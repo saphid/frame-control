@@ -377,7 +377,10 @@ class MacView:
                       "bpp": q["bpp"]}
             url = f"http://127.0.0.1:{self.remote_port}/view?{urlencode(params)}"
         w, h = fit(width or 1280, height or 720)
-        args = " ".join(_quote(str(a)) for a in (appid, url, w, h, tag, *self.browser_flags))
+        # WebXR needs Chromium XR's OpenXR feature, and its XR process needs
+        # the seccomp filter off on arm64 (docs/webxr-chromium.md).
+        xr = ["--enable-features=OpenXR", "--disable-seccomp-filter-sandbox"] if src == "space" else []
+        args = " ".join(_quote(str(a)) for a in (appid, url, w, h, tag, *self.browser_flags, *xr))
         try:
             out = self.run("bash -s -- " + args, stdin=LAUNCH, timeout=60)
         except Exception as e:  # noqa: BLE001 - the server's Failure carries the Frame's words
