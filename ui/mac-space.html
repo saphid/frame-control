@@ -96,6 +96,8 @@ function barOf(p) {
   return { cx: 0, cy: -p.h / 2 - BAR_GAP, w, h: BAR_H };
 }
 function closeOf(p) { const b = barOf(p); return { cx: -b.w / 2 - 0.04, cy: b.cy, r: CLOSE_R }; }
+// Text size buttons (A−, A+) to the bar's right, on window panels.
+function zoomOf(p, dir) { const b = barOf(p); return { cx: b.w / 2 + (dir < 0 ? 0.04 : 0.075), cy: b.cy, r: CLOSE_R }; }
 function placeFacing(p, pos, head) {
   p.pos = pos;
   // Upright, turned to face the viewer (yaw only), as windows do on Vision Pro.
@@ -122,6 +124,12 @@ function pick(origin, dir) {
     if (Math.abs(h.x) <= p.w / 2 && Math.abs(h.y) <= p.h / 2) part = "content";
     else if (Math.abs(h.x - b.cx) <= b.w / 2 + 0.01 && Math.abs(h.y - b.cy) <= b.h / 2 + 0.012) part = "bar";
     else if (Math.hypot(h.x - c.cx, h.y - c.cy) <= c.r + 0.008) part = "close";
+    else if (p.kind === "window") {
+      for (const dir of [-1, 1]) {
+        const z = zoomOf(p, dir);
+        if (Math.hypot(h.x - z.cx, h.y - z.cy) <= z.r + 0.008) part = dir < 0 ? "zoomOut" : "zoomIn";
+      }
+    }
     if (part && (!best || h.t < best.t)) best = { panel: p, part, t: h.t, x: h.x, y: h.y, u: h.x / p.w + 0.5, v: 0.5 - h.y / p.h };
   }
   return best;
@@ -146,6 +154,7 @@ function windowAt(u, v) {
 
 function openPanel(src, opts) {
   const p = { src, kind: opts.kind, title: opts.title || "", w: opts.w || 1.2, h: opts.h || 0.7, pos: [0, 1.4, -1.2], yaw: 0,
+              zoom: { auto: true, base: 0, steps: 0 },
               tex: null, texW: 0, texH: 0, pending: null, lastMove: 0, pendingMove: null };
   p.stream = new MacStream({
     src, space: spaceKey, max: opts.max || "2560", fps: "60",
@@ -169,6 +178,45 @@ function removePanel(p, stop = true) {
   if (p.pending) { p.pending.img.close(); p.pending = null; }
   if (p.tex && gl) gl.deleteTexture(p.tex);
   if (p === desktop) desktop = null;
+  else sendArrange();
+}
+
+// Tell the Mac where the window panels are, left or right of the desktop, so
+// it lays their displays out the same way: the Mac's own pointer then moves
+// from the desktop into the panel beside it, as it looks in the room.
+let arrangeTimer = 0;
+function sendArrange() {
+  clearTimeout(arrangeTimer);
+  arrangeTimer = setTimeout(() => {
+    if (!desktop) return;
+    const inv = M.invRigid(matrixOf(desktop));
+    const list = panels.filter(p => p.kind === "window").map(p => ({ src: p.src, x: +M.point(inv, p.pos)[0].toFixed(3) }));
+    desktop.stream.send({ t: "arrange", panels: list });
+  }, 300);
+}
+
+// Text size: the window's own zoom (Cmd+= / Cmd+-), which browsers, editors,
+// terminals and chat apps all have. Automatic by default: after a window
+// panel is moved, its text follows its distance, a step per 12% nearer or
+// farther than where it was first let go; the A−/A+ buttons take over by hand.
+const ZOOM_STEP = 1.12;
+function textSize(p, steps) {
+  if (!steps || !panels.includes(p)) return;
+  p.stream.focus();
+  const code = steps > 0 ? "Equal" : "Minus", key = steps > 0 ? "=" : "-";
+  for (let i = 0; i < Math.abs(steps); i++) {
+    setTimeout(() => {
+      p.stream.key(true, code, key, ["meta"]);
+      setTimeout(() => p.stream.key(false, code, key, ["meta"]), 30);
+    }, 120 + i * 90);
+  }
+  p.zoom.steps += steps;
+}
+function autoTextSize(p) {
+  if (p.kind !== "window" || !p.zoom.auto || !p.zoom.base) return;
+  const d = V.len(V.sub(p.pos, headNow.pos));
+  const want = Math.max(-6, Math.min(8, Math.round(Math.log(d / p.zoom.base) / Math.log(ZOOM_STEP))));
+  textSize(p, want - p.zoom.steps);
 }
 
 // Remembered placement of the desktop panel, in the room.
@@ -184,6 +232,45 @@ function restoreDesktop(head) {
   const fwd = head.forward;
   placeFacing(desktop, V.add(head.pos, [fwd[0] * 1.2, -0.12, fwd[2] * 1.2]), head.pos);
 }
+
+// ---------- steadying the laser ----------
+// A One Euro filter (Casiez et al. 2012) per axis: heavy smoothing while the
+// pointer moves slowly (hand tremor), little lag when it moves fast.
+class OneEuro {
+  constructor(minCutoff = 1.2, beta = 0.35, dCutoff = 1) { Object.assign(this, { minCutoff, beta, dCutoff, x: null, dx: 0, t: 0 }); }
+  alpha(cutoff, dt) { const tau = 1 / (2 * Math.PI * cutoff); return 1 / (1 + tau / dt); }
+  filter(v, t) {
+    if (this.x === null) { this.x = v; this.t = t; return v; }
+    const dt = Math.max(1e-3, (t - this.t) / 1000);
+    this.t = t;
+    const d = (v - this.x) / dt;
+    this.dx += this.alpha(this.dCutoff, dt) * (d - this.dx);
+    const cutoff = this.minCutoff + this.beta * Math.abs(this.dx);
+    this.x += this.alpha(cutoff, dt) * (v - this.x);
+    return this.x;
+  }
+}
+// Smooths a pointer's ray (direction in radians-ish units, origin in metres)
+// and keeps the last 200 ms, so a click can use where it pointed just before
+// the trigger jerked it.
+function steady(pt, origin, dir, t) {
+  if (!pt.f) pt.f = { d: [0, 1, 2].map(() => new OneEuro(1.0, 0.6)), o: [0, 1, 2].map(() => new OneEuro(1.5, 0.8)), hist: [] };
+  pt.origin = origin.map((v, i) => pt.f.o[i].filter(v, t));
+  pt.dir = V.norm(dir.map((v, i) => pt.f.d[i].filter(v, t)));
+  pt.f.hist.push({ t, origin: pt.origin, dir: pt.dir });
+  while (pt.f.hist.length && t - pt.f.hist[0].t > 200) pt.f.hist.shift();
+}
+// Where the pointer was `ago` ms ago (or now).
+function pointedAgo(pt, ago) {
+  const h = pt.f && pt.f.hist;
+  if (!h || !h.length) return { origin: pt.origin, dir: pt.dir };
+  const t = h[h.length - 1].t - ago;
+  return h.find(e => e.t >= t) || h[h.length - 1];
+}
+// Click stabilisation: after the trigger goes down, the Mac's pointer stays
+// put until the ray has clearly moved (1.2 degrees), so a click doesn't turn
+// into a small drag.
+const CLICK_HOLD_RAD = 1.2 * Math.PI / 180;
 
 // ---------- pointers: controllers, hands, or the mouse ----------
 // Each pointer has a ray; the trigger (select) clicks, squeeze grabs.
@@ -206,6 +293,10 @@ function pointerMoved(pt, head) {
   }
   const target = press ? press.panel : pt.hit && pt.hit.part === "content" ? pt.hit.panel : null;
   if (!target) return;
+  if (press && pt.hold) {
+    if (Math.acos(Math.min(1, V.dot(pt.hold.dir, pt.dir))) < CLICK_HOLD_RAD) return;
+    pt.hold = null;  // moved on purpose: it's a drag
+  }
   const h = press ? hitPanel(target, pt.origin, pt.dir) : pt.hit;
   if (!h) return;
   const u = Math.min(1, Math.max(0, h.x / target.w + 0.5)), v = Math.min(1, Math.max(0, 0.5 - h.y / target.h));
@@ -219,13 +310,20 @@ function sendMove(p, u, v) {
   else p.pendingMove = { u, v };
 }
 function selectStart(pt, head) {
-  const hit = pt.hit;
+  // Where it pointed just before the trigger pull jerked the controller.
+  const before = pointedAgo(pt, 80);
+  const hit = pick(before.origin, before.dir) || pt.hit;
   if (!hit) return;
+  pt.hold = { dir: before.dir, until: true };
   if (hit.part === "close") {
     if (hit.panel === desktop) return leave();
     return removePanel(hit.panel);
   }
   if (hit.part === "bar") return startGrab(pt, hit.panel, head);
+  if (hit.part === "zoomOut" || hit.part === "zoomIn") {
+    hit.panel.zoom.auto = false;  // chosen by hand from now on
+    return textSize(hit.panel, hit.part === "zoomIn" ? 1 : -1);
+  }
   // A click on the Mac. On the desktop, remember which window it started on,
   // and whether it was on its title bar (the top 32 points).
   const p = hit.panel, u = hit.u, v = hit.v;
@@ -234,14 +332,17 @@ function selectStart(pt, head) {
     const w = hooks.windowAt(u, v);
     if (w && mainDisplay && (mainDisplay.y + v * mainDisplay.h) - w.y <= 32) win = w;
   }
-  pt.press = { panel: p, win, last: { u, v } };
+  pt.press = { panel: p, win, last: { u, v }, down: { u, v } };
   p.stream.down(u, v, 0);
 }
 function selectEnd(pt) {
+  const held = !!pt.hold;
+  pt.hold = null;
   if (pt.grab && pt.grab.byTrigger) return endGrab(pt);
   const press = pt.press;
   pt.press = null;
-  if (press && panels.includes(press.panel)) press.panel.stream.up(press.last.u, press.last.v, 0);
+  // A clean click lets go where it went down.
+  if (press && panels.includes(press.panel)) press.panel.stream.up(held ? press.down.u : press.last.u, held ? press.down.v : press.last.v, 0);
 }
 function squeezeStart(pt, head) {
   if (pt.hit) startGrab(pt, pt.hit.panel, head, false);
@@ -269,12 +370,18 @@ function endGrab(pt) {
   pt.grab = null;
   if (!g || !panels.includes(g.panel)) return;
   const p = g.panel;
+  sendArrange();
   if (p === desktop) return saveDesktop();
-  // A window dropped back onto the desktop goes home.
+  // A window dropped back onto the desktop goes home, at its old text size.
   if (desktop) {
     const h = hitPanel(desktop, pt.origin, pt.dir);
-    if (h && Math.abs(h.x) <= desktop.w / 2 && Math.abs(h.y) <= desktop.h / 2 && h.t < g.dist + 0.3) removePanel(p);
+    if (h && Math.abs(h.x) <= desktop.w / 2 && Math.abs(h.y) <= desktop.h / 2 && h.t < g.dist + 0.3) {
+      textSize(p, -p.zoom.steps);
+      return setTimeout(() => removePanel(p), 150 + Math.abs(p.zoom.steps) * 90 + 200);
+    }
   }
+  if (!p.zoom.base) p.zoom.base = V.len(V.sub(p.pos, headNow.pos));  // where it was pulled out to
+  else autoTextSize(p);
 }
 function thumbstick(pt, x, y, dt) {
   if (pt.grab) {
@@ -310,7 +417,7 @@ function detach(pt, press, head) {
 }
 
 // ---------- rendering ----------
-let gl = null, prog = null, quad = null, loc = {};
+let gl = null, prog = null, quad = null, loc = {}, isGL2 = false, aniso = null;
 const VS = `attribute vec2 a; uniform mat4 mvp; uniform vec2 size; varying vec2 uv; varying vec2 pm;
   void main() { uv = vec2(a.x + 0.5, 0.5 - a.y); pm = a * size; gl_Position = mvp * vec4(a * size, 0.0, 1.0); }`;
 const FS = `precision highp float; varying vec2 uv; varying vec2 pm; uniform sampler2D tex; uniform vec4 color;
@@ -323,18 +430,27 @@ const FS = `precision highp float; varying vec2 uv; varying vec2 pm; uniform sam
     gl_FragColor = vec4(c.rgb, c.a * a * color.a);
   }`;
 function initGL(canvas, xrCompatible) {
-  gl = canvas.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false, xrCompatible });
-  gl.getExtension("OES_standard_derivatives");
+  // WebGL 2: mipmaps for textures of any size, so a panel smaller than its
+  // pixels in view is filtered down cleanly instead of shimmering.
+  gl = canvas.getContext("webgl2", { alpha: true, antialias: true, premultipliedAlpha: false, xrCompatible })
+    || canvas.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false, xrCompatible });
+  isGL2 = typeof WebGL2RenderingContext !== "undefined" && gl instanceof WebGL2RenderingContext;
+  if (!isGL2) gl.getExtension("OES_standard_derivatives");
+  aniso = gl.getExtension("EXT_texture_filter_anisotropic");
   const sh = (type, src) => {
     const s = gl.createShader(type);
-    gl.shaderSource(s, type === gl.FRAGMENT_SHADER ? "#extension GL_OES_standard_derivatives : enable\n" + src : src);
+    gl.shaderSource(s, type === gl.FRAGMENT_SHADER && !isGL2 ? "#extension GL_OES_standard_derivatives : enable\n" + src : src);
     gl.compileShader(s);
     if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
     return s;
   };
+  // WebGL 2 needs GLSL ES 3.00 for fwidth (the rounded corners).
+  const v3 = src => "#version 300 es\n" + src.replace(/attribute /g, "in ").replace(/varying /g, "out ");
+  const f3 = src => "#version 300 es\n" + src.replace(/varying /g, "in ").replace(/texture2D\(/g, "texture(")
+    .replace("void main() {", "out vec4 fragColor;\n  void main() {").replace(/gl_FragColor/g, "fragColor");
   prog = gl.createProgram();
-  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
-  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, isGL2 ? v3(VS) : VS));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, isGL2 ? f3(FS) : FS));
   gl.linkProgram(prog);
   if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
   for (const n of ["mvp", "size", "tex", "color", "useTex", "radius"]) loc[n] = gl.getUniformLocation(prog, n);
@@ -349,13 +465,15 @@ function upload(p) {
   if (!p.tex) {
     p.tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, p.tex);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, isGL2 ? gl.LINEAR_MIPMAP_LINEAR : gl.LINEAR);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    if (aniso) gl.texParameterf(gl.TEXTURE_2D, aniso.TEXTURE_MAX_ANISOTROPY_EXT, Math.min(8, gl.getParameter(aniso.MAX_TEXTURE_MAX_ANISOTROPY_EXT)));
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
   }
   gl.bindTexture(gl.TEXTURE_2D, p.tex);
   gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, f.img);
+  if (isGL2) gl.generateMipmap(gl.TEXTURE_2D);
   f.img.close();
   // Keep the panel's shape the picture's shape (a separated window can change size).
   p.aspect = f.h / f.w;
@@ -392,6 +510,16 @@ function drawScene(vp) {
     const b = barOf(p), c = closeOf(p), bh = hovered.has(p.src + ":bar"), ch = hovered.has(p.src + ":close");
     drawRect(vp, M.mul(m, M.panel([b.cx, b.cy, 0], 0)), b.w, b.h, [1, 1, 1, bh ? 0.95 : 0.55], null, b.h / 2);
     drawRect(vp, M.mul(m, M.panel([c.cx, c.cy, 0], 0)), c.r * 2, c.r * 2, ch ? [0.95, 0.3, 0.3, 0.95] : [1, 1, 1, 0.45], null, c.r);
+    if (p.kind === "window") {
+      for (const dir of [-1, 1]) {
+        const z = zoomOf(p, dir), on = hovered.has(p.src + (dir < 0 ? ":zoomOut" : ":zoomIn"));
+        const zm = M.mul(m, M.panel([z.cx, z.cy, 0], 0));
+        drawRect(vp, zm, z.r * 2, z.r * 2, [1, 1, 1, on ? 0.9 : 0.45], null, z.r);
+        const glyph = M.mul(zm, M.panel([0, 0, 0.001], 0));
+        drawRect(vp, glyph, z.r * 1.1, z.r * 0.22, [0.1, 0.1, 0.12, 1], null, 0);
+        if (dir > 0) drawRect(vp, glyph, z.r * 0.22, z.r * 1.1, [0.1, 0.1, 0.12, 1], null, 0);
+      }
+    }
   }
   // Rays, ending where they hit.
   for (const pt of pointers.values()) {
@@ -447,8 +575,7 @@ async function enterXR() {
       const rp = xf.getPose(src.targetRaySpace, xrRef);
       if (!rp) continue;
       const m = rp.transform.matrix, pt = pointerState(src);
-      pt.origin = [m[12], m[13], m[14]];
-      pt.dir = V.norm([-m[8], -m[9], -m[10]]);
+      steady(pt, [m[12], m[13], m[14]], V.norm([-m[8], -m[9], -m[10]]), t);
       pointerMoved(pt, headNow);
       const axes = src.gamepad && src.gamepad.axes;
       if (axes && axes.length >= 4) thumbstick(pt, axes[2], axes[3], dt);

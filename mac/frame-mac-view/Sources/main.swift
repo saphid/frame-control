@@ -106,6 +106,8 @@ final class Session {
     var onEnd: ((Session) -> Void)?
     var onAck: (() -> Void)?
     var onFinished: ((String) -> Void)?
+    /// The Mac space's layout in the room (message "arrange").
+    var onArrange: (([[String: Any]]) -> Void)?
     private let encodeQueue = DispatchQueue(label: "frame-mac-view.encode", qos: .userInteractive)
 
     init(id: Int, source: Source, capture: CaptureSource, ws: WebSocket, codec: Codec, fps: Int, bitsPerPixel: Double,
@@ -245,6 +247,7 @@ final class Session {
         capture.onFrame = { [weak self] pb, pts, shown in self?.offer(pb, pts: pts, capture: shown) }
         capture.onEnded = { [weak self] reason in
             guard let self else { return }
+            agentLog("stream \(self.id) \(self.source.key) ended: \(reason)")
             self.ws.sendJSON(["t": "closed", "reason": reason])
             self.onFinished?(self.source.key)
             self.end()
@@ -275,8 +278,12 @@ final class Session {
         }
         t.resume()
         statsTimer = t
+        agentLog("stream \(id) \(source.key) starting")
         capture.start(maxLong: maxLong, fps: fps) { [weak self] error in
             guard let self else { return }
+            agentLog("stream \(self.id) \(self.source.key) " + (error.map { "failed: \($0) (gone: \(self.capture.gone))" }
+                ?? "capturing \(Int(self.capture.frameRect.width))x\(Int(self.capture.frameRect.height)) pt"
+                   + ((self.capture as? SeparateSource)?.displayID.map { " on display \($0)" } ?? "")))
             if let error {
                 if self.capture.gone {
                     // Final, like a window closing mid-stream: the viewer closes
@@ -389,6 +396,10 @@ final class Session {
         guard !isStopped, let d = text.data(using: .utf8),
               let m = try? JSONSerialization.jsonObject(with: d) as? [String: Any], let t = m["t"] as? String else { return }
         if report(t, m) { return }
+        if t == "arrange", let list = m["panels"] as? [[String: Any]] {
+            onArrange?(list)
+            return
+        }
         let x = m["x"] as? Double ?? -1, y = m["y"] as? Double ?? -1
         if t == "ack" {
             onAck?()
@@ -438,11 +449,20 @@ final class Session {
             case "release":
                 Input.releaseAll(owner: id)
             case "focus":
+                // Before keys meant for this window (the Mac space's text-size buttons).
                 if case .window(let wid) = source, let pid = capture.pid { Input.focus(window: wid, pid: pid) }
+                if case .separate(let wid) = source, let pid = capture.pid { Input.focus(window: wid, pid: pid) }
             default: break
             }
         }
     }
+}
+
+/// One line to stderr (the agent's log), with the time.
+func agentLog(_ s: String) {
+    let f = DateFormatter()
+    f.dateFormat = "HH:mm:ss.SSS"
+    FileHandle.standardError.write(Data("\(f.string(from: Date())) \(s)\n".utf8))
 }
 
 func randomKey() -> String {
@@ -481,6 +501,38 @@ final class Agent {
 
     /// Ends every stream, then exits once separated windows are back on the
     /// Mac's own screens (they're moved back, then their displays go 0.3 s later).
+    /// Lays the separated windows' displays out around the main display the
+    /// way their panels sit around the desktop panel in the room, so the
+    /// Mac's own pointer crosses from one to the next where the panels are
+    /// next to each other. `list`: [{src, x}], x in metres from the desktop
+    /// panel's centre, right positive.
+    func arrange(_ list: [[String: Any]]) {
+        lock.lock()
+        let bySrc = Dictionary(sessions.values.map { ($0.source.key, $0) }, uniquingKeysWith: { a, _ in a })
+        lock.unlock()
+        var sources: [(SeparateSource, Double)] = []
+        for e in list {
+            guard let src = e["src"] as? String, let x = num(e["x"]),
+                  let sep = bySrc[src]?.capture as? SeparateSource else { continue }
+            sources.append((sep, x))
+        }
+        DispatchQueue.main.async {  // Separate mode's state lives on main
+            let items: [(vd: VirtualDisplay, x: Double)] = sources.compactMap { sep, x in sep.virtualDisplay.map { (vd: $0, x: x) } }
+            let main = CGDisplayBounds(CGMainDisplayID())
+            var origins: [(VirtualDisplay, CGPoint)] = []
+            var right = main.maxX, left = main.minX
+            for (vd, _) in items.filter({ $0.x >= 0 }).sorted(by: { $0.x < $1.x }) {
+                origins.append((vd, CGPoint(x: right, y: main.minY)))
+                right += CGFloat(vd.size.width)
+            }
+            for (vd, _) in items.filter({ $0.x < 0 }).sorted(by: { $0.x > $1.x }) {
+                left -= CGFloat(vd.size.width)
+                origins.append((vd, CGPoint(x: left, y: main.minY)))
+            }
+            VirtualDisplay.arrange(origins)
+        }
+    }
+
     /// Idempotent: SIGTERM and the parent going away can both call it, and a
     /// session already ended by /close may still be putting its window back.
     private var quitting = false
@@ -703,6 +755,7 @@ final class Agent {
             self.lock.unlock()
         }
         session.onAck = { [weak self] in self?.acknowledged(key: key) }
+        session.onArrange = { [weak self] list in self?.arrange(list) }
         session.start(maxLong: maxLong, fps: fps)
     }
 }
