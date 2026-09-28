@@ -343,7 +343,7 @@ class MacView:
                 self.launching -= 1
 
     def _show(self, src, quality, width, height):
-        if src != "test" and not src.startswith(("window:", "display:", "separate:")):
+        if src not in ("test", "space") and not src.startswith(("window:", "display:", "separate:")):
             raise MacViewError("Pick a window or display to show.")
         self.shows += 1
         q = QUALITY.get(quality) or QUALITY["balanced"]
@@ -368,9 +368,14 @@ class MacView:
         # A single-use ticket for this source, not Frame Control's key: the URL
         # is visible in the Frame's process list.
         ticket = self.call("/ticket", method="POST", src=src)["ticket"]
-        params = {"src": src, "t": ticket, "tag": tag, "codec": q["codec"], "max": q["max"], "fps": q["fps"],
-                  "bpp": q["bpp"]}
-        url = f"http://127.0.0.1:{self.remote_port}/view?{urlencode(params)}"
+        if src == "space":
+            # The Mac space (ui/mac-space.html): one WebXR page that opens the
+            # Mac's display and any windows pulled out of it (docs/mac-space.md).
+            url = f"http://127.0.0.1:{self.remote_port}/space?{urlencode({'t': ticket, 'tag': tag})}"
+        else:
+            params = {"src": src, "t": ticket, "tag": tag, "codec": q["codec"], "max": q["max"], "fps": q["fps"],
+                      "bpp": q["bpp"]}
+            url = f"http://127.0.0.1:{self.remote_port}/view?{urlencode(params)}"
         w, h = fit(width or 1280, height or 720)
         args = " ".join(_quote(str(a)) for a in (appid, url, w, h, tag, *self.browser_flags))
         try:

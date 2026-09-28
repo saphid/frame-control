@@ -36,8 +36,8 @@ func windowsJSON() -> [[String: Any]] {
         $0.layer == 0 && $0.pid != me && !skip.contains($0.app) && $0.bounds.width >= 120 && $0.bounds.height >= 80
     }.map {
         ["id": $0.id, "src": "window:\($0.id)", "pid": $0.pid, "app": $0.app, "title": $0.title,
-         "w": Int($0.bounds.width), "h": Int($0.bounds.height)]
-    }
+         "w": Int($0.bounds.width), "h": Int($0.bounds.height), "x": Int($0.bounds.minX), "y": Int($0.bounds.minY)]
+    }  // front to back, as CGWindowList gives them
 }
 
 func displaysJSON() -> [[String: Any]] {
@@ -50,7 +50,7 @@ func displaysJSON() -> [[String: Any]] {
     }.map { id in
         let b = CGDisplayBounds(id)
         return ["id": id, "src": "display:\(id)", "name": displayName(id), "w": Int(b.width), "h": Int(b.height),
-                "main": CGDisplayIsMain(id) != 0]
+                "x": Int(b.minX), "y": Int(b.minY), "main": CGDisplayIsMain(id) != 0]
     }
 }
 
@@ -472,6 +472,10 @@ final class Agent {
     private var tickets: [String: (src: String, expiry: Date, key: String?)] = [:]
     /// reconnect key -> source, until Stop for that source.
     private var reconnectKeys: [String: String] = [:]
+    /// Space keys (ui/mac-space.html): each lists the Mac's windows and
+    /// displays and opens streams for any of them, until Stop All (or Stop
+    /// for "space"). Handed out once, for a ticket for "space".
+    private var spaceKeys = Set<String>()
     /// Sources that ended for good (the window closed), for Frame Control.
     private var finished = Set<String>()
 
@@ -524,7 +528,24 @@ final class Agent {
             return key
         }
         if let r = req.query["r"], reconnectKeys[r] == src { return r }
+        if let s = req.query["s"], spaceKeys.contains(s) {
+            let key = randomKey()
+            reconnectKeys[key] = src
+            return key
+        }
         return nil
+    }
+
+    private func isSpace(_ req: Request) -> Bool {
+        lock.lock(); defer { lock.unlock() }
+        return spaceKeys.contains(req.query["s"] ?? "")
+    }
+
+    /// A page next to the viewer (the Mac space and its shared script); no secrets in them.
+    private func sibling(_ name: String, _ type: String, _ c: HTTPConnection) {
+        guard let page, let body = try? Data(contentsOf: page.deletingLastPathComponent().appendingPathComponent(name))
+        else { return c.respond(404, text: "not found") }
+        c.respond(200, body: body, type: type)
     }
 
     /// The viewer has its reconnect key, so the ticket that led to it can't
@@ -541,6 +562,25 @@ final class Agent {
         case ("GET", "/view"):
             guard let page, let body = try? Data(contentsOf: page) else { return c.respond(404, text: "no viewer page") }
             return c.respond(200, body: body, type: "text/html; charset=utf-8")
+        case ("GET", "/space"): return sibling("mac-space.html", "text/html; charset=utf-8", c)
+        case ("GET", "/mac-stream.js"): return sibling("mac-stream.js", "text/javascript; charset=utf-8", c)
+        case ("GET", "/space/key"):
+            // A ticket for "space", spent here: the page keeps the key in memory.
+            lock.lock()
+            let now = Date()
+            tickets = tickets.filter { $0.value.expiry > now }
+            guard let t = req.query["t"], let entry = tickets[t], entry.src == "space" else {
+                lock.unlock()
+                return c.respond(403, text: "forbidden")
+            }
+            tickets[t] = nil
+            let key = randomKey()
+            spaceKeys.insert(key)
+            lock.unlock()
+            return c.respond(json: ["key": key])
+        case ("GET", "/space/windows"):
+            guard isSpace(req) else { return c.respond(403, text: "forbidden") }
+            return c.respond(json: ["windows": windowsJSON(), "displays": displaysJSON(), "input": Input.allowed])
         case ("GET", "/stream"):
             guard let src = Source(req.query["src"] ?? "") else { return c.respond(400, text: "bad src") }
             guard let key = mayStream(req, src: src.key) else { return c.respond(403, text: "forbidden") }
@@ -571,11 +611,13 @@ final class Agent {
         case ("GET", "/displays"):
             c.respond(json: ["displays": displaysJSON()])
         case ("POST", "/ticket"):
-            guard let src = Source(req.query["src"] ?? "") else { return c.respond(400, text: "bad src") }
+            let isSpaceTicket = req.query["src"] == "space"
+            guard isSpaceTicket || Source(req.query["src"] ?? "") != nil else { return c.respond(400, text: "bad src") }
+            let key = isSpaceTicket ? "space" : Source(req.query["src"] ?? "")!.key
             let t = randomKey()
             lock.lock()
-            tickets[t] = (src.key, Date().addingTimeInterval(60), nil)
-            finished.remove(src.key)
+            tickets[t] = (key, Date().addingTimeInterval(60), nil)
+            finished.remove(key)
             lock.unlock()
             c.respond(json: ["ticket": t])
         case ("POST", "/close"):
@@ -586,6 +628,7 @@ final class Agent {
             let matching = sessions.values.filter { src == nil || $0.source.key == src }
             reconnectKeys = reconnectKeys.filter { src != nil && $0.value != src }
             tickets = tickets.filter { src != nil && $0.value.src != src }  // not yet used ones too
+            if src == nil || src == "space" { spaceKeys.removeAll() }
             lock.unlock()
             for s in matching { s.ws.sendJSON(["t": "close"]) }
             DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) { for s in matching { s.end() } }

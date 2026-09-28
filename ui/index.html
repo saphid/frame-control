@@ -315,6 +315,8 @@
   .mv-perm .row { margin-top: 8px; }
   .mv-live { color: var(--green, #7fd67f); font-size: 12px; }
   .mv-opt { display: block; font-size: 13px; margin: 0 0 12px; }
+  .mv-space { align-items: center; gap: 12px; margin: 0 0 14px; }
+  .mv-space .sub { font-size: 13px; }
   .mv-opt .sub { display: block; margin-left: 22px; font-size: 12px; }
   .disp select { width: 100%; background: rgba(0,0,0,.28); color: var(--text); border: 1px solid transparent; border-radius: 3px;
                  padding: 8px 10px; font: inherit; font-size: 13px; }
@@ -657,6 +659,8 @@
           <option value="light">Light</option><option value="compatible">Compatible (JPEG)</option>
         </select>
         <button class="small" id="mvRefresh">Refresh</button></div>
+      <div class="row mv-space"><button class="action" data-mv="show" data-src="space" data-title="Mac space">Open Mac space</button>
+        <span class="sub">Your Mac's screen in the room, like Vision Pro. Drag a window's title bar off its edge to give it a place of its own.</span></div>
       <label class="mv-opt"><input type="checkbox" id="mvSeparate" checked> Give each window its own display
         <span class="sub">its menus and sheets come along, nothing covers it, and it goes back when you stop</span></label>
       <div class="mv-perm" id="mvPerm" hidden></div>
@@ -2253,7 +2257,9 @@ $("macview").onclick = async e => {
     await act(`Show ${b.dataset.title} in the headset`, async () => {
       const r = await api("/api/macview", { action: "show", src: as, quality: $("mvQuality").value,
                                             w: +b.dataset.w || undefined, h: +b.dataset.h || undefined });
-      return { message: `${b.dataset.title} is a panel in the headset now. Float it with the SteamVR dashboard.`, ...r };
+      const message = as === "space" ? "The Mac space is ready in the headset: press Enter Mac space there."
+        : `${b.dataset.title} is a panel in the headset now. Float it with the SteamVR dashboard.`;
+      return { message, ...r };
     }, b);
   } else if (b.dataset.mv === "stop") {
     await act("Stop showing it", () => api("/api/macview", { action: "stop", src }), b);

@@ -1,0 +1,560 @@
+<!doctype html>
+<!-- Frame Control: the Mac space. The Mac's main display as a large panel in
+     the room, and any Mac window pulled out of it as a panel of its own, in
+     one WebXR session with passthrough behind (docs/mac-space.md). Served by
+     the Mac's frame-mac-view agent; streams come from ui/mac-stream.js. Without
+     WebXR (a desktop browser) the same scene shows in the page, with the
+     mouse as the laser: left button = trigger, right button = grab. -->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Mac space</title>
+<style>
+  html, body { margin: 0; height: 100%; background: #101216; color: #eee; font: 16px/1.45 system-ui, sans-serif; overflow: hidden; }
+  #gl { position: fixed; inset: 0; width: 100%; height: 100%; display: block; }
+  #ui { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+        text-align: center; padding: 24px; background: rgba(16,18,22,.92); }
+  #ui[hidden] { display: none; }
+  #enter { font: 600 28px system-ui, sans-serif; padding: 22px 44px; border-radius: 18px; border: 0; color: #fff;
+           background: #2f6fed; cursor: pointer; }
+  #enter:disabled { background: #444; cursor: default; }
+  #msg { max-width: 34em; color: #bbb; }
+  #hint { position: fixed; left: 12px; bottom: 10px; color: #9aa; font-size: 13px; pointer-events: none; }
+</style>
+</head>
+<body>
+<canvas id="gl"></canvas>
+<div id="ui">
+  <div style="font-size:22px">Mac space</div>
+  <button id="enter" disabled>Connecting…</button>
+  <div id="msg">Your Mac's screen appears in front of you. Drag a window's title bar off its edge to give that window a
+    place of its own; drop it back on the screen to put it back.</div>
+</div>
+<div id="hint" hidden>Preview: left button clicks, right button (or Shift) drags a panel by its bar, wheel scrolls.</div>
+<script src="/mac-stream.js"></script>
+<script>
+"use strict";
+const q = new URLSearchParams(location.search);
+const tag = q.get("tag") || "";
+document.title = tag ? `Mac space [${tag}]` : "Mac space";
+const $ = id => document.getElementById(id);
+const say = t => { $("msg").textContent = t; };
+
+// ---------- small 3D math (column-major 4x4, like WebGL) ----------
+const V = {
+  add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
+  sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
+  scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
+  dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
+  len: a => Math.hypot(a[0], a[1], a[2]),
+  norm: a => { const l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; },
+};
+const M = {
+  mul(a, b) {
+    const o = new Float32Array(16);
+    for (let c = 0; c < 4; c++) for (let r = 0; r < 4; r++) {
+      let s = 0;
+      for (let k = 0; k < 4; k++) s += a[k * 4 + r] * b[c * 4 + k];
+      o[c * 4 + r] = s;
+    }
+    return o;
+  },
+  // Rigid transform (rotation about Y by yaw, then position), scaled by sx, sy.
+  panel(pos, yaw, sx = 1, sy = 1) {
+    const c = Math.cos(yaw), s = Math.sin(yaw);
+    return new Float32Array([c * sx, 0, -s * sx, 0, 0, sy, 0, 0, s, 0, c, 0, pos[0], pos[1], pos[2], 1]);
+  },
+  point: (m, p) => [m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13],
+                    m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]],
+  dir: (m, d) => [m[0] * d[0] + m[4] * d[1] + m[8] * d[2], m[1] * d[0] + m[5] * d[1] + m[9] * d[2], m[2] * d[0] + m[6] * d[1] + m[10] * d[2]],
+  perspective(fovy, aspect, near, far) {
+    const f = 1 / Math.tan(fovy / 2), nf = 1 / (near - far);
+    return new Float32Array([f / aspect, 0, 0, 0, 0, f, 0, 0, 0, 0, (far + near) * nf, -1, 0, 0, 2 * far * near * nf, 0]);
+  },
+  // Inverse of a rigid transform (rotation + translation only).
+  invRigid(m) {
+    const o = new Float32Array(16);
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 3; c++) o[c * 4 + r] = m[r * 4 + c];
+    const t = [m[12], m[13], m[14]];
+    o[12] = -(o[0] * t[0] + o[4] * t[1] + o[8] * t[2]);
+    o[13] = -(o[1] * t[0] + o[5] * t[1] + o[9] * t[2]);
+    o[14] = -(o[2] * t[0] + o[6] * t[1] + o[10] * t[2]);
+    o[15] = 1;
+    return o;
+  },
+};
+
+// ---------- panels ----------
+// A panel is a Mac display or window: a video quad, a bar under it to grab,
+// and a close button to the bar's left (as on Vision Pro).
+const BAR_GAP = 0.03, BAR_H = 0.018, CLOSE_R = 0.013;
+const panels = [];
+let desktop = null;
+function barOf(p) {
+  const w = Math.min(0.28, p.w * 0.3);
+  return { cx: 0, cy: -p.h / 2 - BAR_GAP, w, h: BAR_H };
+}
+function closeOf(p) { const b = barOf(p); return { cx: -b.w / 2 - 0.04, cy: b.cy, r: CLOSE_R }; }
+function placeFacing(p, pos, head) {
+  p.pos = pos;
+  // Upright, turned to face the viewer (yaw only), as windows do on Vision Pro.
+  p.yaw = Math.atan2(head[0] - pos[0], head[2] - pos[2]);
+}
+function matrixOf(p) { return M.panel(p.pos, p.yaw); }
+// Where a ray meets the panel's plane, in panel metres (x right, y up), or null.
+function hitPanel(p, origin, dir) {
+  const inv = M.invRigid(matrixOf(p));
+  const o = M.point(inv, origin), d = M.dir(inv, dir);
+  if (Math.abs(d[2]) < 1e-6) return null;
+  const t = -o[2] / d[2];
+  if (t <= 0) return null;
+  return { x: o[0] + d[0] * t, y: o[1] + d[1] * t, t };
+}
+// What a ray points at: the nearest panel part.
+function pick(origin, dir) {
+  let best = null;
+  for (const p of panels) {
+    const h = hitPanel(p, origin, dir);
+    if (!h) continue;
+    let part = null;
+    const b = barOf(p), c = closeOf(p);
+    if (Math.abs(h.x) <= p.w / 2 && Math.abs(h.y) <= p.h / 2) part = "content";
+    else if (Math.abs(h.x - b.cx) <= b.w / 2 + 0.01 && Math.abs(h.y - b.cy) <= b.h / 2 + 0.012) part = "bar";
+    else if (Math.hypot(h.x - c.cx, h.y - c.cy) <= c.r + 0.008) part = "close";
+    if (part && (!best || h.t < best.t)) best = { panel: p, part, t: h.t, x: h.x, y: h.y, u: h.x / p.w + 0.5, v: 0.5 - h.y / p.h };
+  }
+  return best;
+}
+
+let spaceKey = "", layout = { windows: [], displays: [] }, mainDisplay = null;
+async function refreshLayout() {
+  try {
+    const r = await fetch(`/space/windows?s=${encodeURIComponent(spaceKey)}`);
+    if (r.ok) layout = await r.json();
+  } catch (e) {}
+}
+// Replaceable in tests (the Mac's real stacking decides otherwise).
+const hooks = { windowAt: (u, v) => windowAt(u, v) };
+// The topmost Mac window under a point of the main display (u, v in 0..1).
+function windowAt(u, v) {
+  const d = mainDisplay;
+  if (!d) return null;
+  const x = d.x + u * d.w, y = d.y + v * d.h;
+  return layout.windows.find(w => x >= w.x && x < w.x + w.w && y >= w.y && y < w.y + w.h) || null;
+}
+
+function openPanel(src, opts) {
+  const p = { src, kind: opts.kind, title: opts.title || "", w: opts.w || 1.2, h: opts.h || 0.7, pos: [0, 1.4, -1.2], yaw: 0,
+              tex: null, texW: 0, texH: 0, pending: null, lastMove: 0, pendingMove: null };
+  p.stream = new MacStream({
+    src, space: spaceKey, max: opts.max || "2560", fps: "60",
+    onFrame(img, w, h, seq, decodedAt) {
+      // Keep only the newest picture until the next rendered frame.
+      if (p.pending) { p.stream.replaced(p.pending.seq, p.pending.decodedAt); p.pending.img.close(); }
+      p.pending = { img, w, h, seq, decodedAt };
+    },
+    onInfo(m) { if (m.title) p.title = m.title; },
+    onClosed() { removePanel(p, false); },
+  });
+  p.stream.start();
+  panels.push(p);
+  return p;
+}
+function removePanel(p, stop = true) {
+  const i = panels.indexOf(p);
+  if (i < 0) return;
+  panels.splice(i, 1);
+  if (stop) p.stream.stop();  // the Mac ends the stream; a separated window goes back
+  if (p.pending) { p.pending.img.close(); p.pending = null; }
+  if (p.tex && gl) gl.deleteTexture(p.tex);
+  if (p === desktop) desktop = null;
+}
+
+// Remembered placement of the desktop panel, in the room.
+function saveDesktop() {
+  if (desktop) localStorage.setItem("macspace.desktop", JSON.stringify({ pos: desktop.pos, yaw: desktop.yaw, w: desktop.w }));
+}
+function restoreDesktop(head) {
+  try {
+    const s = JSON.parse(localStorage.getItem("macspace.desktop") || "null");
+    if (s && s.pos && s.pos.length === 3) { desktop.pos = s.pos; desktop.yaw = s.yaw; desktop.w = s.w; return; }
+  } catch (e) {}
+  // First time: a large screen a little below eye level, 1.2 m ahead.
+  const fwd = head.forward;
+  placeFacing(desktop, V.add(head.pos, [fwd[0] * 1.2, -0.12, fwd[2] * 1.2]), head.pos);
+}
+
+// ---------- pointers: controllers, hands, or the mouse ----------
+// Each pointer has a ray; the trigger (select) clicks, squeeze grabs.
+const pointers = new Map();
+function pointerState(key) {
+  if (!pointers.has(key)) pointers.set(key, { key, origin: [0, 0, 0], dir: [0, 0, -1], hit: null, selecting: false,
+    grab: null, press: null, lastWheel: 0 });
+  return pointers.get(key);
+}
+// Called whenever a pointer's ray moves.
+function pointerMoved(pt, head) {
+  pt.hit = pick(pt.origin, pt.dir);
+  if (pt.grab) return dragGrab(pt, head);
+  const press = pt.press;
+  if (press && press.panel === desktop && press.win && panels.includes(desktop)) {
+    // Dragging a window's title bar off the edge of the desktop: detach it.
+    const h = hitPanel(desktop, pt.origin, pt.dir);
+    const outside = !h || Math.abs(h.x) > desktop.w / 2 || Math.abs(h.y) > desktop.h / 2;
+    if (outside) return detach(pt, press, head);
+  }
+  const target = press ? press.panel : pt.hit && pt.hit.part === "content" ? pt.hit.panel : null;
+  if (!target) return;
+  const h = press ? hitPanel(target, pt.origin, pt.dir) : pt.hit;
+  if (!h) return;
+  const u = Math.min(1, Math.max(0, h.x / target.w + 0.5)), v = Math.min(1, Math.max(0, 0.5 - h.y / target.h));
+  if (press) press.last = { u, v };
+  sendMove(target, u, v);
+}
+// Moves go at most every 8 ms per panel.
+function sendMove(p, u, v) {
+  const now = performance.now();
+  if (now - p.lastMove >= 8) { p.stream.move(u, v); p.lastMove = now; p.pendingMove = null; }
+  else p.pendingMove = { u, v };
+}
+function selectStart(pt, head) {
+  const hit = pt.hit;
+  if (!hit) return;
+  if (hit.part === "close") {
+    if (hit.panel === desktop) return leave();
+    return removePanel(hit.panel);
+  }
+  if (hit.part === "bar") return startGrab(pt, hit.panel, head);
+  // A click on the Mac. On the desktop, remember which window it started on,
+  // and whether it was on its title bar (the top 32 points).
+  const p = hit.panel, u = hit.u, v = hit.v;
+  let win = null;
+  if (p === desktop) {
+    const w = hooks.windowAt(u, v);
+    if (w && mainDisplay && (mainDisplay.y + v * mainDisplay.h) - w.y <= 32) win = w;
+  }
+  pt.press = { panel: p, win, last: { u, v } };
+  p.stream.down(u, v, 0);
+}
+function selectEnd(pt) {
+  if (pt.grab && pt.grab.byTrigger) return endGrab(pt);
+  const press = pt.press;
+  pt.press = null;
+  if (press && panels.includes(press.panel)) press.panel.stream.up(press.last.u, press.last.v, 0);
+}
+function squeezeStart(pt, head) {
+  if (pt.hit) startGrab(pt, pt.hit.panel, head, false);
+}
+function squeezeEnd(pt) { if (pt.grab && !pt.grab.byTrigger) endGrab(pt); }
+
+// Grabbing: the panel keeps its distance along the ray and its offset from
+// the hit point, and turns to face the viewer. Thumbstick up/down pushes and
+// pulls; left/right resizes.
+function startGrab(pt, p, head, byTrigger = true) {
+  const h = hitPanel(p, pt.origin, pt.dir);
+  const dist = h ? h.t : V.len(V.sub(p.pos, pt.origin));
+  const at = V.add(pt.origin, V.scale(pt.dir, dist));
+  pt.grab = { panel: p, dist, offset: V.sub(p.pos, at), byTrigger };
+  panels.push(panels.splice(panels.indexOf(p), 1)[0]);  // draw it last
+}
+function dragGrab(pt, head) {
+  const g = pt.grab;
+  if (!panels.includes(g.panel)) { pt.grab = null; return; }
+  const at = V.add(pt.origin, V.scale(pt.dir, g.dist));
+  placeFacing(g.panel, V.add(at, g.offset), head.pos);
+}
+function endGrab(pt) {
+  const g = pt.grab;
+  pt.grab = null;
+  if (!g || !panels.includes(g.panel)) return;
+  const p = g.panel;
+  if (p === desktop) return saveDesktop();
+  // A window dropped back onto the desktop goes home.
+  if (desktop) {
+    const h = hitPanel(desktop, pt.origin, pt.dir);
+    if (h && Math.abs(h.x) <= desktop.w / 2 && Math.abs(h.y) <= desktop.h / 2 && h.t < g.dist + 0.3) removePanel(p);
+  }
+}
+function thumbstick(pt, x, y, dt) {
+  if (pt.grab) {
+    const g = pt.grab;
+    g.dist = Math.min(6, Math.max(0.3, g.dist - y * dt * 1.5));
+    const s = 1 + x * dt * 0.8;
+    g.panel.w = Math.min(4, Math.max(0.2, g.panel.w * s));
+    g.panel.h = g.panel.w * (g.panel.aspect || 0.6);
+    return;
+  }
+  const hit = pt.hit;
+  if (!hit || hit.part !== "content" || (Math.abs(y) < 0.2 && Math.abs(x) < 0.2)) return;
+  const now = performance.now();
+  if (now - pt.lastWheel < 16) return;
+  pt.lastWheel = now;
+  hit.panel.stream.wheel(x * 24, y * 24, hit.u, hit.v);
+}
+
+// Pulling a window out of the desktop: finish the Mac-side drag, open the
+// window as a panel of its own (on its own display on the Mac), and let it
+// follow the pointer until the trigger is released.
+function detach(pt, press, head) {
+  pt.press = null;
+  desktop.stream.up(press.last.u, press.last.v, 0);
+  const win = press.win, d = mainDisplay;
+  const scale = desktop.w / d.w;  // metres per Mac point, as on the desktop panel
+  const p = openPanel(`separate:${win.id}`, { kind: "window", title: win.title || win.app, w: win.w * scale, h: (win.h + 40) * scale });
+  p.aspect = p.h / p.w;
+  const dist = Math.max(0.5, (hitPanel(desktop, pt.origin, pt.dir) || { t: 1.2 }).t - 0.15);
+  const at = V.add(pt.origin, V.scale(pt.dir, dist));
+  placeFacing(p, V.add(at, [0, -p.h / 2 + 0.03, 0]), head.pos);
+  pt.grab = { panel: p, dist, offset: V.sub(p.pos, at), byTrigger: true };
+}
+
+// ---------- rendering ----------
+let gl = null, prog = null, quad = null, loc = {};
+const VS = `attribute vec2 a; uniform mat4 mvp; uniform vec2 size; varying vec2 uv; varying vec2 pm;
+  void main() { uv = vec2(a.x + 0.5, 0.5 - a.y); pm = a * size; gl_Position = mvp * vec4(a * size, 0.0, 1.0); }`;
+const FS = `precision highp float; varying vec2 uv; varying vec2 pm; uniform sampler2D tex; uniform vec4 color;
+  uniform float useTex; uniform vec2 size; uniform float radius;
+  void main() {
+    vec2 d = abs(pm) - (size * 0.5 - vec2(radius));
+    float dist = length(max(d, 0.0)) - radius;
+    float a = clamp(0.5 - dist / fwidth(dist), 0.0, 1.0);
+    vec4 c = useTex > 0.5 ? texture2D(tex, uv) : color;
+    gl_FragColor = vec4(c.rgb, c.a * a * color.a);
+  }`;
+function initGL(canvas, xrCompatible) {
+  gl = canvas.getContext("webgl", { alpha: true, antialias: true, premultipliedAlpha: false, xrCompatible });
+  gl.getExtension("OES_standard_derivatives");
+  const sh = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, type === gl.FRAGMENT_SHADER ? "#extension GL_OES_standard_derivatives : enable\n" + src : src);
+    gl.compileShader(s);
+    if (!gl.getShaderParameter(s, gl.COMPILE_STATUS)) throw new Error(gl.getShaderInfoLog(s));
+    return s;
+  };
+  prog = gl.createProgram();
+  gl.attachShader(prog, sh(gl.VERTEX_SHADER, VS));
+  gl.attachShader(prog, sh(gl.FRAGMENT_SHADER, FS));
+  gl.linkProgram(prog);
+  if (!gl.getProgramParameter(prog, gl.LINK_STATUS)) throw new Error(gl.getProgramInfoLog(prog));
+  for (const n of ["mvp", "size", "tex", "color", "useTex", "radius"]) loc[n] = gl.getUniformLocation(prog, n);
+  quad = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-0.5, -0.5, 0.5, -0.5, -0.5, 0.5, 0.5, 0.5]), gl.STATIC_DRAW);
+}
+function upload(p) {
+  const f = p.pending;
+  if (!f) return null;
+  p.pending = null;
+  if (!p.tex) {
+    p.tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, p.tex);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+  }
+  gl.bindTexture(gl.TEXTURE_2D, p.tex);
+  gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, f.img);
+  f.img.close();
+  // Keep the panel's shape the picture's shape (a separated window can change size).
+  p.aspect = f.h / f.w;
+  p.h = p.w * p.aspect;
+  p.texW = f.w;
+  p.texH = f.h;
+  return { seq: f.seq, decodedAt: f.decodedAt, drawnAt: performance.now() };
+}
+function drawRect(vp, model, w, h, color, tex, radius) {
+  gl.uniformMatrix4fv(loc.mvp, false, M.mul(vp, model));
+  gl.uniform2f(loc.size, w, h);
+  gl.uniform4fv(loc.color, color);
+  gl.uniform1f(loc.useTex, tex ? 1 : 0);
+  gl.uniform1f(loc.radius, radius);
+  if (tex) gl.bindTexture(gl.TEXTURE_2D, tex);
+  gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+}
+function drawScene(vp) {
+  gl.useProgram(prog);
+  gl.bindBuffer(gl.ARRAY_BUFFER, quad);
+  const a = gl.getAttribLocation(prog, "a");
+  gl.enableVertexAttribArray(a);
+  gl.vertexAttribPointer(a, 2, gl.FLOAT, false, 0, 0);
+  gl.uniform1i(loc.tex, 0);
+  gl.enable(gl.BLEND);
+  gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+  gl.enable(gl.DEPTH_TEST);
+  const hovered = new Set([...pointers.values()].filter(p => p.hit).map(p => p.hit.panel.src + ":" + p.hit.part));
+  for (const p of panels) {
+    const m = matrixOf(p);
+    // A soft shadow behind, then the picture (grey until the first frame).
+    drawRect(vp, M.mul(m, M.panel([0.004, -0.006, -0.004], 0)), p.w + 0.012, p.h + 0.012, [0, 0, 0, 0.35], null, 0.022);
+    drawRect(vp, m, p.w, p.h, p.tex ? [1, 1, 1, 1] : [0.18, 0.19, 0.22, 0.95], p.tex, 0.016);
+    const b = barOf(p), c = closeOf(p), bh = hovered.has(p.src + ":bar"), ch = hovered.has(p.src + ":close");
+    drawRect(vp, M.mul(m, M.panel([b.cx, b.cy, 0], 0)), b.w, b.h, [1, 1, 1, bh ? 0.95 : 0.55], null, b.h / 2);
+    drawRect(vp, M.mul(m, M.panel([c.cx, c.cy, 0], 0)), c.r * 2, c.r * 2, ch ? [0.95, 0.3, 0.3, 0.95] : [1, 1, 1, 0.45], null, c.r);
+  }
+  // Rays, ending where they hit.
+  for (const pt of pointers.values()) {
+    const len = pt.hit ? pt.hit.t : 2;
+    const mid = V.add(pt.origin, V.scale(pt.dir, len / 2));
+    const yaw = Math.atan2(pt.dir[0], pt.dir[2]);
+    // A thin strip along the ray: x across (horizontal), y along.
+    const along = pt.dir, across = V.norm([Math.cos(yaw), 0, -Math.sin(yaw)]);
+    const normal = [along[1] * across[2] - along[2] * across[1], along[2] * across[0] - along[0] * across[2], along[0] * across[1] - along[1] * across[0]];
+    const model = new Float32Array([across[0], across[1], across[2], 0, along[0], along[1], along[2], 0,
+                                    normal[0], normal[1], normal[2], 0, mid[0], mid[1], mid[2], 1]);
+    drawRect(vp, model, 0.003, len, [1, 1, 1, 0.35], null, 0);
+    if (pt.hit) {
+      const m = M.mul(matrixOf(pt.hit.panel), M.panel([pt.hit.x, pt.hit.y, 0.002], 0));
+      drawRect(vp, m, 0.012, 0.012, [1, 1, 1, 0.9], null, 0.006);
+    }
+  }
+}
+function flushMoves() {
+  for (const p of panels) if (p.pendingMove && performance.now() - p.lastMove >= 8) sendMove(p, p.pendingMove.u, p.pendingMove.v);
+}
+
+// ---------- WebXR ----------
+let xrSession = null, xrRef = null;
+async function enterXR() {
+  const mode = (await navigator.xr.isSessionSupported("immersive-ar").catch(() => false)) ? "immersive-ar" : "immersive-vr";
+  xrSession = await navigator.xr.requestSession(mode, { optionalFeatures: ["local-floor", "hand-tracking"] });
+  const canvas = document.createElement("canvas");
+  initGL(canvas, true);
+  await gl.makeXRCompatible();
+  xrSession.updateRenderState({ baseLayer: new XRWebGLLayer(xrSession, gl, { alpha: true, antialias: true }) });
+  xrRef = await xrSession.requestReferenceSpace("local-floor").catch(() => xrSession.requestReferenceSpace("local"));
+  const on = (type, fn) => xrSession.addEventListener(type, ev => fn(pointerState(ev.inputSource), headNow));
+  on("selectstart", selectStart);
+  on("selectend", pt => selectEnd(pt));
+  on("squeezestart", squeezeStart);
+  on("squeezeend", pt => squeezeEnd(pt));
+  xrSession.addEventListener("end", () => { xrSession = null; $("ui").hidden = false; $("enter").disabled = false; say("Left the Mac space."); });
+  $("ui").hidden = true;
+  let placed = false, last = 0;
+  const frame = (t, xf) => {
+    if (!xrSession) return;
+    xrSession.requestAnimationFrame(frame);
+    const pose = xf.getViewerPose(xrRef);
+    if (!pose) return;
+    const hm = pose.transform.matrix;
+    headNow = { pos: [hm[12], hm[13], hm[14]], forward: V.norm([-hm[8], 0, -hm[10]]) };
+    if (!placed && desktop) { restoreDesktop(headNow); placed = true; }
+    const dt = last ? Math.min(0.1, (t - last) / 1000) : 0;
+    last = t;
+    for (const src of xrSession.inputSources) {
+      if (!src.targetRaySpace) continue;
+      const rp = xf.getPose(src.targetRaySpace, xrRef);
+      if (!rp) continue;
+      const m = rp.transform.matrix, pt = pointerState(src);
+      pt.origin = [m[12], m[13], m[14]];
+      pt.dir = V.norm([-m[8], -m[9], -m[10]]);
+      pointerMoved(pt, headNow);
+      const axes = src.gamepad && src.gamepad.axes;
+      if (axes && axes.length >= 4) thumbstick(pt, axes[2], axes[3], dt);
+    }
+    for (const k of [...pointers.keys()]) if (typeof k === "object" && ![...xrSession.inputSources].includes(k)) pointers.delete(k);
+    flushMoves();
+    const shown = [];
+    for (const p of panels) { const f = upload(p); if (f) shown.push([p, f]); }
+    const layer = xrSession.renderState.baseLayer;
+    gl.bindFramebuffer(gl.FRAMEBUFFER, layer.framebuffer);
+    gl.clearColor(0, 0, 0, 0);  // transparent: passthrough shows through
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    for (const view of pose.views) {
+      const vp = layer.getViewport(view);
+      gl.viewport(vp.x, vp.y, vp.width, vp.height);
+      drawScene(M.mul(view.projectionMatrix, view.transform.inverse.matrix));
+    }
+    const now = performance.now();
+    for (const [p, f] of shown) p.stream.presented(f.seq, f.decodedAt, f.drawnAt, now);
+  };
+  xrSession.requestAnimationFrame(frame);
+}
+let headNow = { pos: [0, 1.6, 0], forward: [0, 0, -1] };
+
+// ---------- preview in a normal page (no headset) ----------
+function preview() {
+  const canvas = $("gl");
+  initGL(canvas, false);
+  $("hint").hidden = false;
+  const head = { pos: [0, 1.6, 0.4], forward: [0, 0, -1] };
+  headNow = head;
+  const mouse = pointerState("mouse");
+  let placed = false;
+  const toRay = e => {
+    const r = canvas.getBoundingClientRect(), x = (e.clientX - r.left) / r.width * 2 - 1, y = 1 - (e.clientY - r.top) / r.height * 2;
+    const f = 1 / Math.tan(Math.PI / 6), aspect = r.width / r.height;
+    mouse.origin = head.pos.slice();
+    mouse.dir = V.norm([x * aspect / f, y / f, -1]);
+    pointerMoved(mouse, head);
+  };
+  canvas.addEventListener("pointermove", toRay);
+  canvas.addEventListener("pointerdown", e => {
+    toRay(e);
+    canvas.setPointerCapture(e.pointerId);
+    if (e.button === 2 || e.shiftKey) squeezeStart(mouse, head); else selectStart(mouse, head);
+  });
+  canvas.addEventListener("pointerup", e => {
+    toRay(e);
+    if (mouse.grab && !mouse.grab.byTrigger) squeezeEnd(mouse); else selectEnd(mouse);
+  });
+  canvas.addEventListener("contextmenu", e => e.preventDefault());
+  canvas.addEventListener("wheel", e => {
+    e.preventDefault();
+    if (mouse.grab) { thumbstick(mouse, 0, -Math.sign(e.deltaY) * 0.5, 0.1); return; }
+    if (mouse.hit && mouse.hit.part === "content") mouse.hit.panel.stream.wheel(e.deltaX, e.deltaY, mouse.hit.u, mouse.hit.v);
+  }, { passive: false });
+  const loop = () => {
+    requestAnimationFrame(loop);
+    if (!placed && desktop) { restoreDesktop(head); placed = true; }
+    const w = canvas.clientWidth, h = canvas.clientHeight;
+    if (canvas.width !== w * devicePixelRatio) { canvas.width = w * devicePixelRatio; canvas.height = h * devicePixelRatio; }
+    flushMoves();
+    const shown = [];
+    for (const p of panels) { const f = upload(p); if (f) shown.push([p, f]); }
+    gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.clearColor(0.06, 0.07, 0.09, 1);
+    gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+    const view = M.invRigid(M.panel(head.pos, 0));
+    drawScene(M.mul(M.perspective(Math.PI / 3, w / h, 0.05, 50), view));
+    for (const [p, f] of shown) p.stream.drawn(f.seq, f.decodedAt, f.drawnAt);
+  };
+  loop();
+}
+
+function leave() {
+  for (const p of [...panels]) removePanel(p);
+  if (xrSession) xrSession.end();
+}
+
+// ---------- start ----------
+(async () => {
+  const ticket = q.get("t") || "";
+  try {
+    const r = await fetch(`/space/key?t=${encodeURIComponent(ticket)}`);
+    if (!r.ok) throw new Error(r.status === 403 ? "This link has expired. Open the Mac space again from Frame Control." : `HTTP ${r.status}`);
+    spaceKey = (await r.json()).key;
+  } catch (e) { say(String(e.message || e)); $("enter").textContent = "Can't connect"; return; }
+  await refreshLayout();
+  setInterval(refreshLayout, 2000);
+  mainDisplay = layout.displays.find(d => d.main) || layout.displays[0] || null;
+  const src = q.get("src") || (mainDisplay ? `display:${mainDisplay.id}` : "test");
+  desktop = openPanel(src, { kind: "desktop", w: 1.25, h: mainDisplay ? 1.25 * mainDisplay.h / mainDisplay.w : 0.7, max: "2560" });
+  desktop.aspect = desktop.h / desktop.w;
+  // For tests over DevTools: drive a pointer the way a controller would.
+  window.space = { panels, pointers, layout: () => layout, desktop: () => desktop, head: () => headNow, V, M, matrixOf,
+                   pointerState, pointerMoved, selectStart, selectEnd, squeezeStart, squeezeEnd, mainDisplay: () => mainDisplay, hooks };
+  const xr = navigator.xr && await navigator.xr.isSessionSupported("immersive-vr").catch(() => false);
+  if (!xr || q.get("preview") === "1") {
+    $("ui").hidden = true;
+    return preview();
+  }
+  $("enter").disabled = false;
+  $("enter").textContent = "Enter Mac space";
+  $("enter").onclick = () => enterXR().catch(e => { say(`Couldn't start: ${e.message || e}`); });
+})();
+</script>
+</body>
+</html>

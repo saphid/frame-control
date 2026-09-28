@@ -70,6 +70,17 @@ class Helpers(unittest.TestCase):
         self.assertIn("Chromium", str(cm.exception))
         self.assertTrue(calls[0].startswith("bash -s -- "))
 
+    def test_the_mac_space_opens_with_a_space_ticket(self):
+        calls, asked = [], []
+        mv = frame_macview.MacView(["ssh"], lambda remote, **kw: calls.append(remote) or "panel x", "frame")
+        mv.call = lambda path, **kw: asked.append((path, kw)) or {"screen": True, "ticket": "tk1"}
+        mv.ensure_tunnel = lambda **kw: None
+        mv.remote_port = 47900
+        out = mv.show("space")
+        self.assertIn(("/ticket", {"method": "POST", "src": "space"}), asked)
+        self.assertIn("http://127.0.0.1:47900/space?t=tk1", calls[0])
+        self.assertEqual(out["src"], "space")
+
     def test_separate_windows_need_accessibility(self):
         mv = frame_macview.MacView(["ssh"], lambda *a, **k: self.fail("no ssh"), "frame")
         mv.call = lambda path, **kw: {"screen": True, "accessibility": False}
@@ -241,7 +252,10 @@ class Agent(unittest.TestCase):
     def test_serves_the_viewer_page(self):
         status, body = self.get(f"/view?k={self.token}&src=test")
         self.assertEqual(status, 200)
-        self.assertIn(b"VideoDecoder", body)
+        self.assertIn(b'<script src="/mac-stream.js">', body)
+        status, script = self.get("/mac-stream.js")
+        self.assertEqual(status, 200)
+        self.assertIn(b"VideoDecoder", script)
 
     def test_snapshot_needs_the_key(self):
         self.assertEqual(self.get("/snapshot?display=1")[0], 403)
@@ -301,6 +315,32 @@ class Agent(unittest.TestCase):
         # Stop revokes the reconnect key.
         self.get(f"/close?k={self.token}&src=test", method="POST")
         self.assertEqual(WS(self.port, f"/stream?src=test&r={hello['r']}").status, 403)
+
+    def test_a_space_key_opens_any_source_until_stop_all(self):
+        t = self.ticket("space")
+        status, body = self.get(f"/space/key?t={t}")
+        self.assertEqual(status, 200)
+        key = json.loads(body)["key"]
+        self.assertEqual(self.get(f"/space/key?t={t}")[0], 403)  # a ticket gives one key
+        self.assertEqual(self.get("/space/windows?s=nope")[0], 403)
+        listing = json.loads(self.get(f"/space/windows?s={key}")[1])
+        self.assertIn("windows", listing)
+        self.assertTrue(all("x" in d and "y" in d for d in listing["displays"]))
+        ws = WS(self.port, f"/stream?src=test&s={key}")
+        self.assertEqual(ws.status, 101)
+        hello = json.loads(ws.recv()[1])
+        self.assertEqual(hello["t"], "hello")
+        ws.close()
+        self.assertEqual(WS(self.port, f"/stream?src=test&t={t}").status, 403)  # not a stream ticket
+        self.get(f"/close?k={self.token}", method="POST")  # Stop All
+        self.assertEqual(self.get(f"/space/windows?s={key}")[0], 403)
+        self.assertEqual(WS(self.port, f"/stream?src=test&s={key}").status, 403)
+        self.assertEqual(WS(self.port, f"/stream?src=test&r={hello['r']}").status, 403)
+
+    def test_the_space_page_and_its_script_are_served(self):
+        for path in ("/space", "/mac-stream.js"):
+            status, _ = self.get(path)
+            self.assertEqual(status, 200, path)
 
     def test_stop_revokes_tickets_not_yet_used(self):
         t = self.ticket("test")
