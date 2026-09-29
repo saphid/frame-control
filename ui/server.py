@@ -46,6 +46,7 @@ import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
 import frame_host  # noqa: E402
 import frame_macview  # noqa: E402
+import frame_pcview  # noqa: E402
 import frame_media  # noqa: E402
 import frame_report  # noqa: E402
 import frame_store  # noqa: E402
@@ -1805,8 +1806,9 @@ def push_media(path):
 
 # The tunnel gets its own connection: the shared master's options would win
 # over anything added after them.
-macview = frame_macview.MacView(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
-                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin, timeout=timeout),
+macview = frame_pcview.host_view(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
+                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin.encode("utf-8") if stdin is not None else None,
+                                                                           timeout=timeout, text=False).decode("utf-8", errors="replace"),
                                 FRAME, track=_live_tunnels.add)
 
 
