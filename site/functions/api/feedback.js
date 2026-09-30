@@ -25,12 +25,16 @@ async function overLimit(kv, key, limit, ttl) {
 
 export async function onRequestPost({ request, env }) {
   if (!env.GITHUB_TOKEN || !env.GITHUB_REPO) {
-    return json(503, { error: "Feedback isn't connected to GitHub yet. Use the GitHub link instead." });
+    return json(503, { error: "Feedback isn't connected to GitHub yet. Use the GitHub link instead.", retrySafe: true });
   }
 
   const origin = request.headers.get("origin");
-  if (origin && new URL(origin).host !== new URL(request.url).host) {
-    return json(403, { error: "Send feedback from the website's form." });
+  if (origin) {
+    try {
+      if (new URL(origin).origin !== new URL(request.url).origin) throw new Error("Origin mismatch");
+    } catch {
+      return json(403, { error: "Send feedback from the website's form." });
+    }
   }
 
   let input;
@@ -63,24 +67,31 @@ export async function onRequestPost({ request, env }) {
     console.log(`Rate limit check failed: ${err}`);
   }
 
-  const res = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
-    method: "POST",
-    headers: {
-      authorization: `Bearer ${env.GITHUB_TOKEN}`,
-      accept: "application/vnd.github+json",
-      "x-github-api-version": "2022-11-28",
-      "user-agent": "frame-control-website",
-      "content-type": "application/json",
-    },
-    body: JSON.stringify(buildIssue(checked.value)),
-  });
+  try {
+    const res = await fetch(`https://api.github.com/repos/${env.GITHUB_REPO}/issues`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${env.GITHUB_TOKEN}`,
+        accept: "application/vnd.github+json",
+        "x-github-api-version": "2022-11-28",
+        "user-agent": "frame-control-website",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(buildIssue(checked.value)),
+    });
 
-  if (!res.ok) {
-    console.log(`GitHub answered ${res.status}: ${(await res.text()).slice(0, 500)}`);
-    return json(502, { error: "GitHub didn't accept it just now. Try again, or use the GitHub link." });
+    if (!res.ok) {
+      return json(502, { error: "GitHub did not confirm delivery. Check recent issues before sending again.", retrySafe: false });
+    }
+    const issue = await res.json();
+    if (!Number.isInteger(issue.number) || typeof issue.html_url !== "string"
+      || issue.html_url !== `https://github.com/${env.GITHUB_REPO}/issues/${issue.number}`) {
+      throw new Error("Invalid issue receipt");
+    }
+    return json(201, { ok: true, number: issue.number, url: issue.html_url });
+  } catch {
+    return json(502, { error: "Delivery could not be confirmed. Check recent issues before sending again.", retrySafe: false });
   }
-  const issue = await res.json();
-  return json(201, { ok: true, number: issue.number, url: issue.html_url });
 }
 
 export const onRequest = () => json(405, { error: "POST only." });

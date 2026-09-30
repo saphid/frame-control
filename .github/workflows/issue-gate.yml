@@ -104,7 +104,7 @@ jobs:
               '',
               `Maintainers review auto-closed issues regularly and reopen worthwhile ones. Issues that do not meet the quality bar in [CONTRIBUTING.md](https://github.com/${context.repo.owner}/${context.repo.repo}/blob/${defaultBranch}/CONTRIBUTING.md) will not be reopened or receive a reply.`,
               '',
-              'Just want to report a bug or share an idea? The [website feedback form](https://frame-control.pages.dev/feedback/) skips this queue.',
+              'Just want to report a bug or share an idea? The [website feedback form](https://framecontrol.fun/feedback/) skips this queue.',
               '',
               'If a maintainer replies `lgtmi` on one of your issues, your future issues will stay open. If a maintainer replies `lgtm`, your future issues and PRs will stay open. The command must be at the start of the reply (optionally after one or more `@username` mentions) or at the end.',
               '',

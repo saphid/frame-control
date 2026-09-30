@@ -27,19 +27,21 @@ form.addEventListener("change", (e) => {
 function githubUrl(data) {
   const params = data.kind === "idea"
     ? new URLSearchParams({ template: "idea.yml", title: data.title, what: data.message })
-    : new URLSearchParams({ template: "bug.yml", title: data.title, description: data.message,
-      version: data.version, os: [data.os, data.steamos && `SteamOS ${data.steamos}`].filter(Boolean).join(", ") });
+    : data.kind === "bug"
+      ? new URLSearchParams({ template: "bug.yml", title: data.title, description: data.message,
+        version: data.version, os: [data.os, data.steamos && `SteamOS ${data.steamos}`].filter(Boolean).join(", ") })
+      : new URLSearchParams({ title: data.title, body: data.message });
   return `https://github.com/saphid/frame-control/issues/new?${params}`;
 }
 
-function showError(message, data) {
+function showError(message, data, uncertain = false) {
   errorBox.textContent = message + " ";
   if (data) {
     const a = document.createElement("a");
-    a.href = githubUrl(data);
+    a.href = uncertain ? "https://github.com/saphid/frame-control/issues" : githubUrl(data);
     a.target = "_blank";
     a.rel = "noopener";
-    a.textContent = "Open it on GitHub instead";
+    a.textContent = uncertain ? "Check recent issues before sending again" : "Open it on GitHub instead";
     errorBox.append(a);
   }
   errorBox.hidden = false;
@@ -62,6 +64,7 @@ form.addEventListener("submit", async (e) => {
 
   send.disabled = true;
   send.textContent = "Sending…";
+  let uncertain = true;
   try {
     // The server treats anything sent sooner as a script (site/lib/feedback.js MIN_FILL_MS).
     const wait = 3100 - (performance.now() - started);
@@ -72,7 +75,11 @@ form.addEventListener("submit", async (e) => {
       body: JSON.stringify({ ...data, elapsed: Math.round(performance.now() - started) }),
     });
     const reply = await res.json().catch(() => ({}));
-    if (!res.ok) throw new Error(reply.error || "Something went wrong sending that.");
+    if (!res.ok) {
+      uncertain = reply.retrySafe === false || (reply.retrySafe !== true && res.status >= 500);
+      throw new Error(reply.error || "Something went wrong sending that.");
+    }
+    if (!reply.ok) throw new Error("Delivery could not be confirmed.");
 
     form.hidden = true;
     document.getElementById("done").hidden = false;
@@ -81,11 +88,11 @@ form.addEventListener("submit", async (e) => {
       link.href = reply.url;
       link.hidden = false;
       document.getElementById("done-text").textContent = `Your feedback is now issue #${reply.number} on GitHub.`
-        + (data.github ? " You'll be notified when someone replies." : " Bookmark it to follow along.");
+        + " Bookmark it or subscribe on GitHub to follow replies.";
     }
     window.scrollTo({ top: 0, behavior: "smooth" });
   } catch (err) {
-    showError(err.message || "Couldn't reach the server.", data);
+    showError(err.message || "Couldn't confirm delivery.", data, uncertain);
   } finally {
     send.disabled = false;
     send.textContent = "Send feedback";

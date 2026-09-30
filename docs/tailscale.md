@@ -1,10 +1,27 @@
-# Tailscale: use the Frame from anywhere
+# Tailscale: advanced remote-access setup
 
-With Tailscale on the Frame, the `frame` SSH alias works off the home LAN, and
-so does everything built on it: Frame Control, the scripts and the Mac app.
+Tailscale is intended to make the `frame` SSH alias available off the home LAN,
+including to Frame Control and the scripts. Off-LAN access has not yet been
+verified; the checks below cover the direct LAN path only. Read the exposure
+section before enabling it: services normally restricted to loopback become
+reachable by other devices on your tailnet.
 When the Mac and the Frame are on the same network, Tailscale connects them
 directly, so there's no relay in the way (`tailscale ping frame` → `via
 192.168.1.50:41641`, 20 ms).
+
+These are source-checkout commands for macOS, not packaged-app menu actions
+or Windows PowerShell commands. The connection script currently uses macOS
+netcat options; this route is not supported on Linux. Install Git, OpenSSH,
+zsh, Python 3 and curl on your Mac; the desktop app's bundled Python is not
+available to these scripts. Then obtain the scripts:
+
+```sh
+git clone https://github.com/saphid/frame-control.git
+cd frame-control
+```
+
+Enable Developer Mode on the awake headset and establish working SSH access
+first using the [connection guide](frame-control.md). Run from the checkout:
 
 ```sh
 scripts/tailscale-on-frame.sh          # install or update, then approve the login URL

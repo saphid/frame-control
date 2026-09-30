@@ -1,6 +1,7 @@
 # Website
 
-The Frame Control website, <https://frame-control.pages.dev>, on Cloudflare Pages.
+The Frame Control website, <https://framecontrol.fun>, on Cloudflare Pages.
+The Pages project is `frame-control`; its fallback hostname is `frame-control.pages.dev`.
 
 - `public/`: static pages. `/` is the landing page, `/feedback/` the feedback form, `/privacy/` the privacy note.
 - `functions/api/feedback.js`: `POST /api/feedback`, which turns the form into a GitHub issue labelled `feedback`.

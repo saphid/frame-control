@@ -37,20 +37,20 @@ test("unknown kinds become other feedback", () => {
   assert.equal(validate(form({ kind: "__proto__" })).value.kind, "other");
 });
 
-test("builds a labelled issue that credits a GitHub user", () => {
+test("builds a labelled issue with an explicitly unverified GitHub username", () => {
   const { value } = validate(form({ github: "@octocat", version: "0.3.1", steamos: "20260922" }));
   const issue = buildIssue(value);
   assert.equal(issue.title, "Bug report: Live view freezes");
   assert.deepEqual(issue.labels, ["feedback", "bug"]);
   assert.match(issue.body, /\| Frame Control version \| 0\.3\.1 \|/);
-  assert.match(issue.body, /^> Sent from the website feedback form by @octocat\./);
+  assert.match(issue.body, /Provided GitHub username \(not verified\): @octocat\./);
   assert.ok(issue.body.endsWith(value.message));
 });
 
-test("anonymous feedback says replies won't reach the sender", () => {
+test("anonymous feedback explains how to follow replies", () => {
   const issue = buildIssue(validate(form({ kind: "other" })).value);
   assert.deepEqual(issue.labels, ["feedback"]);
-  assert.match(issue.body, /won't see replies/);
+  assert.match(issue.body, /bookmark or subscribe/);
 });
 
 test("breaks mentions, issue refs and table cells in user text", () => {

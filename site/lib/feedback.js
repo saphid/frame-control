@@ -79,8 +79,8 @@ export function buildIssue(value) {
   // Our own lines go first, so nothing in the sender's text can hide them.
   const lines = [
     value.github
-      ? `> Sent from the website feedback form by @${value.github}.`
-      : "> Sent from the website feedback form. The sender left no GitHub username, so they won't see replies here.",
+      ? `> Sent from the website feedback form. Provided GitHub username (not verified): @${value.github}.`
+      : "> Sent from the website feedback form. No GitHub username provided; bookmark or subscribe to this issue to follow replies.",
     "",
   ];
   if (details.length) {

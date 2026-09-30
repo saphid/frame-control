@@ -12,7 +12,7 @@ See what the headset sees, install games and Android apps, move files and text a
 [![Checks](https://img.shields.io/github/actions/workflow/status/saphid/steam-frame/checks.yml?branch=main&label=checks)](https://github.com/saphid/steam-frame/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-66c0f4)](LICENSE)
 
-[**Website**](https://frame-control.pages.dev) · [**Download**](#install) · [Trailer](#trailer) · [Features](#features) · [Set up the headset](#set-up-the-headset) · [Feedback](#feedback) · [Docs](#going-further)
+[**Get started**](https://framecontrol.fun) · [**Download**](https://framecontrol.fun/#download) · [Trailer](#trailer) · [Features](#features) · [Set up the headset](#set-up-the-headset) · [Feedback](#feedback) · [Docs](#going-further)
 
 <br>
 
@@ -96,6 +96,17 @@ already ships (sideloading a game copies Valve's own devkit scripts to
 
 ## Install
 
+**New here? [Get Frame Control and follow the setup guide on the website](https://framecontrol.fun/#download).**
+Install it on your **computer, not the headset**. You don't need to clone this
+repository or install Python. Download for your computer, install and open the
+app, then choose **Set Up Connection** with the Frame awake on the same network.
+
+- **macOS:** open the `.dmg`, drag Frame Control to Applications, then open it there.
+- **Windows:** run the installer and launch Frame Control from Start, or extract the portable `.zip` and run `Frame Control.exe`.
+- **Linux:** make the AppImage executable and open it, or install the `.deb` and launch Frame Control.
+
+If the app is blocked, see the first-launch notes below before proceeding.
+
 | | Download | Needs |
 |---|---|---|
 | **macOS** (Apple Silicon) | [Frame-Control-mac-arm64.dmg](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-mac-arm64.dmg) | Nothing extra |
@@ -176,7 +187,7 @@ entry to `~/.ssh/config` and keys at `~/.ssh/id_ed25519_frame` and
 
 This is a first public test, so reports are really useful, especially from
 Windows and Linux. The quickest way is the
-[feedback form](https://frame-control.pages.dev/feedback/): no GitHub account
+[feedback form](https://framecontrol.fun/feedback/): no GitHub account
 needed, and it opens an issue here. Please include:
 
 - what you tried and what happened

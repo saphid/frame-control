@@ -3,8 +3,8 @@
   --bg: #0e141b; --bg-2: #131c26; --panel: #17222e; --panel-2: #1d2a38; --line: rgba(143, 152, 160, .16);
   --text: #c7d0d8; --bright: #fff; --muted: #8f98a0; --dim: #5e6873;
   --blue: #1a9fff; --link: #66c0f4; --green: #75b022; --warn: #d9a23a; --bad: #e0573c;
-  --action: linear-gradient(to right, #47bfff 5%, #1a44c2 95%);
-  --action-hi: linear-gradient(to right, #5fcaff 5%, #2458d6 95%);
+  --action: linear-gradient(to right, #12699e 5%, #1a44c2 95%);
+  --action-hi: linear-gradient(to right, #1676ad 5%, #2458d6 95%);
   --radius: 14px; --wrap: 1160px;
   --font: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
   color-scheme: dark;
@@ -38,8 +38,19 @@ code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: rg
 .top nav a { color: var(--muted); font-size: 14.5px; font-weight: 500; }
 .top nav a:hover, .top nav a[aria-current] { color: var(--bright); }
 .top .end { margin-left: auto; display: flex; gap: 10px; align-items: center; }
-@media (max-width: 880px) { .top nav { display: none; } }
-@media (max-width: 480px) { .top .end .ghost { display: none; } }
+@media (max-width: 880px) {
+  .top { position: static; }
+  .top .wrap { flex-wrap: wrap; height: auto; gap: 12px; padding-top: 12px; padding-bottom: 12px; }
+  .top nav { order: 3; width: 100%; margin-left: 0; gap: 16px; flex-wrap: wrap; }
+  .top nav a { padding: 6px 0; }
+}
+@media (max-width: 480px) {
+  .top .end .ghost { display: none; }
+  .top .wrap { padding-left: 16px; padding-right: 16px; gap: 8px; }
+  .top .brand { font-size: 12px; letter-spacing: 1px; gap: 8px; }
+  .top .brand img { width: 24px; height: 24px; }
+  .top .end .btn { padding: 0 10px; }
+}
 
 /* ---- buttons ---- */
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; height: 46px; padding: 0 22px; border-radius: 10px;
@@ -53,8 +64,8 @@ code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: rg
 .btn.ghost { background: transparent; border-color: var(--line); }
 .btn.ghost:hover { border-color: rgba(143,152,160,.4); background: rgba(255,255,255,.03); }
 .btn.small { height: 36px; padding: 0 14px; font-size: 14px; border-radius: 8px; }
-.btn.coffee { background: #ff5e5b; box-shadow: 0 8px 24px rgba(255, 94, 91, .22); }
-.btn.coffee:hover { background: #ff7471; }
+.btn.coffee { background: #ff5e5b; color: #0e141b; box-shadow: 0 8px 24px rgba(255, 94, 91, .22); }
+.btn.coffee:hover { background: #ff7471; color: #0e141b; }
 .btn svg { width: 18px; height: 18px; flex: none; }
 .btn[disabled] { opacity: .6; cursor: progress; transform: none; }
 
@@ -64,6 +75,7 @@ code { font: 14px ui-monospace, SFMono-Regular, Menlo, monospace; background: rg
                 background: radial-gradient(600px 380px at 30% 30%, rgba(26,159,255,.22), transparent 70%),
                             radial-gradient(520px 360px at 72% 20%, rgba(111,66,193,.2), transparent 70%); }
 .hero > * { position: relative; }
+.hero .cta .btn { max-width: 100%; min-height: 46px; height: auto; padding-top: 12px; padding-bottom: 12px; white-space: normal; }
 .eyebrow { display: inline-block; max-width: 100%; padding: 6px 14px; border-radius: 999px; font-size: 13.5px;
            color: var(--link); background: rgba(26,159,255,.1); border: 1px solid rgba(102,192,244,.22); margin-bottom: 26px; }
 .eyebrow b { color: var(--bright); font-weight: 600; }
@@ -131,10 +143,13 @@ section.alt { background: var(--bg-2); border-block: 1px solid var(--line); }
 .dl .need { color: var(--muted); font-size: 14px; }
 .dl .links { display: flex; flex-direction: column; gap: 8px; margin-top: 16px; }
 .dl .links .btn { width: 100%; }
+.dl > p { margin-top: 12px; font-size: 14px; }
+.dl code { overflow-wrap: anywhere; }
 .dl .tag { margin-left: auto; font-size: 11.5px; font-weight: 650; letter-spacing: 1px; text-transform: uppercase; color: var(--link); }
 
 .faq { max-width: 780px; margin: 0 auto; display: grid; gap: 10px; }
 .faq details { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 0 22px; }
+.faq code { overflow-wrap: anywhere; }
 .faq summary { cursor: pointer; list-style: none; padding: 18px 0; color: var(--bright); font-weight: 600; display: flex; justify-content: space-between; gap: 16px; }
 .faq summary::-webkit-details-marker { display: none; }
 .faq summary::after { content: "+"; color: var(--muted); font-size: 22px; line-height: 1; transition: transform .2s; }

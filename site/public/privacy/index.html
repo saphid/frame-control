@@ -8,8 +8,8 @@
 <meta name="theme-color" content="#0e141b">
 <link rel="icon" href="/favicon.png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
-<link rel="stylesheet" href="/css/site.css">
-<script src="/js/site.js" defer></script>
+<link rel="stylesheet" href="/css/site.css?v=20260930-deep1">
+<script src="/js/site.js?v=20260930-deep1" defer></script>
 </head>
 <body>
 
@@ -38,12 +38,14 @@
     <div class="head">
       <span class="kicker">Privacy</span>
       <h1>Privacy</h1>
-      <p>Short version: the app collects nothing, and the website keeps only what you choose to send.</p>
+      <p>Short version: the released app sends anonymous usage statistics after a first-run notice. You can turn them off. Website feedback becomes public on GitHub.</p>
     </div>
     <div class="faq notes">
-      <section><h2>The app</h2><p>Frame Control talks only to your headset (over SSH on your network), to GitHub for releases, and to Steam and F-Droid for game and app listings. It has no analytics and no accounts.</p></section>
-      <section><h2>The feedback form</h2><p>What you type becomes a public GitHub issue on <a href="https://github.com/saphid/frame-control/issues">saphid/frame-control</a>. To stop abuse, the form keeps a one-way hash of your IP address for about an hour to count submissions. The address itself isn't stored or published.</p></section>
-      <section><h2>This website</h2><p>Hosted on Cloudflare Pages. No cookies, no analytics, no trackers. The download section asks GitHub for the latest version number. Donations go through Ko-fi, under Ko-fi's own privacy policy.</p></section>
+      <section><h2>App usage statistics</h2><p>In v0.4.0, anonymous usage statistics are on by default after the first-run notice has been shown. They go to PostHog's US cloud and include a random persistent installation ID, app version, operating system, CPU architecture and Python version; app opens, updates, tabs used, headset SteamOS builds, and install outcomes. Public catalogue installs may include a Steam app ID, Flathub ID or F-Droid package name. Usage events exclude local filenames, paths and account data. Person profiles and location lookup are disabled, and events use a placeholder IP address; the receiving service still handles the network connection.</p><p>Turn statistics off in <b>Privacy &amp; updates</b>. <b>Show what's been sent</b> lets you inspect sent events. Turning a level off removes its unsent events, not events already received. Source checkouts do not send automatic telemetry by default. <code>DO_NOT_TRACK=1</code> or <code>FRAME_CONTROL_TELEMETRY=0</code> blocks automatic telemetry, not reports you deliberately send through <b>Report a problem</b>.</p></section>
+      <section><h2>Optional app reports</h2><p>Compatibility sharing and detailed error reports are off by default. Enabling compatibility sharing sends reports and tests, including earlier reports on this computer. Enabling error details sends scrubbed error messages and tracebacks. Review free text before sharing: automatic scrubbing is not a guarantee that every personal detail is removed. The app's <b>Report a problem</b> dialog deliberately sends a private report to the maintainer's PostHog project, independently of the usage-statistics setting. This differs from the public website form below. See the <a href="https://github.com/saphid/frame-control/blob/v0.4.0/docs/privacy.md">v0.4.0 privacy guide</a> for exact fields and controls.</p></section>
+      <section><h2>Other app connections</h2><p>Frame Control connects to your headset and to services used by the features you choose, including GitHub for releases, Steam, F-Droid and Flathub for listings or downloads, and the sources of apps you choose to install. It does not require a Frame Control account.</p></section>
+      <section><h2>The website feedback form</h2><p>What you type becomes a public GitHub issue on <a href="https://github.com/saphid/frame-control/issues">saphid/frame-control</a>, including any username and diagnostic details you provide. Do not include passwords, tokens or private information. To stop abuse, the form keeps a token-salted, one-way hash of your IP address in an hourly counter for up to 65 minutes, plus a non-identifying daily counter for up to 25 hours. The form does not store or publish the raw address; Cloudflare still processes network requests.</p></section>
+      <section><h2>This website</h2><p>Hosted on Cloudflare Pages. The site itself sets no cookies and includes no analytics or tracking scripts. Cloudflare processes requests to serve and protect it. The download section asks GitHub for the latest release. Donations go through Ko-fi, under Ko-fi's own privacy policy.</p></section>
     </div>
   </div>
 </main>

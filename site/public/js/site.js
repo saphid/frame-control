@@ -5,8 +5,6 @@ const SITE = {
   kofi: "alexsouthwell",
 };
 
-const RELEASE = `https://github.com/${SITE.repo}/releases/latest/download/`;
-
 // Donate buttons.
 for (const el of document.querySelectorAll("[data-kofi]")) {
   if (SITE.kofi) el.href = `https://ko-fi.com/${SITE.kofi}`;
@@ -28,7 +26,7 @@ function detectPlatform() {
 }
 
 const PLATFORMS = {
-  mac: { name: "macOS", file: "Frame-Control-mac-arm64.dmg" },
+  mac: { name: "macOS (Apple Silicon)", file: "Frame-Control-mac-arm64.dmg" },
   windows: { name: "Windows", file: "Frame-Control-Setup-x64.exe" },
   linux: { name: "Linux", file: "Frame-Control-linux-x86_64.AppImage" },
   "linux-arm": { name: "Linux (arm64)", file: "Frame-Control-linux-arm64.AppImage" },
@@ -37,8 +35,7 @@ const PLATFORMS = {
 const platform = detectPlatform();
 const hero = document.getElementById("hero-download");
 if (hero && PLATFORMS[platform]) {
-  hero.href = RELEASE + PLATFORMS[platform].file;
-  hero.querySelector("[data-label]").textContent = `Download for ${PLATFORMS[platform].name}`;
+  hero.querySelector("[data-label]").textContent = `Get started on ${PLATFORMS[platform].name}`;
 }
 const card = platform && document.querySelector(`.dl[data-os="${platform.replace("-arm", "")}"]`);
 if (card) {
@@ -61,3 +58,16 @@ if (versionEls.length) {
 }
 
 document.querySelectorAll("[data-year]").forEach((el) => (el.textContent = new Date().getFullYear()));
+
+function revealLinkedAnswer(hash = location.hash) {
+  const target = document.getElementById(hash.slice(1));
+  const answer = target?.closest("details");
+  if (answer) answer.open = true;
+}
+
+window.addEventListener("hashchange", () => revealLinkedAnswer());
+document.addEventListener("click", (event) => {
+  const link = event.target?.closest?.('a[href^="#"]');
+  if (link) revealLinkedAnswer(link.getAttribute("href"));
+});
+revealLinkedAnswer();
