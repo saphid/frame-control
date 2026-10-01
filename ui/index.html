@@ -1268,8 +1268,9 @@
     <label class="field">What happened?<textarea id="bugText" maxlength="5000" required minlength="10"
       placeholder="What you did, what happened, and what you expected."></textarea></label>
     <label class="popt"><input type="checkbox" id="bugFollowup"><b>The maintainer may contact me with follow-up questions</b>
-      <span class="sub">Optional. Your email address goes with this report only when this is ticked.</span></label>
+      <span class="sub">Optional. Your email address goes with this report only when this is ticked, and is kept as your contact email in Privacy &amp; updates, where you can remove it.</span></label>
     <label class="field">Your email address<input type="email" id="bugContact" maxlength="254" placeholder="you@example.com" disabled></label>
+    <p class="hint" id="bugReplaces" role="status" hidden></p>
     <label class="popt"><input type="checkbox" id="bugDiag" checked><b>Include diagnostics</b>
       <span class="sub">Frame Control's version, your OS and the Frame's SteamOS build.</span></label>
     <label class="popt"><input type="checkbox" id="bugLogs"><b>Also include recent activity and the server log</b>
@@ -4131,6 +4132,7 @@ async function offerTest(m) {
 
 // ---- privacy: anonymous analytics levels (ui/frame_telemetry.py, docs/privacy.md) ----
 const telemetry = { usage: false, compat: false, blocked: "not loaded" };
+let privacyNoticeShown = false;  // this visit: then the contact prompt waits for another one
 function renderTelemetry(s) {
   Object.assign(telemetry, s);
   setRepHint();
@@ -4141,6 +4143,7 @@ function renderTelemetry(s) {
                                          : "Nothing sent yet.";
   const showNotice = !s.blocked && !s.noticeShown && s.usage;
   $("privacyNotice").hidden = !showNotice;
+  if (showNotice) privacyNoticeShown = true;
   if (showNotice) api("/api/telemetry", { noticeShown: true }).catch(() => {});
 }
 async function loadTelemetry() {
@@ -4183,13 +4186,14 @@ async function loadContact() {
   try { renderContact(await api("/api/contact")); } catch { return; }
   checkContactPrompt();
 }
-// One time only, only once the Frame has connected, and never on top of the privacy notice or
-// straight after it (two asks in a row is nagging): checked at load and whenever the Frame connects.
+// One time only, only once the Frame has connected, and never in a visit that showed the privacy
+// notice (two asks in a row is nagging): checked at load and whenever the Frame connects.
 async function checkContactPrompt() {
-  if (!$("contactNotice").hidden || !$("privacyNotice").hidden) return;
+  await telemetryLoaded;
+  if (privacyNoticeShown || !$("contactNotice").hidden) return;
   let s;
   try { s = await api("/api/contact"); } catch { return; }
-  if (!s.showPrompt || !$("contactNotice").hidden || !$("privacyNotice").hidden) return;
+  if (!s.showPrompt || privacyNoticeShown || !$("contactNotice").hidden) return;
   $("contactNotice").hidden = false;
   api("/api/contact/prompt", { prompt: "shown" }).catch(() => {});
 }
@@ -4257,6 +4261,7 @@ function openBugReport() {
   // A standing yes to follow-up questions (Privacy & updates) fills this in; it can be unticked.
   $("bugFollowup").checked = contact.followup; $("bugContact").value = contact.followup ? contact.email : "";
   $("bugContact").disabled = !contact.followup; $("bugContact").required = contact.followup;
+  bugReplaces();
   $("bugDlg").showModal();
   loadBugPreview();
 }
@@ -4267,7 +4272,17 @@ $("bugFollowup").onchange = () => {
   const on = $("bugFollowup").checked;
   $("bugContact").disabled = !on; $("bugContact").required = on;
   if (on && !$("bugContact").value) { $("bugContact").value = contact.email; $("bugContact").focus(); }
+  bugReplaces();
 };
+// Sending with another address replaces the saved one (ui/frame_contact.py from_report): say so first.
+function bugReplaces() {
+  const email = $("bugContact").value.trim(), old = contact.email;
+  const replaces = $("bugFollowup").checked && email && old && email.toLowerCase() !== old.toLowerCase();
+  $("bugReplaces").hidden = !replaces;
+  $("bugReplaces").textContent = !replaces ? "" : `Sending replaces ${old} as your contact email${contact.updates
+    ? ", and update notices stop until you turn them on again in Privacy & updates" : ""}.`;
+}
+$("bugContact").oninput = bugReplaces;
 $("bugCancel").onclick = () => $("bugDlg").close();
 $("bugCopy").onclick = async () => {
   const { title, body } = bugReportText();
@@ -4290,6 +4305,7 @@ $("bugForm").onsubmit = async e => {
     $("bugMsg").textContent = `Couldn't send it: ${err.message}. Try again later, or use Copy report.`;
     $("bugSend").disabled = false;
   }
+  api("/api/contact").then(renderContact).catch(() => {});  // the report may have saved the address
 };
 if (window.frameApp && window.frameApp.onReportProblem) window.frameApp.onReportProblem(openBugReport);
 
