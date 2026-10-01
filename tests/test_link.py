@@ -457,6 +457,47 @@ class Connecting(unittest.TestCase):
         self.assertEqual(self.routes, [])
         self.assertTrue(all("ControlPath=none" in c for c in self.calls() if "-G" not in c))
 
+    def test_a_test_started_earlier_cant_overwrite_a_newer_one(self):
+        d = self.device("nothing.invalid")
+        entered = {1: threading.Event(), 2: threading.Event()}
+        release = {1: threading.Event(), 2: threading.Event()}
+        calls = []
+
+        def probe(host, port, update=None):
+            calls.append(host)
+            n = len(calls)
+            entered[n].set()
+            release[n].wait(10)
+            return {"state": "refused", "detail": f"test {n}", "ip": None, "rtt_ms": None}
+
+        tests = [threading.Thread(target=self.link.test, args=(d["id"],), daemon=True) for _ in range(2)]
+        with mock.patch.object(fl, "probe", probe):
+            try:
+                tests[0].start()
+                self.assertTrue(entered[1].wait(5), "the first test never probed")
+                tests[1].start()
+                self.assertTrue(entered[2].wait(5), "the second test never probed")
+                # The first finishes while the second is still probing: it mustn't show its
+                # rows or mark the second done.
+                release[1].set()
+                tests[0].join(10)
+                self.assertFalse(tests[0].is_alive())
+                running = self.link.snapshot()["tests"][d["id"]]
+                self.assertFalse(running["done"])
+                self.assertEqual(running["rows"][0]["detail"], "Waiting")
+                release[2].set()
+                tests[1].join(10)
+                self.assertFalse(tests[1].is_alive())
+            finally:
+                for e in release.values():
+                    e.set()
+                for t in tests:
+                    if t.ident:  # started
+                        t.join(10)
+        result = self.link.snapshot()["tests"][d["id"]]
+        self.assertTrue(result["done"])
+        self.assertEqual(result["rows"][0]["detail"], "test 2")
+
     def test_switching_to_a_headset_that_never_answers_stops_using_the_last_one(self):
         self.device("localhost")
         self.hosts({"localhost": "ok"})

@@ -169,6 +169,7 @@ class Link:
         self.version = 0
         self.stopped = False
         self.kicks = []                 # reasons someone asked for a (re)connect
+        self.test_gen = {}              # device id -> its newest test of the addresses (see test())
         self.busy = False               # the loop is handling kicks
         self.state = {"phase": "idle", "reason": None, "device": None, "network": None, "stages": [],
                       "probes": [], "via": None, "error": None, "retry_at": None, "attempt": 0,
@@ -955,9 +956,13 @@ class Link:
         started = now()
         rows = [{"host": a["host"], "kind": a["kind"], "state": "waiting", "detail": "Waiting", "ip": None,
                  "rtt_ms": None, "ssh": None} for a in device["addresses"]]
+        with self.cond:
+            gen = self.test_gen[device_id] = self.test_gen.get(device_id, 0) + 1
 
         def put(**fields):
             with self.cond:
+                if gen != self.test_gen[device_id]:
+                    return  # a newer test has started: its results are the ones to show
                 self.state["tests"][device_id] = dict({"started": started, "done": False, "rows": rows}, **fields)
                 self.version += 1
                 self.cond.notify_all()
@@ -1111,7 +1116,8 @@ def devices_action(link, body, open_setup, busy=lambda: 0):
                 raise frame_devices.DeviceError(f"Removed, but couldn't edit ~/.ssh/config: {e}")
         msg = f"Removed {d['name']}" + (f" and its '{d['alias']}' entry in ~/.ssh/config" if removed else "")
     elif action == "address-add":
-        a = reg.add_address(did, body.get("host"), body.get("kind") or None, body.get("label") or "")
+        a = reg.add_address(did, body.get("host"), body.get("kind") or None, body.get("label") or "",
+                            first=body.get("first") is True)
         if is_active and link.state["phase"] == "failed":
             link.kick("retry")
         msg = f"Added {a['host']}"
