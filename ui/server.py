@@ -60,6 +60,7 @@ import frame_report  # noqa: E402
 import frame_store  # noqa: E402
 import frame_telemetry  # noqa: E402
 import frame_titles  # noqa: E402
+import frame_touch  # noqa: E402
 import frame_webinstall  # noqa: E402
 import frame_vr  # noqa: E402
 import frame_utilities  # noqa: E402
@@ -1005,12 +1006,274 @@ def licenses():
     return notices
 
 
+# KDE Connect's specialKey numbers -> Linux key codes (KEY_BACKSPACE, KEY_TAB, ...).
+PAD_KEYS = {1: 14, 2: 15, 4: 105, 5: 103, 6: 106, 7: 108, 8: 104, 9: 109, 10: 102, 11: 107, 12: 28, 13: 111, 14: 1,
+            **{21 + i: code for i, code in enumerate([59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 87, 88])}}
+PAD_MODS = (("ctrl", 29), ("alt", 56), ("shift", 42), ("super", 125))
+PAD_CLICKS = {"singleclick": "left", "rightclick": "right", "middleclick": "middle"}
+PAD_NOTCH = 15  # scroll units for one wheel notch
+
+
+def typed_in_kde(events):
+    """Whether these events must go the KDE Connect way: they hold an accent or emoji, or
+    earlier ones are queued, being sent or still being typed there (typing must stay in
+    order, so it can't be split between the two ways)."""
+    with _kde_lock:
+        waiting = bool(_kde_queue) or time.time() < _kde_until
+    return waiting or any(ch not in frame_touch.ASCII for e in events for ch in e.get("key", ""))
+
+
+def pad_events(events, kde=False):
+    """The trackpad's and key row's events as (gamescope events, KDE Connect events).
+
+    Gamescope's own input reaches every panel and needs nothing installed, but types only
+    US-keyboard characters. With kde, the keyboard goes to KDE Connect as it was sent, so
+    text stays in order; the pointer always goes through gamescope.
+    """
+    ascii_keys = frame_touch.ASCII
+    out, slow = [], []
+
+    def tap(code, mods):
+        down = [{"key": c, "down": True} for c in mods]
+        out.extend(down + [{"key": code, "down": True}, {"key": code, "down": False}]
+                   + [{"key": c, "down": False} for c in reversed(mods)])
+    for e in events:
+        mods = [code for name, code in PAD_MODS if e.get(name)]
+        if "dx" in e or "dy" in e:
+            if not e.get("scroll"):
+                out.append({k: e[k] for k in ("dx", "dy") if k in e})
+        if e.get("scroll"):
+            out.append({"scroll": [0, -(e.get("dy") or 0) * PAD_NOTCH]})
+        for flag, button in PAD_CLICKS.items():
+            if e.get(flag):
+                out += [{"button": button, "down": True}, {"button": button, "down": False}]
+        if e.get("doubleclick"):
+            out += [{"button": "left", "down": d} for d in (True, False, True, False)]
+        if e.get("singlehold"):
+            out.append({"button": "left", "down": True})
+        if e.get("singlerelease"):
+            out.append({"button": "left", "down": False})
+        if kde and ("key" in e or "specialKey" in e):
+            slow.append({k: e[k] for k in ("key", "specialKey", "ctrl", "alt", "shift", "super") if k in e})
+            continue
+        if "specialKey" in e and e["specialKey"] in PAD_KEYS:
+            tap(PAD_KEYS[e["specialKey"]], mods)
+        if "key" in e:
+            for ch in e["key"]:
+                if ch not in ascii_keys:
+                    continue  # only reached when kde is wrong; the caller checks typed_in_kde first
+                elif mods:
+                    code, shifted = ascii_keys[ch]
+                    tap(code, mods + ([42] if shifted and 42 not in mods else []))
+                else:
+                    if out and "text" in out[-1] and len(out[-1]["text"]) < 100:
+                        out[-1]["text"] += ch
+                    else:
+                        out.append({"text": ch})
+    return out, slow
+
+
 def remote_input(body):
-    """{"events": [...]} sends keyboard and pointer events; {} (or none yet) just starts the agent."""
+    """{"events": [...]} sends keyboard and pointer events; {} (or none yet) just starts the agent.
+
+    "sent" in the answer means the whole batch is taken (the page keeps it and tries again
+    if not), so the keyboard's share is queued only once that's so.
+    """
     events = body.get("events", [])
     if not isinstance(events, list) or len(events) > INPUT_BATCH_LIMIT:
         raise Failure(f"events must be a list of at most {INPUT_BATCH_LIMIT}", 400)
-    return _input.send([input_event(e) for e in events])
+    events = [input_event(e) for e in events]
+    touch, slow = pad_events(events, typed_in_kde(events))
+    status = _touch.send(touch)
+    if touch and not status.get("sent"):
+        return status
+    if touch:
+        _note_typed(touch)
+    if slow:
+        _queue_for_kde(slow)
+    return {**status, "sent": True}
+
+
+# Typing KDE Connect is to do: it starts the first time it's needed, so this waits for it.
+# Nothing on the Frame says when typed text has landed, so each way holds the other back
+# for as long as what it was given should take (a short margin on a time estimate).
+_kde_queue = []
+_kde_lock = threading.Lock()
+_kde_worker = [None]
+_kde_until = 0.0     # keys typed through KDE Connect should have landed by then
+_typed_until = 0.0   # when gamescope's agent will have typed everything it's been given
+KDE_QUEUE_LIMIT = 200
+KDE_WAIT = 90  # seconds to wait for KDE Connect before giving up on what's queued
+TYPING_SETTLE = 0.6  # seconds past the estimate, once
+
+
+def typing_seconds(touch):
+    """How long gamescope's agent takes over these: it sleeps 8 ms after every key transition."""
+    transitions = 0
+    for e in touch:
+        if "text" in e:
+            transitions += sum(2 + 2 * frame_touch.ASCII[ch][1] for ch in e["text"] if ch in frame_touch.ASCII)
+        elif "key" in e:
+            transitions += 1
+    return transitions * 0.008
+
+
+def _note_typed(touch):
+    global _typed_until
+    seconds = typing_seconds(touch)
+    if seconds:
+        with _kde_lock:  # the end of the work, which queues up; the margin is added once, where it's checked
+            _typed_until = max(_typed_until, time.time()) + seconds
+
+
+def _queue_for_kde(events):
+    with _kde_lock:
+        _kde_queue.extend(events)
+        del _kde_queue[:-KDE_QUEUE_LIMIT]
+        if _kde_worker[0] is None:
+            _kde_worker[0] = threading.Thread(target=_drain_kde, daemon=True)
+            _kde_worker[0].start()
+
+
+def _drain_kde():
+    """The only sender, in order. A batch leaves the queue while it's being sent (the queue
+    can be trimmed meanwhile) and goes back to the front if it didn't go."""
+    global _kde_until
+    deadline = time.time() + KDE_WAIT
+    while True:
+        with _kde_lock:
+            batch = _kde_queue[:INPUT_BATCH_LIMIT]
+            del _kde_queue[:len(batch)]
+            if not batch:
+                _kde_worker[0] = None  # retired under the lock, so a new request starts another
+                return
+            wait = _typed_until + TYPING_SETTLE - time.time()
+            _kde_until = time.time() + 3600  # held while in flight
+        if wait > 0:
+            time.sleep(wait)  # gamescope's typing, from just before, goes first
+        status = _input.send(batch)
+        with _kde_lock:
+            if status.get("sent"):
+                _kde_until = time.time() + len(batch) * 0.03 + TYPING_SETTLE
+                deadline = time.time() + KDE_WAIT
+                continue
+            _kde_until = 0.0
+            if status.get("state") == "error" or time.time() > deadline:
+                _kde_queue.clear()  # not coming; don't hold it forever
+                _kde_worker[0] = None
+                return
+            _kde_queue[:0] = batch
+            del _kde_queue[:-KDE_QUEUE_LIMIT]  # as when queuing: the oldest go first
+        time.sleep(0.4)
+
+
+# ---- touch: the headset's panels, through gamescope's own input (frame_touch.py) ----
+
+PANEL_WINDOW = re.compile(r"^\d{1,10}$")
+PANEL_DISPLAY = re.compile(r"^:\d{1,2}$")
+TOUCH_BUTTONS = ("left", "right", "middle")
+
+
+def panels():
+    """The headset's app panels (window, display, name, size) and which has focus."""
+    return json.loads(ssh("python3 - panels", stdin=(HERE / "frame_touch.py").read_text(), timeout=20))
+
+
+def panel_target(q):
+    window, display = (q.get("window") or [""])[0], (q.get("display") or [""])[0]
+    if not PANEL_WINDOW.match(window) or not PANEL_DISPLAY.match(display):
+        raise Failure("window must be a window id and display an X display such as :1", 400)
+    return window, display
+
+
+def panel_capture(query):
+    """One frame of a panel's own window, as PNG (its pixels, without the room around it)."""
+    window, display = panel_target(parse_qs(query))
+    return ssh(f"DISPLAY={display} timeout 10 ffmpeg -hide_banner -loglevel error -nostdin -f x11grab "
+               f"-window_id {window} -i {display} -frames:v 1 -f image2pipe -c:v png -", timeout=20, text=False)
+
+
+def touch_event(event):
+    """A frame_touch.py event with only the fields it knows, in range."""
+    if not isinstance(event, dict):
+        raise Failure("each touch event must be an object", 400)
+
+    def num(name, limit):
+        value = event.get(name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+            raise Failure(f"{name} must be a number", 400)
+        return max(-limit, min(limit, round(float(value), 4)))
+    out = {}
+    if "fx" in event or "fy" in event:
+        if "window" not in event:
+            raise Failure("a position needs the panel's window and display", 400)
+        out.update(fx=num("fx", 1), fy=num("fy", 1))
+    # Any event can name the panel it's meant for; the Frame drops it if another has focus.
+    if "window" in event:
+        window, display = event.get("window"), event.get("display")
+        if isinstance(window, bool) or not isinstance(window, int) or window <= 0:
+            raise Failure("window must be the panel's window id", 400)
+        if not isinstance(display, str) or not PANEL_DISPLAY.match(display):
+            raise Failure("display must be an X display such as :1", 400)
+        out.update(window=window, display=display)
+    for name in ("dx", "dy"):
+        if name in event:
+            out[name] = num(name, INPUT_MOVE_LIMIT)
+    if "button" in event:
+        if event["button"] not in TOUCH_BUTTONS:
+            raise Failure(f"button must be one of {', '.join(TOUCH_BUTTONS)}", 400)
+        out["button"], out["down"] = event["button"], event.get("down") is not False
+    if "scroll" in event:
+        sc = event["scroll"]
+        if not isinstance(sc, list) or len(sc) != 2:
+            raise Failure("scroll must be [dx, dy]", 400)
+        out["scroll"] = [num_value(v, 5000) for v in sc]
+    if "key" in event:
+        key = event["key"]
+        if isinstance(key, bool) or not isinstance(key, int) or not 0 < key < 768:
+            raise Failure("key must be a Linux key code", 400)
+        out["key"], out["down"] = key, event.get("down") is not False
+    if "text" in event:
+        text = event["text"]
+        if not isinstance(text, str) or not 0 < len(text) <= INPUT_TEXT_LIMIT:
+            raise Failure(f"text must be 1 to {INPUT_TEXT_LIMIT} characters", 400)
+        out["text"] = text
+    if not set(out) - {"window", "display"}:
+        raise Failure("touch event has nothing to do", 400)
+    return out
+
+
+def num_value(value, limit):
+    if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+        raise Failure("scroll values must be numbers", 400)
+    return max(-limit, min(limit, round(float(value), 2)))
+
+
+class TouchAgent(InputAgent):
+    """frame_touch.py on the Frame, fed events over one long-lived ssh. Nothing to install:
+    it uses gamescope's own input socket and the libei that's on the image."""
+
+    def __init__(self):
+        super().__init__(source=HERE / "frame_touch.py", packages=[])
+
+    def deliver(self, report, force=False):
+        return ""
+
+    def command(self, folder=""):
+        code = base64.b64encode(self.source.read_bytes()).decode()
+        return "python3 -u -c " + shlex.quote(
+            f"import base64;exec(compile(base64.b64decode('{code}'),'frame_touch','exec'))")
+
+
+_touch = TouchAgent()
+
+
+def remote_touch(body):
+    """{"events": [...]} points, clicks, scrolls and types into the focused panel."""
+    events = body.get("events", [])
+    if not isinstance(events, list) or len(events) > INPUT_BATCH_LIMIT:
+        raise Failure(f"events must be a list of at most {INPUT_BATCH_LIMIT}", 400)
+    return _touch.send([touch_event(e) for e in events])
 
 
 # ---- touch: the headset's panels, through gamescope's own input (frame_touch.py) ----
@@ -2372,7 +2635,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/touch":
                 self.send_json(_touch.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_touch.status))
             elif path == "/api/input":
-                self.send_json(_input.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_input.status))
+                self.send_json(_touch.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_touch.status))
             elif path == "/api/job":
                 self.send_json(job_status(url.query))
             elif path == "/api/android/displays":
