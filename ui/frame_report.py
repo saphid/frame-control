@@ -112,18 +112,22 @@ def send(body):
     """Send the report to PostHog. Returns {"id", "message"}; raises ReportError."""
     kind = body.get('kind') if body.get('kind') in KINDS else 'bug'
     title, text, diag = compose(body)
-    followup = bool(body.get('contactFollowup'))
+    followup = frame_contact.flag(body, 'contactFollowup')
     contact = str(body.get('contact') or '').strip() if followup else ''
     if followup and not frame_contact.valid_email(contact):
         raise ValueError('add your email address for follow-up questions, or untick that box')
+    started = time.time()  # a removal from now on (even while saving the address) is redacted from the log
+    # It becomes the contact email in Settings, where it's changed or removed like any other.
+    contact_id, contact_rev = frame_contact.from_report(contact) if followup else ('', 0)
     ref = uuid.uuid4().hex[:8].upper()
     props = {**frame_telemetry.common(), 'kind': kind, 'title': title, 'message': text,
              'contact': contact, 'contact_followup': followup, 'diagnostics': diag,
+             # Only with an address: a later change from this copy (higher rev) can take it back.
+             'contact_id': contact_id, 'contact_rev': contact_rev,
              'report_id': ref, 'steamos': str(frame.get('build') or '')[:120], 'level': 'report'}
     # Its own random id: a report can carry contact details, so it isn't linked to this copy's analytics.
     event = {'event': 'problem_report', 'distinct_id': str(uuid.uuid4()), 'uuid': str(uuid.uuid4()),
              'timestamp': time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime()), 'properties': props}
-    started = time.time()
     try:
         frame_telemetry.post([event], timeout=30)
     except frame_telemetry.SendError as e:
@@ -143,15 +147,50 @@ class ReportError(RuntimeError):
 
 def inbox(days=30):
     """The maintainer's recent reports from PostHog, newest first (needs the personal API key
-    frame_compat_db.sync uses)."""
+    frame_compat_db.sync uses). Column 10 is whether the person may be asked follow-up
+    questions now: 'withdrawn' when a later choice from the same copy took it back."""
     import frame_compat_db
+    days = int(days)
     res = frame_compat_db._posthog_query(
         "SELECT timestamp, properties.report_id, properties.kind, properties.title, properties.message, "
         "properties.contact, properties.app_version, properties.os, properties.steamos, properties.diagnostics, "
-        "properties.contact_followup "
-        f"FROM events WHERE event = 'problem_report' AND timestamp > now() - INTERVAL {int(days)} DAY "
+        "properties.contact_followup, properties.contact_id, properties.contact_rev "
+        f"FROM events WHERE event = 'problem_report' AND timestamp > now() - INTERVAL {days} DAY "
         "ORDER BY timestamp DESC LIMIT 200")
-    return res.get('results') or []
+    rows = [r for r in res.get('results') or [] if isinstance(r, list) and len(r) == 13]
+    if any(r[11] and _yes(r[10]) for r in rows):
+        later = frame_compat_db._posthog_query(
+            "SELECT distinct_id, properties.email, properties.followup, ifNull(toInt(properties.rev), 0) "
+            "FROM events WHERE event = 'contact_consent' LIMIT 100000")
+        mark_withdrawn(rows, later.get('results') or [])
+    return rows
+
+
+def mark_withdrawn(reports, consents):
+    """Mark reports whose follow-up permission was taken back: the newest contact choice from
+    the same copy made after the report (a higher rev than it carries, not a later clock) no
+    longer agrees to follow-up questions at that address."""
+    newest = {}
+    for c in consents:
+        if not isinstance(c, list) or len(c) != 4:
+            continue
+        cid, email, followup, rev = c
+        try:
+            rev = int(rev or 0)
+        except (TypeError, ValueError):
+            continue
+        if rev > newest.get(str(cid), (-1,))[0]:
+            newest[str(cid)] = (rev, str(email or ''), followup)
+    for r in reports:
+        if not (r[11] and _yes(r[10])):
+            continue
+        try:
+            sent_at = int(r[12] or 0)
+        except (TypeError, ValueError):
+            sent_at = 0
+        rev, email, followup = newest.get(str(r[11]), (-1, '', None))
+        if rev > sent_at and not (_yes(followup) and email.strip().lower() == str(r[5] or '').strip().lower()):
+            r[10] = 'withdrawn'
 
 
 def _yes(v):
@@ -204,14 +243,13 @@ def main():
     if cmd != 'inbox':
         sys.exit(USAGE)
     for row in inbox(*(args[:1] or [30])):
-        if not isinstance(row, list) or len(row) != 11:
-            continue
         ts, ref, kind, title, text, contact, version, osname, steamos, diag = (str(v or '') for v in row[:10])
         # Reports from before contact_followup existed only carried an address given for a reply.
         reply = contact and (row[10] is None or _yes(row[10]))
         print(f"== {ts[:16].replace('T', ' ')}  {ref}  [{kind}] {title}")
         print(f"   {version} on {osname}, SteamOS {steamos or 'unknown'}"
-              f"{', may follow up at ' + contact if reply else ''}")
+              f"{', may follow up at ' + contact if reply else ''}"
+              f"{', follow-up permission since withdrawn' if row[10] == 'withdrawn' else ''}")
         print('   ' + text.replace('\n', '\n   '))
         if diag:
             print('   --- diagnostics\n   ' + diag.replace('\n', '\n   '))
