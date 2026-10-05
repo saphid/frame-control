@@ -334,8 +334,8 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = subprocess.run([*SSH, FRAME, remote], capture_output=True, **feed,
-                           text=text, errors="replace" if text else None, timeout=timeout)
+        r = frame_host.run_ssh([*SSH, FRAME, remote], capture_output=True, **feed,
+                               text=text, errors="replace" if text else None, timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Failure(f"Timed out talking to {FRAME}")
     if r.returncode != 0:
@@ -505,8 +505,8 @@ def save_shots(body):
         incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
         try:
             try:
-                r = subprocess.run(["scp", "-p", *SSH[1:], *(f"{FRAME}:{p}" for p in todo), str(incoming)],
-                                   capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
+                r = frame_host.run_ssh(["scp", "-p", *SSH[1:], *(f"{FRAME}:{p}" for p in todo), str(incoming)],
+                                       capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
             except subprocess.TimeoutExpired:
                 raise Failure("Copying screenshots timed out")
             if r.returncode != 0:
@@ -1200,6 +1200,8 @@ def open_thing(body):
                 raise Failure("That screenshot isn't saved on this computer yet", 404)
             frame_host.reveal_path(saved)
             return {"message": f"Showed {saved.name} in {frame_host.FILE_MANAGER}"}
+    except frame_host.Unreachable as e:
+        raise Failure(str(e), 400)  # theirs to turn on; nothing failed here
     except frame_host.HostError as e:
         raise Failure(str(e), 500)
     raise Failure("unknown target", 400)
@@ -2255,12 +2257,17 @@ def push_file(path, dest="Downloads/"):
         else:
             # Modern scp uses SFTP, so the remote path isn't parsed by a shell.
             cmd = ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
-        r = subprocess.run(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
+        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
         raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"copy exited {r.returncode}")
     return f"Sent {name} to ~/{dest}"
+
+
+class ClientGone(Exception):
+    """The page went away (a reload, the app quitting) before its reply was written:
+    nobody to answer, and nothing went wrong here."""
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -2295,8 +2302,11 @@ class Handler(BaseHTTPRequestHandler):
         # Nobody may frame the UI (clickjacking).
         self.send_header("X-Frame-Options", "DENY")
         self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
-        self.end_headers()
-        self.wfile.write(data)
+        try:
+            self.end_headers()
+            self.wfile.write(data)
+        except ConnectionError as e:  # Windows says ConnectionAbortedError, others BrokenPipeError
+            raise ClientGone() from e
 
     def send_json(self, obj, status=200):
         self.send_bytes(json.dumps(obj).encode(), "application/json", status)
@@ -2339,6 +2349,8 @@ class Handler(BaseHTTPRequestHandler):
                 from apk_sources import _images
                 try:
                     self.send_bytes(*_images.image(path.rsplit("/", 1)[-1]))
+                except ClientGone:
+                    raise
                 except Exception:
                     self.send_json({"error": "Artwork unavailable"}, 404)
             elif path == "/api/sources/details":
@@ -2416,6 +2428,8 @@ class Handler(BaseHTTPRequestHandler):
                                 headers=[("X-Capture-Source", "gamescope")])
             else:
                 self.send_json({"error": "not found"}, 404)
+        except ClientGone:
+            raise
         except Failure as e:
             self.send_error_json(str(e), e.status, e.apk)
         except ValueError as e:
@@ -2451,6 +2465,8 @@ class Handler(BaseHTTPRequestHandler):
             with (contextlib.nullcontext() if path in NOT_HEADSET_WORK else working(meant)):
                 result = handler(body)
             self.send_json(result)
+        except ClientGone:
+            raise
         except Failure as e:
             if e.status >= 500:
                 frame_telemetry.diagnostic(f"POST {path} {action_of(body)}", e)
@@ -2625,6 +2641,10 @@ class LoopbackServer(ThreadingHTTPServer):
         # Loopback needs no hostname.
         socketserver.TCPServer.server_bind(self)
         self.server_name, self.server_port = "127.0.0.1", self.server_address[1]
+
+    def handle_error(self, request, client_address):
+        if not isinstance(sys.exc_info()[1], ClientGone):
+            super().handle_error(request, client_address)
 
 
 _ONE_SERVER = None

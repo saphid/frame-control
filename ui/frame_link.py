@@ -74,8 +74,8 @@ def ssh_g(alias):
     """(hostname, port, user, proxied) from `ssh -G ALIAS`, for a headset that's only an
     ssh alias. proxied: it goes through ProxyJump or ProxyCommand, so only ssh can reach it."""
     try:
-        out = subprocess.run(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True,
-                             timeout=10).stdout
+        out = frame_host.run_ssh(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                                 timeout=10).stdout
     except (OSError, subprocess.TimeoutExpired):
         out = ""
     got = {}
@@ -765,8 +765,8 @@ class Link:
         if not self.control:
             return False
         try:
-            return subprocess.run([*self.mux_base, *opts, "-O", "check", alias or self.alias], capture_output=True,
-                                  stdin=subprocess.DEVNULL, timeout=5).returncode == 0
+            return frame_host.run_ssh([*self.mux_base, *opts, "-O", "check", alias or self.alias], capture_output=True,
+                                      stdin=subprocess.DEVNULL, timeout=5).returncode == 0
         except (OSError, subprocess.TimeoutExpired):
             return False
 
@@ -777,8 +777,8 @@ class Link:
             pending.kill()
         if self.control and self.alias:
             try:
-                subprocess.run([*self.mux_base, *self.opts, "-O", "exit", self.alias], capture_output=True,
-                               stdin=subprocess.DEVNULL, timeout=5)
+                frame_host.run_ssh([*self.mux_base, *self.opts, "-O", "exit", self.alias], capture_output=True,
+                                   stdin=subprocess.DEVNULL, timeout=5)
             except (OSError, subprocess.TimeoutExpired):
                 pass
         if proc and proc.poll() is None:
@@ -983,8 +983,8 @@ class Link:
                     *self.host_opts(device, ssh_target(a["host"], res.get("ip"))),
                     "-o", "StrictHostKeyChecking=yes", device["alias"], "true"]
             try:
-                r = subprocess.run(argv, capture_output=True, stdin=subprocess.DEVNULL, text=True,
-                                   errors="replace", timeout=20)
+                r = frame_host.run_ssh(argv, capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                                       errors="replace", timeout=20)
                 err = r.stderr.strip()
                 if r.returncode == 0:
                     rows[i].update(ssh="ok", detail=f"{lead} · SSH works")
