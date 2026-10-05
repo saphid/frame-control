@@ -339,12 +339,38 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
         raise Failure(f"Timed out talking to {FRAME}")
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
+        if r.returncode == 255 and repair_ssh_config(err):
+            return ssh(remote, stdin=stdin, timeout=timeout, text=text)
         if r.returncode == 255 and LINK and unreachable(err):
             LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
         failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
         failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
         raise failure
     return r.stdout
+
+
+_config_repaired = False
+
+
+def repair_ssh_config(err):
+    """Windows' OpenSSH refused ~/.ssh/config for its ACL: give the file a private one,
+    once per run. -> True if it did, so the command is worth retrying."""
+    global _config_repaired
+    if _config_repaired or not frame_host.WINDOWS or frame_host.BAD_PERMISSIONS not in err:
+        return False
+    # ssh doubles the backslashes: "C:\\Users\\me/.ssh/config"
+    named = re.sub(r"[\\/]+", "/", err.split(frame_host.BAD_PERMISSIONS, 1)[1].splitlines()[0].strip())
+    config = frame_devices.ssh_config()
+    if not named.lower().endswith("/" + config.name.lower()):
+        return False  # a key or another file: not ours to rewrite
+    _config_repaired = True
+    try:
+        if frame_devices.repair_permissions(config):
+            print(f"Gave {config} a private ACL: ssh refused it ({named})", file=sys.stderr)
+            return True
+    except OSError as e:
+        print(f"Couldn't repair {config}'s permissions: {e}", file=sys.stderr)
+    return False
 
 
 def strip_ansi(s):
