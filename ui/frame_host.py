@@ -284,6 +284,42 @@ def clipboard_text():
     raise HostError("Can't read the clipboard")
 
 
+# What Windows' OpenSSH says when it refuses ~/.ssh/config (or a key) for its ACL.
+BAD_PERMISSIONS = "Bad owner or permissions on "
+
+
+def make_private(path):
+    """Leave only this user able to open PATH, as ssh insists for ~/.ssh/config.
+    Windows: an ACL of just this user, SYSTEM and Administrators, inherited nothing.
+    A file written into ~/.ssh otherwise takes the folder's ACL, and Windows' OpenSSH
+    refuses it if that grants anyone else, even an account deleted long ago
+    ("Bad owner or permissions"). Best effort: -> False if it couldn't."""
+    if not WINDOWS:
+        try:
+            os.chmod(path, 0o600)
+            return True
+        except OSError:
+            return False
+    me = os.environ.get("USERNAME", "")
+    try:  # "desktop\me","S-1-5-21-..."
+        # Bytes: the account name is in the console's code page, the SID is ASCII.
+        out = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], capture_output=True,
+                             stdin=subprocess.DEVNULL, timeout=10).stdout
+        sid = out.decode("ascii", "replace").strip().rsplit(",", 1)[-1].strip('"')
+        if sid.startswith("S-1-"):
+            me = "*" + sid
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if not me:
+        return False
+    try:
+        return subprocess.run(["icacls", str(path), "/inheritance:r", "/grant:r", f"{me}:F",
+                               "*S-1-5-18:F", "*S-1-5-32-544:F"], capture_output=True,
+                              stdin=subprocess.DEVNULL, timeout=10).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def ssh_hostname(alias):
     """The real host name an ssh alias points at (`ssh -G`), for non-SSH clients like RDP."""
     try:

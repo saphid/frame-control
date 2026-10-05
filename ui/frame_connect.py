@@ -24,7 +24,9 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
-import frame_host
+# The app runs this with python -I, which leaves the script's folder off sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import frame_host  # noqa: E402
 
 FRAME_USER = os.environ.get("FRAME_USER", "steamos")
 USER_FROM_ENV = "FRAME_USER" in os.environ
@@ -332,8 +334,9 @@ def _write_config(host, port, user):
     block = config_block(host, port, user)
     tmp = CONFIG.with_name(f"config.frame-control.{os.getpid()}.tmp")
     tmp.write_text("\n".join(block + kept) + "\n", encoding="utf-8")
-    if os.name != "nt":
-        tmp.chmod(0o600)
+    if not frame_host.make_private(tmp):
+        say("    couldn't make ~/.ssh/config private; if ssh says \"Bad owner or permissions\", "
+            "Frame Control repairs it when it next connects")
     # On Windows a running ssh.exe (Frame Control's own, say) keeps the config open
     # and locked, so the swap can fail for a moment; keep trying for a while.
     for attempt in range(60):

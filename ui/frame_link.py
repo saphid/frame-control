@@ -108,7 +108,8 @@ def probe(host, port, timeout=PROBE_TIMEOUT, update=None):
         ip = addr[0]
         if family == socket.AF_INET6 and len(addr) > 3 and addr[3] and "%" not in ip:
             try:  # a link-local IPv6 address only works with its interface
-                ip = f"{ip}%{socket.if_indextoname(addr[3])}"
+                # Windows' ssh takes only the number: its names ("wireless_32768") don't resolve.
+                ip = f"{ip}%{addr[3] if frame_host.WINDOWS else socket.if_indextoname(addr[3])}"
             except (OSError, AttributeError):
                 pass
         left = deadline - now()

@@ -241,8 +241,7 @@ def _write_config(path, text, expected):
     try:
         with os.fdopen(fd_, "w", encoding="utf-8") as fh:
             fh.write(text)
-        if not frame_host.WINDOWS:
-            tmp.chmod(0o600)
+        frame_host.make_private(tmp)  # best effort: an edit still beats none (repair_permissions insists)
         for attempt in range(20):  # Windows: a running ssh.exe can hold the file for a moment
             if read_config(path) != expected:
                 return False
@@ -269,6 +268,37 @@ def _edit_config(path, change):
             if _write_config(path, "\n".join(new) + "\n", text):
                 return True
         raise OSError(f"{path} kept changing while Frame Control tried to update it")
+
+
+def repair_permissions(path=None):
+    """Give ~/.ssh/config make_private's ACL by swapping in a byte-for-byte copy: for a
+    file Windows' OpenSSH refuses ("Bad owner or permissions"). -> True only if the copy
+    got that ACL and replaced the file."""
+    path = Path(path or ssh_config())
+    with _config_lock, file_lock(path.with_name(LOCK_NAME)):
+        try:
+            data = path.read_bytes()
+        except OSError:
+            return False
+        fd_, tmp = tempfile.mkstemp(prefix="config.frame-control.", dir=str(path.parent))
+        tmp = Path(tmp)
+        try:
+            with os.fdopen(fd_, "wb") as fh:
+                fh.write(data)
+            if not frame_host.make_private(tmp):
+                return False
+            for attempt in range(20):  # a running ssh.exe can hold the file for a moment
+                if path.read_bytes() != data:
+                    return False
+                try:
+                    os.replace(tmp, path)
+                    return True
+                except PermissionError:
+                    time.sleep(0.25)
+            return False
+        finally:
+            if tmp.exists():
+                tmp.unlink()
 
 
 def rewrite_block(alias, path=None, hostname=None, user=None, port=None, expect=None):
