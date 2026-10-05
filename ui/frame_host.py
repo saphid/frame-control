@@ -6,6 +6,7 @@ CLI (used by the Electron app, so terminal handling lives in one place):
   python3 ui/frame_host.py terminal -- CMD [ARG...]   # open CMD in a terminal window
 """
 import hashlib
+import io
 import os
 import shlex
 import shutil
@@ -13,6 +14,7 @@ import socket
 import ssl
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 MAC = sys.platform == "darwin"
@@ -36,6 +38,41 @@ class HostError(RuntimeError):
 
 class Unreachable(HostError):
     """The Frame, or a service on it, didn't answer: the person's to sort out, not a fault here."""
+
+
+def run_ssh(argv, **kwargs):
+    """Run an OpenSSH tool without Windows' redirected-stderr pipe hang.
+
+    A real temporary file avoids OpenSSH's blocked asynchronous stderr writes,
+    while keeping subprocess.run's captured output, text, check and timeout API.
+    """
+    if not WINDOWS:
+        return subprocess.run(argv, **kwargs)
+    if kwargs.pop("capture_output", False):
+        if kwargs.get("stdout") is not None or kwargs.get("stderr") is not None:
+            raise ValueError("stdout and stderr arguments may not be used with capture_output")
+        kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if kwargs.get("stderr") != subprocess.PIPE:
+        return subprocess.run(argv, **kwargs)
+    check = kwargs.pop("check", False)
+    text = any(kwargs.get(key) for key in ("text", "universal_newlines", "encoding", "errors"))
+    with tempfile.TemporaryFile() as stderr:
+        kwargs["stderr"] = stderr
+        try:
+            result = subprocess.run(argv, **kwargs)
+        except subprocess.TimeoutExpired as error:
+            stderr.seek(0)
+            error.stderr = stderr.read()
+            raise
+        stderr.seek(0)
+        if text:
+            with io.TextIOWrapper(stderr, encoding=kwargs.get("encoding"), errors=kwargs.get("errors")) as reader:
+                result.stderr = reader.read()
+        else:
+            result.stderr = stderr.read()
+    if check:
+        result.check_returncode()
+    return result
 
 
 def data_dir(*parts):
@@ -159,6 +196,19 @@ def open_path(path):
                      stderr=subprocess.DEVNULL, **DETACHED)
 
 
+def reveal_path(path):
+    """Show a file selected in its folder (Linux file managers vary, so there the folder opens)."""
+    path = Path(path)
+    if MAC:
+        cmd = ["open", "-R", str(path)]
+    elif WINDOWS:
+        cmd = f'explorer /select,"{path}"'  # as one string: Explorer wants the quotes after the comma
+    else:
+        return open_path(path.parent)
+    subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, **DETACHED)
+
+
 open_url = open_path  # the same openers hand URLs to the default browser
 
 
@@ -237,7 +287,7 @@ def clipboard_text():
 def ssh_hostname(alias):
     """The real host name an ssh alias points at (`ssh -G`), for non-SSH clients like RDP."""
     try:
-        out = subprocess.run(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=10).stdout
+        out = run_ssh(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=10).stdout
     except (OSError, subprocess.TimeoutExpired):
         return alias
     for line in out.splitlines():

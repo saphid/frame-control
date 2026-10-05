@@ -50,6 +50,7 @@ import frame_catalog  # noqa: E402
 import frame_devices  # noqa: E402
 import frame_steamgriddb
 import frame_comfort  # noqa: E402
+import frame_contact  # noqa: E402
 import frame_host  # noqa: E402
 import frame_link  # noqa: E402
 import frame_macview  # noqa: E402
@@ -332,8 +333,8 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = subprocess.run([*SSH, FRAME, remote], capture_output=True, **feed,
-                           text=text, errors="replace" if text else None, timeout=timeout)
+        r = frame_host.run_ssh([*SSH, FRAME, remote], capture_output=True, **feed,
+                               text=text, errors="replace" if text else None, timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Failure(f"Timed out talking to {FRAME}")
     if r.returncode != 0:
@@ -503,8 +504,8 @@ def save_shots(body):
         incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
         try:
             try:
-                r = subprocess.run(["scp", "-p", *SSH[1:], *(f"{FRAME}:{p}" for p in todo), str(incoming)],
-                                   capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
+                r = frame_host.run_ssh(["scp", "-p", *SSH[1:], *(f"{FRAME}:{p}" for p in todo), str(incoming)],
+                                       capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
             except subprocess.TimeoutExpired:
                 raise Failure("Copying screenshots timed out")
             if r.returncode != 0:
@@ -1192,6 +1193,12 @@ def open_thing(body):
             SHOTS_DIR.mkdir(parents=True, exist_ok=True)
             frame_host.open_path(SHOTS_DIR)
             return {"message": f"Opened {SHOTS_DIR} in {frame_host.FILE_MANAGER}"}
+        if what == "shot":
+            saved = SHOTS_DIR / shot_path(body.get("id")).rsplit("/", 1)[-1]
+            if not saved.exists():
+                raise Failure("That screenshot isn't saved on this computer yet", 404)
+            frame_host.reveal_path(saved)
+            return {"message": f"Showed {saved.name} in {frame_host.FILE_MANAGER}"}
     except frame_host.Unreachable as e:
         raise Failure(str(e), 400)  # theirs to turn on; nothing failed here
     except frame_host.HostError as e:
@@ -2153,6 +2160,7 @@ POST = {
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
         "/api/telemetry": frame_telemetry.update_settings, "/api/telemetry/event": frame_telemetry.page_event,
+        "/api/contact": frame_contact.save, "/api/contact/prompt": frame_contact.prompt,
         "/api/report/preview": report_preview, "/api/report": report_send, "/api/macview": macview_action, "/api/panels": panels_action,
         "/api/devices": lambda body: devices_post(body)}
 
@@ -2248,7 +2256,7 @@ def push_file(path, dest="Downloads/"):
         else:
             # Modern scp uses SFTP, so the remote path isn't parsed by a shell.
             cmd = ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
-        r = subprocess.run(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
+        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
@@ -2392,6 +2400,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(macview_state(parse_qs(url.query)))
             elif path == "/api/telemetry":
                 self.send_json(frame_telemetry.state())
+            elif path == "/api/contact":
+                self.send_json(frame_contact.state())
             elif path == "/api/computer/state":
                 self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_computer.py").read_text(), timeout=20)))
             elif path == "/api/status":
@@ -2664,6 +2674,7 @@ def main():
     sweep_tmp()
     threading.Thread(target=apk_search.warm, daemon=True).start()  # big indexes download before the first search
     frame_telemetry.start()
+    frame_contact.start()
     global LINK, _ONE_SERVER
     if not LOCAL:
         if not PRIVATE:  # a private server only uses the headsets (see one_server)
@@ -2676,12 +2687,16 @@ def main():
         signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
     if args.exit_on_eof:
         def watch_stdin():
-            sys.stdin.buffer.read()
+            # os.read, not sys.stdin.buffer.read: a buffered read holds stdin's lock,
+            # and if a signal stops the server first, Python aborts (SIGABRT) at exit
+            # when it can't take that lock back from this thread.
+            while os.read(0, 4096):
+                pass
             threading.Thread(target=httpd.shutdown, daemon=True).start()
         threading.Thread(target=watch_stdin, daemon=True).start()
-    # The real port, which --port 0 leaves to the system (the iPhone app reads it from here).
-    print(f"Frame Control on http://127.0.0.1:{httpd.server_address[1]}  (alias: {FRAME}; Ctrl-C to stop)", flush=True)
     try:
+        # The real port, which --port 0 leaves to the system (the iPhone app reads it from here).
+        print(f"Frame Control on http://127.0.0.1:{httpd.server_address[1]}  (alias: {FRAME}; Ctrl-C to stop)", flush=True)
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
