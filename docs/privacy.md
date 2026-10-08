@@ -100,7 +100,9 @@ scrubbed:
   names, passwords, ports, paths and queries are dropped
 - `token=`, `key=`, `password=` and similar values are replaced
 
-The same error is sent at most once every 10 minutes.
+The same error is sent at most once every 10 minutes. When ssh reports that
+it couldn't reach the Frame (asleep, away, or not set up yet), that is sent
+at most once per kind each time Frame Control runs.
 
 ## Report a problem
 

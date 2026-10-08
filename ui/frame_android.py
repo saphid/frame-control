@@ -63,9 +63,11 @@ def ssh(cmd, input=None, timeout=120):
         p = frame_host.run_ssh(['ssh', *SSH_OPTS, FRAME, cmd], capture_output=True, **feed,
                                timeout=timeout, text=isinstance(input, str) or input is None)
     except subprocess.TimeoutExpired:
-        raise FrameError(f'timed out talking to {FRAME}')
+        raise frame_host.link_failure(FrameError(f'timed out talking to {FRAME}'))
     if p.returncode != 0:
-        raise FrameError((p.stderr or p.stdout or f'ssh exited {p.returncode}').strip()[-600:])
+        error = FrameError((p.stderr or p.stdout or f'ssh exited {p.returncode}').strip()[-600:])
+        stderr = p.stderr if isinstance(p.stderr, str) else (p.stderr or b'').decode(errors='replace')
+        raise frame_host.link_failure(error) if frame_host.ssh_link_failed(p.returncode, stderr) else error
     return p.stdout
 
 
