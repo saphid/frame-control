@@ -53,6 +53,9 @@ SENT_KEEP = 200
 OUTBOX_MAX = 2000  # events kept while offline; the oldest go first
 FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
+# Not faults in Frame Control: the headset asleep, away or not set up yet. The status poll
+# meets these every few seconds, so each is sent at most once per session, whatever the wording.
+EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up')
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -248,8 +251,13 @@ CATEGORIES = [
     ('steam_shortcut', re.compile(r'(?i)steam did not return a shortcut|shortcut list|no Steam shortcut')),
     ('frame_not_set_up', re.compile(r'(?i)Could not resolve hostname|no "?frame"? (?:SSH )?alias')),
     ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed')),
+    # Anything ssh says about its own connection: "ssh: connect to host … port 22: <reason>" (Windows
+    # says "Unknown error"), "ssh exited 255" when it printed nothing, a dropped shared connection
+    # (mux_client_…, client_loop), and Windows' "banner exchange: Connection to UNKNOWN port -1"
+    # (its ssh can't name a peer whose connect failed late).
     ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|No route to host|'
-                                     r'Network is unreachable|Operation timed out|asleep|kex_exchange')),
+                                     r'Network is unreachable|Host is down|asleep|kex_exchange|banner exchange|'
+                                     r'ssh: connect to host |ssh exited 255|mux_client_|client_loop: ')),
     ('frame_disk_full', re.compile(r'(?i)No space left|disk full|ENOSPC')),
     ('download_failed', re.compile(r'(?i)HTTP (?:Error )?\d{3}|URLError|download|certificate verify failed')),
     ('flatpak', re.compile(r'(?i)flatpak|flathub')),
@@ -368,11 +376,17 @@ def diagnostic(where, error, tb=None):
     if not enabled('diagnostics'):
         return
     message = scrub(error)
-    fingerprint = f'{where}|{message[:120]}'
+    category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
-            return
+        if category in EXPECTED_CATEGORIES:
+            fingerprint = f'expected|{category}'
+            if fingerprint in _seen_errors:
+                return
+        else:
+            fingerprint = f'{where}|{message[:120]}'
+            if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
+                return
         _seen_errors[fingerprint] = now
     exc_type = type(error).__name__ if isinstance(error, BaseException) else 'Error'
     frames = []
@@ -385,7 +399,7 @@ def diagnostic(where, error, tb=None):
                                                 'mechanism': {'handled': True, 'type': 'generic'},
                                                 'stacktrace': {'type': 'raw', 'frames': frames[-30:]}}],
                            '$exception_type': exc_type, '$exception_message': message,
-                           'where': scrub(where, 200), 'error_category': categorize(error)[0]},
+                           'where': scrub(where, 200), 'error_category': category},
             level='diagnostics')
 
 

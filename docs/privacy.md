@@ -93,7 +93,9 @@ scrubbed:
   names, passwords, ports, paths and queries are dropped
 - `token=`, `key=`, `password=` and similar values are replaced
 
-The same error is sent at most once every 10 minutes.
+The same error is sent at most once every 10 minutes. Errors that only mean
+the Frame couldn't be reached (asleep, away, or not set up yet) are sent at
+most once per kind each time Frame Control runs.
 
 ## Report a problem
 

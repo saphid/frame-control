@@ -92,6 +92,33 @@ class Gates(Base):
             tm.diagnostic("POST /api/android install", RuntimeError("boom"))
         self.assertEqual(len(self.queued()), 1)
 
+    def test_connection_failures_are_sent_once_per_session(self):
+        # The status poll meets an asleep or absent headset every few seconds (638 timeouts from
+        # six people in two weeks): one event per kind per session, whatever the address or route.
+        tm.update_settings({"diagnostics": True})
+        with mock.patch.object(tm.time, "time", return_value=1000.0):
+            for ip in ("192.168.1.20", "192.168.1.21", "10.0.0.5"):
+                for where in ("POST /api/comfort status", "job steam"):
+                    tm.diagnostic(where, RuntimeError(f"ssh: connect to host {ip} port 22: Connection timed out"))
+                    tm.diagnostic(where, RuntimeError(f"ssh: connect to host {ip} port 22: Host is down"))
+                    tm.diagnostic(where, RuntimeError("Timed out talking to frame"))
+            tm.diagnostic("POST /api/comfort status",
+                          RuntimeError("ssh: Could not resolve hostname frame: No such host is known."))
+        with mock.patch.object(tm.time, "time", return_value=1000.0 + 10 * tm.REPEAT_WINDOW):
+            tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
+            tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: Could not resolve hostname frame"))
+        sent = [e["properties"] for e in self.queued()]
+        self.assertEqual([p["error_category"] for p in sent], ["frame_unreachable", "frame_not_set_up"])
+        self.assertTrue(all(p["$exception_message"].startswith("ssh: ") for p in sent))
+
+    def test_real_errors_are_still_sent_beside_connection_failures(self):
+        tm.update_settings({"diagnostics": True})
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("POST /api/comfort status", KeyError("battery"))
+        tm.diagnostic("POST /api/android install", RuntimeError("boom"))
+        self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
+                         ["frame_unreachable", "other", "other"])
+
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
         self.assertEqual(self.queued()[0]["properties"].get("extra"), None)
@@ -179,6 +206,29 @@ class Scrub(unittest.TestCase):
         self.assertEqual(tm.categorize("ssh: connect to host 10.0.0.2 port 22: Connection refused")[0],
                          "frame_unreachable")
         self.assertEqual(tm.categorize("something new")[0], "other")
+
+    def test_connection_failures_seen_from_released_versions(self):
+        # Wording from 0.4.0's error reports (addresses replaced), on Windows, macOS and Linux.
+        unreachable = [
+            "ssh: connect to host 192.168.1.20 port 22: Connection timed out",
+            "ssh: connect to host 192.168.1.20 port 22: Operation timed out",
+            "ssh: connect to host 192.168.1.20 port 22: No route to host",
+            "ssh: connect to host 192.168.1.20 port 22: Host is down",
+            "ssh: connect to host 192.168.1.20 port 22: Unknown error",
+            "ssh exited 255",
+            "mux_client_request_session: read from master failed: Broken pipe\n"
+            "ssh: connect to host 192.168.1.20 port 22: Host is down",
+            "client_loop: send disconnect: Connection reset",
+            "banner exchange: Connection to UNKNOWN port -1: Connection refused",
+            "Timed out talking to frame",
+        ]
+        for message in unreachable:
+            self.assertEqual(tm.categorize(message)[0], "frame_unreachable", message)
+        for message in ("ssh: Could not resolve hostname frame: No such host is known.",
+                        "ssh: Could not resolve hostname fe80::1%wireless_32773: No such host is known."):
+            self.assertEqual(tm.categorize(message)[0], "frame_not_set_up", message)
+        self.assertEqual(tm.categorize("ssh exited 1")[0], "other")
+        self.assertEqual(tm.categorize("frame@10.0.0.2: Permission denied (publickey).")[0], "frame_auth")
 
 
 class Compat(Base):
