@@ -105,7 +105,7 @@ class Gates(Base):
             tm.diagnostic("POST /api/comfort status",
                           RuntimeError("ssh: Could not resolve hostname frame: No such host is known."))
         with mock.patch.object(tm.time, "time", return_value=1000.0 + 10 * tm.REPEAT_WINDOW):
-            tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
+            tm.diagnostic("POST /api/comfort status", RuntimeError("client_loop: send disconnect: Connection reset"))
             tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: Could not resolve hostname frame"))
         sent = [e["properties"] for e in self.queued()]
         self.assertEqual([p["error_category"] for p in sent], ["frame_unreachable", "frame_not_set_up"])
@@ -118,6 +118,27 @@ class Gates(Base):
         tm.diagnostic("POST /api/android install", RuntimeError("boom"))
         self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
                          ["frame_unreachable", "other", "other"])
+
+    def test_a_download_that_breaks_after_a_connection_failure_is_still_sent(self):
+        # Only ssh's own wording is held back for the session: a web-link download whose
+        # connection resets is a different fault, even though "Connection reset" is in both.
+        tm.update_settings({"diagnostics": True})
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("job web", RuntimeError("download failed: [Errno 54] Connection reset by peer"))
+        tm.diagnostic("job web", RuntimeError("urlopen error [Errno 60] Operation timed out"))
+        tm.diagnostic("job web", RuntimeError("urlopen error [Errno 60] Operation timed out"))  # usual window
+        self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
+                         ["frame_unreachable", "download_failed", "frame_unreachable"])
+
+    def test_a_command_that_exits_255_is_not_a_connection_failure(self):
+        # A bare "ssh exited 255" is ssh with nothing on stderr: the command on the Frame may
+        # have exited 255 itself. It keeps the usual window, beside a connection failure.
+        tm.update_settings({"diagnostics": True})
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Host is down"))
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.6 port 22: Host is down"))
+        self.assertEqual([e["properties"]["error_category"] for e in self.queued()], ["frame_unreachable", "other"])
 
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
@@ -215,7 +236,6 @@ class Scrub(unittest.TestCase):
             "ssh: connect to host 192.168.1.20 port 22: No route to host",
             "ssh: connect to host 192.168.1.20 port 22: Host is down",
             "ssh: connect to host 192.168.1.20 port 22: Unknown error",
-            "ssh exited 255",
             "mux_client_request_session: read from master failed: Broken pipe\n"
             "ssh: connect to host 192.168.1.20 port 22: Host is down",
             "client_loop: send disconnect: Connection reset",
@@ -228,6 +248,8 @@ class Scrub(unittest.TestCase):
                         "ssh: Could not resolve hostname fe80::1%wireless_32773: No such host is known."):
             self.assertEqual(tm.categorize(message)[0], "frame_not_set_up", message)
         self.assertEqual(tm.categorize("ssh exited 1")[0], "other")
+        self.assertEqual(tm.categorize("ssh exited 255")[0], "other")  # may be the command's own exit code
+        self.assertEqual(tm.categorize("download failed: [Errno 54] Connection reset by peer")[0], "download_failed")
         self.assertEqual(tm.categorize("frame@10.0.0.2: Permission denied (publickey).")[0], "frame_auth")
 
 

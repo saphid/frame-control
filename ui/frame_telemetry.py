@@ -54,8 +54,13 @@ OUTBOX_MAX = 2000  # events kept while offline; the oldest go first
 FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
 # Not faults in Frame Control: the headset asleep, away or not set up yet. The status poll
-# meets these every few seconds, so each is sent at most once per session, whatever the wording.
+# meets these every few seconds, so each is sent at most once per session, whatever the wording,
+# but only when ssh's own wording shows it was the link to the headset that failed (a download's
+# "Connection reset by peer" is also frame_unreachable by category, and keeps the usual window).
 EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up')
+FRAME_LINK_FAILED = re.compile(r'ssh: connect to host |ssh: Could not resolve hostname|no "?frame"? (?:SSH )?alias|'
+                               r'Timed out talking to |banner exchange: |kex_exchange_identification|'
+                               r'mux_client_|client_loop: |Connection (?:closed|reset) by \S+ port \d+')
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -248,16 +253,18 @@ CATEGORIES = [
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
     ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name')),
     ('cant_run_on_frame', re.compile(r"can't run on the Frame")),
+    # A web-link download (frame_webinstall) that broke: not the headset, whatever the reason.
+    ('download_failed', re.compile(r'^download failed: ')),
     ('steam_shortcut', re.compile(r'(?i)steam did not return a shortcut|shortcut list|no Steam shortcut')),
     ('frame_not_set_up', re.compile(r'(?i)Could not resolve hostname|no "?frame"? (?:SSH )?alias')),
     ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed')),
     # Anything ssh says about its own connection: "ssh: connect to host … port 22: <reason>" (Windows
-    # says "Unknown error"), "ssh exited 255" when it printed nothing, a dropped shared connection
-    # (mux_client_…, client_loop), and Windows' "banner exchange: Connection to UNKNOWN port -1"
-    # (its ssh can't name a peer whose connect failed late).
+    # says "Unknown error"), a dropped shared connection (mux_client_…, client_loop), and Windows'
+    # "banner exchange: Connection to UNKNOWN port -1" (its ssh can't name a peer whose connect
+    # failed late). Not a bare "ssh exited 255": a command on the Frame can exit 255 too.
     ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|No route to host|'
                                      r'Network is unreachable|Host is down|asleep|kex_exchange|banner exchange|'
-                                     r'ssh: connect to host |ssh exited 255|mux_client_|client_loop: ')),
+                                     r'ssh: connect to host |mux_client_|client_loop: ')),
     ('frame_disk_full', re.compile(r'(?i)No space left|disk full|ENOSPC')),
     ('download_failed', re.compile(r'(?i)HTTP (?:Error )?\d{3}|URLError|download|certificate verify failed')),
     ('flatpak', re.compile(r'(?i)flatpak|flathub')),
@@ -379,7 +386,7 @@ def diagnostic(where, error, tb=None):
     category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if category in EXPECTED_CATEGORIES:
+        if category in EXPECTED_CATEGORIES and FRAME_LINK_FAILED.search(str(error)):
             fingerprint = f'expected|{category}'
             if fingerprint in _seen_errors:
                 return
