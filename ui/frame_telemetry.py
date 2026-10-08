@@ -352,8 +352,9 @@ def frame_seen(build, version):
     capture('frame_connected', {'steamos_build': str(build)[:40], 'steamos_version': str(version or '')[:40]})
 
 
-def install_finished(kind, ok, seconds=None, error=None, **props):
-    """kind: apk, flatpak, steam, title or web. props must already be public (no file names)."""
+def install_finished(kind, ok, seconds=None, error=None, diagnose=True, **props):
+    """kind: apk, flatpak, steam, title or web. props must already be public (no file names).
+    diagnose=False when the error is reported as a diagnostic elsewhere."""
     p = {'kind': kind, 'ok': bool(ok), **{k: v for k, v in props.items() if v is not None}}
     if seconds is not None:
         p['seconds'] = round(seconds, 1)
@@ -364,7 +365,7 @@ def install_finished(kind, ok, seconds=None, error=None, **props):
     elif not ok:
         p['error_category'] = 'other'
     capture('install_finished', p)
-    if error is not None and not ok:
+    if error is not None and not ok and diagnose:
         diagnostic(f'{kind} install failed', error)
 
 

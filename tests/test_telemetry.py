@@ -231,6 +231,78 @@ class InstallFinished(unittest.TestCase):
             self.assertEqual(capture.call_args[0][1]["error_category"], "other")
 
 
+class ApkInstallJobs(unittest.TestCase):
+    """The whole job path: what the page is told, and what telemetry sends, once."""
+
+    def setUp(self):
+        import frame_android
+        import frame_webinstall
+        import server
+        self.server, self.android, self.web = server, frame_android, frame_webinstall
+        for target, name, kw in ((server, "ensure_master", {}), (server.frame_catalog, "app", {}),
+                                 (server.frame_catalog, "add_report", {})):
+            p = mock.patch.object(target, name, **kw)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def run_job(self, body):
+        job = self.server.android(body)["job"]
+        for _ in range(500):
+            with self.server._jobs_lock:
+                state = dict(self.server._jobs[job])
+            if state["done"]:
+                return state
+            time.sleep(0.01)
+        self.fail("job did not finish")
+
+    def test_missing_layer_warning_reaches_every_completion_message(self):
+        meta = {"label": "VR", "package": "org.test.vr", "vr_issues": [self.android.LAYER_MISSING_NOTE]}
+        with mock.patch.object(self.server.frame_catalog, "install", return_value=meta):
+            state = self.run_job({"action": "install", "package": "org.test.vr"})
+        self.assertIsNone(state["error"])
+        self.assertIn(self.android.LAYER_MISSING_NOTE, state["message"])
+        with mock.patch.object(self.server.frame_apk_versions, "install", return_value=meta):
+            state = self.run_job({"action": "install", "package": "org.test.vr", "url": "https://example.com/v.apk"})
+        self.assertIn(self.android.LAYER_MISSING_NOTE, state["message"])
+        with mock.patch.object(self.android, "install", return_value=meta):
+            self.assertIn(self.android.LAYER_MISSING_NOTE, self.web.dispatch("/tmp/v.apk")["message"])
+        # A normal install says nothing about the layer.
+        with mock.patch.object(self.server.frame_catalog, "install", return_value=dict(meta, vr_issues=[])):
+            state = self.run_job({"action": "install", "package": "org.test.vr"})
+        self.assertNotIn("OpenXR", state["message"])
+
+    def test_unexpected_failure_is_one_event_and_one_diagnostic(self):
+        info = {"package": "org.test.flat", "label": "Flat", "abis": [], "min_sdk": None, "vr": False,
+                "vr_activity": False, "launchable": True, "repairable": False}
+        sent = []
+        tm._seen_errors.clear()
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install",
+                                  side_effect=FileNotFoundError(2, "No such file or directory", "scp")), \
+                mock.patch.object(self.server.frame_catalog, "install",
+                                  side_effect=lambda pkg: self.android.install("/tmp/x.apk")):
+            state = self.run_job({"action": "install", "package": "org.test.flat"})
+        self.assertIn("FileNotFoundError", state["error"])
+        events = [e for e, _ in sent]
+        self.assertEqual(events.count("install_finished"), 1)
+        self.assertEqual(events.count("$exception"), 1, events)
+        finished = next(p for e, p in sent if e == "install_finished")
+        self.assertEqual((finished["ok"], finished["error_category"]), (False, "tool_missing"))
+        # A FrameError still gets its install diagnostic (the job reports it as well, as before).
+        sent.clear()
+        tm._seen_errors.clear()
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install", side_effect=self.android.FrameError("timed out talking to frame")), \
+                mock.patch.object(self.server.frame_catalog, "install",
+                                  side_effect=lambda pkg: self.android.install("/tmp/x.apk")):
+            self.run_job({"action": "install", "package": "org.test.flat"})
+        self.assertEqual([e for e, _ in sent].count("install_finished"), 1)
+
+
 class ApkInstallReports(unittest.TestCase):
     """server.apk_installed: an APK that won't install is reported; connection trouble isn't."""
 

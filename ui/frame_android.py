@@ -116,6 +116,11 @@ def xr_compat_files(apk_path):
     return add
 
 
+def layer_note(meta):
+    """The missing-layer warning for an install's completion message, or ''."""
+    return LAYER_MISSING_NOTE if LAYER_MISSING_NOTE in ((meta or {}).get('vr_issues') or []) else ''
+
+
 def check_installable(info):
     if info['min_sdk'] and info['min_sdk'] > 30:
         raise FrameError(f"{info['label']} needs Android API {info['min_sdk']}; Lepton is Android 11 (API 30)")

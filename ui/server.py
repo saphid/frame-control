@@ -1255,8 +1255,8 @@ def android(body):
 
             def work():
                 m = frame_apk_versions.install(pkg, url) if url else frame_catalog.install(pkg)
-                return {"message": f"Installed {m['label']}. It's in the Steam library; launching it opens its own panel.",
-                        "app": m}
+                message = f"Installed {m['label']}. It's in the Steam library; launching it opens its own panel."
+                return {"message": f"{message} {frame_android.layer_note(m)}".strip(), "app": m}
             return start_job(f"Install {pkg}", work)
         if action == "refresh-art":
             if not pkg and not body.get("all"):
@@ -1304,7 +1304,10 @@ def apk_installed(info, meta, error, seconds):
     in_catalog = bool(pkg) and pkg in by_pkg
     # Package names only for catalogue apps, which are public; a private APK's name stays here.
     # No version: a local rebuild can share a catalogue app's package name but carry anything in its version.
+    # frame_android.install re-raises anything that isn't a FrameError, and whoever
+    # catches it (a job, a request) reports it with its traceback: once is enough.
     frame_telemetry.install_finished("apk", error is None, seconds, error, catalog=in_catalog,
+                                     diagnose=error is None or isinstance(error, frame_android.FrameError),
                                      package=pkg if in_catalog else None,
                                      xr_layer_missing=True if (info or {}).get("xr_layer_missing") else None)
     if error is not None and pkg and frame_telemetry.categorize(error)[0] in APK_FAULTS:
