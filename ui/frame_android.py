@@ -23,6 +23,7 @@ from frame_apk_sign import repack
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 FRAME = os.environ.get('FRAME_ALIAS', 'frame')
+TMP_PREFIX = 'frame-vr-'  # then the server's PID, so server.sweep_tmp can clear a stopped run's patched APK
 APPS_DIR = 'Applications/Android'          # relative to the Frame's $HOME
 COMPAT = '.local/share/Steam/steamapps/compatdata'
 SHADERS = '.local/share/Steam/steamapps/shadercache'
@@ -167,7 +168,7 @@ def install(apk_path, flatscreen=None, name=None, source=None, icon_png=None, xr
         add = xr_compat_files(apk_path) if (info['vr'] if xr_compat is None else xr_compat) else {}
         with _install_lock:
             if add or info['repairable']:
-                with tempfile.TemporaryDirectory(prefix='frame-vr-') as tmp:
+                with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-') as tmp:
                     patched = os.path.join(tmp, 'app.apk')
                     info['patched'] = patch(apk_path, patched, add)['patched']
                     info['launchable'] = True

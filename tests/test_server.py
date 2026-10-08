@@ -310,6 +310,48 @@ class OneServer(unittest.TestCase):
                     proc.stdout.close()
                     shutil.rmtree(env["FRAME_CONTROL_DATA_DIR"], ignore_errors=True)
 
+    def test_staging_folders_cleared_when_stopped_mid_transfer(self):
+        """The server leaves without interpreter teardown, so TemporaryDirectory cleanup
+        doesn't run for work still in progress: its own staging folders go on the way out,
+        and a dead server's at the next start."""
+        dead = subprocess.Popen([sys.executable, "-c", "pass"])
+        dead.wait()
+        home = tempfile.mkdtemp(prefix="frame-stop-home-")
+        self.addCleanup(shutil.rmtree, home, ignore_errors=True)
+        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": os.path.join(home, "data"),
+               "FRAME_ALIAS": "frame-control-test.invalid", "HOME": home, "XDG_CACHE_HOME": os.path.join(home, ".cache"),
+               "LOCALAPPDATA": home, "APPDATA": home}
+        index_dir = Path(subprocess.run(
+            [sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import frame_host; "
+                                   "print(frame_host.cache_dir('apk-sources'))", str(ROOT / "ui")],
+            env=env, capture_output=True, text=True, check=True).stdout.strip())
+        index_dir.mkdir(parents=True)
+        tmp = Path(tempfile.gettempdir())
+
+        def staged(folder, prefix, pid):
+            d = Path(tempfile.mkdtemp(prefix=f"{prefix}{pid}-", dir=folder))
+            self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+            (d / "app.apk").write_bytes(b"\0" * 4096)
+            return d
+
+        left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
+        proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        try:
+            self.assertIn("Frame Control on", proc.stdout.readline())
+            self.assertEqual([d for d in left_by_dead if d.exists()], [])
+            in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
+                         staged(index_dir, ".download-", proc.pid)]
+            proc.terminate()
+            self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+            self.assertEqual([d for d in in_flight if d.exists()], [])
+        finally:
+            if proc.poll() is None:
+                proc.kill()
+                proc.wait()
+            proc.stdin.close()
+            proc.stdout.close()
+
 
 class ArtworkSettings(unittest.TestCase):
     """The settings panel's endpoints, with and without the page's X-Frame-UI key."""

@@ -45,6 +45,7 @@ import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
+from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
 import frame_devices  # noqa: E402
@@ -1922,23 +1923,36 @@ def _pid_alive(pid):
     return True
 
 
-def sweep_tmp():
-    """Delete download and title staging folders left by a server killed mid-install.
+def _tmp_places():
+    """Where each kind of staging folder goes, and its name before the server's PID."""
+    tmp = Path(tempfile.gettempdir())
+    return [(tmp, WEB_TMP_PREFIX), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
+            (tmp, frame_agent.TMP_PREFIX), (frame_host.cache_dir("apk-sources"), apk_fdroid.TMP_PREFIX)]
 
-    Folders carry the server's PID, so only a dead server's are taken.
+
+def sweep_tmp(own=False):
+    """Delete staging folders (downloads, unzipped titles, patched APKs, staged files,
+    app-index downloads) left by a server that stopped mid-way.
+
+    Folders carry the server's PID, so only a dead server's are taken; own=True (on
+    the way out, see main) takes this server's too.
     """
-    for prefix in (WEB_TMP_PREFIX, frame_titles.TMP_PREFIX):
-        for d in Path(tempfile.gettempdir()).glob(f"{prefix}*"):
-            _sweep_one(prefix, d)
+    for folder, prefix in _tmp_places():
+        try:
+            found = list(folder.glob(f"{prefix}*"))
+        except OSError:
+            continue
+        for d in found:
+            _sweep_one(prefix, d, own)
 
 
-def _sweep_one(prefix, d):
+def _sweep_one(prefix, d, own=False):
     m = re.fullmatch(re.escape(prefix) + r"(\d+)-.*", d.name)
     if not m:
         return
     pid = int(m[1])
     try:
-        if pid != os.getpid() and not _pid_alive(pid) and d.is_dir():
+        if (own if pid == os.getpid() else not _pid_alive(pid)) and d.is_dir():
             shutil.rmtree(d, ignore_errors=True)
     except OSError:
         pass
@@ -2742,13 +2756,19 @@ def main():
             if proc.poll() is None:
                 proc.terminate()
         _purge_titles(now=float("inf"))  # unconfirmed title uploads
+        # Staging folders of work still running (a patched APK mid-copy, an index
+        # download): leaving below skips the cleanup their TemporaryDirectory would
+        # get at interpreter exit. sweep_tmp at the next start catches any missed.
+        sweep_tmp(own=True)
     # Stopped as asked, and everything above is cleaned up. Leave now, without
     # Python's interpreter teardown: daemon threads are still running (app index
     # downloads, the stdin watcher, telemetry, the headset link, request handlers)
     # and none can be stopped promptly. Tearing the interpreter down under them
-    # occasionally crashed the process (SIGSEGV, seen on Python 3.13 on Linux)
-    # after a stop signal. Nothing here registers atexit work, and the OS frees
-    # the one-server lock with the process.
+    # occasionally crashed the process (SIGSEGV, seen on Python 3.13 on Linux):
+    # OpenSSL's exit cleanup freed state those threads were using. That teardown
+    # also runs atexit handlers and weakref finalizers; nothing here registers
+    # atexit work, the only finalizers are TemporaryDirectory cleanups (swept
+    # above), and the OS frees the one-server lock with the process.
     sys.stdout.flush()
     sys.stderr.flush()
     os._exit(0)

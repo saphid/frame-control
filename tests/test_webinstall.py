@@ -386,17 +386,28 @@ class ServerJobs(unittest.TestCase):
     def test_dead_servers_leftovers_swept(self):
         dead = subprocess.Popen([sys.executable, "-c", "pass"])
         dead.wait()
-        # Downloads and title staging (unzipped titles) are both swept.
-        for prefix in (self.server.WEB_TMP_PREFIX, self.server.frame_titles.TMP_PREFIX):
-            gone = tempfile.mkdtemp(prefix=f"{prefix}{dead.pid}-")
-            live = tempfile.mkdtemp(prefix=f"{prefix}{os.getpid()}-")
-            try:
-                self.server.sweep_tmp()
-                self.assertFalse(os.path.exists(gone), prefix)
-                self.assertTrue(os.path.exists(live), prefix)
-            finally:
-                shutil.rmtree(gone, ignore_errors=True)
-                shutil.rmtree(live, ignore_errors=True)
+        s = self.server
+        with tempfile.TemporaryDirectory() as cache, \
+                mock.patch.object(s.frame_host, "cache_dir", lambda *parts: Path(cache).joinpath(*parts)):
+            # Downloads, title staging, patched VR APKs, files staged for the
+            # assistant, and app-index downloads (in the cache folder).
+            places = s._tmp_places()
+            self.assertEqual({p for _, p in places}, {s.WEB_TMP_PREFIX, s.frame_titles.TMP_PREFIX,
+                                                      s.frame_android.TMP_PREFIX, s.frame_agent.TMP_PREFIX,
+                                                      s.apk_fdroid.TMP_PREFIX})
+            for folder, prefix in places:
+                folder.mkdir(parents=True, exist_ok=True)
+                gone = tempfile.mkdtemp(prefix=f"{prefix}{dead.pid}-", dir=folder)
+                live = tempfile.mkdtemp(prefix=f"{prefix}{os.getpid()}-", dir=folder)
+                try:
+                    s.sweep_tmp()
+                    self.assertFalse(os.path.exists(gone), prefix)
+                    self.assertTrue(os.path.exists(live), prefix)
+                    s.sweep_tmp(own=True)  # on the way out: this server's own go too
+                    self.assertFalse(os.path.exists(live), prefix)
+                finally:
+                    shutil.rmtree(gone, ignore_errors=True)
+                    shutil.rmtree(live, ignore_errors=True)
 
     def test_temp_dir_failure_ends_the_job(self):
         job, dispatch = self.run_job(mkdtemp_error=OSError("disk full"))
