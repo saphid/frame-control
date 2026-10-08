@@ -81,8 +81,12 @@ class Media(unittest.TestCase):
             write_status(path, **values)
 
         class FakeOverlay:
+            created = 0
+
             def create(self, *a, **k):
-                return len(calls)
+                # Handles in creation order: surround 0, then screen 1 (theatre).
+                FakeOverlay.created += 1
+                return FakeOverlay.created - 1
 
             def call(self, *a):
                 pass
@@ -130,6 +134,13 @@ class Media(unittest.TestCase):
         # Two video frames were dropped; the surround (handle 0) waited and was re-sent.
         self.assertEqual(result['dropped'], 2)
         self.assertIn((0, 1, 1), calls[3:])
+
+    def test_theatre_surround_failure_does_not_stop_playback(self):
+        def fail_surround(n):
+            if n == 1:  # the surround's upload is the first pixels call
+                raise RuntimeError('OpenVR SetOverlayRaw failed: 11')
+        result, _ = self.play_with('clip_SBS.mp4', on_pixels=fail_surround)
+        self.assertEqual((result['state'], result['frames']), ('ended', 4))
 
     def test_stop_mid_video_reports_stopped(self):
         result, _ = self.play_with('clip_SBS.mp4', on_pixels=lambda n: n == 3 and stop_now())
