@@ -256,6 +256,36 @@ class Repositories(unittest.TestCase):
         self.assertEqual(result['icon'], URL + 'icons/legacy.1.png')
         self.assertEqual(result['images']['screenshots'], [URL + 'org.example.app/fr/sevenInchScreenshots/tablet.png'])
 
+    def test_per_abi_builds_offer_and_download_the_arm64_one(self):
+        import hashlib
+
+        def build(code, name, abis):
+            self.files[name] = name.encode()
+            return {'manifest': {'versionName': '391', 'versionCode': code, 'usesSdk': {'minSdkVersion': 28},
+                                 'nativecode': abis},
+                    'file': {'name': '/' + name, 'sha256': hashlib.sha256(name.encode()).hexdigest(), 'size': code},
+                    'added': 0}
+        # One APK per ABI under different codes (the x86_64 one highest, as F-Droid often does),
+        # plus a universal and an arm64-only build sharing a code.
+        builds = [build(3911, 'app-armeabi-v7a.apk', ['armeabi-v7a']), build(3914, 'app-x86_64.apk', ['x86_64']),
+                  build(3913, 'app-x86.apk', ['x86']),
+                  build(3912, 'app-universal.apk', ['arm64-v8a', 'armeabi-v7a', 'x86_64']),
+                  build(3912, 'app-arm64-v8a.apk', ['arm64-v8a'])]
+        raw = self.root / 'splits.json'
+        raw.write_text(json.dumps({'packages': {'com.futo.platformplayer': {
+            'metadata': {'name': {'en-US': 'Grayjay'}},
+            'versions': {str(i): b for i, b in enumerate(builds)}}}}))
+        source = {'id': 'test', 'url': URL}
+        app = fdroid._reduce(raw, source)['com.futo.platformplayer']
+        self.assertEqual([v['name'] for v in app['versions']], ['/app-arm64-v8a.apk', '/app-universal.apk'])
+        self.assertEqual((app['version_code'], app['abis']), (3912, ['arm64-v8a']))
+        with patch.object(fdroid, 'details', return_value=app):
+            for code in (None, 3912):
+                fdroid.download(source, 'com.futo.platformplayer', version_code=code)
+                self.assertTrue(self.fetch_mock.call_args[0][0].endswith('/app-arm64-v8a.apk'))
+            with self.assertRaises(SourceError):  # the x86_64 build is never offered
+                fdroid.download(source, 'com.futo.platformplayer', version_code=3914)
+
     def test_v2_legacy_screenshot_keys_and_limit(self):
         meta = {'phoneScreenshots': {'fr': [{'name': '/phone/' + str(i) + '.png'} for i in range(8)]},
                 'sevenInchScreenshots': {'en-US': [{'name': '/tablet.png'}]}}
