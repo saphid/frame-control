@@ -6,6 +6,7 @@ Run: python3 -m unittest discover -s tests
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
 import os
+import subprocess
 import sys
 import tempfile
 import threading
@@ -20,7 +21,13 @@ sys.path.insert(0, str(ROOT / "ui"))
 
 import frame_compat_db as db  # noqa: E402
 import frame_report as fr  # noqa: E402
+import frame_host  # noqa: E402
 import frame_telemetry as tm  # noqa: E402
+
+
+def link_error(message, kind=RuntimeError):
+    """An error as an ssh helper raises it when ssh couldn't reach the headset."""
+    return frame_host.link_failure(kind(message))
 
 
 class Base(unittest.TestCase):
@@ -94,72 +101,44 @@ class Gates(Base):
 
     def test_connection_failures_are_sent_once_per_session(self):
         # The status poll meets an asleep or absent headset every few seconds (638 timeouts from
-        # six people in two weeks): one event per kind per session, whatever the address or route.
+        # six people in two weeks): one event per kind per session, whatever the address or route,
+        # for errors marked where ssh ran as ssh failing to reach the headset.
         tm.update_settings({"diagnostics": True})
         with mock.patch.object(tm.time, "time", return_value=1000.0):
             for ip in ("192.168.1.20", "192.168.1.21", "10.0.0.5"):
                 for where in ("POST /api/comfort status", "job steam"):
-                    tm.diagnostic(where, RuntimeError(f"ssh: connect to host {ip} port 22: Connection timed out"))
-                    tm.diagnostic(where, RuntimeError(f"ssh: connect to host {ip} port 22: Host is down"))
-                    tm.diagnostic(where, RuntimeError("Timed out talking to frame"))
+                    tm.diagnostic(where, link_error(f"ssh: connect to host {ip} port 22: Connection timed out"))
+                    tm.diagnostic(where, link_error(f"ssh: connect to host {ip} port 22: Host is down"))
+                    tm.diagnostic(where, link_error("Timed out talking to frame"))
             tm.diagnostic("POST /api/comfort status",
-                          RuntimeError("ssh: Could not resolve hostname frame: No such host is known."))
+                          link_error("ssh: Could not resolve hostname frame: No such host is known."))
         with mock.patch.object(tm.time, "time", return_value=1000.0 + 10 * tm.REPEAT_WINDOW):
-            tm.diagnostic("POST /api/comfort status", RuntimeError("client_loop: send disconnect: Connection reset"))
-            tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: Could not resolve hostname frame"))
+            tm.diagnostic("POST /api/comfort status", link_error("client_loop: send disconnect: Connection reset"))
+            tm.diagnostic("POST /api/comfort status", link_error("ssh: Could not resolve hostname frame"))
         sent = [e["properties"] for e in self.queued()]
         self.assertEqual([p["error_category"] for p in sent], ["frame_unreachable", "frame_not_set_up"])
         self.assertTrue(all(p["$exception_message"].startswith("ssh: ") for p in sent))
 
-    def test_real_errors_are_still_sent_beside_connection_failures(self):
+    def test_only_marked_errors_are_held_for_the_session(self):
+        # The same words without the mark (from a download, a file name, anything not ssh) keep
+        # the usual 10-minute window.
         tm.update_settings({"diagnostics": True})
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
-        tm.diagnostic("POST /api/comfort status", KeyError("battery"))
-        tm.diagnostic("POST /api/android install", RuntimeError("boom"))
-        self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
-                         ["frame_unreachable", "other", "other"])
-
-    def test_a_download_that_breaks_after_a_connection_failure_is_still_sent(self):
-        # Only ssh's own wording is held back for the session: a web-link download whose
-        # connection resets is a different fault, even though "Connection reset" is in both.
-        tm.update_settings({"diagnostics": True})
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("POST /api/comfort status", link_error("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("job web", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("job web", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
         tm.diagnostic("job web", RuntimeError("download failed: [Errno 54] Connection reset by peer"))
         tm.diagnostic("job web", RuntimeError("urlopen error [Errno 60] Operation timed out"))
-        tm.diagnostic("job web", RuntimeError("urlopen error [Errno 60] Operation timed out"))  # usual window
         self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
-                         ["frame_unreachable", "download_failed", "frame_unreachable"])
+                         ["frame_unreachable", "frame_unreachable", "download_failed", "frame_unreachable"])
 
-    def test_a_message_that_only_mentions_ssh_wording_is_still_sent(self):
-        # Review round 2: the words must start a line as ssh prints them. A web-link download whose
-        # file name has them in it (checksum mismatch, the real message) is not a link failure.
+    def test_real_errors_are_still_sent_beside_connection_failures(self):
         tm.update_settings({"diagnostics": True})
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
-        for name in ("kex_exchange_identification.zip", "client_loop-timed-out.apk", "banner exchange.zip",
-                     "Timed out talking to frame.zip"):
-            tm.diagnostic("web install failed",
-                          RuntimeError(f"{name} doesn't match the manifest's sha256; not installing it"))
-        self.assertEqual(len(self.queued()), 5)
-        for message in ("ssh: connect to host 10.0.0.5 port 22: Connection timed out",
-                        "Warning: Permanently added\r\nkex_exchange_identification: read: Connection reset by peer",
-                        "Connection closed by 10.0.0.5 port 22", "Timed out talking to frame",
-                        "banner exchange: Connection to UNKNOWN port -1: Connection refused",
-                        "mux_client_request_session: read from master failed: Broken pipe",
-                        "client_loop: send disconnect: Connection reset"):
-            self.assertTrue(tm.FRAME_LINK_FAILED.search(message), message)
-        for message in ("kex_exchange_identification.zip doesn't match", "x client_loop: y",
-                        "Timed out talking to frame.zip doesn't match", "download failed: Connection reset by peer"):
-            self.assertFalse(tm.FRAME_LINK_FAILED.search(message), message)
-
-    def test_a_command_that_exits_255_is_not_a_connection_failure(self):
-        # A bare "ssh exited 255" is ssh with nothing on stderr: the command on the Frame may
-        # have exited 255 itself. It keeps the usual window, beside a connection failure.
-        tm.update_settings({"diagnostics": True})
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Host is down"))
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))
-        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.6 port 22: Host is down"))
-        self.assertEqual([e["properties"]["error_category"] for e in self.queued()], ["frame_unreachable", "other"])
+        tm.diagnostic("POST /api/comfort status", link_error("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        tm.diagnostic("POST /api/comfort status", KeyError("battery"))
+        tm.diagnostic("POST /api/android install", RuntimeError("boom"))
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))  # the command's own exit code?
+        self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
+                         ["frame_unreachable", "other", "other", "other"])
 
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
@@ -307,6 +286,82 @@ class Compat(Base):
             tm.update_settings({"compat": True})
             tm.update_settings({"compat": True})  # already sent: not again
         self.assertEqual([e["properties"]["id"] for e in self.queued() if e["event"] == "compat_report"], ["old1"])
+
+
+class LinkFailureProvenance(Base):
+    """Only ssh, where it runs, decides that it couldn't reach the headset; the error report
+    then holds that back for the session. Nothing in a message can claim it."""
+
+    def setUp(self):
+        super().setUp()
+        import frame_android
+        import frame_webinstall
+        import server
+        self.server, self.android, self.web = server, frame_android, frame_webinstall
+        for target, name, kw in ((server, "ensure_master", {}), (server, "LINK", {"new": None}),
+                                 (server, "repair_ssh_config", {"return_value": False})):
+            p = mock.patch.object(target, name, **kw)
+            p.start()
+            self.addCleanup(p.stop)
+        tm.update_settings({"diagnostics": True})
+
+    def ssh_fails(self, module, returncode, stderr):
+        """Run module.ssh with ssh exiting `returncode`; -> the exception, as the route handler gets it."""
+        done = subprocess.CompletedProcess(["ssh"], returncode, "", stderr)
+        with mock.patch.object(frame_host, "run_ssh", return_value=done):
+            try:
+                module.ssh("true")
+            except Exception as e:  # noqa: BLE001
+                return e
+        self.fail("ssh did not raise")
+
+    def poll_fails(self):
+        e = self.ssh_fails(self.server, 255, "ssh: connect to host 10.0.0.5 port 22: Connection timed out\r\n")
+        tm.diagnostic("POST /api/comfort status", e)
+
+    def test_a_status_poll_that_cannot_reach_the_frame_is_sent_once(self):
+        for _ in range(5):
+            self.poll_fails()
+        for stderr in ("Warning: Permanently added '10.0.0.5' (ED25519) to the list of known hosts.\r\n"
+                       "kex_exchange_identification: read: Connection reset by peer\r\n",
+                       "banner exchange: Connection to UNKNOWN port -1: Connection refused\r\n",
+                       "\x1b[0mssh: connect to host 10.0.0.5 port 22: Unknown error\n"):
+            tm.diagnostic("POST /api/comfort status", self.ssh_fails(self.server, 255, stderr))
+        with mock.patch.object(frame_host, "run_ssh", side_effect=subprocess.TimeoutExpired("ssh", 30)):
+            with self.assertRaises(self.server.Failure) as caught:
+                self.server.ssh("true")
+        tm.diagnostic("POST /api/comfort status", caught.exception)
+        e = self.ssh_fails(self.android, 255, "ssh: connect to host 10.0.0.5 port 22: Host is down\n")
+        tm.diagnostic("job steam", e)
+        self.assertEqual([p["properties"]["error_category"] for p in self.queued()], ["frame_unreachable"])
+
+    def test_a_command_that_fails_on_the_frame_is_not_marked(self):
+        self.poll_fails()
+        for module in (self.server, self.android):
+            for code, stderr in ((255, ""), (255, "x: ssh: connect to host frame port 22: Connection timed out\n"),
+                                 (1, "ssh: connect to host 10.0.0.5 port 22: Connection timed out\n")):
+                e = self.ssh_fails(module, code, stderr)
+                self.assertFalse(getattr(e, "frame_link_failed", False), (module.__name__, code, stderr))
+
+    def test_download_failures_after_a_poll_failure_are_still_sent(self):
+        # Review round 3: these file names, in the real checksum message through the web-link worker,
+        # were held back with the poll's connection failures.
+        self.poll_fails()
+        names = ("Connection closed by frame port 22.zip", "Connection reset by frame port 22.apk",
+                 "kex_exchange_identification: read.zip", "banner exchange: payload.zip",
+                 "ssh: connect to host frame port 22: x.zip", "Timed out talking to frame")
+        for name in names:
+            job = {"phase": "download", "done": 0, "total": None, "detail": "", "message": None, "error": None,
+                   "cancel": False}
+            plan = {"name": None, "exe": None, "url": "https://example.com/x.zip", "kind": "zip"}
+            error = self.web.WebInstallError(f"{name} doesn't match the manifest's sha256; not installing it")
+            with mock.patch.object(self.web, "download", side_effect=error):
+                self.server._webinstall_run(plan, job)
+            self.assertEqual(job["phase"], "error")
+        exceptions = [e["properties"] for e in self.queued() if e["event"] == "$exception"]
+        self.assertEqual([p["error_category"] for p in exceptions], ["frame_unreachable"] + ["download_failed"] * len(names))
+        finished = [e["properties"] for e in self.queued() if e["event"] == "install_finished"]
+        self.assertEqual({p["error_category"] for p in finished}, {"download_failed"})
 
 
 class InstallFinished(unittest.TestCase):

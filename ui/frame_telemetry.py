@@ -55,14 +55,10 @@ FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
 # Not faults in Frame Control: the headset asleep, away or not set up yet. The status poll
 # meets these every few seconds, so each is sent at most once per session, whatever the wording,
-# but only when a line starts the way ssh's own report of a failed link does (a download's
-# "Connection reset by peer" is also frame_unreachable by category, and keeps the usual window;
-# so does any message that merely mentions these words, in a file name say).
+# but only for an error marked where ssh ran as ssh failing to reach the headset
+# (frame_host.link_failure). The message alone isn't evidence: a download's "Connection reset by
+# peer", or a file name with ssh's words in it, keeps the usual window.
 EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up')
-FRAME_LINK_FAILED = re.compile(r'^(?:ssh: connect to host \S+ port \d+: |ssh: Could not resolve hostname |'
-                               r'Timed out talking to \S+$|banner exchange: |kex_exchange_identification: |'
-                               r'mux_client_\w+: |client_loop: |Connection (?:closed|reset) by \S+ port \d+)',
-                               re.M)
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -250,6 +246,11 @@ def scrub(text, limit=2000):
 
 # From the most to the least specific; the first match wins.
 CATEGORIES = [
+    # A web-link download (frame_webinstall) that broke or didn't check out: not the headset,
+    # whatever the reason, and first so a file name in the message can't put it elsewhere.
+    ('download_failed', re.compile(r"\A(?:download failed: |download cut off at |downloaded \d+ bytes; |"
+                                   r"the server says \d+ bytes; )|doesn't match the manifest's sha256; "
+                                   r"not installing it\Z")),
     ('android_installer', re.compile(r'INSTALL_(?:FAILED|PARSE_FAILED)_[A-Z_]+')),
     ('apk_needs_newer_android', re.compile(r'needs Android API')),
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
@@ -258,8 +259,6 @@ CATEGORIES = [
     ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)")),
     ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name')),
     ('cant_run_on_frame', re.compile(r"can't run on the Frame")),
-    # A web-link download (frame_webinstall) that broke: not the headset, whatever the reason.
-    ('download_failed', re.compile(r'^download failed: ')),
     ('steam_shortcut', re.compile(r'(?i)steam did not return a shortcut|shortcut list|no Steam shortcut')),
     ('frame_not_set_up', re.compile(r'(?i)Could not resolve hostname|no "?frame"? (?:SSH )?alias')),
     ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed')),
@@ -394,7 +393,7 @@ def diagnostic(where, error, tb=None):
     category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if category in EXPECTED_CATEGORIES and FRAME_LINK_FAILED.search(str(error)):
+        if category in EXPECTED_CATEGORIES and getattr(error, 'frame_link_failed', False):
             fingerprint = f'expected|{category}'
             if fingerprint in _seen_errors:
                 return

@@ -337,7 +337,7 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
         r = frame_host.run_ssh([*SSH, FRAME, remote], capture_output=True, **feed,
                                text=text, errors="replace" if text else None, timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise Failure(f"Timed out talking to {FRAME}")
+        raise frame_host.link_failure(Failure(f"Timed out talking to {FRAME}"))
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
@@ -346,6 +346,8 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
             LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
         failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
         failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
+        if frame_host.ssh_link_failed(r.returncode, strip_ansi(err)):
+            frame_host.link_failure(failure)  # ssh never reached the Frame (see frame_telemetry.diagnostic)
         raise failure
     return r.stdout
 
