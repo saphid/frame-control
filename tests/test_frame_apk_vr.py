@@ -255,6 +255,10 @@ class VRTests(unittest.TestCase):
             self.assertEqual(set(add), set(frame_android.XR_COMPAT_FILES))
             self.assertIn(b'XR_APILAYER_FRAME_compat', add['assets/openxr/1/api_layers/implicit.d/XrApiLayer_FRAME_compat.json'])
             self.assertTrue(add['lib/arm64-v8a/libXrApiLayer_FRAME_compat.so'].startswith(b'\x7fELF'))
+            # The library verified on the headset (its SHA-256 is in the layer's README).
+            import hashlib
+            digest = hashlib.sha256(add['lib/arm64-v8a/libXrApiLayer_FRAME_compat.so']).hexdigest()
+            self.assertIn(digest, (Path(frame_android.XR_COMPAT) / 'README.md').read_text())
             with zipfile.ZipFile(apk, 'a') as z:  # already injected: nothing more to add
                 z.writestr('lib/arm64-v8a/libXrApiLayer_FRAME_compat.so', b'')
             self.assertEqual(frame_android.xr_compat_files(str(apk)), {})
@@ -269,8 +273,82 @@ class VRTests(unittest.TestCase):
             with zipfile.ZipFile(apk, 'w') as z:
                 z.writestr('lib/arm64-v8a/libopenxr_loader.so', b'')
             with patch.object(frame_android, 'XR_COMPAT', d):
-                with self.assertRaisesRegex(frame_android.FrameError, 'build.sh'):
+                with self.assertRaisesRegex(frame_android.LayerMissing, 'build.sh'):
                     frame_android.xr_compat_files(str(apk))
+            # Present but corrupt, or empty, counts as missing too.
+            for rel in frame_android.XR_COMPAT_FILES.values():
+                os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
+                with open(os.path.join(d, rel), 'wb') as f:
+                    f.write(b'\x1f\x8b not really gzip')
+            with patch.object(frame_android, 'XR_COMPAT', d):
+                with self.assertRaises(frame_android.LayerMissing):
+                    frame_android.xr_compat_files(str(apk))
+            for rel in frame_android.XR_COMPAT_FILES.values():
+                os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
+                open(os.path.join(d, rel), 'wb').close()
+            with patch.object(frame_android, 'XR_COMPAT', d):
+                with self.assertRaises(frame_android.LayerMissing):
+                    frame_android.xr_compat_files(str(apk))
+
+    def test_layer_ships_in_packaged_builds(self):
+        """The arm64 library is in the repo, copied by electron-builder, and checked after packing."""
+        import fnmatch, json
+        root = Path(__file__).resolve().parents[1]
+        for rel in frame_android.XR_COMPAT_FILES.values():
+            self.assertGreater((root / 'frame/openxr-compat' / rel).stat().st_size, 0, rel)
+        # No bare arm64 ELF ships: electron-builder's 7-Zip gives those an ARM64 filter the
+        # Windows installer can't extract, so the installed app silently lacked the library.
+        for f in (root / 'frame/openxr-compat/prebuilt').rglob('*'):
+            if f.is_file():
+                self.assertNotEqual(f.read_bytes()[:4], b'\x7fELF', f)
+        build = json.loads((root / 'app/package.json').read_text())['build']
+        self.assertEqual(build.get('afterPack'), 'build/check-resources.js')
+        entry = next(e for e in build['extraResources'] if e['from'] == '../frame/openxr-compat')
+        self.assertEqual(entry['to'], 'frame/openxr-compat')
+        check = (root / 'app/build/check-resources.js').read_text()
+        for rel in frame_android.XR_COMPAT_FILES.values():
+            self.assertTrue(any(fnmatch.fnmatch(rel, f.replace('**/', '*/')) for f in entry['filter']), rel)
+            self.assertFalse(any(f.endswith('.so') for f in entry['filter']))
+            self.assertIn('frame/openxr-compat/' + rel, check)
+
+    def test_install_goes_ahead_without_a_missing_layer(self):
+        """A copy of Frame Control without the layer installs VR apps anyway and says so."""
+        base = {'package': 'org.test.vr', 'label': 'VR', 'abis': [], 'min_sdk': None, 'vr_issues': [],
+                'vr': True, 'vr_activity': True, 'launchable': True, 'repairable': False}
+        seen = []
+        missing = frame_android.LayerMissing(frame_android.LAYER_MISSING)
+        with patch.object(frame_android, 'apk_info', side_effect=lambda p: dict(base)), \
+                patch.object(frame_android, 'xr_compat_files', side_effect=missing), \
+                patch.object(frame_android, 'patch') as repair, \
+                patch.object(frame_android, '_install', return_value={'package': 'org.test.vr'}) as install, \
+                patch.object(frame_android, 'install_hooks', [lambda *a: seen.append(a)]):
+            frame_android.install('game.apk')
+            repair.assert_not_called()  # nothing to add and nothing to repair: the APK goes as is
+            info = install.call_args.args[1]
+            self.assertTrue(info['xr_layer_missing'])
+            self.assertEqual(info['vr_issues'], [frame_android.LAYER_MISSING_NOTE])
+            self.assertIsNone(seen[-1][2])  # reported as a working install
+            # Asked for explicitly, a missing layer is still an error.
+            with self.assertRaises(frame_android.LayerMissing):
+                frame_android.install('game.apk', xr_compat=True)
+            self.assertIsInstance(seen[-1][2], frame_android.LayerMissing)
+
+    def test_patch_failures_are_named_and_every_failure_is_reported(self):
+        base = {'package': 'org.test.vr', 'label': 'VR', 'abis': [], 'min_sdk': None,
+                'vr': True, 'vr_activity': True, 'launchable': True, 'repairable': False}
+        seen = []
+        with patch.object(frame_android, 'apk_info', side_effect=lambda p: dict(base)), \
+                patch.object(frame_android, 'xr_compat_files', return_value={'x': b'1'}), \
+                patch.object(frame_android, 'patch', side_effect=frame_android.FrameError('ZIP64 APKs are unsupported')), \
+                patch.object(frame_android, 'install_hooks', [lambda *a: seen.append(a)]):
+            with self.assertRaisesRegex(frame_android.FrameError, 'could not prepare the APK for the Frame: ZIP64'):
+                frame_android.install('game.apk')
+        with patch.object(frame_android, 'apk_info', side_effect=lambda p: dict(base, vr=False)), \
+                patch.object(frame_android, '_install', side_effect=FileNotFoundError(2, 'No such file or directory', 'ssh')), \
+                patch.object(frame_android, 'install_hooks', [lambda *a: seen.append(a)]):
+            with self.assertRaises(FileNotFoundError):
+                frame_android.install('game.apk')
+        self.assertIsInstance(seen[-1][2], FileNotFoundError)  # not only FrameErrors reach telemetry
 
     def test_patch_rejects_corrupt_manifest_cleanly(self):
         with patch.object(frame_android, 'apk_info', side_effect=struct.error('bad')):

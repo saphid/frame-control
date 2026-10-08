@@ -273,6 +273,17 @@ class Scrub(unittest.TestCase):
         self.assertEqual(tm.categorize("download failed: [Errno 54] Connection reset by peer")[0], "download_failed")
         self.assertEqual(tm.categorize("frame@10.0.0.2: Permission denied (publickey).")[0], "frame_auth")
 
+    def test_install_failure_categories(self):
+        import frame_android
+        self.assertEqual(tm.categorize(frame_android.LayerMissing(frame_android.LAYER_MISSING))[0], "layer_missing")
+        # The message 0.4.0 sent, so old and new builds land in the same bucket.
+        self.assertEqual(tm.categorize("the OpenXR compatibility layer isn't built; run "
+                                       "frame/openxr-compat/build.sh")[0], "layer_missing")
+        self.assertEqual(tm.categorize("could not prepare the APK for the Frame: ZIP64 APKs are unsupported")[0],
+                         "apk_repack_failed")
+        self.assertEqual(tm.categorize(FileNotFoundError(2, "No such file or directory", "ssh"))[0], "tool_missing")
+        self.assertEqual(tm.categorize("[WinError 2] The system cannot find the file specified")[0], "tool_missing")
+
 
 class Compat(Base):
     def test_reports_are_shared_only_after_opting_in_without_file_names(self):
@@ -298,6 +309,114 @@ class Compat(Base):
         self.assertEqual([e["properties"]["id"] for e in self.queued() if e["event"] == "compat_report"], ["old1"])
 
 
+class InstallFinished(unittest.TestCase):
+    def test_failure_category_only_no_text(self):
+        """install_finished carries a fixed category for a failure, never the message or a file name."""
+        import frame_android
+        with mock.patch.object(tm, "capture") as capture, mock.patch.object(tm, "diagnostic"):
+            tm.install_finished("apk", False, 0.0, frame_android.LayerMissing(
+                "C:\\Users\\Bob\\My Game.apk: " + frame_android.LAYER_MISSING), catalog=False)
+            props = capture.call_args[0][1]
+            self.assertEqual(props["error_category"], "layer_missing")
+            self.assertNotIn("Bob", repr(props))
+            self.assertEqual(set(props), {"kind", "ok", "seconds", "error_category", "catalog"})
+            tm.install_finished("apk", False)
+            self.assertEqual(capture.call_args[0][1]["error_category"], "other")
+
+
+class ApkInstallJobs(unittest.TestCase):
+    """The whole job path: what the page is told, and what telemetry sends, once."""
+
+    def setUp(self):
+        import frame_android
+        import frame_webinstall
+        import server
+        self.server, self.android, self.web = server, frame_android, frame_webinstall
+        for target, name, kw in ((server, "ensure_master", {}), (server.frame_catalog, "app", {}),
+                                 (server.frame_catalog, "add_report", {})):
+            p = mock.patch.object(target, name, **kw)
+            p.start()
+            self.addCleanup(p.stop)
+
+    def run_job(self, body):
+        job = self.server.android(body)["job"]
+        for _ in range(500):
+            with self.server._jobs_lock:
+                state = dict(self.server._jobs[job])
+            if state["done"]:
+                return state
+            time.sleep(0.01)
+        self.fail("job did not finish")
+
+    def test_missing_layer_warning_reaches_every_completion_message(self):
+        meta = {"label": "VR", "package": "org.test.vr", "vr_issues": [self.android.LAYER_MISSING_NOTE]}
+        with mock.patch.object(self.server.frame_catalog, "install", return_value=meta):
+            state = self.run_job({"action": "install", "package": "org.test.vr"})
+        self.assertIsNone(state["error"])
+        self.assertIn(self.android.LAYER_MISSING_NOTE, state["message"])
+        with mock.patch.object(self.server.frame_apk_versions, "install", return_value=meta):
+            state = self.run_job({"action": "install", "package": "org.test.vr", "url": "https://example.com/v.apk"})
+        self.assertIn(self.android.LAYER_MISSING_NOTE, state["message"])
+        with mock.patch.object(self.android, "install", return_value=meta):
+            self.assertIn(self.android.LAYER_MISSING_NOTE, self.web.dispatch("/tmp/v.apk")["message"])
+        # A normal install says nothing about the layer.
+        with mock.patch.object(self.server.frame_catalog, "install", return_value=dict(meta, vr_issues=[])):
+            state = self.run_job({"action": "install", "package": "org.test.vr"})
+        self.assertNotIn("OpenXR", state["message"])
+
+    def test_unexpected_failure_is_one_event_and_one_diagnostic(self):
+        info = {"package": "org.test.flat", "label": "Flat", "abis": [], "min_sdk": None, "vr": False,
+                "vr_activity": False, "launchable": True, "repairable": False}
+        sent = []
+        tm._seen_errors.clear()
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install",
+                                  side_effect=FileNotFoundError(2, "No such file or directory", "scp")), \
+                mock.patch.object(self.server.frame_catalog, "install",
+                                  side_effect=lambda pkg: self.android.install("/tmp/x.apk")):
+            state = self.run_job({"action": "install", "package": "org.test.flat"})
+        self.assertIn("FileNotFoundError", state["error"])
+        events = [e for e, _ in sent]
+        self.assertEqual(events.count("install_finished"), 1)
+        self.assertEqual(events.count("$exception"), 1, events)
+        finished = next(p for e, p in sent if e == "install_finished")
+        self.assertEqual((finished["ok"], finished["error_category"]), (False, "tool_missing"))
+        # The same failure through a web link: one event and one diagnostic there too.
+        sent.clear()
+        tm._seen_errors.clear()
+        job = {"phase": "download", "done": 0, "total": None, "detail": "", "message": None, "error": None,
+               "cancel": False}
+        plan = {"name": None, "exe": None, "url": "https://example.com/x.apk", "kind": "apk"}
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install",
+                                  side_effect=FileNotFoundError(2, "No such file or directory", "scp")), \
+                mock.patch.object(self.server.frame_webinstall, "download",
+                                  side_effect=lambda plan, tmp, **kw: os.path.join(tmp, "x.apk")):
+            self.server._webinstall_run(plan, job)
+        self.assertEqual(job["phase"], "error")
+        self.assertIn("FileNotFoundError", job["error"])
+        events = [e for e, _ in sent]
+        self.assertEqual(events.count("install_finished"), 1, events)
+        self.assertEqual(events.count("$exception"), 1, events)
+        finished = next(p for e, p in sent if e == "install_finished")
+        self.assertEqual((finished["kind"], finished["error_category"]), ("apk", "tool_missing"))
+        # A FrameError still gets its install diagnostic (the job reports it as well, as before).
+        sent.clear()
+        tm._seen_errors.clear()
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install", side_effect=self.android.FrameError("timed out talking to frame")), \
+                mock.patch.object(self.server.frame_catalog, "install",
+                                  side_effect=lambda pkg: self.android.install("/tmp/x.apk")):
+            self.run_job({"action": "install", "package": "org.test.flat"})
+        self.assertEqual([e for e, _ in sent].count("install_finished"), 1)
+
+
 class ApkInstallReports(unittest.TestCase):
     """server.apk_installed: an APK that won't install is reported; connection trouble isn't."""
 
@@ -316,6 +435,12 @@ class ApkInstallReports(unittest.TestCase):
         args, kw = self.add_report.call_args
         self.assertEqual((args[0], args[1], kw["result"], kw["via"]), ("org.x", "2.0", "install_failed", "install"))
         self.assertIs(self.install_finished.call_args[0][1], False)
+
+    def test_install_without_layer_is_flagged(self):
+        self.server.apk_installed({"package": "com.private.vr", "xr_layer_missing": True}, {}, None, 4.0)
+        self.assertIs(self.install_finished.call_args[1]["xr_layer_missing"], True)
+        self.server.apk_installed({"package": "com.private.vr"}, {}, None, 4.0)
+        self.assertIsNone(self.install_finished.call_args[1]["xr_layer_missing"])
 
     def test_connection_trouble_is_not_reported(self):
         self.server.apk_installed({"package": "org.x", "version": "2.0"}, None,

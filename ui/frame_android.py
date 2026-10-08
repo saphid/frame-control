@@ -11,7 +11,7 @@ Python stdlib only. CLI: python3 ui/frame_android.py
   install-obb PKG OBB [OBB ...] | backup-data PKG ARCHIVE | restore-data PKG ARCHIVE
   refresh-art PKG|--all | patch SRC DST [--add NAME=PATH ...] | list | launch PKG | stop PKG | remove PKG | probe PKG
 """
-import base64, json, os, re, shlex, shutil, struct, subprocess, sys, threading, time, zlib
+import base64, gzip, json, os, re, shlex, shutil, struct, subprocess, sys, threading, time, zlib
 
 import frame_apk
 import frame_artwork
@@ -33,7 +33,8 @@ SHORTCUTS = os.path.join(ROOT, 'frame', 'android', 'steam_shortcuts.py')
 XR_COMPAT = os.path.join(ROOT, 'frame', 'openxr-compat')
 XR_COMPAT_FILES = {
     'assets/openxr/1/api_layers/implicit.d/XrApiLayer_FRAME_compat.json': 'XrApiLayer_FRAME_compat.json',
-    'lib/arm64-v8a/libXrApiLayer_FRAME_compat.so': 'prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so',
+    # Gzipped in the repo and the app; see frame/openxr-compat/build.sh for why.
+    'lib/arm64-v8a/libXrApiLayer_FRAME_compat.so': 'prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz',
 }
 PKG_RE = re.compile(r'^[A-Za-z][\w]*(\.[A-Za-z_][\w]*)+$')
 SSH_OPTS = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8']
@@ -41,6 +42,18 @@ SSH_OPTS = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8']
 
 class FrameError(RuntimeError):
     pass
+
+
+class LayerMissing(FrameError):
+    """The OpenXR compatibility layer's files aren't in this copy of Frame Control."""
+
+
+LAYER_MISSING = ("Frame Control's OpenXR compatibility layer is missing from this copy "
+                 "(frame/openxr-compat/prebuilt); reinstall Frame Control, or in a source "
+                 "checkout run frame/openxr-compat/build.sh")
+LAYER_MISSING_NOTE = ("Installed without the OpenXR compatibility layer, which is missing from this "
+                      "copy of Frame Control; apps that need OpenXR 1.1 may not start. Reinstalling "
+                      "Frame Control restores it.")
 
 
 def ssh(cmd, input=None, timeout=120):
@@ -94,10 +107,18 @@ def xr_compat_files(apk_path):
     for entry, rel in XR_COMPAT_FILES.items():
         try:
             with open(os.path.join(XR_COMPAT, rel), 'rb') as f:
-                add[entry] = f.read()
-        except OSError:
-            raise FrameError("the OpenXR compatibility layer isn't built; run frame/openxr-compat/build.sh")
+                data = f.read()
+            add[entry] = gzip.decompress(data) if rel.endswith('.gz') else data
+        except (OSError, EOFError, zlib.error):  # gzip.BadGzipFile is an OSError
+            add[entry] = b''
+        if not add[entry]:  # missing, unreadable (antivirus, permissions) or truncated
+            raise LayerMissing(LAYER_MISSING)
     return add
+
+
+def layer_note(meta):
+    """The missing-layer warning for an install's completion message, or ''."""
+    return LAYER_MISSING_NOTE if LAYER_MISSING_NOTE in ((meta or {}).get('vr_issues') or []) else ''
 
 
 def check_installable(info):
@@ -163,18 +184,31 @@ def install(apk_path, flatscreen=None, name=None, source=None, icon_png=None, xr
         if flatscreen is None:
             flatscreen = not info['vr']
         # VR apps get the OpenXR compatibility layer unless told otherwise; it only
-        # changes calls SteamVR would otherwise reject.
-        add = xr_compat_files(apk_path) if (info['vr'] if xr_compat is None else xr_compat) else {}
+        # changes calls SteamVR would otherwise reject. Without it OpenXR 1.0 apps
+        # still run, so a copy of Frame Control that lacks it installs anyway and
+        # says so, unless the layer was asked for explicitly.
+        add = {}
+        if info['vr'] if xr_compat is None else xr_compat:
+            try:
+                add = xr_compat_files(apk_path)
+            except LayerMissing:
+                if xr_compat:
+                    raise
+                info['vr_issues'] = list(info.get('vr_issues') or []) + [LAYER_MISSING_NOTE]
+                info['xr_layer_missing'] = True
         with _install_lock:
             if add or info['repairable']:
                 with tempfile.TemporaryDirectory(prefix='frame-vr-') as tmp:
                     patched = os.path.join(tmp, 'app.apk')
-                    info['patched'] = patch(apk_path, patched, add)['patched']
+                    try:
+                        info['patched'] = patch(apk_path, patched, add)['patched']
+                    except FrameError as e:
+                        raise FrameError(f'could not prepare the APK for the Frame: {e}') from e
                     info['launchable'] = True
                     meta = _install(patched, info, pkg, flatscreen, name, source or os.path.basename(apk_path), artwork)
             else:
                 meta = _install(apk_path, info, pkg, flatscreen, name, source, artwork)
-    except FrameError as e:
+    except Exception as e:  # not only FrameError: every failed install is reported
         _after_install(info, None, e, start)
         raise
     _after_install(info, meta, None, start)

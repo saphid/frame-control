@@ -190,8 +190,11 @@ ctest --test-dir frame/openxr-compat/build-host --output-on-failure
 
 The script produces arm64-v8a / android-24, C++17, `-O2`, static libc++, hidden
 internal symbols, stripped output, and `-Wl,-z,max-page-size=16384`.
-The committed prebuilt is `prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so`.
-Its SHA-256 is recorded below with the APK checks.
+The committed prebuilt is `prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz`,
+gzipped (`gzip -9 -n`) so the Windows installer carries it intact: electron-builder's
+7-Zip compresses a bare arm64 ELF with its ARM64 filter, which the installer's
+extractor skips. Frame Control decompresses it when injecting the layer. The
+SHA-256 of the uncompressed library is recorded below with the APK checks.
 
 [Host test output](evidence/ctest.txt): two tests passed, covering pure logic
 and the actual layer with a fake next layer and host-only log/JNI shims.

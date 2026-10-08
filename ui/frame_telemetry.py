@@ -253,6 +253,9 @@ CATEGORIES = [
     ('android_installer', re.compile(r'INSTALL_(?:FAILED|PARSE_FAILED)_[A-Z_]+')),
     ('apk_needs_newer_android', re.compile(r'needs Android API')),
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
+    ('layer_missing', re.compile(r'OpenXR compatibility layer')),
+    ('apk_repack_failed', re.compile(r'could not prepare the APK for the Frame')),
+    ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)")),
     ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name')),
     ('cant_run_on_frame', re.compile(r"can't run on the Frame")),
     # A web-link download (frame_webinstall) that broke: not the headset, whatever the reason.
@@ -366,8 +369,9 @@ def frame_seen(build, version):
     capture('frame_connected', {'steamos_build': str(build)[:40], 'steamos_version': str(version or '')[:40]})
 
 
-def install_finished(kind, ok, seconds=None, error=None, **props):
-    """kind: apk, flatpak, steam, title or web. props must already be public (no file names)."""
+def install_finished(kind, ok, seconds=None, error=None, diagnose=True, **props):
+    """kind: apk, flatpak, steam, title or web. props must already be public (no file names).
+    diagnose=False when the error is reported as a diagnostic elsewhere."""
     p = {'kind': kind, 'ok': bool(ok), **{k: v for k, v in props.items() if v is not None}}
     if seconds is not None:
         p['seconds'] = round(seconds, 1)
@@ -375,8 +379,10 @@ def install_finished(kind, ok, seconds=None, error=None, **props):
         p['error_category'], code = categorize(error)
         if code:
             p['installer_code'] = code
+    elif not ok:
+        p['error_category'] = 'other'
     capture('install_finished', p)
-    if error is not None and not ok:
+    if error is not None and not ok and diagnose:
         diagnostic(f'{kind} install failed', error)
 
 
