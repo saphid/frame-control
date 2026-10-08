@@ -11,7 +11,7 @@ Python stdlib only. CLI: python3 ui/frame_android.py
   install-obb PKG OBB [OBB ...] | backup-data PKG ARCHIVE | restore-data PKG ARCHIVE
   refresh-art PKG|--all | patch SRC DST [--add NAME=PATH ...] | list | launch PKG | stop PKG | remove PKG | probe PKG
 """
-import base64, json, os, re, shlex, shutil, struct, subprocess, sys, threading, time, zlib
+import base64, gzip, json, os, re, shlex, shutil, struct, subprocess, sys, threading, time, zlib
 
 import frame_apk
 import frame_artwork
@@ -33,7 +33,8 @@ SHORTCUTS = os.path.join(ROOT, 'frame', 'android', 'steam_shortcuts.py')
 XR_COMPAT = os.path.join(ROOT, 'frame', 'openxr-compat')
 XR_COMPAT_FILES = {
     'assets/openxr/1/api_layers/implicit.d/XrApiLayer_FRAME_compat.json': 'XrApiLayer_FRAME_compat.json',
-    'lib/arm64-v8a/libXrApiLayer_FRAME_compat.so': 'prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so',
+    # Gzipped in the repo and the app; see frame/openxr-compat/build.sh for why.
+    'lib/arm64-v8a/libXrApiLayer_FRAME_compat.so': 'prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz',
 }
 PKG_RE = re.compile(r'^[A-Za-z][\w]*(\.[A-Za-z_][\w]*)+$')
 SSH_OPTS = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8']
@@ -106,8 +107,9 @@ def xr_compat_files(apk_path):
     for entry, rel in XR_COMPAT_FILES.items():
         try:
             with open(os.path.join(XR_COMPAT, rel), 'rb') as f:
-                add[entry] = f.read()
-        except OSError:
+                data = f.read()
+            add[entry] = gzip.decompress(data) if rel.endswith('.gz') else data
+        except (OSError, EOFError, zlib.error):  # gzip.BadGzipFile is an OSError
             add[entry] = b''
         if not add[entry]:  # missing, unreadable (antivirus, permissions) or truncated
             raise LayerMissing(LAYER_MISSING)

@@ -82,7 +82,7 @@
         "to": "frame/openxr-compat",
         "filter": [
           "XrApiLayer_FRAME_compat.json",
-          "prebuilt/**/*.so"
+          "prebuilt/**/*.so.gz"
         ]
       },
       {

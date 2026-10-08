@@ -255,6 +255,10 @@ class VRTests(unittest.TestCase):
             self.assertEqual(set(add), set(frame_android.XR_COMPAT_FILES))
             self.assertIn(b'XR_APILAYER_FRAME_compat', add['assets/openxr/1/api_layers/implicit.d/XrApiLayer_FRAME_compat.json'])
             self.assertTrue(add['lib/arm64-v8a/libXrApiLayer_FRAME_compat.so'].startswith(b'\x7fELF'))
+            # The library verified on the headset (its SHA-256 is in the layer's README).
+            import hashlib
+            digest = hashlib.sha256(add['lib/arm64-v8a/libXrApiLayer_FRAME_compat.so']).hexdigest()
+            self.assertIn(digest, (Path(frame_android.XR_COMPAT) / 'README.md').read_text())
             with zipfile.ZipFile(apk, 'a') as z:  # already injected: nothing more to add
                 z.writestr('lib/arm64-v8a/libXrApiLayer_FRAME_compat.so', b'')
             self.assertEqual(frame_android.xr_compat_files(str(apk)), {})
@@ -271,7 +275,14 @@ class VRTests(unittest.TestCase):
             with patch.object(frame_android, 'XR_COMPAT', d):
                 with self.assertRaisesRegex(frame_android.LayerMissing, 'build.sh'):
                     frame_android.xr_compat_files(str(apk))
-            # Present but empty (a truncated copy, or a quarantined file) counts as missing too.
+            # Present but corrupt, or empty, counts as missing too.
+            for rel in frame_android.XR_COMPAT_FILES.values():
+                os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
+                with open(os.path.join(d, rel), 'wb') as f:
+                    f.write(b'\x1f\x8b not really gzip')
+            with patch.object(frame_android, 'XR_COMPAT', d):
+                with self.assertRaises(frame_android.LayerMissing):
+                    frame_android.xr_compat_files(str(apk))
             for rel in frame_android.XR_COMPAT_FILES.values():
                 os.makedirs(os.path.dirname(os.path.join(d, rel)) or d, exist_ok=True)
                 open(os.path.join(d, rel), 'wb').close()
@@ -285,6 +296,11 @@ class VRTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1]
         for rel in frame_android.XR_COMPAT_FILES.values():
             self.assertGreater((root / 'frame/openxr-compat' / rel).stat().st_size, 0, rel)
+        # No bare arm64 ELF ships: electron-builder's 7-Zip gives those an ARM64 filter the
+        # Windows installer can't extract, so the installed app silently lacked the library.
+        for f in (root / 'frame/openxr-compat/prebuilt').rglob('*'):
+            if f.is_file():
+                self.assertNotEqual(f.read_bytes()[:4], b'\x7fELF', f)
         build = json.loads((root / 'app/package.json').read_text())['build']
         self.assertEqual(build.get('afterPack'), 'build/check-resources.js')
         entry = next(e for e in build['extraResources'] if e['from'] == '../frame/openxr-compat')
@@ -292,6 +308,7 @@ class VRTests(unittest.TestCase):
         check = (root / 'app/build/check-resources.js').read_text()
         for rel in frame_android.XR_COMPAT_FILES.values():
             self.assertTrue(any(fnmatch.fnmatch(rel, f.replace('**/', '*/')) for f in entry['filter']), rel)
+            self.assertFalse(any(f.endswith('.so') for f in entry['filter']))
             self.assertIn('frame/openxr-compat/' + rel, check)
 
     def test_install_goes_ahead_without_a_missing_layer(self):
