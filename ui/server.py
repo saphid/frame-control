@@ -2742,6 +2742,16 @@ def main():
             if proc.poll() is None:
                 proc.terminate()
         _purge_titles(now=float("inf"))  # unconfirmed title uploads
+    # Stopped as asked, and everything above is cleaned up. Leave now, without
+    # Python's interpreter teardown: daemon threads are still running (app index
+    # downloads, the stdin watcher, telemetry, the headset link, request handlers)
+    # and none can be stopped promptly. Tearing the interpreter down under them
+    # occasionally crashed the process (SIGSEGV, seen on Python 3.13 on Linux)
+    # after a stop signal. Nothing here registers atexit work, and the OS frees
+    # the one-server lock with the process.
+    sys.stdout.flush()
+    sys.stderr.flush()
+    os._exit(0)
 
 
 if __name__ == "__main__":

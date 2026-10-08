@@ -10,6 +10,7 @@ import http.client
 import io
 import json
 import os
+import shutil
 import socket
 import struct
 import subprocess
@@ -287,15 +288,27 @@ class OneServer(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "no SIGTERM on Windows")
     def test_sigterm_while_the_app_holds_stdin_exits_cleanly(self):
-        """The app keeps stdin open; a stop signal used to abort Python (SIGABRT) at exit."""
-        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": tempfile.mkdtemp(prefix="frame-one-server-"),
-               "FRAME_ALIAS": "frame-control-test.invalid"}
-        proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
-                                env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        self.addCleanup(lambda: (proc.stdin.close(), proc.stdout.close()))
-        self.assertIn("Frame Control on", proc.stdout.readline())
-        proc.terminate()
-        self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+        """The app keeps stdin open; a stop signal used to abort Python (SIGABRT) at exit,
+        and later, now and then, crash it (SIGSEGV) while background threads were still
+        loading TLS certificates. Run a few times: that crash came about 1 run in 100."""
+        for attempt in range(5):
+            with self.subTest(attempt=attempt):
+                env = {**os.environ, "FRAME_CONTROL_DATA_DIR": tempfile.mkdtemp(prefix="frame-one-server-"),
+                       "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONFAULTHANDLER": "1"}
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
+                    shutil.rmtree(env["FRAME_CONTROL_DATA_DIR"], ignore_errors=True)
 
 
 class ArtworkSettings(unittest.TestCase):
