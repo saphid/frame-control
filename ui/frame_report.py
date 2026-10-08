@@ -13,12 +13,17 @@ frame_contact.py's `contact_consent` events; `contacts` lists them.
 """
 import os
 import platform
+import re
+import shutil
+import subprocess
 import sys
 import time
 import uuid
 
 import frame_contact
+import frame_devices
 import frame_host
+import frame_link
 import frame_telemetry
 
 KINDS = ('bug', 'idea', 'question', 'other')
@@ -28,6 +33,8 @@ LOG_LINES = 60
 ACTIVITY_LINES = 25
 
 frame = {}  # the Frame's last known SteamOS build, set by server.status()
+link = None  # the connector (frame_link.Link), set by server.main; None on the Frame itself
+_ssh_versions = {}  # ssh path -> `ssh -V`, asked once per run
 
 
 def u16(s):
@@ -59,9 +66,140 @@ def _log_tail():
     return list(reversed(keep[-LOG_LINES:]))
 
 
+def ssh_path_kind(path):
+    """What sort of ssh a path is, never the path itself (it can hold a user name)."""
+    if not path:
+        return "not found"
+    p = str(path).replace("\\", "/").lower()
+    for marks, kind in ((("/system32/openssh/", "/sysnative/openssh/"), "Windows OpenSSH (System32)"),
+                        (("/program files/openssh",), "OpenSSH in Program Files"),
+                        (("/git/",), "Git for Windows"), (("msys", "cygwin"), "MSYS2/Cygwin"),
+                        (("/opt/homebrew/", "/usr/local/", "linuxbrew"), "Homebrew or /usr/local"),
+                        (("/nix/",), "Nix")):
+        if any(m in p for m in marks):
+            return kind
+    if p in ("/usr/bin/ssh", "/bin/ssh"):
+        return "system OpenSSH"
+    return "other"
+
+
+def _ssh_on_path():
+    """Every ssh on PATH, in the order they're found; the first is the one the app runs."""
+    names = ("ssh.exe", "ssh") if frame_host.WINDOWS else ("ssh",)
+    found, seen = [], set()
+    for d in os.get_exec_path():
+        for name in names:
+            cand = os.path.join(d, name)
+            key = os.path.normcase(os.path.abspath(cand))
+            if key not in seen and os.path.isfile(cand):
+                seen.add(key)
+                found.append(cand)
+                break
+    return found
+
+
+def ssh_version(path):
+    """`ssh -V`'s first line (it prints to stderr), asked once per run."""
+    if path not in _ssh_versions:
+        try:
+            r = frame_host.run_ssh([path, "-V"], capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                                   errors="replace", timeout=5)
+            lines = ((r.stderr or "") + (r.stdout or "")).strip().splitlines()
+            _ssh_versions[path] = lines[0][:120] if lines else f"no version (exit {r.returncode})"
+        except (OSError, subprocess.SubprocessError) as e:
+            _ssh_versions[path] = f"couldn't run it ({type(e).__name__})"
+    return _ssh_versions[path]
+
+
+def ssh_line():
+    path = shutil.which("ssh")
+    if not path:
+        return "SSH: no ssh on PATH"
+    others = [ssh_path_kind(p) for p in _ssh_on_path()
+              if os.path.normcase(os.path.abspath(p)) != os.path.normcase(os.path.abspath(path))]
+    others = [k for i, k in enumerate(others) if k not in others[:i]]
+    return f"SSH: {ssh_path_kind(path)}, {ssh_version(path)}" + (f"; also on PATH: {', '.join(others)}" if others else "")
+
+
+def config_line(alias):
+    """Whether ~/.ssh/config has the managed block for the alias, and a hand-written Host for it."""
+    try:
+        text = frame_devices.ssh_config().read_text(encoding="utf-8", errors="replace")
+    except FileNotFoundError:
+        return "~/.ssh/config: missing"
+    except OSError as e:
+        return f"~/.ssh/config: can't read it ({type(e).__name__})"
+    blocks = [b["alias"] for b in frame_devices.parse_blocks(text)]
+    outside, inside = [], None
+    for line in text.splitlines():
+        m = frame_devices.BLOCK_RE.fullmatch(line.strip())
+        if m:
+            inside = m.group(1)
+        elif inside and line.strip() == frame_devices.end_mark(inside):
+            inside = None
+        elif not inside:
+            outside.append(line)
+    own = any(alias in re.split(r"[\s=]+", ln.strip())[1:] for ln in outside
+              if re.match(r"(?i)\s*host[\s=]", ln))
+    return (f"~/.ssh/config: managed \"{alias}\" block {'yes' if alias in blocks else 'no'} "
+            f"({len(blocks)} managed in all); hand-written \"Host {alias}\" {'yes' if own else 'no'}")
+
+
+def connection_lines():
+    """A short summary of the connector: kinds of addresses and states, never the addresses."""
+    if link is None:
+        return ["Connection: no connector (this server doesn't reach a headset over SSH)"]
+    snap = link.snapshot()
+    active = link.active_device()
+    alias = active.get("alias") or "?"
+    hosts = [a.get("host") for a in active.get("addresses") or ()] + [active.get("frozen_host")]
+    hosts += [r.get(k) for r in snap.get("probes") or () for k in ("host", "ip")]
+    hosts += [(snap.get("via") or {}).get(k) for k in ("host", "ip")]
+
+    def hide(text):
+        return frame_link.hide_hosts(str(text or ""), hosts, keep=(alias,))
+
+    def ssh_said(raw, message):
+        last = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()][-1:]
+        return f" | ssh said: {hide(last[0])[:300]}" if last and last[0] != message else ""
+
+    phase, err, via = snap.get("phase") or "idle", snap.get("error"), snap.get("via")
+    head = f"Connection: {phase}"
+    if phase == "connected" and via:
+        rtt = via.get("rtt_ms")
+        head += f" via {frame_link.address_kind(via.get('host'), via.get('ip'))}" + (f" ({rtt:g} ms)" if rtt is not None else "")
+    elif err:
+        head += f" at {err.get('stage')}"
+    head += f", attempt {snap.get('attempt') or 0}" + (f" ({snap['reason']})" if snap.get("reason") else "")
+    lines = [head]
+    kind = ("none set up" if active.get("none") else "a bare ssh alias" if active.get("transient")
+            else f"saved, {len(active.get('addresses') or [])} address(es)")
+    lines.append(f"Headsets: {len(link.reg.devices())} saved; active \"{alias}\" ({kind})")
+    if err:
+        lines.append(f"Error: {hide(err.get('message'))}{ssh_said(err.get('raw'), err.get('message'))}")
+    last = link.last_failure
+    if last and (not err or last.get("message") != err.get("message")):
+        ago = max(0, int(frame_link.now() - last.get("at", 0)))
+        lines.append(f"Last failure ({last.get('stage')}, {ago // 60} min {ago % 60} s ago): "
+                     f"{hide(last.get('message'))}{ssh_said(last.get('raw'), last.get('message'))}")
+    lines.append(f"Addresses tried: {frame_link.probes_summary(snap.get('probes')) or 'none yet'}")
+    net = snap.get("network")
+    if net:
+        ts = net.get("tailscale") or {}
+        lines.append(f"Network: gateway {'yes' if net.get('gateway') else 'no'}, Tailscale "
+                     f"{'on' if ts.get('up') else 'off' if ts.get('installed') else 'not installed'}")
+    for part in (ssh_line, lambda: config_line(alias)):
+        try:
+            lines.append(part())
+        except Exception as e:  # a report must still go out
+            lines.append(f"({type(e).__name__} while checking SSH)")
+    return lines
+
+
 def diagnostics(activity=(), include_logs=False, limit=DIAG_MAX):
     """What a report includes, scrubbed and at most `limit` UTF-16 units. Always the versions
-    and builds; recent activity and the server log only when asked for, since they can name
+    and builds, and a connection summary (connection_lines: kinds of address and states, never
+    the addresses, so "the app can't find the headset" can be told apart); recent activity and the server log only when asked for, since they can name
     files. Sections are filled in order of use, newest lines first, so trimming drops the oldest."""
     t = frame_telemetry.state()
     levels = ', '.join(f"{name} {'on' if on else 'off'}" for name, on in
@@ -74,7 +212,11 @@ def diagnostics(activity=(), include_logs=False, limit=DIAG_MAX):
         f"Analytics: {levels}",
         f"Report time: {time.strftime('%Y-%m-%d %H:%M %Z')}",
     ]
-    out = frame_telemetry.scrub('\n'.join(env), limit=limit)
+    try:
+        conn = connection_lines()
+    except Exception as e:  # never stop a report over its diagnostics
+        conn = [f"Connection: summary unavailable ({type(e).__name__})"]
+    out = frame_telemetry.scrub('\n'.join(env) + '\n\n' + '\n'.join(conn), limit=limit)
     if not include_logs:
         return cut(out, limit)
     sections = [('Recent activity (newest first):', [str(a)[:300] for a in list(activity)[:ACTIVITY_LINES] if isinstance(a, str)]),

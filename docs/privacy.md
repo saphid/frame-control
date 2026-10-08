@@ -122,10 +122,37 @@ With **Include diagnostics** ticked (the default), the report adds:
 - the OS, its release and CPU, and the Python version
 - the Frame's SteamOS build, if it has connected since the app started
 - which analytics levels are on
+- a short connection summary, so "the app can't find the headset" can be
+  diagnosed:
+  - the connector's state (idle, connecting, connected or failed), the stage
+    it failed at (network, find, ssh, identity or login), the attempt number
+    and why it started
+  - how many headsets are saved, and the active one's ssh alias name (such as
+    `frame`) and number of addresses
+  - the current error and the last failure (with how long ago), as shown on
+    the connection pill, plus ssh's last line about it. The headset's
+    addresses and host names, and the user name in `user@host`, are replaced
+    with `<host>` and `<user>@`
+  - for each address tried, only its kind (`.local`, `ipv4`, `ipv6`,
+    `ipv6 link-local`, `tailscale`, `hostname`, `alias` for one read from
+    `~/.ssh/config`, and what a name resolved to, such as
+    `.local->ipv6 link-local`) and how the try went (answered, unresolved,
+    timeout, refused, unreachable, SSH failed). Never the address itself
+  - whether this computer has a network gateway, and whether Tailscale is on,
+    off or not installed
+  - which kind of `ssh` the app runs (such as Windows OpenSSH in System32,
+    Git for Windows, Homebrew, or the system one), never its path, with the
+    first line of `ssh -V`, and the kinds of any other `ssh` on the PATH
+  - whether `~/.ssh/config` exists, whether it has Set Up Connection's
+    managed block for the active alias, how many managed blocks it has, and
+    whether a hand-written `Host` line also names the alias
 
 **Also include recent activity and the server log** is off by default,
 because those lines can name files and apps. When ticked, it adds the newest
-Activity lines and server log lines, without the request lines.
+Activity lines and server log lines, without the request lines. The server
+log has a line for each failed connection attempt (the same stage, message
+and address kinds as above, scrubbed the same way when written; a failure
+that repeats on every retry is written at most once every 5 minutes).
 
 Everything is scrubbed like error details and limited to what fits in the
 report. Environment details are kept first, then the newest lines. **Show

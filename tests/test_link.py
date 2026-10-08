@@ -6,6 +6,7 @@ Run: python3 -m unittest discover -s tests
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import http.client
+import io
 import json
 import os
 import shutil
@@ -598,6 +599,96 @@ class Connecting(unittest.TestCase):
         self.assertEqual(fl.next_alias(self.link), "frame")
         (self.dir / "ssh" / "config").write_text("Host frame lab-*\n  HostName 10.0.0.7\n")  # someone's own `frame`
         self.assertEqual(fl.next_alias(self.link), "frame-2")
+
+    # ---- what a failure leaves for a problem report ----
+    def stderr(self):
+        fl._logged.update(line=None, at=0.0, repeats=0)
+        err = io.StringIO()
+        p = mock.patch.object(sys, "stderr", err)
+        p.start()
+        self.addCleanup(p.stop)
+        return err
+
+    def test_each_failure_goes_to_the_server_log_scrubbed(self):
+        err = self.stderr()
+        self.device("steamdeck-jane.invalid", "localhost")
+        self.hosts({"localhost": "denied"})
+        self.link.connect(["start"])
+        line = err.getvalue()
+        self.assertIn("frame_link: login failed: The Frame didn't accept this computer's SSH key.", line)
+        self.assertIn("addresses: hostname unresolved; hostname->ipv4", line)
+        for leaked in ("steamdeck-jane", "127.0.0.1", "localhost"):
+            self.assertNotIn(leaked, line)
+        self.assertEqual(self.link.last_failure["stage"], "login")
+
+    def test_the_same_failure_isnt_logged_every_retry(self):
+        err = self.stderr()
+        for _ in range(3):
+            fl.log_failure("find", "The Frame isn't answering.", "", [{"host": "frame.local", "state": "timeout"}])
+        self.assertEqual(err.getvalue().count("frame_link:"), 1)
+        fl._logged["at"] -= fl.LOG_REPEAT_EVERY + 1
+        fl.log_failure("find", "The Frame isn't answering.", "", [{"host": "frame.local", "state": "timeout"}])
+        self.assertIn("(and 2 more times)", err.getvalue())
+        self.assertNotIn("frame.local", err.getvalue())
+
+    def test_reports_carry_a_connection_summary_without_addresses(self):
+        import frame_report as fr
+        self.stderr()
+        self.device("steamdeck-jane.invalid", "frame-t.invalid")
+        (self.dir / "ssh" / "config").write_text(
+            f"{fd.begin_mark('frame-t')}\nHost frame-t\n  HostName 192.168.1.50\n  User steamos\n{fd.end_mark('frame-t')}\n"
+            "Host frame-t\n  HostName 10.0.0.7\n")
+        self.link.connect(["start"])
+        fake = subprocess.CompletedProcess(["ssh", "-V"], 0, "", "OpenSSH_9.9p1, LibreSSL 3.3.6\n")
+        with mock.patch.object(fr, "link", self.link), mock.patch.dict(fr._ssh_versions, clear=True), \
+                mock.patch.object(fr.frame_host, "run_ssh", return_value=fake):
+            text = fr.diagnostics()
+        self.assertIn("Connection: failed at find, attempt 1 (Starting up)", text)
+        self.assertIn('Headsets: 1 saved; active "frame-t" (saved, 2 address(es))', text)
+        self.assertIn("Error: Can't find the Frame on the network. | ssh said: ssh: Could not resolve hostname <host>", text)
+        self.assertIn("Addresses tried: hostname unresolved; hostname unresolved", text)
+        self.assertIn("Network: gateway yes, Tailscale not installed", text)
+        self.assertIn("OpenSSH_9.9p1", text)
+        self.assertIn('~/.ssh/config: managed "frame-t" block yes (1 managed in all); hand-written "Host frame-t" yes', text)
+        for leaked in ("steamdeck-jane", "192.168", "10.0.0.7", "steamos", str(self.dir)):
+            self.assertNotIn(leaked, text)
+
+
+class ConnectionDiagnostics(unittest.TestCase):
+    def test_address_kinds_never_the_address(self):
+        self.assertEqual(fl.address_kind("frame.local", "fe80::1%eth0"), ".local->ipv6 link-local")
+        self.assertEqual(fl.address_kind("frame.local", "192.168.1.5"), ".local->ipv4")
+        self.assertEqual(fl.address_kind("frame.local"), ".local")
+        self.assertEqual(fl.address_kind("fe80::1%5"), "ipv6 link-local")
+        self.assertEqual(fl.address_kind("2001:db8::1"), "ipv6")
+        self.assertEqual(fl.address_kind("192.168.1.5", "192.168.1.5"), "ipv4")
+        self.assertEqual(fl.address_kind("100.101.102.103"), "tailscale")
+        self.assertEqual(fl.address_kind("frame.tail1234.ts.net", "100.101.102.103"), "tailscale")
+        self.assertEqual(fl.address_kind("steamdeck"), "hostname")
+        self.assertEqual(fl.probes_summary([{"host": "frame", "label": "from ~/.ssh/config", "state": "timeout"}]),
+                         "alias hostname timeout")
+
+    def test_hidden_hosts_leave_the_rest(self):
+        self.assertEqual(fl.hide_hosts("frame_link: Could not resolve hostname frame", ["frame"]),
+                         "frame_link: Could not resolve hostname <host>")
+        self.assertEqual(fl.hide_hosts("ssh frame to frame.local", ["frame.local", "frame"], keep=("frame",)),
+                         "ssh frame to <host>")
+        self.assertEqual(fl.hide_hosts("steamos@frame: Permission denied (publickey).", []),
+                         "<user>@frame: Permission denied (publickey).")
+
+    def test_ssh_kinds(self):
+        import frame_report as fr
+        for path, kind in ((r"C:\WINDOWS\System32\OpenSSH\ssh.exe", "Windows OpenSSH (System32)"),
+                           (r"C:\Program Files\OpenSSH\ssh.exe", "OpenSSH in Program Files"),
+                           (r"C:\Program Files\Git\usr\bin\ssh.exe", "Git for Windows"),
+                           ("/usr/bin/ssh", "system OpenSSH"), ("/opt/homebrew/bin/ssh", "Homebrew or /usr/local"),
+                           ("/home/jane/bin/ssh", "other"), (None, "not found")):
+            self.assertEqual(fr.ssh_path_kind(path), kind)
+
+    def test_no_connector_says_so(self):
+        import frame_report as fr
+        with mock.patch.object(fr, "link", None):
+            self.assertIn("Connection: no connector", fr.diagnostics())
 
 
 @unittest.skipIf(os.name == "nt", "the stand-in ssh is a POSIX script")
