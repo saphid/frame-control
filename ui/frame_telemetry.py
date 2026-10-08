@@ -53,6 +53,12 @@ SENT_KEEP = 200
 OUTBOX_MAX = 2000  # events kept while offline; the oldest go first
 FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
+# Not faults in Frame Control: the headset asleep, away or not set up yet. The status poll
+# meets these every few seconds, so each is sent at most once per session, whatever the wording,
+# but only for an error marked where ssh ran as ssh failing to reach the headset
+# (frame_host.link_failure). The message alone isn't evidence: a download's "Connection reset by
+# peer", or a file name with ssh's words in it, keeps the usual window.
+EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up')
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -240,6 +246,11 @@ def scrub(text, limit=2000):
 
 # From the most to the least specific; the first match wins.
 CATEGORIES = [
+    # A web-link download (frame_webinstall) that broke or didn't check out: not the headset,
+    # whatever the reason, and first so a file name in the message can't put it elsewhere.
+    ('download_failed', re.compile(r"\A(?:download failed: |download cut off at |downloaded \d+ bytes; |"
+                                   r"the server says \d+ bytes; )|doesn't match the manifest's sha256; "
+                                   r"not installing it\Z")),
     ('android_installer', re.compile(r'INSTALL_(?:FAILED|PARSE_FAILED)_[A-Z_]+')),
     ('apk_needs_newer_android', re.compile(r'needs Android API')),
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
@@ -251,8 +262,13 @@ CATEGORIES = [
     ('steam_shortcut', re.compile(r'(?i)steam did not return a shortcut|shortcut list|no Steam shortcut')),
     ('frame_not_set_up', re.compile(r'(?i)Could not resolve hostname|no "?frame"? (?:SSH )?alias')),
     ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed')),
+    # Anything ssh says about its own connection: "ssh: connect to host … port 22: <reason>" (Windows
+    # says "Unknown error"), a dropped shared connection (mux_client_…, client_loop), and Windows'
+    # "banner exchange: Connection to UNKNOWN port -1" (its ssh can't name a peer whose connect
+    # failed late). Not a bare "ssh exited 255": a command on the Frame can exit 255 too.
     ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|No route to host|'
-                                     r'Network is unreachable|Operation timed out|asleep|kex_exchange')),
+                                     r'Network is unreachable|Host is down|asleep|kex_exchange|banner exchange|'
+                                     r'ssh: connect to host |mux_client_|client_loop: ')),
     ('frame_disk_full', re.compile(r'(?i)No space left|disk full|ENOSPC')),
     ('download_failed', re.compile(r'(?i)HTTP (?:Error )?\d{3}|URLError|download|certificate verify failed')),
     ('flatpak', re.compile(r'(?i)flatpak|flathub')),
@@ -369,16 +385,34 @@ def install_finished(kind, ok, seconds=None, error=None, diagnose=True, **props)
         diagnostic(f'{kind} install failed', error)
 
 
+def link_failed(error):
+    """Whether an ssh helper marked this error (frame_host.link_failure) as ssh failing to reach the
+    headset: the error itself, or one it was re-raised from (`raise Failure(...) from e`)."""
+    for _ in range(10):  # a cause chain is short; never loop on a cycle
+        if error is None:
+            return False
+        if getattr(error, 'frame_link_failed', False):
+            return True
+        error = getattr(error, '__cause__', None)
+    return False
+
+
 def diagnostic(where, error, tb=None):
     """An error for the opt-in diagnostics level: scrubbed text, and a traceback if there is one."""
     if not enabled('diagnostics'):
         return
     message = scrub(error)
-    fingerprint = f'{where}|{message[:120]}'
+    category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
-            return
+        if category in EXPECTED_CATEGORIES and link_failed(error):
+            fingerprint = f'expected|{category}'
+            if fingerprint in _seen_errors:
+                return
+        else:
+            fingerprint = f'{where}|{message[:120]}'
+            if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
+                return
         _seen_errors[fingerprint] = now
     exc_type = type(error).__name__ if isinstance(error, BaseException) else 'Error'
     frames = []
@@ -391,7 +425,7 @@ def diagnostic(where, error, tb=None):
                                                 'mechanism': {'handled': True, 'type': 'generic'},
                                                 'stacktrace': {'type': 'raw', 'frames': frames[-30:]}}],
                            '$exception_type': exc_type, '$exception_message': message,
-                           'where': scrub(where, 200), 'error_category': categorize(error)[0]},
+                           'where': scrub(where, 200), 'error_category': category},
             level='diagnostics')
 
 

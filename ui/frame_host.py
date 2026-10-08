@@ -8,6 +8,7 @@ CLI (used by the Electron app, so terminal handling lives in one place):
 import hashlib
 import io
 import os
+import re
 import shlex
 import shutil
 import socket
@@ -34,6 +35,25 @@ DETACHED = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if WINDOWS
 
 class HostError(RuntimeError):
     pass
+
+
+# The start of a line in which ssh itself says the link to the headset failed (not the command it ran).
+SSH_LINK_FAILED = re.compile(r"^(?:ssh: connect to host |ssh: Could not resolve hostname |banner exchange: |"
+                             r"kex_exchange_identification: |mux_client_\w+: |client_loop: |"
+                             r"Connection (?:closed|reset) by \S+ port \d+|Connection timed out during banner exchange)",
+                             re.M)
+
+
+def ssh_link_failed(returncode, stderr):
+    """Whether an ssh run failed to reach the headset: ssh's own exit code (255) and its own words."""
+    return returncode == 255 and bool(SSH_LINK_FAILED.search(stderr or ""))
+
+
+def link_failure(error):
+    """Mark an exception as ssh failing to reach the headset, judged where ssh ran (so error
+    reports can tell it from a message that only looks like one: a file name, say)."""
+    error.frame_link_failed = True
+    return error
 
 
 class Unreachable(HostError):
