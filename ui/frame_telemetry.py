@@ -55,12 +55,14 @@ FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
 # Not faults in Frame Control: the headset asleep, away or not set up yet. The status poll
 # meets these every few seconds, so each is sent at most once per session, whatever the wording,
-# but only when ssh's own wording shows it was the link to the headset that failed (a download's
-# "Connection reset by peer" is also frame_unreachable by category, and keeps the usual window).
+# but only when a line starts the way ssh's own report of a failed link does (a download's
+# "Connection reset by peer" is also frame_unreachable by category, and keeps the usual window;
+# so does any message that merely mentions these words, in a file name say).
 EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up')
-FRAME_LINK_FAILED = re.compile(r'ssh: connect to host |ssh: Could not resolve hostname|no "?frame"? (?:SSH )?alias|'
-                               r'Timed out talking to |banner exchange: |kex_exchange_identification|'
-                               r'mux_client_|client_loop: |Connection (?:closed|reset) by \S+ port \d+')
+FRAME_LINK_FAILED = re.compile(r'^(?:ssh: connect to host \S+ port \d+: |ssh: Could not resolve hostname |'
+                               r'Timed out talking to \S+$|banner exchange: |kex_exchange_identification: |'
+                               r'mux_client_\w+: |client_loop: |Connection (?:closed|reset) by \S+ port \d+)',
+                               re.M)
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')

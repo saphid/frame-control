@@ -130,6 +130,27 @@ class Gates(Base):
         self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
                          ["frame_unreachable", "download_failed", "frame_unreachable"])
 
+    def test_a_message_that_only_mentions_ssh_wording_is_still_sent(self):
+        # Review round 2: the words must start a line as ssh prints them. A web-link download whose
+        # file name has them in it (checksum mismatch, the real message) is not a link failure.
+        tm.update_settings({"diagnostics": True})
+        tm.diagnostic("POST /api/comfort status", RuntimeError("ssh: connect to host 10.0.0.5 port 22: Connection timed out"))
+        for name in ("kex_exchange_identification.zip", "client_loop-timed-out.apk", "banner exchange.zip",
+                     "Timed out talking to frame.zip"):
+            tm.diagnostic("web install failed",
+                          RuntimeError(f"{name} doesn't match the manifest's sha256; not installing it"))
+        self.assertEqual(len(self.queued()), 5)
+        for message in ("ssh: connect to host 10.0.0.5 port 22: Connection timed out",
+                        "Warning: Permanently added\r\nkex_exchange_identification: read: Connection reset by peer",
+                        "Connection closed by 10.0.0.5 port 22", "Timed out talking to frame",
+                        "banner exchange: Connection to UNKNOWN port -1: Connection refused",
+                        "mux_client_request_session: read from master failed: Broken pipe",
+                        "client_loop: send disconnect: Connection reset"):
+            self.assertTrue(tm.FRAME_LINK_FAILED.search(message), message)
+        for message in ("kex_exchange_identification.zip doesn't match", "x client_loop: y",
+                        "Timed out talking to frame.zip doesn't match", "download failed: Connection reset by peer"):
+            self.assertFalse(tm.FRAME_LINK_FAILED.search(message), message)
+
     def test_a_command_that_exits_255_is_not_a_connection_failure(self):
         # A bare "ssh exited 255" is ssh with nothing on stderr: the command on the Frame may
         # have exited 255 itself. It keeps the usual window, beside a connection failure.
