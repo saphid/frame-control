@@ -29,6 +29,7 @@
         ]
       }
     ],
+    "afterPack": "build/check-resources.js",
     "directories": {
       "output": "dist",
       "buildResources": "build"

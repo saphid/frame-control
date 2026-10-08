@@ -43,6 +43,18 @@ class FrameError(RuntimeError):
     pass
 
 
+class LayerMissing(FrameError):
+    """The OpenXR compatibility layer's files aren't in this copy of Frame Control."""
+
+
+LAYER_MISSING = ("Frame Control's OpenXR compatibility layer is missing from this copy "
+                 "(frame/openxr-compat/prebuilt); reinstall Frame Control, or in a source "
+                 "checkout run frame/openxr-compat/build.sh")
+LAYER_MISSING_NOTE = ("Installed without the OpenXR compatibility layer, which is missing from this "
+                      "copy of Frame Control; apps that need OpenXR 1.1 may not start. Reinstalling "
+                      "Frame Control restores it.")
+
+
 def ssh(cmd, input=None, timeout=120):
     try:
         # No inherited stdin (see server.ssh): Windows' ssh.exe would wait on it.
@@ -96,7 +108,9 @@ def xr_compat_files(apk_path):
             with open(os.path.join(XR_COMPAT, rel), 'rb') as f:
                 add[entry] = f.read()
         except OSError:
-            raise FrameError("the OpenXR compatibility layer isn't built; run frame/openxr-compat/build.sh")
+            add[entry] = b''
+        if not add[entry]:  # missing, unreadable (antivirus, permissions) or truncated
+            raise LayerMissing(LAYER_MISSING)
     return add
 
 
@@ -159,18 +173,31 @@ def install(apk_path, flatscreen=None, name=None, source=None, icon_png=None, xr
         if flatscreen is None:
             flatscreen = not info['vr']
         # VR apps get the OpenXR compatibility layer unless told otherwise; it only
-        # changes calls SteamVR would otherwise reject.
-        add = xr_compat_files(apk_path) if (info['vr'] if xr_compat is None else xr_compat) else {}
+        # changes calls SteamVR would otherwise reject. Without it OpenXR 1.0 apps
+        # still run, so a copy of Frame Control that lacks it installs anyway and
+        # says so, unless the layer was asked for explicitly.
+        add = {}
+        if info['vr'] if xr_compat is None else xr_compat:
+            try:
+                add = xr_compat_files(apk_path)
+            except LayerMissing:
+                if xr_compat:
+                    raise
+                info['vr_issues'] = list(info.get('vr_issues') or []) + [LAYER_MISSING_NOTE]
+                info['xr_layer_missing'] = True
         with _install_lock:
             if add or info['repairable']:
                 with tempfile.TemporaryDirectory(prefix='frame-vr-') as tmp:
                     patched = os.path.join(tmp, 'app.apk')
-                    info['patched'] = patch(apk_path, patched, add)['patched']
+                    try:
+                        info['patched'] = patch(apk_path, patched, add)['patched']
+                    except FrameError as e:
+                        raise FrameError(f'could not prepare the APK for the Frame: {e}') from e
                     info['launchable'] = True
                     meta = _install(patched, info, pkg, flatscreen, name, source or os.path.basename(apk_path), artwork)
             else:
                 meta = _install(apk_path, info, pkg, flatscreen, name, source, artwork)
-    except FrameError as e:
+    except Exception as e:  # not only FrameError: every failed install is reported
         _after_install(info, None, e, start)
         raise
     _after_install(info, meta, None, start)

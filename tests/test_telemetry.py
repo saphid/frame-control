@@ -180,6 +180,17 @@ class Scrub(unittest.TestCase):
                          "frame_unreachable")
         self.assertEqual(tm.categorize("something new")[0], "other")
 
+    def test_install_failure_categories(self):
+        import frame_android
+        self.assertEqual(tm.categorize(frame_android.LayerMissing(frame_android.LAYER_MISSING))[0], "layer_missing")
+        # The message 0.4.0 sent, so old and new builds land in the same bucket.
+        self.assertEqual(tm.categorize("the OpenXR compatibility layer isn't built; run "
+                                       "frame/openxr-compat/build.sh")[0], "layer_missing")
+        self.assertEqual(tm.categorize("could not prepare the APK for the Frame: ZIP64 APKs are unsupported")[0],
+                         "apk_repack_failed")
+        self.assertEqual(tm.categorize(FileNotFoundError(2, "No such file or directory", "ssh"))[0], "tool_missing")
+        self.assertEqual(tm.categorize("[WinError 2] The system cannot find the file specified")[0], "tool_missing")
+
 
 class Compat(Base):
     def test_reports_are_shared_only_after_opting_in_without_file_names(self):
@@ -205,6 +216,21 @@ class Compat(Base):
         self.assertEqual([e["properties"]["id"] for e in self.queued() if e["event"] == "compat_report"], ["old1"])
 
 
+class InstallFinished(unittest.TestCase):
+    def test_failure_category_only_no_text(self):
+        """install_finished carries a fixed category for a failure, never the message or a file name."""
+        import frame_android
+        with mock.patch.object(tm, "capture") as capture, mock.patch.object(tm, "diagnostic"):
+            tm.install_finished("apk", False, 0.0, frame_android.LayerMissing(
+                "C:\\Users\\Bob\\My Game.apk: " + frame_android.LAYER_MISSING), catalog=False)
+            props = capture.call_args[0][1]
+            self.assertEqual(props["error_category"], "layer_missing")
+            self.assertNotIn("Bob", repr(props))
+            self.assertEqual(set(props), {"kind", "ok", "seconds", "error_category", "catalog"})
+            tm.install_finished("apk", False)
+            self.assertEqual(capture.call_args[0][1]["error_category"], "other")
+
+
 class ApkInstallReports(unittest.TestCase):
     """server.apk_installed: an APK that won't install is reported; connection trouble isn't."""
 
@@ -223,6 +249,12 @@ class ApkInstallReports(unittest.TestCase):
         args, kw = self.add_report.call_args
         self.assertEqual((args[0], args[1], kw["result"], kw["via"]), ("org.x", "2.0", "install_failed", "install"))
         self.assertIs(self.install_finished.call_args[0][1], False)
+
+    def test_install_without_layer_is_flagged(self):
+        self.server.apk_installed({"package": "com.private.vr", "xr_layer_missing": True}, {}, None, 4.0)
+        self.assertIs(self.install_finished.call_args[1]["xr_layer_missing"], True)
+        self.server.apk_installed({"package": "com.private.vr"}, {}, None, 4.0)
+        self.assertIsNone(self.install_finished.call_args[1]["xr_layer_missing"])
 
     def test_connection_trouble_is_not_reported(self):
         self.server.apk_installed({"package": "org.x", "version": "2.0"}, None,

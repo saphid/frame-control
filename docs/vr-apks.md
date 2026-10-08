@@ -249,6 +249,10 @@ the app wants 1.1 and enables the extensions that became 1.1 core; maps
 and keeps the current refresh rate when SteamVR refuses a requested one.
 `meta.json` records `"patched": ["openxr-compat"]`. Skip it with
 `install … --no-xr-compat`. Its decisions go to logcat under `FrameXrCompat`.
+If this copy of Frame Control is missing the layer's library (an incomplete
+install, or a file removed after installing), VR apps install without it and
+the install message says so; OpenXR 1.0 apps still run. Release builds fail
+to package without it (`app/build/check-resources.js`).
 
 Verified on the headset (2026-09-28):
 

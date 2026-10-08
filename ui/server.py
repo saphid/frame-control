@@ -1305,7 +1305,8 @@ def apk_installed(info, meta, error, seconds):
     # Package names only for catalogue apps, which are public; a private APK's name stays here.
     # No version: a local rebuild can share a catalogue app's package name but carry anything in its version.
     frame_telemetry.install_finished("apk", error is None, seconds, error, catalog=in_catalog,
-                                     package=pkg if in_catalog else None)
+                                     package=pkg if in_catalog else None,
+                                     xr_layer_missing=True if (info or {}).get("xr_layer_missing") else None)
     if error is not None and pkg and frame_telemetry.categorize(error)[0] in APK_FAULTS:
         frame_catalog.add_report(pkg, info.get("version"), result="install_failed", notes=str(error)[:300],
                                  via="install", label=info.get("label"))
