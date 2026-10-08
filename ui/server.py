@@ -1255,8 +1255,8 @@ def android(body):
 
             def work():
                 m = frame_apk_versions.install(pkg, url) if url else frame_catalog.install(pkg)
-                return {"message": f"Installed {m['label']}. It's in the Steam library; launching it opens its own panel.",
-                        "app": m}
+                message = f"Installed {m['label']}. It's in the Steam library; launching it opens its own panel."
+                return {"message": f"{message} {frame_android.layer_note(m)}".strip(), "app": m}
             return start_job(f"Install {pkg}", work)
         if action == "refresh-art":
             if not pkg and not body.get("all"):
@@ -1304,8 +1304,12 @@ def apk_installed(info, meta, error, seconds):
     in_catalog = bool(pkg) and pkg in by_pkg
     # Package names only for catalogue apps, which are public; a private APK's name stays here.
     # No version: a local rebuild can share a catalogue app's package name but carry anything in its version.
+    # frame_android.install re-raises anything that isn't a FrameError, and whoever
+    # catches it (a job, a request) reports it with its traceback: once is enough.
     frame_telemetry.install_finished("apk", error is None, seconds, error, catalog=in_catalog,
-                                     package=pkg if in_catalog else None)
+                                     diagnose=error is None or isinstance(error, frame_android.FrameError),
+                                     package=pkg if in_catalog else None,
+                                     xr_layer_missing=True if (info or {}).get("xr_layer_missing") else None)
     if error is not None and pkg and frame_telemetry.categorize(error)[0] in APK_FAULTS:
         frame_catalog.add_report(pkg, info.get("version"), result="install_failed", notes=str(error)[:300],
                                  via="install", label=info.get("label"))
@@ -1844,8 +1848,12 @@ def _webinstall_run(plan, job):
         job["error"] = str(e) if isinstance(e, known) else f"{type(e).__name__}: {e}"
         job["phase"] = "error"
         # An APK that failed to install was counted by apk_installed.
-        if not isinstance(e, frame_webinstall.Cancelled) and not (stage == "install" and plan.get("kind") == "apk"):
+        apk_install = stage == "install" and plan.get("kind") == "apk"
+        if not isinstance(e, frame_webinstall.Cancelled) and not apk_install:
             frame_telemetry.install_finished("web", False, error=e, stage=stage, kind_detail=plan.get("kind"))
+        elif apk_install and not isinstance(e, known):
+            # Not a FrameError, so apk_installed left its diagnostic to whoever caught it: here.
+            frame_telemetry.diagnostic("web install", e)
     finally:
         with _web_lock:
             job.pop("_conn", None)
