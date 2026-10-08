@@ -305,9 +305,9 @@ class LinkFailureProvenance(Base):
             self.addCleanup(p.stop)
         tm.update_settings({"diagnostics": True})
 
-    def ssh_fails(self, module, returncode, stderr):
+    def ssh_fails(self, module, returncode, stderr, stdout=""):
         """Run module.ssh with ssh exiting `returncode`; -> the exception, as the route handler gets it."""
-        done = subprocess.CompletedProcess(["ssh"], returncode, "", stderr)
+        done = subprocess.CompletedProcess(["ssh"], returncode, stdout, stderr)
         with mock.patch.object(frame_host, "run_ssh", return_value=done):
             try:
                 module.ssh("true")
@@ -342,6 +342,44 @@ class LinkFailureProvenance(Base):
                                  (1, "ssh: connect to host 10.0.0.5 port 22: Connection timed out\n")):
                 e = self.ssh_fails(module, code, stderr)
                 self.assertFalse(getattr(e, "frame_link_failed", False), (module.__name__, code, stderr))
+            # Review round 4: the command's own output (stdout) isn't ssh speaking.
+            e = self.ssh_fails(module, 255, "", stdout="ssh: connect to host frame port 22: Connection timed out\n")
+            self.assertFalse(getattr(e, "frame_link_failed", False), module.__name__)
+
+    def request(self, path, body):
+        """POST to the real server, as the page does."""
+        import http.client
+        c = http.client.HTTPConnection("127.0.0.1", self.httpd.server_port)
+        c.request("POST", path, json.dumps(body), {"X-Frame-UI": self.server.UI_KEY, "Content-Type": "application/json"})
+        r = c.getresponse()
+        result = r.status, json.loads(r.read())
+        c.close()
+        return result
+
+    def test_routes_that_rewrap_a_link_failure_keep_its_mark(self):
+        # Review round 4: /api/android and /api/titles re-raise frame_android's FrameError as a
+        # Failure; after the status poll's first connection failure, theirs are held back too,
+        # also past the 10-minute window.
+        self.httpd = self.server.ThreadingHTTPServer(("127.0.0.1", 0), self.server.Handler)
+        threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
+        self.addCleanup(self.httpd.server_close)
+        self.addCleanup(self.httpd.shutdown)
+        down = subprocess.CompletedProcess(["ssh"], 255, "", "ssh: connect to host 10.0.0.5 port 22: Connection timed out\r\n")
+        meta = {"label": "Test App", "game_id": 5, "shortcut": None}
+        with mock.patch.object(frame_host, "run_ssh", return_value=down), \
+                mock.patch.object(self.android, "_meta_or_fail", return_value=meta), \
+                mock.patch.object(self.server.frame_titles, "ensure_utils"):
+            self.assertEqual(self.request("/api/comfort", {"action": "status"})[0], 503)  # the page shows its offline message
+            for t in (1000.0, 1000.0 + 2 * tm.REPEAT_WINDOW):
+                with mock.patch.object(tm.time, "time", return_value=t):
+                    self.assertEqual(self.request("/api/android", {"action": "launch", "package": "org.test"})[0], 503)
+                    self.assertEqual(self.request("/api/titles", {"action": "launch", "id": "mygame"})[0], 503)
+            # Not a link failure: still reported, through the same re-wrap.
+            with mock.patch.object(self.android, "_meta_or_fail", side_effect=self.android.FrameError("boom")):
+                self.assertEqual(self.request("/api/android", {"action": "launch", "package": "org.test"})[0], 502)
+        sent = [(e["properties"]["where"], e["properties"]["error_category"]) for e in self.queued()
+                if e["event"] == "$exception"]
+        self.assertEqual(sent, [("POST /api/comfort status", "frame_unreachable"), ("POST /api/android launch", "other")])
 
     def test_download_failures_after_a_poll_failure_are_still_sent(self):
         # Review round 3: these file names, in the real checksum message through the web-link worker,

@@ -385,6 +385,18 @@ def install_finished(kind, ok, seconds=None, error=None, diagnose=True, **props)
         diagnostic(f'{kind} install failed', error)
 
 
+def link_failed(error):
+    """Whether an ssh helper marked this error (frame_host.link_failure) as ssh failing to reach the
+    headset: the error itself, or one it was re-raised from (`raise Failure(...) from e`)."""
+    for _ in range(10):  # a cause chain is short; never loop on a cycle
+        if error is None:
+            return False
+        if getattr(error, 'frame_link_failed', False):
+            return True
+        error = getattr(error, '__cause__', None)
+    return False
+
+
 def diagnostic(where, error, tb=None):
     """An error for the opt-in diagnostics level: scrubbed text, and a traceback if there is one."""
     if not enabled('diagnostics'):
@@ -393,7 +405,7 @@ def diagnostic(where, error, tb=None):
     category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if category in EXPECTED_CATEGORIES and getattr(error, 'frame_link_failed', False):
+        if category in EXPECTED_CATEGORIES and link_failed(error):
             fingerprint = f'expected|{category}'
             if fingerprint in _seen_errors:
                 return

@@ -346,8 +346,11 @@ def ssh(remote, *, stdin=None, timeout=30, text=True):
             LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
         failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
         failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
-        if frame_host.ssh_link_failed(r.returncode, strip_ansi(err)):
-            frame_host.link_failure(failure)  # ssh never reached the Frame (see frame_telemetry.diagnostic)
+        # ssh never reached the Frame (see frame_telemetry.diagnostic): judged on ssh's stderr only,
+        # never on the command's output.
+        stderr = (r.stderr if text else (r.stderr or b"").decode(errors="replace")) or ""
+        if frame_host.ssh_link_failed(r.returncode, strip_ansi(stderr)):
+            frame_host.link_failure(failure)
         raise failure
     return r.stdout
 
@@ -1289,7 +1292,7 @@ def android(body):
                      " and shared it" if frame_telemetry.enabled("compat") else " on this computer")
             return {"message": f"Saved your report for {name}{where}", "report": r}
     except frame_android.FrameError as e:
-        raise Failure(str(e))
+        raise Failure(str(e)) from e  # from e: keeps frame_host.link_failure's mark for diagnostics
     raise Failure("unknown action", 400)
 
 
@@ -1430,7 +1433,7 @@ def titles(body):
     try:
         m = getattr(frame_titles, action)(gid)
     except frame_android.FrameError as e:
-        raise Failure(str(e))
+        raise Failure(str(e)) from e  # from e: keeps frame_host.link_failure's mark for diagnostics
     return {"message": f"{'Launching' if action == 'launch' else 'Removed'} {m['id']}"}
 
 
