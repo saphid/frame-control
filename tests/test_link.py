@@ -663,6 +663,25 @@ class Connecting(unittest.TestCase):
         self.assertNotIn("steamdeck-jane", text)
         self.assertNotEqual(a["id"], b["id"])
 
+    def test_the_headsets_alias_and_name_stay_out_of_the_log(self):
+        import frame_report as fr
+        err = self.stderr()
+        d = self.reg.add_device("jane-office.example.com", name="Jane Doe's work headset", hosts=[])
+        self.reg.set_active(d["id"])
+        self.link.connect(["start"])
+        self.assertIn("find failed: The active headset has no addresses.", err.getvalue())
+        # A message that names it anyway (any case) goes too, in the log and so in a report's log.
+        self.link.note_failure("ssh", "JANE-OFFICE.EXAMPLE.COM: jane doe's work headset stopped answering")
+        log = self.dir / "server.log"
+        log.write_text(err.getvalue())
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_LOG": str(log)}):
+            with mock.patch.object(fr, "link", self.link), mock.patch.dict(fr._ssh, {"thread": None, "line": "SSH: x"}):
+                text = fr.diagnostics(include_logs=True)
+        self.assertIn("frame_link: ssh failed", text)
+        for leaked in ("jane", "Jane", "JANE"):
+            self.assertNotIn(leaked, err.getvalue())
+            self.assertNotIn(leaked, text)
+
 
 def quiet_log(test):
     """Catch frame_link's log lines, starting with nothing remembered."""
@@ -708,6 +727,20 @@ class FailureLog(unittest.TestCase):
         self.assertIn("connect to host <host> port 22", out)
         for leaked in ("bastion-jane", "jane-office", "steamdeck-jane", "frame-jane"):
             self.assertNotIn(leaked, out)
+
+    def test_headsets_named_like_sshs_words_dont_shield_the_real_host(self):
+        err = quiet_log(self)
+        for saved in ("host", "hostname", "to"):
+            fl.log_failure("ssh", "ssh stopped", "ssh: connect to host bastion-jane port 22: Connection refused",
+                           hosts=[saved])
+            fl.log_failure("ssh", "ssh stopped", "ssh: Could not resolve hostname jane-office.example.com: not known",
+                           hosts=[saved])
+        out = err.getvalue()
+        self.assertIn("connect to host <host> port 22", out)
+        self.assertIn("hostname <host>", out)
+        for leaked in ("bastion-jane", "jane-office"):
+            self.assertNotIn(leaked, out)
+        self.assertEqual(fl.hide_hosts("<host> and frame", ["host", "frame"]), "<host> and <host>")
 
     def test_windows_user_names_with_spaces_go_whole(self):
         err = quiet_log(self)

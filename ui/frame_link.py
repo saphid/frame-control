@@ -173,16 +173,20 @@ def hide_hosts(text, hosts, keep=()):
     """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
     longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
     can't recognise goes too."""
-    keep = {k.lower() for k in keep if k}
-    for h in sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True):
-        text = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", text, flags=re.I)
-    return text
+    keep = {k.lower() for k in keep if k} | KEYWORDS  # a headset called "host" mustn't eat ssh's wording
+    names = sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
+    parts = re.split(r"(<[^<>\n]*>)", text)  # never inside a <placeholder> already there
+    for i in range(0, len(parts), 2):
+        for h in names:
+            parts[i] = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", parts[i], flags=re.I)
+    return "".join(parts)
 
 
 # ssh names the host it was going to after these words ("Could not resolve hostname X",
 # "connect to host X port 22", "Timed out talking to X"): whatever follows goes, known or not.
 OPERAND = re.compile(r"(?i)\b(hostname|host|to(?:\s+host)?)\s+(?!<)([^\s:,;'\"()|]+)")
 PLAIN_WORDS = {"answer", "the", "a", "an", "this", "it", "its", "be", "connect", "find", "work", "try"}
+KEYWORDS = {"host", "hostname", "to", "port"} | PLAIN_WORDS
 
 
 def hide_operands(text):
@@ -194,9 +198,10 @@ def hide_operands(text):
 
 
 def scrub_failure(text, hosts=()):
-    """Free text about a failed attempt, for the log: the attempt's own hosts and anything ssh
-    names as a host replaced, then the shared scrubber (addresses, paths, user names)."""
-    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
+    """Free text about a failed attempt, for the log: anything ssh names as a host, then the
+    attempt's own names (case-insensitively, outside placeholders), then the shared scrubber
+    (addresses, paths, user names)."""
+    return frame_telemetry.scrub(hide_hosts(hide_operands(str(text or "")), hosts), 600)
 
 
 def failure_category(message, raw=""):
@@ -291,6 +296,7 @@ class Link:
         self.routed = None              # the device id every ssh command points at
         self.routed_device = None
         self.last_failure = None        # {"stage", "category", "at"}: for report diagnostics, no free text
+        self.attempt_device = None      # the headset the current attempt is for
 
     # ---- publishing ----
     def publish(self, **fields):
@@ -617,6 +623,7 @@ class Link:
             self.cond.notify_all()
         ok = False
         try:
+            self.attempt_device = device  # its names, for scrubbing this attempt's log lines
             ok = self.attempt(device)
         finally:
             self.finish(gen, ok, device)
@@ -675,8 +682,11 @@ class Link:
         """Keep a failure for report diagnostics as fixed values only (its stage and error
         category, decided now), and write it to the log scrubbed with this attempt's hosts."""
         self.last_failure = {"stage": stage, "category": failure_category(message, raw), "at": now()}
-        d = self.routed_device or {}
-        hosts = [a.get("host") for a in d.get("addresses") or ()] + [d.get("frozen_host")]
+        hosts = []
+        for d in (self.attempt_device, self.routed_device):  # the headset tried, and where commands go
+            d = d or {}
+            hosts += [a.get("host") for a in d.get("addresses") or ()]
+            hosts += [d.get("frozen_host"), d.get("alias"), d.get("name")]
         log_failure(stage, message, raw, probes, hosts)
 
     def attempt(self, device):
@@ -684,7 +694,7 @@ class Link:
             self.fail("find", "No headset is set up. Add one on the Devices tab.")
             return False
         if not device.get("transient") and not device["addresses"]:
-            self.fail("find", f"{device['name']} has no addresses. Add one on the Devices tab.")
+            self.fail("find", "The active headset has no addresses. Add one on the Devices tab.")
             return False
         # 1. this computer's network
         self.stage("network", "active")
