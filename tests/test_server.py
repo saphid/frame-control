@@ -334,23 +334,31 @@ class OneServer(unittest.TestCase):
             (d / "app.apk").write_bytes(b"\0" * 4096)
             return d
 
-        left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
-        proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
-                                env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        try:
-            self.assertIn("Frame Control on", proc.stdout.readline())
-            self.assertEqual([d for d in left_by_dead if d.exists()], [])
-            in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
-                         staged(index_dir, ".download-", proc.pid)]
-            proc.terminate()
-            self.assertEqual(proc.wait(30), 0, proc.stdout.read())
-            self.assertEqual([d for d in in_flight if d.exists()], [])
-        finally:
-            if proc.poll() is None:
-                proc.kill()
-                proc.wait()
-            proc.stdin.close()
-            proc.stdout.close()
+        # Stopped as the app stops it: by closing stdin (the only way on Windows,
+        # where terminate() is a hard kill) and, elsewhere, by SIGTERM too.
+        for stop in ["stdin"] + (["sigterm"] if os.name != "nt" else []):
+            with self.subTest(stop=stop):
+                left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    self.assertEqual([d for d in left_by_dead if d.exists()], [])
+                    in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
+                                 staged(index_dir, ".download-", proc.pid)]
+                    if stop == "stdin":
+                        proc.stdin.close()
+                    else:
+                        proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                    self.assertEqual([d for d in in_flight if d.exists()], [])
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
 
 
 class ArtworkSettings(unittest.TestCase):
