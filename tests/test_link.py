@@ -742,6 +742,18 @@ class FailureLog(unittest.TestCase):
             self.assertNotIn(leaked, out)
         self.assertEqual(fl.hide_hosts("<host> and frame", ["host", "frame"]), "<host> and <host>")
 
+    def test_whole_names_go_before_sshs_words_and_only_real_tokens_are_spared(self):
+        for name, said in (("Jane Doe's work headset", "Timed out talking to Jane Doe's work headset"),
+                           ("Jane to Doe headset", "Jane to Doe headset stopped answering"),
+                           ("<Jane Doe>", "<Jane Doe> stopped answering")):
+            out = fl.scrub_failure(said, [name])
+            self.assertTrue(out.startswith("<host>") or out == "Timed out talking to <host>", out)
+            for leaked in ("Jane", "Doe"):
+                self.assertNotIn(leaked, out)
+        self.assertEqual(fl.scrub_failure("Timed out talking to Jane Doe's work headset", ["Jane Doe's work headset"]),
+                         "Timed out talking to <host>")
+        self.assertEqual(fl.hide_hosts("<user>@<host>: <ip>", ["user", "host", "ip"]), "<user>@<host>: <ip>")
+
     def test_windows_user_names_with_spaces_go_whole(self):
         err = quiet_log(self)
         with mock.patch.object(fl.frame_telemetry, "_user_names", return_value=set()):

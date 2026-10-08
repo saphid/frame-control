@@ -169,13 +169,17 @@ def probes_summary(probes):
     return "; ".join(out)
 
 
+# Exactly the tokens the scrubbers write (here and frame_telemetry.scrub), nothing else in <...>.
+PLACEHOLDER = re.compile(r"(<(?:host|user|email|ip|mac|steamid|hex|token|ssh-key|pem|url|redacted)>)")
+
+
 def hide_hosts(text, hosts, keep=()):
     """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
     longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
     can't recognise goes too."""
     keep = {k.lower() for k in keep if k} | KEYWORDS  # a headset called "host" mustn't eat ssh's wording
     names = sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
-    parts = re.split(r"(<[^<>\n]*>)", text)  # never inside a <placeholder> already there
+    parts = PLACEHOLDER.split(text)  # never inside a scrubber's own <token> already there
     for i in range(0, len(parts), 2):
         for h in names:
             parts[i] = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", parts[i], flags=re.I)
@@ -198,10 +202,10 @@ def hide_operands(text):
 
 
 def scrub_failure(text, hosts=()):
-    """Free text about a failed attempt, for the log: anything ssh names as a host, then the
-    attempt's own names (case-insensitively, outside placeholders), then the shared scrubber
-    (addresses, paths, user names)."""
-    return frame_telemetry.scrub(hide_hosts(hide_operands(str(text or "")), hosts), 600)
+    """Free text about a failed attempt, for the log: the attempt's own names, whole and
+    longest first (case-insensitively, never ssh's own words), then anything ssh names as a
+    host, then the shared scrubber (addresses, paths, user names)."""
+    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
 
 
 def failure_category(message, raw=""):

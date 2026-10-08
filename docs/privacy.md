@@ -170,9 +170,9 @@ because those lines can name files and apps. When ticked, it adds the newest
 Activity lines and server log lines, without the request lines. The server
 log has a line for each failed connection attempt: its stage, the message
 shown on the connection pill, ssh's last line about it, and the address kinds
-above. That free text is scrubbed when the line is written: any name ssh gives after
-"hostname", "host" or "to", and then the addresses, ssh alias and display name
-of the headset being tried (whatever their case), become `<host>`; a Windows home folder's
+above. That free text is scrubbed when the line is written: the addresses, ssh alias
+and display name of the headset being tried (whole, whatever their case), and
+then any name ssh gives after "hostname", "host" or "to", become `<host>`; a Windows home folder's
 whole name (spaces and apostrophes included) becomes `<user>`, and ssh's
 whole `user@host:` field (spaces, `DOMAIN\user` and full domain names
 included) becomes `<user>@<host>:`; then the scrubbing below. A host name ssh mentions
