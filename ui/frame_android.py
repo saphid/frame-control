@@ -104,7 +104,11 @@ def check_installable(info):
     if info['min_sdk'] and info['min_sdk'] > 30:
         raise FrameError(f"{info['label']} needs Android API {info['min_sdk']}; Lepton is Android 11 (API 30)")
     if info['abis'] and 'arm64-v8a' not in info['abis']:
-        raise FrameError(f"{info['label']} has no arm64-v8a build ({', '.join(info['abis'])}); Lepton is 64-bit ARM only")
+        # Sites that offer one APK per ABI (Grayjay: arm64-v8a, armeabi-v7a, x86, x86_64,
+        # universal) leave the choice to the user; say which file to fetch instead.
+        raise FrameError(f"{info['label']} has no arm64-v8a build ({', '.join(info['abis'])}); Lepton is 64-bit ARM only. "
+                         "This file is for other devices: download the APK marked arm64-v8a "
+                         "(or arm64, or universal) and install that instead")
 
 
 _install_lock = threading.Lock()  # installs are rare; one at a time avoids every race
