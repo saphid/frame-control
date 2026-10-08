@@ -32,12 +32,14 @@ import queue
 import re
 import socket
 import subprocess
+import sys
 import threading
 import time
 
 import frame_devices
 import frame_host
 import frame_network
+import frame_telemetry
 
 PROBE_TIMEOUT = 4      # seconds for a TCP answer on port 22
 RESOLVE_GRACE = 6      # ...after however long the name lookup took, up to this much
@@ -136,6 +138,115 @@ def probe(host, port, timeout=PROBE_TIMEOUT, update=None):
     return last or {"state": "timeout", "detail": "No answer"}
 
 
+def _ip_kind(text):
+    """ipv4, ipv6, ipv6 link-local or tailscale for an IP address (zone allowed), else None."""
+    try:
+        ip = ipaddress.ip_address((text or "").strip("[]").split("%")[0])
+    except ValueError:
+        return None
+    if frame_network.is_tailscale(str(ip)):
+        return "tailscale"
+    return "ipv4" if ip.version == 4 else "ipv6 link-local" if ip.is_link_local else "ipv6"
+
+
+def address_kind(host, ip=None):
+    """What sort of address a probe row is, for diagnostics, never the address itself:
+    ".local", "ipv4", "ipv6", "ipv6 link-local", "tailscale" or "hostname", plus what a
+    name resolved to (".local->ipv6 link-local") when the probe got that far."""
+    h = (host or "").lower().rstrip(".")
+    kind = _ip_kind(h) or (".local" if h.endswith(".local") else
+                           "tailscale" if frame_network.is_tailscale(h) else "hostname")
+    got = _ip_kind(ip) if ip and not _ip_kind(h) else None
+    return f"{kind}->{got}" if got and got != kind else kind
+
+
+def probes_summary(probes):
+    """Each address tried, as its kind and how the probe went: "alias .local->ipv4 timeout"."""
+    out = []
+    for row in probes or ():
+        lead = "alias " if row.get("label") == "from ~/.ssh/config" else ""
+        out.append(f"{lead}{address_kind(row.get('host'), row.get('ip'))} {row.get('state') or '?'}")
+    return "; ".join(out)
+
+
+# Exactly the tokens the scrubbers write (here and frame_telemetry.scrub), nothing else in <...>.
+PLACEHOLDER = re.compile(r"(<(?:host|user|email|ip|mac|steamid|hex|token|ssh-key|pem|url|redacted)>)")
+
+
+def hide_hosts(text, hosts, keep=()):
+    """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
+    longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
+    can't recognise goes too."""
+    keep = {k.lower() for k in keep if k} | KEYWORDS  # a headset called "host" mustn't eat ssh's wording
+    names = sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
+    parts = PLACEHOLDER.split(text)  # never inside a scrubber's own <token> already there
+    for i in range(0, len(parts), 2):
+        for h in names:
+            parts[i] = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", parts[i], flags=re.I)
+    return "".join(parts)
+
+
+# ssh names the host it was going to after these words ("Could not resolve hostname X",
+# "connect to host X port 22", "Timed out talking to X"): whatever follows goes, known or not.
+OPERAND = re.compile(r"(?i)\b(hostname|host|to(?:\s+host)?)\s+(?!<)([^\s:,;'\"()|]+)")
+PLAIN_WORDS = {"answer", "the", "a", "an", "this", "it", "its", "be", "connect", "find", "work", "try"}
+KEYWORDS = {"host", "hostname", "to", "port"} | PLAIN_WORDS
+
+
+def hide_operands(text):
+    def one(m):
+        word = m.group(2).rstrip(".")
+        dots = m.group(2)[len(word):]
+        return m.group(0) if word.lower() in PLAIN_WORDS else f"{m.group(1)} <host>{dots}"
+    return OPERAND.sub(one, text)
+
+
+def scrub_failure(text, hosts=()):
+    """Free text about a failed attempt, for the log: the attempt's own names, whole and
+    longest first (case-insensitively, never ssh's own words), then anything ssh names as a
+    host, then the shared scrubber (addresses, paths, user names)."""
+    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
+
+
+def failure_category(message, raw=""):
+    """The telemetry error category (frame_unreachable, frame_auth, ...) for a failure: a fixed
+    word, never its text."""
+    return frame_telemetry.categorize(f"{message or ''}\n{raw or ''}")[0]
+
+
+_logged = {}            # failure line -> {"at": when last written, "repeats": since then}
+LOG_REPEAT_EVERY = 300  # the same failure, retried every 30 s, goes in the log at most this often
+LOG_REMEMBER = 32       # different failures remembered for that
+
+
+def log_failure(stage, message, raw="", probes=(), hosts=()):
+    """One failed connection attempt to stderr (the app's server.log), scrubbed when written,
+    with the hosts of that attempt (so a later switch of headset can't let them through)."""
+    hosts = list(hosts) + [r.get(k) for r in probes or () for k in ("host", "ip")]
+    bits = [f"frame_link: {stage} failed: {scrub_failure(message, hosts)}"]
+    last = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()][-1:]
+    if last and last[0] != message:
+        bits.append(f"ssh said: {scrub_failure(last[0][:300], hosts)}")
+    tried = probes_summary(probes)
+    if tried:
+        bits.append(f"addresses: {tried}")
+    line = " | ".join(bits)[:900]
+    t = time.monotonic()
+    seen = _logged.get(line)
+    if seen and t - seen["at"] < LOG_REPEAT_EVERY:
+        seen["repeats"] += 1
+        return
+    more = f" (and {seen['repeats']} more times)" if seen and seen["repeats"] else ""
+    _logged.pop(line, None)
+    _logged[line] = {"at": t, "repeats": 0}
+    while len(_logged) > LOG_REMEMBER:
+        _logged.pop(next(iter(_logged)))  # the least recently written
+    try:
+        print(line + more, file=sys.stderr, flush=True)
+    except (OSError, ValueError, AttributeError):
+        pass  # no stderr (a closed pipe): the page still shows the failure
+
+
 def ssh_target(host, ip):
     """Where ssh should go for an address whose probe answered from `ip`: that IP, so ssh
     doesn't look the name up again and try an address that didn't answer."""
@@ -188,6 +299,8 @@ class Link:
         self.route_lock = threading.Lock()
         self.routed = None              # the device id every ssh command points at
         self.routed_device = None
+        self.last_failure = None        # {"stage", "category", "at"}: for report diagnostics, no free text
+        self.attempt_device = None      # the headset the current attempt is for
 
     # ---- publishing ----
     def publish(self, **fields):
@@ -436,7 +549,9 @@ class Link:
                 if reasons:
                     self.connect(reasons)
             except Exception as e:  # keep the loop alive whatever happens; say what went wrong
-                self.publish(phase="failed", error={"stage": "network", "message": f"{type(e).__name__}: {e}",
+                message = f"{type(e).__name__}: {e}"
+                self.note_failure("network", message, str(e))
+                self.publish(phase="failed", error={"stage": "network", "message": message,
                                                     "raw": str(e)}, retry_at=now() + RETRY[-1])
             finally:
                 with self.cond:
@@ -512,6 +627,7 @@ class Link:
             self.cond.notify_all()
         ok = False
         try:
+            self.attempt_device = device  # its names, for scrubbing this attempt's log lines
             ok = self.attempt(device)
         finally:
             self.finish(gen, ok, device)
@@ -540,6 +656,7 @@ class Link:
                                   now() + RETRY[min(self.fails, len(RETRY)) - 1])
                 if not self.state["error"]:
                     self.state["error"] = {"stage": "find", "message": "Couldn't connect", "raw": ""}
+                    self.note_failure("find", "Couldn't connect", "", self.state["probes"])
             self.version += 1
             self.cond.notify_all()
 
@@ -562,13 +679,26 @@ class Link:
         self.stage(sid, "failed", message)
         with self.cond:
             self.state["error"] = {"stage": sid, "message": message, "raw": raw}
+            probes = copy.deepcopy(self.state["probes"])
+        self.note_failure(sid, message, raw, probes)
+
+    def note_failure(self, stage, message, raw="", probes=()):
+        """Keep a failure for report diagnostics as fixed values only (its stage and error
+        category, decided now), and write it to the log scrubbed with this attempt's hosts."""
+        self.last_failure = {"stage": stage, "category": failure_category(message, raw), "at": now()}
+        hosts = []
+        for d in (self.attempt_device, self.routed_device):  # the headset tried, and where commands go
+            d = d or {}
+            hosts += [a.get("host") for a in d.get("addresses") or ()]
+            hosts += [d.get("frozen_host"), d.get("alias"), d.get("name")]
+        log_failure(stage, message, raw, probes, hosts)
 
     def attempt(self, device):
         if device.get("none"):
             self.fail("find", "No headset is set up. Add one on the Devices tab.")
             return False
         if not device.get("transient") and not device["addresses"]:
-            self.fail("find", f"{device['name']} has no addresses. Add one on the Devices tab.")
+            self.fail("find", "The active headset has no addresses. Add one on the Devices tab.")
             return False
         # 1. this computer's network
         self.stage("network", "active")

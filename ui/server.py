@@ -2723,6 +2723,8 @@ def main():
         LINK = frame_link.Link(frame_devices.Registry(), env_alias=FRAME if FRAME_FROM_ENV else None,
                                mux_base=MUX_BASE, control=CONTROL, apply=route, explain=unreachable)
         LINK.work_lock, LINK.work = _work_lock, lambda: _work[0]
+        frame_report.link = LINK  # its connection summary goes in every report's diagnostics
+        frame_report.start_ssh_check()  # ...with which ssh this is, found once in the background
         LINK.start()
     if not frame_host.WINDOWS:
         signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))

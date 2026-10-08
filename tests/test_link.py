@@ -6,6 +6,7 @@ Run: python3 -m unittest discover -s tests
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import http.client
+import io
 import json
 import os
 import shutil
@@ -598,6 +599,260 @@ class Connecting(unittest.TestCase):
         self.assertEqual(fl.next_alias(self.link), "frame")
         (self.dir / "ssh" / "config").write_text("Host frame lab-*\n  HostName 10.0.0.7\n")  # someone's own `frame`
         self.assertEqual(fl.next_alias(self.link), "frame-2")
+
+    # ---- what a failure leaves for a problem report ----
+    def stderr(self):
+        return quiet_log(self)
+
+    def report(self):
+        import frame_report as fr
+        done = threading.Thread(target=lambda: None)
+        done.start()
+        done.join()
+        with mock.patch.object(fr, "link", self.link), \
+                mock.patch.dict(fr._ssh, {"thread": done, "line": "SSH: system OpenSSH, OpenSSH 9.9p1, LibreSSL 3.3.6"}):
+            return fr.diagnostics()
+
+    def test_each_failure_goes_to_the_server_log_scrubbed(self):
+        err = self.stderr()
+        self.device("steamdeck-jane.invalid", "localhost")
+        self.hosts({"localhost": "denied"})
+        self.link.connect(["start"])
+        line = err.getvalue()
+        self.assertIn("frame_link: login failed: The Frame didn't accept this computer's SSH key.", line)
+        self.assertIn("addresses: hostname unresolved; hostname->ipv4", line)
+        for leaked in ("steamdeck-jane", "127.0.0.1", "localhost"):
+            self.assertNotIn(leaked, line)
+        self.assertEqual(self.link.last_failure["stage"], "login")
+
+    def test_reports_carry_a_connection_summary_in_fixed_words(self):
+        self.stderr()
+        self.device("steamdeck-jane.invalid", "frame-t.invalid")
+        (self.dir / "ssh" / "config").write_text(
+            f"{fd.begin_mark('frame-t')}\nHost frame-t\n  HostName 192.168.1.50\n  User steamos\n{fd.end_mark('frame-t')}\n"
+            "Host frame-t\n  HostName 10.0.0.7\n")
+        self.link.connect(["start"])
+        text = self.report()
+        self.assertIn("Connection: failed at find, attempt 1 (Starting up)", text)
+        self.assertIn("Headsets: 1 saved; active alias custom (saved, 2 address(es))", text)
+        self.assertIn("Error: find, frame_not_set_up", text)
+        self.assertRegex(text, r"Last failure: find, frame_not_set_up, 0 min \d+ s ago")
+        self.assertIn("Addresses tried: hostname unresolved; hostname unresolved", text)
+        self.assertIn("Network: gateway yes, Tailscale not installed", text)
+        self.assertIn("SSH: system OpenSSH, OpenSSH 9.9p1", text)
+        self.assertIn("~/.ssh/config: managed block for the active alias yes (1 managed in all); "
+                      "hand-written Host for it yes", text)
+        # No free text from the error or ssh at all, and not the custom alias.
+        for leaked in ("steamdeck-jane", "Could not resolve", "Can't find", "192.168", "10.0.0.7", "steamos",
+                       "frame-t", str(self.dir)):
+            self.assertNotIn(leaked, text)
+
+    def test_a_failure_on_the_last_headset_leaves_nothing_of_it_after_switching(self):
+        self.stderr()
+        a = self.device("steamdeck-jane.invalid")
+        self.link.connect(["start"])
+        b = self.reg.add_device("frame-2", port=self.port, hosts=[])
+        self.reg.add_address(b["id"], "localhost", kind="lan")
+        self.hosts({"localhost": "ok"})
+        self.reg.set_active(b["id"])
+        self.link.connect(["switch"])
+        self.assertEqual(self.link.snapshot()["phase"], "connected")
+        text = self.report()
+        self.assertIn("Connection: connected via hostname->ipv4", text)
+        self.assertRegex(text, r"Last failure: find, frame_not_set_up, ")
+        self.assertNotIn("steamdeck-jane", text)
+        self.assertNotEqual(a["id"], b["id"])
+
+    def test_the_headsets_alias_and_name_stay_out_of_the_log(self):
+        import frame_report as fr
+        err = self.stderr()
+        d = self.reg.add_device("jane-office.example.com", name="Jane Doe's work headset", hosts=[])
+        self.reg.set_active(d["id"])
+        self.link.connect(["start"])
+        self.assertIn("find failed: The active headset has no addresses.", err.getvalue())
+        # A message that names it anyway (any case) goes too, in the log and so in a report's log.
+        self.link.note_failure("ssh", "JANE-OFFICE.EXAMPLE.COM: jane doe's work headset stopped answering")
+        log = self.dir / "server.log"
+        log.write_text(err.getvalue())
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_LOG": str(log)}):
+            with mock.patch.object(fr, "link", self.link), mock.patch.dict(fr._ssh, {"thread": None, "line": "SSH: x"}):
+                text = fr.diagnostics(include_logs=True)
+        self.assertIn("frame_link: ssh failed", text)
+        for leaked in ("jane", "Jane", "JANE"):
+            self.assertNotIn(leaked, err.getvalue())
+            self.assertNotIn(leaked, text)
+
+
+def quiet_log(test):
+    """Catch frame_link's log lines, starting with nothing remembered."""
+    fl._logged.clear()
+    err = io.StringIO()
+    p = mock.patch.object(sys, "stderr", err)
+    p.start()
+    test.addCleanup(p.stop)
+    return err
+
+
+class FailureLog(unittest.TestCase):
+    def test_the_same_failure_isnt_logged_every_retry(self):
+        err = quiet_log(self)
+        for _ in range(3):
+            fl.log_failure("find", "The Frame isn't answering.", "", [{"host": "frame.local", "state": "timeout"}])
+        self.assertEqual(err.getvalue().count("frame_link:"), 1)
+        for v in fl._logged.values():
+            v["at"] -= fl.LOG_REPEAT_EVERY + 1
+        fl.log_failure("find", "The Frame isn't answering.", "", [{"host": "frame.local", "state": "timeout"}])
+        self.assertIn("(and 2 more times)", err.getvalue())
+        self.assertNotIn("frame.local", err.getvalue())
+
+    def test_interleaved_failures_are_throttled_too(self):
+        err = quiet_log(self)
+        for _ in range(4):
+            fl.log_failure("find", "The Frame isn't answering.")
+            fl.log_failure("login", "The Frame didn't accept this computer's SSH key.")
+        self.assertEqual(err.getvalue().count("frame_link:"), 2)
+        for i in range(fl.LOG_REMEMBER + 10):  # many different failures: memory stays bounded
+            fl.log_failure("ssh", f"failure number {i}")
+        self.assertLessEqual(len(fl._logged), fl.LOG_REMEMBER)
+
+    def test_hosts_ssh_names_go_known_or_not_and_whatever_the_case(self):
+        err = quiet_log(self)
+        fl.log_failure("ssh", "ssh stopped", "ssh: Could not resolve hostname bastion-jane: Name or service not known")
+        fl.log_failure("ssh", "ssh stopped", "channel 0: open failed: connect to host jane-office.example.com port 22")
+        fl.log_failure("ssh", "ssh stopped", "kex_exchange_identification: Connection reset by steamdeck-jane",
+                       hosts=["STEAMDECK-JANE"])
+        fl.log_failure("ssh", "Timed out talking to frame-jane", "")
+        out = err.getvalue()
+        self.assertIn("hostname <host>", out)
+        self.assertIn("connect to host <host> port 22", out)
+        for leaked in ("bastion-jane", "jane-office", "steamdeck-jane", "frame-jane"):
+            self.assertNotIn(leaked, out)
+
+    def test_headsets_named_like_sshs_words_dont_shield_the_real_host(self):
+        err = quiet_log(self)
+        for saved in ("host", "hostname", "to"):
+            fl.log_failure("ssh", "ssh stopped", "ssh: connect to host bastion-jane port 22: Connection refused",
+                           hosts=[saved])
+            fl.log_failure("ssh", "ssh stopped", "ssh: Could not resolve hostname jane-office.example.com: not known",
+                           hosts=[saved])
+        out = err.getvalue()
+        self.assertIn("connect to host <host> port 22", out)
+        self.assertIn("hostname <host>", out)
+        for leaked in ("bastion-jane", "jane-office"):
+            self.assertNotIn(leaked, out)
+        self.assertEqual(fl.hide_hosts("<host> and frame", ["host", "frame"]), "<host> and <host>")
+
+    def test_whole_names_go_before_sshs_words_and_only_real_tokens_are_spared(self):
+        for name, said in (("Jane Doe's work headset", "Timed out talking to Jane Doe's work headset"),
+                           ("Jane to Doe headset", "Jane to Doe headset stopped answering"),
+                           ("<Jane Doe>", "<Jane Doe> stopped answering")):
+            out = fl.scrub_failure(said, [name])
+            self.assertTrue(out.startswith("<host>") or out == "Timed out talking to <host>", out)
+            for leaked in ("Jane", "Doe"):
+                self.assertNotIn(leaked, out)
+        self.assertEqual(fl.scrub_failure("Timed out talking to Jane Doe's work headset", ["Jane Doe's work headset"]),
+                         "Timed out talking to <host>")
+        self.assertEqual(fl.hide_hosts("<user>@<host>: <ip>", ["user", "host", "ip"]), "<user>@<host>: <ip>")
+
+    def test_windows_user_names_with_spaces_go_whole(self):
+        err = quiet_log(self)
+        with mock.patch.object(fl.frame_telemetry, "_user_names", return_value=set()):
+            fl.log_failure("ssh", r"Bad owner or permissions on C:\Users\Jane Doe/.ssh/config", "")
+            fl.log_failure("login", "The Frame didn't accept this computer's SSH key.",
+                           "Jane Doe@frame: Permission denied (publickey).")
+            fl.log_failure("login", "refused", r"debug | ssh said: CORP\jane@frame's password: denied")
+        out = err.getvalue()
+        self.assertIn(r"C:\Users\<user>/.ssh/config", out)
+        self.assertIn("<user>@<host>: Permission denied", out)
+        for leaked in ("Jane", "Doe", "jane", "CORP"):
+            self.assertNotIn(leaked, out)
+
+    def test_whole_ssh_user_at_host_fields_and_home_folders_go(self):
+        import frame_telemetry as tm
+        with mock.patch.object(tm, "_user_names", return_value=set()):
+            self.assertEqual(tm.scrub(r"CORP\Jane Doe@jane-office.example.com: Permission denied (publickey)."),
+                             "<user>@<host>: Permission denied (publickey).")
+            self.assertEqual(tm.scrub("jane@jane-office.example.com's password: "), "<user>@<host>'s password: ")
+            self.assertEqual(tm.scrub(r"Bad owner on C:\Users\O'Brien/.ssh/config"), r"Bad owner on C:\Users\<user>/.ssh/config")
+            self.assertEqual(tm.scrub(r"c:\users\Zoë Smith.Jr\.ssh\config"), r"c:\users\<user>\.ssh\config")
+            self.assertEqual(tm.scrub("/users/O'Brien/x and /HOME/jane doe/y"), "/users/<user>/x and /HOME/<user>/y")
+            self.assertEqual(tm.scrub("write to me@example.com today"), "write to <email> today")
+
+
+class ConnectionDiagnostics(unittest.TestCase):
+    def test_address_kinds_never_the_address(self):
+        self.assertEqual(fl.address_kind("frame.local", "fe80::1%eth0"), ".local->ipv6 link-local")
+        self.assertEqual(fl.address_kind("frame.local", "192.168.1.5"), ".local->ipv4")
+        self.assertEqual(fl.address_kind("frame.local"), ".local")
+        self.assertEqual(fl.address_kind("fe80::1%5"), "ipv6 link-local")
+        self.assertEqual(fl.address_kind("2001:db8::1"), "ipv6")
+        self.assertEqual(fl.address_kind("192.168.1.5", "192.168.1.5"), "ipv4")
+        self.assertEqual(fl.address_kind("100.101.102.103"), "tailscale")
+        self.assertEqual(fl.address_kind("frame.tail1234.ts.net", "100.101.102.103"), "tailscale")
+        self.assertEqual(fl.address_kind("steamdeck"), "hostname")
+        self.assertEqual(fl.probes_summary([{"host": "frame", "label": "from ~/.ssh/config", "state": "timeout"}]),
+                         "alias hostname timeout")
+
+    def test_hidden_hosts_leave_the_rest(self):
+        self.assertEqual(fl.hide_hosts("frame_link: Could not resolve hostname frame", ["frame"]),
+                         "frame_link: Could not resolve hostname <host>")
+        self.assertEqual(fl.hide_hosts("ssh frame to frame.local", ["frame.local", "frame"], keep=("frame",)),
+                         "ssh frame to <host>")
+        self.assertEqual(fl.hide_hosts("reset by SteamDeck", ["steamdeck"]), "reset by <host>")
+        self.assertEqual(fl.hide_operands("The headset took too long to answer."), "The headset took too long to answer.")
+
+    def test_ssh_version_is_rebuilt_from_its_numbers(self):
+        import frame_report as fr
+        for said, want in (("OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2\n", "OpenSSH for Windows 9.5p1, LibreSSL 3.8.2"),
+                           ("OpenSSH_9.9p1, LibreSSL 3.3.6\n", "OpenSSH 9.9p1, LibreSSL 3.3.6"),
+                           ("OpenSSH_8.9p1 Ubuntu-3ubuntu0.10, OpenSSL 3.0.2 15 Mar 2022\n", "OpenSSH 8.9p1"),
+                           ("OpenSSH_9.6p1, OpenSSL 3.0.13 30 Jan 2024\n", "OpenSSH 9.6p1, OpenSSL 3.0.13"),
+                           ("OpenSSH_9.9p1-Jane-Doe-Laptop, LibreSSL 3.3.6\n", "unknown"),
+                           ("OpenSSH_9.9p1, OpenSSL jane-laptop\n", "OpenSSH 9.9p1"),
+                           (r"C:\Users\Jane\OpenSSH-portable\ssh.exe: not found", "unknown"),
+                           ("", "unknown")):
+            with mock.patch.object(fr.frame_host, "run_ssh", return_value=subprocess.CompletedProcess([], 0, "", said)):
+                self.assertEqual(fr.ssh_version("ssh"), want, said)
+
+    def test_only_the_default_alias_is_named(self):
+        import frame_report as fr
+        self.assertEqual(fr.alias_kind("frame"), 'default ("frame")')
+        self.assertEqual(fr.alias_kind("jane-office.example.com"), "custom")
+
+    def test_a_slow_path_never_holds_up_a_report(self):
+        import frame_report as fr
+        release = threading.Event()
+
+        def slow():
+            release.wait(5)
+            return []
+        with mock.patch.dict(fr._ssh, {"thread": None, "line": None}), mock.patch.object(fr, "_ssh_on_path", slow), \
+                mock.patch.object(fr, "link", None), mock.patch.object(fr.shutil, "which", return_value="/usr/bin/ssh"), \
+                mock.patch.object(fr.frame_host, "run_ssh",
+                                  return_value=subprocess.CompletedProcess([], 0, "", "OpenSSH_9.9p1, LibreSSL 3.3.6\n")):
+            t0 = time.monotonic()
+            self.assertIn("Connection: no connector", fr.diagnostics())
+            self.assertIn("SSH: still being checked", fr.ssh_line())
+            self.assertLess(time.monotonic() - t0, 2)
+            thread = fr._ssh["thread"]
+            release.set()
+            thread.join(5)
+            self.assertTrue(fr._ssh["line"].startswith("SSH: "))
+            self.assertNotEqual(fr.ssh_line(), "SSH: still being checked")
+
+    def test_ssh_kinds(self):
+        import frame_report as fr
+        for path, kind in ((r"C:\WINDOWS\System32\OpenSSH\ssh.exe", "Windows OpenSSH (System32)"),
+                           (r"C:\Program Files\OpenSSH\ssh.exe", "OpenSSH in Program Files"),
+                           (r"C:\Program Files\Git\usr\bin\ssh.exe", "Git for Windows"),
+                           ("/usr/bin/ssh", "system OpenSSH"), ("/opt/homebrew/bin/ssh", "Homebrew or /usr/local"),
+                           ("/home/jane/bin/ssh", "other"), (None, "not found")):
+            self.assertEqual(fr.ssh_path_kind(path), kind)
+
+    def test_no_connector_says_so(self):
+        import frame_report as fr
+        with mock.patch.object(fr, "link", None):
+            self.assertIn("Connection: no connector", fr.diagnostics())
 
 
 @unittest.skipIf(os.name == "nt", "the stand-in ssh is a POSIX script")
