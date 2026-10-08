@@ -51,6 +51,20 @@ test("update.json assets always download from this repository's release", () => 
   assert.throws(() => require("../updater").fromManifest({ version: "nope", assets: [] }));
 });
 
+test("the release page is this repository's tag page, never a draft's untagged-... link", () => {
+  const { fromManifest, fromApi } = require("../updater");
+  const tagPage = "https://github.com/saphid/frame-control/releases/tag/v0.4.0";
+  const page = (p) => fromManifest({ version: "0.4.0", assets: [], page: p }).page;
+  assert.strictEqual(page(tagPage), tagPage);
+  // 0.4.0's real update.json: the draft's address, a 404 once published.
+  assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/untagged-c6ddfed7f75d67db2e99"), tagPage);
+  assert.strictEqual(page(undefined), tagPage);
+  assert.strictEqual(page("https://evil.example/releases/tag/v0.4.0"), tagPage);
+  assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/v0.4.0?x=1"), tagPage);
+  assert.strictEqual(fromApi({ tag_name: "v0.4.0", assets: [],
+                               html_url: "https://github.com/saphid/frame-control/releases/tag/untagged-x" }).page, tagPage);
+});
+
 test("prepare refuses a release that isn't newer (no downgrades)", async () => {
   const { prepare } = require("../updater");
   const release = { version: "0.3.1", assets: [] };

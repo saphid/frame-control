@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+"""A stand-in for the GitHub CLI's `gh api`, for tests/test_publish_release.py. Serves
+the releases in $FAKEGH_RELEASES (a JSON list, drafts included) and the tags in
+$FAKEGH_TAGS (space-separated); an upload's body is written to $FAKEGH_UPLOAD.
+Every call is appended to $FAKEGH_LOG as a JSON line. Anything else fails, so the
+script under test can't fall back to `gh release ...` (GraphQL) unnoticed."""
+import json
+import os
+import sys
+
+args = sys.argv[1:]
+with open(os.environ["FAKEGH_LOG"], "a") as f:
+    f.write(json.dumps(args) + "\n")
+if not args or args[0] != "api":
+    sys.exit("fakegh: only `gh api` is supported: %r" % args)
+
+method, endpoint, fields, inp, i = "GET", None, {}, None, 1
+while i < len(args):
+    a = args[i]
+    if a == "-X":
+        method = args[i + 1]; i += 2
+    elif a in ("-f", "-F"):
+        k, _, v = args[i + 1].partition("="); fields[k] = v; i += 2
+    elif a == "--input":
+        inp = args[i + 1]; i += 2
+    elif a in ("-H", "--jq"):
+        i += 2
+    elif a.startswith("-"):
+        i += 1
+    elif endpoint is None:
+        endpoint = a; i += 1
+    else:
+        sys.exit("fakegh: unexpected argument %r" % a)
+
+releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
+repo = "repos/saphid/frame-control/"
+if method == "GET" and endpoint.startswith(repo + "git/ref/tags/"):
+    tag = endpoint.rsplit("/", 1)[1]
+    if tag not in os.environ.get("FAKEGH_TAGS", "").split():
+        sys.exit("gh: Not Found (HTTP 404)")
+    print(json.dumps({"ref": "refs/tags/" + tag}))
+elif method == "GET" and endpoint.startswith(repo + "releases?"):
+    for r in releases:  # what --jq '.[]' prints
+        print(json.dumps(r))
+elif method == "DELETE" and endpoint.startswith(repo + "releases/assets/"):
+    pass
+elif method == "POST" and endpoint.startswith("https://uploads.github.com/" + repo + "releases/"):
+    with open(inp) as src, open(os.environ["FAKEGH_UPLOAD"], "w") as dst:
+        dst.write(src.read())
+    print("{}")
+elif method == "PATCH" and endpoint.startswith(repo + "releases/"):
+    print("published %s at https://github.com/saphid/frame-control/releases/tag/%s"
+          % (fields.get("tag_name"), fields.get("tag_name")))
+else:
+    sys.exit("fakegh: unhandled %s %s" % (method, endpoint))
