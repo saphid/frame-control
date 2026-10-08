@@ -610,7 +610,7 @@ class Connecting(unittest.TestCase):
         done.start()
         done.join()
         with mock.patch.object(fr, "link", self.link), \
-                mock.patch.dict(fr._ssh, {"thread": done, "line": "SSH: system OpenSSH, OpenSSH_9.9p1, LibreSSL 3.3.6"}):
+                mock.patch.dict(fr._ssh, {"thread": done, "line": "SSH: system OpenSSH, OpenSSH 9.9p1, LibreSSL 3.3.6"}):
             return fr.diagnostics()
 
     def test_each_failure_goes_to_the_server_log_scrubbed(self):
@@ -634,15 +634,17 @@ class Connecting(unittest.TestCase):
         self.link.connect(["start"])
         text = self.report()
         self.assertIn("Connection: failed at find, attempt 1 (Starting up)", text)
-        self.assertIn('Headsets: 1 saved; active "frame-t" (saved, 2 address(es))', text)
+        self.assertIn("Headsets: 1 saved; active alias custom (saved, 2 address(es))", text)
         self.assertIn("Error: find, frame_not_set_up", text)
         self.assertRegex(text, r"Last failure: find, frame_not_set_up, 0 min \d+ s ago")
         self.assertIn("Addresses tried: hostname unresolved; hostname unresolved", text)
         self.assertIn("Network: gateway yes, Tailscale not installed", text)
-        self.assertIn("SSH: system OpenSSH, OpenSSH_9.9p1", text)
-        self.assertIn('~/.ssh/config: managed "frame-t" block yes (1 managed in all); hand-written "Host frame-t" yes', text)
-        # No free text from the error or ssh at all.
-        for leaked in ("steamdeck-jane", "Could not resolve", "Can't find", "192.168", "10.0.0.7", "steamos", str(self.dir)):
+        self.assertIn("SSH: system OpenSSH, OpenSSH 9.9p1", text)
+        self.assertIn("~/.ssh/config: managed block for the active alias yes (1 managed in all); "
+                      "hand-written Host for it yes", text)
+        # No free text from the error or ssh at all, and not the custom alias.
+        for leaked in ("steamdeck-jane", "Could not resolve", "Can't find", "192.168", "10.0.0.7", "steamos",
+                       "frame-t", str(self.dir)):
             self.assertNotIn(leaked, text)
 
     def test_a_failure_on_the_last_headset_leaves_nothing_of_it_after_switching(self):
@@ -716,9 +718,20 @@ class FailureLog(unittest.TestCase):
             fl.log_failure("login", "refused", r"debug | ssh said: CORP\jane@frame's password: denied")
         out = err.getvalue()
         self.assertIn(r"C:\Users\<user>/.ssh/config", out)
-        self.assertIn("<user>@frame: Permission denied", out)
+        self.assertIn("<user>@<host>: Permission denied", out)
         for leaked in ("Jane", "Doe", "jane", "CORP"):
             self.assertNotIn(leaked, out)
+
+    def test_whole_ssh_user_at_host_fields_and_home_folders_go(self):
+        import frame_telemetry as tm
+        with mock.patch.object(tm, "_user_names", return_value=set()):
+            self.assertEqual(tm.scrub(r"CORP\Jane Doe@jane-office.example.com: Permission denied (publickey)."),
+                             "<user>@<host>: Permission denied (publickey).")
+            self.assertEqual(tm.scrub("jane@jane-office.example.com's password: "), "<user>@<host>'s password: ")
+            self.assertEqual(tm.scrub(r"Bad owner on C:\Users\O'Brien/.ssh/config"), r"Bad owner on C:\Users\<user>/.ssh/config")
+            self.assertEqual(tm.scrub(r"c:\users\Zoë Smith.Jr\.ssh\config"), r"c:\users\<user>\.ssh\config")
+            self.assertEqual(tm.scrub("/users/O'Brien/x and /HOME/jane doe/y"), "/users/<user>/x and /HOME/<user>/y")
+            self.assertEqual(tm.scrub("write to me@example.com today"), "write to <email> today")
 
 
 class ConnectionDiagnostics(unittest.TestCase):
@@ -743,13 +756,23 @@ class ConnectionDiagnostics(unittest.TestCase):
         self.assertEqual(fl.hide_hosts("reset by SteamDeck", ["steamdeck"]), "reset by <host>")
         self.assertEqual(fl.hide_operands("The headset took too long to answer."), "The headset took too long to answer.")
 
-    def test_ssh_version_is_only_its_version_words(self):
+    def test_ssh_version_is_rebuilt_from_its_numbers(self):
         import frame_report as fr
-        for said, want in (("OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2\n", "OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2"),
-                           ("OpenSSH_9.9p1, LibreSSL 3.3.6\n", "OpenSSH_9.9p1, LibreSSL 3.3.6"),
-                           (r"C:\Users\Jane Doe\ssh.exe: something odd", "unrecognised version (exit 0)")):
+        for said, want in (("OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2\n", "OpenSSH for Windows 9.5p1, LibreSSL 3.8.2"),
+                           ("OpenSSH_9.9p1, LibreSSL 3.3.6\n", "OpenSSH 9.9p1, LibreSSL 3.3.6"),
+                           ("OpenSSH_8.9p1 Ubuntu-3ubuntu0.10, OpenSSL 3.0.2 15 Mar 2022\n", "OpenSSH 8.9p1"),
+                           ("OpenSSH_9.6p1, OpenSSL 3.0.13 30 Jan 2024\n", "OpenSSH 9.6p1, OpenSSL 3.0.13"),
+                           ("OpenSSH_9.9p1-Jane-Doe-Laptop, LibreSSL 3.3.6\n", "unknown"),
+                           ("OpenSSH_9.9p1, OpenSSL jane-laptop\n", "OpenSSH 9.9p1"),
+                           (r"C:\Users\Jane\OpenSSH-portable\ssh.exe: not found", "unknown"),
+                           ("", "unknown")):
             with mock.patch.object(fr.frame_host, "run_ssh", return_value=subprocess.CompletedProcess([], 0, "", said)):
-                self.assertEqual(fr.ssh_version("ssh"), want)
+                self.assertEqual(fr.ssh_version("ssh"), want, said)
+
+    def test_only_the_default_alias_is_named(self):
+        import frame_report as fr
+        self.assertEqual(fr.alias_kind("frame"), 'default ("frame")')
+        self.assertEqual(fr.alias_kind("jane-office.example.com"), "custom")
 
     def test_a_slow_path_never_holds_up_a_report(self):
         import frame_report as fr

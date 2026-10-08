@@ -123,14 +123,14 @@ With **Include diagnostics** ticked (the default), the report adds:
 - the Frame's SteamOS build, if it has connected since the app started
 - which analytics levels are on
 - a short connection summary, so "the app can't find the headset" can be
-  diagnosed. It is made of fixed words, counts and the alias name only; no
-  text from an error message or from ssh goes in it:
+  diagnosed. It is made of fixed words and counts only; no text from an
+  error message or from ssh, and no name you chose, goes in it:
   - the connector's state (idle, connecting, connected or failed), the stage
     it failed at (network, find, ssh, identity or login), the attempt number
     and why it started (such as "Starting up" or "Trying again")
-  - how many headsets are saved, the active one's ssh alias name (such as
-    `frame`; it's whatever name the headset was set up under), whether it's
-    saved or a bare ssh alias, and its number of addresses
+  - how many headsets are saved; whether the active one's ssh alias is the
+    default `frame` or a custom one (a custom alias itself is never named);
+    whether it's saved or a bare ssh alias; and its number of addresses
   - for the current error and the last failure: the stage and an error
     category (the same fixed names as error details, such as
     `frame_unreachable`, `frame_not_set_up`, `frame_auth` or `other`), and
@@ -146,14 +146,17 @@ With **Include diagnostics** ticked (the default), the report adds:
     off or not installed
   - which kind of `ssh` the app runs (Windows OpenSSH in System32, OpenSSH in
     Program Files, Git for Windows, MSYS2/Cygwin, Homebrew or /usr/local,
-    Nix, the system one, or "other"), never its path; its version words from
-    `ssh -V` (such as `OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2`, and
-    nothing else it prints); and the kinds of any other `ssh` on the PATH.
+    Nix, the system one, or "other"), never its path; its version, rebuilt
+    from the numbers in the banner `ssh -V` prints (such as
+    `OpenSSH for Windows 9.5p1, LibreSSL 3.8.2`; anything that isn't a
+    plain OpenSSH banner is reported as `unknown`); and the kinds of any
+    other `ssh` on the PATH.
     This is looked up once in the background after the app starts, so a
     report sent straight away may say "still being checked"
   - whether `~/.ssh/config` exists, whether it has Set Up Connection's
     managed block for the active alias, how many managed blocks it has, and
-    whether a hand-written `Host` line also names the alias
+    whether a hand-written `Host` line also names the alias (yes or no; the
+    alias isn't named)
 
 **Also include recent activity and the server log** is off by default,
 because those lines can name files and apps. When ticked, it adds the newest
@@ -163,8 +166,9 @@ shown on the connection pill, ssh's last line about it, and the address kinds
 above. That free text is scrubbed when the line is written: the addresses and
 names of the headset being tried (whatever their case), and any name ssh gives
 after "hostname", "host" or "to", become `<host>`; a Windows home folder's
-whole name and the whole user part of `user@host` (spaces and `DOMAIN\user`
-included) become `<user>`; then the scrubbing below. A host name ssh mentions
+whole name (spaces and apostrophes included) becomes `<user>`, and ssh's
+whole `user@host:` field (spaces, `DOMAIN\user` and full domain names
+included) becomes `<user>@<host>:`; then the scrubbing below. A host name ssh mentions
 in some other wording can still get through, so check the log lines in **Show
 exactly what's included** before sending. A failure that repeats on every
 retry is written at most once every 5 minutes.

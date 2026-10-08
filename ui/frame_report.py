@@ -98,18 +98,31 @@ def _ssh_on_path():
     return found
 
 
-VERSION_RE = re.compile(r"\b((?:OpenSSH|Sun_SSH|dropbear)[\w.\-]*)(?:[, ]+((?:LibreSSL|OpenSSL) [\w.\-]+))?", re.I)
+# Only a real banner at the very start ("OpenSSH_9.9p1, LibreSSL 3.3.6",
+# "OpenSSH_for_Windows_9.5p1, LibreSSL 3.8.2"): rebuilt from fixed names and its numbers.
+BANNER_RE = re.compile(r"OpenSSH_(for_Windows_)?(\d+)\.(\d+)(p\d+)?(?=[,\s]|$)")
+LIBRARY_RE = re.compile(r",?\s*(LibreSSL|OpenSSL) (\d+\.\d+\.\d+[a-z]?)(?=[,\s]|$)")
+
+
+def parse_ssh_version(said):
+    """"OpenSSH 9.9p1, LibreSSL 3.3.6"-style text from `ssh -V`'s output, or "unknown"."""
+    said = (said or "").lstrip()
+    m = BANNER_RE.match(said)
+    if not m:
+        return "unknown"
+    out = f"OpenSSH{' for Windows' if m.group(1) else ''} {m.group(2)}.{m.group(3)}{m.group(4) or ''}"
+    lib = LIBRARY_RE.match(said, m.end())
+    return out + (f", {lib.group(1)} {lib.group(2)}" if lib else "")
 
 
 def ssh_version(path):
-    """The version words of `ssh -V` (it prints to stderr), nothing else it says."""
+    """The version from `ssh -V` (it prints to stderr), nothing else it says."""
     try:
         r = frame_host.run_ssh([path, "-V"], capture_output=True, stdin=subprocess.DEVNULL, text=True,
                                errors="replace", timeout=5)
     except (OSError, subprocess.SubprocessError) as e:
         return f"couldn't run it ({type(e).__name__})"
-    m = VERSION_RE.search((r.stderr or "") + " " + (r.stdout or ""))
-    return ", ".join(g for g in m.groups() if g) if m else f"unrecognised version (exit {r.returncode})"
+    return parse_ssh_version(r.stderr or r.stdout)
 
 
 def _ssh_check():
@@ -168,13 +181,18 @@ def config_line(alias):
             outside.append(line)
     own = any(alias in re.split(r"[\s=]+", ln.strip())[1:] for ln in outside
               if re.match(r"(?i)\s*host[\s=]", ln))
-    return (f"~/.ssh/config: managed \"{alias}\" block {'yes' if alias in blocks else 'no'} "
-            f"({len(blocks)} managed in all); hand-written \"Host {alias}\" {'yes' if own else 'no'}")
+    return (f"~/.ssh/config: managed block for the active alias {'yes' if alias in blocks else 'no'} "
+            f"({len(blocks)} managed in all); hand-written Host for it {'yes' if own else 'no'}")
+
+
+def alias_kind(alias):
+    """`default ("frame")` or `custom`: a name someone chose can say who they are."""
+    return 'default ("frame")' if alias == "frame" else "custom"
 
 
 def connection_lines():
     """A short summary of the connector in fixed words only: states, stages, error categories,
-    kinds of address, counts. No text from errors or ssh, and never an address."""
+    kinds of address, counts. No text from errors or ssh, no custom alias, never an address."""
     if link is None:
         return ["Connection: no connector (this server doesn't reach a headset over SSH)"]
     snap = link.snapshot()
@@ -191,7 +209,7 @@ def connection_lines():
     lines = [head]
     kind = ("none set up" if active.get("none") else "a bare ssh alias" if active.get("transient")
             else f"saved, {len(active.get('addresses') or [])} address(es)")
-    lines.append(f"Headsets: {len(link.reg.devices())} saved; active \"{alias}\" ({kind})")
+    lines.append(f"Headsets: {len(link.reg.devices())} saved; active alias {alias_kind(alias)} ({kind})")
     if err:
         lines.append(f"Error: {err.get('stage')}, {frame_link.failure_category(err.get('message'), err.get('raw'))}")
     last = link.last_failure
