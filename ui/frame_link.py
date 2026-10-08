@@ -171,34 +171,67 @@ def probes_summary(probes):
 
 def hide_hosts(text, hosts, keep=()):
     """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
-    longest first, so a bare name like "steamdeck" that the scrubber can't recognise goes too;
-    and ssh's "user@host" loses the user."""
-    for h in sorted({h for h in hosts if h and h not in keep}, key=len, reverse=True):
-        text = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", text)
-    return re.sub(r"[\w.+-]+@(?=[\w\[<])", "<user>@", text)
+    longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
+    can't recognise goes too."""
+    keep = {k.lower() for k in keep if k}
+    for h in sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True):
+        text = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", text, flags=re.I)
+    return text
 
 
-_logged = {"line": None, "at": 0.0, "repeats": 0}
+# ssh names the host it was going to after these words ("Could not resolve hostname X",
+# "connect to host X port 22", "Timed out talking to X"): whatever follows goes, known or not.
+OPERAND = re.compile(r"(?i)\b(hostname|host|to(?:\s+host)?)\s+(?!<)([^\s:,;'\"()|]+)")
+PLAIN_WORDS = {"answer", "the", "a", "an", "this", "it", "its", "be", "connect", "find", "work", "try"}
+
+
+def hide_operands(text):
+    def one(m):
+        word = m.group(2).rstrip(".")
+        dots = m.group(2)[len(word):]
+        return m.group(0) if word.lower() in PLAIN_WORDS else f"{m.group(1)} <host>{dots}"
+    return OPERAND.sub(one, text)
+
+
+def scrub_failure(text, hosts=()):
+    """Free text about a failed attempt, for the log: the attempt's own hosts and anything ssh
+    names as a host replaced, then the shared scrubber (addresses, paths, user names)."""
+    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
+
+
+def failure_category(message, raw=""):
+    """The telemetry error category (frame_unreachable, frame_auth, ...) for a failure: a fixed
+    word, never its text."""
+    return frame_telemetry.categorize(f"{message or ''}\n{raw or ''}")[0]
+
+
+_logged = {}            # failure line -> {"at": when last written, "repeats": since then}
 LOG_REPEAT_EVERY = 300  # the same failure, retried every 30 s, goes in the log at most this often
+LOG_REMEMBER = 32       # different failures remembered for that
 
 
-def log_failure(stage, message, raw="", probes=()):
-    """One failed connection attempt to stderr (the app's server.log), scrubbed like a report."""
-    bits = [f"frame_link: {stage} failed: {message}"]
+def log_failure(stage, message, raw="", probes=(), hosts=()):
+    """One failed connection attempt to stderr (the app's server.log), scrubbed when written,
+    with the hosts of that attempt (so a later switch of headset can't let them through)."""
+    hosts = list(hosts) + [r.get(k) for r in probes or () for k in ("host", "ip")]
+    bits = [f"frame_link: {stage} failed: {scrub_failure(message, hosts)}"]
     last = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()][-1:]
     if last and last[0] != message:
-        bits.append(f"ssh said: {last[0][:300]}")
+        bits.append(f"ssh said: {scrub_failure(last[0][:300], hosts)}")
     tried = probes_summary(probes)
     if tried:
         bits.append(f"addresses: {tried}")
-    hosts = [r.get("host") for r in probes or ()] + [r.get("ip") for r in probes or ()]
-    line = frame_telemetry.scrub(hide_hosts(" | ".join(bits), hosts), 800)
+    line = " | ".join(bits)[:900]
     t = time.monotonic()
-    if line == _logged["line"] and t - _logged["at"] < LOG_REPEAT_EVERY:
-        _logged["repeats"] += 1
+    seen = _logged.get(line)
+    if seen and t - seen["at"] < LOG_REPEAT_EVERY:
+        seen["repeats"] += 1
         return
-    more = f" (and {_logged['repeats']} more times)" if line == _logged["line"] and _logged["repeats"] else ""
-    _logged.update(line=line, at=t, repeats=0)
+    more = f" (and {seen['repeats']} more times)" if seen and seen["repeats"] else ""
+    _logged.pop(line, None)
+    _logged[line] = {"at": t, "repeats": 0}
+    while len(_logged) > LOG_REMEMBER:
+        _logged.pop(next(iter(_logged)))  # the least recently written
     try:
         print(line + more, file=sys.stderr, flush=True)
     except (OSError, ValueError, AttributeError):
@@ -257,7 +290,7 @@ class Link:
         self.route_lock = threading.Lock()
         self.routed = None              # the device id every ssh command points at
         self.routed_device = None
-        self.last_failure = None        # {"stage", "message", "raw", "at"}: for report diagnostics
+        self.last_failure = None        # {"stage", "category", "at"}: for report diagnostics, no free text
 
     # ---- publishing ----
     def publish(self, **fields):
@@ -507,8 +540,7 @@ class Link:
                     self.connect(reasons)
             except Exception as e:  # keep the loop alive whatever happens; say what went wrong
                 message = f"{type(e).__name__}: {e}"
-                self.last_failure = {"stage": "network", "message": message, "raw": str(e), "at": now()}
-                log_failure("network", message)
+                self.note_failure("network", message, str(e))
                 self.publish(phase="failed", error={"stage": "network", "message": message,
                                                     "raw": str(e)}, retry_at=now() + RETRY[-1])
             finally:
@@ -613,8 +645,7 @@ class Link:
                                   now() + RETRY[min(self.fails, len(RETRY)) - 1])
                 if not self.state["error"]:
                     self.state["error"] = {"stage": "find", "message": "Couldn't connect", "raw": ""}
-                    self.last_failure = dict(self.state["error"], at=now())
-                    log_failure("find", "Couldn't connect", "", self.state["probes"])
+                    self.note_failure("find", "Couldn't connect", "", self.state["probes"])
             self.version += 1
             self.cond.notify_all()
 
@@ -638,8 +669,15 @@ class Link:
         with self.cond:
             self.state["error"] = {"stage": sid, "message": message, "raw": raw}
             probes = copy.deepcopy(self.state["probes"])
-        self.last_failure = {"stage": sid, "message": message, "raw": raw, "at": now()}
-        log_failure(sid, message, raw, probes)
+        self.note_failure(sid, message, raw, probes)
+
+    def note_failure(self, stage, message, raw="", probes=()):
+        """Keep a failure for report diagnostics as fixed values only (its stage and error
+        category, decided now), and write it to the log scrubbed with this attempt's hosts."""
+        self.last_failure = {"stage": stage, "category": failure_category(message, raw), "at": now()}
+        d = self.routed_device or {}
+        hosts = [a.get("host") for a in d.get("addresses") or ()] + [d.get("frozen_host")]
+        log_failure(stage, message, raw, probes, hosts)
 
     def attempt(self, device):
         if device.get("none"):

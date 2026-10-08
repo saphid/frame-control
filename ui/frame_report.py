@@ -17,6 +17,7 @@ import re
 import shutil
 import subprocess
 import sys
+import threading
 import time
 import uuid
 
@@ -34,7 +35,6 @@ ACTIVITY_LINES = 25
 
 frame = {}  # the Frame's last known SteamOS build, set by server.status()
 link = None  # the connector (frame_link.Link), set by server.main; None on the Frame itself
-_ssh_versions = {}  # ssh path -> `ssh -V`, asked once per run
 
 
 def u16(s):
@@ -98,20 +98,21 @@ def _ssh_on_path():
     return found
 
 
+VERSION_RE = re.compile(r"\b((?:OpenSSH|Sun_SSH|dropbear)[\w.\-]*)(?:[, ]+((?:LibreSSL|OpenSSL) [\w.\-]+))?", re.I)
+
+
 def ssh_version(path):
-    """`ssh -V`'s first line (it prints to stderr), asked once per run."""
-    if path not in _ssh_versions:
-        try:
-            r = frame_host.run_ssh([path, "-V"], capture_output=True, stdin=subprocess.DEVNULL, text=True,
-                                   errors="replace", timeout=5)
-            lines = ((r.stderr or "") + (r.stdout or "")).strip().splitlines()
-            _ssh_versions[path] = lines[0][:120] if lines else f"no version (exit {r.returncode})"
-        except (OSError, subprocess.SubprocessError) as e:
-            _ssh_versions[path] = f"couldn't run it ({type(e).__name__})"
-    return _ssh_versions[path]
+    """The version words of `ssh -V` (it prints to stderr), nothing else it says."""
+    try:
+        r = frame_host.run_ssh([path, "-V"], capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                               errors="replace", timeout=5)
+    except (OSError, subprocess.SubprocessError) as e:
+        return f"couldn't run it ({type(e).__name__})"
+    m = VERSION_RE.search((r.stderr or "") + " " + (r.stdout or ""))
+    return ", ".join(g for g in m.groups() if g) if m else f"unrecognised version (exit {r.returncode})"
 
 
-def ssh_line():
+def _ssh_check():
     path = shutil.which("ssh")
     if not path:
         return "SSH: no ssh on PATH"
@@ -119,6 +120,32 @@ def ssh_line():
               if os.path.normcase(os.path.abspath(p)) != os.path.normcase(os.path.abspath(path))]
     others = [k for i, k in enumerate(others) if k not in others[:i]]
     return f"SSH: {ssh_path_kind(path)}, {ssh_version(path)}" + (f"; also on PATH: {', '.join(others)}" if others else "")
+
+
+_ssh = {"thread": None, "line": None}
+_ssh_lock = threading.Lock()
+SSH_WAIT = 0.3  # how long a report preview waits for the ssh check (PATH can hold slow network drives)
+
+
+def start_ssh_check():
+    """Look for ssh once, in the background (server.main starts it), so a report never waits
+    on PATH folders on slow or mapped drives."""
+    def run():
+        try:
+            line = _ssh_check()
+        except Exception as e:  # a report must still go out
+            line = f"SSH: couldn't check ({type(e).__name__})"
+        _ssh["line"] = line
+    with _ssh_lock:
+        if _ssh["thread"] is None:
+            _ssh["thread"] = threading.Thread(target=run, name="report-ssh-check", daemon=True)
+            _ssh["thread"].start()
+        return _ssh["thread"]
+
+
+def ssh_line():
+    start_ssh_check().join(SSH_WAIT)
+    return _ssh["line"] or "SSH: still being checked"
 
 
 def config_line(alias):
@@ -146,23 +173,13 @@ def config_line(alias):
 
 
 def connection_lines():
-    """A short summary of the connector: kinds of addresses and states, never the addresses."""
+    """A short summary of the connector in fixed words only: states, stages, error categories,
+    kinds of address, counts. No text from errors or ssh, and never an address."""
     if link is None:
         return ["Connection: no connector (this server doesn't reach a headset over SSH)"]
     snap = link.snapshot()
     active = link.active_device()
     alias = active.get("alias") or "?"
-    hosts = [a.get("host") for a in active.get("addresses") or ()] + [active.get("frozen_host")]
-    hosts += [r.get(k) for r in snap.get("probes") or () for k in ("host", "ip")]
-    hosts += [(snap.get("via") or {}).get(k) for k in ("host", "ip")]
-
-    def hide(text):
-        return frame_link.hide_hosts(str(text or ""), hosts, keep=(alias,))
-
-    def ssh_said(raw, message):
-        last = [ln.strip() for ln in (raw or "").splitlines() if ln.strip()][-1:]
-        return f" | ssh said: {hide(last[0])[:300]}" if last and last[0] != message else ""
-
     phase, err, via = snap.get("phase") or "idle", snap.get("error"), snap.get("via")
     head = f"Connection: {phase}"
     if phase == "connected" and via:
@@ -176,12 +193,11 @@ def connection_lines():
             else f"saved, {len(active.get('addresses') or [])} address(es)")
     lines.append(f"Headsets: {len(link.reg.devices())} saved; active \"{alias}\" ({kind})")
     if err:
-        lines.append(f"Error: {hide(err.get('message'))}{ssh_said(err.get('raw'), err.get('message'))}")
+        lines.append(f"Error: {err.get('stage')}, {frame_link.failure_category(err.get('message'), err.get('raw'))}")
     last = link.last_failure
-    if last and (not err or last.get("message") != err.get("message")):
+    if last:
         ago = max(0, int(frame_link.now() - last.get("at", 0)))
-        lines.append(f"Last failure ({last.get('stage')}, {ago // 60} min {ago % 60} s ago): "
-                     f"{hide(last.get('message'))}{ssh_said(last.get('raw'), last.get('message'))}")
+        lines.append(f"Last failure: {last.get('stage')}, {last.get('category')}, {ago // 60} min {ago % 60} s ago")
     lines.append(f"Addresses tried: {frame_link.probes_summary(snap.get('probes')) or 'none yet'}")
     net = snap.get("network")
     if net:

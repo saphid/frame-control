@@ -229,9 +229,15 @@ def scrub(text, limit=2000):
     home = str(Path.home())
     if len(home) > 3:
         t = t.replace(home, '~')
-    t = re.sub(r'(/Users/|/home/|[A-Za-z]:\\Users\\)[^/\\\s]+', r'\1<user>', t)
+    t = re.sub(r'(/Users/|/home/)[^/\\\s]+', r'\1<user>', t)
+    # A Windows home folder's whole name, spaces and all ("C:\Users\Jane Doe\..."), up to the next separator.
+    t = re.sub(r'''([A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n'"]+''', r'\1<user>', t)
     for pattern, repl in SCRUBS:
         t = pattern.sub(repl, t)
+    # ssh's "user@host: ..." and "user@host's password": the whole user part, even "Jane Doe" or
+    # DOMAIN\user, when it starts a line or follows ": " or "| "; then any other word@host.
+    t = re.sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|'"<]{1,64}@(?=[\w.\[\]%<>-]+(?::|'s\s))''', '<user>@', t)
+    t = re.sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)
     t = IPV6_RE.sub(_ipv6, t)
     for name in _user_names():
         t = re.sub(r'\b%s\b' % re.escape(name), '<user>', t)
