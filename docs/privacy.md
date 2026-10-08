@@ -43,13 +43,20 @@ computer, exactly as they were sent.
 | `app_opened` | At most once a day | |
 | `frame_connected` | The first time a SteamOS build is seen | `steamos_build`, `steamos_version` |
 | `tab_viewed` | The first click on each tab in a session | `tab` |
-| `install_finished` | Any install finishes, working or not | `kind` (apk, flatpak, steam, title, web), `ok`, `seconds`, `error_category`, `installer_code`, and see below |
+| `install_finished` | Any install finishes, working or not | `kind` (apk, flatpak, steam, title, web), `ok`, `seconds`, `error_category` (only when `ok` is false), `installer_code`, `xr_layer_missing`, and see below |
 | `update_offered`, `update_started`, `update_failed` | The update banner | `to_version`, `error_category` |
 
 `install_finished` never includes a file name, path or error message. An
-error becomes one category from a fixed list (for example `apk_wrong_abi` or
-`frame_unreachable`), plus Android's own `INSTALL_FAILED_…` code when there
-is one. It names what was installed only when that's already public:
+error becomes one category from this fixed list, plus Android's own
+`INSTALL_FAILED_…` code (`installer_code`) when there is one:
+`android_installer`, `apk_needs_newer_android`, `apk_wrong_abi`,
+`layer_missing`, `apk_repack_failed`, `tool_missing`, `apk_unreadable`,
+`cant_run_on_frame`, `steam_shortcut`, `frame_not_set_up`, `frame_auth`,
+`frame_unreachable`, `frame_disk_full`, `download_failed`, `flatpak`,
+`cancelled`, `lepton` or `other`. A VR APK that installed without Frame
+Control's OpenXR compatibility layer, because this copy of the app is missing
+it, carries `xr_layer_missing: true`; otherwise that field is left out. It
+names what was installed only when that's already public:
 
 - F-Droid catalogue apps: `package`. Never the version, since a local build can reuse a
   catalogue app's package name
