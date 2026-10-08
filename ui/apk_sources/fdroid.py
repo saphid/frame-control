@@ -27,6 +27,7 @@ from frame_catalog import _IndexReader, _reduce_index, _sha256
 
 KIND = 'fdroid'
 CACHE_VERSION = 2
+TMP_PREFIX = '.download-'  # in the cache folder, then the server's PID, so server.sweep_tmp can clear a stopped run's
 _LOCK = threading.RLock()  # settings only; never held while downloading
 _load_locks = {}
 _refreshing = {}  # source id -> background refresh thread
@@ -530,7 +531,7 @@ def _load(source, force=False):
             return found[:2]
         cache.parent.mkdir(parents=True, exist_ok=True)
         try:
-            with tempfile.TemporaryDirectory(dir=str(cache.parent)) as tmp:
+            with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-', dir=str(cache.parent)) as tmp:
                 jar, raw = Path(tmp) / 'index.jar', Path(tmp) / 'index.json'
                 v2 = True
                 try:

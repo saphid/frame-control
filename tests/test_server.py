@@ -10,6 +10,7 @@ import http.client
 import io
 import json
 import os
+import shutil
 import socket
 import struct
 import subprocess
@@ -287,15 +288,77 @@ class OneServer(unittest.TestCase):
 
     @unittest.skipIf(os.name == "nt", "no SIGTERM on Windows")
     def test_sigterm_while_the_app_holds_stdin_exits_cleanly(self):
-        """The app keeps stdin open; a stop signal used to abort Python (SIGABRT) at exit."""
-        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": tempfile.mkdtemp(prefix="frame-one-server-"),
-               "FRAME_ALIAS": "frame-control-test.invalid"}
-        proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
-                                env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
-        self.addCleanup(lambda: (proc.stdin.close(), proc.stdout.close()))
-        self.assertIn("Frame Control on", proc.stdout.readline())
-        proc.terminate()
-        self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+        """The app keeps stdin open; a stop signal used to abort Python (SIGABRT) at exit,
+        and later, now and then, crash it (SIGSEGV) while background threads were still
+        loading TLS certificates. Run a few times: that crash came about 1 run in 100."""
+        for attempt in range(5):
+            with self.subTest(attempt=attempt):
+                env = {**os.environ, "FRAME_CONTROL_DATA_DIR": tempfile.mkdtemp(prefix="frame-one-server-"),
+                       "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONFAULTHANDLER": "1"}
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
+                    shutil.rmtree(env["FRAME_CONTROL_DATA_DIR"], ignore_errors=True)
+
+    def test_staging_folders_cleared_when_stopped_mid_transfer(self):
+        """The server leaves without interpreter teardown, so TemporaryDirectory cleanup
+        doesn't run for work still in progress: its own staging folders go on the way out,
+        and a dead server's at the next start."""
+        dead = subprocess.Popen([sys.executable, "-c", "pass"])
+        dead.wait()
+        home = tempfile.mkdtemp(prefix="frame-stop-home-")
+        self.addCleanup(shutil.rmtree, home, ignore_errors=True)
+        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": os.path.join(home, "data"),
+               "FRAME_ALIAS": "frame-control-test.invalid", "HOME": home, "XDG_CACHE_HOME": os.path.join(home, ".cache"),
+               "LOCALAPPDATA": home, "APPDATA": home}
+        index_dir = Path(subprocess.run(
+            [sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import frame_host; "
+                                   "print(frame_host.cache_dir('apk-sources'))", str(ROOT / "ui")],
+            env=env, capture_output=True, text=True, check=True).stdout.strip())
+        index_dir.mkdir(parents=True)
+        tmp = Path(tempfile.gettempdir())
+
+        def staged(folder, prefix, pid):
+            d = Path(tempfile.mkdtemp(prefix=f"{prefix}{pid}-", dir=folder))
+            self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+            (d / "app.apk").write_bytes(b"\0" * 4096)
+            return d
+
+        # Stopped as the app stops it: by closing stdin (the only way on Windows,
+        # where terminate() is a hard kill) and, elsewhere, by SIGTERM too.
+        for stop in ["stdin"] + (["sigterm"] if os.name != "nt" else []):
+            with self.subTest(stop=stop):
+                left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    self.assertEqual([d for d in left_by_dead if d.exists()], [])
+                    in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
+                                 staged(index_dir, ".download-", proc.pid)]
+                    if stop == "stdin":
+                        proc.stdin.close()
+                    else:
+                        proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                    self.assertEqual([d for d in in_flight if d.exists()], [])
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
 
 
 class ArtworkSettings(unittest.TestCase):

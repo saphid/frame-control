@@ -9,6 +9,8 @@ import subprocess
 import threading
 import time
 
+TMP_PREFIX = 'frame-agent-'  # then the server's PID, so server.sweep_tmp can clear a stopped run's
+
 
 class Approvals:
     def __init__(self):
@@ -109,7 +111,7 @@ def call(server, body):
     if name == 'send_file':
         # Stage the reviewed bytes before the existing transfer helper reads them.
         import tempfile
-        with tempfile.TemporaryDirectory(prefix='frame-agent-') as tmp:
+        with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-') as tmp:
             source = Path(action['arguments']['path'])
             with source.open('rb') as stream:
                 data = stream.read(16 * 1024**2 + 1)
