@@ -16,8 +16,12 @@ permissions:
 jobs:
   # One job makes the draft, before the builds: three matrix jobs each running
   # "view || create" could race and make duplicate drafts. The draft is tied to
-  # the pushed tag (--verify-tag, then tag_name set explicitly), so
-  # scripts/publish-release.sh and `gh release upload` find it by tag.
+  # the pushed tag (the tag must already exist on GitHub, then tag_name is set
+  # explicitly), so scripts/publish-release.sh and `gh release upload` find it
+  # by tag. It is created with the REST API so the id comes straight back: the
+  # release list can lag a fresh draft (v0.4.2's first run found nothing and
+  # PATCHed releases/ with an empty id). tests/test_release_workflow.py runs
+  # this step against tests/fakegh.
   draft:
     if: startsWith(github.ref, 'refs/tags/')
     runs-on: ubuntu-latest
@@ -28,11 +32,16 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           tag="${GITHUB_REF_NAME}"
+          # A rerun finds the draft an earlier attempt made.
           id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.tag_name == \"$tag\") | .id" | head -n 1)
           if [ -z "$id" ]; then
-            gh release create "$tag" --draft --verify-tag --title "Frame Control ${tag#v}" --notes ""
-            id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.draft and .name == \"Frame Control ${tag#v}\") | .id" | head -n 1)
+            # Given a missing tag, GitHub would create it on the default branch.
+            gh api "repos/$GH_REPO/git/ref/tags/$tag" >/dev/null \
+              || { echo "tag $tag isn't on GitHub" >&2; exit 1; }
+            id=$(gh api -X POST "repos/$GH_REPO/releases" -f tag_name="$tag" -f name="Frame Control ${tag#v}" \
+              -F draft=true -f body="" --jq .id)
           fi
+          [ -n "$id" ] || { echo "no release id for $tag; not PATCHing releases/" >&2; exit 1; }
           gh api -X PATCH "repos/$GH_REPO/releases/$id" -f tag_name="$tag" --jq '"release " + (.id|tostring) + " tag_name " + .tag_name'
 
   build:
