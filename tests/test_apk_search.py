@@ -33,6 +33,10 @@ class SettingsTest(unittest.TestCase):
         self.addCleanup(p.stop)
         for state in (search._running, search._pending, search._status, search._game_data):
             state.clear()
+        # server.py points this at the real compatibility database; tests use none unless they say so.
+        p = patch.object(search, 'compat_reports', None)
+        p.start()
+        self.addCleanup(p.stop)
         from apk_sources import _web
         self.claims = []
         for name in ('claim', 'release'):  # fake downloads aren't real files
@@ -74,6 +78,45 @@ class SearchTests(SettingsTest):
         self.assertTrue(search.fit({'min_sdk': 23, 'abis': []})['installable'])
         self.assertFalse(search.fit({'min_sdk': 23, 'abis': ['x86']})['installable'])
         self.assertIn('Legacy VrApi', search.fit({'engine': 'VrApi'})['reasons'][0])
+
+    def test_compat_reports_surface_in_results(self):
+        grayjay = dict(source='futo', id='com.futo.platformplayer', package='com.futo.platformplayer',
+                       name='Grayjay', min_sdk=28, vr=False, free=True, downloadable=True,
+                       abis=['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'])
+        reps = {'com.futo.platformplayer': [
+            {'package': 'com.futo.platformplayer', 'version': '391', 'result': 'install_failed',
+             'notes': 'Grayjay has no arm64-v8a build (armeabi-v7a); Lepton is 64-bit ARM only',
+             'date': '2026-10-01T10:00:00'},
+            {'package': 'com.futo.platformplayer', 'version': '391', 'result': 'crashes',
+             'date': '2026-10-02T10:00:00', 'via': 'probe'},
+            {'package': 'com.futo.platformplayer', 'version': '391', 'rating': 'broken',
+             'date': '2026-10-03T10:00:00', 'via': 'user'}]}
+        with patch.object(search, 'compat_reports', lambda: reps):
+            offer = search.group([grayjay], 'grayjay')[0]['offers'][0]
+        self.assertEqual(offer['verdict'], {'label': 'Reported not working on the Frame', 'tone': 'warn'})
+        self.assertEqual(offer['compat']['verdict'], 'no')
+        self.assertIn('broken', offer['compat']['lines'][0])
+        self.assertEqual(offer['compat']['lines'][1], '2 reports, 0 working')  # the wrong-file report is left out
+        self.assertTrue(offer['fit']['installable'])  # a warning, not a block: the user may still try
+
+        works = {'org.brush': [{'package': 'org.brush', 'rating': 'works', 'date': '2026-10-01'}]}
+        with patch.object(search, 'compat_reports', lambda: works):
+            brush = search.group(ENTRIES[:1])[0]['offers'][0]
+        self.assertEqual(brush['verdict']['tone'], 'works')
+
+        # A report never overrides a hard blocker such as a missing arm64-v8a build.
+        x86 = dict(grayjay, abis=['x86_64'])
+        with patch.object(search, 'compat_reports', lambda: {'com.futo.platformplayer': works['org.brush']}):
+            self.assertEqual(search.group([x86])[0]['offers'][0]['verdict']['tone'], 'blocked')
+
+    def test_compat_reports_failure_or_absence_changes_nothing(self):
+        def broken():
+            raise OSError('database unavailable')
+        for hook in (None, broken, lambda: {}):
+            with patch.object(search, 'compat_reports', hook):
+                offer = search.group(ENTRIES[:1])[0]['offers'][0]
+            self.assertIsNone(offer['compat'])
+            self.assertEqual(offer['verdict']['label'], 'Ready to try on the Frame')
 
     def test_timeout_and_failure_leave_other_results(self):
         release = threading.Event()

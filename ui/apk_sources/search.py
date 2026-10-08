@@ -2,7 +2,13 @@
 
 Optional store metadata: images {icon, banner, screenshots}, developer,
 description, popularity, open_source, requires_meta_services, frame_tested.
-Only an explicit frame_tested=True produces a working-on-Frame verdict.
+Only an explicit frame_tested=True, or a compatibility report, produces a
+working-on-Frame verdict.
+
+Compatibility reports (frame_compat_db, through the compat_reports hook that
+server.py sets) are matched by package name and turned into entry['compat'],
+using the same rules as the catalogue (apk-catalog/reports.py). A report never
+overrides a hard blocker such as a missing arm64-v8a build.
 """
 import importlib
 import inspect
@@ -23,6 +29,8 @@ _pending = {}  # source id -> newest query waiting for the running one
 _game_data = {}  # package -> downloaded OBB paths waiting for "Add game data"
 _status = {}
 TIMEOUT = 12
+# () -> {package: [report, ...]}; set by server.py. None (or a failure) means no reports.
+compat_reports = None
 
 
 def modules():
@@ -140,6 +148,24 @@ def fit(entry):
             'reasons': reasons}
 
 
+def _reports():
+    if compat_reports is None:
+        return {}
+    try:
+        return compat_reports() or {}
+    except Exception:  # noqa: BLE001 - reports are a hint; search must still work
+        return {}
+
+
+def compat(entry, by_package):
+    """{'verdict': works|maybe|no, 'lines': [...]} from reports for this package, or None."""
+    found = by_package.get(entry.get('package')) if entry.get('package') else None
+    if found:
+        from frame_catalog import reports  # apk-catalog/reports.py, the catalogue's rules
+        found = reports.verdict(found)
+    return {'verdict': found[0], 'lines': found[1]} if found else None
+
+
 def verdict(entry):
     compatibility = fit(entry)
     hints = ' '.join(str(entry.get(k) or '') for k in ('engine', 'vr_engine', 'vr_hints', 'vr_issues')).lower()
@@ -151,22 +177,28 @@ def verdict(entry):
         return {'label': "This version isn't made for the Frame", 'tone': 'blocked'}
     if 'vrapi' in hints:
         return {'label': "Made for older Quest headsets; won't run on the Frame", 'tone': 'blocked'}
-    if entry.get('frame_tested') is True:
+    reported = (entry.get('compat') or {}).get('verdict')
+    if reported == 'no':
+        return {'label': 'Reported not working on the Frame', 'tone': 'warn'}
+    if reported == 'maybe':
+        return {'label': 'Reported working with issues on the Frame', 'tone': 'warn'}
+    if entry.get('frame_tested') is True or reported == 'works':
         return {'label': 'Works on the Frame', 'tone': 'works'}
     if compatibility['installable'] is True:
         return {'label': 'Ready to try on the Frame', 'tone': 'ready'}
     return {'label': 'Not yet checked on the Frame', 'tone': 'unknown'}
 
 
-def decorate(entry):
+def decorate(entry, by_package=None):
     from apk_sources import _images
+    entry = dict(entry, compat=compat(entry, by_package or {}))
     return dict(entry, fit=fit(entry), verdict=verdict(entry), artwork=_images.artwork(entry))
 
 
 def details(source_id, entry_id):
     module, source = resolve(source_id)
     return decorate(dict(module.details(source, entry_id), source=source_id,
-                         source_name=source['name'], trust=source.get('trust')))
+                         source_name=source['name'], trust=source.get('trust')), _reports())
 
 
 def offer_rank(entry):
@@ -180,8 +212,9 @@ def offer_rank(entry):
 
 def group(entries, query='', vr=None, installable=False):
     groups = {}
+    by_package = _reports() if entries else {}
     for entry in entries:
-        entry = decorate(entry)
+        entry = decorate(entry, by_package)
         if vr is not None and (entry.get('vr') is True) != vr:  # unknown counts as flat
             continue
         if installable and entry['fit']['installable'] is not True:
