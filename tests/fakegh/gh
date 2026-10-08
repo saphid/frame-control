@@ -1,11 +1,17 @@
 #!/usr/bin/env python3
-"""A stand-in for the GitHub CLI's `gh api`, for tests/test_publish_release.py. Serves
-the releases in $FAKEGH_RELEASES (a JSON list, drafts included) and the tags in
-$FAKEGH_TAGS (space-separated); an upload's body is written to $FAKEGH_UPLOAD.
-Every call is appended to $FAKEGH_LOG as a JSON line. Anything else fails, so the
-script under test can't fall back to `gh release ...` (GraphQL) unnoticed."""
+"""A stand-in for the GitHub CLI's `gh api`, for tests/test_publish_release.py and
+tests/test_release_workflow.py. Serves the releases in $FAKEGH_RELEASES (a JSON list,
+drafts included) and the tags in $FAKEGH_TAGS (space-separated); an upload's body is
+written to $FAKEGH_UPLOAD. Every call is appended to $FAKEGH_LOG as a JSON line.
+Anything else fails, so the script under test can't fall back to `gh release ...`
+(GraphQL) unnoticed. POST .../releases (release.yml's draft step) answers as release
+$FAKEGH_NEW_ID (default 9001) without adding it to the listing, like GitHub's list
+lagging a fresh draft. With jq installed, --jq filters a response the way gh does
+(raw strings, compact JSON)."""
 import json
 import os
+import shutil
+import subprocess
 import sys
 
 args = sys.argv[1:]
@@ -14,7 +20,7 @@ with open(os.environ["FAKEGH_LOG"], "a") as f:
 if not args or args[0] != "api":
     sys.exit("fakegh: only `gh api` is supported: %r" % args)
 
-method, endpoint, fields, inp, i = "GET", None, {}, None, 1
+method, endpoint, fields, inp, jq, i = "GET", None, {}, None, None, 1
 while i < len(args):
     a = args[i]
     if a == "-X":
@@ -23,7 +29,9 @@ while i < len(args):
         k, _, v = args[i + 1].partition("="); fields[k] = v; i += 2
     elif a == "--input":
         inp = args[i + 1]; i += 2
-    elif a in ("-H", "--jq"):
+    elif a == "--jq":
+        jq = args[i + 1]; i += 2
+    elif a == "-H":
         i += 2
     elif a.startswith("-"):
         i += 1
@@ -34,14 +42,34 @@ while i < len(args):
 
 releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
 repo = "repos/saphid/frame-control/"
+
+
+def answer(response, fallback):
+    """Print response through --jq when jq is here, else the fixed fallback text."""
+    if jq and shutil.which("jq"):
+        out = subprocess.run(["jq", "-r", "-c", jq], input=json.dumps(response),
+                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        sys.stdout.write(out.stdout)
+        if out.returncode:
+            sys.exit("fakegh: jq failed: " + out.stderr)
+    else:
+        print(fallback)
+
+
 if method == "GET" and endpoint.startswith(repo + "git/ref/tags/"):
     tag = endpoint.rsplit("/", 1)[1]
     if tag not in os.environ.get("FAKEGH_TAGS", "").split():
         sys.exit("gh: Not Found (HTTP 404)")
     print(json.dumps({"ref": "refs/tags/" + tag}))
 elif method == "GET" and endpoint.startswith(repo + "releases?"):
-    for r in releases:  # what --jq '.[]' prints
-        print(json.dumps(r))
+    # The fallback is what --jq '.[]' prints.
+    answer(releases, "\n".join(json.dumps(r) for r in releases))
+elif method == "POST" and endpoint == repo + "releases":
+    new = {"id": int(os.environ.get("FAKEGH_NEW_ID", "9001")), "tag_name": fields.get("tag_name"),
+           "name": fields.get("name"), "draft": fields.get("draft") == "true",
+           "body": fields.get("body"), "assets": [],
+           "html_url": "https://github.com/saphid/frame-control/releases/tag/untagged-be29e900f7855d794136"}
+    answer(new, json.dumps(new))
 elif method == "DELETE" and endpoint.startswith(repo + "releases/assets/"):
     pass
 elif method == "POST" and endpoint.startswith("https://uploads.github.com/" + repo + "releases/"):
@@ -49,7 +77,11 @@ elif method == "POST" and endpoint.startswith("https://uploads.github.com/" + re
         dst.write(src.read())
     print("{}")
 elif method == "PATCH" and endpoint.startswith(repo + "releases/"):
-    print("published %s at https://github.com/saphid/frame-control/releases/tag/%s"
-          % (fields.get("tag_name"), fields.get("tag_name")))
+    rid = endpoint[len(repo + "releases/"):]
+    if not rid.isdigit():  # what GitHub said to v0.4.2's PATCH of releases/ (an empty id)
+        sys.exit("gh: Not Found (HTTP 404)")
+    page = "https://github.com/saphid/frame-control/releases/tag/%s" % fields.get("tag_name")
+    answer({"id": int(rid), "tag_name": fields.get("tag_name"), "html_url": page},
+           "published %s at %s" % (fields.get("tag_name"), page))
 else:
     sys.exit("fakegh: unhandled %s %s" % (method, endpoint))
