@@ -2114,10 +2114,6 @@ def source_text(body, key, optional=False):
     return value.strip()
 
 
-# Search results carry the same compatibility reports the catalogue uses (e.g. "broken").
-apk_search.compat_reports = lambda: frame_catalog.reports.by_package(frame_catalog.compat_db.load())
-
-
 def source_search(query):
     args = parse_qs(query)
     q = args.get('q', [''])[0]
