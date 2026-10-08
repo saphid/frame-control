@@ -42,7 +42,10 @@ def release(rid, tag_name, name="Frame Control 9.8.7", draft=True):
     return {"id": rid, "tag_name": tag_name, "name": name, "draft": draft, "assets": []}
 
 
-@unittest.skipUnless(shutil.which("bash") and shutil.which("jq"), "needs bash and jq (for gh --jq)")
+# The step only runs on ubuntu-latest. On Windows `bash` is often the WSL launcher
+# (with no distribution on GitHub's runners), not a bash that can run tests/fakegh.
+@unittest.skipUnless(os.name != "nt" and shutil.which("bash") and shutil.which("jq"),
+                     "needs a POSIX bash and jq (for gh --jq); the step runs on ubuntu only")
 class DraftStep(unittest.TestCase):
     def run_step(self, releases, tags="v9.8.7", tag="v9.8.7"):
         d = Path(tempfile.mkdtemp())
