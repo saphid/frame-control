@@ -290,6 +290,27 @@ class ApkInstallJobs(unittest.TestCase):
         self.assertEqual(events.count("$exception"), 1, events)
         finished = next(p for e, p in sent if e == "install_finished")
         self.assertEqual((finished["ok"], finished["error_category"]), (False, "tool_missing"))
+        # The same failure through a web link: one event and one diagnostic there too.
+        sent.clear()
+        tm._seen_errors.clear()
+        job = {"phase": "download", "done": 0, "total": None, "detail": "", "message": None, "error": None,
+               "cancel": False}
+        plan = {"name": None, "exe": None, "url": "https://example.com/x.apk", "kind": "apk"}
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))), \
+                mock.patch.object(self.android, "apk_info", side_effect=lambda path: dict(info)), \
+                mock.patch.object(self.android, "_install",
+                                  side_effect=FileNotFoundError(2, "No such file or directory", "scp")), \
+                mock.patch.object(self.server.frame_webinstall, "download",
+                                  side_effect=lambda plan, tmp, **kw: os.path.join(tmp, "x.apk")):
+            self.server._webinstall_run(plan, job)
+        self.assertEqual(job["phase"], "error")
+        self.assertIn("FileNotFoundError", job["error"])
+        events = [e for e, _ in sent]
+        self.assertEqual(events.count("install_finished"), 1, events)
+        self.assertEqual(events.count("$exception"), 1, events)
+        finished = next(p for e, p in sent if e == "install_finished")
+        self.assertEqual((finished["kind"], finished["error_category"]), ("apk", "tool_missing"))
         # A FrameError still gets its install diagnostic (the job reports it as well, as before).
         sent.clear()
         tm._seen_errors.clear()

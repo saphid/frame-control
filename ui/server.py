@@ -1848,8 +1848,12 @@ def _webinstall_run(plan, job):
         job["error"] = str(e) if isinstance(e, known) else f"{type(e).__name__}: {e}"
         job["phase"] = "error"
         # An APK that failed to install was counted by apk_installed.
-        if not isinstance(e, frame_webinstall.Cancelled) and not (stage == "install" and plan.get("kind") == "apk"):
+        apk_install = stage == "install" and plan.get("kind") == "apk"
+        if not isinstance(e, frame_webinstall.Cancelled) and not apk_install:
             frame_telemetry.install_finished("web", False, error=e, stage=stage, kind_detail=plan.get("kind"))
+        elif apk_install and not isinstance(e, known):
+            # Not a FrameError, so apk_installed left its diagnostic to whoever caught it: here.
+            frame_telemetry.diagnostic("web install", e)
     finally:
         with _web_lock:
             job.pop("_conn", None)
