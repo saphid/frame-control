@@ -34,8 +34,8 @@ count. So a build reaches people only when you publish it, after testing it.
    installer's digest), then publishes the release and marks it latest. It
    uses only the REST API: `gh release view` can't find a draft whose
    `tag_name` still reads `untagged-…`, and GraphQL is often rate-limited.
-   Such a draft is found by its title (`Frame Control 0.4.0…`) and tied to
-   the tag when it's published. The release page in `update.json` is always
+   Such a draft is found by its exact title (`Frame Control 0.4.0`, or that
+   followed by `: subtitle`) and tied to the tag when it's published. The release page in `update.json` is always
    `releases/tag/<tag>`, because a draft's own address (`releases/tag/untagged-…`)
    stops working once it's published. From then on, running copies see the update. They check about 8
    seconds after starting, then every 6 hours, and anyone can use **Check for

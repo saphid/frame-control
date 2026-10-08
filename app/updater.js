@@ -108,10 +108,13 @@ async function getJson(url, headers) {
 
 // The release page the banner links to. update.json for 0.4.0 carried the draft's
 // address (releases/tag/untagged-...), which is dead once the release is published,
-// so only this repository's tag pages are trusted; anything else becomes the tag's page.
-const TAG_PAGE = new RegExp(`^https://github\\.com/${REPO}/releases/tag/(?!untagged-)[^/?#\\s]+$`);
-function releasePage(page, version) {
-  return typeof page === "string" && TAG_PAGE.test(page) ? page : `${RELEASES}/tag/v${version}`;
+// and a page from the manifest could also be steered elsewhere (e.g. tag/..\..\other/repo
+// normalizes to another repository) before shell.openExternal. So the given page is
+// ignored: the link is always this repository's tag page, built from a valid version.
+function releasePage(version) {
+  const v = parseVersion(version);
+  if (!v) return RELEASES;
+  return `${RELEASES}/tag/v${v.nums.join(".")}${v.pre ? "-" + v.pre : ""}`;
 }
 
 // update.json and the API's release both become { version, notes, page, assets }.
@@ -120,7 +123,7 @@ function fromManifest(m) {
   const version = String(m.version).replace(/^v/i, "");
   const base = `https://github.com/${REPO}/releases/download/v${version}/`;
   return { version, notes: String(m.notes || "").slice(0, 4000),
-           page: releasePage(m.page, version),
+           page: releasePage(version),
            // Assets always come from this repository's release, whatever the manifest says.
            assets: m.assets.map((a) => ({ name: String(a.name), url: base + encodeURIComponent(String(a.name)),
                                           size: a.size, digest: a.digest || null })) };
@@ -130,7 +133,7 @@ function fromApi(r) {
   if (r.draft || r.prerelease) throw new Error("GitHub returned an unpublished release");
   const version = String(r.tag_name || "").replace(/^v/i, "");
   return { version, notes: String(r.body || "").slice(0, 4000),
-           page: releasePage(r.html_url, version),
+           page: releasePage(version),
            assets: (r.assets || []).map((a) => ({ name: a.name, url: a.browser_download_url, size: a.size,
                                                  digest: a.digest || null })) };
 }

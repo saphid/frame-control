@@ -61,6 +61,13 @@ test("the release page is this repository's tag page, never a draft's untagged-.
   assert.strictEqual(page(undefined), tagPage);
   assert.strictEqual(page("https://evil.example/releases/tag/v0.4.0"), tagPage);
   assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/v0.4.0?x=1"), tagPage);
+  // Paths that normalize to another repository.
+  assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/..\\..\\..\\..\\other-owner\\other-repo"),
+                     tagPage);
+  assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/%2e%2e/%2e%2e/%2e%2e/%2e%2e/other-owner/other-repo"),
+                     tagPage);
+  assert.strictEqual(page("https://github.com/saphid/frame-control/releases/tag/v0.3.9"), tagPage);  // only its own tag
+  assert.strictEqual(fromApi({ tag_name: "../../x", assets: [] }).page, "https://github.com/saphid/frame-control/releases");
   assert.strictEqual(fromApi({ tag_name: "v0.4.0", assets: [],
                                html_url: "https://github.com/saphid/frame-control/releases/tag/untagged-x" }).page, tagPage);
 });

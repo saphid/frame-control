@@ -33,17 +33,19 @@ gh api "repos/$repo/git/ref/tags/$tag" >/dev/null 2>&1 \
 
 # Every release, drafts included, one JSON object per line.
 gh api --paginate "repos/$repo/releases?per_page=100" --jq '.[]' > "$tmp/releases"
-# The release whose tag_name is the tag; failing that, the one draft named
-# "Frame Control X.Y.Z..." (release.yml's title) that isn't tied to a tag yet.
+# The release whose tag_name is the tag; failing that, the one untagged-... draft
+# titled "Frame Control X.Y.Z" (release.yml's title), optionally ": subtitle".
 python3 - "$tag" "$tmp/releases" > "$tmp/release.json" <<'EOF'
 import json, re, sys
 tag, path = sys.argv[1], sys.argv[2]
 rels = [json.loads(line) for line in open(path) if line.strip()]
 hits = [r for r in rels if r.get("tag_name") == tag]
 if not hits:
-    title = re.compile(r"Frame Control " + re.escape(tag.lstrip("v")) + r"(?![\w.])")
-    hits = [r for r in rels if r.get("draft") and not str(r.get("tag_name") or "").startswith("v")
-            and title.match(r.get("name") or "")]
+    # Exactly this version: "Frame Control 0.4.0", or that followed by ": <subtitle>".
+    # Never "Frame Control 0.4.0-rc.1" or "0.4.00", and only drafts with no real tag.
+    title = re.compile(r"Frame Control " + re.escape(tag.lstrip("v")) + r"(: .*)?", re.S)
+    hits = [r for r in rels if r.get("draft") and str(r.get("tag_name") or "").startswith("untagged-")
+            and title.fullmatch(r.get("name") or "")]
 if len(hits) != 1:
     why = "no release" if not hits else "%d releases (ids %s)" % (len(hits), ", ".join(str(r["id"]) for r in hits))
     sys.exit("found %s for %s; expected one draft" % (why, tag))

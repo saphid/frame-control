@@ -58,6 +58,11 @@ class PublishRelease(unittest.TestCase):
             self.assertIn(f, patch)
         self.assertTrue(all(c[0] == "api" for c in log))  # never `gh release ...` (GraphQL)
 
+    def test_an_untagged_draft_may_carry_a_subtitle(self):
+        p, log, upload = self.run_script([draft(name="Frame Control 9.8.7: faster")], "v9.8.7")
+        self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+        self.assertEqual(upload["version"], "9.8.7")
+
     def test_prefers_the_release_whose_tag_name_matches(self):
         p, log, upload = self.run_script([draft(name="Frame Control 9.8.7 old", rid=1),
                                           draft(tag_name="v9.8.7", name="Renamed", rid=2)], "v9.8.7")
@@ -81,6 +86,14 @@ class PublishRelease(unittest.TestCase):
         p, _, _ = self.run_script([draft(name="Frame Control 9.8.70")], "v9.8.7")
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("no release", p.stderr)
+        # A pre-release's draft, or one bound to an unrelated tag, is never taken for v9.8.7.
+        for rel in (draft(name="Frame Control 9.8.7-rc.1"), draft(name="Frame Control 9.8.7.1"),
+                    draft(tag_name="kdeconnect-frame-1"), draft(tag_name="")):
+            p, log, upload = self.run_script([rel], "v9.8.7")
+            self.assertNotEqual(p.returncode, 0, rel)
+            self.assertIn("no release", p.stderr)
+            self.assertIsNone(upload)
+            self.assertFalse(any("PATCH" in c for c in log))
         p, log, _ = self.run_script([draft()], "v9.8.7", tags="")
         self.assertNotEqual(p.returncode, 0)
         self.assertIn("push it first", p.stderr)
