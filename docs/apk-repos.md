@@ -58,8 +58,55 @@ form shows the pinned one ("Trusted on first use: …") so you can compare it.
 Re-adding an existing URL preserves its pin; changing it requires deliberately
 removing and re-adding it.
 
+### Repositories behind a login
+
+Some self-hosted repositories sit behind HTTP basic auth. As in F-Droid's own
+client, the login can be part of the address
+(`https://user:pass@example.org/fdroid/repo`), or given separately: in the
+store's **Add a source** form under "This repository needs a login", in the
+server API (`username` and `password` beside `url`), or on the command line,
+where the password is read from standard input so it stays out of shell history
+and `ps`:
+
+```sh
+printf '%s\n' "$PASSWORD" | python3 ui/apk_sources/fdroid.py add 'https://example.org/fdroid/repo' --username me --password-stdin
+```
+
+How the login is kept and used:
+
+- **Kept out of the address.** The `user:pass@` part is removed before anything
+  is saved, so the saved repository URL, its id, the source list, job results
+  and the page never contain it. The store only says "Uses a login".
+- **Stored separately.** Logins live in
+  `frame_host.data_dir('source-credentials.json')`
+  (`~/Library/Application Support/Frame Control/source-credentials.json` on
+  macOS), written with mode 0600 and keyed by source id. They are stored in
+  plain text there, protected by file permissions only (on Windows,
+  the folder's normal ACLs). Removing the repository deletes its login, and
+  the file goes when the last login is removed.
+- **HTTPS only.** An `http://` address with a login is refused before any request.
+- **Exact origin only.** The `Authorization` header is added per request, and
+  only when the request's scheme, host and port match the repository's. A
+  redirect to another host or port gets no login, and that request's own
+  `Authorization` header is removed. A same-origin redirect still gets it.
+  The store's artwork proxy sends the login only for images under the
+  repository's own address on that origin.
+- **Never echoed.** Logins are not written to logs, error messages, API
+  responses or the cache. The CLI prints only the saved source.
+- **Checked before saving.** As with any repository, the whole index must
+  download and verify before anything is saved. HTTP 401 (or 403 when a login
+  was sent) stops the add with "check the username and password" and saves
+  nothing: no repository, no login, no rollback state. A 403 with a login is
+  not treated as rate limiting.
+- **Same verification.** The login changes only who may download. Signature,
+  fingerprint pin or TOFU, index hash and rollback checks apply exactly as for
+  any other repository.
+
+Re-adding the same address with a new login replaces the saved one. Re-adding
+it without a login keeps the saved one.
+
 The API for the search/server integration is in `ui/apk_sources/fdroid.py`:
-`add_repo(url, fingerprint=None, name=None)`, `remove_repo(source_id)`,
+`add_repo(url, fingerprint=None, name=None, username=None, password=None)`, `remove_repo(source_id)`,
 `set_enabled(source_id, enabled)`, and `user_repos()`. The module also exposes
 `sources`, `search`, `details`, and `download` from the shared source contract.
 This change supplies the CLI and API; the integrated source-management UI is
