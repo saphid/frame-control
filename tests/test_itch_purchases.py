@@ -4,7 +4,7 @@ Offline: a fake HTTPS layer under urllib's real opener (so redirects and header
 handling are the real ones) serves the recorded JSON in fixtures/itch_account.
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
-import contextlib, email.message, http.client, io, json, os, sys, tempfile, threading, unittest
+import contextlib, email.message, http.client, io, ipaddress, json, os, sys, tempfile, threading, unittest
 import urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -44,6 +44,33 @@ class Reply(io.BytesIO):
 
     def getcode(self):
         return self.code
+
+    def getheader(self, name, default=None):
+        return self.headers.get(name, default)
+
+
+class FakeConnection:
+    """_web._connect's http.client connection, answered from the same routes."""
+
+    def __init__(self, web, host):
+        self.web, self.host, self.reply = web, host, None
+
+    def request(self, method, path, headers=None):
+        req = urllib.request.Request('https://' + self.host + path, headers=headers or {})
+        self.reply = self.web(None, req)
+
+    def getresponse(self):
+        return self.reply
+
+    def close(self):
+        pass
+
+
+# What the fake resolver answers: the storage host is public; the rest are traps.
+ADDRESSES = {'storage.itch-cdn.example': '151.101.1.1', 'other-cdn.example': '151.101.2.2',
+             'localhost.': '127.0.0.1', 'frame.local': '192.168.1.20', '127.0.0x0.1': '127.0.0.1',
+             'intranet.example': '10.0.0.5', 'mapped.example': '::ffff:127.0.0.1', 'cgnat.example': '100.64.0.1',
+             'mixed.example': ('151.101.1.1', '10.0.0.5')}
 
 
 class FakeItch:
@@ -104,6 +131,28 @@ class ItchPurchases(unittest.TestCase):
         p = patch('urllib.request.HTTPHandler.http_open', side_effect=AssertionError('plain HTTP in test'))
         p.start()
         self.addCleanup(p.stop)
+        real_lookup = _web.socket.getaddrinfo
+
+        def lookup(host, port, *args, **kwargs):
+            if host not in ADDRESSES:
+                try:
+                    ipaddress.ip_address(host)  # IP literals (and the in-process test server) need no DNS
+                    return real_lookup(host, port, *args, **kwargs)
+                except ValueError:
+                    pass
+                if host == 'localhost':
+                    return real_lookup(host, port, *args, **kwargs)
+                raise _web.socket.gaierror('unknown test host ' + host)
+            found = ADDRESSES[host]
+            return [(10 if ':' in a else 2, 1, 6, '', (a, port)) for a in ([found] if isinstance(found, str) else found)]
+        self.connected = []
+
+        def connect(host, address, timeout):
+            self.connected.append((host, address))
+            return FakeConnection(self.web, host)
+        for p in (patch.object(_web.socket, 'getaddrinfo', lookup), patch.object(_web, '_connect', connect)):
+            p.start()
+            self.addCleanup(p.stop)
         account._forget()
         self.addCleanup(account._forget)
         _web._limited.clear()
@@ -157,9 +206,18 @@ class ItchPurchases(unittest.TestCase):
             account.connect(KEY + '\r\nX-Injected: 1')
         self.assertEqual(len(self.web.calls), 3)  # malformed keys never reach itch.io
 
+    def test_a_refused_request_with_a_working_key_keeps_the_key(self):
+        self.connect()
+        self.web.route('api.itch.io/games/341190/uploads', Reply('https://api.itch.io/games/341190/uploads', 403, b''))
+        with self.assertRaisesRegex(SourceError, r'refused this request \(HTTP 403\)') as caught:
+            itch.details(self.owned_source(), '341190')
+        self.assertNotIsInstance(caught.exception, account.BadKey)
+        self.assertTrue(account.connected())
+
     def test_a_key_revoked_later_is_removed_with_a_clear_message(self):
         self.connect()
         self.web.route('api.itch.io/profile/owned-keys', Reply('https://api.itch.io/profile/owned-keys', 401, b''))
+        self.web.route('api.itch.io/profile', Reply('https://api.itch.io/profile', 401, b''))
         with self.assertRaisesRegex(account.BadKey, 'no longer accepts the saved API key'):
             itch.search(self.owned_source(), '')
         self.assertFalse(account.path().exists())
@@ -277,19 +335,156 @@ class ItchPurchases(unittest.TestCase):
         self.assertEqual(api[1]['authorization'], 'Bearer ' + KEY)
         self.assertTrue(cdn[0].startswith('https://storage.itch-cdn.example/'))
         self.assertNotIn('authorization', cdn[1])
+        # Connected to the address that was checked, not to a fresh lookup.
+        self.assertEqual(self.connected, [('storage.itch-cdn.example', ('151.101.1.1', 443))])
         self.assertTrue(all(KEY not in u for u, _ in self.web.calls))
         with self.assertRaisesRegex(SourceError, 'version codes'):
             itch.download(self.owned_source(), '341190', version_code=3)
 
-    def test_redirects_to_plain_http_or_addresses_are_refused(self):
+    def test_download_also_accepts_a_json_url_or_the_file_itself(self):
         self.connect()
-        for location in ('http://storage.itch-cdn.example/a.apk', 'https://127.0.0.1/a.apk',
-                         'https://[::1]/a.apk', 'https://localhost/a.apk', 'https://user:pw@cdn.example/a.apk',
+        self.storage()
+        location = 'https://storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk?sig=abc'
+        self.web.route('api.itch.io/uploads/503/download',
+                       Reply('https://api.itch.io/uploads/503/download', 200, {'url': location},
+                             {'Content-Type': 'application/json'}))
+        self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+        self.assertNotIn('authorization', self.web.calls[-1][1])
+        self.web.route('api.itch.io/uploads/503/download',
+                       Reply('https://api.itch.io/uploads/503/download', 200, apk_bytes(),
+                             {'Content-Type': 'application/octet-stream'}))
+        self.connected.clear()
+        self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+        self.assertEqual(self.connected, [])  # api.itch.io served it; no storage host involved
+        self.web.route('api.itch.io/uploads/503/download',
+                       Reply('https://api.itch.io/uploads/503/download', 200, {'nothing': 1},
+                             {'Content-Type': 'application/json'}))
+        with self.assertRaisesRegex(SourceError, 'did not say where'):
+            itch.download(self.owned_source(), '341190')
+
+    def test_storage_redirects_are_checked_on_every_hop(self):
+        self.connect()
+        self.storage('https://other-cdn.example/hop')
+        self.web.route('other-cdn.example/hop', Reply('https://other-cdn.example/hop', 302, b'',
+                                                      {'Location': 'https://storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk'}))
+        self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+        self.assertEqual([h for h, _ in self.connected], ['other-cdn.example', 'storage.itch-cdn.example'])
+        self.web.route('other-cdn.example/hop', Reply('https://other-cdn.example/hop', 302, b'',
+                                                      {'Location': 'https://intranet.example/a.apk'}))
+        with self.assertRaisesRegex(SourceError, 'private network address'):
+            itch.download(self.owned_source(), '341190')
+
+    def test_redirects_to_plain_http_or_private_addresses_are_refused(self):
+        self.connect()
+        for location in ('http://storage.itch-cdn.example/a.apk', 'https://user:pw@cdn.example/a.apk',
                          'https://cdn.example:8443/a.apk'):
             self.storage(location)
             with self.assertRaisesRegex(SourceError, 'unexpected download URL'):
                 itch.download(self.owned_source(), '341190')
+        for location in ('https://localhost./a.apk', 'https://frame.local/a.apk', 'https://127.0.0x0.1/a.apk',
+                         'https://intranet.example/a.apk', 'https://mapped.example/a.apk',
+                         'https://cgnat.example/a.apk', 'https://mixed.example/a.apk',
+                         'https://127.0.0.1/a.apk', 'https://[::1]/a.apk', 'https://169.254.169.254/a.apk'):
+            self.storage(location)
+            with self.assertRaisesRegex(SourceError, 'private network address'):
+                itch.download(self.owned_source(), '341190')
+        self.assertEqual(self.connected, [])
         self.assertEqual({urllib.parse.urlsplit(u).hostname for u, _ in self.web.calls}, {'api.itch.io'})
+
+    def test_public_address_rules(self):
+        for ip in ('151.101.1.1', '2a04:4e42::81'):
+            self.assertTrue(_web.public_address(ip), ip)
+        for ip in ('127.0.0.1', '10.1.2.3', '172.16.0.1', '192.168.0.1', '169.254.169.254', '100.64.0.1',
+                   '0.0.0.0', '224.0.0.1', '255.255.255.255', '::1', 'fe80::1%en0', 'fc00::1',
+                   '::ffff:10.0.0.1', '::ffff:127.0.0.1', 'ff02::1', 'not an ip'):
+            self.assertFalse(_web.public_address(ip), ip)
+        self.assertEqual(_web.resolve_public('storage.itch-cdn.example'), ('151.101.1.1', 443))
+
+    def test_storage_refusals_are_download_errors_not_rate_limits(self):
+        self.connect()
+        self.storage()
+        self.web.route('storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk',
+                       Reply('https://storage.itch-cdn.example/x', 403, b'denied'))
+        with self.assertRaisesRegex(SourceError, r"itch.io's download server refused the file \(HTTP 403\)") as caught:
+            itch.download(self.owned_source(), '341190')
+        self.assertNotIsInstance(caught.exception, SourceLimited)
+        self.assertTrue(account.connected())
+        self.assertEqual(_web.wait_time('https://api.itch.io/'), 0)
+        self.web.route('storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk',
+                       Reply('https://storage.itch-cdn.example/x', 429, b'', {'Retry-After': '60'}))
+        with self.assertRaises(SourceLimited):
+            itch.download(self.owned_source(), '341190')
+
+    def test_a_key_revoked_after_details_were_cached_is_removed_at_download(self):
+        self.connect()
+        itch.details(self.owned_source(), '341190')  # uploads and owned keys now cached
+        for code in (401, 403):
+            self.connect()
+            self.web.route('api.itch.io/uploads/503/download', Reply('https://api.itch.io/uploads/503/download', code, b''))
+            self.web.route('api.itch.io/profile', Reply('https://api.itch.io/profile', code, b''))
+            with self.assertRaisesRegex(account.BadKey, 'no longer accepts the saved API key'):
+                account.download(503, 9001)
+            self.assertFalse(account.path().exists())
+            self.web.route('api.itch.io/profile', {'user': {'username': 'player'}})
+        # The key still works, only this download is refused: keep the key, say so.
+        self.connect()
+        self.web.route('api.itch.io/uploads/503/download', Reply('https://api.itch.io/uploads/503/download', 403, b''))
+        with self.assertRaisesRegex(SourceError, r'refused this request \(HTTP 403\)') as caught:
+            account.download(503, 9001)
+        self.assertNotIsInstance(caught.exception, (account.BadKey, SourceLimited))
+        self.assertTrue(account.connected())
+
+    def test_a_disconnect_during_the_key_check_wins(self):
+        checking, release = threading.Event(), threading.Event()
+
+        def slow_profile(req, query):
+            checking.set()
+            release.wait(5)
+            return {'user': {'username': 'player'}}
+        self.web.route('api.itch.io/profile', slow_profile)
+        outcome = {}
+
+        def run():
+            try:
+                outcome['result'] = account.connect(KEY)
+            except SourceError as e:
+                outcome['error'] = e
+        worker = threading.Thread(target=run)
+        worker.start()
+        self.assertTrue(checking.wait(5))
+        account.disconnect()
+        release.set()
+        worker.join(5)
+        self.assertRegex(str(outcome.get('error')), 'changed while the key was being checked; nothing was saved')
+        self.assertFalse(account.path().exists())
+        self.assertFalse(account.connected())
+
+    def test_concurrent_connects_never_share_a_temporary_file(self):
+        made = []
+        real = account.tempfile.mkstemp
+
+        def mkstemp(*args, **kwargs):
+            fd, name = real(*args, **kwargs)
+            made.append(name)
+            if os.name == 'posix':
+                self.assertEqual(os.stat(name).st_mode & 0o777, 0o600)
+            return fd, name
+        with patch.object(account.tempfile, 'mkstemp', mkstemp):
+            workers = [threading.Thread(target=lambda k=k: self.swallow(account.connect, k)) for k in (KEY, OTHER) * 3]
+            for w in workers:
+                w.start()
+            for w in workers:
+                w.join(5)
+        self.assertEqual(len(made), len(set(made)))
+        self.assertIn(json.loads(account.path().read_text())['key'], (KEY, OTHER))
+        self.assertEqual([p.name for p in account.path().parent.iterdir()], ['itch-account.json'])
+
+    @staticmethod
+    def swallow(fn, *args):
+        try:
+            fn(*args)
+        except SourceError:
+            pass  # a connect overtaken by another one refuses to save: fine here
 
     def test_existing_hosts_still_strip_authorization_on_redirect(self):
         req = urllib.request.Request('https://api.github.com/a', headers={'Authorization': 'Bearer x'})
@@ -327,7 +522,11 @@ class ItchPurchases(unittest.TestCase):
             (OSError('timed out'), SourceError, '^Could not reach itch.io: timed out$'),
             (Reply('https://api.itch.io/profile/owned-keys', 200, b'<html>'), SourceError, 'invalid response'),
             ({'errors': ['echo ' + KEY]}, SourceError, r'^itch.io: echo \[API key\]$'),
+            # The key straddles the 200-character cut: no piece of it may survive.
+            ({'errors': ['x' * 180, KEY]}, SourceError, r'^itch.io: x{180}; \[API key\]$'),
+            ({'errors': ['x' * 190 + KEY]}, SourceError, r'^itch.io: x{190}\[API key\]$'),
         ]
+        self.assertEqual(account._clean('cut at ' + KEY[:9], KEY), 'cut at [API key]')  # a truncated key's start
         stderr = io.StringIO()
         with contextlib.redirect_stderr(stderr):
             for reply, kind, message in cases:

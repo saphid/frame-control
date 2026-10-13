@@ -1,5 +1,6 @@
 """Small HTTPS cache and APK downloader for public publisher sources."""
-import hashlib, os, shutil, tempfile, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
+import hashlib, http.client, ipaddress, os, shutil, socket, ssl, tempfile, threading, time
+import urllib.error, urllib.parse, urllib.request, zipfile
 from email.utils import parsedate_to_datetime
 
 import frame_host
@@ -124,19 +125,13 @@ def prune():
                 pass
 
 
-ANY = '*'  # as hosts: any public HTTPS host name (itch.io redirects downloads to its storage)
-
-
 def checked_url(url, hosts):
     try:
         p = urllib.parse.urlsplit(url)
         port = p.port
     except (ValueError, TypeError) as e:
         raise SourceError('Source returned an invalid URL') from e
-    host = p.hostname or ''
-    named = '.' in host and ':' not in host and not host.replace('.', '').isdigit()  # no IP literals
-    if (p.scheme != 'https' or p.username or p.password or port not in (None, 443)
-            or not (named if hosts == ANY else host in hosts)):
+    if p.scheme != 'https' or p.username or p.password or port not in (None, 443) or p.hostname not in hosts:
         raise SourceError('Source returned an unexpected download URL')
     return url
 
@@ -155,10 +150,9 @@ class Redirect(urllib.request.HTTPRedirectHandler):
         return result
 
 
-def open_url(url, hosts, headers=None, redirects=None):
-    """GET url, on one of hosts; it may redirect to redirects (default: hosts)."""
+def open_url(url, hosts, headers=None):
     checked_url(url, hosts)
-    return urllib.request.build_opener(Redirect(hosts if redirects is None else redirects)).open(
+    return urllib.request.build_opener(Redirect(hosts)).open(
         urllib.request.Request(url, headers={'User-Agent': UA, **(headers or {})}), timeout=60)
 
 
@@ -205,19 +199,16 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint=''):
         raise SourceError('Could not read source: ' + str(e)) from e
 
 
-def apk(url, hosts, digest=None, name=None, headers=None, redirects=None):
+def save_apk(response, digest=None):
+    """Stream response (anything with read(n)) into the cache as a checked APK."""
     tmp = None
-    name = name or _host(url)
-    wait = wait_time(url)
-    if wait:
-        raise limited_error(name, wait)
     try:
         fd, tmp = tempfile.mkstemp(dir=cache(), suffix='.part')
         h = hashlib.sha256()
-        with os.fdopen(fd, 'wb') as f, open_url(url, hosts, headers, redirects) as r:
+        with os.fdopen(fd, 'wb') as f:
             size = 0
             while True:
-                chunk = r.read(1 << 20)
+                chunk = response.read(1 << 20)
                 if not chunk:
                     break
                 size += len(chunk)
@@ -234,12 +225,101 @@ def apk(url, hosts, digest=None, name=None, headers=None, redirects=None):
         path = os.path.join(cache(), actual + '.apk')
         os.replace(tmp, path)
         return {'apk': path, 'obb': [], 'sha256': actual, 'verified': bool(digest)}
+    finally:
+        if tmp and os.path.exists(tmp):
+            os.remove(tmp)
+
+
+def apk(url, hosts, digest=None, name=None):
+    name = name or _host(url)
+    wait = wait_time(url)
+    if wait:
+        raise limited_error(name, wait)
+    try:
+        with open_url(url, hosts) as r:
+            return save_apk(r, digest)
     except urllib.error.HTTPError as e:
         if e.code in (403, 429):
             raise limited_error(name, throttle(url, e.headers)) from e
         raise SourceError('Could not download APK: HTTP error ' + str(e.code)) from e
     except (OSError, ValueError, zipfile.BadZipFile) as e:
         raise SourceError('Could not download APK: ' + str(e)) from e
-    finally:
-        if tmp and os.path.exists(tmp):
-            os.remove(tmp)
+
+
+def public_address(ip):
+    """True for an address on the public internet: never loopback, private, link-local,
+    shared (CGNAT), reserved or multicast, including IPv4 written oddly or mapped into IPv6."""
+    try:
+        a = ipaddress.ip_address(ip.split('%', 1)[0])
+    except ValueError:
+        return False
+    if a.version == 6 and a.ipv4_mapped:
+        a = a.ipv4_mapped
+    return a.is_global and not a.is_multicast
+
+
+def resolve_public(host):
+    """host's address for port 443, if every address it has is public; else SourceError."""
+    try:
+        addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
+    except (OSError, UnicodeError) as e:
+        raise SourceError('Could not find the download server ' + host) from e
+    if not addresses or not all(public_address(a[4][0]) for a in addresses):
+        raise SourceError('The download server is on a private network address; refused')
+    return addresses[0][4][:2]
+
+
+def _public_connection(host, timeout):
+    """A verified TLS connection to host:443, made to an address checked to be public.
+
+    The checked address is the one connected to, so a second lookup can't swap in another."""
+    return _connect(host, resolve_public(host), timeout)
+
+
+def _connect(host, address, timeout):
+    sock = socket.create_connection(address, timeout=timeout)
+    try:
+        sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
+    except BaseException:
+        sock.close()
+        raise
+    conn = http.client.HTTPConnection(host, 443, timeout=timeout)
+    conn.sock = sock
+    return conn
+
+
+def public_apk(url, name, redirects=3, timeout=60):
+    """Download an APK from a public HTTPS host that no source lists in advance (itch.io's
+    storage). No credentials are sent. Every hop, redirects included, is re-checked."""
+    for _ in range(redirects + 1):
+        try:
+            p = urllib.parse.urlsplit(url)
+            port = p.port
+        except (ValueError, TypeError) as e:
+            raise SourceError(name + ' returned an invalid download URL') from e
+        if p.scheme != 'https' or not p.hostname or p.username or p.password or port not in (None, 443):
+            raise SourceError(name + ' returned an unexpected download URL')
+        wait = wait_time(url)
+        if wait:
+            raise limited_error(name, wait)
+        try:
+            conn = _public_connection(p.hostname, timeout)
+        except OSError as e:
+            raise SourceError('Could not download APK: ' + str(e)) from e
+        try:
+            conn.request('GET', (p.path or '/') + ('?' + p.query if p.query else ''), headers={'User-Agent': UA})
+            r = conn.getresponse()
+            if r.status in (301, 302, 303, 307, 308):
+                url = urllib.parse.urljoin(url, r.getheader('Location') or '')
+                continue
+            if r.status == 429:
+                raise limited_error(name, throttle(url, r.headers))
+            if r.status != 200:
+                raise SourceError("%s's download server refused the file (HTTP %d); try again later"
+                                  % (name, r.status))
+            return save_apk(r)
+        except (OSError, ValueError, http.client.HTTPException, zipfile.BadZipFile) as e:
+            raise SourceError('Could not download APK: ' + str(e)) from e
+        finally:
+            conn.close()
+    raise SourceError(name + ' redirected the download too many times')

@@ -2,12 +2,13 @@
 
 Opt-in (store > sources > Connect itch.io). The key is kept in
 frame_host.data_dir('itch-account.json') with mode 0600 and is only ever sent to
-https://api.itch.io, in an Authorization header; _web drops it on any redirect
-(downloads redirect to itch.io's storage host). It never goes into a URL, an error,
-a log line or an API response. Owned-key listings stay in memory, never in the
-disk cache. API: https://itch.io/docs/api/serverside. See docs/apk-repos.md.
+https://api.itch.io, in an Authorization header. Downloads end on itch.io's storage
+host, fetched without the key from a checked public address (_web.public_apk).
+The key never goes into a URL, an error, a log line or an API response. Owned-key
+listings stay in memory, never in the disk cache.
+API: https://itch.io/docs/api/serverside. See docs/apk-repos.md.
 """
-import hashlib, json, os, re, threading, time, urllib.error, urllib.parse
+import hashlib, json, os, re, tempfile, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 
 import frame_host
 from . import SourceError, _web
@@ -21,8 +22,13 @@ PAGES = 40  # stop after 20,000 owned keys
 KEY = re.compile(r'[A-Za-z0-9_.-]{16,256}')
 BAD_KEY = ('itch.io did not accept the API key. Create one in itch.io settings > '
            'API keys and connect again')
-_lock = threading.Lock()
-_cache = {}  # (key digest, what) -> (time, value)
+REVOKED = ('itch.io no longer accepts the saved API key, so it was removed. '
+           'Create a new one in itch.io settings > API keys and connect again')
+REDIRECTS = (301, 302, 303, 307, 308)
+_lock = threading.Lock()  # the cache
+_cache = {}  # (generation, key digest, what) -> (time, value)
+_account = threading.Lock()  # saving and deleting the key file
+_generation = [0]  # bumped by every save and delete: a connect that started earlier doesn't save
 
 
 class BadKey(SourceError):
@@ -61,23 +67,18 @@ def _key():
 
 
 def _save(key, username):
+    """Write the key file through a fresh 0600 temporary file (mkstemp), then move it into place."""
     target = path()
     target.parent.mkdir(parents=True, exist_ok=True)
-    tmp = target.with_name(target.name + '.tmp')
-    try:
-        os.remove(str(tmp))
-    except FileNotFoundError:
-        pass
-    # Created 0600 (O_EXCL: never reuse a file someone else made), then moved into place.
-    fd = os.open(str(tmp), os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+    fd, tmp = tempfile.mkstemp(dir=str(target.parent), prefix='.itch-account-', suffix='.tmp')
     try:
         with os.fdopen(fd, 'w') as f:
+            os.chmod(tmp, 0o600)  # mkstemp already does on POSIX; say so for every platform
             json.dump({'key': key, 'username': username}, f)
-        os.chmod(str(tmp), 0o600)
-        os.replace(str(tmp), str(target))
+        os.replace(tmp, str(target))
     finally:
-        if tmp.exists():
-            tmp.unlink()
+        if os.path.exists(tmp):
+            os.remove(tmp)
 
 
 def _forget():
@@ -86,30 +87,47 @@ def _forget():
 
 
 def _clean(message, key):
-    return message.replace(key, '[API key]') if key else message
+    """message without the key, or any start of it (8+ characters) left by truncation."""
+    if not key:
+        return message
+    for n in range(len(key), 7, -1):
+        message = message.replace(key[:n], '[API key]')
+    return message
 
 
-def _get(api_path, key, params=None):
-    """JSON from api.itch.io; SourceError with a readable message (never the key) on failure."""
-    url = API + api_path + ('?' + urllib.parse.urlencode(params) if params else '')
+class _Stay(urllib.request.HTTPRedirectHandler):
+    """Don't follow: the caller decides where a redirect may go, and never sends the key there."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def _open(url, key, accept='application/json'):
+    """GET url on api.itch.io with the key. Redirects come back as HTTPError 30x."""
+    _web.checked_url(url, HOSTS)
     wait = _web.wait_time(url)
     if wait:
         raise _web.limited_error(NAME, wait)
-    try:
-        with _web.open_url(url, HOSTS, {'Authorization': 'Bearer ' + key, 'Accept': 'application/json'}) as r:
-            raw = r.read(8 * 1024 * 1024 + 1)
-    except urllib.error.HTTPError as e:
-        e.close()
-        if e.code == 429:
-            raise _web.limited_error(NAME, _web.throttle(url, e.headers)) from None
-        if e.code in (401, 403):
-            raise BadKey(BAD_KEY) from None
-        raise SourceError('itch.io returned HTTP error %d; try again later' % e.code) from None
-    except SourceError:
-        raise
-    except (OSError, ValueError) as e:
-        reason = getattr(e, 'reason', None) or e
-        raise SourceError(_clean('Could not reach itch.io: ' + str(reason), key)) from None
+    return urllib.request.build_opener(_Stay()).open(urllib.request.Request(
+        url, headers={'User-Agent': _web.UA, 'Authorization': 'Bearer ' + key, 'Accept': accept}), timeout=60)
+
+
+def _refused(code, key, api_path):
+    """401/403 from api.itch.io: BadKey only once /profile confirms the key itself is refused;
+    otherwise it's this request (a game or upload this purchase doesn't cover)."""
+    if api_path != '/profile':
+        _get('/profile', key)  # raises BadKey if the key is the problem
+        raise SourceError('itch.io refused this request (HTTP %d); your purchase may not include it' % code)
+    raise BadKey(BAD_KEY)
+
+
+def _network_error(e, key):
+    reason = getattr(e, 'reason', None) or e
+    return SourceError(_clean('Could not reach itch.io: ' + str(reason), key))
+
+
+def _checked(raw, key):
+    """Decoded JSON object from api.itch.io, or SourceError/BadKey from its errors array."""
     if len(raw) > 8 * 1024 * 1024:
         raise SourceError('itch.io response is too large')
     try:
@@ -120,16 +138,37 @@ def _get(api_path, key, params=None):
         raise SourceError('itch.io returned an invalid response')
     errors = data.get('errors')
     if errors:  # documented: errors is an array of strings
-        text = '; '.join(str(m) for m in errors if isinstance(m, (str, int)))[:200]
+        # Each message loses the key before joining and shortening, so no part of it survives the cut.
+        text = _clean('; '.join(_clean(str(m), key) for m in errors if isinstance(m, (str, int)))[:200], key)
         if re.search(r'\b(invalid|revoked|expired)\b.*\bkey\b|\bkey\b.*\b(invalid|revoked|expired)\b', text, re.I) \
                 and 'download key' not in text.lower():
             raise BadKey(BAD_KEY)
-        raise SourceError(_clean('itch.io: ' + (text or 'request refused'), key))
+        raise SourceError('itch.io: ' + (text or 'request refused'))
     return data
 
 
+def _get(api_path, key, params=None):
+    """JSON from api.itch.io; SourceError with a readable message (never the key) on failure."""
+    url = API + api_path + ('?' + urllib.parse.urlencode(params) if params else '')
+    try:
+        with _open(url, key) as r:
+            raw = r.read(8 * 1024 * 1024 + 1)
+    except urllib.error.HTTPError as e:
+        e.close()
+        if e.code == 429:
+            raise _web.limited_error(NAME, _web.throttle(url, e.headers)) from None
+        if e.code in (401, 403):
+            _refused(e.code, key, api_path)
+        raise SourceError('itch.io returned HTTP error %d; try again later' % e.code) from None
+    except SourceError:
+        raise
+    except (OSError, ValueError) as e:
+        raise _network_error(e, key) from None
+    return _checked(raw, key)
+
+
 def _cached(key, what, load):
-    slot = (hashlib.sha256(key.encode()).hexdigest(), what)
+    slot = (_generation[0], hashlib.sha256(key.encode()).hexdigest(), what)
     with _lock:
         hit = _cache.get(slot)
     if hit and time.time() - hit[0] < TTL:
@@ -146,32 +185,47 @@ def _use(call):
     try:
         return call(key)
     except BadKey:
-        if (_load() or {}).get('key') == key:  # not a key connected meanwhile
-            disconnect()
-        raise BadKey('itch.io no longer accepts the saved API key, so it was removed. '
-                     'Create a new one in itch.io settings > API keys and connect again') from None
+        with _account:
+            if (_load() or {}).get('key') == key:  # not a key connected meanwhile
+                _delete()
+        raise BadKey(REVOKED) from None
 
 
 def connect(key):
-    """Check key with itch.io (GET /profile), then save it. A refused key is never saved."""
+    """Check key with itch.io (GET /profile), then save it. A refused key is never saved, and
+    nor is one whose check finished after a disconnect or another connect."""
     key = (key or '').strip() if isinstance(key, str) else ''
     if not KEY.fullmatch(key):
         raise BadKey('That does not look like an itch.io API key. Copy it from itch.io settings > API keys')
-    user = _get('/profile', key).get('user')
+    with _account:
+        started = _generation[0]
+    user = _get('/profile', key).get('user')  # the network, outside the lock
     if not isinstance(user, dict):
         raise SourceError('itch.io returned an invalid profile')
     username = user.get('username') if isinstance(user.get('username'), str) else None
+    with _account:
+        if _generation[0] != started:
+            raise SourceError('The itch.io connection changed while the key was being checked; '
+                              'nothing was saved. Try again')
+        _generation[0] += 1
+        _save(key, username)
     _forget()
-    _save(key, username)
     return {'message': 'Connected to itch.io' + (' as ' + username if username else ''), 'itch': status()}
 
 
-def disconnect():
-    _forget()
+def _delete():
+    """Remove the key file; call with _account held."""
+    _generation[0] += 1
     try:
         os.remove(str(path()))
     except FileNotFoundError:
         pass
+    _forget()
+
+
+def disconnect():
+    with _account:
+        _delete()
     return {'message': 'Disconnected from itch.io; the API key was deleted from this computer', 'itch': status()}
 
 
@@ -237,8 +291,42 @@ def download_url(upload_id, download_key_id):
     return API + '/uploads/%d/download?' % upload_id + urllib.parse.urlencode({'download_key_id': download_key_id})
 
 
+def _fetch(url, key):
+    """Ask api.itch.io for the file. Not checked against a live account, so this accepts each
+    plausible answer: a redirect to storage, JSON naming the storage URL, or the file itself."""
+    try:
+        r = _open(url, key, 'application/vnd.android.package-archive, application/json;q=0.5, */*;q=0.1')
+    except urllib.error.HTTPError as e:
+        e.close()
+        if e.code in REDIRECTS:
+            target = e.headers.get('Location')
+        elif e.code == 429:
+            raise _web.limited_error(NAME, _web.throttle(url, e.headers)) from None
+        elif e.code in (401, 403):
+            _refused(e.code, key, '/uploads')
+        else:
+            raise SourceError('itch.io returned HTTP error %d for the download; try again later' % e.code) from None
+    except SourceError:
+        raise
+    except (OSError, ValueError) as e:
+        raise _network_error(e, key) from None
+    else:
+        with r:
+            if 'json' not in (r.headers.get('Content-Type') or '').lower():
+                try:
+                    return _web.save_apk(r)  # served by api.itch.io itself
+                except (OSError, ValueError, zipfile.BadZipFile) as e:
+                    raise SourceError(_clean('Could not download APK: ' + str(e), key)) from None
+            try:
+                target = _checked(r.read(1024 * 1024 + 1), key).get('url')
+            except (OSError, ValueError) as e:
+                raise _network_error(e, key) from None
+    if not isinstance(target, str) or not target:
+        raise SourceError('itch.io did not say where to download the file')
+    return _web.public_apk(urllib.parse.urljoin(url, target), NAME)  # no key past this point
+
+
 def download(upload_id, download_key_id):
-    """The APK, through _web.apk: the key goes to api.itch.io only, never to the storage host."""
+    """The APK: the key goes to api.itch.io only, never to the storage host."""
     url = download_url(upload_id, download_key_id)
-    return _use(lambda key: _web.apk(url, HOSTS, None, name=NAME,
-                                     headers={'Authorization': 'Bearer ' + key}, redirects=_web.ANY))
+    return _use(lambda key: _fetch(url, key))
