@@ -42,10 +42,8 @@ for (const [url, address, user, pass] of [
   ["https://alice:100%done@repo.example/private/repo", "https://repo.example/private/repo", "alice", "100%done"],
   ["https:\t//alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
   ["ht\ntps://alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
-  ["https:\\\\alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
   ["https:alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
   ["\u0000https://alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
-  ["fdroidrepos://alice:p\\w@repo.example/repo", "fdroidrepos://repo.example/repo", "alice", "p\\w"],
   ["https://alice:%FF@repo.example/private/repo", "https://repo.example/private/repo", "alice", "%FF"],
   ["https://al%20ice:p%40ss:word@repo.example/r", "https://repo.example/r", "al ice", "p@ss:word"],
   ["https://alice:p%FF\u00e4@repo.example/repo", "https://repo.example/repo", "alice", "p%FF\u00e4"],
@@ -60,7 +58,7 @@ for (const [url, address, user, pass] of [
 }
 
 // An address the parser rejects that may hold a login is refused and left as typed, never sent.
-for (const url of ["https://alice:s3cret@repo example/repo", "https:alice:s3cret@repo example/repo", "https://repo.example:bad\\a@b"]) {
+for (const url of ["https://alice\\name:pw@repo.example/repo", "https:\\\\alice:s3cret@repo.example/repo", "fdroidrepos://alice:p\\w@repo.example/repo", "https://alice:s3cret@repo example/repo", "https:alice:s3cret@repo example/repo", "https://repo.example:bad\\a@b"]) {
   f = form(url);
   if (moveLogin(f) !== false) fail("accepted an invalid address with a login: " + url);
   if (f.elements.username.value || f.elements.password.value) fail("guessed a login from an invalid address: " + url);
@@ -75,4 +73,7 @@ for (const url of ["https://repo.example/repo", "not a url", "https://repo.examp
 const html = sourceToken({ id: "github", name: "GitHub releases", token: { set: true, from: "saved", rejected: true } });
 if (!html.includes("rejected") || !html.includes('data-clear-token="github"')) fail("token row: " + html);
 if (sourceToken({ id: "fdroid", name: "F-Droid" }) !== "") fail("token field on a source without one");
+const slow = "https://a:" + "%FF".repeat(4000) + "@repo.example/r", t0 = Date.now();
+f = form(slow); moveLogin(f);
+if (Date.now() - t0 > 200 || f.elements.password.value !== "%FF".repeat(4000)) fail("decoding malformed escapes is slow or wrong");
 console.log("ok");

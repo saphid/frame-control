@@ -3293,13 +3293,15 @@ async function addSource(body) {
 // Plain text, not the URL parser: an address it rejects (or a login it can't decode) must
 // still lose its login first. Decoding falls back to the text as typed.
 // Percent-decode what decodes; keep any byte sequence that isn't UTF-8 as typed.
+// One forward pass: each lead byte gives its sequence length (at most 4 bytes).
 function decodeLenient(s) {
   return s.replace(/(?:%[0-9a-f]{2})+/gi, run => {
-    let out='', i=0;
-    while(i<run.length){
-      let j=run.length;
-      for(; j>i; j-=3){ try { out+=decodeURIComponent(run.slice(i,j)); break; } catch {} }
-      if(j>i) i=j; else { out+=run.slice(i,i+3); i+=3; }
+    const b=run.match(/%[0-9a-f]{2}/gi); let out='', i=0;
+    while(i<b.length){
+      const v=parseInt(b[i].slice(1),16);
+      const n=v<0x80 ? 1 : v>=0xC2&&v<0xE0 ? 2 : v>=0xE0&&v<0xF0 ? 3 : v>=0xF0&&v<0xF5 ? 4 : 0;
+      if(n){ try { out+=decodeURIComponent(b.slice(i,i+n).join('')); i+=n; continue; } catch {} }
+      out+=b[i]; i++;
     }
     return out;
   });
@@ -3311,6 +3313,9 @@ function moveLogin(form) {
   const el=form.elements;
   el.url.value=el.url.value.replace(/^[\u0000- ]+|[\u0000- ]+$/g,'').replace(/[\t\n\r]/g,'');
   let u;
+  // A backslash and an '@' together are read differently by browsers and by the
+  // server, so the address can't be split safely: refuse it rather than guess.
+  if(el.url.value.includes('@') && el.url.value.includes('\\'))return false;
   try { u=new URL(el.url.value); } catch { return !el.url.value.includes('@'); }
   if(!u.username && !u.password)return true;
   const user=decodeLenient(u.username), pass=decodeLenient(u.password);
