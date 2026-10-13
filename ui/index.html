@@ -3288,10 +3288,22 @@ async function addSource(body) {
   $("sourceError").textContent=result ? result.message : error || "We couldn't add that repository.";
   if(result){$("addSource").reset();sourceState.source='';await loadSources();await searchSources();}
 }
+// A login typed into the address moves into the login fields, on the page too, before anything
+// is sent: the address is shown and logged, the login never. It stays there if adding fails.
+function moveLogin(form) {
+  const el=form.elements;
+  try {
+    const u=new URL(el.url.value);
+    if(!u.username && !u.password)return;
+    if(!el.username.value)el.username.value=decodeURIComponent(u.username);
+    if(!el.password.value)el.password.value=decodeURIComponent(u.password);
+    u.username='';u.password='';el.url.value=u.href;
+    el.username.closest('details').open=true;
+  } catch {}
+}
 $("addSource").onsubmit=e=>{
-  e.preventDefault();const f=new FormData(e.target);let url=f.get('url'),username=f.get('username'),password=f.get('password');
-  // A login typed into the address moves to the login fields: the address is shown and logged, the login never.
-  try { const u=new URL(url); if(u.username||u.password){ username=username||decodeURIComponent(u.username); password=password||decodeURIComponent(u.password); u.username='';u.password='';url=u.href; } } catch {}
+  e.preventDefault();moveLogin(e.target);
+  const f=new FormData(e.target), url=f.get('url'), username=f.get('username'), password=f.get('password');
   addSource({action:'add',url,fingerprint:f.get('fingerprint'),...(username ? {username,password} : {})});
 };
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());

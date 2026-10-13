@@ -58,7 +58,9 @@ rejected it, never its value. Tokens are sent as `Authorization: Bearer` only to
 release downloads don't need them), and removed on redirects. If GitHub answers
 401 to the token, the request is retried once without it, as Obtainium does.
 The rejection is logged without the token and shown in source settings. The
-token is not tried again until it is saved again or the app restarts. The
+token is not tried again until it is saved again or the app restarts. Rate-limit
+backoff is kept per login (anonymous, or each token), so saving a token after
+anonymous requests were limited lets the next request go out with it. The
 adapter does not read `gh` credentials automatically. Metadata is cached for one hour under
 `frame_host.cache_dir('apk-sources', 'publisher')`. A cold details request
 fetches at most ten releases. Rate-limit errors are surfaced without retry

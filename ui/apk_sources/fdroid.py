@@ -127,7 +127,7 @@ class _HTTPSRedirect(urllib.request.HTTPRedirectHandler):
 def _fetch(url, path, maximum, auth=None):
     """auth: the repository's login, sent only to its exact origin (never after a redirect elsewhere)."""
     host = urllib.parse.urlsplit(url).hostname
-    wait = _web.wait_time(url)
+    wait = _web.wait_time(url, auth)
     if wait:
         raise _web.limited_error(host, wait)
     request = urllib.request.Request(url, headers={'User-Agent': 'FrameControl/1.0'})
@@ -148,7 +148,7 @@ def _fetch(url, path, maximum, auth=None):
             raise SourceAuthError('The repository refused the login (HTTP %d); check the username and password'
                                   % e.code if auth else 'This repository needs a username and password') from None
         if e.code in (403, 429):
-            raise _web.limited_error(host, _web.throttle(url, e.headers)) from e
+            raise _web.limited_error(host, _web.throttle(url, e.headers, auth)) from e
         raise
 
 

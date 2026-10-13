@@ -6,10 +6,19 @@ credential belongs to one exact origin (https, host, port) and is only ever sent
 to a request for that origin: Handler adds it to each request, redirects
 included, and removes any Authorization header from every other request.
 
+Artwork (for_url, and Handler(..., scoped=True)) is stricter: the URL must also be
+under the credential's scope by whole path segments, with no dot segments, encoded
+slashes or ';' a server could normalise into a path outside it.
+
 Secrets leave this module only as an Authorization header value. Credential's
 repr hides them, and nothing here puts them in an exception message.
+
+Each change is a read-modify-write under an inter-process lock (the CLI and the
+app may both save), so one process can't undo another's save or removal.
 """
 import base64
+import contextlib
+import errno
 import json
 import os
 import tempfile
@@ -25,6 +34,65 @@ MAX = 4096  # longest username, password or token accepted
 
 def _path():
     return frame_host.data_dir('source-credentials.json')
+
+
+@contextlib.contextmanager
+def _changing():
+    """This thread, then this process, holds the credentials file for a read-modify-write."""
+    path = _path().with_name('source-credentials.lock')
+    with _lock:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        with open(str(path), 'a+b') as f:
+            if os.name == 'nt':
+                import msvcrt
+                while True:
+                    try:
+                        f.seek(0)
+                        msvcrt.locking(f.fileno(), msvcrt.LK_LOCK, 1)
+                        break
+                    except OSError as e:  # LK_LOCK gives up after ~10 s of contention; keep waiting
+                        if e.errno not in (errno.EACCES, errno.EDEADLK):
+                            raise
+                try:
+                    yield
+                finally:
+                    f.seek(0)
+                    msvcrt.locking(f.fileno(), msvcrt.LK_UNLCK, 1)
+            else:
+                import fcntl
+                fcntl.flock(f.fileno(), fcntl.LOCK_EX)
+                try:
+                    yield
+                finally:
+                    fcntl.flock(f.fileno(), fcntl.LOCK_UN)
+
+
+def _segments(path):
+    """A URL path's decoded segments, or None if a server might read it as another path:
+    '.' or '..' (plain or percent-encoded), encoded '/' or '\\', '%' left after decoding
+    (double encoding), or ';' path parameters."""
+    if ';' in path or '\\' in path:
+        return None
+    parts = [urllib.parse.unquote(part) for part in path.split('/')]
+    if any(part in ('.', '..') or '/' in part or '\\' in part or '%' in part or ';' in part for part in parts):
+        return None
+    return parts
+
+
+def in_scope(credential, url):
+    """True if url is on credential's origin and under its scope by whole, plain path segments."""
+    if credential is None or not credential.matches(url):
+        return False
+    try:
+        path, scope = urllib.parse.urlsplit(url).path, urllib.parse.urlsplit(credential.scope).path
+    except ValueError:
+        return False
+    parts, base = _segments(path), _segments(scope)
+    if parts is None or base is None:
+        return False
+    if base and base[-1] == '':
+        base = base[:-1]  # 'https://h/repo/' covers '/repo/x', not '/repository'
+    return parts[:len(base)] == base
 
 
 def origin(url):
@@ -153,7 +221,7 @@ def has(key):
 def put(key, credential):
     if not isinstance(credential, Credential):
         raise TypeError('put() needs a Credential')
-    with _lock:
+    with _changing():
         data = _read()
         data[key] = credential._json()
         _save(data)
@@ -161,7 +229,7 @@ def put(key, credential):
 
 def remove(key):
     """Delete key's credential from disk; True if there was one."""
-    with _lock:
+    with _changing():
         data = _read()
         if key not in data:
             return False
@@ -171,27 +239,30 @@ def remove(key):
 
 
 def for_url(url):
-    """A saved credential whose origin matches url and whose scope url is under, or None."""
+    """A saved credential url is in the scope of (see in_scope), or None. Call it again for
+    each redirect hop: the answer depends only on the URL being requested."""
     with _lock:
         keys = list(_read())
     for key in keys:
         credential = get(key)
-        if credential and credential.matches(url) and url.startswith(credential.scope):
+        if in_scope(credential, url):
             return credential
     return None
 
 
 class Handler(urllib.request.BaseHandler):
     """Adds the credential to requests for its origin (redirects included) and strips
-    Authorization from every other request, so a redirect elsewhere never gets it."""
+    Authorization from every other request, so a redirect elsewhere never gets it.
+    scoped=True also requires each request, redirects included, to be in_scope."""
     handler_order = 900  # after the default processors
 
-    def __init__(self, credential):
-        self.credential = credential
+    def __init__(self, credential, scoped=False):
+        self.credential, self.scoped = credential, scoped
 
     def _request(self, req):
         req.remove_header('Authorization')
-        if self.credential is not None and self.credential.matches(req.full_url):
+        allowed = in_scope if self.scoped else lambda c, url: c is not None and c.matches(url)
+        if allowed(self.credential, req.full_url):
             req.add_unredirected_header('Authorization', self.credential.header())
         return req
 

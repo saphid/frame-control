@@ -83,14 +83,19 @@ How the login is kept and used:
   macOS), written with mode 0600 and keyed by source id. They are stored in
   plain text there, protected by file permissions only (on Windows,
   the folder's normal ACLs). Removing the repository deletes its login, and
-  the file goes when the last login is removed.
+  the file goes when the last login is removed. Each change holds a lock
+  file (`source-credentials.lock`), so the app and the command line can't undo
+  each other's saves or removals.
 - **HTTPS only.** An `http://` address with a login is refused before any request.
 - **Exact origin only.** The `Authorization` header is added per request, and
   only when the request's scheme, host and port match the repository's. A
   redirect to another host or port gets no login, and that request's own
   `Authorization` header is removed. A same-origin redirect still gets it.
-  The store's artwork proxy sends the login only for images under the
-  repository's own address on that origin.
+  The store's artwork proxy is stricter: it sends the login only for images
+  under the repository's address by whole path segments, checked again on
+  every redirect. Paths with `.` or `..` segments (plain or percent-encoded),
+  encoded `/` or `\`, double encoding or `;` get no login, since a server
+  could normalise them to a path outside the repository.
 - **Never echoed.** Logins are not written to logs, error messages, API
   responses or the cache. The CLI prints only the saved source.
 - **Checked before saving.** As with any repository, the whole index must

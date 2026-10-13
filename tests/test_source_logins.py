@@ -11,18 +11,20 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import stat
+import subprocess
 import sys
 import tempfile
 import threading
 import time
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 import urllib.request
 import urllib.response
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
-from apk_sources import SourceAuthError, SourceError, _credentials, _images, _web, fdroid, github, search
+from apk_sources import SourceAuthError, SourceError, SourceLimited, _credentials, _images, _web, fdroid, github, search
 import server
 
 FIXTURES = Path(__file__).parent / 'fixtures' / 'fdroid'
@@ -255,11 +257,14 @@ class GitHubToken(Base):
         super().setUp()
         self.accept = {TOKEN}
         self.releases = json.dumps([]).encode()
+        self.anonymous_limited = False
 
     def route(self, url, auth):
         if url.startswith('https://api.github.com/'):
             if auth is not None and auth not in {'Bearer ' + t for t in self.accept}:
                 return 401, {}, b'{"message": "Bad credentials"}'
+            if auth is None and self.anonymous_limited:
+                return 403, {'X-RateLimit-Remaining': '0', 'X-RateLimit-Reset': str(int(time.time()) + 1800)}, b'{}'
             if url.endswith('/redirected'):
                 return 302, {'Location': 'https://github.com/landed'}, b''
             return 200, {}, self.releases
@@ -314,11 +319,157 @@ class GitHubToken(Base):
         github._api('/repos/a/b/releases')
         self.assertEqual(self.web.seen[-1][1], None)
 
+    def test_saving_a_token_escapes_the_anonymous_rate_limit(self):
+        self.anonymous_limited = True
+        with self.assertRaisesRegex(SourceLimited, 'GitHub is limiting requests'):
+            github._api('/repos/a/b/releases')
+        self.assertEqual(self.web.seen[-1][1], None)
+        github.set_token(TOKEN)
+        self.assertEqual(github._api('/repos/a/b/other'), [])  # tried, with the token's own quota
+        self.assertEqual(self.web.seen[-1], ('https://api.github.com/repos/a/b/other', 'Bearer ' + TOKEN))
+        github.clear_token()
+        count = len(self.web.seen)
+        with self.assertRaisesRegex(SourceLimited, 'GitHub is limiting requests'):
+            github._api('/repos/a/b/third')
+        self.assertEqual(len(self.web.seen), count)  # anonymous is still backing off: no request
+
     def test_bad_tokens_are_refused(self):
         for token in ('', '   ', 'two words', 'x\nAuthorization: y'):
             with self.subTest(token=token), self.assertRaises(SourceError):
                 github.set_token(token)
         self.assertFalse(self.credentials_file().exists())
+
+
+PNG = b'\x89PNG\r\n\x1a\nfixture'
+PRIVATE = 'https://repo.example/private/repo/'
+TRAVERSALS = [PRIVATE + '%2e%2e/%2e%2e/evil/collect.png', PRIVATE + '%2E%2E/x.png', PRIVATE + '../../evil/x.png',
+              PRIVATE + './icons/a.png', PRIVATE + '..%2f..%2fevil/x.png', PRIVATE + 'a%5c..%5c..%5cevil.png',
+              PRIVATE + 'a;b/../../evil.png', PRIVATE + '%252e%252e/%252e%252e/evil.png',
+              'https://repo.example/private/repository/x.png', 'https://repo.example/private/repo%2fx.png']
+
+
+class ArtworkScope(Base):
+    """The artwork proxy: actual outgoing headers, through _images.get's own HTTP code."""
+
+    def setUp(self):
+        super().setUp()
+        self.sent, self.redirects = [], {}
+        _credentials.put('fdroid-user-private', _credentials.basic(PRIVATE, USER, PASSWORD))
+        test = self
+
+        class Response:
+            def __init__(self, status, location=''):
+                self.status, self.location, self.body = status, location, PNG if status == 200 else b''
+
+            def getheader(self, name, default=''):
+                return self.location if name == 'Location' else default
+
+            def read1(self, n):
+                chunk, self.body = self.body[:n], self.body[n:]
+                return chunk
+
+        class Connection:
+            def __init__(self, host, port, timeout=None):
+                self.host, self.port = host, port
+
+            def request(self, method, path, headers):
+                url = 'https://%s%s' % (self.host, path)
+                test.sent.append((url, headers.get('Authorization')))
+                self.url = url
+
+            def getresponse(self):
+                if self.url in test.redirects:
+                    return Response(302, test.redirects[self.url])
+                return Response(200)
+
+            def close(self):
+                pass
+
+        # A public address, no real socket or TLS, and Connection in place of http.client's.
+        for target, name, value in [(_images, '_resolve', lambda host, port, timeout: [(2, 1, 6, '', ('93.184.216.34', port))]),
+                                    (_images.socket, 'create_connection', lambda *a, **k: Mock()),
+                                    (_images.ssl, 'create_default_context', lambda: Mock()),
+                                    (_images.http.client, 'HTTPConnection', Connection)]:
+            mock = patch.object(target, name, value)
+            mock.start()
+            self.addCleanup(mock.stop)
+
+    def test_artwork_in_the_repository_gets_the_login(self):
+        self.assertEqual(_images.get(PRIVATE + 'icons/a%20b.png'), PNG)
+        self.assertEqual(self.sent, [(PRIVATE + 'icons/a%20b.png', basic(USER, PASSWORD))])
+
+    def test_paths_a_server_could_normalise_outside_the_repository_get_nothing(self):
+        for url in TRAVERSALS:
+            with self.subTest(url=url):
+                self.sent.clear()
+                self.assertEqual(_images.get(url), PNG)
+                self.assertEqual(self.sent, [(url, None)])
+                self.assertIsNone(_credentials.for_url(url))
+
+    def test_redirect_to_a_traversal_gets_nothing(self):
+        start = PRIVATE + 'icons/a.png'
+        self.redirects[start] = PRIVATE + '%2e%2e/%2e%2e/evil/collect.png'
+        self.assertEqual(_images.get(start), PNG)
+        self.assertEqual(self.sent, [(start, basic(USER, PASSWORD)), (self.redirects[start], None)])
+
+
+class ScopedHandler(Base):
+    """Handler(scoped=True), for callers (artwork-like) that must stay inside a scope, redirects included."""
+
+    def route(self, url, auth):
+        if url == PRIVATE + 'icons/a.png':
+            return 302, {'Location': PRIVATE + '%2e%2e/%2e%2e/evil/collect.png'}, b''
+        return 200, {}, PNG
+
+    def test_redirect_into_a_traversal_is_stripped(self):
+        login = _credentials.basic(PRIVATE, USER, PASSWORD)
+        opener = urllib.request.build_opener(_credentials.Handler(login, scoped=True))
+        with opener.open(PRIVATE + 'icons/a.png') as r:
+            self.assertEqual(r.read(), PNG)
+        self.assertEqual(self.web.seen, [(PRIVATE + 'icons/a.png', basic(USER, PASSWORD)),
+                                         (PRIVATE + '%2e%2e/%2e%2e/evil/collect.png', None)])
+        for url in TRAVERSALS:
+            self.assertFalse(_credentials.in_scope(login, url), url)
+        self.assertTrue(_credentials.in_scope(login, PRIVATE + 'a/b%20c.png?x=1'))
+        self.assertTrue(_credentials.in_scope(login, PRIVATE.rstrip('/')))
+
+
+CHURN = '''
+import sys
+sys.path.insert(0, sys.argv[1])
+from apk_sources import _credentials
+for i in range(int(sys.argv[3])):
+    key = sys.argv[2] + str(i)
+    _credentials.put(key, _credentials.basic('https://h.example/', 'u', 'p'))
+    if i % 2:
+        _credentials.remove(key)
+'''
+
+
+class TwoProcesses(Base):
+    def test_interleaved_saves_and_removals_are_not_lost(self):
+        ui = str(Path(__file__).resolve().parents[1] / 'ui')
+        env = dict(os.environ, FRAME_CONTROL_DATA_DIR=str(self.root / 'data'))
+        count = 60
+        procs = [subprocess.Popen([sys.executable, '-c', CHURN, ui, prefix, str(count)], env=env,
+                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE) for prefix in ('a', 'b')]
+        for p in procs:
+            out, err = p.communicate(timeout=120)
+            self.assertEqual(p.returncode, 0, err.decode())
+        saved = set(json.loads(self.credentials_file().read_text()))
+        self.assertEqual(saved, {p + str(i) for p in 'ab' for i in range(0, count, 2)})
+        if os.name != 'nt':
+            self.assertEqual(stat.S_IMODE(self.credentials_file().stat().st_mode), 0o600)
+
+
+@unittest.skipUnless(shutil.which('node'), 'needs node')
+class PageLogin(unittest.TestCase):
+    def test_login_leaves_the_address_field_before_sending(self):
+        """tests/page/source_login.mjs runs the real page functions from index.html."""
+        r = subprocess.run(['node', str(Path(__file__).parent / 'page' / 'source_login.mjs')],
+                           capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+        self.assertIn('ok', r.stdout)
 
 
 class Endpoints(Repository):

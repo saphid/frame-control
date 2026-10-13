@@ -38,7 +38,7 @@ def release(path):
         else:
             _in_use.pop(path, None)
 BACKOFF = 600  # seconds to leave a host alone after 403/429 without Retry-After
-_limited = {}  # host -> time.time() before which we don't contact it
+_limited = {}  # host (+ login identity) -> time.time() before which we don't ask it with that login
 _limited_lock = threading.Lock()
 
 
@@ -46,8 +46,16 @@ def _host(url):
     return (urllib.parse.urlsplit(url).hostname or '').lower()
 
 
-def throttle(url, headers=None):
-    """Remember that url's host asked us to back off; return the delay in seconds."""
+def _who(url, auth=None):
+    """Backoff key: the host, per login. A token has its own quota, so anonymous
+    rate limiting mustn't hold back requests made with one (or the reverse)."""
+    if auth is None:
+        return _host(url)
+    return _host(url) + ' ' + hashlib.sha256(auth.header().encode()).hexdigest()[:16]
+
+
+def throttle(url, headers=None, auth=None):
+    """Remember that url's host asked us (with this login) to back off; return the delay in seconds."""
     headers = headers or {}
     now, delay = time.time(), None
     value = (headers.get('Retry-After') or '').strip()
@@ -62,14 +70,15 @@ def throttle(url, headers=None):
     if delay is None and headers.get('X-RateLimit-Remaining') == '0' and reset.isdigit():
         delay = int(reset) - now  # GitHub
     delay = min(max(delay if delay is not None else BACKOFF, 1), 6 * 3600)
+    key = _who(url, auth)
     with _limited_lock:
-        _limited[_host(url)] = max(_limited.get(_host(url), 0), now + delay)
+        _limited[key] = max(_limited.get(key, 0), now + delay)
     return delay
 
 
-def wait_time(url):
+def wait_time(url, auth=None):
     with _limited_lock:
-        return max(0, _limited.get(_host(url), 0) - time.time())
+        return max(0, _limited.get(_who(url, auth), 0) - time.time())
 
 
 def limited_error(name, seconds, hint=''):
@@ -169,7 +178,7 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint='', auth=None):
         if os.path.isfile(path) and time.time() - os.path.getmtime(path) < ttl:
             with open(path, 'rb') as f:
                 return f.read()
-        wait = wait_time(url)
+        wait = wait_time(url, auth)
         if wait:
             data = cached()
             if data is None:
@@ -192,7 +201,7 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint='', auth=None):
         if e.code == 401:  # not 403: GitHub also uses that for rate limits, token or not
             raise SourceAuthError('%s refused the login (HTTP 401)' % name) from e
         if e.code in (403, 429):
-            delay = throttle(url, e.headers)
+            delay = throttle(url, e.headers, auth)
             data = cached()
             if data is None:
                 raise limited_error(name, delay, hint) from e
