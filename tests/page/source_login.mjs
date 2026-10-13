@@ -42,8 +42,10 @@ for (const [url, address, user, pass] of [
   ["https://alice:100%done@repo.example/private/repo", "https://repo.example/private/repo", "alice", "100%done"],
   ["https:\t//alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
   ["ht\ntps://alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
-  ["https:\\\\alice:s3cret@repo.example/repo", "https:\\\\repo.example/repo", "alice", "s3cret"],
-  ["https:alice:s3cret@repo.example/repo", "https:repo.example/repo", "alice", "s3cret"],
+  ["https:\\\\alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
+  ["https:alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
+  ["\u0000https://alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
+  ["fdroidrepos://alice:p\\w@repo.example/repo", "fdroidrepos://repo.example/repo", "alice", "p\\w"],
   ["https://alice:%FF@repo.example/private/repo", "https://repo.example/private/repo", "alice", "%FF"],
   ["https://al%20ice:p%40ss:word@repo.example/r", "https://repo.example/r", "al ice", "p@ss:word"],
   ["https://alice:s3cret@repo example/repo", "https://repo example/repo", "alice", "s3cret"],
@@ -57,7 +59,7 @@ for (const [url, address, user, pass] of [
     fail(`login for ${url}: ${f.elements.username.value} / ${f.elements.password.value}`);
 }
 
-for (const url of ["https://repo.example/repo", "not a url", "https://repo.example/a@b"]) {
+for (const url of ["https://repo.example/repo", "not a url", "https://repo.example/a@b", "fdroidrepos:///a@b", "fdroidrepos:/a@b", "https://repo.example/r?x=a@b#c@d"]) {
   f = form(url);
   moveLogin(f);
   if (f.elements.url.value !== url || f.elements.username.value) fail("changed an address without a login: " + url);
