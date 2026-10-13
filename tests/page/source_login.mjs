@@ -40,6 +40,10 @@ if (f.elements.url.value.includes("fromurl") || f.elements.username.value !== "t
 // Undecodable logins and addresses the URL parser rejects still lose their login, decoded where possible.
 for (const [url, address, user, pass] of [
   ["https://alice:100%done@repo.example/private/repo", "https://repo.example/private/repo", "alice", "100%done"],
+  ["https:\t//alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
+  ["ht\ntps://alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
+  ["https:\\\\alice:s3cret@repo.example/repo", "https:\\\\repo.example/repo", "alice", "s3cret"],
+  ["https:alice:s3cret@repo.example/repo", "https:repo.example/repo", "alice", "s3cret"],
   ["https://alice:%FF@repo.example/private/repo", "https://repo.example/private/repo", "alice", "%FF"],
   ["https://al%20ice:p%40ss:word@repo.example/r", "https://repo.example/r", "al ice", "p@ss:word"],
   ["https://alice:s3cret@repo example/repo", "https://repo example/repo", "alice", "s3cret"],
