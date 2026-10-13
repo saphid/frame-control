@@ -90,12 +90,28 @@ def _forget():
 
 
 def _clean(message, key):
-    """message without the key, or any start of it (8+ characters) left by truncation."""
+    """message without the key, or any start of it (8+ characters, as truncation leaves), in
+    any letter case, with any of its characters written literally or percent-encoded (%4B or
+    %4b). The only redaction used here: every message that might hold the key goes through it.
+    (The key's characters are letters, digits and _.-, so +/space encoding can't change it.)"""
     if not key:
         return message
-    for n in range(len(key), 7, -1):
-        message = message.replace(key[:n], '[API key]')
-    return message
+    tokens = ['(?:%s|%%%02x)' % (re.escape(c), ord(c)) for c in key]
+    start, rest = re.compile(''.join(tokens[:8]), re.I), [re.compile(t, re.I) for t in tokens[8:]]
+    out, pos = [], 0
+    while True:
+        found = start.search(message, pos)
+        if not found:
+            break
+        end = found.end()
+        for token in rest:  # as much more of the key as follows
+            more = token.match(message, end)
+            if not more:
+                break
+            end = more.end()
+        out += [message[pos:found.start()], '[API key]']
+        pos = end
+    return ''.join(out) + message[pos:]
 
 
 class _Stay(urllib.request.HTTPRedirectHandler):
@@ -336,12 +352,12 @@ def _fetch(url, key):
         target = _checked(raw, key, '/uploads').get('url')
     if not isinstance(target, str) or not target:
         raise SourceError('itch.io did not say where to download the file')
-    target = urllib.parse.urljoin(url, target)
-    if _carries_key(target, key):
-        raise SourceError('itch.io pointed the download at a URL carrying your API key; refused, '
-                          'so the key is not sent to the storage server')
+    def refuse(hop):  # on the first URL and on every redirect after it, before any lookup
+        if _carries_key(hop, key):
+            raise SourceError('itch.io pointed the download at a URL carrying your API key; refused, '
+                              'so the key is not sent to the storage server')
     try:
-        return _web.public_apk(target, NAME)  # no key past this point
+        return _web.public_apk(urllib.parse.urljoin(url, target), NAME, check=refuse)  # no key sent
     except SourceLimited as e:
         raise SourceLimited(_clean(str(e), key), e.retry_after) from None
     except SourceError as e:
@@ -349,14 +365,12 @@ def _fetch(url, key):
 
 
 def _carries_key(url, key):
-    """True if url holds the key (or 8+ characters of its start, in any case, anywhere), or an
-    itch.io API-key parameter: go-itchio puts the key in ?api_key=, and storage must never get it.
-    Other parameters (signatures, tokens) are the storage URL's own and are kept."""
-    if _clean(url.lower(), key.lower()) != url.lower():
-        return True
-    unquoted = urllib.parse.unquote(url).lower()
-    if _clean(unquoted, key.lower()) != unquoted:
-        return True
+    """True if url holds the key (or 8+ characters of its start), however cased or encoded, or
+    an itch.io API-key parameter: go-itchio puts the key in ?api_key=, and storage must never
+    get it. Other parameters (signatures, tokens) are the storage URL's own and are kept."""
+    for form in (url, urllib.parse.unquote(url), urllib.parse.unquote_plus(url)):
+        if _clean(form, key) != form:
+            return True
     names = {name.lower() for name, _ in urllib.parse.parse_qsl(urllib.parse.urlsplit(url).query,
                                                                   keep_blank_values=True)}
     return bool(names & {'api_key', 'apikey', 'api-key'})

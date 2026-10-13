@@ -406,6 +406,9 @@ class ItchPurchases(unittest.TestCase):
         for ip in ('127.0.0.1', '10.1.2.3', '172.16.0.1', '192.168.0.1', '169.254.169.254', '100.64.0.1',
                    '0.0.0.0', '224.0.0.1', '255.255.255.255', '240.0.0.1', '::1', '::', 'fe80::1%en0', 'fc00::1',
                    'ff02::1', 'not an ip',
+                   '192.0.0.8', '192.0.0.11', '192.0.0.255', '192.0.0.170', '192.0.0.9', '192.0.0.1',  # 3.9: global
+                   '192.0.2.1', '192.88.99.1', '198.18.0.1', '198.19.255.255', '198.51.100.7', '203.0.113.9',
+                   '0.1.2.3', '10.255.255.255', '172.31.0.1', '239.1.1.1', '254.0.0.1',
                    '4000::1', '100::1', 'f000::1',  # reserved: Python 3.9's is_global says True for 4000::1
                    '::ffff:10.0.0.1', '::ffff:127.0.0.1', '::ffff:8.8.8.8',  # IPv4-mapped
                    '::a00:1', '::8.8.8.8',  # IPv4-compatible
@@ -444,6 +447,53 @@ class ItchPurchases(unittest.TestCase):
         # A storage URL's own signature or token parameters are fine.
         self.storage('https://storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk?token=abc&Signature=x')
         self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+
+    def test_a_later_redirect_carrying_the_key_is_refused_before_connecting(self):
+        self.connect()
+        bad = 'https://storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk?api_key=' + KEY
+        for hops in (['https://other-cdn.example/hop1'],  # 2nd hop carries the key
+                     ['https://other-cdn.example/hop1', 'https://other-cdn.example/hop2']):  # 3rd hop
+            self.connected.clear()
+            self.storage(hops[0])
+            for here, there in zip(hops, hops[1:] + [bad]):
+                path = urllib.parse.urlsplit(here).path
+                self.web.route('other-cdn.example' + path, Reply(here, 302, b'', {'Location': there}))
+            with self.assertRaisesRegex(SourceError, 'carrying your API key; refused') as caught:
+                itch.download(self.owned_source(), '341190')
+            self.assertNotIn(KEY, str(caught.exception))
+            self.assertEqual([h for h, _ in self.connected], ['other-cdn.example'] * len(hops))
+            self.assertFalse(any(KEY in u for u, _ in self.web.calls))
+        # The check runs on every hop before the name is even looked up.
+        seen = []
+        with patch.object(_web, 'resolve_public', side_effect=AssertionError('looked up')):
+            with self.assertRaisesRegex(SourceError, 'no thanks'):
+                _web.public_apk('https://storage.itch-cdn.example/a.apk', 'itch.io',
+                                check=lambda u: seen.append(u) or (_ for _ in ()).throw(SourceError('no thanks')))
+        self.assertEqual(seen, ['https://storage.itch-cdn.example/a.apk'])
+
+    def test_redaction_catches_every_spelling_of_the_key(self):
+        hexed = ''.join('%%%02X' % ord(c) for c in KEY)
+        for spelling in (KEY, KEY.lower(), KEY.upper(), hexed, hexed.lower(),
+                         KEY[:5] + hexed[15:30] + KEY[10:],  # partly encoded
+                         KEY[:9], hexed[:30].lower()):  # starts of it, 8+ characters
+            cleaned = account._clean('before ' + spelling + ' after', KEY)
+            self.assertEqual(cleaned, 'before [API key] after', spelling)
+        self.assertEqual(account._clean('TESTKEY is short', KEY), 'TESTKEY is short')  # 7 characters: kept
+        self.assertEqual(account._clean(KEY + KEY.lower(), KEY), '[API key][API key]')
+        for url in ('https://cdn.example/a?x=' + hexed, 'https://cdn.example/a?x=' + hexed.lower(),
+                    'https://cdn.example/' + KEY.upper() + '/a', 'https://cdn.example/a?x=' + urllib.parse.quote_plus(KEY)):
+            self.assertTrue(account._carries_key(url, KEY), url)
+        self.assertFalse(account._carries_key('https://cdn.example/a?token=abc&Signature=x', KEY))
+        # Storage errors carrying an encoded or lowercased key lose it, keeping their kind.
+        self.connect()
+        self.storage()
+        with patch.object(_web, 'public_apk', side_effect=SourceLimited('slow ' + hexed.lower(), 42)):
+            with self.assertRaises(SourceLimited) as caught:
+                itch.download(self.owned_source(), '341190')
+        self.assertEqual((str(caught.exception), caught.exception.retry_after), ('slow [API key]', 42))
+        with patch.object(_web, 'public_apk', side_effect=SourceError('host ' + KEY.lower() + '.cdn')):
+            with self.assertRaisesRegex(SourceError, r'^host \[API key\]\.cdn$'):
+                itch.download(self.owned_source(), '341190')
 
     def test_storage_errors_lose_the_key_but_keep_their_kind(self):
         self.connect()
@@ -513,12 +563,23 @@ class ItchPurchases(unittest.TestCase):
         server.bind(('127.0.0.1', 0))
         server.listen(1)
         self.addCleanup(server.close)
+        timeouts = []
+        real_settimeout = socket.socket.settimeout
+
+        def settimeout(sock, value):
+            timeouts.append(value)
+            return real_settimeout(sock, value)
         start = time.monotonic()
-        with self.assertRaises(OSError):
-            REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, start + 0.5)
+        # No thread is left behind to shut the connection later: the deadline is only socket timeouts.
+        with patch.object(_web.threading, 'Timer', side_effect=AssertionError('watchdog thread')), \
+                patch.object(socket.socket, 'settimeout', settimeout):
+            with self.assertRaises(OSError):
+                REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, start + 0.5)
         self.assertLess(time.monotonic() - start, 3)
-        with self.assertRaises(OSError):  # a deadline already gone: no connection attempt at all
-            REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, time.monotonic() - 1)
+        self.assertTrue(timeouts and all(0 < t <= 0.5 for t in timeouts), timeouts)  # what's left, each step
+        with patch.object(_web.socket, 'create_connection', side_effect=AssertionError('connected')):
+            with self.assertRaises(socket.timeout):  # a deadline already gone: no connection attempt at all
+                REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, time.monotonic() - 1)
 
     def test_an_unreachable_address_falls_back_to_the_next_checked_one(self):
         self.connect()

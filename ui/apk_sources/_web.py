@@ -259,6 +259,12 @@ _SPECIAL6 = tuple(ipaddress.ip_network(n) for n in (
     '2001:db8::/32',  # documentation
     '2002::/16',      # 6to4
     '3fff::/20'))     # documentation (2024)
+# IPv4 blocks that are never the public internet, listed in full rather than trusting
+# is_global (Python 3.9 calls 192.0.0.8, .11 and .255 global).
+_SPECIAL4 = tuple(ipaddress.ip_network(n) for n in (
+    '0.0.0.0/8', '10.0.0.0/8', '100.64.0.0/10', '127.0.0.0/8', '169.254.0.0/16', '172.16.0.0/12',
+    '192.0.0.0/24', '192.0.2.0/24', '192.88.99.0/24', '192.168.0.0/16', '198.18.0.0/15',
+    '198.51.100.0/24', '203.0.113.0/24', '224.0.0.0/4', '240.0.0.0/4', '255.255.255.255/32'))
 
 
 def public_address(ip):
@@ -270,6 +276,8 @@ def public_address(ip):
     except ValueError:
         return False
     if a.version == 6 and (a not in _GLOBAL6 or any(a in n for n in _SPECIAL6)):
+        return False
+    if a.version == 4 and any(a in n for n in _SPECIAL4):
         return False
     return a.is_global and not (a.is_reserved or a.is_private or a.is_loopback or a.is_link_local
                                 or a.is_multicast or a.is_unspecified)
@@ -314,42 +322,37 @@ def _public_connection(host, timeout, budget=CONNECT_BUDGET):
 def _connect(host, address, timeout, deadline):
     """TLS to exactly address, verified as host, connected and handshaken before deadline
     (a time.monotonic() value); reads then get timeout seconds each."""
-    left = deadline - time.monotonic()
-    if left <= 0:
-        raise socket.timeout('Timed out connecting to ' + host)
-    sock = socket.create_connection(address, timeout=left)
-    live = [sock]
-
-    def expire():  # a server trickling the handshake byte by byte still stops at the deadline
-        try:
-            socket.socket.shutdown(live[0], socket.SHUT_RDWR)
-        except OSError:
-            pass
-    watchdog = threading.Timer(max(0, deadline - time.monotonic()), expire)
-    watchdog.daemon = True
-    watchdog.start()
-    try:
-        sock.settimeout(max(0.001, deadline - time.monotonic()))
-        live[0] = ssl.create_default_context().wrap_socket(sock, server_hostname=host,
-                                                           do_handshake_on_connect=False)
-        live[0].do_handshake()
-        if time.monotonic() >= deadline:
+    def remaining():
+        left = deadline - time.monotonic()
+        if left <= 0:
             raise socket.timeout('Timed out connecting to ' + host)
-        live[0].settimeout(timeout)
+        return left
+    sock = socket.create_connection(address, timeout=remaining())
+    try:
+        # Each step gets what is left of the deadline as its socket timeout. A handshake
+        # read as several receives could in theory run past it by one timeout; no thread
+        # is kept to cut it short, as one could fire after the connection was handed over.
+        sock.settimeout(remaining())
+        sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host,
+                                                        do_handshake_on_connect=False)
+        sock.settimeout(remaining())
+        sock.do_handshake()
+        sock.settimeout(timeout)
     except BaseException:
-        live[0].close()
+        sock.close()
         raise
-    finally:
-        watchdog.cancel()
     conn = http.client.HTTPConnection(host, 443, timeout=timeout)
-    conn.sock = live[0]
+    conn.sock = sock
     return conn
 
 
-def public_apk(url, name, redirects=3, timeout=60):
+def public_apk(url, name, redirects=3, timeout=60, check=None):
     """Download an APK from a public HTTPS host that no source lists in advance (itch.io's
-    storage). No credentials are sent. Every hop, redirects included, is re-checked."""
+    storage). No credentials are sent. Every hop, redirects included, is re-checked, and
+    check(url), if given, runs on each hop before any lookup or connection (it raises)."""
     for _ in range(redirects + 1):
+        if check:
+            check(url)
         try:
             p = urllib.parse.urlsplit(url)
             port = p.port
