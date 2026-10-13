@@ -3,7 +3,7 @@ import hashlib, os, shutil, tempfile, threading, time, urllib.error, urllib.pars
 from email.utils import parsedate_to_datetime
 
 import frame_host
-from . import SourceError, SourceLimited
+from . import SourceAuthError, SourceError, SourceLimited, _credentials
 
 UA = 'FrameControl/0.1'
 APK_CAP = 2 * 1024 ** 3  # cached APKs across all sources, least recently used go first
@@ -136,6 +136,8 @@ def checked_url(url, hosts):
 
 
 class Redirect(urllib.request.HTTPRedirectHandler):
+    """Only to the allowed hosts, and never carrying an Authorization header along:
+    a credential passed to open_url() is added again, by its Handler, only on its origin."""
     def __init__(self, hosts):
         self.hosts = hosts
 
@@ -147,13 +149,15 @@ class Redirect(urllib.request.HTTPRedirectHandler):
         return result
 
 
-def open_url(url, hosts, headers=None):
+def open_url(url, hosts, headers=None, auth=None):
+    """auth: an _credentials.Credential, sent only to requests on its own origin."""
     checked_url(url, hosts)
-    return urllib.request.build_opener(Redirect(hosts)).open(
+    handlers = [Redirect(hosts)] + ([_credentials.Handler(auth)] if auth else [])
+    return urllib.request.build_opener(*handlers).open(
         urllib.request.Request(url, headers={'User-Agent': UA, **(headers or {})}), timeout=60)
 
 
-def read(url, hosts, headers=None, ttl=3600, name=None, hint=''):
+def read(url, hosts, headers=None, ttl=3600, name=None, hint='', auth=None):
     path = os.path.join(cache(), hashlib.sha256(url.encode()).hexdigest() + '.data')
     name = name or _host(url) or 'The source'
 
@@ -171,7 +175,7 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint=''):
             if data is None:
                 raise limited_error(name, wait, hint)
             return data
-        with open_url(url, hosts, headers) as r:
+        with open_url(url, hosts, headers, auth) as r:
             data = r.read(8 * 1024 * 1024 + 1)
         if len(data) > 8 * 1024 * 1024:
             raise SourceError('Source index is too large')
@@ -185,6 +189,8 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint=''):
                 os.remove(tmp)
         return data
     except urllib.error.HTTPError as e:
+        if e.code == 401:  # not 403: GitHub also uses that for rate limits, token or not
+            raise SourceAuthError('%s refused the login (HTTP 401)' % name) from e
         if e.code in (403, 429):
             delay = throttle(url, e.headers)
             data = cached()

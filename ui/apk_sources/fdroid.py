@@ -20,7 +20,7 @@ import zipfile
 
 if __package__ in (None, ''):
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from apk_sources import SourceError, SourceLimited, _web
+from apk_sources import SourceAuthError, SourceError, SourceLimited, _credentials, _web
 import frame_host
 from frame_apk_sign import _der_parts, _cert_key, der
 from frame_catalog import _IndexReader, _reduce_index, _sha256
@@ -71,6 +71,39 @@ def _url(url, fingerprint=None):
     return urllib.parse.urlunsplit(('https', p.netloc.lower(), p.path.rstrip('/') + '/', '', '')), pin
 
 
+def _split_login(url, username=None, password=None):
+    """(url without user:pass, credential or None). The address may carry the login, as
+    F-Droid's client accepts (https://user:pass@host/fdroid/repo), or it may be given apart."""
+    try:
+        p = urllib.parse.urlsplit(url)
+        p.port
+    except ValueError as e:
+        raise SourceError('invalid repository URL') from e
+    if '@' in p.netloc:
+        if p.username is None:
+            raise SourceError('invalid repository URL')
+        linked = urllib.parse.unquote(p.username), None if p.password is None else urllib.parse.unquote(p.password)
+        if username not in (None, '', linked[0]) or (linked[1] is not None and password not in (None, '', linked[1])):
+            raise SourceError('the address and the username/password fields disagree')
+        username = linked[0]
+        password = linked[1] if linked[1] is not None else password
+        url = urllib.parse.urlunsplit((p.scheme, p.netloc.rpartition('@')[2], p.path, p.query, p.fragment))
+    if username in (None, ''):
+        if password:
+            raise SourceError('a password needs a username')
+        return url, None
+    clean, _ = _url(url)
+    try:
+        return url, _credentials.basic(clean, username, password or '')
+    except ValueError as e:
+        raise SourceError('cannot use that login: ' + str(e)) from None
+
+
+def _login(source):
+    """The saved login for a user repository, or None."""
+    return None if source.get('builtin') else _credentials.get(source['id'])
+
+
 def _child(base, name):
     name = str(name).lstrip('/')
     decoded = urllib.parse.unquote(name)
@@ -91,14 +124,16 @@ class _HTTPSRedirect(urllib.request.HTTPRedirectHandler):
         return super().redirect_request(req, fp, code, msg, headers, newurl)
 
 
-def _fetch(url, path, maximum):
+def _fetch(url, path, maximum, auth=None):
+    """auth: the repository's login, sent only to its exact origin (never after a redirect elsewhere)."""
     host = urllib.parse.urlsplit(url).hostname
     wait = _web.wait_time(url)
     if wait:
         raise _web.limited_error(host, wait)
     request = urllib.request.Request(url, headers={'User-Agent': 'FrameControl/1.0'})
+    handlers = [_HTTPSRedirect()] + ([_credentials.Handler(auth)] if auth else [])
     try:
-        with urllib.request.build_opener(_HTTPSRedirect()).open(request, timeout=60) as r, open(path, 'wb') as f:
+        with urllib.request.build_opener(*handlers).open(request, timeout=60) as r, open(path, 'wb') as f:
             total = 0
             while True:
                 chunk = r.read(1 << 20)
@@ -109,6 +144,9 @@ def _fetch(url, path, maximum):
                     raise SourceError('repository file exceeds size limit')
                 f.write(chunk)
     except urllib.error.HTTPError as e:
+        if e.code == 401 or (e.code == 403 and auth):
+            raise SourceAuthError('The repository refused the login (HTTP %d); check the username and password'
+                                  % e.code if auth else 'This repository needs a username and password') from None
         if e.code in (403, 429):
             raise _web.limited_error(host, _web.throttle(url, e.headers)) from e
         raise
@@ -342,7 +380,7 @@ def sources():
     return [dict(id=i, kind=KIND, name=n, url=u, fingerprint=p, builtin=True,
                  # The archive only holds superseded versions; it clutters search unless asked for.
                  enabled=settings['enabled'].get(i, i != 'fdroid-archive'), trust='community')
-            for i, n, u, p in builtins] + settings['repos']
+            for i, n, u, p in builtins] + [dict(s, login=_credentials.has(s['id'])) for s in settings['repos']]
 
 
 def _text(value):
@@ -514,10 +552,12 @@ def _source_lock(source_id):
         return _load_locks.setdefault(source_id, threading.Lock())
 
 
-def _load(source, force=False):
+def _load(source, force=False, auth=None):
+    """auth: a login to use instead of the saved one (while adding, before anything is saved)."""
     if not re.fullmatch(r'[a-z0-9-]+', source['id']):
         raise SourceError('invalid source id')
     _url(source['url'], source.get('fingerprint'))
+    auth = auth or _login(source)
     cache = frame_host.cache_dir('apk-sources', source['id'] + '.json')
     found = None if force else _cached(source, cache)
     if found:
@@ -535,7 +575,7 @@ def _load(source, force=False):
                 jar, raw = Path(tmp) / 'index.jar', Path(tmp) / 'index.json'
                 v2 = True
                 try:
-                    _fetch(source['url'] + 'entry.jar', jar, 8 * 1024 * 1024)
+                    _fetch(source['url'] + 'entry.jar', jar, 8 * 1024 * 1024, auth=auth)
                 except urllib.error.HTTPError as e:
                     if e.code not in (404, 410):
                         raise
@@ -543,7 +583,7 @@ def _load(source, force=False):
                         raise SourceError('repository no longer serves its signed v2 index; '
                                           'refusing to fall back to the older v1 index') from e
                     v2 = False
-                    _fetch(source['url'] + 'index-v1.jar', jar, 256 * 1024 * 1024)
+                    _fetch(source['url'] + 'index-v1.jar', jar, 256 * 1024 * 1024, auth=auth)
                     content, pin = _jar(jar, 'index-v1.json', source.get('fingerprint'))
                     timestamp = _v1(content, raw)
                     _check_timestamp(source, timestamp)
@@ -552,7 +592,7 @@ def _load(source, force=False):
                     signed = json.loads(content)
                     timestamp, entry = signed.get('timestamp'), signed['index']
                     _check_timestamp(source, timestamp)
-                    _fetch(_child(source['url'], entry['name']), raw, 512 * 1024 * 1024)
+                    _fetch(_child(source['url'], entry['name']), raw, 512 * 1024 * 1024, auth=auth)
                     if _sha256(raw) != entry['sha256'] or (entry.get('size') is not None and raw.stat().st_size != entry['size']):
                         raise SourceError('index SHA-256 or size mismatch')
                 apps = _reduce(raw, source)
@@ -572,7 +612,10 @@ def _load(source, force=False):
             raise SourceError('cannot load repository: ' + str(e)) from e
 
 
-def add_repo(url, fingerprint=None, name=None):
+def add_repo(url, fingerprint=None, name=None, username=None, password=None):
+    """Check and save a repository. A login (in the URL or apart) is kept out of the
+    saved URL, in _credentials, and saved only once the repository's index verified."""
+    url, login = _split_login(url, username, password)
     url, pin = _url(url, fingerprint)
     with _LOCK:
         existing = next((s for s in _read()['repos'] if s['url'] == url), None)
@@ -583,15 +626,26 @@ def add_repo(url, fingerprint=None, name=None):
     source = dict(id='fdroid-user-' + hashlib.sha256(url.encode()).hexdigest()[:20], kind=KIND,
                   name=name or (existing or {}).get('name') or urllib.parse.urlsplit(url).hostname,
                   url=url, builtin=False, enabled=True, trust='user', fingerprint=pin)
-    _, source['fingerprint'] = _load(source, force=True)  # network work outside the settings lock
+    # Network work outside the settings lock; without a new login, a saved one (re-adding) is used.
+    _, source['fingerprint'] = _load(source, force=True, auth=login)
     source['trust_on_first_use'] = existing.get('trust_on_first_use', False) if existing else pin is None
     with _LOCK:
         settings = _read()
         current = next((s for s in settings['repos'] if s['id'] == source['id']), None)
         if current and current['fingerprint'] != source['fingerprint']:
             raise SourceError('repository already has a different pinned fingerprint; remove it first')
-        settings['repos'] = [s for s in settings['repos'] if s['id'] != source['id']] + [source]
-        _write(_storage(), settings)
+        previous = _credentials.get(source['id'])
+        if login:
+            _credentials.put(source['id'], login)
+        try:
+            settings['repos'] = [s for s in settings['repos'] if s['id'] != source['id']] + [source]
+            _write(_storage(), settings)
+        except BaseException:
+            if login and previous:  # not saved after all: leave the login as it was
+                _credentials.put(source['id'], previous)
+            elif login:
+                _credentials.remove(source['id'])
+            raise
     return source
 
 
@@ -602,6 +656,7 @@ def remove_repo(source_id):
             raise SourceError('unknown user repository')
         settings['repos'] = [s for s in settings['repos'] if s['id'] != source_id]
         _write(_storage(), settings)
+        _credentials.remove(source_id)
     with _state_file_lock(), _LOCK:  # lock order: state file, then _LOCK
         states = _states()
         if states.pop(source_id, None) is not None:  # re-adding is a deliberate new trust decision
@@ -663,7 +718,7 @@ def download(source, entry_id, version_code=None):
             fd, tmp = tempfile.mkstemp(dir=str(path.parent), suffix='.part')
             os.close(fd)
             try:
-                _fetch(_child(source['url'], version['name']), tmp, 4 * 1024 ** 3)
+                _fetch(_child(source['url'], version['name']), tmp, 4 * 1024 ** 3, auth=_login(source))
                 if _sha256(tmp) != sha:
                     raise SourceError('APK SHA-256 mismatch; download discarded')
                 os.replace(tmp, path)
@@ -684,6 +739,8 @@ def main():
     add.add_argument('url')
     add.add_argument('--fingerprint')
     add.add_argument('--name')
+    add.add_argument('--username', help='for a repository behind a login (HTTP basic auth)')
+    add.add_argument('--password-stdin', action='store_true', help='read the password from the first line of stdin')
     sub.add_parser('list')
     remove = sub.add_parser('remove')
     remove.add_argument('source')
@@ -702,7 +759,12 @@ def main():
 def _cli(parser, args):
     try:
         if args.command == 'add':
-            result = add_repo(args.url, args.fingerprint, args.name)
+            password = None
+            if args.password_stdin:
+                if not args.username:
+                    raise SourceError('--password-stdin needs --username')
+                password = sys.stdin.readline().rstrip('\r\n')
+            result = add_repo(args.url, args.fingerprint, args.name, args.username, password)
         elif args.command == 'list':
             result = sources()
         elif args.command == 'remove':
