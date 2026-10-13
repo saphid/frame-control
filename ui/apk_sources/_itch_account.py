@@ -91,13 +91,14 @@ def _forget():
 
 def _clean(message, key):
     """message without the key, or any start of it (8+ characters, as truncation leaves), in
-    any letter case, with any of its characters written literally or percent-encoded (%4B or
-    %4b). The only redaction used here: every message that might hold the key goes through it.
-    (The key's characters are letters, digits and _.-, so +/space encoding can't change it.)"""
+    any letter case, with any of its characters written literally, percent-encoded (%4B or
+    %4b) or percent-encoded twice (%254B, %254b). The only redaction used here: every message
+    that might hold the key goes through it. (The key's characters are letters, digits and
+    _.-, so +/space encoding can't change it.)"""
     if not key:
         return message
-    # Each character: itself, or the percent-encoding of either of its letter cases.
-    tokens = ['(?:%s)' % '|'.join([re.escape(c)] + ['%%%02x' % ord(v) for v in sorted({c.lower(), c.upper()})])
+    # Each character: itself, or the percent-encoding (once or twice) of either of its letter cases.
+    tokens = ['(?:%s)' % '|'.join([re.escape(c)] + ['%%(?:25)?%02x' % ord(v) for v in sorted({c.lower(), c.upper()})])
               for c in key]
     start, rest = re.compile(''.join(tokens[:8]), re.I), [re.compile(t, re.I) for t in tokens[8:]]
     out, pos = [], 0

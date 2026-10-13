@@ -481,6 +481,14 @@ class ItchPurchases(unittest.TestCase):
                          '%%%02x' % ord(KEY[0].swapcase()) + KEY[1:]):  # one encoded, recased letter
             cleaned = account._clean('before ' + spelling + ' after', KEY)
             self.assertEqual(cleaned, 'before [API key] after', spelling)
+        double = ''.join('%%25%02X' % ord(c) for c in KEY)  # percent-encoded twice
+        for spelling in (double, double.lower(), double.upper(), double[:5 * 9],  # full, hex recased, 9-char start
+                         ''.join('%%25%02x' % ord(c) for c in KEY.lower()),  # the key recased, then double-encoded
+                         KEY[:4] + double[20:45] + hexed[27:33] + KEY[11:]):  # literal, double and single mixed
+            self.assertEqual(account._clean('before ' + spelling + ' after', KEY), 'before [API key] after', spelling)
+        self.assertEqual(account._clean(double[:5 * 7], KEY), double[:5 * 7])  # 7 characters: kept
+        self.assertTrue(account._carries_key('https://cdn.example/a?x=' + double, KEY))
+        self.assertTrue(account._carries_key('https://cdn.example/' + double[:5 * 8].lower() + '/a', KEY))
         self.assertEqual(account._clean('TESTKEY is short', KEY), 'TESTKEY is short')  # 7 characters: kept
         self.assertEqual(account._clean(KEY + KEY.lower(), KEY), '[API key][API key]')
         for url in ('https://cdn.example/a?x=' + hexed, 'https://cdn.example/a?x=' + hexed.lower(),
