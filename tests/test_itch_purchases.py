@@ -475,7 +475,10 @@ class ItchPurchases(unittest.TestCase):
         hexed = ''.join('%%%02X' % ord(c) for c in KEY)
         for spelling in (KEY, KEY.lower(), KEY.upper(), hexed, hexed.lower(),
                          KEY[:5] + hexed[15:30] + KEY[10:],  # partly encoded
-                         KEY[:9], hexed[:30].lower()):  # starts of it, 8+ characters
+                         KEY[:9], hexed[:30].lower(),  # starts of it, 8+ characters
+                         ''.join('%%%02x' % ord(c) for c in KEY.lower()),  # encoded after a case change
+                         ''.join('%%%02X' % ord(c) for c in KEY.swapcase()),
+                         '%%%02x' % ord(KEY[0].swapcase()) + KEY[1:]):  # one encoded, recased letter
             cleaned = account._clean('before ' + spelling + ' after', KEY)
             self.assertEqual(cleaned, 'before [API key] after', spelling)
         self.assertEqual(account._clean('TESTKEY is short', KEY), 'TESTKEY is short')  # 7 characters: kept

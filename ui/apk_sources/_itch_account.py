@@ -96,7 +96,9 @@ def _clean(message, key):
     (The key's characters are letters, digits and _.-, so +/space encoding can't change it.)"""
     if not key:
         return message
-    tokens = ['(?:%s|%%%02x)' % (re.escape(c), ord(c)) for c in key]
+    # Each character: itself, or the percent-encoding of either of its letter cases.
+    tokens = ['(?:%s)' % '|'.join([re.escape(c)] + ['%%%02x' % ord(v) for v in sorted({c.lower(), c.upper()})])
+              for c in key]
     start, rest = re.compile(''.join(tokens[:8]), re.I), [re.compile(t, re.I) for t in tokens[8:]]
     out, pos = [], 0
     while True:
