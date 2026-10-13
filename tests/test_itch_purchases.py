@@ -471,6 +471,15 @@ class ItchPurchases(unittest.TestCase):
                                 check=lambda u: seen.append(u) or (_ for _ in ()).throw(SourceError('no thanks')))
         self.assertEqual(seen, ['https://storage.itch-cdn.example/a.apk'])
 
+    def test_a_partial_match_before_the_key_cannot_hide_its_start(self):
+        key = 'abcdefghABCDEFGHi1234567890'
+        for text in (key[:8].upper() + key.upper(), key[:9] + key, 'xx' + key[:8] + key + 'yy'):
+            out = account._clean(text, key)
+            self.assertNotIn('1234567890', out, (text, out))
+        import time
+        t0 = time.monotonic(); account._clean(('abcdefgh' * 12500)[:100000], key)
+        self.assertLess(time.monotonic() - t0, 2.0)
+
     def test_redaction_catches_every_spelling_of_the_key(self):
         hexed = ''.join('%%%02X' % ord(c) for c in KEY)
         for spelling in (KEY, KEY.lower(), KEY.upper(), hexed, hexed.lower(),

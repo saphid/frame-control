@@ -101,7 +101,7 @@ def _clean(message, key):
     tokens = ['(?:%s)' % '|'.join([re.escape(c)] + ['%%(?:25)?%02x' % ord(v) for v in sorted({c.lower(), c.upper()})])
               for c in key]
     start, rest = re.compile(''.join(tokens[:8]), re.I), [re.compile(t, re.I) for t in tokens[8:]]
-    out, pos = [], 0
+    spans, pos = [], 0
     while True:
         found = start.search(message, pos)
         if not found:
@@ -112,8 +112,17 @@ def _clean(message, key):
             if not more:
                 break
             end = more.end()
-        out += [message[pos:found.start()], '[API key]']
-        pos = end
+        spans.append((found.start(), end))
+        # Look again from the next character, not the end: a partial match just before the
+        # real key can overlap its start. Overlapping spans merge below.
+        pos = found.start() + 1
+    out, pos = [], 0
+    for a, b in spans:  # in order of start; only overlapping spans merge
+        if out and a < pos:
+            pos = max(pos, b)
+            continue
+        out += [message[pos:a], '[API key]']
+        pos = b
     return ''.join(out) + message[pos:]
 
 
