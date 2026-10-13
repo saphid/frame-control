@@ -124,18 +124,26 @@ def prune():
                 pass
 
 
+ANY = '*'  # as hosts: any public HTTPS host name (itch.io redirects downloads to its storage)
+
+
 def checked_url(url, hosts):
     try:
         p = urllib.parse.urlsplit(url)
         port = p.port
     except (ValueError, TypeError) as e:
         raise SourceError('Source returned an invalid URL') from e
-    if p.scheme != 'https' or p.username or p.password or port not in (None, 443) or p.hostname not in hosts:
+    host = p.hostname or ''
+    named = '.' in host and ':' not in host and not host.replace('.', '').isdigit()  # no IP literals
+    if (p.scheme != 'https' or p.username or p.password or port not in (None, 443)
+            or not (named if hosts == ANY else host in hosts)):
         raise SourceError('Source returned an unexpected download URL')
     return url
 
 
 class Redirect(urllib.request.HTTPRedirectHandler):
+    """Follow redirects only to hosts; an Authorization header never follows one."""
+
     def __init__(self, hosts):
         self.hosts = hosts
 
@@ -147,9 +155,10 @@ class Redirect(urllib.request.HTTPRedirectHandler):
         return result
 
 
-def open_url(url, hosts, headers=None):
+def open_url(url, hosts, headers=None, redirects=None):
+    """GET url, on one of hosts; it may redirect to redirects (default: hosts)."""
     checked_url(url, hosts)
-    return urllib.request.build_opener(Redirect(hosts)).open(
+    return urllib.request.build_opener(Redirect(hosts if redirects is None else redirects)).open(
         urllib.request.Request(url, headers={'User-Agent': UA, **(headers or {})}), timeout=60)
 
 
@@ -196,7 +205,7 @@ def read(url, hosts, headers=None, ttl=3600, name=None, hint=''):
         raise SourceError('Could not read source: ' + str(e)) from e
 
 
-def apk(url, hosts, digest=None, name=None):
+def apk(url, hosts, digest=None, name=None, headers=None, redirects=None):
     tmp = None
     name = name or _host(url)
     wait = wait_time(url)
@@ -205,7 +214,7 @@ def apk(url, hosts, digest=None, name=None):
     try:
         fd, tmp = tempfile.mkstemp(dir=cache(), suffix='.part')
         h = hashlib.sha256()
-        with os.fdopen(fd, 'wb') as f, open_url(url, hosts) as r:
+        with os.fdopen(fd, 'wb') as f, open_url(url, hosts, headers, redirects) as r:
             size = 0
             while True:
                 chunk = r.read(1 << 20)
