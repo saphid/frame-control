@@ -111,8 +111,10 @@ How it works, using the documented
   with a `url` field naming it, or the file itself. Frame Control follows the
   first two without the key, to HTTPS on port 443 only, and only to host names
   whose every address is public (no loopback, private, link-local, shared,
-  reserved or multicast address, however written). It connects to the address
-  it checked, and checks again on each further redirect. The APK then takes
+  reserved or multicast address, however written, nor an IPv6 form carrying
+  IPv4: mapped, compatible, NAT64, 6to4 or Teredo). It connects only to the
+  addresses it checked, trying each in turn, and checks again on each further
+  redirect. The APK then takes
   the normal install path, with the same ABI, OpenXR layer and Meta-services
   checks and warnings as any other store download.
 

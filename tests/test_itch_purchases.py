@@ -70,7 +70,8 @@ class FakeConnection:
 ADDRESSES = {'storage.itch-cdn.example': '151.101.1.1', 'other-cdn.example': '151.101.2.2',
              'localhost.': '127.0.0.1', 'frame.local': '192.168.1.20', '127.0.0x0.1': '127.0.0.1',
              'intranet.example': '10.0.0.5', 'mapped.example': '::ffff:127.0.0.1', 'cgnat.example': '100.64.0.1',
-             'mixed.example': ('151.101.1.1', '10.0.0.5')}
+             'mixed.example': ('151.101.1.1', '10.0.0.5'), 'dual.example': ('2a04:4e42::81', '151.101.1.1'),
+             'nat64.example': '64:ff9b:1::a00:1'}
 
 
 class FakeItch:
@@ -145,10 +146,13 @@ class ItchPurchases(unittest.TestCase):
                 raise _web.socket.gaierror('unknown test host ' + host)
             found = ADDRESSES[host]
             return [(10 if ':' in a else 2, 1, 6, '', (a, port)) for a in ([found] if isinstance(found, str) else found)]
-        self.connected = []
+        self.connected, self.unreachable = [], set()
 
-        def connect(host, address, timeout):
+        def connect(host, address, timeout, attempt=None):
             self.connected.append((host, address))
+            if address[0] in self.unreachable:
+                raise OSError('Network is unreachable')
+            self.assertLessEqual(attempt, 10)
             return FakeConnection(self.web, host)
         for p in (patch.object(_web.socket, 'getaddrinfo', lookup), patch.object(_web, '_connect', connect)):
             p.start()
@@ -384,7 +388,8 @@ class ItchPurchases(unittest.TestCase):
         for location in ('https://localhost./a.apk', 'https://frame.local/a.apk', 'https://127.0.0x0.1/a.apk',
                          'https://intranet.example/a.apk', 'https://mapped.example/a.apk',
                          'https://cgnat.example/a.apk', 'https://mixed.example/a.apk',
-                         'https://127.0.0.1/a.apk', 'https://[::1]/a.apk', 'https://169.254.169.254/a.apk'):
+                         'https://127.0.0.1/a.apk', 'https://[::1]/a.apk', 'https://169.254.169.254/a.apk',
+                         'https://nat64.example/a.apk', 'https://[4000::1]/a.apk', 'https://[64:ff9b:1::a00:1]/a.apk'):
             self.storage(location)
             with self.assertRaisesRegex(SourceError, 'private network address'):
                 itch.download(self.owned_source(), '341190')
@@ -392,13 +397,32 @@ class ItchPurchases(unittest.TestCase):
         self.assertEqual({urllib.parse.urlsplit(u).hostname for u, _ in self.web.calls}, {'api.itch.io'})
 
     def test_public_address_rules(self):
-        for ip in ('151.101.1.1', '2a04:4e42::81'):
+        for ip in ('151.101.1.1', '8.8.8.8', '2a04:4e42::81', '2001:4860:4860::8888'):
             self.assertTrue(_web.public_address(ip), ip)
         for ip in ('127.0.0.1', '10.1.2.3', '172.16.0.1', '192.168.0.1', '169.254.169.254', '100.64.0.1',
-                   '0.0.0.0', '224.0.0.1', '255.255.255.255', '::1', 'fe80::1%en0', 'fc00::1',
-                   '::ffff:10.0.0.1', '::ffff:127.0.0.1', 'ff02::1', 'not an ip'):
+                   '0.0.0.0', '224.0.0.1', '255.255.255.255', '240.0.0.1', '::1', '::', 'fe80::1%en0', 'fc00::1',
+                   'ff02::1', 'not an ip',
+                   '4000::1', '100::1', 'f000::1',  # reserved: Python 3.9's is_global says True for 4000::1
+                   '::ffff:10.0.0.1', '::ffff:127.0.0.1', '::ffff:8.8.8.8',  # IPv4-mapped
+                   '::a00:1', '::8.8.8.8',  # IPv4-compatible
+                   '64:ff9b::a00:1', '64:ff9b::808:808',  # NAT64 well-known prefix
+                   '64:ff9b:1::a00:1', '64:ff9b:1::808:808',  # NAT64 local-use: 3.9's is_global says True
+                   '2002:a00:1::1', '2002:808:808::1',  # 6to4
+                   '2001:0:4136:e378:8000:63bf:3fff:fdd2'):  # Teredo
             self.assertFalse(_web.public_address(ip), ip)
-        self.assertEqual(_web.resolve_public('storage.itch-cdn.example'), ('151.101.1.1', 443))
+        self.assertEqual(_web.resolve_public('storage.itch-cdn.example'), [('151.101.1.1', 443)])
+        self.assertEqual(_web.resolve_public('dual.example'), [('2a04:4e42::81', 443), ('151.101.1.1', 443)])
+
+    def test_an_unreachable_address_falls_back_to_the_next_checked_one(self):
+        self.connect()
+        self.storage('https://dual.example/upload/503/OrbitGarden-Quest.apk')
+        self.web.route('dual.example/upload/503/OrbitGarden-Quest.apk', Reply('https://dual.example/', 200, apk_bytes()))
+        self.unreachable.add('2a04:4e42::81')
+        self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+        self.assertEqual(self.connected, [('dual.example', ('2a04:4e42::81', 443)), ('dual.example', ('151.101.1.1', 443))])
+        self.unreachable.add('151.101.1.1')
+        with self.assertRaisesRegex(SourceError, '^Could not download APK: Network is unreachable$'):
+            itch.download(self.owned_source(), '341190')
 
     def test_storage_refusals_are_download_errors_not_rate_limits(self):
         self.connect()
@@ -457,6 +481,59 @@ class ItchPurchases(unittest.TestCase):
         worker.join(5)
         self.assertRegex(str(outcome.get('error')), 'changed while the key was being checked; nothing was saved')
         self.assertFalse(account.path().exists())
+        self.assertFalse(account.connected())
+
+    def test_an_old_refusal_does_not_undo_a_reconnect_with_the_same_key(self):
+        self.connect()
+        listing, release, profile_ok = threading.Event(), threading.Event(), [True]
+
+        def slow_owned(req, query):
+            listing.set()
+            release.wait(5)
+            return Reply(req.full_url, 401, b'')
+        self.web.route('api.itch.io/profile/owned-keys', slow_owned)
+        self.web.route('api.itch.io/profile', lambda req, q: {'user': {'username': 'player'}} if profile_ok[0]
+                       else Reply(req.full_url, 401, b''))
+        outcome = {}
+
+        def run():
+            try:
+                account.owned_keys()
+            except SourceError as e:
+                outcome['error'] = e
+        worker = threading.Thread(target=run)
+        worker.start()
+        self.assertTrue(listing.wait(5))
+        account.disconnect()
+        account.connect(KEY)  # same key, connected again while the old listing waits
+        profile_ok[0] = False  # the old listing's confirmation now sees a refusal
+        release.set()
+        worker.join(5)
+        self.assertIsInstance(outcome.get('error'), account.BadKey)
+        self.assertTrue(account.path().exists())  # the fresh connection survives
+        self.assertEqual(json.loads(account.path().read_text())['key'], KEY)
+
+    def test_redacted_text_is_not_mistaken_for_a_key_error(self):
+        self.connect()
+        before = len(self.web.urls('api.itch.io/profile'))
+        self.web.route('api.itch.io/profile/owned-keys', {'errors': ['Invalid request: ' + KEY]})
+        with self.assertRaisesRegex(SourceError, r'^itch.io: Invalid request: \[API key\]$') as caught:
+            account.owned_keys()
+        self.assertNotIsInstance(caught.exception, account.BadKey)
+        self.assertTrue(account.connected())
+        self.assertEqual(len(self.web.urls('api.itch.io/profile')), before)  # not even a key check needed
+
+    def test_an_invalid_key_error_elsewhere_is_confirmed_before_deleting(self):
+        self.connect()
+        self.web.route('api.itch.io/profile/owned-keys', {'errors': ['invalid key']})
+        with self.assertRaisesRegex(SourceError, '^itch.io: invalid key$') as caught:
+            account.owned_keys()  # /profile still accepts the key: keep it
+        self.assertNotIsInstance(caught.exception, account.BadKey)
+        self.assertTrue(account.connected())
+        account._forget()
+        self.web.route('api.itch.io/profile', {'errors': ['invalid key']})
+        with self.assertRaisesRegex(account.BadKey, 'no longer accepts'):
+            account.owned_keys()
         self.assertFalse(account.connected())
 
     def test_concurrent_connects_never_share_a_temporary_file(self):

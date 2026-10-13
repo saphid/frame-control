@@ -112,12 +112,13 @@ def _open(url, key, accept='application/json'):
         url, headers={'User-Agent': _web.UA, 'Authorization': 'Bearer ' + key, 'Accept': accept}), timeout=60)
 
 
-def _refused(code, key, api_path):
-    """401/403 from api.itch.io: BadKey only once /profile confirms the key itself is refused;
-    otherwise it's this request (a game or upload this purchase doesn't cover)."""
+def _refused(code, key, api_path, message=None):
+    """A refusal that may be about the key (401/403, or an "invalid key" error): BadKey only
+    once /profile confirms the key itself is refused; otherwise it's this request (a game or
+    upload this purchase doesn't cover), and the key stays."""
     if api_path != '/profile':
         _get('/profile', key)  # raises BadKey if the key is the problem
-        raise SourceError('itch.io refused this request (HTTP %d); your purchase may not include it' % code)
+        raise SourceError(message or 'itch.io refused this request (HTTP %d); your purchase may not include it' % code)
     raise BadKey(BAD_KEY)
 
 
@@ -126,7 +127,10 @@ def _network_error(e, key):
     return SourceError(_clean('Could not reach itch.io: ' + str(reason), key))
 
 
-def _checked(raw, key):
+BAD_KEY_TEXT = re.compile(r'\b(invalid|revoked|expired)\b.*\bkey\b|\bkey\b.*\b(invalid|revoked|expired)\b', re.I)
+
+
+def _checked(raw, key, api_path):
     """Decoded JSON object from api.itch.io, or SourceError/BadKey from its errors array."""
     if len(raw) > 8 * 1024 * 1024:
         raise SourceError('itch.io response is too large')
@@ -138,11 +142,13 @@ def _checked(raw, key):
         raise SourceError('itch.io returned an invalid response')
     errors = data.get('errors')
     if errors:  # documented: errors is an array of strings
+        messages = [str(m) for m in errors if isinstance(m, (str, int))]
+        # Judged on itch.io's own words: redacted text says "[API key]", which would look like a key error.
+        about_key = any(BAD_KEY_TEXT.search(m) and 'download key' not in m.lower() for m in messages)
         # Each message loses the key before joining and shortening, so no part of it survives the cut.
-        text = _clean('; '.join(_clean(str(m), key) for m in errors if isinstance(m, (str, int)))[:200], key)
-        if re.search(r'\b(invalid|revoked|expired)\b.*\bkey\b|\bkey\b.*\b(invalid|revoked|expired)\b', text, re.I) \
-                and 'download key' not in text.lower():
-            raise BadKey(BAD_KEY)
+        text = _clean('; '.join(_clean(m, key) for m in messages)[:200], key)
+        if about_key:
+            _refused(None, key, api_path, 'itch.io: ' + text)
         raise SourceError('itch.io: ' + (text or 'request refused'))
     return data
 
@@ -164,7 +170,7 @@ def _get(api_path, key, params=None):
         raise
     except (OSError, ValueError) as e:
         raise _network_error(e, key) from None
-    return _checked(raw, key)
+    return _checked(raw, key, api_path)
 
 
 def _cached(key, what, load):
@@ -181,12 +187,15 @@ def _cached(key, what, load):
 
 def _use(call):
     """Run call(key); a key itch.io now refuses is removed, so the account shows disconnected."""
-    key = _key()
+    with _account:  # the key and the connection it belongs to, read together
+        key, generation = _key(), _generation[0]
     try:
         return call(key)
     except BadKey:
         with _account:
-            if (_load() or {}).get('key') == key:  # not a key connected meanwhile
+            # Only the connection this call started with: a reconnect meanwhile (even with
+            # the same key) has been checked since, and is not undone by this older verdict.
+            if _generation[0] == generation and (_load() or {}).get('key') == key:
                 _delete()
         raise BadKey(REVOKED) from None
 
@@ -318,7 +327,7 @@ def _fetch(url, key):
                 except (OSError, ValueError, zipfile.BadZipFile) as e:
                     raise SourceError(_clean('Could not download APK: ' + str(e), key)) from None
             try:
-                target = _checked(r.read(1024 * 1024 + 1), key).get('url')
+                target = _checked(r.read(1024 * 1024 + 1), key, '/uploads').get('url')
             except (OSError, ValueError) as e:
                 raise _network_error(e, key) from None
     if not isinstance(target, str) or not target:

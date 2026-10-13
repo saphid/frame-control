@@ -246,40 +246,61 @@ def apk(url, hosts, digest=None, name=None):
         raise SourceError('Could not download APK: ' + str(e)) from e
 
 
+# IPv6 forms that carry an IPv4 address to some translator (mapped, compatible, NAT64 incl.
+# local-use, 6to4, Teredo): the IPv4 inside may be private, so they are refused outright.
+_TRANSLATED = tuple(ipaddress.ip_network(n) for n in
+                    ('::/96', '::ffff:0:0/96', '64:ff9b::/96', '64:ff9b:1::/48', '2002::/16', '2001::/32'))
+
+
 def public_address(ip):
     """True for an address on the public internet: never loopback, private, link-local,
-    shared (CGNAT), reserved or multicast, including IPv4 written oddly or mapped into IPv6."""
+    shared (CGNAT), reserved, unspecified or multicast, nor an IPv6 wrapper around IPv4.
+    Each test is explicit: Python 3.9's is_global alone lets reserved IPv6 through."""
     try:
         a = ipaddress.ip_address(ip.split('%', 1)[0])
     except ValueError:
         return False
-    if a.version == 6 and a.ipv4_mapped:
-        a = a.ipv4_mapped
-    return a.is_global and not a.is_multicast
+    if a.version == 6 and any(a in n for n in _TRANSLATED):
+        return False
+    return a.is_global and not (a.is_reserved or a.is_private or a.is_loopback or a.is_link_local
+                                or a.is_multicast or a.is_unspecified)
 
 
 def resolve_public(host):
-    """host's address for port 443, if every address it has is public; else SourceError."""
+    """host's addresses for port 443, if every address it has is public; else SourceError."""
     try:
         addresses = socket.getaddrinfo(host, 443, type=socket.SOCK_STREAM)
     except (OSError, UnicodeError) as e:
         raise SourceError('Could not find the download server ' + host) from e
     if not addresses or not all(public_address(a[4][0]) for a in addresses):
         raise SourceError('The download server is on a private network address; refused')
-    return addresses[0][4][:2]
+    found = []
+    for a in addresses:
+        if a[4][:2] not in found:
+            found.append(a[4][:2])
+    return found
 
 
-def _public_connection(host, timeout):
+def _public_connection(host, timeout, attempt=10):
     """A verified TLS connection to host:443, made to an address checked to be public.
 
-    The checked address is the one connected to, so a second lookup can't swap in another."""
-    return _connect(host, resolve_public(host), timeout)
+    Each checked address is tried in turn (attempt seconds each to connect); the one
+    connected to is always one that was checked, so a second lookup can't swap in another."""
+    error = None
+    for address in resolve_public(host):
+        try:
+            return _connect(host, address, timeout, min(attempt, timeout))
+        except OSError as e:  # unreachable, refused, or its TLS failed: try the next one
+            error = e
+    raise error
 
 
-def _connect(host, address, timeout):
-    sock = socket.create_connection(address, timeout=timeout)
+def _connect(host, address, timeout, attempt=None):
+    """TLS to exactly address, verified as host; attempt bounds the connect and handshake."""
+    sock = socket.create_connection(address, timeout=attempt or timeout)
     try:
         sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
+        sock.settimeout(timeout)
     except BaseException:
         sock.close()
         raise
