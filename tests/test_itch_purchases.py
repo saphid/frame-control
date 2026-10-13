@@ -4,7 +4,8 @@ Offline: a fake HTTPS layer under urllib's real opener (so redirects and header
 handling are the real ones) serves the recorded JSON in fixtures/itch_account.
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
-import contextlib, email.message, http.client, io, ipaddress, json, os, sys, tempfile, threading, unittest
+import contextlib, email.message, http.client, io, ipaddress, json, os, socket, sys, tempfile, threading, time
+import unittest
 import urllib.error, urllib.parse, urllib.request, zipfile
 from pathlib import Path
 from unittest.mock import patch
@@ -71,7 +72,9 @@ ADDRESSES = {'storage.itch-cdn.example': '151.101.1.1', 'other-cdn.example': '15
              'localhost.': '127.0.0.1', 'frame.local': '192.168.1.20', '127.0.0x0.1': '127.0.0.1',
              'intranet.example': '10.0.0.5', 'mapped.example': '::ffff:127.0.0.1', 'cgnat.example': '100.64.0.1',
              'mixed.example': ('151.101.1.1', '10.0.0.5'), 'dual.example': ('2a04:4e42::81', '151.101.1.1'),
-             'nat64.example': '64:ff9b:1::a00:1'}
+             'nat64.example': '64:ff9b:1::a00:1', 'sitelocal.example': 'fec0::1',
+             'many.example': tuple('151.101.%d.1' % n for n in range(1, 9))}
+REAL_CONNECT = _web._connect
 
 
 class FakeItch:
@@ -148,11 +151,11 @@ class ItchPurchases(unittest.TestCase):
             return [(10 if ':' in a else 2, 1, 6, '', (a, port)) for a in ([found] if isinstance(found, str) else found)]
         self.connected, self.unreachable = [], set()
 
-        def connect(host, address, timeout, attempt=None):
+        def connect(host, address, timeout, deadline):
             self.connected.append((host, address))
             if address[0] in self.unreachable:
                 raise OSError('Network is unreachable')
-            self.assertLessEqual(attempt, 10)
+            self.assertLessEqual(deadline - time.monotonic(), _web.CONNECT_BUDGET)
             return FakeConnection(self.web, host)
         for p in (patch.object(_web.socket, 'getaddrinfo', lookup), patch.object(_web, '_connect', connect)):
             p.start()
@@ -389,7 +392,8 @@ class ItchPurchases(unittest.TestCase):
                          'https://intranet.example/a.apk', 'https://mapped.example/a.apk',
                          'https://cgnat.example/a.apk', 'https://mixed.example/a.apk',
                          'https://127.0.0.1/a.apk', 'https://[::1]/a.apk', 'https://169.254.169.254/a.apk',
-                         'https://nat64.example/a.apk', 'https://[4000::1]/a.apk', 'https://[64:ff9b:1::a00:1]/a.apk'):
+                         'https://nat64.example/a.apk', 'https://[4000::1]/a.apk', 'https://[64:ff9b:1::a00:1]/a.apk',
+                         'https://[fec0::1]/a.apk', 'https://sitelocal.example/a.apk'):
             self.storage(location)
             with self.assertRaisesRegex(SourceError, 'private network address'):
                 itch.download(self.owned_source(), '341190')
@@ -408,10 +412,113 @@ class ItchPurchases(unittest.TestCase):
                    '64:ff9b::a00:1', '64:ff9b::808:808',  # NAT64 well-known prefix
                    '64:ff9b:1::a00:1', '64:ff9b:1::808:808',  # NAT64 local-use: 3.9's is_global says True
                    '2002:a00:1::1', '2002:808:808::1',  # 6to4
-                   '2001:0:4136:e378:8000:63bf:3fff:fdd2'):  # Teredo
+                   '2001:0:4136:e378:8000:63bf:3fff:fdd2',  # Teredo
+                   'fec0::1', 'feff::1',  # site-local: Python 3.9's is_global says True
+                   'fc00::1', 'fd12:3456::1', 'fe80::1', 'ff00::1', 'ff0e::1', '8000::1', 'c000::1',
+                   '2001:db8::1', '3fff::1',  # documentation
+                   '2001:10::1', '2001:20::1', '2001:2::1'):  # ORCHID, ORCHIDv2, benchmarking
             self.assertFalse(_web.public_address(ip), ip)
         self.assertEqual(_web.resolve_public('storage.itch-cdn.example'), [('151.101.1.1', 443)])
         self.assertEqual(_web.resolve_public('dual.example'), [('2a04:4e42::81', 443), ('151.101.1.1', 443)])
+
+    def test_a_storage_url_carrying_the_key_is_refused(self):
+        self.connect()
+        for location in ('https://storage.itch-cdn.example/a.apk?api_key=' + KEY,
+                         'https://storage.itch-cdn.example/a.apk?API_KEY=someone-elses',
+                         'https://storage.itch-cdn.example/a.apk?apikey=x',
+                         'https://storage.itch-cdn.example/' + KEY + '/a.apk',
+                         'https://storage.itch-cdn.example/a.apk#' + KEY[:10],
+                         'https://storage.itch-cdn.example/a.apk?x=' + urllib.parse.quote('%' + KEY),
+                         'https://' + KEY.lower() + '.itch-cdn.example/a.apk'):
+            self.storage(location)
+            with self.assertRaisesRegex(SourceError, 'carrying your API key; refused') as caught:
+                itch.download(self.owned_source(), '341190')
+            self.assertNotIn(KEY.lower(), str(caught.exception).lower())
+        self.web.route('api.itch.io/uploads/503/download',
+                       Reply('https://api.itch.io/uploads/503/download', 200,
+                             {'url': 'https://storage.itch-cdn.example/a.apk?api_key=' + KEY},
+                             {'Content-Type': 'application/json'}))
+        with self.assertRaisesRegex(SourceError, 'carrying your API key; refused'):
+            itch.download(self.owned_source(), '341190')
+        self.assertEqual(self.connected, [])
+        # A storage URL's own signature or token parameters are fine.
+        self.storage('https://storage.itch-cdn.example/upload/503/OrbitGarden-Quest.apk?token=abc&Signature=x')
+        self.assertTrue(os.path.isfile(itch.download(self.owned_source(), '341190')['apk']))
+
+    def test_storage_errors_lose_the_key_but_keep_their_kind(self):
+        self.connect()
+        self.storage()
+        with patch.object(_web, 'public_apk', side_effect=SourceLimited('slow down ' + KEY, 90)):
+            with self.assertRaises(SourceLimited) as caught:
+                itch.download(self.owned_source(), '341190')
+        self.assertEqual((str(caught.exception), caught.exception.retry_after), ('slow down [API key]', 90))
+        with patch.object(_web, 'public_apk', side_effect=SourceError('Could not find the download server ' + KEY)):
+            with self.assertRaisesRegex(SourceError, r'^Could not find the download server \[API key\]$') as caught:
+                itch.download(self.owned_source(), '341190')
+        self.assertIsNone(caught.exception.__cause__)
+        self.assertTrue(caught.exception.__suppress_context__)
+
+    def test_broken_http_responses_are_readable_and_lose_the_key(self):
+        self.connect()
+
+        class Truncated(Reply):
+            def read(self, *args):
+                raise http.client.IncompleteRead(b'{"owned_keys": [' + KEY.encode(), 1000)
+        cases = [http.client.BadStatusLine('HTTP/1.1 ' + KEY + ' oops'),
+                 lambda req, q: Truncated(req.full_url, 200, b''),
+                 http.client.RemoteDisconnected('closed after ' + KEY)]
+        for case in cases:
+            account._forget()
+            self.web.route('api.itch.io/profile/owned-keys', case)
+            with self.assertRaisesRegex(SourceError, '^Could not reach itch.io: ') as caught:
+                account.owned_keys()
+            self.assertNotIn(KEY, str(caught.exception))
+            self.assertIsNone(caught.exception.__cause__)
+            self.assertTrue(caught.exception.__suppress_context__)
+            self.assertTrue(account.connected())
+        # The same on the download request, for each kind of answer it reads.
+        for case in (http.client.BadStatusLine('HTTP/1.1 ' + KEY),
+                     lambda req, q: Truncated(req.full_url, 200, b'', {'Content-Type': 'application/json'}),
+                     lambda req, q: Truncated(req.full_url, 200, b'', {'Content-Type': 'application/octet-stream'})):
+            self.web.route('api.itch.io/uploads/503/download', case)
+            with self.assertRaises(SourceError) as caught:
+                account.download(503, 9001)
+            self.assertNotIn(KEY, str(caught.exception))
+            self.assertRegex(str(caught.exception), '^Could not (reach itch.io|download APK): ')
+
+    def test_connecting_shares_one_deadline_across_addresses(self):
+        clock, deadlines = [1000.0], []
+
+        def slow(host, address, timeout, deadline):
+            deadlines.append(deadline)
+            clock[0] += 7  # each address hangs for 7 s before failing
+            raise socket.timeout('timed out')
+        with patch.object(_web.time, 'monotonic', lambda: clock[0]), patch.object(_web, '_connect', slow):
+            with self.assertRaises(OSError):
+                _web._public_connection('many.example', 60)
+        self.assertEqual(len(set(deadlines)), 1)  # one deadline for every attempt
+        self.assertEqual(deadlines[0], 1000.0 + _web.CONNECT_BUDGET)
+        self.assertEqual(len(deadlines), 3)  # 8 addresses, but only 21 s of trying, not 56
+        self.assertLessEqual(clock[0] - 1000.0, _web.CONNECT_BUDGET + 7)
+        deadlines.clear()
+        clock[0] = 1000.0
+        with patch.object(_web.time, 'monotonic', lambda: clock[0]), patch.object(_web, '_connect', slow):
+            with self.assertRaises(OSError):
+                _web._public_connection('many.example', 5)  # the caller's shorter timeout wins
+        self.assertEqual(deadlines, [1005.0])
+
+    def test_a_stalled_handshake_stops_at_the_deadline(self):
+        # A local server that accepts and then says nothing: the TLS handshake never completes.
+        server = socket.socket()
+        server.bind(('127.0.0.1', 0))
+        server.listen(1)
+        self.addCleanup(server.close)
+        start = time.monotonic()
+        with self.assertRaises(OSError):
+            REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, start + 0.5)
+        self.assertLess(time.monotonic() - start, 3)
+        with self.assertRaises(OSError):  # a deadline already gone: no connection attempt at all
+            REAL_CONNECT('storage.itch-cdn.example', server.getsockname(), 60, time.monotonic() - 1)
 
     def test_an_unreachable_address_falls_back_to_the_next_checked_one(self):
         self.connect()

@@ -8,10 +8,10 @@ The key never goes into a URL, an error, a log line or an API response. Owned-ke
 listings stay in memory, never in the disk cache.
 API: https://itch.io/docs/api/serverside. See docs/apk-repos.md.
 """
-import hashlib, json, os, re, tempfile, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
+import hashlib, http.client, json, os, re, tempfile, threading, time, urllib.error, urllib.parse, urllib.request, zipfile
 
 import frame_host
-from . import SourceError, _web
+from . import SourceError, SourceLimited, _web
 
 API = 'https://api.itch.io'
 HOSTS = ('api.itch.io',)
@@ -25,6 +25,9 @@ BAD_KEY = ('itch.io did not accept the API key. Create one in itch.io settings >
 REVOKED = ('itch.io no longer accepts the saved API key, so it was removed. '
            'Create a new one in itch.io settings > API keys and connect again')
 REDIRECTS = (301, 302, 303, 307, 308)
+# Everything a connection or response can raise. http.client's errors (IncompleteRead,
+# BadStatusLine...) are not OSErrors, and BadStatusLine repeats what the server sent.
+NETWORK = (OSError, ValueError, http.client.HTTPException)
 _lock = threading.Lock()  # the cache
 _cache = {}  # (generation, key digest, what) -> (time, value)
 _account = threading.Lock()  # saving and deleting the key file
@@ -168,7 +171,7 @@ def _get(api_path, key, params=None):
         raise SourceError('itch.io returned HTTP error %d; try again later' % e.code) from None
     except SourceError:
         raise
-    except (OSError, ValueError) as e:
+    except NETWORK as e:
         raise _network_error(e, key) from None
     return _checked(raw, key, api_path)
 
@@ -317,22 +320,46 @@ def _fetch(url, key):
             raise SourceError('itch.io returned HTTP error %d for the download; try again later' % e.code) from None
     except SourceError:
         raise
-    except (OSError, ValueError) as e:
+    except NETWORK as e:
         raise _network_error(e, key) from None
     else:
         with r:
             if 'json' not in (r.headers.get('Content-Type') or '').lower():
                 try:
                     return _web.save_apk(r)  # served by api.itch.io itself
-                except (OSError, ValueError, zipfile.BadZipFile) as e:
+                except NETWORK + (zipfile.BadZipFile,) as e:
                     raise SourceError(_clean('Could not download APK: ' + str(e), key)) from None
             try:
-                target = _checked(r.read(1024 * 1024 + 1), key, '/uploads').get('url')
-            except (OSError, ValueError) as e:
+                raw = r.read(1024 * 1024 + 1)
+            except NETWORK as e:
                 raise _network_error(e, key) from None
+        target = _checked(raw, key, '/uploads').get('url')
     if not isinstance(target, str) or not target:
         raise SourceError('itch.io did not say where to download the file')
-    return _web.public_apk(urllib.parse.urljoin(url, target), NAME)  # no key past this point
+    target = urllib.parse.urljoin(url, target)
+    if _carries_key(target, key):
+        raise SourceError('itch.io pointed the download at a URL carrying your API key; refused, '
+                          'so the key is not sent to the storage server')
+    try:
+        return _web.public_apk(target, NAME)  # no key past this point
+    except SourceLimited as e:
+        raise SourceLimited(_clean(str(e), key), e.retry_after) from None
+    except SourceError as e:
+        raise type(e)(_clean(str(e), key)) from None
+
+
+def _carries_key(url, key):
+    """True if url holds the key (or 8+ characters of its start, in any case, anywhere), or an
+    itch.io API-key parameter: go-itchio puts the key in ?api_key=, and storage must never get it.
+    Other parameters (signatures, tokens) are the storage URL's own and are kept."""
+    if _clean(url.lower(), key.lower()) != url.lower():
+        return True
+    unquoted = urllib.parse.unquote(url).lower()
+    if _clean(unquoted, key.lower()) != unquoted:
+        return True
+    names = {name.lower() for name, _ in urllib.parse.parse_qsl(urllib.parse.urlsplit(url).query,
+                                                                  keep_blank_values=True)}
+    return bool(names & {'api_key', 'apikey', 'api-key'})
 
 
 def download(upload_id, download_key_id):

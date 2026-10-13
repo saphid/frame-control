@@ -246,21 +246,30 @@ def apk(url, hosts, digest=None, name=None):
         raise SourceError('Could not download APK: ' + str(e)) from e
 
 
-# IPv6 forms that carry an IPv4 address to some translator (mapped, compatible, NAT64 incl.
-# local-use, 6to4, Teredo): the IPv4 inside may be private, so they are refused outright.
-_TRANSLATED = tuple(ipaddress.ip_network(n) for n in
-                    ('::/96', '::ffff:0:0/96', '64:ff9b::/96', '64:ff9b:1::/48', '2002::/16', '2001::/32'))
+# IPv6 is an allow-list: only global unicast (2000::/3), which rules out everything else at
+# once (loopback, unspecified, mapped/compatible IPv4, NAT64 64:ff9b::, site-local fec0::,
+# unique-local fc00::, link-local, multicast, reserved). Inside it, these special blocks are
+# refused too: 6to4 and Teredo carry IPv4 that may be private; the rest aren't the internet.
+_GLOBAL6 = ipaddress.ip_network('2000::/3')
+_SPECIAL6 = tuple(ipaddress.ip_network(n) for n in (
+    '2001::/32',      # Teredo
+    '2001:2::/48',    # benchmarking
+    '2001:10::/28',   # ORCHID
+    '2001:20::/28',   # ORCHIDv2
+    '2001:db8::/32',  # documentation
+    '2002::/16',      # 6to4
+    '3fff::/20'))     # documentation (2024)
 
 
 def public_address(ip):
     """True for an address on the public internet: never loopback, private, link-local,
-    shared (CGNAT), reserved, unspecified or multicast, nor an IPv6 wrapper around IPv4.
-    Each test is explicit: Python 3.9's is_global alone lets reserved IPv6 through."""
+    site-local, shared (CGNAT), reserved, unspecified or multicast, nor an IPv6 wrapper
+    around IPv4. Python 3.9's is_global alone lets several of these through."""
     try:
         a = ipaddress.ip_address(ip.split('%', 1)[0])
     except ValueError:
         return False
-    if a.version == 6 and any(a in n for n in _TRANSLATED):
+    if a.version == 6 and (a not in _GLOBAL6 or any(a in n for n in _SPECIAL6)):
         return False
     return a.is_global and not (a.is_reserved or a.is_private or a.is_loopback or a.is_link_local
                                 or a.is_multicast or a.is_unspecified)
@@ -281,31 +290,59 @@ def resolve_public(host):
     return found
 
 
-def _public_connection(host, timeout, attempt=10):
+CONNECT_BUDGET = 20  # seconds for connecting, all addresses and TLS handshakes together
+
+
+def _public_connection(host, timeout, budget=CONNECT_BUDGET):
     """A verified TLS connection to host:443, made to an address checked to be public.
 
-    Each checked address is tried in turn (attempt seconds each to connect); the one
-    connected to is always one that was checked, so a second lookup can't swap in another."""
+    Each checked address is tried in turn, all within one deadline (budget, or timeout if
+    shorter) covering both connecting and the handshake. The one connected to is always one
+    that was checked, so a second lookup can't swap in another. timeout is for reads after."""
+    deadline = time.monotonic() + min(budget, timeout)
     error = None
     for address in resolve_public(host):
+        if time.monotonic() >= deadline:
+            break
         try:
-            return _connect(host, address, timeout, min(attempt, timeout))
+            return _connect(host, address, timeout, deadline)
         except OSError as e:  # unreachable, refused, or its TLS failed: try the next one
             error = e
-    raise error
+    raise error or socket.timeout('Timed out connecting to ' + host)
 
 
-def _connect(host, address, timeout, attempt=None):
-    """TLS to exactly address, verified as host; attempt bounds the connect and handshake."""
-    sock = socket.create_connection(address, timeout=attempt or timeout)
+def _connect(host, address, timeout, deadline):
+    """TLS to exactly address, verified as host, connected and handshaken before deadline
+    (a time.monotonic() value); reads then get timeout seconds each."""
+    left = deadline - time.monotonic()
+    if left <= 0:
+        raise socket.timeout('Timed out connecting to ' + host)
+    sock = socket.create_connection(address, timeout=left)
+    live = [sock]
+
+    def expire():  # a server trickling the handshake byte by byte still stops at the deadline
+        try:
+            socket.socket.shutdown(live[0], socket.SHUT_RDWR)
+        except OSError:
+            pass
+    watchdog = threading.Timer(max(0, deadline - time.monotonic()), expire)
+    watchdog.daemon = True
+    watchdog.start()
     try:
-        sock = ssl.create_default_context().wrap_socket(sock, server_hostname=host)
-        sock.settimeout(timeout)
+        sock.settimeout(max(0.001, deadline - time.monotonic()))
+        live[0] = ssl.create_default_context().wrap_socket(sock, server_hostname=host,
+                                                           do_handshake_on_connect=False)
+        live[0].do_handshake()
+        if time.monotonic() >= deadline:
+            raise socket.timeout('Timed out connecting to ' + host)
+        live[0].settimeout(timeout)
     except BaseException:
-        sock.close()
+        live[0].close()
         raise
+    finally:
+        watchdog.cancel()
     conn = http.client.HTTPConnection(host, 443, timeout=timeout)
-    conn.sock = sock
+    conn.sock = live[0]
     return conn
 
 

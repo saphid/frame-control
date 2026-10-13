@@ -110,11 +110,16 @@ How it works, using the documented
   The answer accepted is a redirect to itch.io's storage host, a JSON body
   with a `url` field naming it, or the file itself. Frame Control follows the
   first two without the key, to HTTPS on port 443 only, and only to host names
-  whose every address is public (no loopback, private, link-local, shared,
-  reserved or multicast address, however written, nor an IPv6 form carrying
-  IPv4: mapped, compatible, NAT64, 6to4 or Teredo). It connects only to the
-  addresses it checked, trying each in turn, and checks again on each further
-  redirect. The APK then takes
+  whose every address is public. For IPv4 that means no loopback, private,
+  link-local, shared, reserved or multicast address, however written. IPv6 is
+  an allow-list: global unicast (`2000::/3`) only, minus 6to4, Teredo,
+  documentation, ORCHID and benchmarking blocks, so mapped or NAT64 IPv4,
+  site-local, unique-local and the rest are all refused. It connects only to
+  the addresses it checked, trying each in turn within one 20-second budget
+  for connecting and the TLS handshake, and checks again on each further
+  redirect. A storage URL that contains the API key (or 8+ characters of it,
+  anywhere) or an `api_key` parameter is refused, so the key never reaches
+  the storage server. The APK then takes
   the normal install path, with the same ABI, OpenXR layer and Meta-services
   checks and warnings as any other store download.
 
