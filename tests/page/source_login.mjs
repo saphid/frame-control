@@ -18,7 +18,7 @@ function grab(name) {
 }
 const { moveLogin, sourceToken } = new Function(
   "const esc = s => String(s).replace(/[&<>\"']/g, c => `&#${c.charCodeAt(0)};`); const storeName = s => s;\n" +
-  grab("moveLogin") + grab("sourceToken") + "return { moveLogin, sourceToken };")();
+  grab("decodeLenient") + grab("moveLogin") + grab("sourceToken") + "return { moveLogin, sourceToken };")();
 
 function form(url, username = "", password = "") {
   const details = { open: false };
@@ -37,7 +37,7 @@ moveLogin(f);
 if (f.elements.url.value.includes("fromurl") || f.elements.username.value !== "typed" || f.elements.password.value !== "typedpw")
   fail("typed login replaced, or address kept the login");
 
-// Undecodable logins and addresses the URL parser rejects still lose their login, decoded where possible.
+// Undecodable logins and unusual spellings the URL parser accepts still lose their login; undecodable bytes stay as typed.
 for (const [url, address, user, pass] of [
   ["https://alice:100%done@repo.example/private/repo", "https://repo.example/private/repo", "alice", "100%done"],
   ["https:\t//alice:s3cret@repo.example/repo", "https://repo.example/repo", "alice", "s3cret"],
@@ -48,7 +48,7 @@ for (const [url, address, user, pass] of [
   ["fdroidrepos://alice:p\\w@repo.example/repo", "fdroidrepos://repo.example/repo", "alice", "p\\w"],
   ["https://alice:%FF@repo.example/private/repo", "https://repo.example/private/repo", "alice", "%FF"],
   ["https://al%20ice:p%40ss:word@repo.example/r", "https://repo.example/r", "al ice", "p@ss:word"],
-  ["https://alice:s3cret@repo example/repo", "https://repo example/repo", "alice", "s3cret"],
+  ["https://alice:p%FF\u00e4@repo.example/repo", "https://repo.example/repo", "alice", "p%FF\u00e4"],
   ["fdroidrepos://alice:pw@repo.example/repo?fingerprint=AB", "fdroidrepos://repo.example/repo?fingerprint=AB", "alice", "pw"],
   ["https://alice@repo.example/repo", "https://repo.example/repo", "alice", ""],
 ]) {
@@ -57,6 +57,13 @@ for (const [url, address, user, pass] of [
   if (f.elements.url.value !== address) fail(`address kept the login: ${url} -> ${f.elements.url.value}`);
   if (f.elements.username.value !== user || f.elements.password.value !== pass)
     fail(`login for ${url}: ${f.elements.username.value} / ${f.elements.password.value}`);
+}
+
+// An address the parser rejects that may hold a login is refused and left as typed, never sent.
+for (const url of ["https://alice:s3cret@repo example/repo", "https:alice:s3cret@repo example/repo", "https://repo.example:bad\\a@b"]) {
+  f = form(url);
+  if (moveLogin(f) !== false) fail("accepted an invalid address with a login: " + url);
+  if (f.elements.username.value || f.elements.password.value) fail("guessed a login from an invalid address: " + url);
 }
 
 for (const url of ["https://repo.example/repo", "not a url", "https://repo.example/a@b", "fdroidrepos:///a@b", "fdroidrepos:/a@b", "https://repo.example/r?x=a@b#c@d"]) {
