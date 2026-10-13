@@ -3290,16 +3290,17 @@ async function addSource(body) {
 }
 // A login typed into the address moves into the login fields, on the page too, before anything
 // is sent: the address is shown and logged, the login never. It stays there if adding fails.
+// Plain text, not the URL parser: an address it rejects (or a login it can't decode) must
+// still lose its login first. Decoding falls back to the text as typed.
 function moveLogin(form) {
-  const el=form.elements;
-  try {
-    const u=new URL(el.url.value);
-    if(!u.username && !u.password)return;
-    if(!el.username.value)el.username.value=decodeURIComponent(u.username);
-    if(!el.password.value)el.password.value=decodeURIComponent(u.password);
-    u.username='';u.password='';el.url.value=u.href;
-    el.username.closest('details').open=true;
-  } catch {}
+  const el=form.elements, m=/^(\s*[a-z][a-z0-9+.-]*:\/\/)([^\/?#]*)@/i.exec(el.url.value);
+  if(!m)return;
+  el.url.value=m[1]+el.url.value.slice(m[0].length);
+  const decode=s=>{ try { return decodeURIComponent(s); } catch { return s; } };
+  const at=m[2].indexOf(':'), user=at<0 ? m[2] : m[2].slice(0,at), pass=at<0 ? "" : m[2].slice(at+1);
+  if(!el.username.value)el.username.value=decode(user);
+  if(!el.password.value)el.password.value=decode(pass);
+  el.username.closest('details').open=true;
 }
 $("addSource").onsubmit=e=>{
   e.preventDefault();moveLogin(e.target);

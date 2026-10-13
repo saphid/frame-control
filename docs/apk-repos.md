@@ -87,15 +87,16 @@ How the login is kept and used:
   file (`source-credentials.lock`), so the app and the command line can't undo
   each other's saves or removals.
 - **HTTPS only.** An `http://` address with a login is refused before any request.
-- **Exact origin only.** The `Authorization` header is added per request, and
-  only when the request's scheme, host and port match the repository's. A
-  redirect to another host or port gets no login, and that request's own
-  `Authorization` header is removed. A same-origin redirect still gets it.
-  The store's artwork proxy is stricter: it sends the login only for images
-  under the repository's address by whole path segments, checked again on
-  every redirect. Paths with `.` or `..` segments (plain or percent-encoded),
-  encoded `/` or `\`, double encoding or `;` get no login, since a server
-  could normalise them to a path outside the repository.
+- **Inside the repository only.** The `Authorization` header is decided
+  separately for every request, redirects included: index, `entry.jar`,
+  APKs and the store's artwork proxy. It is sent only when the request's
+  scheme, host and port match the repository's and its path is inside the
+  repository's directory by whole path segments. A redirect to another host
+  or port, or to another path on the same server, gets no login, and that
+  request's own `Authorization` header is removed. Paths with `.` or `..`
+  segments (plain or percent-encoded), encoded `/` or `\`, double encoding
+  or `;` get no login, since a server could normalise them to a path
+  outside the repository. Index file names like that are refused outright.
 - **Never echoed.** Logins are not written to logs, error messages, API
   responses or the cache. The CLI prints only the saved source.
 - **Checked before saving.** As with any repository, the whole index must

@@ -6,9 +6,10 @@ credential belongs to one exact origin (https, host, port) and is only ever sent
 to a request for that origin: Handler adds it to each request, redirects
 included, and removes any Authorization header from every other request.
 
-Artwork (for_url, and Handler(..., scoped=True)) is stricter: the URL must also be
-under the credential's scope by whole path segments, with no dot segments, encoded
-slashes or ';' a server could normalise into a path outside it.
+Scoped use (for_url, and Handler(..., scoped=True), which F-Droid repositories and
+artwork use) is stricter: the URL must also be under the credential's scope by whole
+path segments, with no dot segments, encoded slashes or ';' a server could normalise
+into a path outside it. Origin-only matching suits a host-wide token (GitHub's API).
 
 Secrets leave this module only as an Authorization header value. Credential's
 repr hides them, and nothing here puts them in an exception message.
@@ -67,7 +68,7 @@ def _changing():
                     fcntl.flock(f.fileno(), fcntl.LOCK_UN)
 
 
-def _segments(path):
+def path_segments(path):
     """A URL path's decoded segments, or None if a server might read it as another path:
     '.' or '..' (plain or percent-encoded), encoded '/' or '\\', '%' left after decoding
     (double encoding), or ';' path parameters."""
@@ -87,7 +88,7 @@ def in_scope(credential, url):
         path, scope = urllib.parse.urlsplit(url).path, urllib.parse.urlsplit(credential.scope).path
     except ValueError:
         return False
-    parts, base = _segments(path), _segments(scope)
+    parts, base = path_segments(path), path_segments(scope)
     if parts is None or base is None:
         return False
     if base and base[-1] == '':
@@ -116,8 +117,8 @@ def _check(value, what, allow_empty=False):
 class Credential:
     """A username and password (basic) or a token (bearer) for one origin.
 
-    scope is a URL prefix used only to pick a stored credential for a URL (for_url);
-    whether a request gets the credential depends on its origin alone."""
+    scope is the URL prefix it belongs under: in_scope checks it (by path segments),
+    matches() checks only the origin."""
     __slots__ = ('origin', 'scope', 'username', '_secret')
 
     def __init__(self, scope, secret, username=None):

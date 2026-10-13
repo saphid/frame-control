@@ -114,6 +114,9 @@ def _child(base, name):
     url = urllib.parse.urljoin(base, urllib.parse.quote(decoded, safe='/'))  # names may contain '#' or spaces
     if not url.startswith(base) or urllib.parse.urlsplit(url).query or urllib.parse.urlsplit(url).fragment:
         raise SourceError('repository file is outside its repository')
+    # Nothing a server could normalise elsewhere: double-encoded dots, ';' parameters, encoded slashes.
+    if _credentials.path_segments(urllib.parse.urlsplit(url).path) is None:
+        raise SourceError('unsafe repository file name')
     return url
 
 
@@ -125,13 +128,14 @@ class _HTTPSRedirect(urllib.request.HTTPRedirectHandler):
 
 
 def _fetch(url, path, maximum, auth=None):
-    """auth: the repository's login, sent only to its exact origin (never after a redirect elsewhere)."""
+    """auth: the repository's login, sent only inside the repository (its origin and directory,
+    by whole plain path segments), on every request including redirects."""
     host = urllib.parse.urlsplit(url).hostname
     wait = _web.wait_time(url, auth)
     if wait:
         raise _web.limited_error(host, wait)
     request = urllib.request.Request(url, headers={'User-Agent': 'FrameControl/1.0'})
-    handlers = [_HTTPSRedirect()] + ([_credentials.Handler(auth)] if auth else [])
+    handlers = [_HTTPSRedirect()] + ([_credentials.Handler(auth, scoped=True)] if auth else [])
     try:
         with urllib.request.build_opener(*handlers).open(request, timeout=60) as r, open(path, 'wb') as f:
             total = 0

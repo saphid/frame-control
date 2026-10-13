@@ -37,7 +37,23 @@ moveLogin(f);
 if (f.elements.url.value.includes("fromurl") || f.elements.username.value !== "typed" || f.elements.password.value !== "typedpw")
   fail("typed login replaced, or address kept the login");
 
-for (const url of ["https://repo.example/repo", "not a url"]) {
+// Undecodable logins and addresses the URL parser rejects still lose their login, decoded where possible.
+for (const [url, address, user, pass] of [
+  ["https://alice:100%done@repo.example/private/repo", "https://repo.example/private/repo", "alice", "100%done"],
+  ["https://alice:%FF@repo.example/private/repo", "https://repo.example/private/repo", "alice", "%FF"],
+  ["https://al%20ice:p%40ss:word@repo.example/r", "https://repo.example/r", "al ice", "p@ss:word"],
+  ["https://alice:s3cret@repo example/repo", "https://repo example/repo", "alice", "s3cret"],
+  ["fdroidrepos://alice:pw@repo.example/repo?fingerprint=AB", "fdroidrepos://repo.example/repo?fingerprint=AB", "alice", "pw"],
+  ["https://alice@repo.example/repo", "https://repo.example/repo", "alice", ""],
+]) {
+  f = form(url);
+  moveLogin(f);
+  if (f.elements.url.value !== address) fail(`address kept the login: ${url} -> ${f.elements.url.value}`);
+  if (f.elements.username.value !== user || f.elements.password.value !== pass)
+    fail(`login for ${url}: ${f.elements.username.value} / ${f.elements.password.value}`);
+}
+
+for (const url of ["https://repo.example/repo", "not a url", "https://repo.example/a@b"]) {
   f = form(url);
   moveLogin(f);
   if (f.elements.url.value !== url || f.elements.username.value) fail("changed an address without a login: " + url);

@@ -198,7 +198,31 @@ class RepositoryLogin(Repository):
         mirror = [auth for url, auth in self.web.seen if url.startswith('https://mirror.example/')]
         same_origin = [auth for url, auth in self.web.seen if url.startswith('https://repo.example/elsewhere/')]
         self.assertEqual(mirror, [None])
-        self.assertEqual(same_origin, [self.login])  # same scheme, host and port: still that repository's
+        self.assertEqual(same_origin, [None])  # same origin but outside the repository: no login either
+
+    def test_traversal_names_are_refused_and_never_get_the_login(self):
+        for name in ('%252e%252e/%252e%252e/evil/collect.apk', '..;/..;/evil/collect.apk', 'a%2f..%2f..%2fevil.apk',
+                     'a%5c..%5cevil.apk', '%2e%2e/evil.apk', 'x;y.apk', '100%25.apk'):
+            with self.subTest(name=name), self.assertRaisesRegex(SourceError, 'unsafe|outside'):
+                fdroid._child(REPO, name)
+        self.assertEqual(fdroid._child(REPO, '/app/en-US/phoneScreenshots/#0 a.png'),
+                         REPO + 'app/en-US/phoneScreenshots/%230%20a.png')
+        # Even if such a URL reached the downloader directly, the login stays home.
+        login = _credentials.basic(REPO, USER, PASSWORD)
+        for url in (REPO + '%252e%252e/%252e%252e/evil/collect.apk', REPO + '..;/..;/evil/collect.apk'):
+            with self.subTest(url=url), tempfile.TemporaryDirectory() as tmp:
+                self.web.seen.clear()
+                with contextlib.suppress(SourceError):  # the repository answers 401 without the login
+                    fdroid._fetch(url, Path(tmp) / 'out', 1 << 20, auth=login)
+                self.assertEqual(self.web.seen, [(url, None)])
+
+    def test_same_origin_redirect_outside_the_repository_gets_no_login(self):
+        self.redirect = {'example1.apk': 'https://repo.example/elsewhere/example1.apk'}
+        source = self.add()
+        self.web.seen.clear()
+        self.assertTrue(fdroid.download(source, 'org.example.app', 1)['verified'])
+        self.assertEqual(self.web.seen, [(REPO + 'example1.apk', self.login),
+                                         ('https://repo.example/elsewhere/example1.apk', None)])
 
     def test_other_ports_and_http_never_get_the_login(self):
         login = _credentials.basic(REPO, USER, PASSWORD)
