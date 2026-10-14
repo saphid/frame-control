@@ -276,6 +276,8 @@ def search(query='', vr=None, source=None, installable=False, timeout=TIMEOUT, l
         raise SourceError('Unknown category')
     if not query.strip():
         limit = max(limit, BROWSE_LIMIT)
+    else:
+        phone = True  # the phone-only guess hides apps from browsing, never from a search for them
     chosen = [(m, s) for m, s in items if s['enabled'] and (not source or s['id'] == source)]
     # Page-only sources (SideQuest) can't be searched; offer a link to browse them instead.
     elsewhere = [{'name': s['name'], 'url': s['url']} for m, s in chosen if s.get('page_only')]

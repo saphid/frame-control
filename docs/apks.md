@@ -190,14 +190,16 @@ and Tools (`ui/apk_sources/_categories.py`). A VR app is always in VR. Otherwise
 F-Droid's own categories decide, the finer one first (an app in *Multimedia* and
 *Social Network* is Web & chat).
 
-Apps built around a phone are hidden unless **Show phone-only apps** is on:
-apps in a category that only makes sense in a phone's own system (launchers,
-keyboards, calls and SMS, wallpapers, Xposed modules), apps in a phone-side one
-(VPNs, fitness, alarms, system tools, contacts) unless a finer useful category
-says otherwise (Thunderbird is in Contact, but it's email), and tools named for
-phone hardware or for needing root ("no root required" doesn't count). They install and run in Lepton, but
-do nothing useful on the Frame. In the F-Droid index of October 2026 that is
-about 1,800 of 4,500 apps.
+Apps built around a phone are hidden from browsing unless **Show phone-only
+apps** is on; a search always finds them, labelled *Phone app*. Hidden: apps in
+a category that only makes sense in a phone's own system (launchers, keyboards,
+wallpapers, Xposed modules), apps in a phone-side category (calls and SMS, VPNs,
+fitness, alarms, system tools) unless a useful category says otherwise
+(FluffyChat is in Phone & SMS, but it's a messenger), apps named for a phone
+part (a widget, a launcher, a battery tool), and apps that need hardware the
+Frame lacks (an IR blaster, a watch, NFC, root). They would install and run in
+Lepton, but do nothing useful on the Frame. In the October 2026 indexes that is
+about 1,600 of F-Droid's 4,500 apps and 550 of IzzyOnDroid's 1,300.
 
 Without a search, each source offers its best 300 for the chosen category:
 apps with a banner first, then with screenshots, then the newest.

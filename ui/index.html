@@ -1083,7 +1083,7 @@
         <div id="storeCats" class="store-cats"></div>
         <div class="store-side-opts">
           <label class="store-check"><input type="checkbox" id="storeFits"> Only apps that fit the Frame</label>
-          <label class="store-check" title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools"><input type="checkbox" id="storePhone"> Show phone-only apps</label>
+          <label class="store-check" title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools. Searching always finds them."><input type="checkbox" id="storePhone"> Show phone-only apps</label>
           <label class="store-source-select"><span>Source</span><select id="sourceFilter"><option value="">All sources</option></select></label>
         </div>
       </div>
@@ -3358,7 +3358,7 @@ const STORE_FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocke
 function storeFit(o) { const t = o.verdict?.tone; return STORE_FIT[t] ? `<span class="store-fit ${t}" title="${esc(o.verdict.label)}">${STORE_FIT[t]}</span>` : ""; }
 function storeCard(app) {
   const i=sourceState.apps.indexOf(app), o=app.offers[0], c=app.category || o.category;
-  return `<button class="store-card" data-app="${i}" aria-label="View ${esc(app.name)}">${storeArt(o,"",false,null,null,o.vr ? '<span class="store-vr">VR</span>' : "")}<span class="store-card-content"><span class="store-card-title">${storeIcon(o)}<strong>${esc(app.name)}</strong></span><span class="store-summary">${esc(storeText(app.summary) || "A new addition to your Frame")}</span><span class="store-card-foot"><span class="store-cat">${esc(c ? storeCat(c)[1] : o.vr === false ? "Flat-screen app" : "Android app")}</span>${storeFit(o) || "<b>Free</b>"}</span></span></button>`;
+  return `<button class="store-card" data-app="${i}" aria-label="View ${esc(app.name)}">${storeArt(o,"",false,null,null,o.vr ? '<span class="store-vr">VR</span>' : "")}<span class="store-card-content"><span class="store-card-title">${storeIcon(o)}<strong>${esc(app.name)}</strong></span><span class="store-summary">${esc(storeText(app.summary) || "A new addition to your Frame")}</span><span class="store-card-foot"><span class="store-cat">${esc(o.phone_only ? "Phone app" : c ? storeCat(c)[1] : o.vr === false ? "Flat-screen app" : "Android app")}</span>${storeFit(o) || "<b>Free</b>"}</span></span></button>`;
 }
 function storeRow(title, subtitle, apps, category) {
   return apps.length ? `<section class="store-row"><div class="store-row-head"><h2>${esc(title)}</h2><p>${esc(subtitle)}</p>${category !== undefined ? `<button class="see-all" data-cat="${esc(category)}">See all ›</button>` : ""}</div><div class="store-shelf">${apps.slice(0,12).map(storeCard).join("")}</div></section>` : "";

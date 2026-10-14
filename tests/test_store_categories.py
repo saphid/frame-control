@@ -263,5 +263,39 @@ class ReviewCases(unittest.TestCase):
         self.assertTrue(kind(categories=['Xposed'])['phone_only'])
 
 
+
+class ReviewCasesTwo(unittest.TestCase):
+    """Round two of real entries (October 2026)."""
+    def test_messengers_with_phone_or_push_stay(self):
+        for categories in (['Internet', 'Messaging', 'Phone & SMS'], ['Internet', 'Messaging', 'Push'],
+                           ['Connectivity', 'Messaging', 'Phone & SMS', 'Voice & Video Chat']):
+            with self.subTest(categories=categories):
+                self.assertEqual(kind(categories=categories), {'category': 'web', 'phone_only': False})
+
+    def test_broad_only_sources_can_escape_a_phone_side(self):
+        self.assertEqual(kind(categories=['System', 'Development']), {'category': 'tools', 'phone_only': False})
+        self.assertEqual(kind(categories=['Connectivity', 'Internet']), {'category': 'web', 'phone_only': False})
+        self.assertTrue(kind(categories=['VPN & Proxy', 'Internet'])['phone_only'])  # it has finer ones, none useful
+
+    def test_summary_features_dont_make_a_phone_app(self):
+        self.assertFalse(kind(name='OSS Weather', summary='Forecasts with home screen widgets', categories=['Weather'])['phone_only'])
+        self.assertFalse(kind(name='Digital Calculator', summary='Hardware keyboard support', categories=['Calculator', 'System'])['phone_only'])
+        self.assertTrue(kind(name='Clock Widget', categories=['Clock'])['phone_only'])  # but the name says what it is
+
+    def test_hardware_the_frame_lacks(self):
+        self.assertTrue(kind(name='IR Blaster Remote', categories=['Multimedia', 'Remote Controller', 'System'])['phone_only'])
+        self.assertTrue(kind(name='Wear Sync for Breezy', summary='Weather on your Wear OS watch', categories=['Connectivity', 'Weather'])['phone_only'])
+
+
+class SearchFindsPhoneApps(unittest.TestCase):
+    setUp, run_search = Search.setUp, Search.run_search
+
+    def test_a_search_finds_what_browsing_hides(self):
+        entries = [dict(ENTRY, id='s', name='Texts', categories=['Phone & SMS'])]
+        self.assertEqual(self.run_search(entries)['apps'], [])
+        found = self.run_search(entries, query='texts')['apps']
+        self.assertEqual([(a['name'], a['offers'][0]['phone_only']) for a in found], [('Texts', True)])
+
+
 if __name__ == '__main__':
     unittest.main()
