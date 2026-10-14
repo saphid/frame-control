@@ -306,5 +306,43 @@ class SearchFindsPhoneApps(unittest.TestCase):
         self.assertEqual([(a['name'], a['offers'][0]['phone_only']) for a in found], [('Texts', True)])
 
 
+
+class ArtworkLookups(unittest.TestCase):
+    """A page of cards asks for dozens of images at once; they mustn't fail for want of a lookup slot."""
+    def setUp(self):
+        _images._dns.clear()
+        self.addCleanup(_images._dns.clear)
+
+    def test_public_answers_are_kept_private_ones_are_not(self):
+        public = [(2, 1, 6, '', ('93.184.216.34', 443))]
+        with patch.object(_images.socket, 'getaddrinfo', return_value=public) as lookup:
+            for _ in range(3):
+                self.assertEqual(_images._resolve('example.org', 443, 5), public)
+        self.assertEqual(lookup.call_count, 1)
+        private = [(2, 1, 6, '', ('10.0.0.5', 443))]
+        with patch.object(_images.socket, 'getaddrinfo', return_value=private) as lookup:
+            _images._resolve('inside.example', 443, 5)
+            _images._resolve('inside.example', 443, 5)
+        self.assertEqual(lookup.call_count, 2)
+
+    def test_many_at_once_wait_for_a_slot(self):
+        import threading, time
+        public = [(2, 1, 6, '', ('93.184.216.34', 443))]
+        def slow(*a, **k):
+            time.sleep(0.05)
+            return public
+        errors = []
+        def one(i):
+            try:
+                _images._resolve('host%d.example' % i, 443, 5)
+            except SourceError as e:
+                errors.append(e)
+        with patch.object(_images.socket, 'getaddrinfo', side_effect=slow):
+            threads = [threading.Thread(target=one, args=(i,)) for i in range(12)]
+            [t.start() for t in threads]
+            [t.join() for t in threads]
+        self.assertEqual(errors, [])
+
+
 if __name__ == '__main__':
     unittest.main()

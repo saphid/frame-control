@@ -21,6 +21,7 @@ class ArtworkTests(unittest.TestCase):
             _images._urls.clear()
             _images._tokens.clear()
             _images._cache.clear()
+            _images._dns.clear()
 
     def test_only_registered_source_images_are_fetchable(self):
         with patch.object(_images, 'fetch') as fetch:

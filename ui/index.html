@@ -727,7 +727,14 @@
     .store-hero { height:285px; border-radius:9px; margin-bottom:26px; }
     .hero-copy { padding:26px 22px; } .hero-copy strong { font-size:29px; }
     .hero-copy > span:not(.store-eyebrow):not(.hero-cta) { font-size:13px; max-width:260px; }
-    .store-row-head { display:block; } .store-row-head h2 { font-size:18px; } .store-row-head p { margin-top:3px; }
+    .store-row-head { display:flex; align-items:center; } .store-row-head h2 { font-size:18px; } .store-row-head p { display:none; }
+    .store-heading .store-eyebrow, .store-heading p { display:none; } .store-heading h1 { font-size:26px; margin:0 0 12px; }
+    .store-shelf { grid-auto-columns:minmax(200px,72%); gap:12px; }
+    .store-switch > button { height:38px; padding:0 14px; font-size:14px; }
+    .lib-head { margin-bottom:16px; } .lib-head p { font-size:13px; } .lib-tools, .lib-tools input[type=search] { width:100%; }
+    .lib-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+    .lib-body { padding:10px 10px 2px; } .lib-body .store-icon { width:30px; height:30px; font-size:14px; } .lib-body strong { font-size:13px; }
+    .lib-actions { padding:10px; gap:6px; } .lib-actions .play, .lib-actions .stop { height:34px; font-size:13px; }
     .store-card-content { padding:10px; } .store-card-title { gap:6px; } .store-card-title strong { font-size:13px; }
     .store-card-title .store-icon { width:25px; height:25px; font-size:12px; border-radius:6px; }
     .store-card-foot { font-size:10px; margin-top:12px; } .store-summary { font-size:11px; }

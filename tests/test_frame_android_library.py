@@ -122,6 +122,11 @@ FIXTURES = ROOT / 'tests/fixtures/library'
 
 
 class ArtworkTests(unittest.TestCase):
+    def setUp(self):
+        from apk_sources import _images
+        _images._dns.clear()  # each test answers lookups its own way
+        self.addCleanup(_images._dns.clear)
+
     def test_source_inputs_and_url(self):
         from apk_sources import _images
         data = (FIXTURES / 'icon.png').read_bytes()

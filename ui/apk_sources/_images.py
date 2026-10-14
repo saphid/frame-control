@@ -73,11 +73,34 @@ def fetch(url, redirects=3, deadline=None, limit=MAX_IMAGE):
 
 # Lookups that outlast their deadline keep running; cap them so they can't pile up.
 _resolvers = threading.BoundedSemaphore(4)
+# A page of store cards asks for dozens of images from the same few hosts at once: their public
+# addresses are kept for a few minutes, so most requests don't need a lookup (or a slot) at all.
+_dns = {}  # (host, port) -> (addresses, expires)
+DNS_TTL = 300
 
 
 def _resolve(host, port, timeout):
+    with _lock:
+        known = _dns.get((host, port))
+    if known and known[1] > time.monotonic():
+        return known[0]
+    found = _lookup(host, port, timeout)
+    try:
+        public = bool(found) and all(ipaddress.ip_address(a[4][0]).is_global for a in found)
+    except (TypeError, ValueError, IndexError):
+        public = False
+    if public:  # private answers are refused by the caller, and never kept
+        with _lock:
+            _dns[(host, port)] = (found, time.monotonic() + DNS_TTL)
+            while len(_dns) > 256:
+                _dns.pop(next(iter(_dns)))
+    return found
+
+
+def _lookup(host, port, timeout):
     # getaddrinfo has no timeout of its own; a thread keeps a slow resolver inside the budget.
-    if not _resolvers.acquire(blocking=False):
+    # A request waits for a free slot within its own budget rather than failing at once.
+    if not _resolvers.acquire(timeout=max(0, min(timeout, 10))):
         raise SourceError('Too many slow artwork name lookups are still running; try again shortly')
     found = {}
 
