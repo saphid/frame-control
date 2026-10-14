@@ -234,5 +234,34 @@ class Route(unittest.TestCase):
                     server.source_search(bad)
 
 
+
+class ReviewCases(unittest.TestCase):
+    """Real index entries (October 2026) that the first rules got wrong."""
+    def test_useful_apps_with_a_phone_side_stay(self):
+        for categories, category in ((['Connectivity', 'Email', 'Internet', 'Writing'], 'web'),  # Thunderbird
+                                     (['Connectivity', 'Internet', 'Multimedia', 'Podcast'], 'watch'),  # FocusPodcast
+                                     (['Contact', 'Email'], 'web'),
+                                     (['Cloud Storage & File Sync', 'File Manager', 'System'], 'tools')):
+            with self.subTest(categories=categories):
+                self.assertEqual(kind(categories=categories), {'category': category, 'phone_only': False})
+
+    def test_phone_side_alone_or_with_a_broad_category_is_hidden(self):
+        for categories in (['Internet', 'VPN & Proxy'], ['App Manager', 'Development', 'System'], ['Navigation']):
+            with self.subTest(categories=categories):
+                self.assertTrue(kind(categories=categories)['phone_only'])
+        self.assertTrue(kind(categories=['Launcher', 'Games'])['phone_only'])  # system ones always
+
+    def test_no_root_needed_is_not_a_root_tool(self):
+        for summary in ('Linux on Android, no root required', 'Linux Without Root Access', 'SSH server without root',
+                        'Works on non-rooted phones', 'Rootless and simple'):
+            with self.subTest(summary=summary):
+                self.assertFalse(kind(summary=summary, categories=['Development'])['phone_only'])
+        self.assertTrue(kind(summary='Needs root to tune the kernel', categories=['Development'])['phone_only'])
+
+    def test_izzyondroid_names(self):
+        self.assertEqual(kind(categories=['Office'])['category'], 'work')
+        self.assertTrue(kind(categories=['Xposed'])['phone_only'])
+
+
 if __name__ == '__main__':
     unittest.main()

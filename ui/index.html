@@ -3367,7 +3367,9 @@ function storeEmpty() {
   return `<div class="store-empty"><svg viewBox="0 0 120 100" fill="none" aria-hidden="true"><rect x="18" y="25" width="60" height="55" rx="12" fill="currentColor" opacity=".08"/><rect x="29" y="18" width="60" height="55" rx="12" stroke="currentColor" opacity=".35"/><circle cx="61" cy="43" r="15" stroke="currentColor" stroke-width="3"/><path d="m72 55 17 18M17 12v10m-5-5h10m79-4v10m-5-5h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><h2>A little further to explore.</h2><p>No apps found this time. Try a different name, another category, or turn on phone-only apps.</p><button class="action" id="storeReset">Back to the store</button></div>`;
 }
 function renderCats() {
-  $("storeCats").innerHTML = STORE_CATS.map(([id, label]) => `<button data-cat="${id}" aria-pressed="${sourceState.category === id}">${catIcon(id)}<span>${esc(label)}</span></button>`).join("");
+  if (!$("storeCats").children.length)  // built once, so a keyboard user keeps focus on the category they chose
+    $("storeCats").innerHTML = STORE_CATS.map(([id, label]) => `<button data-cat="${id}" aria-pressed="false">${catIcon(id)}<span>${esc(label)}</span></button>`).join("");
+  $("storeCats").querySelectorAll("[data-cat]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cat === sourceState.category)));
   const [, label, eyebrow, blurb] = storeCat(sourceState.category);
   $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Store")}</h1><p>${esc(blurb)}</p>`;
 }
@@ -3380,7 +3382,9 @@ function renderStore() {
   // Home: one featured VR app, then a shelf per category; each app appears once, blocked ones not at all.
   const ok=apps.filter(a=>a.offers[0].verdict?.tone !== 'blocked'), shown=new Set();
   const day=Math.floor(Date.now()/864e5), heroes=ok.filter(a=>a.offers[0].vr && a.offers[0].artwork?.banner);
-  const featured=heroes[day % (heroes.length || 1)] || ok.find(a=>a.offers[0].artwork?.banner) || apps[0], o=featured.offers[0];
+  const featured=heroes[day % (heroes.length || 1)] || ok.find(a=>a.offers[0].artwork?.banner) || ok[0];
+  if (!featured) { $("searchGrid").innerHTML=storeEmpty(); return; }  // nothing here runs on the Frame
+  const o=featured.offers[0];
   shown.add(featured);
   const take=(list)=>{ const out=list.filter(a=>!shown.has(a)).slice(0,12); out.forEach(a=>shown.add(a)); return out; };
   const rows=STORE_CATS.slice(1).map(([id,label,eyebrow])=>storeRow(label,eyebrow,take(ok.filter(a=>a.category===id)),id)).join("");

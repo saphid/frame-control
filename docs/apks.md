@@ -191,11 +191,13 @@ F-Droid's own categories decide, the finer one first (an app in *Multimedia* and
 *Social Network* is Web & chat).
 
 Apps built around a phone are hidden unless **Show phone-only apps** is on:
-anything in a phone category (launchers, keyboards, calls and SMS, wallpapers,
-VPNs, fitness, alarms, system tools), apps whose categories are all phone ones,
-and tools named for phone hardware or root. They install and run in Lepton, but
+apps in a category that only makes sense in a phone's own system (launchers,
+keyboards, calls and SMS, wallpapers, Xposed modules), apps in a phone-side one
+(VPNs, fitness, alarms, system tools, contacts) unless a finer useful category
+says otherwise (Thunderbird is in Contact, but it's email), and tools named for
+phone hardware or for needing root ("no root required" doesn't count). They install and run in Lepton, but
 do nothing useful on the Frame. In the F-Droid index of October 2026 that is
-about 2,000 of 4,500 apps.
+about 1,800 of 4,500 apps.
 
 Without a search, each source offers its best 300 for the chosen category:
 apps with a banner first, then with screenshots, then the newest.
