@@ -7,6 +7,7 @@ struct SetupView: View {
     @ObservedObject var model: AppModel
     @StateObject private var finder = FrameFinder()
     @State private var password = ""
+    @State private var showPassword = false
     @State private var manualHost = ""
     @State private var user = "steamos"
     @State private var showOther = false
@@ -93,13 +94,35 @@ struct SetupView: View {
     // MARK: step 2
 
     @ViewBuilder private var passwordStep: some View {
-        SecureField("Developer Mode password", text: $password)
+        HStack(spacing: 8) {
+            Group {
+                if showPassword {
+                    TextField("Developer Mode password", text: $password)
+                } else {
+                    SecureField("Developer Mode password", text: $password)
+                }
+            }
             .textContentType(.password)
+            .textInputAutocapitalization(.never)
+            .autocorrectionDisabled()
             .submitLabel(.go)
             .focused($passwordFocused)
             .onSubmit(connect)
-            .padding(12)
-            .background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 10))
+            .padding(.vertical, 12)
+            Button {
+                showPassword.toggle()
+                passwordFocused = true  // keep typing after the field swaps
+            } label: {
+                Image(systemName: showPassword ? "eye.slash" : "eye").foregroundStyle(Color.frameMuted)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(showPassword ? "Hide password" : "Show password")
+        }
+        .padding(.leading, 12)
+        .padding(.trailing, 2)
+        .background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 10))
         Text("Haven't set one? On the Frame: Steam Settings → Developer → Set User Password. It's only used now, to let this \(model.deviceName) in; it isn't saved.")
             .font(.footnote).foregroundStyle(Color.frameMuted)
         Button(action: connect) {
