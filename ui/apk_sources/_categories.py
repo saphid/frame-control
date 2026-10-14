@@ -78,6 +78,9 @@ EMULATOR = re.compile(r'\bemulat(or|ion|es)\b|\b(retroarch|ppsspp|dolphin|dosbox
 PHONE_NAME = re.compile(r'\b(launcher|home ?screen|widgets?|keyboard|wallpapers?|ringtones?|dialer|sms|mms|'
                         r'caller id|lock ?screen|status ?bar|step counter|pedometer|5g|4g|lte|hotspot|tethering|'
                         r'magisk|xposed|battery)\b|\[root\]', re.I)
+# "Doesn't need root" isn't a root tool; taken out before HARDWARE looks for "needs root".
+NOT_ROOT = re.compile(r"\b(no|non|without|not|never|doesn.?t (need|require)|does not (need|require)|don.?t (need|require))[- ]+(the )?root(ed|ing)?\b"
+                      r"|\broot(less|[- ]free| (is )?not (required|needed))\b", re.I)
 # Needs hardware or a device the Frame doesn't have, from the name or summary.
 HARDWARE = re.compile(r'\b(infra-?red|ir (blaster|remote|transmitter)|wear ?os|smart ?watch(es)?|nfc|sim card|'
                       r'(requires?|needs?|for) (a )?root(ed)?( (access|device|phone))?)\b', re.I)
@@ -101,7 +104,7 @@ def classify(entry):
                                           for c in names):
         phone = True
     if category not in ('games', 'emulators', 'watch', 'read', 'create'):
-        phone = phone or bool(PHONE_NAME.search(name)) or bool(HARDWARE.search(name + ' ' + summary))
+        phone = phone or bool(PHONE_NAME.search(name)) or bool(HARDWARE.search(NOT_ROOT.sub(' ', name + ' ' + summary)))
     return {'category': category, 'phone_only': phone}
 
 

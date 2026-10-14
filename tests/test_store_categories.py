@@ -282,6 +282,15 @@ class ReviewCasesTwo(unittest.TestCase):
         self.assertFalse(kind(name='Digital Calculator', summary='Hardware keyboard support', categories=['Calculator', 'System'])['phone_only'])
         self.assertTrue(kind(name='Clock Widget', categories=['Clock'])['phone_only'])  # but the name says what it is
 
+    def test_saying_root_isnt_needed(self):
+        for summary in ('VNC server app that does not require root privileges', "Backups that don't need root access",
+                        "It doesn't need root", 'Linux without root', 'Works on non-rooted phones', 'Rootless'):
+            with self.subTest(summary=summary):
+                self.assertFalse(kind(summary=summary, categories=['Remote Access'])['phone_only'])
+        for summary in ('Requires root', 'Needs root access to change the kernel', 'For rooted devices'):
+            with self.subTest(summary=summary):
+                self.assertTrue(kind(summary=summary, categories=['Remote Access'])['phone_only'])
+
     def test_hardware_the_frame_lacks(self):
         self.assertTrue(kind(name='IR Blaster Remote', categories=['Multimedia', 'Remote Controller', 'System'])['phone_only'])
         self.assertTrue(kind(name='Wear Sync for Breezy', summary='Weather on your Wear OS watch', categories=['Connectivity', 'Weather'])['phone_only'])
