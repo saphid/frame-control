@@ -186,9 +186,10 @@ const CATS = [
 const catLabel = id => (CATS.find(c => c[0] === id) || [])[1] || "";
 const FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocked: "Won't run" };
 // view: "" (home), a category id, or "installed"; jobs: offer key -> {stage, percent, done, result, error}
-// installedFrom: offer key -> package it installed as (GitHub listings have no package); needsData: offer key -> package
+// installedFrom: offer key -> package it installed as (GitHub listings have no package);
+// needsData: installed packages still waiting for their game data (any view, while installed)
 const st = { view: "", q: "", phone: false, page: 0, apps: [], installed: new Map(), jobs: new Map(), installedFrom: new Map(),
-             needsData: new Map(), request: 0, loading: false, retry: 0 };
+             needsData: new Set(), request: 0, loading: false, retry: 0 };
 
 async function api(path, body) {
   const opts = body === undefined ? { headers: { "X-Frame-UI": UI_KEY } } : {
@@ -230,8 +231,10 @@ const text = s => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " 
 
 // ---- Data ----
 async function loadInstalled() {
-  try { st.installed = new Map((await api("/api/android")).apps.map(a => [a.package, a])); }
-  catch (e) { toast(`Couldn't list installed apps: ${e.message}`, true); }
+  try {
+    st.installed = new Map((await api("/api/android")).apps.map(a => [a.package, a]));
+    for (const pkg of st.needsData) if (!st.installed.has(pkg)) { st.needsData.delete(pkg); st.jobs.delete("data:" + pkg); }  // removed
+  } catch (e) { toast(`Couldn't list installed apps: ${e.message}`, true); }
   $("instN").textContent = st.installed.size || "";
 }
 async function search(quiet) {
@@ -342,7 +345,7 @@ function openDetail(app) {
 }
 function drawDetail() {
   const app = current; if (!app) return;
-  const o = app.offers[0], m = installedOf(app), key = offerKey(app), job = st.jobs.get(key), data = st.jobs.get(key + ":data");
+  const o = app.offers[0], m = installedOf(app), key = offerKey(app), job = st.jobs.get(key), data = m && st.jobs.get("data:" + m.package);
   if (app.installed && !m) return closeDetail();  // removed
   const shots = (o.artwork?.screenshots || []).filter(valid);
   const top = valid(o.artwork?.banner) ? art(app.name, { banner: o.artwork.banner })
@@ -354,15 +357,13 @@ function drawDetail() {
     const pct = typeof j.percent === "number" ? Math.max(3, Math.min(100, j.percent)) : null;
     return `<div class="progress${pct === null ? " busy" : ""}"><span>${esc(j.stage || "Downloading")}${pct === null ? "…" : ` ${Math.round(pct)}%`}</span><div class="track"><div class="fill" style="${pct === null ? "" : `width:${pct}%`}"></div></div></div>`;
   };
-  const gameData = !st.needsData.has(key) ? "" : data && !data.done ? progress(data)
+  const gameData = !(m && st.needsData.has(m.package)) ? "" : data && !data.done ? progress(data)
     : `<button class="primary" data-act="game-data">Add game data</button><span class="meta">Open it once on the Frame first.</span>`;
   if (job && !job.done) {
     acts = progress(job);
   } else if (m) {
     acts = gameData + (m.running ? `<button data-act="stop">■ Stop</button>` : `<button class="play" data-act="launch">▶ Open</button>`)
       + `<button class="danger" data-act="remove">Remove</button>`;
-  } else if (gameData) {
-    acts = gameData;
   } else if (!o.source) {
     acts = "";
   } else if (o.downloadable === false) {
@@ -417,13 +418,13 @@ $("sheet").onclick = async e => {
     const job = await runJob(key, () => api("/api/sources/install", { source: o.source, id: o.id, version_code: o.version_code ?? null }));
     if (job.result?.package) {
       st.installedFrom.set(key, job.result.package);
-      if (job.result.game_data) st.needsData.set(key, job.result.package);
+      if (job.result.game_data) st.needsData.add(job.result.package);
     }
     return render(), drawDetail();
   }
-  if (act === "game-data") {  // its own job: a failed copy keeps the install's result, so it can be tried again
-    const job = await runJob(key + ":data", () => api("/api/sources", { action: "game-data", package: st.needsData.get(key) }));
-    if (!job.error) st.needsData.delete(key);
+  if (act === "game-data" && m) {  // its own job, by package: a failed copy keeps the pending data, so it can be tried again
+    const job = await runJob("data:" + m.package, () => api("/api/sources", { action: "game-data", package: m.package }));
+    if (!job.error) st.needsData.delete(m.package);
     return render(), drawDetail();
   }
   const pkg = m?.package; if (!pkg) return;
@@ -434,6 +435,7 @@ $("sheet").onclick = async e => {
   try {
     const r = await api("/api/android", { action: act, package: pkg });
     toast(r.message);
+    if (act === "remove") { st.needsData.delete(pkg); st.jobs.delete("data:" + pkg); }
     if (act === "launch") closeDetail();
   } catch (err) { toast(err.message, true); }
   await loadInstalled(); render();
