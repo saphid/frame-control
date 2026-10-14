@@ -284,6 +284,19 @@ class ItchPurchases(unittest.TestCase):
                          (itch.OWNED, 'itch.io (my purchases)', 'Owned on itch.io'))
         self.assertNotIn(KEY, json.dumps(result))
 
+    def test_owned_games_show_under_either_vr_choice(self):
+        # itch.io doesn't say which purchases are VR, so neither filter hides them; other
+        # games of unknown kind still count as flat.
+        self.connect()
+        both = ['Free Quest Toy', 'Orbit Garden VR']
+        for vr in (True, False):
+            names = sorted(a['name'] for a in search.search('', vr=vr, source=itch.OWNED)['apps'])
+            self.assertEqual(names, both)
+        flat = {'source': 'x', 'id': '1', 'name': 'Flat', 'summary': '', 'vr': None}
+        self.assertEqual(search.group([flat], vr=True), [])
+        self.assertEqual(len(search.group([flat], vr=False)), 1)
+        self.assertEqual(search.group([dict(flat, owned=True, vr=False)], vr=True), [])
+
     def test_only_the_account_source_may_mark_paid_games_owned(self):
         entry = {'free': False, 'owned': True}
         self.assertFalse(search.obtainable({'id': 'fdroid'}, entry))

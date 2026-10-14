@@ -182,7 +182,10 @@ def group(entries, query='', vr=None, installable=False):
     groups = {}
     for entry in entries:
         entry = decorate(entry)
-        if vr is not None and (entry.get('vr') is True) != vr:  # unknown counts as flat
+        # Unknown counts as flat, except the user's own purchases (itch.io doesn't say which are
+        # VR): those show under either choice rather than vanish from one.
+        if vr is not None and (entry.get('vr') is True) != vr \
+                and not (entry.get('owned') is True and entry.get('vr') is None):
             continue
         if installable and entry['fit']['installable'] is not True:
             continue
