@@ -186,7 +186,9 @@ const CATS = [
 const catLabel = id => (CATS.find(c => c[0] === id) || [])[1] || "";
 const FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocked: "Won't run" };
 // view: "" (home), a category id, or "installed"; jobs: offer key -> {stage, percent, done, result, error}
-const st = { view: "", q: "", phone: false, page: 0, apps: [], installed: new Map(), jobs: new Map(), request: 0, loading: false, retry: 0 };
+// installedFrom: offer key -> package it installed as (GitHub listings have no package); needsData: offer key -> package
+const st = { view: "", q: "", phone: false, page: 0, apps: [], installed: new Map(), jobs: new Map(), installedFrom: new Map(),
+             needsData: new Map(), request: 0, loading: false, retry: 0 };
 
 async function api(path, body) {
   const opts = body === undefined ? { headers: { "X-Frame-UI": UI_KEY } } : {
@@ -235,7 +237,7 @@ async function loadInstalled() {
 async function search(quiet) {
   const request = ++st.request;
   clearTimeout(st.retry);
-  if (st.view === "installed") { st.page = 0; return render(); }
+  if (st.view === "installed") { st.loading = false; st.page = 0; return render(); }  // a pending search is now stale
   st.loading = !quiet; if (!quiet) render();
   const params = new URLSearchParams({ q: st.q, category: st.view, phone: String(st.phone) });
   try {
@@ -252,7 +254,12 @@ async function search(quiet) {
     st.loading = false; st.apps = []; render(`Couldn't reach the app shelves: ${e.message}`);
   }
 }
-const installedOf = app => app.package && st.installed.get(app.package);
+const offerKey = app => `${app.offers[0].source}:${app.offers[0].id}`;
+// Always the latest state: an Installed card's own copy goes stale after Stop or Remove.
+function installedOf(app) {
+  const pkg = app.installed?.package || app.package || st.installedFrom.get(offerKey(app));
+  return pkg ? st.installed.get(pkg) : undefined;
+}
 
 // ---- Pages ----
 function list() {
@@ -265,7 +272,7 @@ function list() {
   return st.home ? st.home.rest : st.apps;
 }
 function card(app, i) {
-  const o = app.offers[0], m = app.installed || installedOf(app), job = st.jobs.get(`${o.source}:${o.id}`);
+  const o = app.offers[0], m = installedOf(app), job = st.jobs.get(offerKey(app));
   const state = m ? `<span class="tag">${m.running ? "Running" : "Installed"}</span>`
     : job && !job.done ? `<span class="tag">Installing…</span>`
     : FIT[o.verdict?.tone] ? `<span class="fit ${o.verdict.tone}">${FIT[o.verdict.tone]}</span>` : "";
@@ -335,21 +342,27 @@ function openDetail(app) {
 }
 function drawDetail() {
   const app = current; if (!app) return;
-  const o = app.offers[0], m = app.installed || installedOf(app), key = `${o.source}:${o.id}`, job = st.jobs.get(key);
+  const o = app.offers[0], m = installedOf(app), key = offerKey(app), job = st.jobs.get(key), data = st.jobs.get(key + ":data");
+  if (app.installed && !m) return closeDetail();  // removed
   const shots = (o.artwork?.screenshots || []).filter(valid);
   const top = valid(o.artwork?.banner) ? art(app.name, { banner: o.artwork.banner })
     : shots.length ? `<div class="gallery">${shots.slice(0, 3).map(u => img(u)).join("")}</div>` : art(app.name, o.artwork || {});
   const meta = [o.developer, o.source_name, o.version ? `v${ver(o.version)}` : m?.version ? `v${ver(m.version)}` : "", o.size ? size(o.size) : ""].filter(Boolean).join(" · ");
   const reasons = (o.fit?.reasons || []).filter(Boolean);
   let acts;
-  if (m) {
-    acts = (m.running ? `<button data-act="stop">■ Stop</button>` : `<button class="play" data-act="launch">▶ Open</button>`)
+  const progress = j => {
+    const pct = typeof j.percent === "number" ? Math.max(3, Math.min(100, j.percent)) : null;
+    return `<div class="progress${pct === null ? " busy" : ""}"><span>${esc(j.stage || "Downloading")}${pct === null ? "…" : ` ${Math.round(pct)}%`}</span><div class="track"><div class="fill" style="${pct === null ? "" : `width:${pct}%`}"></div></div></div>`;
+  };
+  const gameData = !st.needsData.has(key) ? "" : data && !data.done ? progress(data)
+    : `<button class="primary" data-act="game-data">Add game data</button><span class="meta">Open it once on the Frame first.</span>`;
+  if (job && !job.done) {
+    acts = progress(job);
+  } else if (m) {
+    acts = gameData + (m.running ? `<button data-act="stop">■ Stop</button>` : `<button class="play" data-act="launch">▶ Open</button>`)
       + `<button class="danger" data-act="remove">Remove</button>`;
-  } else if (job && !job.done) {
-    const pct = typeof job.percent === "number" ? Math.max(3, Math.min(100, job.percent)) : null;
-    acts = `<div class="progress${pct === null ? " busy" : ""}"><span>${esc(job.stage || "Downloading")}${pct === null ? "…" : ` ${Math.round(pct)}%`}</span><div class="track"><div class="fill" style="${pct === null ? "" : `width:${pct}%`}"></div></div></div>`;
-  } else if (job?.result?.game_data) {
-    acts = `<button class="primary" data-act="game-data">Add game data</button><span class="meta">Open it once on the Frame first.</span>`;
+  } else if (gameData) {
+    acts = gameData;
   } else if (!o.source) {
     acts = "";
   } else if (o.downloadable === false) {
@@ -359,11 +372,13 @@ function drawDetail() {
   } else {
     acts = `<button class="primary" data-act="install">Install</button>`;
   }
-  const note = job?.error ? `<div class="meta" style="color:var(--bad)">${esc(job.error)}</div>` : "";
+  const blurb = o.description || o.summary || (app.installed ? "" : app.summary);  // an Installed card's summary is its version, already in meta
+  const failed = data?.error || job?.error;
+  const note = failed ? `<div class="meta" style="color:var(--bad)">${esc(failed)}</div>` : "";
   $("sheet").innerHTML = `${top}<div class="inner">
     <div class="top">${icon(app.name, o.artwork)}<div><h2>${esc(app.name)}</h2><div class="meta">${esc(meta)}</div></div>
       ${o.vr ? '<span class="vr" style="margin-left:auto">VR</span>' : ""}</div>
-    ${app.summary || o.summary ? `<div class="text">${esc(text(o.description || app.summary || o.summary))}</div>` : ""}
+    ${blurb ? `<div class="text">${esc(text(blurb))}</div>` : ""}
     ${o.verdict ? `<div class="why"><b>${esc(o.verdict.label)}</b>${reasons.length ? `<ul>${reasons.slice(0, 3).map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}</div>` : ""}
     ${note}<div class="acts">${acts}<button class="close" data-act="close">Close</button></div></div>`;
 }
@@ -387,22 +402,29 @@ async function runJob(key, start) {
     }
   } catch (e) { job.error = e.message; toast(e.message, true); }
   finally {
-    job.done = true; await loadInstalled();
-    if (!job.result?.game_data) st.jobs.delete(key);
-    render(); drawDetail();
+    job.done = true;
+    if (!job.error) st.jobs.delete(key);  // a failure stays, so the sheet can say why
+    await loadInstalled(); render(); drawDetail();
   }
+  return job;
 }
 $("sheet").onclick = async e => {
   const b = e.target.closest("[data-act]"); if (!b || !current) return;
-  const app = current, o = app.offers[0], m = app.installed || installedOf(app), act = b.dataset.act, key = `${o.source}:${o.id}`;
+  const app = current, o = app.offers[0], m = installedOf(app), act = b.dataset.act, key = offerKey(app);
   if (act === "close") return closeDetail();
   if (act === "install") {
     toast(`Installing ${app.name}. The first time takes a minute…`);
-    return runJob(key, () => api("/api/sources/install", { source: o.source, id: o.id, version_code: o.version_code ?? null }));
+    const job = await runJob(key, () => api("/api/sources/install", { source: o.source, id: o.id, version_code: o.version_code ?? null }));
+    if (job.result?.package) {
+      st.installedFrom.set(key, job.result.package);
+      if (job.result.game_data) st.needsData.set(key, job.result.package);
+    }
+    return render(), drawDetail();
   }
-  if (act === "game-data") {
-    const pkg = st.jobs.get(key)?.result?.package;
-    return runJob(key, () => api("/api/sources", { action: "game-data", package: pkg }));
+  if (act === "game-data") {  // its own job: a failed copy keeps the install's result, so it can be tried again
+    const job = await runJob(key + ":data", () => api("/api/sources", { action: "game-data", package: st.needsData.get(key) }));
+    if (!job.error) st.needsData.delete(key);
+    return render(), drawDetail();
   }
   const pkg = m?.package; if (!pkg) return;
   if (act === "remove" && b.dataset.sure !== "1") {

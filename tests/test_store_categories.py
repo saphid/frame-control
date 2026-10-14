@@ -325,6 +325,19 @@ class ArtworkLookups(unittest.TestCase):
             _images._resolve('inside.example', 443, 5)
         self.assertEqual(lookup.call_count, 2)
 
+    def test_waiting_for_a_slot_counts_against_the_budget(self):
+        import threading, time
+        gate = threading.Event()
+        for _ in range(4):  # every slot busy for the whole test
+            _images._resolvers.acquire()
+        threading.Timer(0.06, lambda: [_images._resolvers.release() for _ in range(4)]).start()
+        with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(2) and []):
+            start = time.monotonic()
+            with self.assertRaises(SourceError):
+                _images._resolve('slow.example', 443, 0.1)
+            self.assertLess(time.monotonic() - start, 0.16)
+        gate.set()
+
     def test_many_at_once_wait_for_a_slot(self):
         import threading, time
         public = [(2, 1, 6, '', ('93.184.216.34', 443))]

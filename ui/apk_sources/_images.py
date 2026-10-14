@@ -100,8 +100,10 @@ def _resolve(host, port, timeout):
 def _lookup(host, port, timeout):
     # getaddrinfo has no timeout of its own; a thread keeps a slow resolver inside the budget.
     # A request waits for a free slot within its own budget rather than failing at once.
+    started = time.monotonic()
     if not _resolvers.acquire(timeout=max(0, min(timeout, 10))):
         raise SourceError('Too many slow artwork name lookups are still running; try again shortly')
+    timeout -= time.monotonic() - started  # the wait for a slot comes out of the same budget
     found = {}
 
     def run():
