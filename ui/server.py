@@ -2179,11 +2179,14 @@ def source_search(query):
     q = args.get('q', [''])[0]
     vr = args.get('vr', [''])[0]
     installable = args.get('installable', [''])[0]
-    if len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0'):
+    category, phone = args.get('category', [''])[0], args.get('phone', [''])[0]
+    if (len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0')
+            or phone not in ('', 'true', 'false', '1', '0') or len(category) > 40):
         raise Failure('Invalid search filters', 400)
     try:
         return apk_search.search(q, vr=None if not vr else vr in ('true', '1'),
-                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'))
+                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'),
+                                 category=category or None, phone=phone in ('true', '1'))
     except SourceError as e:
         raise Failure(str(e), 400)
 
@@ -2415,6 +2418,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self.send_bytes((HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/store":
+                # The Android store as a headset panel (scripts/store-on-frame.sh).
+                self.send_bytes((HERE / "store.html").read_bytes(), "text/html; charset=utf-8")
             elif path == "/api/settings/artwork":
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
@@ -2464,7 +2470,12 @@ class Handler(BaseHTTPRequestHandler):
                 ensure_master()
                 apps = frame_android.list_apps()
                 backfill_art(apps=apps)
-                self.send_json({"apps": apps})
+                try:  # store artwork for the library's cards, from saved indexes only
+                    art = apk_search.artwork_for(apps)
+                except Exception:
+                    art = {}
+                self.send_json({"apps": [dict(a, store_art=art[a['package']]) if a.get('package') in art else a
+                                         for a in apps]})
             elif path == "/api/titles":
                 ensure_master()
                 titles_list = frame_titles.list_titles()

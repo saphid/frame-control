@@ -12,7 +12,9 @@ from urllib.parse import urljoin, urlsplit
 from apk_sources import SourceError
 
 _lock = threading.Lock()
-_urls = OrderedDict()
+_urls = OrderedDict()  # token -> URL, oldest first
+_tokens = {}  # URL -> token
+MAX_TOKENS = 16384
 _cache = OrderedDict()
 MAX_IMAGE = 8 * 1024 * 1024
 MAX_CACHE = 64 * 1024 * 1024
@@ -31,24 +33,24 @@ def register(url):
     if not isinstance(url, str) or not valid_url(url):
         return None
     with _lock:
-        for token, known in _urls.items():
-            if known == url:
-                _urls.move_to_end(token)
-                return '/source-image/' + token
+        token = _tokens.get(url)
+        if token in _urls:
+            _urls.move_to_end(token)
+            return '/source-image/' + token
         token = secrets.token_urlsafe(24)
-        _urls[token] = url
-        while len(_urls) > 4096:
-            _urls.popitem(last=False)
+        _urls[token], _tokens[url] = url, token
+        while len(_urls) > MAX_TOKENS:  # a store browse lists a few thousand images
+            _tokens.pop(_urls.popitem(last=False)[1], None)
     return '/source-image/' + token
 
 
-def artwork(entry):
+def artwork(entry, shots=12):
     images = entry.get('images') or {}
     if not isinstance(images, dict):
         images = {}
     return {'icon': register(images.get('icon') or entry.get('icon')),
             'banner': register(images.get('banner')),
-            'screenshots': [path for path in (register(u) for u in (images.get('screenshots') or [])[:12]) if path]}
+            'screenshots': [path for path in (register(u) for u in (images.get('screenshots') or [])[:min(shots, 12)]) if path]}
 
 
 def image_type(data):
@@ -71,12 +73,37 @@ def fetch(url, redirects=3, deadline=None, limit=MAX_IMAGE):
 
 # Lookups that outlast their deadline keep running; cap them so they can't pile up.
 _resolvers = threading.BoundedSemaphore(4)
+# A page of store cards asks for dozens of images from the same few hosts at once: their public
+# addresses are kept for a few minutes, so most requests don't need a lookup (or a slot) at all.
+_dns = {}  # (host, port) -> (addresses, expires)
+DNS_TTL = 300
 
 
 def _resolve(host, port, timeout):
+    with _lock:
+        known = _dns.get((host, port))
+    if known and known[1] > time.monotonic():
+        return known[0]
+    found = _lookup(host, port, timeout)
+    try:
+        public = bool(found) and all(ipaddress.ip_address(a[4][0]).is_global for a in found)
+    except (TypeError, ValueError, IndexError):
+        public = False
+    if public:  # private answers are refused by the caller, and never kept
+        with _lock:
+            _dns[(host, port)] = (found, time.monotonic() + DNS_TTL)
+            while len(_dns) > 256:
+                _dns.pop(next(iter(_dns)))
+    return found
+
+
+def _lookup(host, port, timeout):
     # getaddrinfo has no timeout of its own; a thread keeps a slow resolver inside the budget.
-    if not _resolvers.acquire(blocking=False):
+    # A request waits for a free slot within its own budget rather than failing at once.
+    started = time.monotonic()
+    if not _resolvers.acquire(timeout=max(0, min(timeout, 10))):
         raise SourceError('Too many slow artwork name lookups are still running; try again shortly')
+    timeout -= time.monotonic() - started  # the wait for a slot comes out of the same budget
     found = {}
 
     def run():

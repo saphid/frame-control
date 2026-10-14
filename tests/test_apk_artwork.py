@@ -19,7 +19,9 @@ class ArtworkTests(unittest.TestCase):
     def setUp(self):
         with _images._lock:
             _images._urls.clear()
+            _images._tokens.clear()
             _images._cache.clear()
+            _images._dns.clear()
 
     def test_only_registered_source_images_are_fetchable(self):
         with patch.object(_images, 'fetch') as fetch:
@@ -71,9 +73,13 @@ class ArtworkTests(unittest.TestCase):
             _images.remember('https://example.com/a.png', PNG[:8] + b'x' * _images.MAX_IMAGE)
 
     def test_handles_are_bounded(self):
-        for i in range(4100):
-            _images.register('https://example.com/%d.png' % i)
-        self.assertEqual(len(_images._urls),4096)
+        with patch.object(_images, 'MAX_TOKENS', 50):
+            first = _images.register('https://example.com/0.png')
+            for i in range(1, 60):
+                _images.register('https://example.com/%d.png' % i)
+            self.assertEqual((len(_images._urls), len(_images._tokens)), (50, 50))
+            self.assertNotEqual(_images.register('https://example.com/0.png'), first)  # forgotten, so a new handle
+            self.assertEqual(_images.register('https://example.com/59.png'), _images.register('https://example.com/59.png'))
 
     def test_plain_language_verdict_is_evidence_based(self):
         self.assertEqual(search.verdict({})['label'], 'Not yet checked on the Frame')

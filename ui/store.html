@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>APK Store</title>
+<!-- Frame Control's Android store as a panel in the headset (docs/apks.md →
+     "The store in the headset"). Served by ui/server.py running on the Frame
+     (FRAME_LOCAL=1), opened by scripts/store-on-frame.sh at 1280×800. The same
+     sources, categories and artwork as the Store in Frame Control (/api/search,
+     ui/apk_sources/_categories.py), drawn for the laser: big targets, pages
+     instead of drag-scrolling (the panel gets mouse clicks, so a drag would
+     select text), the thumbstick (a mouse wheel) turns pages, and an on-screen
+     keyboard for search. -->
+<style>
+  :root {
+    --bg: #0f1722; --rail: #131d2a; --card: #1b2938; --card-hi: #23364a; --line: #ffffff14;
+    --text: #e3e8ee; --bright: #fff; --dim: #93a4ba; --blue: #1a9fff; --link: #66c0f4;
+    --good: #8ed36b; --bad: #ef7a64;
+    --action: linear-gradient(to right, #47bfff 5%, #1a44c2 95%);
+    --play: linear-gradient(to right, #75b022 5%, #588a1b 95%);
+  }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  html, body { margin: 0; height: 100%; background: radial-gradient(ellipse at 70% -20%, #1d3a5a 0%, transparent 60%), var(--bg);
+    color: var(--text); font: 19px/1.35 "Motiva Sans", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    overflow: hidden; user-select: none; -webkit-user-select: none; }
+  button { font: inherit; color: inherit; background: #ffffff0d; border: 1px solid var(--line); border-radius: 12px;
+    min-height: 52px; padding: 0 20px; cursor: pointer; }
+  button:hover { background: #ffffff1c; }
+  button:disabled { opacity: .45; cursor: default; }
+  button.primary { background: var(--action); border: 0; font-weight: 600; color: #fff; }
+  button.play { background: var(--play); border: 0; font-weight: 600; color: #fff; }
+  button.danger { color: var(--bad); }
+  svg { width: 22px; height: 22px; flex: none; }
+  .app { display: grid; grid-template-columns: 236px 1fr; height: 100%; }
+  /* Rail */
+  .rail { background: #0c131ccc; border-right: 1px solid var(--line); padding: 18px 12px; display: flex; flex-direction: column; gap: 3px; }
+  .rail h1 { font-size: 22px; margin: 2px 10px 12px; display: flex; align-items: center; gap: 10px; color: var(--bright); }
+  .rail h1 svg { width: 28px; height: 28px; color: var(--blue); }
+  .rail button { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 47px; text-align: left; border: 0;
+    background: transparent; color: #b5c0cb; font-size: 17px; font-weight: 500; padding: 0 12px; border-radius: 10px; }
+  .rail button:hover { background: #ffffff10; color: var(--bright); }
+  .rail button[aria-pressed="true"] { background: #1a9fff2e; color: var(--bright); box-shadow: inset 4px 0 0 var(--blue); }
+  .rail .sep { height: 1px; background: var(--line); margin: 6px 8px; }
+  .rail .n { margin-left: auto; font-size: 13px; color: #c6e2f5; background: #1a9fff2e; border-radius: 10px; padding: 1px 8px; }
+  .rail .n:empty { display: none; }
+  .rail label { margin-top: auto; display: flex; align-items: center; gap: 10px; padding: 10px 12px; font-size: 15px; color: var(--dim); cursor: pointer; }
+  .rail input { width: 22px; height: 22px; accent-color: var(--blue); margin: 0; }
+  /* Main */
+  main { display: flex; flex-direction: column; min-width: 0; padding: 18px 22px; gap: 12px; }
+  .bar { display: flex; gap: 12px; align-items: center; }
+  .search { flex: 1; display: flex; align-items: center; gap: 12px; background: #0c1520; border: 1px solid var(--line);
+    border-radius: 12px; min-height: 54px; padding: 0 18px; color: var(--dim); }
+  .search input { flex: 1; background: none; border: 0; color: var(--text); font: inherit; outline: none; min-width: 0; }
+  .search input::placeholder { color: var(--dim); }
+  .heading { display: flex; align-items: baseline; gap: 14px; min-height: 30px; }
+  .heading b { color: var(--bright); font-size: 25px; letter-spacing: -.4px; }
+  .heading span { color: var(--dim); font-size: 16px; }
+  .heading .note { margin-left: auto; font-size: 14px; color: var(--dim); max-width: 520px; text-align: right; }
+  .content { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+  .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 14px; }
+  .grid.one-row { grid-template-rows: minmax(0, 1fr); }
+  .card { display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; min-height: 0; border-radius: 14px;
+    background: var(--card); border: 1px solid var(--line); }
+  .card:hover { background: var(--card-hi); border-color: #66c0f480; }
+  .card .art { flex: 0 0 52%; }
+  .card .body { display: flex; flex-direction: column; gap: 6px; padding: 10px 12px 12px; min-height: 0; flex: 1; width: 100%; }
+  .card .title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+  .card .title strong { font-size: 17px; color: var(--bright); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+  .card .sum { color: var(--dim); font-size: 14px; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .card .foot { margin-top: auto; display: flex; justify-content: space-between; align-items: center; gap: 6px; font-size: 13px; color: var(--dim); }
+  /* Artwork: a banner, else screenshots side by side, else the icon over its own blur, else an initial. */
+  .art { position: relative; display: block; overflow: hidden; width: 100%;
+    background: radial-gradient(ellipse at 75% 10%, hsl(var(--hue) 50% 40%), transparent 70%), linear-gradient(140deg, hsl(var(--hue) 35% 18%), #101827); }
+  .art > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .art .initial { position: absolute; inset: 0; display: grid; place-items: center; font-size: 64px; font-weight: 700; color: #ffffff45; }
+  .art.shots { display: flex; gap: 6px; justify-content: center; padding: 8px 8px 0; }
+  .art.shots > img { position: relative; inset: auto; width: auto; max-width: 31%; height: 100%; object-position: top; border-radius: 6px 6px 0 0; box-shadow: 0 4px 14px #0008; }
+  .art.iconart > .backdrop { position: absolute; inset: -30%; width: 160%; height: 160%; object-fit: cover; filter: blur(28px) saturate(1.4) brightness(.55); }
+  .art.iconart > .mark { position: absolute; left: 50%; top: 50%; width: 36%; height: auto; aspect-ratio: 1; transform: translate(-50%, -50%); border-radius: 22%; box-shadow: 0 8px 24px #0009; object-fit: cover; }
+  .art.shots .initial, .art.iconart .initial { display: none; }
+  .art .vr { position: absolute; z-index: 2; top: 8px; left: 8px; }
+  .icon { position: relative; display: inline-grid; place-items: center; width: 38px; height: 38px; border-radius: 9px; overflow: hidden; flex: none;
+    background: hsl(var(--hue) 35% 28%); color: #fff; font-size: 18px; font-weight: 600; }
+  .icon img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+  .vr { font-size: 12px; font-weight: 700; letter-spacing: .8px; color: #0e141b; background: #c2e7ff; border-radius: 5px; padding: 2px 7px; }
+  .fit { font-size: 12px; font-weight: 600; border-radius: 5px; padding: 2px 8px; white-space: nowrap; }
+  .fit.works { color: #c3efb2; background: #59bf4029; } .fit.ready { color: #bfe3fa; background: #1a9fff26; } .fit.blocked { color: #f3b2a6; background: #d9412629; }
+  .tag { font-size: 12px; font-weight: 600; color: #d6f5c8; background: #2d5a1f; border-radius: 10px; padding: 2px 9px; white-space: nowrap; }
+  /* Home */
+  .hero { position: relative; flex: 0 0 42%; padding: 0; border: 0; border-radius: 16px; overflow: hidden; text-align: left; isolation: isolate; }
+  .hero .art { position: absolute; inset: 0; height: 100%; }
+  .hero::after { content: ""; position: absolute; inset: 0; z-index: 1; background: linear-gradient(90deg, #081421f0 0%, #08142180 50%, #08142100 85%); }
+  .hero .copy { position: relative; z-index: 2; padding: 26px 30px; max-width: 560px; display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
+  .hero .eyebrow { display: flex; gap: 10px; align-items: center; font-size: 13px; font-weight: 700; letter-spacing: 1.6px; text-transform: uppercase; color: #c2e7ff; }
+  .hero strong { font-size: 38px; color: #fff; line-height: 1.05; letter-spacing: -.8px; }
+  .hero .blurb { color: #e0e8ef; font-size: 17px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hero .cta { margin-top: 4px; background: #ffffff22; border: 1px solid #ffffff44; border-radius: 10px; padding: 9px 18px; font-size: 16px; color: #fff; }
+  /* Pager */
+  .pager { display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+  .pager button { min-width: 180px; }
+  .dots { display: flex; gap: 8px; align-items: center; color: var(--dim); font-size: 15px; }
+  .empty { grid-column: 1 / -1; grid-row: 1 / -1; display: grid; place-items: center; align-content: center; gap: 14px; color: var(--dim); text-align: center; padding: 30px; }
+  .empty h2 { margin: 0; color: var(--bright); font-size: 24px; }
+  .skeleton { border-radius: 14px; background: linear-gradient(100deg, #1b2938 30%, #24364a 50%, #1b2938 70%); background-size: 300% 100%; animation: shimmer 1.4s infinite; }
+  @keyframes shimmer { to { background-position: -150% 0; } }
+  /* Detail sheet and keyboard sit over everything. */
+  .overlay { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; z-index: 10; }
+  .sheet { background: #16212e; border: 1px solid var(--line); border-radius: 22px; width: 1000px; max-height: 740px; overflow: hidden;
+    display: flex; flex-direction: column; box-shadow: 0 30px 80px #000c; }
+  .sheet > .art { flex: 0 0 250px; }
+  .sheet .gallery { flex: 0 0 250px; display: flex; gap: 10px; padding: 14px 14px 0; background: #0c131c; justify-content: center; overflow: hidden; }
+  .sheet .gallery img { height: 100%; width: auto; max-width: 32%; object-fit: cover; object-position: top; border-radius: 10px 10px 0 0; }
+  .sheet .inner { padding: 20px 28px 22px; display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+  .sheet .top { display: flex; gap: 18px; align-items: center; }
+  .sheet .top .icon { width: 72px; height: 72px; border-radius: 16px; font-size: 32px; }
+  .sheet h2 { margin: 0; font-size: 30px; color: var(--bright); line-height: 1.1; }
+  .sheet .meta { color: var(--dim); font-size: 16px; }
+  .sheet .text { font-size: 17px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+  .sheet .why { background: #ffffff0a; border-radius: 12px; padding: 10px 16px; font-size: 15px; color: #c5d0db; }
+  .sheet .why ul { margin: 4px 0 0; padding-left: 22px; }
+  .sheet .acts { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 8px; align-items: center; }
+  .sheet .acts .close { margin-left: auto; }
+  .progress { flex: 1; min-width: 260px; display: flex; flex-direction: column; gap: 6px; font-size: 15px; color: var(--dim); }
+  .progress .track { height: 8px; border-radius: 4px; background: #ffffff14; overflow: hidden; }
+  .progress .fill { height: 100%; background: var(--blue); width: 30%; transition: width .3s; }
+  .progress.busy .fill { animation: busy 1.2s ease-in-out infinite; }
+  @keyframes busy { from { margin-left: -30%; } to { margin-left: 100%; } }
+  .kbd { position: fixed; left: 0; right: 0; bottom: 0; background: #131d2af5; border-top: 1px solid var(--line);
+    padding: 12px; display: grid; gap: 8px; z-index: 20; box-shadow: 0 -20px 50px #0009; }
+  .kbd .row { display: flex; gap: 8px; justify-content: center; }
+  .kbd button { min-width: 76px; min-height: 60px; padding: 0 10px; font-size: 21px; }
+  .kbd .wide { min-width: 320px; }
+  .toast { position: fixed; left: 50%; top: 18px; transform: translateX(-50%); background: #0d2236; border: 1px solid var(--blue);
+    border-radius: 14px; padding: 12px 20px; z-index: 30; max-width: 900px; box-shadow: 0 10px 30px #0008; }
+  .toast.bad { background: #3a1416; border-color: var(--bad); }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="rail" role="navigation" aria-label="Store">
+    <h1><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16l-1.5 12.5a1 1 0 0 1-1 .9H6.5a1 1 0 0 1-1-.9z"/><path d="M8.5 9V6a3.5 3.5 0 0 1 7 0v3"/></svg>APK Store</h1>
+    <div id="cats"></div>
+    <div class="sep"></div>
+    <button data-view="installed" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><rect x="3.5" y="4" width="7" height="7" rx="1.5"/><rect x="13.5" y="4" width="7" height="7" rx="1.5"/><rect x="3.5" y="14" width="7" height="7" rx="1.5"/><rect x="13.5" y="14" width="7" height="7" rx="1.5"/></svg>Installed<span class="n" id="instN"></span></button>
+    <label title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools. Searching always finds them."><input type="checkbox" id="phone"> Show phone-only apps</label>
+  </div>
+  <main>
+    <div class="bar">
+      <label class="search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="q" placeholder="Search games and apps" autocomplete="off" spellcheck="false" aria-label="Search games and apps"></label>
+      <button id="kbdBtn" title="On-screen keyboard">⌨︎ Keyboard</button>
+    </div>
+    <div class="heading"><b id="title">Home</b><span id="count"></span><span class="note" id="note"></span></div>
+    <div class="content" id="content"></div>
+    <div class="pager">
+      <button id="prev">◀ Previous</button>
+      <span class="dots" id="page"></span>
+      <button id="next">Next ▶</button>
+    </div>
+  </main>
+</div>
+
+<div class="overlay" id="detail" hidden><div class="sheet" id="sheet"></div></div>
+<div class="kbd" id="kbd" hidden></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+const UI_KEY = new URLSearchParams(location.search).get("key") || "1";
+const $ = id => document.getElementById(id);
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const PER_PAGE = 8;
+// Same ids and order as STORE_CATS in index.html and ui/apk_sources/_categories.py.
+const CATS = [
+  ["", "Home", '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>'],
+  ["vr", "VR", '<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h14a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 19 16h-3.5l-2-2.5h-3l-2 2.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><circle cx="8" cy="11.5" r="1.5"/><circle cx="16" cy="11.5" r="1.5"/>'],
+  ["games", "Games", '<path d="M7 9h10a4 4 0 0 1 3.9 4.9l-.6 2.6a2 2 0 0 1-3.4.9L14.5 15h-5l-2.4 2.4a2 2 0 0 1-3.4-.9l-.6-2.6A4 4 0 0 1 7 9z"/><path d="M8 11.5v3M6.5 13h3"/>'],
+  ["emulators", "Emulators", '<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M9 20h6M12 16v4M8 10.5h3M9.5 9v3"/>'],
+  ["watch", "Watch & listen", '<rect x="3.5" y="5.5" width="17" height="11" rx="1.5"/><path d="m10.5 8.5 4 2.5-4 2.5z"/><path d="M8 20h8"/>'],
+  ["read", "Read & learn", '<path d="M12 7c-2-1.5-5-2-8-1.5v12c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-12c-3-.5-6 0-8 1.5zM12 7v12"/>'],
+  ["create", "Create", '<path d="m14.5 5.5 4 4L9 19H5v-4z"/><path d="m12.5 7.5 4 4"/>'],
+  ["work", "Work", '<rect x="4" y="7" width="16" height="12" rx="1.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"/>'],
+  ["web", "Web & chat", '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13.5 0 16M12 4c-2.5 2.5-2.5 13.5 0 16"/>'],
+  ["tools", "Tools", '<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4.5 16.5l3 3 4.7-4.7a4 4 0 0 0 5.3-5.3l-2.4 2.4-2.6-.4-.4-2.6z"/>'],
+];
+const catLabel = id => (CATS.find(c => c[0] === id) || [])[1] || "";
+const FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocked: "Won't run" };
+// view: "" (home), a category id, or "installed"; jobs: offer key -> {stage, percent, done, result, error}
+// installedFrom: offer key -> package it installed as (GitHub listings have no package);
+// needsData: installed packages still waiting for their game data (any view, while installed)
+const st = { view: "", q: "", phone: false, page: 0, apps: [], installed: new Map(), jobs: new Map(), installedFrom: new Map(),
+             needsData: new Set(), request: 0, loading: false, retry: 0 };
+
+async function api(path, body) {
+  const opts = body === undefined ? { headers: { "X-Frame-UI": UI_KEY } } : {
+    method: "POST", headers: { "Content-Type": "application/json", "X-Frame-UI": UI_KEY }, body: JSON.stringify(body) };
+  const r = await fetch(path, opts);
+  const j = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(j.error || `HTTP ${r.status}`);
+  return j;
+}
+let toastTimer;
+function toast(msg, bad = false) {
+  const t = $("toast");
+  t.textContent = msg; t.className = "toast" + (bad ? " bad" : ""); t.hidden = false;
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, bad ? 8000 : 4500);
+}
+
+// ---- Artwork (only the server's /source-image/ handles are ever used as an image) ----
+const hue = name => [...String(name)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % 360;
+const initial = name => [...String(name || "?")][0].toUpperCase();
+const valid = u => /^\/source-image\/[\w-]+$/.test(u || "");
+const img = (u, cls = "") => valid(u) ? `<img${cls ? ` class="${cls}"` : ""} src="${esc(u)}" alt="" decoding="async">` : "";
+function art(name, a = {}, extra = "") {
+  const base = `style="--hue:${hue(name)}"`, ini = `<span class="initial" aria-hidden="true">${esc(initial(name))}</span>`;
+  if (valid(a.banner)) return `<span class="art" ${base}>${ini}${img(a.banner)}${extra}</span>`;
+  const shots = (a.screenshots || []).filter(valid).slice(0, 3);
+  if (shots.length) return `<span class="art shots" ${base}>${ini}${shots.map(u => img(u)).join("")}${extra}</span>`;
+  if (valid(a.icon)) return `<span class="art iconart" ${base}>${ini}${img(a.icon, "backdrop")}${img(a.icon, "mark")}${extra}</span>`;
+  return `<span class="art" ${base}>${ini}${extra}</span>`;
+}
+const icon = (name, a = {}) => `<span class="icon" style="--hue:${hue(name)}" aria-hidden="true">${esc(initial(name))}${img(a.icon)}</span>`;
+document.addEventListener("error", e => {
+  const el = e.target;
+  if (!el.matches?.(".art img, .icon img")) return;
+  if (!el.dataset.retried) { el.dataset.retried = "1"; setTimeout(() => { el.src = el.getAttribute("src").split("?")[0] + "?retry=1"; }, 1500); return; }
+  const box = el.closest(".shots, .iconart"); el.remove();
+  if (box && !box.querySelector("img")) box.classList.remove("shots", "iconart");
+}, true);
+const text = s => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " ");
+
+// ---- Data ----
+async function loadInstalled() {
+  try {
+    st.installed = new Map((await api("/api/android")).apps.map(a => [a.package, a]));
+    for (const pkg of st.needsData) if (!st.installed.has(pkg)) { st.needsData.delete(pkg); st.jobs.delete("data:" + pkg); }  // removed
+  } catch (e) { toast(`Couldn't list installed apps: ${e.message}`, true); }
+  $("instN").textContent = st.installed.size || "";
+}
+async function search(quiet) {
+  const request = ++st.request;
+  clearTimeout(st.retry);
+  if (st.view === "installed") { st.loading = false; st.page = 0; return render(); }  // a pending search is now stale
+  st.loading = !quiet; if (!quiet) render();
+  const params = new URLSearchParams({ q: st.q, category: st.view, phone: String(st.phone) });
+  try {
+    const result = await api("/api/search?" + params);
+    if (request !== st.request) return;
+    st.apps = result.apps; st.loading = false;
+    const loading = result.sources.filter(s => s.status === "loading").map(s => s.name);
+    $("note").textContent = loading.length ? `Still fetching ${loading.join(" and ")}; more apps will appear.` : "";
+    if (loading.length) st.retry = setTimeout(() => request === st.request && search(true), 6000);
+    if (!quiet) st.page = 0;
+    render();
+  } catch (e) {
+    if (request !== st.request) return;
+    st.loading = false; st.apps = []; render(`Couldn't reach the app shelves: ${e.message}`);
+  }
+}
+const offerKey = app => `${app.offers[0].source}:${app.offers[0].id}`;
+// Always the latest state: an Installed card's own copy goes stale after Stop or Remove.
+function installedOf(app) {
+  const pkg = app.installed?.package || app.package || st.installedFrom.get(offerKey(app));
+  return pkg ? st.installed.get(pkg) : undefined;
+}
+
+// ---- Pages ----
+function list() {
+  if (st.view === "installed") {
+    const q = st.q.toLowerCase();
+    return [...st.installed.values()].filter(m => !q || `${m.label} ${m.package}`.toLowerCase().includes(q))
+      .map(m => ({ installed: m, name: m.label || m.package, package: m.package, summary: m.version ? `v${String(m.version).replace(/^v/i, "")}` : "",
+                   offers: [{ name: m.label, artwork: m.store_art || {}, vr: m.vr && !m.flatscreen }] }));
+  }
+  return st.home ? st.home.rest : st.apps;
+}
+function card(app, i) {
+  const o = app.offers[0], m = installedOf(app), job = st.jobs.get(offerKey(app));
+  const state = m ? `<span class="tag">${m.running ? "Running" : "Installed"}</span>`
+    : job && !job.done ? `<span class="tag">Installing…</span>`
+    : FIT[o.verdict?.tone] ? `<span class="fit ${o.verdict.tone}">${FIT[o.verdict.tone]}</span>` : "";
+  const kind = o.phone_only ? "Phone app" : catLabel(app.category || o.category) || (m ? (o.vr ? "VR app" : "Android app") : "Android app");
+  return `<button class="card" data-i="${i}" aria-label="${esc(app.name)}">${art(app.name, o.artwork, o.vr ? '<span class="vr">VR</span>' : "")}
+    <span class="body"><span class="title">${icon(app.name, o.artwork)}<strong>${esc(app.name)}</strong></span>
+    <span class="sum">${esc(text(app.summary))}</span><span class="foot"><span>${esc(kind)}</span>${state}</span></span></button>`;
+}
+function render(error) {
+  const home = st.view === "" && !st.q;
+  $("title").textContent = st.q ? `Results for “${st.q}”` : st.view === "installed" ? "Installed" : st.view ? catLabel(st.view) : "Home";
+  document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === st.view)));
+  const content = $("content");
+  if (st.loading) {
+    content.innerHTML = `<div class="grid">${Array.from({ length: PER_PAGE }, () => '<div class="skeleton"></div>').join("")}</div>`;
+    $("count").textContent = ""; $("page").textContent = ""; $("prev").disabled = $("next").disabled = true; return;
+  }
+  // Home: a featured VR app and four picks, then pages of one app from each category in turn.
+  st.home = null;
+  if (home && st.apps.length) {
+    const ok = st.apps.filter(a => a.offers[0].verdict?.tone !== "blocked");
+    const heroes = ok.filter(a => a.offers[0].vr && valid(a.offers[0].artwork?.banner));
+    const featured = heroes[Math.floor(Date.now() / 864e5) % (heroes.length || 1)] || ok.find(a => valid(a.offers[0].artwork?.banner));
+    const queues = CATS.slice(1).map(([id]) => ok.filter(a => a.category === id && a !== featured));
+    const mixed = [];
+    for (let i = 0; queues.some(q => q[i]); i++) queues.forEach(q => q[i] && mixed.push(q[i]));
+    st.home = { featured, rest: mixed.slice(0, 4 + 5 * PER_PAGE) };  // six pages of picks; the categories have the rest
+  }
+  const items = list();
+  const first = st.home?.featured ? 4 : PER_PAGE;  // the first home page shares its space with the banner
+  const pages = Math.max(1, items.length <= first ? 1 : 1 + Math.ceil((items.length - first) / PER_PAGE));
+  st.page = Math.min(st.page, pages - 1);
+  const start = st.page === 0 ? 0 : first + (st.page - 1) * PER_PAGE;
+  const shown = items.slice(start, start + (st.page === 0 ? first : PER_PAGE));
+  $("count").textContent = home ? "" : `${items.length.toLocaleString()} app${items.length === 1 ? "" : "s"}`;
+  $("page").textContent = `Page ${st.page + 1} of ${pages}`;
+  $("prev").disabled = st.page === 0; $("next").disabled = st.page >= pages - 1;
+  const empty = error ? `<div class="empty"><h2>No connection</h2>${esc(error)}</div>`
+    : st.view === "installed" && !st.q ? `<div class="empty"><h2>Nothing installed yet</h2>Pick an app in the store and press Install.<button class="primary" data-view="">Browse the store</button></div>`
+    : `<div class="empty"><h2>No apps here</h2>Try another category${st.phone ? "" : ", or show phone-only apps"}.</div>`;
+  let html = "";
+  if (st.page === 0 && st.home?.featured) {
+    const f = st.home.featured, o = f.offers[0];
+    html += `<button class="hero" data-feature="1" aria-label="${esc(f.name)}">${art(f.name, o.artwork)}<span class="copy">
+      <span class="eyebrow">${o.vr ? '<span class="vr">VR</span>' : ""}Featured</span><strong>${esc(f.name)}</strong>
+      <span class="blurb">${esc(text(f.summary))}</span><span class="cta">See ${esc(f.name)} ›</span></span></button>`;
+  }
+  html += `<div class="grid${st.page === 0 && st.home?.featured ? " one-row" : ""}">${shown.length ? shown.map((a, i) => card(a, start + i)).join("") : empty}</div>`;
+  content.innerHTML = html;
+}
+function turn(by) {
+  if (by < 0 ? $("prev").disabled : $("next").disabled) return;
+  st.page += by; render();
+}
+
+// ---- Detail sheet ----
+let current = null;  // {app, installed}
+const ver = v => String(v || "").replace(/^v/i, "");
+const size = n => n >= 1e9 ? (n / 1e9).toFixed(1) + " GB" : n >= 1e6 ? Math.round(n / 1e6) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
+function openDetail(app) {
+  current = app; drawDetail(); $("detail").hidden = false;
+  const o = app.offers[0];
+  if (o.source && o.id && !app.detailed) {  // the full entry has all the screenshots
+    api(`/api/sources/details?source=${encodeURIComponent(o.source)}&id=${encodeURIComponent(o.id)}`)
+      .then(full => { if (current === app) { app.offers[0] = { ...o, ...full }; app.detailed = true; drawDetail(); } }).catch(() => {});
+  }
+}
+function drawDetail() {
+  const app = current; if (!app) return;
+  const o = app.offers[0], m = installedOf(app), key = offerKey(app), job = st.jobs.get(key), data = m && st.jobs.get("data:" + m.package);
+  if (app.installed && !m) return closeDetail();  // removed
+  const shots = (o.artwork?.screenshots || []).filter(valid);
+  const top = valid(o.artwork?.banner) ? art(app.name, { banner: o.artwork.banner })
+    : shots.length ? `<div class="gallery">${shots.slice(0, 3).map(u => img(u)).join("")}</div>` : art(app.name, o.artwork || {});
+  const meta = [o.developer, o.source_name, o.version ? `v${ver(o.version)}` : m?.version ? `v${ver(m.version)}` : "", o.size ? size(o.size) : ""].filter(Boolean).join(" · ");
+  const reasons = (o.fit?.reasons || []).filter(Boolean);
+  let acts;
+  const progress = j => {
+    const pct = typeof j.percent === "number" ? Math.max(3, Math.min(100, j.percent)) : null;
+    return `<div class="progress${pct === null ? " busy" : ""}"><span>${esc(j.stage || "Downloading")}${pct === null ? "…" : ` ${Math.round(pct)}%`}</span><div class="track"><div class="fill" style="${pct === null ? "" : `width:${pct}%`}"></div></div></div>`;
+  };
+  const gameData = !(m && st.needsData.has(m.package)) ? "" : data && !data.done ? progress(data)
+    : `<button class="primary" data-act="game-data">Add game data</button><span class="meta">Open it once on the Frame first.</span>`;
+  if (job && !job.done) {
+    acts = progress(job);
+  } else if (m) {
+    acts = gameData + (m.running ? `<button data-act="stop">■ Stop</button>` : `<button class="play" data-act="launch">▶ Open</button>`)
+      + `<button class="danger" data-act="remove">Remove</button>`;
+  } else if (!o.source) {
+    acts = "";
+  } else if (o.downloadable === false) {
+    acts = `<button disabled>Get it from the developer's page</button>`;
+  } else if (o.verdict?.tone === "blocked") {
+    acts = `<button disabled>Won't run on the Frame</button>`;
+  } else {
+    acts = `<button class="primary" data-act="install">Install</button>`;
+  }
+  const blurb = o.description || o.summary || (app.installed ? "" : app.summary);  // an Installed card's summary is its version, already in meta
+  const failed = data?.error || job?.error;
+  const note = failed ? `<div class="meta" style="color:var(--bad)">${esc(failed)}</div>` : "";
+  $("sheet").innerHTML = `${top}<div class="inner">
+    <div class="top">${icon(app.name, o.artwork)}<div><h2>${esc(app.name)}</h2><div class="meta">${esc(meta)}</div></div>
+      ${o.vr ? '<span class="vr" style="margin-left:auto">VR</span>' : ""}</div>
+    ${blurb ? `<div class="text">${esc(text(blurb))}</div>` : ""}
+    ${o.verdict ? `<div class="why"><b>${esc(o.verdict.label)}</b>${reasons.length ? `<ul>${reasons.slice(0, 3).map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}</div>` : ""}
+    ${note}<div class="acts">${acts}<button class="close" data-act="close">Close</button></div></div>`;
+}
+function closeDetail() { current = null; $("detail").hidden = true; }
+
+async function runJob(key, start) {
+  const job = { stage: "Downloading", percent: null, done: false };
+  st.jobs.set(key, job); drawDetail(); render();
+  try {
+    const { job: id } = await start();
+    for (let misses = 0; ;) {
+      await new Promise(ok => setTimeout(ok, 1500));
+      let j;
+      try { j = await api(`/api/job?id=${encodeURIComponent(id)}`); misses = 0; }
+      catch (e) { if (++misses >= 20 || /no such job/.test(e.message)) throw e; continue; }
+      Object.assign(job, { stage: j.stage || job.stage, percent: j.percent ?? null });
+      if (!j.done) { drawDetail(); continue; }
+      if (j.error) throw new Error(j.error);
+      toast(j.message); job.result = j.result || {};
+      break;
+    }
+  } catch (e) { job.error = e.message; toast(e.message, true); }
+  finally {
+    job.done = true;
+    if (!job.error) st.jobs.delete(key);  // a failure stays, so the sheet can say why
+    await loadInstalled(); render(); drawDetail();
+  }
+  return job;
+}
+$("sheet").onclick = async e => {
+  const b = e.target.closest("[data-act]"); if (!b || !current) return;
+  const app = current, o = app.offers[0], m = installedOf(app), act = b.dataset.act, key = offerKey(app);
+  if (act === "close") return closeDetail();
+  if (act === "install") {
+    toast(`Installing ${app.name}. The first time takes a minute…`);
+    const job = await runJob(key, () => api("/api/sources/install", { source: o.source, id: o.id, version_code: o.version_code ?? null }));
+    if (job.result?.package) {
+      st.installedFrom.set(key, job.result.package);
+      if (job.result.game_data) st.needsData.add(job.result.package);
+    }
+    return render(), drawDetail();
+  }
+  if (act === "game-data" && m) {  // its own job, by package: a failed copy keeps the pending data, so it can be tried again
+    const job = await runJob("data:" + m.package, () => api("/api/sources", { action: "game-data", package: m.package }));
+    if (!job.error) st.needsData.delete(m.package);
+    return render(), drawDetail();
+  }
+  const pkg = m?.package; if (!pkg) return;
+  if (act === "remove" && b.dataset.sure !== "1") {
+    b.dataset.sure = "1"; b.textContent = "Remove it and its data?"; return;  // no confirm(): a separate window the laser has to find
+  }
+  b.disabled = true;
+  try {
+    const r = await api("/api/android", { action: act, package: pkg });
+    toast(r.message);
+    if (act === "remove") { st.needsData.delete(pkg); st.jobs.delete("data:" + pkg); }
+    if (act === "launch") closeDetail();
+  } catch (err) { toast(err.message, true); }
+  await loadInstalled(); render();
+  if (current === app) drawDetail();
+};
+$("detail").onclick = e => { if (e.target === $("detail")) closeDetail(); };
+
+// ---- Navigation ----
+$("cats").innerHTML = CATS.map(([id, label, path]) => `<button data-view="${id}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${path}</svg>${esc(label)}</button>`).join("");
+document.addEventListener("click", e => {
+  const v = e.target.closest("[data-view]");
+  if (v && !e.target.closest("#sheet")) {
+    st.view = v.dataset.view; st.q = ""; $("q").value = "";
+    if (st.view === "installed") loadInstalled().then(() => search()); else search();
+    return;
+  }
+  if (e.target.closest("[data-feature]")) return openDetail(st.home.featured);
+  const c = e.target.closest(".card[data-i]");
+  if (c) openDetail(list()[+c.dataset.i]);
+});
+$("phone").onchange = e => { st.phone = e.target.checked; search(); };
+$("prev").onclick = () => turn(-1);
+$("next").onclick = () => turn(1);
+// The thumbstick arrives as a mouse wheel: one notch, one page.
+let wheelAt = 0;
+document.querySelector("main").addEventListener("wheel", e => {
+  e.preventDefault();
+  if (!$("detail").hidden || Date.now() - wheelAt < 350 || Math.abs(e.deltaY) < 4) return;
+  wheelAt = Date.now(); turn(e.deltaY > 0 ? 1 : -1);
+}, { passive: false });
+let qTimer;
+$("q").oninput = e => { clearTimeout(qTimer); qTimer = setTimeout(() => { st.q = e.target.value.trim(); search(); }, 250); };
+document.addEventListener("keydown", e => { if (e.key === "Escape") { closeDetail(); $("kbd").hidden = true; } });
+
+// ---- On-screen keyboard (a text field on a panel may not bring up Steam's) ----
+const ROWS = ["1234567890", "qwertyuiop", "asdfghjkl", "zxcvbnm"];
+$("kbd").innerHTML = ROWS.map(r => `<div class="row">${[...r].map(k => `<button data-k="${k}">${k}</button>`).join("")}</div>`).join("")
+  + `<div class="row"><button data-k="clear">Clear</button><button class="wide" data-k=" ">space</button><button data-k="back">⌫</button><button data-k="done" class="primary">Done</button></div>`;
+$("kbd").onclick = e => {
+  const b = e.target.closest("[data-k]"); if (!b) return;
+  const k = b.dataset.k, q = $("q");
+  if (k === "done") { $("kbd").hidden = true; return; }
+  q.value = k === "clear" ? "" : k === "back" ? q.value.slice(0, -1) : q.value + k;
+  q.dispatchEvent(new Event("input"));
+};
+$("kbdBtn").onclick = () => $("kbd").hidden = !$("kbd").hidden;
+
+loadInstalled().then(() => search());
+</script>
+</body>
+</html>
