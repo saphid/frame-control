@@ -558,6 +558,95 @@
   .store-badges { display:flex; flex-wrap:wrap; gap:7px; }
   .store-badge { font-size:11px; color:#b7d8ec; background:#6ec9ff14; padding:4px 9px; border-radius:5px; }
   .store-badge.works { color:#b8e2ab; background:#70bb5418; }
+  /* ---- Android: Store and Library ---- */
+  .store-tabs { border-bottom:0; padding-bottom:0; margin-bottom:26px; }
+  .store-switch { display:inline-flex; padding:4px; gap:4px; border-radius:12px; background:#0e1723; border:1px solid #ffffff10; }
+  .store-switch > button { display:inline-flex; align-items:center; gap:9px; height:42px; padding:0 22px; border-radius:9px; font-size:15px; font-weight:600; background:transparent; color:var(--muted); border:0; }
+  .store-switch > button svg { width:19px; height:19px; }
+  .store-switch > button.on { background:linear-gradient(180deg,#2a4763,#203a52); color:var(--bright); box-shadow:0 2px 10px #0006, inset 0 1px 0 #ffffff14; }
+  .store-switch > button:not(.on):hover { color:var(--text); background:#ffffff08; }
+  #andCount { font-size:12px; font-weight:600; color:#c6e2f5; background:#1a9fff2e; border-radius:10px; padding:1px 8px; }
+  #andCount:empty { display:none; }
+  .store-layout { display:grid; grid-template-columns:200px minmax(0,1fr); gap:32px; align-items:start; }
+  .store-side { position:sticky; top:88px; display:flex; flex-direction:column; gap:18px; }
+  .store-cats { display:flex; flex-direction:column; gap:2px; }
+  .store-cats button { display:flex; align-items:center; gap:11px; width:100%; height:38px; padding:0 12px; border-radius:8px; background:transparent; border:0; color:#b5c0cb; font-size:14px; font-weight:500; text-align:left; }
+  .store-cats button svg { width:18px; height:18px; flex:none; opacity:.85; }
+  .store-cats button:hover { background:#ffffff09; color:var(--bright); }
+  .store-cats button[aria-pressed=true] { background:#1a9fff26; color:var(--bright); box-shadow:inset 3px 0 0 var(--blue); }
+  .store-side-opts { display:flex; flex-direction:column; gap:10px; padding:14px 12px 0; border-top:1px solid #ffffff10; font-size:12px; color:#a8b5c2; }
+  .store-check { display:flex; align-items:center; gap:8px; cursor:pointer; }
+  .store-check input { accent-color:var(--blue); width:15px; height:15px; margin:0; }
+  .store-source-select { display:flex; flex-direction:column; gap:6px; }
+  .store-source-select select { max-width:none; width:100%; }
+  .store-main { min-width:0; }
+  .store-toolbar { margin-bottom:20px; }
+  @media(max-width:900px) {
+    .store-layout { display:block; }
+    .store-side { position:static; margin-bottom:18px; gap:12px; }
+    .store-cats { flex-direction:row; overflow-x:auto; scrollbar-width:none; gap:6px; }
+    .store-cats button { width:auto; flex:none; height:34px; border-radius:18px; background:#ffffff07; border:1px solid #ffffff0c; font-size:12px; }
+    .store-cats button[aria-pressed=true] { box-shadow:none; background:#235779; border-color:#5287a5; }
+    .store-side-opts { flex-direction:row; flex-wrap:wrap; align-items:center; gap:14px; border:0; padding:0; }
+    .store-source-select { flex-direction:row; align-items:center; }
+  }
+  .store-shelf { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(220px,calc((100% - 54px)/4)); gap:18px; overflow-x:auto; scroll-snap-type:x mandatory; padding:4px 2px 14px; scrollbar-width:thin; }
+  .store-shelf > * { scroll-snap-align:start; }
+  .store-row-head .see-all { margin-left:auto; font-size:12px; height:28px; padding:0 12px; border-radius:14px; background:#ffffff0a; color:var(--link); border:0; }
+  .store-row-head .see-all:hover { background:#ffffff14; color:var(--bright); }
+  .store-card { display:flex; flex-direction:column; }
+  .store-card-content { display:flex; flex-direction:column; flex:1; min-width:0; width:100%; }
+  .store-card-title strong { min-width:0; }
+  .store-summary { white-space:normal; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; min-height:2.9em; line-height:1.45; }
+  .store-card-foot { margin-top:auto; padding-top:12px; }
+  .store-art.shots { display:flex; gap:6px; justify-content:center; padding:10px 10px 0; }
+  .store-art.shots > img { position:relative; inset:auto; width:auto; height:100%; max-width:31%; object-fit:cover; object-position:top; border-radius:6px 6px 0 0; box-shadow:0 4px 14px #0008; }
+  .store-art.icon-art > .art-backdrop { position:absolute; inset:-30%; width:160%; height:160%; object-fit:cover; filter:blur(28px) saturate(1.4) brightness(.55); }
+  .store-art.icon-art > .art-mark { position:absolute; z-index:2; left:50%; top:50%; width:34%; aspect-ratio:1; height:auto; transform:translate(-50%,-50%); border-radius:22%; box-shadow:0 8px 24px #0009; object-fit:cover; }
+  .store-art.icon-art .art-initial, .store-art.shots .art-initial { display:none; }
+  .store-cat { color:#a8b5c2; }
+  .store-fit { font-size:11px; font-weight:600; border-radius:4px; padding:2px 7px; }
+  .store-fit.works { color:#c3efb2; background:#59bf4029; }
+  .store-fit.ready { color:#bfe3fa; background:#1a9fff26; }
+  .store-fit.blocked { color:#f3b2a6; background:#d9412629; }
+  .store-vr { font-size:10px; font-weight:700; letter-spacing:.8px; color:#0e141b; background:#c2e7ff; border-radius:4px; padding:2px 6px; }
+  .store-art .store-vr { position:absolute; z-index:3; top:9px; left:9px; box-shadow:0 2px 8px #0007; }
+  .store-hero .hero-meta { display:flex; gap:8px; align-items:center; }
+  /* Library */
+  .lib-head { display:flex; align-items:flex-end; justify-content:space-between; gap:24px; flex-wrap:wrap; margin-bottom:22px; }
+  .lib-head h1 { font-size:clamp(26px,3vw,34px); letter-spacing:-1px; margin:6px 0 6px; color:var(--bright); font-weight:700; }
+  .lib-head p { color:#a8b5c2; margin:0; font-size:14px; max-width:620px; }
+  .lib-tools { display:flex; gap:12px; align-items:center; flex-wrap:wrap; }
+  .lib-tools input[type=search] { width:220px; border-radius:8px; }
+  .lib-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:18px; margin-bottom:36px; }
+  .lib-card { position:relative; display:flex; flex-direction:column; border-radius:10px; background:#1b2938; border:1px solid #ffffff0b; transition:transform .18s,box-shadow .18s; }
+  .lib-card:hover { transform:translateY(-3px); box-shadow:0 12px 28px #0005; background:#203247; }
+  .lib-card .store-art { aspect-ratio:16/9; width:100%; border-radius:10px 10px 0 0; }
+  .lib-card:has(.lib-more[open]) { z-index:5; transform:none; }
+  .lib-card.running { border-color:#59bf4080; box-shadow:0 0 0 1px #59bf4040; }
+  .lib-running { position:absolute; z-index:3; top:9px; right:9px; font-size:11px; font-weight:600; color:#d6f5c8; background:#2d5a1fd9; border-radius:10px; padding:2px 9px; display:inline-flex; align-items:center; gap:6px; }
+  .lib-running::before { content:""; width:7px; height:7px; border-radius:50%; background:#8ef05f; box-shadow:0 0 6px #8ef05f; }
+  .lib-body { display:flex; gap:11px; align-items:center; padding:13px 14px 4px; min-width:0; }
+  .lib-body .store-icon { width:40px; height:40px; border-radius:10px; font-size:19px; }
+  .lib-body strong { display:block; color:var(--bright); font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lib-body small { display:block; color:var(--muted); font-size:12px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .lib-body > div { min-width:0; }
+  .lib-warn { margin:6px 14px 0; font-size:11px; color:#e8c27a; }
+  .lib-actions { display:flex; gap:8px; align-items:center; padding:12px 14px 14px; margin-top:auto; }
+  .lib-actions .play, .lib-actions .stop { flex:1; height:36px; font-size:14px; font-weight:600; border-radius:6px; }
+  .lib-more { position:relative; }
+  .lib-more > summary { list-style:none; display:flex; align-items:center; justify-content:center; width:38px; height:36px; border-radius:6px; background:var(--btn); color:var(--text); cursor:pointer; font-size:18px; line-height:1; }
+  .lib-more > summary::-webkit-details-marker { display:none; }
+  .lib-more > summary:hover, .lib-more[open] > summary { background:var(--btn-hi); }
+  .lib-menu { position:absolute; right:0; bottom:calc(100% + 6px); z-index:20; min-width:190px; padding:6px; border-radius:9px; background:#23364a; border:1px solid #ffffff1a; box-shadow:0 14px 34px #000a; display:flex; flex-direction:column; }
+  .lib-menu button { display:block; width:100%; text-align:left; height:auto; padding:8px 10px; border-radius:6px; background:transparent; font-size:13px; font-weight:400; color:var(--text); border:0; }
+  .lib-menu button small { display:block; color:var(--muted); font-size:11px; margin-top:2px; }
+  .lib-menu button:hover { background:#ffffff12; }
+  .lib-menu button.danger { color:#ff9c8a; }
+  .lib-empty { grid-column:1/-1; text-align:center; padding:48px 20px; border:1px dashed #ffffff1c; border-radius:12px; color:#a8b5c2; }
+  .lib-empty h2 { color:var(--bright); text-transform:none; letter-spacing:-.3px; font-size:20px; margin:0 0 8px; }
+  .lib-section { font-size:13px; text-transform:uppercase; letter-spacing:1.6px; color:var(--muted); margin:0 0 14px; font-weight:700; }
+  .lib-manage { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,360px),1fr)); gap:18px; align-items:start; }
   .store-empty { display:flex; flex-direction:column; align-items:center; text-align:center; padding:58px 20px 70px; }
   .store-empty svg { width:110px; height:90px; color:var(--link); margin-bottom:14px; }
   .store-empty h2 { font-size:23px; color:var(--bright); margin:8px 0; text-transform:none; letter-spacing:0; }
@@ -987,24 +1076,33 @@
 
   <div class="page" data-page="android">
   <section id="android">
-    <div class="store-tabs" aria-label="Android sections"><button class="on" data-store-tab="browse" aria-pressed="true">Discover</button><button data-store-tab="library" aria-pressed="false">On your Frame <span id="andCount"></span></button><span class="spacer"></span><button id="sourcesOpen" class="small">Sources <span aria-hidden="true">⚙</span></button><button class="small" id="repNew" hidden>+ Report an APK</button></div>
-    <section id="appStore" aria-label="Discover apps">
-      <div class="store-toolbar"><div class="store-heading"><div><div class="store-eyebrow">A little more possibility</div><h1>Find your next favorite.</h1><p>Great games and useful apps. All in one place, all free to explore.</p></div></div>
+    <div class="store-tabs" aria-label="Android sections"><div class="store-switch"><button class="on" data-store-tab="browse" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16l-1.5 12.5a1 1 0 0 1-1 .9H6.5a1 1 0 0 1-1-.9z"/><path d="M8.5 9V6a3.5 3.5 0 0 1 7 0v3"/></svg>Store</button><button data-store-tab="library" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7" height="7" rx="1.5"/><rect x="13.5" y="4" width="7" height="7" rx="1.5"/><rect x="3.5" y="14" width="7" height="7" rx="1.5"/><rect x="13.5" y="14" width="7" height="7" rx="1.5"/></svg>Library <span id="andCount"></span></button></div><span class="spacer"></span><button id="sourcesOpen" class="small">Sources <span aria-hidden="true">⚙</span></button><button class="small" id="repNew" hidden>+ Report an APK</button></div>
+    <section id="appStore" aria-label="Android store">
+      <div class="store-layout">
+      <div class="store-side" role="navigation" aria-label="Store categories">
+        <div id="storeCats" class="store-cats"></div>
+        <div class="store-side-opts">
+          <label class="store-check"><input type="checkbox" id="storeFits"> Only apps that fit the Frame</label>
+          <label class="store-check" title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools"><input type="checkbox" id="storePhone"> Show phone-only apps</label>
+          <label class="store-source-select"><span>Source</span><select id="sourceFilter"><option value="">All sources</option></select></label>
+        </div>
+      </div>
+      <div class="store-main">
+      <div class="store-toolbar"><div class="store-heading" id="storeHeading"><div class="store-eyebrow">Android apps for your Frame</div><h1>Store</h1><p>VR games, emulators, video and reading apps that work in a panel. Free, from open sources.</p></div>
       <form id="sourceSearch" class="store-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="sourceQ" type="search" aria-label="Search games and apps" placeholder="Search games and apps"><button type="submit" class="small">Search</button></form></div>
-      <div class="store-filters"><div id="searchFilters" class="store-chips"><button data-filter="all" aria-pressed="true">For you</button><button data-filter="vr" aria-pressed="false">VR experiences</button><button data-filter="flat" aria-pressed="false">Flat-screen apps</button><button data-filter="installable" aria-pressed="false">Fits your Frame</button></div><label class="store-source-select"><span class="sr-only">Filter by source</span><select id="sourceFilter"><option value="">All sources</option></select></label></div>
       <div id="sourceStatus" class="store-notice" role="status" aria-live="polite" hidden></div>
       <div id="searchCount" class="store-result-count" aria-live="polite"></div>
       <div id="searchGrid" aria-busy="false"></div>
-    </section>
-    <div class="and-grid" id="androidLibrary" hidden>
-      <div class="and-col">
-      <div class="panel">
-        <div class="shelf-head"><h2>On the Frame</h2></div>
-        <div class="list" id="andApps"><div class="sub">Loading…</div></div>
-        <div class="hint">Each app runs in its own Lepton instance and keeps its data. It's in the Steam
-          library under its own name and opens in its own panel. Test launches it and records
-          whether it stays up; Report records how it worked for you.</div>
       </div>
+      </div>
+    </section>
+    <div class="lib" id="androidLibrary" hidden>
+      <div class="lib-head"><div><div class="store-eyebrow">On your Frame</div><h1>Library</h1><p id="libSummary">Your Android apps. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.</p></div>
+        <div class="lib-tools"><div class="store-chips" id="libFilters"><button data-lib="all" aria-pressed="true">All</button><button data-lib="vr" aria-pressed="false">VR</button><button data-lib="flat" aria-pressed="false">Flat</button><button data-lib="running" aria-pressed="false">Running</button></div>
+          <input id="libQ" type="search" aria-label="Filter your apps" placeholder="Filter your apps"></div></div>
+      <div class="lib-grid" id="andApps"><div class="sub">Loading…</div></div>
+      <h2 class="lib-section">Display and reports</h2>
+      <div class="lib-manage">
       <section class="panel disp" id="display">
       <div class="shelf-head"><h2>Android display</h2><span class="count">Lepton</span><span class="spacer"></span>
         <button class="small" id="dispReload" title="Read the current values again">Refresh</button></div>
@@ -3199,7 +3297,22 @@ document.body.addEventListener("click", async e => {
 loadOwned();
 
 // ---- Discover apps ----
-const sourceState = { vr: null, installable: false, source: "", apps: [], sources: [], request: 0, detail: null, detailRequest: 0, jobs: new Map() };
+const sourceState = { vr: null, installable: false, source: "", category: "", phone: false, apps: [], sources: [], request: 0, detail: null, detailRequest: 0, jobs: new Map() };
+// The store's categories (ui/apk_sources/_categories.py): what a Frame is good for, not F-Droid's phone-centred list.
+const STORE_CATS = [
+  ["", "Home", "Android apps for your Frame", "VR games, emulators, video and reading apps that work in a panel. Free, from open sources.", '<path d="M4 11.5 12 5l8 6.5V19a1 1 0 0 1-1 1h-4.5v-5h-5v5H5a1 1 0 0 1-1-1z"/>'],
+  ["vr", "VR", "Made for headsets", "OpenXR games and experiences that fill the room, not a panel.", '<path d="M3.5 8.5A1.5 1.5 0 0 1 5 7h14a1.5 1.5 0 0 1 1.5 1.5v6A1.5 1.5 0 0 1 19 16h-3.5l-2-2.5h-3l-2 2.5H5a1.5 1.5 0 0 1-1.5-1.5z"/><circle cx="8" cy="11.5" r="1.5"/><circle cx="16" cy="11.5" r="1.5"/>'],
+  ["games", "Games", "Play in a panel", "Puzzle, strategy, card and action games that play well on a big floating screen.", '<path d="M7 9h10a4 4 0 0 1 3.9 4.9l-.6 2.6a2 2 0 0 1-3.4.9L14.5 15h-5l-2.4 2.4a2 2 0 0 1-3.4-.9l-.6-2.6A4 4 0 0 1 7 9z"/><path d="M8 11.5v3M6.5 13h3"/><circle cx="15.5" cy="12" r=".6" fill="currentColor"/><circle cx="17" cy="13.6" r=".6" fill="currentColor"/>'],
+  ["emulators", "Emulators", "Classic games, big screen", "RetroArch, Dolphin, PPSSPP and friends. Bring your own games.", '<rect x="4" y="5" width="16" height="11" rx="1.5"/><path d="M9 20h6M12 16v4"/><path d="M8 10.5h3M9.5 9v3"/><circle cx="15" cy="10.5" r=".8" fill="currentColor"/>'],
+  ["watch", "Watch & listen", "Your own cinema", "Video players, streaming front-ends, music and podcasts.", '<rect x="3.5" y="5.5" width="17" height="11" rx="1.5"/><path d="m10.5 8.5 4 2.5-4 2.5z" fill="currentColor"/><path d="M8 20h8"/>'],
+  ["read", "Read & learn", "Books, news and more", "E-book and comic readers, news, dictionaries and learning apps.", '<path d="M12 7c-2-1.5-5-2-8-1.5v12c3-.5 6 0 8 1.5 2-1.5 5-2 8-1.5v-12c-3-.5-6 0-8 1.5zM12 7v12"/>'],
+  ["create", "Create", "Make something", "Drawing, photo editing, music and recording.", '<path d="m14.5 5.5 4 4L9 19H5v-4z"/><path d="m12.5 7.5 4 4"/>'],
+  ["work", "Work", "Get things done", "Notes, tasks, documents, calendars and calculators.", '<rect x="4" y="7" width="16" height="12" rx="1.5"/><path d="M9 7V5.5A1.5 1.5 0 0 1 10.5 4h3A1.5 1.5 0 0 1 15 5.5V7M4 12h16"/>'],
+  ["web", "Web & chat", "Stay connected", "Browsers, email, messaging and social apps.", '<circle cx="12" cy="12" r="8"/><path d="M4 12h16M12 4c2.5 2.5 2.5 13.5 0 16M12 4c-2.5 2.5-2.5 13.5 0 16"/>'],
+  ["tools", "Tools", "Handy utilities", "File managers, passwords, remote access and developer tools.", '<path d="M14.5 6.5a4 4 0 0 0-5.3 5.3L4.5 16.5l3 3 4.7-4.7a4 4 0 0 0 5.3-5.3l-2.4 2.4-2.6-.4-.4-2.6z"/>'],
+];
+const storeCat = id => STORE_CATS.find(c => c[0] === (id || "")) || STORE_CATS[0];
+const catIcon = id => `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${storeCat(id)[4]}</svg>`;
 const storeName = s => String(s || "").replace(/ \(demo\)$/i, "");
 const storeHue = name => [...String(name)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % 360;
 const storeInitial = name => [...String(name || "?")][0].toUpperCase();
@@ -3207,12 +3320,30 @@ const storeText = text => String(text || "").replace(/<[^>]*>/g, " ").replace(/&
 const storeOpenSource = o => o.open_source === true || /^(MIT|Apache|[AL]?GPL|BSD|MPL|ISC|CC0|Unlicense)/i.test(o.license || "");
 function sourcePage(url) { try { const u = new URL(url); return ["https:", "http:"].includes(u.protocol) ? u.href : ""; } catch { return ""; } }
 function storeImage(path, alt, eager=false) { return /^\/source-image\/[\w-]+$/.test(path || "") ? `<img src="${esc(path)}" alt="${esc(alt)}" loading="${eager ? "eager" : "lazy"}" decoding="async">` : ""; }
-function storeArt(o, cls="", eager=false, path=null, alt=null) {
-  const image = path || o.artwork?.banner || o.artwork?.screenshots?.[0];
-  return `<span class="store-art ${cls}" style="--hue:${storeHue(o.name)}"><span class="art-initial" aria-hidden="true">${esc(storeInitial(o.name))}</span>${storeImage(image, alt || `${o.name} artwork`, eager)}</span>`;
+function storeArt(o, cls="", eager=false, path=null, alt=null, extra="") {
+  // Best artwork first: a banner, else phone-style screenshots side by side, else the icon over its own blur.
+  const art = o.artwork || {}, label = alt || `${o.name} artwork`, initial = `<span class="art-initial" aria-hidden="true">${esc(storeInitial(o.name))}</span>`;
+  const valid = u => /^\/source-image\/[\w-]+$/.test(u || "");
+  if (!path && !valid(art.banner) && (art.screenshots || []).some(valid)) {
+    const shots = art.screenshots.filter(valid).slice(0, 3);
+    return `<span class="store-art shots ${cls}" style="--hue:${storeHue(o.name)}" role="img" aria-label="${esc(label)}">${initial}${shots.map(u => storeImage(u, "", eager)).join("")}${extra}</span>`;
+  }
+  if (!path && !valid(art.banner) && valid(art.icon)) {
+    return `<span class="store-art icon-art ${cls}" style="--hue:${storeHue(o.name)}" role="img" aria-label="${esc(label)}">${initial}<img class="art-backdrop" src="${esc(art.icon)}" alt="" loading="${eager ? "eager" : "lazy"}" decoding="async"><img class="art-mark" src="${esc(art.icon)}" alt="" loading="${eager ? "eager" : "lazy"}" decoding="async">${extra}</span>`;
+  }
+  const image = path || art.banner || art.screenshots?.[0];
+  return `<span class="store-art ${cls}" style="--hue:${storeHue(o.name)}">${initial}${storeImage(image, label, eager)}${extra}</span>`;
 }
 function storeIcon(o) { return `<span class="store-icon" style="--hue:${storeHue(o.name)}" aria-hidden="true">${esc(storeInitial(o.name))}${storeImage(o.artwork?.icon, "")}</span>`; }
-document.addEventListener("error", e => { if (e.target.matches?.(".store-art img, .store-icon img")) e.target.remove(); }, true);
+document.addEventListener("error", e => {
+  if (!e.target.matches?.(".store-art img, .store-icon img")) return;
+  const img = e.target;
+  if (!img.dataset.retried) {  // the proxy fetches from the source on first use, which can time out once
+    img.dataset.retried = "1"; setTimeout(() => { img.src = img.getAttribute("src").split("?")[0] + "?retry=1"; }, 1500); return;
+  }
+  const art = img.closest(".icon-art, .shots"); img.remove();
+  if (art && !art.querySelector("img")) art.classList.remove("icon-art", "shots");  // show the initial again
+}, true);
 function sourceMark(s) { const name=storeName(s); return `<span class="offer-mark" style="--hue:${storeHue(name)}" aria-hidden="true">${esc(name === "SideQuest" ? "SQ" : name === "F-Droid" ? "Fd" : name.slice(0,2))}</span>`; }
 function sourceDescription(s) { return s.description || ({fdroid:"Independent, open-source apps",sidequest:"Discover something new in VR",itch:"Games from independent creators",github:"Direct from the people who make it"})[s.kind] || (s.name.includes("GitHub") ? "Direct from the people who make it" : s.name.includes("Droid") ? "Independent, open-source apps" : s.name.includes("SideQuest") ? "Discover something new in VR" : s.name.includes("itch") ? "Games from independent creators" : "Apps shared by this community"); }
 async function loadSources() {
@@ -3223,32 +3354,46 @@ async function loadSources() {
     $("sourcesList").innerHTML = sources.map(s=>`<div class="source-setting">${sourceMark(s.name)}<div class="grow"><strong>${esc(storeName(s.name))}</strong><p>${esc(sourceDescription(s))}</p><small>${esc(({official:"Official store",community:"Community",user:"Added by you"})[s.trust] || "Community")}</small>${s.builtin === false ? `<button class="small" data-remove="${esc(s.id)}" aria-label="Remove ${esc(s.name)}">Remove</button>` : ""}</div><input class="source-toggle" role="switch" type="checkbox" aria-label="Enable ${esc(storeName(s.name))}" data-enable="${esc(s.id)}" ${s.enabled ? "checked" : ""}></div>`).join("") || `<p class="store-notice">Your sources will appear here when they are available.</p>`;
   } catch (e) { $("sourceError").textContent = e.message; }
 }
+const STORE_FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocked: "Won't run" };
+function storeFit(o) { const t = o.verdict?.tone; return STORE_FIT[t] ? `<span class="store-fit ${t}" title="${esc(o.verdict.label)}">${STORE_FIT[t]}</span>` : ""; }
 function storeCard(app) {
-  const i=sourceState.apps.indexOf(app), o=app.offers[0];
-  return `<button class="store-card" data-app="${i}" aria-label="View ${esc(app.name)}">${storeArt(o)}<span class="store-card-content"><span class="store-card-title">${storeIcon(o)}<strong>${esc(app.name)}</strong></span><span class="store-summary">${esc(storeText(app.summary) || "A new addition to your Frame")}</span><span class="store-card-foot"><span>${o.vr ? "VR experience" : o.vr === false ? "Flat-screen app" : "Android app"}</span><b>Free</b></span></span></button>`;
+  const i=sourceState.apps.indexOf(app), o=app.offers[0], c=app.category || o.category;
+  return `<button class="store-card" data-app="${i}" aria-label="View ${esc(app.name)}">${storeArt(o,"",false,null,null,o.vr ? '<span class="store-vr">VR</span>' : "")}<span class="store-card-content"><span class="store-card-title">${storeIcon(o)}<strong>${esc(app.name)}</strong></span><span class="store-summary">${esc(storeText(app.summary) || "A new addition to your Frame")}</span><span class="store-card-foot"><span class="store-cat">${esc(c ? storeCat(c)[1] : o.vr === false ? "Flat-screen app" : "Android app")}</span>${storeFit(o) || "<b>Free</b>"}</span></span></button>`;
 }
-function storeRow(title, subtitle, apps) { return apps.length ? `<section class="store-row"><div class="store-row-head"><h2>${esc(title)}</h2><p>${esc(subtitle)}</p></div><div class="store-grid">${apps.slice(0,5).map(storeCard).join("")}</div></section>` : ""; }
+function storeRow(title, subtitle, apps, category) {
+  return apps.length ? `<section class="store-row"><div class="store-row-head"><h2>${esc(title)}</h2><p>${esc(subtitle)}</p>${category !== undefined ? `<button class="see-all" data-cat="${esc(category)}">See all ›</button>` : ""}</div><div class="store-shelf">${apps.slice(0,12).map(storeCard).join("")}</div></section>` : "";
+}
 function storeEmpty() {
-  return `<div class="store-empty"><svg viewBox="0 0 120 100" fill="none" aria-hidden="true"><rect x="18" y="25" width="60" height="55" rx="12" fill="currentColor" opacity=".08"/><rect x="29" y="18" width="60" height="55" rx="12" stroke="currentColor" opacity=".35"/><circle cx="61" cy="43" r="15" stroke="currentColor" stroke-width="3"/><path d="m72 55 17 18M17 12v10m-5-5h10m79-4v10m-5-5h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><h2>A little further to explore.</h2><p>No apps found this time. Try a different name, clear your filters, or explore another source.</p><button class="action" id="storeReset">Explore all apps</button></div>`;
+  return `<div class="store-empty"><svg viewBox="0 0 120 100" fill="none" aria-hidden="true"><rect x="18" y="25" width="60" height="55" rx="12" fill="currentColor" opacity=".08"/><rect x="29" y="18" width="60" height="55" rx="12" stroke="currentColor" opacity=".35"/><circle cx="61" cy="43" r="15" stroke="currentColor" stroke-width="3"/><path d="m72 55 17 18M17 12v10m-5-5h10m79-4v10m-5-5h10" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg><h2>A little further to explore.</h2><p>No apps found this time. Try a different name, another category, or turn on phone-only apps.</p><button class="action" id="storeReset">Back to the store</button></div>`;
+}
+function renderCats() {
+  $("storeCats").innerHTML = STORE_CATS.map(([id, label]) => `<button data-cat="${id}" aria-pressed="${sourceState.category === id}">${catIcon(id)}<span>${esc(label)}</span></button>`).join("");
+  const [, label, eyebrow, blurb] = storeCat(sourceState.category);
+  $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Store")}</h1><p>${esc(blurb)}</p>`;
 }
 function renderStore() {
-  const apps=sourceState.apps, browsing=!$("sourceQ").value.trim() && sourceState.vr === null && !sourceState.installable && !sourceState.source;
-  $("searchCount").textContent = browsing ? "" : `${apps.length} ${apps.length===1 ? "app" : "apps"}${$("sourceQ").value.trim() ? ` for “${$("sourceQ").value.trim()}”` : ""}`;
+  const apps=sourceState.apps, q=$("sourceQ").value.trim(), browsing=!q && !sourceState.category && !sourceState.installable && !sourceState.source;
+  renderCats();
+  $("searchCount").textContent = browsing ? "" : `${apps.length} ${apps.length===1 ? "app" : "apps"}${q ? ` for “${q}”` : ""}${sourceState.category ? ` in ${storeCat(sourceState.category)[1]}` : ""}`;
   if (!apps.length) { $("searchGrid").innerHTML=storeEmpty(); return; }
   if (!browsing) { $("searchGrid").innerHTML=`<div class="store-grid">${apps.map(storeCard).join("")}</div>`; return; }
-  const featured=apps.find(a=>a.offers[0].vr && a.offers[0].artwork?.banner && a.offers[0].verdict?.tone !== 'blocked') || apps.find(a=>a.offers[0].artwork?.banner) || apps[0], o=featured.offers[0];
-  const tested=apps.filter(a=>a.offers.some(o=>o.vr && o.verdict?.tone==='works'));
-  const vr=tested.length ? tested : apps.filter(a=>a.offers.some(o=>o.vr && o.verdict?.tone !== 'blocked'));
-  const popular=[...apps].sort((a,b)=>(b.offers[0].popularity||0)-(a.offers[0].popularity||0));
-  const recent=apps.filter(a=>a.offers.some(o=>o.updated)).sort((a,b)=>String(b.offers[0].updated||'').localeCompare(String(a.offers[0].updated||'')));
-  $("searchGrid").innerHTML=`<button class="store-hero" data-app="${apps.indexOf(featured)}" aria-label="Explore ${esc(featured.name)}">${storeArt(o,"",true)}<span class="hero-copy"><span class="store-eyebrow">Step into something new</span><strong>${esc(featured.name)}</strong><span>${esc(storeText(featured.summary))}</span><span class="hero-cta">Explore ${esc(featured.name)} <span aria-hidden="true">&nbsp; ↗</span></span></span></button>` + storeRow(apps.some(a=>a.offers[0].popularity) ? "Popular apps" : "Explore apps","More ways to make your Frame yours",popular) + storeRow(tested.length ? "VR that works on the Frame" : "Step into VR",tested.length ? "Experiences checked on a Frame" : "A new perspective, a whole new playground",vr) + storeRow("Recently updated","Fresh from their creators",recent);
+  // Home: one featured VR app, then a shelf per category; each app appears once, blocked ones not at all.
+  const ok=apps.filter(a=>a.offers[0].verdict?.tone !== 'blocked'), shown=new Set();
+  const day=Math.floor(Date.now()/864e5), heroes=ok.filter(a=>a.offers[0].vr && a.offers[0].artwork?.banner);
+  const featured=heroes[day % (heroes.length || 1)] || ok.find(a=>a.offers[0].artwork?.banner) || apps[0], o=featured.offers[0];
+  shown.add(featured);
+  const take=(list)=>{ const out=list.filter(a=>!shown.has(a)).slice(0,12); out.forEach(a=>shown.add(a)); return out; };
+  const rows=STORE_CATS.slice(1).map(([id,label,eyebrow])=>storeRow(label,eyebrow,take(ok.filter(a=>a.category===id)),id)).join("");
+  const recent=take([...ok].filter(a=>a.offers[0].updated && a.offers[0].artwork?.icon).sort((a,b)=>String(b.offers[0].updated).localeCompare(String(a.offers[0].updated))));
+  $("searchGrid").innerHTML=`<button class="store-hero" data-app="${apps.indexOf(featured)}" aria-label="Explore ${esc(featured.name)}">${storeArt(o,"",true)}<span class="hero-copy"><span class="hero-meta">${o.vr ? '<span class="store-vr">VR</span>' : ""}<span class="store-eyebrow">Featured</span></span><strong>${esc(featured.name)}</strong><span>${esc(storeText(featured.summary))}</span><span class="hero-cta">See ${esc(featured.name)} <span aria-hidden="true">&nbsp;›</span></span></span></button>` + rows + storeRow("Recently updated","Fresh from their creators",recent);
 }
-function storeChips() { $("searchFilters").querySelectorAll("button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.filter==='all' ? sourceState.vr===null && !sourceState.installable : b.dataset.filter==='installable' ? sourceState.installable : sourceState.vr===(b.dataset.filter==='vr'))); }
+function storeChips() { renderCats(); $("storeFits").checked = sourceState.installable; $("storePhone").checked = sourceState.phone; }
+function storeCategory(id) { sourceState.category = id || ""; $("sourceQ").value = ""; storeChips(); searchSources(); document.getElementById("android")?.scrollIntoView({block:"start", behavior:"smooth"}); }
 async function searchSources(quiet) {
   const request=++sourceState.request;
   $("searchGrid").setAttribute("aria-busy","true");
   if(!quiet)$("searchGrid").innerHTML=`<div class="store-grid" role="status" aria-label="Finding apps">${Array.from({length:8},()=>'<div class="store-skeleton" aria-hidden="true"></div>').join("")}</div>`;
-  const params=new URLSearchParams({q:$("sourceQ").value,source:sourceState.source,installable:String(sourceState.installable)});
+  const params=new URLSearchParams({q:$("sourceQ").value,source:sourceState.source,installable:String(sourceState.installable),category:sourceState.category,phone:String(sourceState.phone)});
   if(sourceState.vr!==null)params.set("vr",String(sourceState.vr));
   try {
     const result=await api("/api/search?"+params);if(request!==sourceState.request)return;
@@ -3341,8 +3486,10 @@ let storeSearchTimer;
 $("sourceQ").oninput=()=>{clearTimeout(storeSearchTimer);storeSearchTimer=setTimeout(searchSources,300);};
 $("sourceSearch").onsubmit=e=>{e.preventDefault();clearTimeout(storeSearchTimer);searchSources();};
 $("sourceFilter").onchange=e=>{sourceState.source=e.target.value;searchSources();};
-$("searchFilters").onclick=e=>{const b=e.target.closest('[data-filter]');if(!b)return;const f=b.dataset.filter;if(f==='all'){sourceState.vr=null;sourceState.installable=false;}else if(f==='installable')sourceState.installable=!sourceState.installable;else sourceState.vr=sourceState.vr===(f==='vr')?null:f==='vr';storeChips();searchSources();};
-$("searchGrid").onclick=e=>{const b=e.target.closest('[data-app]');if(b)openStoreApp(+b.dataset.app);if(e.target.closest('#storeReset')){$('sourceQ').value='';sourceState.vr=null;sourceState.installable=false;sourceState.source='';storeChips();searchSources();}};
+$("storeCats").onclick=e=>{const b=e.target.closest('[data-cat]');if(b)storeCategory(b.dataset.cat);};
+$("storeFits").onchange=e=>{sourceState.installable=e.target.checked;searchSources();};
+$("storePhone").onchange=e=>{sourceState.phone=e.target.checked;searchSources();};
+$("searchGrid").onclick=e=>{const c=e.target.closest('[data-cat]');if(c)return storeCategory(c.dataset.cat);const b=e.target.closest('[data-app]');if(b)openStoreApp(+b.dataset.app);if(e.target.closest('#storeReset')){$('sourceQ').value='';sourceState.vr=null;sourceState.installable=false;sourceState.phone=false;sourceState.category='';sourceState.source='';$('sourceFilter').value='';storeChips();searchSources();}};
 $("detailBody").onclick=e=>{if(e.target.closest('[data-close]'))return $("appDetail").close();if(e.target.closest('#detailInstall'))installStoreApp();const b=e.target.closest('[data-gallery]');if(b)$('detailGallery').scrollBy({left:+b.dataset.gallery*$('detailGallery').clientWidth*.86,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
 $("detailBody").onchange=e=>{if(e.target.name==='storeOffer'){sourceState.detail.choice=+e.target.value;renderAppDetail();loadOfferDetails();}};
 $("sourcesOpen").onclick=()=>{loadSources();$('sourcesDialog').showModal();};
@@ -3371,6 +3518,7 @@ document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick =
   showAndroidTab(button.dataset.storeTab);
   if (button.dataset.storeTab === 'library') loadAndroid();
 });
+storeChips();
 loadSources().then(()=>searchSources());
 
 // ---- Android apps (own Lepton instance each) + catalogue ----
@@ -3378,27 +3526,55 @@ const VLABEL = { works: "Works on Frame", likely: "Should work", maybe: "Might w
 const cat = { apps: null, q: "", cat: "", v: new Set(["works", "likely"]), shown: 0, results: [] };
 let androidApps = [];
 
+const libState = { filter: "all", q: "" };
+function libCard(a) {
+  const pkg = esc(a.package), name = a.label || a.package;
+  const o = { name, artwork: a.store_art || {} };  // the store's artwork for it, when a source lists it
+  const kind = a.vr && !a.flatscreen ? '<span class="store-vr">VR</span>' : "";
+  const version = String(a.version || "").replace(/^v/i, "");
+  const from = a.source && !/\.apk$/i.test(a.source) ? ` · ${a.source}` : "";
+  const issues = (a.vr_issues || []).filter(n => !/\(good\)\.?$/.test(n));  // frame_apk_vr.py also notes good news
+  const warn = issues.length ? `<div class="lib-warn" title="${esc(issues.join(" "))}">${esc(issues[0])}</div>` : "";
+  return `<article class="lib-card${a.running ? " running" : ""}" data-pkg="${pkg}">
+    ${storeArt(o, "", false, null, `${name} artwork`, kind + (a.running ? '<span class="lib-running">Running</span>' : ""))}
+    <div class="lib-body">${storeIcon(o)}<div><strong title="${esc(name)}">${esc(name)}</strong><small title="${pkg}">${version ? "v" + esc(version) : esc(a.package)}${esc(from)}</small></div></div>${warn}
+    <div class="lib-actions">
+      ${a.running ? `<button class="stop" data-and="stop" data-pkg="${pkg}">■ Stop</button>`
+                  : `<button class="play" data-and="launch" data-pkg="${pkg}">▶ Play</button>`}
+      <details class="lib-more"><summary aria-label="More for ${esc(name)}" title="More">⋯</summary><div class="lib-menu">
+        ${a.art_missing ? `<button data-and="refresh-art" data-pkg="${pkg}" data-name="${esc(name)}">Add artwork<small>Its Steam library tile has none yet</small></button>` : ""}
+        <button data-and="probe" data-pkg="${pkg}">Test<small>Launch it and record whether it stays up</small></button>
+        <button data-and="rate" data-pkg="${pkg}" data-ver="${esc(a.version)}" data-name="${esc(name)}" data-src="${esc(a.source || "")}">Report how it worked<small>Goes to the shared compatibility list</small></button>
+        <button class="danger" data-and="remove" data-pkg="${pkg}" data-name="${esc(name)}">Remove from the Frame</button>
+      </div></details>
+    </div></article>`;
+}
+function renderLibrary() {
+  const q = libState.q.trim().toLowerCase(), f = libState.filter;
+  const shown = androidApps.filter(a => (f === "all" || (f === "vr" ? a.vr && !a.flatscreen : f === "flat" ? !(a.vr && !a.flatscreen) : a.running))
+    && (!q || `${a.label} ${a.package}`.toLowerCase().includes(q)));
+  const vr = androidApps.filter(a => a.vr && !a.flatscreen).length, running = androidApps.filter(a => a.running).length;
+  $("libSummary").textContent = androidApps.length
+    ? `${androidApps.length} ${androidApps.length === 1 ? "app" : "apps"} on your Frame${vr ? `, ${vr} in VR` : ""}${running ? `; ${running} running now` : ""}. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.`
+    : "Your Android apps. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.";
+  $("libFilters").querySelectorAll("[data-lib]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lib === f));
+  $("andApps").innerHTML = shown.length ? shown.map(libCard).join("")
+    : androidApps.length ? `<div class="lib-empty"><h2>Nothing matches</h2><p>Try another filter.</p></div>`
+    : `<div class="lib-empty"><h2>No Android apps yet</h2><p>Find VR games, emulators and video apps in the store, or drop an .apk on Send to Frame.</p><button class="action" data-store-go="browse">Open the store</button></div>`;
+}
+$("libFilters").onclick = e => { const b = e.target.closest("[data-lib]"); if (b) { libState.filter = b.dataset.lib; renderLibrary(); } };
+$("libQ").oninput = e => { libState.q = e.target.value; renderLibrary(); };
+$("andApps").addEventListener("click", e => {
+  if (e.target.closest("[data-store-go]")) showAndroidTab("browse");
+  if (e.target.closest(".lib-menu button")) e.target.closest("details").open = false;
+});
+document.addEventListener("click", e => { document.querySelectorAll(".lib-more[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
 async function loadAndroid() {
   try {
     androidApps = (await api("/api/android")).apps;
   } catch (e) { return failed($("andApps"), e); }
-  $("andCount").textContent = androidApps.length ? `${androidApps.length} installed` : "";
-  $("andApps").innerHTML = androidApps.length ? androidApps.map(a => {
-    const c = cat.apps && cat.apps.find(x => x.p === a.package);
-    const icon = c && c.i ? `<img class="and-icon" src="${esc(c.i)}" alt="">` : `<div class="and-icon"></div>`;
-    return `<div class="item and-item">${icon}
-      <div class="grow"><div class="t">${esc(a.label)}</div>
-        <div class="s">${esc(a.package)} · v${esc(String(a.version || "").replace(/^v/i, ""))}</div></div>
-      ${a.running ? `<span class="tag">Running</span>` : ""}
-      <div class="row and-btns">
-        ${a.running ? `<button class="small" data-and="stop" data-pkg="${esc(a.package)}">Stop</button>`
-                    : `<button class="play small" data-and="launch" data-pkg="${esc(a.package)}">▶</button>`}
-        ${a.art_missing ? `<button class="small" data-and="refresh-art" data-pkg="${esc(a.package)}" data-name="${esc(a.label)}" title="Its Steam library tile has no artwork yet">Add artwork</button>` : ""}
-        <button class="small" data-and="probe" data-pkg="${esc(a.package)}" title="Launch it and record whether it stays up">Test</button>
-        <button class="small" data-and="rate" data-pkg="${esc(a.package)}" data-ver="${esc(a.version)}" data-name="${esc(a.label)}" data-src="${esc(a.source || "")}" title="Report how it worked">Report</button>
-        <button class="small danger" data-and="remove" data-pkg="${esc(a.package)}" data-name="${esc(a.label)}">Remove</button>
-      </div></div>`;
-  }).join("") : `<div class="sub">No Android apps yet. Install one from the catalogue, or drop an .apk on Send to Frame.</div>`;
+  $("andCount").textContent = androidApps.length ? String(androidApps.length) : "";
+  renderLibrary();
   const installed = new Set(androidApps.map(a => a.package));
   document.querySelectorAll('#catGrid [data-and="install"]').forEach(b => {
     if (installed.has(b.dataset.pkg)) b.outerHTML = `<span class="tag">Installed</span>`;

@@ -177,6 +177,29 @@ See
 [compat-db/README.md](../compat-db/README.md) and
 [apk-catalog/README.md](../apk-catalog/README.md).
 
+## Store and Library in Frame Control
+
+The Android tab has two views. **Store** finds apps across the sources (F-Droid,
+IzzyOnDroid, curated GitHub releases, itch.io). **Library** shows the apps on the
+Frame as cards, with Play and a menu for Test, Report and Remove; the display
+settings and recent reports are below it.
+
+The store groups apps by what a headset is good for, not by F-Droid's list:
+VR, Games, Emulators, Watch & listen, Read & learn, Create, Work, Web & chat
+and Tools (`ui/apk_sources/_categories.py`). A VR app is always in VR. Otherwise
+F-Droid's own categories decide, the finer one first (an app in *Multimedia* and
+*Social Network* is Web & chat).
+
+Apps built around a phone are hidden unless **Show phone-only apps** is on:
+anything in a phone category (launchers, keyboards, calls and SMS, wallpapers,
+VPNs, fitness, alarms, system tools), apps whose categories are all phone ones,
+and tools named for phone hardware or root. They install and run in Lepton, but
+do nothing useful on the Frame. In the F-Droid index of October 2026 that is
+about 2,000 of 4,500 apps.
+
+Without a search, each source offers its best 300 for the chosen category:
+apps with a banner first, then with screenshots, then the newest.
+
 ## In-headset app store: F-Droid 1.17 (verified 2026-09-25)
 
 F-Droid 1.23 uses an old Compose and crashes on launch. **F-Droid 1.17.2**, the

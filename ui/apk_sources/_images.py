@@ -12,7 +12,9 @@ from urllib.parse import urljoin, urlsplit
 from apk_sources import SourceError
 
 _lock = threading.Lock()
-_urls = OrderedDict()
+_urls = OrderedDict()  # token -> URL, oldest first
+_tokens = {}  # URL -> token
+MAX_TOKENS = 16384
 _cache = OrderedDict()
 MAX_IMAGE = 8 * 1024 * 1024
 MAX_CACHE = 64 * 1024 * 1024
@@ -31,24 +33,24 @@ def register(url):
     if not isinstance(url, str) or not valid_url(url):
         return None
     with _lock:
-        for token, known in _urls.items():
-            if known == url:
-                _urls.move_to_end(token)
-                return '/source-image/' + token
+        token = _tokens.get(url)
+        if token in _urls:
+            _urls.move_to_end(token)
+            return '/source-image/' + token
         token = secrets.token_urlsafe(24)
-        _urls[token] = url
-        while len(_urls) > 4096:
-            _urls.popitem(last=False)
+        _urls[token], _tokens[url] = url, token
+        while len(_urls) > MAX_TOKENS:  # a store browse lists a few thousand images
+            _tokens.pop(_urls.popitem(last=False)[1], None)
     return '/source-image/' + token
 
 
-def artwork(entry):
+def artwork(entry, shots=12):
     images = entry.get('images') or {}
     if not isinstance(images, dict):
         images = {}
     return {'icon': register(images.get('icon') or entry.get('icon')),
             'banner': register(images.get('banner')),
-            'screenshots': [path for path in (register(u) for u in (images.get('screenshots') or [])[:12]) if path]}
+            'screenshots': [path for path in (register(u) for u in (images.get('screenshots') or [])[:min(shots, 12)]) if path]}
 
 
 def image_type(data):

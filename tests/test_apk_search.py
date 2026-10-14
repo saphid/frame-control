@@ -122,7 +122,7 @@ class SearchTests(SettingsTest):
                     break
                 time.sleep(.01)
             self.assertTrue(arrived[1]['event'].wait(2))
-        self.assertEqual(arrived[1]['query'], ('second', 50))
+        self.assertEqual(arrived[1]['query'][:2], ('second', 50))
 
     def test_set_enabled_does_not_hold_search_lock_in_source(self):
         free = []

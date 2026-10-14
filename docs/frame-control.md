@@ -133,7 +133,7 @@ rejects invalid types, out-of-range levels and invalid mute states before SSH.
 Other settings link to the existing forms and their validation, progress,
 confirmations and reset behavior: per-instance Android resolution/density/text,
 comfort sessions and alerts, media layouts, Mac streaming quality, privacy,
-sources and artwork. Android display links reveal **On your Frame** before
+sources and artwork. Android display links reveal the **Library** before
 scrolling to the form. Mac streaming remains searchable on all platforms, with
 its action shown only when the server is on macOS.
 

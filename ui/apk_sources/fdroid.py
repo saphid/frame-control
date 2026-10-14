@@ -26,7 +26,7 @@ from frame_apk_sign import _der_parts, _cert_key, der
 from frame_catalog import _IndexReader, _reduce_index, _sha256
 
 KIND = 'fdroid'
-CACHE_VERSION = 2
+CACHE_VERSION = 3  # 3: categories
 TMP_PREFIX = '.download-'  # in the cache folder, then the server's PID, so server.sweep_tmp can clear a stopped run's
 _LOCK = threading.RLock()  # settings only; never held while downloading
 _load_locks = {}
@@ -432,6 +432,7 @@ def _reduce(path, source):
                     name=_text(meta.get('name')) or pkg, summary=_summary(meta.get('summary')),
                     icon=images['icon'], images=images, developer=_text(meta.get('authorName')) or None,
                     page=meta.get('webSite') or source['url'], vr=None, free=True,
+                    categories=[c for c in meta.get('categories') or [] if isinstance(c, str)][:8],
                     license=meta.get('license'), downloadable=bool(latest.get('sha256')),
                     versions=versions, **{k: latest[k] for k in ('version', 'version_code', 'min_sdk', 'abis', 'size', 'updated')})
     return result
@@ -450,6 +451,7 @@ def _v1(content, path):
         localized = app.get('localized', {})
         meta = {k: _text({locale: fields[k] for locale, fields in localized.items() if fields.get(k)}) or app.get(k)
                 for k in ('name', 'summary', 'license', 'webSite', 'authorName')}
+        meta['categories'] = app.get('categories') or []
         for field in ('icon', 'featureGraphic', 'phoneScreenshots', 'sevenInchScreenshots'):
             images = {}
             for locale, fields in localized.items():
@@ -625,14 +627,37 @@ def set_enabled(source_id, enabled):
         _write(_storage(), settings)
 
 
-def search(source, query, limit=50):
+def _showcase(a):
+    """Browse order without a query: apps with real artwork first, then the most recently updated."""
+    images = a.get('images') or {}
+    return (not images.get('banner'), not images.get('screenshots'), not images.get('icon'),
+            ''.join(chr(0x10ffff - ord(c)) for c in str(a.get('updated') or '')))
+
+
+def search(source, query, limit=50, keep=None):
+    """keep: optional filter applied before the limit (the store's category browse)."""
     if not source.get('enabled', True):
         return []
     apps, _ = _load(source)
     words = query.casefold().split()
-    found = [a for a in apps.values() if all(w in (a['id'] + ' ' + a['name'] + ' ' + a['summary']).casefold() for w in words)]
-    found.sort(key=lambda a: (a['id'].casefold() != query.casefold(), a['name'].casefold()))
+    found = [a for a in apps.values() if all(w in (a['id'] + ' ' + a['name'] + ' ' + a['summary']).casefold() for w in words)
+             and (keep is None or keep(a))]
+    if words:
+        found.sort(key=lambda a: (a['id'].casefold() != query.casefold(), a['name'].casefold()))
+    else:
+        found.sort(key=_showcase)
     return [{k: v for k, v in a.items() if k != 'versions'} for a in found[:max(0, limit)]]
+
+
+def lookup(source, packages):
+    """Entries for these packages from the saved index only (never downloads); missing ones are left out."""
+    if not source.get('enabled', True):
+        return {}
+    found = _cached(source, frame_host.cache_dir('apk-sources', source['id'] + '.json'))
+    if not found:
+        return {}
+    apps = found[0]
+    return {p: {k: v for k, v in apps[p].items() if k != 'versions'} for p in packages if p in apps}
 
 
 def details(source, entry_id):
