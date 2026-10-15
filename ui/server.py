@@ -46,6 +46,7 @@ import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
+from apk_sources import _itch_account as itch_account  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
 import frame_devices  # noqa: E402
@@ -2376,6 +2377,13 @@ def source_manage(body):
         if action == 'remove':
             apk_search.manage_repo('remove_repo', source_id=source_text(body, 'source'))
             return {'message': 'Repository removed'}
+        if action == 'itch-connect':  # the key is checked with itch.io, saved 0600, never echoed
+            key = body.get('key')
+            if not isinstance(key, str) or not key.strip() or len(key) > 300:
+                raise Failure('Paste your itch.io API key', 400)
+            return itch_account.connect(key)
+        if action == 'itch-disconnect':
+            return itch_account.disconnect()
         raise Failure('Unknown source action', 400)
     except SourceError as e:
         raise Failure(str(e), 400)
@@ -2600,7 +2608,7 @@ class Handler(BaseHTTPRequestHandler):
                 except SourceError as e:
                     raise Failure(str(e), 400)
             elif path == "/api/sources":
-                self.send_json({"sources": apk_search.sources()})
+                self.send_json({"sources": apk_search.sources(), "itch": itch_account.status()})
             elif path == "/api/search":
                 self.send_json(source_search(url.query))
             elif path == "/api/apk-versions":
