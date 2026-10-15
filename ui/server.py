@@ -2319,6 +2319,16 @@ def source_text(body, key, optional=False):
     return value.strip()
 
 
+def login_text(body, key):
+    """A username, password or token: kept exactly (no stripping) and never echoed back."""
+    value = body.get(key)
+    if value in (None, ''):
+        return None
+    if not isinstance(value, str) or len(value) > 4096:
+        raise Failure('Provide a valid ' + key, 400)
+    return value
+
+
 def source_search(query):
     args = parse_qs(query)
     q = args.get('q', [''])[0]
@@ -2357,19 +2367,31 @@ def source_manage(body):
         if action == 'add':
             url = source_text(body, 'url')
             fingerprint, name = source_text(body, 'fingerprint', True), source_text(body, 'name', True)
-            parts = urlparse(url)
-            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname or parts.username:
-                raise Failure('Use an HTTPS or fdroidrepos:// repository URL without credentials', 400)
+            username, password = login_text(body, 'username'), login_text(body, 'password')
+            try:
+                parts = urlparse(url)
+                parts.port
+            except ValueError:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400) from None
+            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400)
             apk_search.repo_module()  # fail now if this build can't manage repositories
 
             def add():  # downloads and verifies the whole index: a job, not a request
-                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name)
+                # A login (here or in the URL) is stored apart and never comes back in a response.
+                login = {'username': username, 'password': password} if username or password else {}
+                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name, **login)
                 message = 'Added ' + source['name']
                 if source.get('trust_on_first_use'):
                     message += '. Trusted on first use: ' + source['fingerprint'].upper()
                 return {'message': message, 'source': {k: source.get(k) for k in
                                                        ('id', 'name', 'fingerprint', 'trust_on_first_use')}}
             return start_job('Add repository', add)
+        if action in ('set-token', 'clear-token'):
+            token = login_text(body, 'token') if action == 'set-token' else None
+            if action == 'set-token' and not token:
+                raise Failure('Paste a token', 400)
+            return apk_search.set_token(source_text(body, 'source'), token)
         if action == 'game-data':
             package = source_text(body, 'package')
             return start_job('Add game data', lambda: apk_search.add_game_data(package))
