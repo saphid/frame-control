@@ -67,16 +67,23 @@ signing team in Xcode (Signing & Capabilities).
 
 ## TestFlight
 
-Frame Control is available to the account's internal TestFlight testers. Install
-Apple's TestFlight app, accept the invitation, then tap **Install** or **Update**
-next to Frame Control. The first working phone build was version 0.1.0,
-build 202610140516, uploaded on 2026-10-14.
+Join the [Frame Control beta](https://testflight.apple.com/join/9xjW91g6),
+install Apple's TestFlight app, then tap **Install** or **Update** next to Frame
+Control. Internal account testers can also use their invitation. The first
+working phone build was version 0.1.0, build 202610140516, uploaded on
+2026-10-14. On 2026-10-16, App Store Connect confirmed that this build was
+beta-approved in the external **Public Beta** group and its public link was
+enabled.
 
 ### Upload a build
 
 You need Xcode, XcodeGen, a paid Apple Developer Program team, an App Store
 Connect app record for `com.saphid.framecontrol`, and an App Store Connect team
-API key with the **App Manager** role. Create the key under **Users and Access →
+API key with the signing access your release setup needs. This Mac relies on
+Apple's cloud-managed distribution certificates: an **App Manager** key was
+rejected with `Cloud signing permission error`, so this setup needs **Admin**
+access. A setup with a local distribution signing identity may be able to use
+a narrower role. Create the key under **Users and Access →
 Integrations → App Store Connect API**. Download it directly to
 `~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8`, outside the repository,
 and restrict it to its owner (`chmod 600`). Apple allows one download. Keep

@@ -2,7 +2,9 @@
 # Archive Frame Control and upload it to TestFlight.
 #
 # Needs a paid Apple Developer Program team and an App Store Connect API key
-# (Users and Access → Integrations → App Store Connect API, role App Manager):
+# (Users and Access → Integrations → App Store Connect API). This Mac needs
+# Admin access for Apple's cloud-managed distribution signing; App Manager
+# alone was rejected with "Cloud signing permission error". See docs/iphone.md.
 #
 #   ASC_KEY_ID=ABC123 ASC_ISSUER_ID=uuid ASC_KEY_PATH=~/.appstoreconnect/AuthKey_ABC123.p8 \
 #     ios/scripts/testflight.sh
