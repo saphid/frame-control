@@ -65,6 +65,79 @@ The build packs the Frame bundle from the checkout, so the phone always runs
 the page and server from the same commit. Running on a phone needs your own
 signing team in Xcode (Signing & Capabilities).
 
+## TestFlight
+
+Frame Control is available to the account's internal TestFlight testers. Install
+Apple's TestFlight app, accept the invitation, then tap **Install** or **Update**
+next to Frame Control. The first working phone build was version 0.1.0,
+build 202610140516, uploaded on 2026-10-14.
+
+### Upload a build
+
+You need Xcode, XcodeGen, a paid Apple Developer Program team, an App Store
+Connect app record for `com.saphid.framecontrol`, and an App Store Connect team
+API key with the **App Manager** role. Create the key under **Users and Access →
+Integrations → App Store Connect API**. Download it directly to
+`~/.appstoreconnect/private_keys/AuthKey_<KEY_ID>.p8`, outside the repository,
+and restrict it to its owner (`chmod 600`). Apple allows one download. Keep
+the private key out of chat, screenshots, logs and Git.
+
+From the repository root:
+
+```sh
+ASC_KEY_ID=YOUR_KEY_ID \
+ASC_ISSUER_ID=YOUR_ISSUER_UUID \
+ASC_KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_YOUR_KEY_ID.p8" \
+TEAM_ID=YOUR_TEAM_ID \
+  ios/scripts/testflight.sh
+```
+
+The script regenerates the Xcode project, archives with automatic signing,
+checks the archived build number, and uploads to App Store Connect. `TEAM_ID`
+defaults to this project's team, `NJZUMEA4BN`. `BUILD_NUMBER` defaults to UTC
+`YYYYMMDDHHMM`; wait for a new minute between uploads, or supply a unique,
+higher build number. The archive, export options and export output are under
+`ios/build/testflight/<BUILD_NUMBER>/` (ignored by Git).
+
+Build from a reviewed, clean checkout. The build packs the server, web pages
+and helpers from the current checkout, including uncommitted changes; it does
+not limit the bundle to the last commit.
+
+An upload succeeding means Apple received the build. Wait for it to finish
+processing in **App Store Connect → Frame Control → TestFlight** and check
+that it is ready for testing. `ios/project.yml` declares
+`ITSAppUsesNonExemptEncryption: false`, so each generated app declares that it
+uses no non-exempt encryption, matching the previous builds' export-compliance
+answers. Reassess that declaration if the app's cryptography changes.
+
+To replace a key, create and securely download the replacement, verify that it
+can access this app, then revoke the old key in Users and Access. Update the
+upload environment to use the replacement. Revocation does not remove an
+already uploaded TestFlight build from testers' phones.
+
+### Add testers
+
+**Internal:** add an existing App Store Connect user with an eligible role to
+an internal testing group, and add the build to that group (or enable automatic
+distribution). New account users must first accept their account invitation.
+Internal testing grants App Store Connect access; use external testing for
+people who only need to try the app.
+
+**External:** create an external testing group, complete Beta App Information
+and review contact details, add a build and its **What to Test** notes, then
+submit it for TestFlight App Review when required. Use
+<https://framecontrol.fun/privacy/> for the privacy policy and
+<https://framecontrol.fun/feedback/> for feedback. Review notes must explain
+that the app requires a Steam Frame with Developer Mode enabled and a user
+password; do not provide your own headset credentials to reviewers. Apple may
+need a way to evaluate features that require the hardware.
+
+After Apple approves the build for external testing, enable the group's public
+link and choose a tester limit. Share that link to let testers join without an
+App Store Connect account. Creating a group alone does not make a build public.
+Do not describe the link as ready until the approved build is in the group and
+the link is enabled.
+
 ## Verified
 
 <img src="img/iphone-tabs.jpg" alt="The four tabs in the iPhone app, connected to a Frame" width="900">
@@ -101,8 +174,34 @@ Paste, or set Settings → Apps → Frame Control → Paste from Other Apps → 
 Sending text to the Frame's clipboard needs the desktop panel open in the
 headset, as on the desktop app.
 
-Not yet exercised: Android display changes through podman (no Android app was
-running), a real sleep/restart/shut down on the Frame, and a physical iPhone.
+On a physical iPhone, 2026-10-14: Alex reported build 202610140516 was working
+after pairing and trying the password visibility button. A server process
+started by the phone and its SSH key on the Frame confirmed the connection.
+This was a setup/connection smoke check; it did not verify every app feature.
+
+On a physical iPhone 16 Pro running iOS 27.2, 2026-10-16: the same build launched
+and automatically reconnected to the Frame. A device screenshot showed the
+green connection indicator, 100% headset battery and the loaded Android
+catalog. This confirms connection and rendering, not status refresh or actions
+inside the app. A separate signed automation runner was installed and passed
+its health check, but iOS then refused activation with `SBMainWorkspace: Locked`;
+the phone must be unlocked for the remaining interactive checks.
+
+<img src="img/iphone-physical-20261016.jpg" alt="Frame Control connected to the Frame on a physical iPhone, showing battery and the Android catalog" width="360">
+
+### Physical-phone follow-up checklist
+
+- Confirm battery/status data updates and the Steam games list loads.
+- Capture a headset still, save it through the share sheet, then play live video.
+- Send a small, disposable file and check its contents on the Frame; remove the
+  test file afterwards.
+- Send test text to the Frame's clipboard with its desktop panel open.
+- With an Android app running, change and restore its display settings.
+- After saving headset work, deliberately test sleep, restart and shut down.
+
+These full feature checks remain pending on a physical phone. Android display
+changes through podman and real sleep/restart/shut down also remain unverified
+by the Simulator checks above.
 
 Debug builds have Simulator test hooks (`FRAME_TEST_HOST`, `FRAME_TEST_PAGE`,
 `FRAME_TEST_JS`, and the tunnel URL in the app's Caches folder); release builds

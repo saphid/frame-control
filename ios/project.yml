@@ -34,6 +34,7 @@ targets:
       path: FrameControl/Info.plist
       properties:
         CFBundleDisplayName: Frame Control
+        ITSAppUsesNonExemptEncryption: false
         UILaunchScreen:
           UIColorName: ""
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait, UIInterfaceOrientationLandscapeLeft, UIInterfaceOrientationLandscapeRight]
