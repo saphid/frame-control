@@ -88,12 +88,14 @@ class Overlay:
     def close(self):
         # Best effort: SteamVR removes a disconnected client's overlays anyway,
         # and a teardown error must not overwrite a finished playback's status.
-        for h in reversed(self.handles):
-            try:
-                self.call('DestroyOverlay', h)
-            except RuntimeError:
-                pass
-        self.vr.VR_ShutdownInternal()
+        try:
+            for h in reversed(self.handles):
+                try:
+                    self.call('DestroyOverlay', h)
+                except Exception:  # signals are already ignored here, so Stop isn't lost
+                    pass
+        finally:
+            self.vr.VR_ShutdownInternal()
 
 
 def probe(path):
@@ -183,6 +185,8 @@ def play(args):
             except OverlayBusy:
                 pending.insert(0, item)
                 return
+            except RuntimeError:
+                pass  # the surround is cosmetic; never end playback over it
 
     def hold(handle, data, w, h):
         """Keep a still (photo or splat) up until Stop, retrying through standby."""
@@ -203,10 +207,14 @@ def play(args):
     try:
         vr = Overlay()
         if args.theatre:
-            surround = vr.create('framecontrol.media.surround', 40, 4, order=0)
-            vr.call('SetOverlayAlpha', surround, .85)
-            if not show(surround, b'\x00\x00\x00\xff', 1, 1):
-                pending.append((surround, b'\x00\x00\x00\xff', 1, 1))
+            try:
+                surround = vr.create('framecontrol.media.surround', 40, 4, order=0)
+                vr.call('SetOverlayAlpha', surround, .85)
+                if not show(surround, b'\x00\x00\x00\xff', 1, 1):
+                    pending.append((surround, b'\x00\x00\x00\xff', 1, 1))
+            except RuntimeError as e:
+                # Cosmetic: play without the dark surround rather than not at all.
+                print('Theatre surround unavailable: %s' % e, flush=True)
         screen = vr.create('framecontrol.media.screen', 3 if args.theatre else 1.6, 2,
                            plan['layout'] != 'mono', aspect)
         if splat:
