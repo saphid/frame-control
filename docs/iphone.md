@@ -71,9 +71,11 @@ Join the [Frame Control beta](https://testflight.apple.com/join/9xjW91g6),
 install Apple's TestFlight app, then tap **Install** or **Update** next to Frame
 Control. Internal account testers can also use their invitation. The first
 working phone build was version 0.1.0, build 202610140516, uploaded on
-2026-10-14. On 2026-10-16, App Store Connect confirmed that this build was
-beta-approved in the external **Public Beta** group and its public link was
-enabled.
+2026-10-14. On 2026-10-16, build **202610160824** was uploaded and approved for
+internal and external testing. App Store Connect confirmed both builds were in
+the external **Public Beta** group, with its public link enabled and a limit of
+50 testers. The new build declares the encryption-compliance answer in the app
+and preserves the previous build's exact server bundle.
 
 ### Upload a build
 
@@ -192,7 +194,10 @@ green connection indicator, 100% headset battery and the loaded Android
 catalog. This confirms connection and rendering, not status refresh or actions
 inside the app. A separate signed automation runner was installed and passed
 its health check, but iOS then refused activation with `SBMainWorkspace: Locked`;
-the phone must be unlocked for the remaining interactive checks.
+the phone must be unlocked for the remaining interactive checks. A later resume
+attempt at 20:09 Australia/Sydney found it locked again before runner startup
+(`passcodeRequired: true`). No new feature checks completed; the task's
+automation session was closed, and the installed app was preserved.
 
 <img src="img/iphone-physical-20261016.jpg" alt="Frame Control connected to the Frame on a physical iPhone, showing battery and the Android catalog" width="360">
 
