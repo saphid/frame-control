@@ -193,25 +193,50 @@ and automatically reconnected to the Frame. A device screenshot showed the
 green connection indicator, 100% headset battery and the loaded Android
 catalog. This confirms connection and rendering, not status refresh or actions
 inside the app. A separate signed automation runner was installed and passed
-its health check, but iOS then refused activation with `SBMainWorkspace: Locked`;
-the phone must be unlocked for the remaining interactive checks. A later resume
-attempt at 20:09 Australia/Sydney found it locked again before runner startup
-(`passcodeRequired: true`). No new feature checks completed; the task's
-automation session was closed, and the installed app was preserved.
+its health check. Initial interaction attempts were blocked by the phone's
+lock; testing resumed once Alex unlocked it and kept the screen awake.
 
 <img src="img/iphone-physical-20261016.jpg" alt="Frame Control connected to the Frame on a physical iPhone, showing battery and the Android catalog" width="360">
 
+In that continuation, still on build **202610140516**, the status header
+refreshed, the Games tab loaded 14 installed titles with sizes and Play
+controls, and a uniquely named 114-byte text file was selected through the
+iPhone's Files picker and sent to `~/Downloads` on the Frame. An SSH readback
+matched the file's contents exactly; this verifies phone-to-Frame upload,
+not a download back to the phone. Both the iCloud source fixture and the
+uploaded test file were removed and checked absent.
+
+Capture returned a blank headset frame with an asleep/unworn explanation.
+Save opened the native share sheet and reached the Photos permission prompt;
+no completed Photos save was verified. A final Settings check showed
+**Add Photos Only** enabled, without photo-library read access. A test string
+sent through the clipboard control was refused with the expected prerequisite:
+`plasmashell` was not running, so the desktop panel must be opened in the
+headset. The phone's existing clipboard was not read. Live mode started and
+reported **30 fps**, but its visible frames remained blank, so meaningful
+video playback is still unverified. Android listed 10 installed apps; a
+separate SSH check found zero running containers and zero Android ADB
+listeners, so display-setting changes were not exercised.
+
+<img src="img/iphone-games-physical-20261016.jpg" alt="Frame Control's Games tab on the physical iPhone, showing the installed library and Play controls" width="360">
+
+<img src="img/iphone-live-physical-20261016.jpg" alt="Live mode reporting 30 fps on the physical iPhone with blank headset content and the page horizontally clipped" width="360">
+
+Testing also exposed an enlarged, horizontally clipped page after text entry
+and navigation. Its cause has not yet been isolated. Restarting Frame Control
+restored the normal layout and automatically reconnected to the headset.
+
 ### Physical-phone follow-up checklist
 
-- Confirm battery/status data updates and the Steam games list loads.
-- Capture a headset still, save it through the share sheet, then play live video.
-- Send a small, disposable file and check its contents on the Frame; remove the
-  test file afterwards.
+- With the headset awake and worn, capture visible headset content, save it to
+  Photos, then verify live video.
 - Send test text to the Frame's clipboard with its desktop panel open.
 - With an Android app running, change and restore its display settings.
+- Reproduce and fix the page enlargement and horizontal clipping after text
+  entry and navigation.
 - After saving headset work, deliberately test sleep, restart and shut down.
 
-These full feature checks remain pending on a physical phone. Android display
+These remaining checks are pending on a physical phone. Android display
 changes through podman and real sleep/restart/shut down also remain unverified
 by the Simulator checks above.
 
