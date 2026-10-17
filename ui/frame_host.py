@@ -5,12 +5,17 @@ Everything here runs on your computer, not the Frame. Python stdlib only.
 CLI (used by the Electron app, so terminal handling lives in one place):
   python3 ui/frame_host.py terminal -- CMD [ARG...]   # open CMD in a terminal window
 """
+import hashlib
+import io
 import os
+import re
 import shlex
 import shutil
+import socket
 import ssl
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 MAC = sys.platform == "darwin"
@@ -30,6 +35,68 @@ DETACHED = ({"creationflags": subprocess.CREATE_NEW_PROCESS_GROUP} if WINDOWS
 
 class HostError(RuntimeError):
     pass
+
+
+# The start of a line in which ssh itself says the link to the headset failed (not the command it ran).
+# That includes ssh refusing the headset's host key, and the headset refusing this computer's
+# key ("user@host: Permission denied (publickey,...)."): either way no command ran.
+SSH_LINK_FAILED = re.compile(r"^(?:ssh: connect to host |ssh: Could not resolve hostname |banner exchange: |"
+                             r"kex_exchange_identification: |mux_client_\w+: |client_loop: |"
+                             r"Connection (?:closed|reset) by \S+ port \d+|Connection timed out during banner exchange|"
+                             r"Host key verification failed\.|No \S+ host key is known for |"
+                             r"[^\n@:]{1,64}@\S+: Permission denied \()",  # a Windows user name may have spaces
+                             re.M)
+
+
+def ssh_link_failed(returncode, stderr):
+    """Whether an ssh run failed to reach the headset: ssh's own exit code (255) and its own words."""
+    return returncode == 255 and bool(SSH_LINK_FAILED.search(stderr or ""))
+
+
+def link_failure(error):
+    """Mark an exception as ssh failing to reach the headset, judged where ssh ran (so error
+    reports can tell it from a message that only looks like one: a file name, say)."""
+    error.frame_link_failed = True
+    return error
+
+
+class Unreachable(HostError):
+    """The Frame, or a service on it, didn't answer: the person's to sort out, not a fault here."""
+
+
+def run_ssh(argv, **kwargs):
+    """Run an OpenSSH tool without Windows' redirected-stderr pipe hang.
+
+    A real temporary file avoids OpenSSH's blocked asynchronous stderr writes,
+    while keeping subprocess.run's captured output, text, check and timeout API.
+    """
+    if not WINDOWS:
+        return subprocess.run(argv, **kwargs)
+    if kwargs.pop("capture_output", False):
+        if kwargs.get("stdout") is not None or kwargs.get("stderr") is not None:
+            raise ValueError("stdout and stderr arguments may not be used with capture_output")
+        kwargs.update(stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    if kwargs.get("stderr") != subprocess.PIPE:
+        return subprocess.run(argv, **kwargs)
+    check = kwargs.pop("check", False)
+    text = any(kwargs.get(key) for key in ("text", "universal_newlines", "encoding", "errors"))
+    with tempfile.TemporaryFile() as stderr:
+        kwargs["stderr"] = stderr
+        try:
+            result = subprocess.run(argv, **kwargs)
+        except subprocess.TimeoutExpired as error:
+            stderr.seek(0)
+            error.stderr = stderr.read()
+            raise
+        stderr.seek(0)
+        if text:
+            with io.TextIOWrapper(stderr, encoding=kwargs.get("encoding"), errors=kwargs.get("errors")) as reader:
+                result.stderr = reader.read()
+        else:
+            result.stderr = stderr.read()
+    if check:
+        result.check_returncode()
+    return result
 
 
 def data_dir(*parts):
@@ -56,13 +123,19 @@ def cache_dir(*parts):
     return base.joinpath(*parts)
 
 
-def control_path(*, private=False):
+def control_path(tag="x", *, private=None):
     """ssh ControlPath for the shared connection, or None where it isn't supported.
 
+    `tag` names the headset: ssh's %C hashes only the address, user and port, so two
+    headsets reached at the same address (one of them moved) would otherwise share a
+    connection, and one's commands would run on the other.
     /tmp, not $TMPDIR: macOS's per-user temp path overflows the unix socket path limit.
     """
+    # A private server (the MCP adapter's) keeps its own masters: FRAME_PRIVATE_SSH=1.
+    if private is None:
+        private = os.environ.get("FRAME_PRIVATE_SSH") == "1"
     suffix = f"-{os.getpid()}" if private else ""
-    return f"/tmp/frame-ui-{os.getuid()}{suffix}-%C" if MUX else None
+    return f"/tmp/frame-ui-{os.getuid()}{suffix}-{tag}-%C" if MUX else None
 
 
 def which(name, *extra):
@@ -147,6 +220,19 @@ def open_path(path):
                      stderr=subprocess.DEVNULL, **DETACHED)
 
 
+def reveal_path(path):
+    """Show a file selected in its folder (Linux file managers vary, so there the folder opens)."""
+    path = Path(path)
+    if MAC:
+        cmd = ["open", "-R", str(path)]
+    elif WINDOWS:
+        cmd = f'explorer /select,"{path}"'  # as one string: Explorer wants the quotes after the comma
+    else:
+        return open_path(path.parent)
+    subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
+                     stderr=subprocess.DEVNULL, **DETACHED)
+
+
 open_url = open_path  # the same openers hand URLs to the default browser
 
 
@@ -222,10 +308,46 @@ def clipboard_text():
     raise HostError("Can't read the clipboard")
 
 
+# What Windows' OpenSSH says when it refuses ~/.ssh/config (or a key) for its ACL.
+BAD_PERMISSIONS = "Bad owner or permissions on "
+
+
+def make_private(path):
+    """Leave only this user able to open PATH, as ssh insists for ~/.ssh/config.
+    Windows: an ACL of just this user, SYSTEM and Administrators, inherited nothing.
+    A file written into ~/.ssh otherwise takes the folder's ACL, and Windows' OpenSSH
+    refuses it if that grants anyone else, even an account deleted long ago
+    ("Bad owner or permissions"). Best effort: -> False if it couldn't."""
+    if not WINDOWS:
+        try:
+            os.chmod(path, 0o600)
+            return True
+        except OSError:
+            return False
+    me = os.environ.get("USERNAME", "")
+    try:  # "desktop\me","S-1-5-21-..."
+        # Bytes: the account name is in the console's code page, the SID is ASCII.
+        out = subprocess.run(["whoami", "/user", "/fo", "csv", "/nh"], capture_output=True,
+                             stdin=subprocess.DEVNULL, timeout=10).stdout
+        sid = out.decode("ascii", "replace").strip().rsplit(",", 1)[-1].strip('"')
+        if sid.startswith("S-1-"):
+            me = "*" + sid
+    except (OSError, subprocess.TimeoutExpired):
+        pass
+    if not me:
+        return False
+    try:
+        return subprocess.run(["icacls", str(path), "/inheritance:r", "/grant:r", f"{me}:F",
+                               "*S-1-5-18:F", "*S-1-5-32-544:F"], capture_output=True,
+                              stdin=subprocess.DEVNULL, timeout=10).returncode == 0
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+
+
 def ssh_hostname(alias):
     """The real host name an ssh alias points at (`ssh -G`), for non-SSH clients like RDP."""
     try:
-        out = subprocess.run(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=10).stdout
+        out = run_ssh(["ssh", "-G", alias], capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=10).stdout
     except (OSError, subprocess.TimeoutExpired):
         return alias
     for line in out.splitlines():
@@ -258,24 +380,65 @@ def open_steam_link():
     return "Steam Link isn't installed; opened its download page"
 
 
-def open_rdp(alias):
-    """Remote desktop to the Frame's xrdp (user steamos)."""
-    host = ssh_hostname(alias)
+RDP_PORT = 3389
+RDP_USER = "steamos"  # xrdp signs in with the Developer Mode password, not this computer's
+# xrdp's certificate is its own, so every client warns about it first.
+RDP_LOGIN = (f"accept the warning about the Frame's certificate, then sign in as {RDP_USER} "
+             "with your Developer Mode password")
+
+
+def check_rdp(host, timeout=3):
+    """Raise Unreachable, saying why, unless the Frame's RDP port takes a connection."""
+    try:
+        with socket.create_connection((host, RDP_PORT), timeout=timeout):
+            return
+    except ConnectionRefusedError:
+        raise Unreachable(f"The Frame at {host} is on but isn't accepting remote desktop (port {RDP_PORT} "
+                          "refused). Turn on Developer Mode in Steam Settings > System on the headset, "
+                          "then restart it and try again.") from None
+    except socket.gaierror:
+        raise Unreachable(f"Can't find {host} on the network for remote desktop. Check the headset's "
+                          "address on the Devices tab.") from None
+    except OSError as e:
+        raise Unreachable(f"The Frame didn't answer remote desktop at {host} ({e}). It may be asleep, "
+                          "switched off or on another network; if it's on, check Developer Mode is on "
+                          "in Steam Settings > System.") from None
+
+
+def rdp_file(host):
+    """A Remote Desktop connection file for the Frame. mstsc /v: alone offers this
+    computer's Windows account, which xrdp turns away; the file names steamos instead."""
+    if any(c in host for c in "\r\n"):
+        raise HostError("That headset address can't be used for remote desktop")
+    # One file per address, so two launches close together can't swap headsets.
+    path = cache_dir(f"frame-{hashlib.sha256(host.encode()).hexdigest()[:16]}.rdp")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w", encoding="utf-8", newline="\r\n") as f:  # Path.write_text(newline=) is 3.10+
+        f.write(f"full address:s:{host}\nusername:s:{RDP_USER}\n")
+    return path
+
+
+def open_rdp(alias, host=None):
+    """Remote desktop to the Frame's xrdp (user steamos), at `host` or where the alias points."""
+    host = host or ssh_hostname(alias)
+    # The client would open either way and then fail on its own, with nothing said here.
+    check_rdp(host)
     if MAC:
         if subprocess.run(["open", "-a", "Windows App"], capture_output=True).returncode == 0:
-            return "Opened Windows App"
+            return f"Opened Windows App: connect to {host} and {RDP_LOGIN}"
         open_url("https://apps.apple.com/app/windows-app/id1295203466")
         return "Windows App isn't installed; opened its App Store page"
     if WINDOWS:
-        _spawn(["mstsc.exe", f"/v:{host}"])
-        return f"Opened Remote Desktop to {host}"
+        _spawn(["mstsc.exe", str(rdp_file(host))])
+        # Windows asks about the unsigned connection file first.
+        return f"Opened Remote Desktop to {host}: choose Connect, {RDP_LOGIN}"
     if which("remmina"):
-        _spawn(["remmina", "-c", f"rdp://steamos@{host}"])
-        return f"Opened Remmina to {host}"
+        _spawn(["remmina", "-c", f"rdp://{RDP_USER}@{host}"])
+        return f"Opened Remmina to {host}: {RDP_LOGIN}"
     for name in ("xfreerdp3", "xfreerdp"):
         if which(name):
-            _spawn([name, f"/v:{host}", "/u:steamos", "/dynamic-resolution"])
-            return f"Opened FreeRDP to {host}"
+            _spawn([name, f"/v:{host}", f"/u:{RDP_USER}", "/dynamic-resolution"])
+            return f"Opened FreeRDP to {host}: {RDP_LOGIN}"
     raise HostError("No RDP client found: install Remmina or FreeRDP")
 
 

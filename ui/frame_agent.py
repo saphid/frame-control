@@ -1,11 +1,15 @@
 """Agent actions and one-use human approvals. No model SDK or network calls here."""
 import hashlib
+import os
 from pathlib import Path
 import secrets
+import shlex
 import shutil
 import subprocess
 import threading
 import time
+
+TMP_PREFIX = 'frame-agent-'  # then the server's PID, so server.sweep_tmp can clear a stopped run's
 
 
 class Approvals:
@@ -107,7 +111,7 @@ def call(server, body):
     if name == 'send_file':
         # Stage the reviewed bytes before the existing transfer helper reads them.
         import tempfile
-        with tempfile.TemporaryDirectory(prefix='frame-agent-') as tmp:
+        with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-') as tmp:
             source = Path(action['arguments']['path'])
             with source.open('rb') as stream:
                 data = stream.read(16 * 1024**2 + 1)
@@ -129,7 +133,10 @@ def run_script(server, name, args):
     script = server.HERE.parent / 'scripts' / name
     if not script.exists() or not shutil.which('zsh') or server.LOCAL:
         raise ValueError(name + ' requires a computer with zsh and the matching script installed')
-    result = subprocess.run(['zsh', str(script), *args], capture_output=True, text=True, timeout=60)
+    # The headset the server is routed to, not whatever `frame` means in ~/.ssh/config.
+    env = {**os.environ, 'FRAME_ALIAS': server.FRAME,
+           'FRAME_SSH_OPTS': shlex.join(server.SSH[1:])}
+    result = subprocess.run(['zsh', str(script), *args], capture_output=True, text=True, timeout=60, env=env)
     if result.returncode:
         raise ValueError(result.stderr.strip() or 'Script failed')
     return {'message': result.stdout.strip()}

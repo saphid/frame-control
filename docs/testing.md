@@ -15,6 +15,29 @@ A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/ste
 python3 -m unittest discover -s tests
 ```
 
+The Control Center is covered by `tests/test_control_center.py` and its Node
+behavior suite `tests/control_center.cjs` (also run by unittest discovery).
+They exercise production search, metrics, navigation and action handlers with
+mocked API/DOM boundaries: volume Apply/mute/readback, offline and failed reads,
+stale samples, selected-headset capture, duplicate actions and validation before
+SSH. Integration regressions run the production shared refresh, Home renderer,
+host callback and Control Center bootstrap: a pre-command status request must be
+drained before audio readback starts, and delayed startup retains sample receipt
+age, failed-read state and early host capabilities. The actual Flatpak install
+redraw cannot revive a failed sample; a new successful poll restores metrics and
+audio after either redraw or delayed mount. Draft regressions cover a pending headset
+switch and mute followed by Apply. Static asset HTTP tests and desktop/iPhone bundle checks catch missing CSS
+or JavaScript. A focused run is:
+
+```sh
+python3 -m unittest discover -s tests -p test_control_center.py -v
+node --test tests/control_center.cjs
+node --check ui/control-center.js
+```
+
+Responsive layout, actual browser rendering and keyboard/touch behavior still
+need browser verification. No Control Center test connects to a real headset.
+
 About 120 tests, a few seconds, on Python 3.9 and newer. GitHub Actions runs
 them on macOS, Windows and Linux. They don't pick up `tests/e2e`.
 
@@ -104,6 +127,20 @@ switch while SSH is down:
 
 ## Headset smoke test
 
+**Documented shared-device procedure:** before a test installs, launches or
+stops an application, acquire `ssh frame 'mkdir /tmp/frame-test.lock'`. If it
+fails, leave that lock alone and continue offline work. Only the thread that
+acquired it releases it with `ssh frame 'rmdir /tmp/frame-test.lock'`, after
+cleanup. Keep each device session to a few minutes.
+
+Check battery capacity and charging state under `/sys/class/power_supply`
+before and after; keep capacity above 20%. Stop only processes started by the
+test, remove temporary installs and profiles, and restore the prior dashboard
+state. Leave Steam and SteamVR running. Do not reboot or change global settings.
+Record the build, actual interaction results, cleanup and any unworn-headset
+limits alongside screenshots or logs. These are caller responsibilities; the
+smoke script below does not acquire this shared lock itself.
+
 ```sh
 scripts/frame-smoke.sh           # needs `ssh frame` to work without a password
 scripts/frame-smoke.sh --pair    # also pairs a throwaway key: approve it in the headset
@@ -181,3 +218,29 @@ assistant against an in-process HTTP endpoint with canned responses (no keys or
 external calls). `tests/e2e/test_agents.py` runs the MCP/HTTP/SSH path against the
 fake Frame for approved installs, clipboard and file transfer. Headset Chromium
 rendering and real screenshots still need a device; see [agent evidence](agents.md#evidence-and-limits).
+
+## Family and comfort
+
+`tests/test_comfort.py` uses an injected clock, fake headset sensor readings and
+actions, plus a Node fake of Steam's Home API. It covers warnings before Home,
+late/suspended sessions, cancellation, failed actions, duplicate alerts, reboot
+invalidation, per-zone thermal trips and shared on-headset state. The server
+guards reject invalid session settings before SSH. See
+[real-device evidence and limits](family-comfort.md#verification).
+
+## Panel switcher
+
+`tests/test_panels.py` supplies fake-Frame `vrcmd --overlays` output, checks
+main-panel filtering (including hidden panels), revalidates closed panels before
+focus, and drives the headset helper's real loopback HTTP server to test access
+keys, Host/Origin guards, malformed requests, offline errors and Close. It runs
+in the normal unit suite without OpenVR or a headset. The fixture format comes
+from SteamVR 2.18.1, BUILD_ID `20260925.6191901`; it does not simulate rendering.
+
+On the Frame, run `python3 -` over SSH with `ui/frame_panels.py` on stdin to
+list panels. `--focus <key>` rechecks the list and requests focus. In Frame
+Control, **Tools → Panel switcher → Open in headset** exercises installation,
+Chromium rendering and the same helper through HTTP. Close the switcher after
+testing. [The recorded device checks](panels.md#frame-controls-panel-switcher)
+cover actual focus, HTTP guards and an OpenXR sample transition, and separately
+identify the unverified Steam-game, spatial layout, reboot and laser behaviors.
