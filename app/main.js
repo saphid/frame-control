@@ -1,7 +1,7 @@
 // Frame Control as a desktop app (macOS, Windows, Linux): starts ui/server.py on
 // a free loopback port and shows it in a native window. The server does all the
 // work over the `frame` SSH alias; this file only hosts it.
-const { app, BrowserWindow, Menu, Notification, clipboard, dialog, ipcMain, shell } = require("electron");
+const { app, BrowserWindow, Menu, Notification, clipboard, dialog, ipcMain, nativeImage, session, shell } = require("electron");
 const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
 const fs = require("fs");
@@ -11,6 +11,7 @@ const os = require("os");
 const path = require("path");
 const { SCHEME, parseInstallLink, linkFromArgv } = require("./install-link");
 const updater = require("./updater");
+const { createMetaSignIn } = require("./meta-signin");
 
 const run = promisify(execFile);
 
@@ -115,10 +116,11 @@ function ping(target) {
 }
 
 async function startServer() {
-  // The version and whether this is a built app go to ui/frame_telemetry.py, which
-  // sends nothing from a source checkout.
+  // The version, the time zone and whether this is a built app go to ui/frame_telemetry.py,
+  // which sends nothing from a source checkout.
   const env = { ...process.env, PATH: await loginPath(), FRAME_CONTROL_APP: "1",
                 FRAME_CONTROL_VERSION: app.getVersion(), FRAME_CONTROL_LOG: LOG,
+                FRAME_CONTROL_TIMEZONE: Intl.DateTimeFormat().resolvedOptions().timeZone || "",
                 ...(app.isPackaged ? { FRAME_CONTROL_PACKAGED: "1" } : {}),
                 ...(fs.existsSync(TOOLS) ? { FRAME_CONTROL_TOOLS: TOOLS } : {}) };
   python = await findPython(env);
@@ -149,7 +151,7 @@ async function startServer() {
   const target = `http://127.0.0.1:${port}/`;
   for (let i = 0; i < 100; i++) {
     if (exited !== null) throw new Error(`The server exited (${exited}). See ${LOG}.`);
-    if (await ping(target)) { url = target; return; }
+    if (await ping(target)) { url = target; serverStarted = Date.now(); return; }
     await new Promise((r) => setTimeout(r, 100));
   }
   if (server === child) server = null;
@@ -175,18 +177,27 @@ function stopServer() {
   if (server) endServer(server);
 }
 
-function errorPage(message) {
+function errorPage(message, title = "Frame Control couldn't start") {
   const esc = (s) => s.replace(/[&<>]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;" }[c]));
   const html = `<!doctype html><meta charset="utf-8"><body style="margin:0;height:100vh;display:grid;
     place-items:center;background:${BG};color:#e6edf3;font:14px -apple-system,sans-serif">
-    <div style="max-width:560px;padding:32px;line-height:1.5"><h2>Frame Control couldn't start</h2>
-    <p>${esc(message)}</p><p style="color:#8b98a8">Fix it, then choose Frame → Restart Server.</p></div>`;
+    <div style="max-width:560px;padding:32px;line-height:1.5"><h2>${esc(title)}</h2>
+    <p>${esc(message)}</p>
+    <p><button onclick="this.disabled = true; frameApp.restartServer()" style="font:inherit;padding:6px 16px;
+      border-radius:6px;border:1px solid #30363d;background:#21262d;color:inherit;cursor:pointer">Try Again</button></p>
+    <p style="color:#8b98a8">Frame → Restart Server does the same.</p></div>`;
   return "data:text/html;charset=utf-8," + encodeURIComponent(html);
 }
 
+// A server that had been running starts again by itself (something stopped it: a
+// signal, a crash). One that stops again within a minute shows the error instead,
+// so a server that can't stay up doesn't restart forever.
+let serverStarted = 0;
 function serverDied(why) {
   url = null;
-  if (win) win.loadURL(errorPage(`The server stopped unexpectedly (${why}). See ${LOG}.`));
+  if (!win) return;
+  if (Date.now() - serverStarted > 60000) restartServer();
+  else win.loadURL(errorPage(`Its server stopped unexpectedly (${why}). See ${LOG}.`, "Frame Control stopped"));
 }
 
 // Restarts that overlap share one: two could each start a server, and the one
@@ -263,7 +274,20 @@ function fromUi(e) {
   } catch { return false; }
 }
 
+// The error page's Try Again button. The error page is the only data: page the window
+// shows (`url` can still be set then: the server answered but the page failed to load).
+ipcMain.handle("server:restart", (e) => {
+  if (win && e.sender === win.webContents && e.senderFrame && e.senderFrame.url.startsWith("data:")) restartServer();
+});
 ipcMain.handle("clipboard:read", (e) => fromUi(e) ? clipboard.readText() : "");
+// A PNG or JPEG (a screenshot) onto the clipboard as an image.
+ipcMain.handle("clipboard:writeImage", (e, bytes) => {
+  if (!fromUi(e) || !(bytes instanceof Uint8Array)) return false;
+  const img = nativeImage.createFromBuffer(Buffer.from(bytes));
+  if (img.isEmpty()) throw new Error("not an image");
+  clipboard.writeImage(img);
+  return true;
+});
 ipcMain.handle("connection:setup", (e) => { if (fromUi(e)) setUpConnection(); });
 ipcMain.on("keys:capture", (e, on) => { if (fromUi(e)) win.webContents.setIgnoreMenuShortcuts(on === true); });
 ipcMain.handle("update:get", (e) => fromUi(e) ? publicUpdate() : null);
@@ -324,6 +348,47 @@ ipcMain.handle("comfort:notify", (e, message) => {
     notification.show();
   });
 });
+
+// ---- Sign in with Meta (app/meta-signin.js, docs/meta-library.md) ----
+// The token goes from the sign-in window's own session straight to the server's
+// connect path; the page asks for it and only hears the server's answer.
+function postApi(apiPath, body) {
+  return new Promise((resolve, reject) => {
+    if (!url) return reject(new Error("Frame Control's server isn't running."));
+    const data = JSON.stringify(body);
+    const req = http.request(new URL(apiPath, url), {
+      method: "POST", timeout: 60000,
+      headers: { "Content-Type": "application/json", "X-Frame-UI": process.env.FRAME_UI_KEY || "1",
+                 "Content-Length": Buffer.byteLength(data) },
+    }, (res) => {
+      let text = "";
+      res.setEncoding("utf8");
+      res.on("data", (c) => { text += c; });
+      res.on("end", () => {
+        let parsed = {};
+        try { parsed = JSON.parse(text); } catch {}
+        resolve({ status: res.statusCode, data: parsed });
+      });
+    });
+    req.on("error", reject);
+    req.on("timeout", () => req.destroy(new Error("the server didn't answer")));
+    req.end(data);
+  });
+}
+
+let metaSignIn = null;
+const meta = () => (metaSignIn ||= createMetaSignIn({
+  BrowserWindow, session, shell, parent: () => win,
+  // The page only offers sign-in after its "I understand" box is ticked (checked again below).
+  connect: (token, attempt) => postApi("/api/meta", { action: "connect", token, acknowledged: true, attempt }),
+  cancel: (attempt) => postApi("/api/meta", { action: "cancel-signin", attempt }),
+}));
+ipcMain.handle("meta:signin", (e, acknowledged) => {
+  if (!fromUi(e)) return null;
+  if (acknowledged !== true) return { ok: false, error: "My Meta library is experimental: tick that you understand the warning first." };
+  return meta().signIn();
+});
+ipcMain.handle("meta:signout", (e) => fromUi(e) ? meta().signOut() : false);
 
 // frame-control://install links from websites (docs/web-install.md). They can
 // arrive before the window or server exists (macOS open-url on a cold launch),
