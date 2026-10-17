@@ -4,6 +4,10 @@ Frame Control's **Get games** section lists the games you own with each one's
 Steam Frame rating, installs them on the Frame, and searches the Steam store.
 This page covers how it works underneath, so you can do the same from a shell.
 
+For flat-to-VR mods and Beat Saber custom songs, see the
+[per-game feasibility table](mods.md). Mod support is separate from Steam's
+Frame rating; there is no mod installer yet.
+
 ## How it works
 
 The Frame's Steam client runs with `-cef-enable-debugging`. So its UI, a
@@ -106,3 +110,11 @@ returns nothing without `cc`, so Frame Control takes the country from
 - Installing when there's more than one library folder, such as a microSD card.
 - Uninstalling. `steam://uninstall/<appid>` should open a confirmation in the
   headset.
+
+## Optional VR software
+
+The [VR utilities list](vr-utilities.md#optional-software) is separate from our
+controls and HUD. It checks software ownership as well as games; paid utilities
+are installable only when already in the loaded Frame account library. No
+purchase flow is added. Public reports, local results and ownership are shown
+separately, and untested tools remain untested.

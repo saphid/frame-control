@@ -1,4 +1,5 @@
 """Offline version lookup with small index-v2 fixtures."""
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import io
 import json
 import os
@@ -183,6 +184,35 @@ class VersionsTest(unittest.TestCase):
         info['abis'] = ['armeabi-v7a']
         self.assertIn('no arm64-v8a build', versions.describe(info))
 
+    def test_wrong_abi_error_says_which_file_to_get(self):
+        import frame_telemetry
+        for abis in (['armeabi-v7a'], ['x86_64']):  # the two per-ABI Grayjay files users tried
+            info = {'label': 'Grayjay', 'min_sdk': 28, 'abis': abis}
+            with self.assertRaises(frame_android.FrameError) as error:
+                frame_android.check_installable(info)
+            message = str(error.exception)
+            self.assertIn('no arm64-v8a build (%s)' % abis[0], message)
+            self.assertIn('download the APK marked arm64-v8a', message)
+            self.assertEqual(frame_telemetry.categorize(message)[0], 'apk_wrong_abi')
+        frame_android.check_installable({'label': 'Universal', 'min_sdk': 28,
+                                         'abis': ['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64']})
+
+    def test_wrong_file_reports_do_not_rate_the_app(self):
+        reports = frame_catalog.reports
+        wrong_file = {'package': 'org.example.app', 'version': '391', 'result': 'install_failed',
+                      'notes': 'Example has no arm64-v8a build (x86_64); Lepton is 64-bit ARM only',
+                      'date': '2026-10-01T10:00:00'}
+        self.assertIsNone(reports.verdict([wrong_file]))
+        app = frame_catalog.catalog_build.finalize({'pr': 'likely', 'pw': ['No known blockers']}, [wrong_file])
+        self.assertEqual((app['r'], app['t']), ('likely', False))  # the prediction stands
+        # A real installer failure, a crash or a person's rating still counts.
+        installer = dict(wrong_file, notes='INSTALL_FAILED_INVALID_APK')
+        self.assertEqual(reports.verdict([installer])[0], 'no')
+        crash = dict(wrong_file, result='crashes', notes=None, date='2026-10-02')
+        self.assertEqual(reports.verdict([wrong_file, crash])[0], 'no')
+        rated = dict(wrong_file, rating='works', date='2026-10-03')
+        self.assertEqual(reports.verdict([wrong_file, rated])[0], 'works')
+
     def test_install_resolves_index_hash(self):
         versions.alternatives('org.example.app')
         with patch.object(versions, 'alternatives', side_effect=AssertionError('recomputed')), \
@@ -242,6 +272,7 @@ class UploadVersionsTest(unittest.TestCase):
             handler.rfile = io.BytesIO(b'x')
             with patch.object(frame_android, 'apk_info', return_value=dict(info)), \
                     patch.object(versions, 'alternatives', side_effect=AssertionError('lookup during upload')) as lookup, \
+                    patch.object(frame_android, 'install_hooks', []), \
                     patch.object(server, 'ensure_master') as ssh:
                 if mode == 'apkinfo':
                     reply = handler.upload()
@@ -255,6 +286,29 @@ class UploadVersionsTest(unittest.TestCase):
                 lookup.assert_not_called()
                 ssh.assert_not_called()
 
+
+    def test_blocked_uploads_are_reported_like_failed_installs(self):
+        import server
+        info = {'package': 'org.example.app', 'label': 'Example', 'version': '5',
+                'version_code': 5, 'min_sdk': 33, 'abis': [], 'icon_png': None}
+        for apk_info, expected_info in ((dict(info), 'org.example.app'),
+                                        (frame_android.FrameError('not an APK'), None)):
+            handler = object.__new__(server.Handler)
+            handler.headers = {'X-Filename': 'app.apk', 'X-Mode': 'apk', 'Content-Length': '1'}
+            handler.rfile = io.BytesIO(b'x')
+            calls = []
+            patch_info = (patch.object(frame_android, 'apk_info', side_effect=apk_info)
+                          if isinstance(apk_info, Exception) else
+                          patch.object(frame_android, 'apk_info', return_value=apk_info))
+            with patch_info, patch.object(frame_android, 'install_hooks', [lambda *a: calls.append(a)]), \
+                    patch.object(server, 'ensure_master'):
+                with self.assertRaises(server.Failure):
+                    handler.upload()
+            self.assertEqual(len(calls), 1)
+            got_info, meta, error, _ = calls[0]
+            self.assertEqual((got_info or {}).get('package'), expected_info)
+            self.assertIsNone(meta)
+            self.assertIsInstance(error, frame_android.FrameError)
 
 if __name__ == '__main__':
     unittest.main()

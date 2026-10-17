@@ -5,6 +5,12 @@ in **Lepton**, Valve's Waydroid-based container. Lepton is built for games,
 not general Android use
 ([GamingOnLinux](https://www.gamingonlinux.com/2026/09/lepton-from-valve-to-run-android-games-on-linux-is-now-open-source/)).
 
+**VR streaming clients:** WiVRn 26.9 and ALVR 20.14.1 install, but both fail
+OpenXR instance creation on the checked Frame because its Android runtime lacks
+`XR_KHR_convert_timespec_time` (**verified** 2026-09-28, SteamOS 0.4.1,
+BUILD_ID 20260925.6191901). They are not Frame Control dependencies. See
+[the feasibility results and options](linux-vr-streaming.md).
+
 ## Install from the Mac: one app, one Lepton instance (verified 2026-09-25)
 
 Use Frame Control's **Android apps** section (search, Install, Test, Report), drop
@@ -32,6 +38,12 @@ section below), instead of going into Lepton Development:
    restarts and updates, and each app gets its own SteamVR panel. Several can
    run at once alongside Lepton Development, each in its own container
    (`lepton-steamlaunch-<id>`, ADB on 5556, 5557, …).
+
+Split APKs (a base plus `split_*.apk` files) install as one app:
+`python3 ui/frame_android.py install base.apk split1.apk …`. Lepton runs one
+APK, so splits that add native libraries or assets are merged into the base
+and re-signed; density and language splits are refused. See
+[quest-import.md](quest-import.md#split-apks). Not yet tried on a real Frame.
 
 Verified with AntennaPod and Tabletop Tools: installed in about 7 s, launched
 from the shortcut, stopped, and relaunched with their data intact. ADB and
@@ -325,3 +337,11 @@ because gamescope scales Lepton's surface to fit the same panel. Also unverified
 whether the settings survive the app or its Lepton instance relaunching.
 Lepton Development rebuilds its Android data on exit, so there they probably
 don't.
+
+## Expansion files and save backups
+
+SideQuest-inspired CLI helpers install local OBB files into an already-running
+app instance and back up/restore a stopped instance's private app data. See
+[SideQuest features and limits](sidequest.md) for commands, archive scope and
+verification status. These paths have offline coverage; real Frame storage and
+permissions remain unverified. They do not change APK install or launch behavior.
