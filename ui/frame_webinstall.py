@@ -456,7 +456,9 @@ def dispatch(path, name=None, exe=None, progress=None, source=None):
             m = frame_android.install(path, source=source or os.path.basename(path))
         except frame_android.FrameError as e:
             raise WebInstallError(str(e))
-        return {"message": f"Installed {m['label']} as its own app in the Steam library", "kind": kind, "result": m}
+        message = f"Installed {m['label']} as its own app in the Steam library"
+        note = frame_android.layer_note(m)
+        return {"message": f"{message}. {note}" if note else message, "kind": kind, "result": m}
     try:
         import frame_titles
     except ImportError as e:

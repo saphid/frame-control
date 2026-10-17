@@ -9,7 +9,7 @@ import subprocess
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STUBS = ['$', 'toggleLive', 'scrollToY', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadTitles']
+STUBS = ['$', 'toggleLive', 'scrollToY', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadTitles', 'showAndroidTab']
 
 RUN = r'''
 const vm = require('vm');
@@ -43,7 +43,7 @@ class PageStartup(unittest.TestCase):
                         for n in STUBS if n != '$')
         code = ('const $ = id => id === "nowhere" ? null : { classList: { toggle() {} }, scrollIntoView() {} };\n' + stubs + tables + 'let page = "home";\n' + show +
                 'showPage();\n' + ''.join(f'let {n};\n' for n in later))
-        hashes = ['', '#home', '#games', '#android', '#tools', '#settings', '#devices', '#nowhere']
+        hashes = ['', '#home', '#games', '#android', '#tools', '#settings', '#devices', '#control', '#nowhere']
         hashes += ['#' + k for k in re.findall(r'(\w+): "', tables)]
         r = subprocess.run(['node', '-e', RUN], input=json.dumps({'code': code, 'hashes': hashes}),
                            capture_output=True, text=True)

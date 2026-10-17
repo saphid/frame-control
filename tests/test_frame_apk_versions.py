@@ -184,6 +184,35 @@ class VersionsTest(unittest.TestCase):
         info['abis'] = ['armeabi-v7a']
         self.assertIn('no arm64-v8a build', versions.describe(info))
 
+    def test_wrong_abi_error_says_which_file_to_get(self):
+        import frame_telemetry
+        for abis in (['armeabi-v7a'], ['x86_64']):  # the two per-ABI Grayjay files users tried
+            info = {'label': 'Grayjay', 'min_sdk': 28, 'abis': abis}
+            with self.assertRaises(frame_android.FrameError) as error:
+                frame_android.check_installable(info)
+            message = str(error.exception)
+            self.assertIn('no arm64-v8a build (%s)' % abis[0], message)
+            self.assertIn('download the APK marked arm64-v8a', message)
+            self.assertEqual(frame_telemetry.categorize(message)[0], 'apk_wrong_abi')
+        frame_android.check_installable({'label': 'Universal', 'min_sdk': 28,
+                                         'abis': ['arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64']})
+
+    def test_wrong_file_reports_do_not_rate_the_app(self):
+        reports = frame_catalog.reports
+        wrong_file = {'package': 'org.example.app', 'version': '391', 'result': 'install_failed',
+                      'notes': 'Example has no arm64-v8a build (x86_64); Lepton is 64-bit ARM only',
+                      'date': '2026-10-01T10:00:00'}
+        self.assertIsNone(reports.verdict([wrong_file]))
+        app = frame_catalog.catalog_build.finalize({'pr': 'likely', 'pw': ['No known blockers']}, [wrong_file])
+        self.assertEqual((app['r'], app['t']), ('likely', False))  # the prediction stands
+        # A real installer failure, a crash or a person's rating still counts.
+        installer = dict(wrong_file, notes='INSTALL_FAILED_INVALID_APK')
+        self.assertEqual(reports.verdict([installer])[0], 'no')
+        crash = dict(wrong_file, result='crashes', notes=None, date='2026-10-02')
+        self.assertEqual(reports.verdict([wrong_file, crash])[0], 'no')
+        rated = dict(wrong_file, rating='works', date='2026-10-03')
+        self.assertEqual(reports.verdict([wrong_file, rated])[0], 'works')
+
     def test_install_resolves_index_hash(self):
         versions.alternatives('org.example.app')
         with patch.object(versions, 'alternatives', side_effect=AssertionError('recomputed')), \
