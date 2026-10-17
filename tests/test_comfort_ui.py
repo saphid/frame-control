@@ -1,4 +1,5 @@
 """Run the actual shared page's comfort renderer against a minimal DOM/bridge."""
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import pathlib
 import shutil
 import subprocess
@@ -99,4 +100,33 @@ renderComfort({id:'new', active:false, time:910, options:{minutes:45}, events:[]
 assert.equal($('sessionMinutes').value, '50');  // later polls leave it alone
 '''
         result = subprocess.run(['node', '-e', setup + code + checks], capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_poll_waits_while_the_frame_is_unreachable(self):
+        page = (ROOT / 'ui/index.html').read_text(encoding='utf-8')
+        start = page.index('async function pollComfort()')
+        code = page[start:page.index('$("comfortForm").onsubmit', start)]
+        js = r'''
+const assert = require('node:assert/strict');
+const el = {textContent: 'Checking session…'};
+const $ = () => el;
+let online = false, comfortBusy = false, calls = 0, timers = 0;
+const api = async () => { calls++; return {}; };
+const renderComfort = () => {};
+const setTimeout = () => { timers++; };
+''' + code + r'''
+(async () => {
+  await pollComfort();
+  assert.equal(calls, 0);  // no ssh attempt while the status check can't reach the Frame
+  assert.match(el.textContent, /when the Frame is connected/);
+  assert.equal(timers, 1);  // still scheduled, to resume when it's back
+  online = true;
+  await pollComfort();
+  assert.equal(calls, 1);
+  online = null;  // a status check that failed for another reason: keep polling
+  await pollComfort();
+  assert.equal(calls, 2);
+})().catch(e => { console.error(e); process.exitCode = 1; });
+'''
+        result = subprocess.run(['node', '-e', js], capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stderr)
