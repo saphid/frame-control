@@ -17,11 +17,12 @@ python3 ui/server.py         # anywhere: then open http://127.0.0.1:47810
 
 ## Features
 
-The window has five tabs: **Home** (headset view, status, screenshots),
+The window has six tabs: **Home** (headset view, status, screenshots),
 **Games** (installed games, sideloaded titles, getting games), **Android** (apps,
 the catalogue, display settings, reports), **Tools** (sending files and text,
-Flatpaks, remote and power) and **Devices** (your headsets and their addresses).
-Keys 1–5 switch between them. Files can be dropped anywhere in the window. A
+Flatpaks, remote and power), **Devices** (your headsets and their addresses),
+and **Control** (the searchable Control Center, metrics, supported settings and
+headset guidance). Keys 1–6 switch between them. Files can be dropped anywhere in the window. A
 connection pill in the header always shows which headset and whether it's
 connected, and how (Tailscale, or the network's name). Click it to add, edit or
 reorder the headset's addresses, or to see each step of connecting. When the Frame can't be
@@ -88,8 +89,68 @@ counts them while they run.
   name your networks, and switch headsets. See [devices.md](devices.md).
 - **One-click tools**: SSH or SFTP in a terminal window, Steam Link, and remote
   desktop (Windows App on macOS, Remote Desktop on Windows, Remmina or FreeRDP on
-  Linux). Sleep, restart and shut down open a terminal window because SteamOS
-  asks for the sudo password over SSH.
+  Linux). Remote desktop first checks that the Frame's xrdp answers on port
+  3389 (Developer Mode turns it on). On Windows it opens a connection file for
+  user `steamos`, because `mstsc /v:` alone offers your Windows account, which
+  xrdp turns away. Accept the warning about the Frame's own certificate, then
+  sign in with the Developer Mode password. Sleep, restart and
+  shut down open a terminal window because SteamOS asks for the sudo password
+  over SSH.
+
+## Control Center
+
+Open **Control** or `#control` to search controls, status and help. Categories
+cover device/audio, VR/comfort, apps/files, connection/remote and Frame Control
+preferences. Search is local: it matches labels, descriptions and familiar terms
+such as “DPI”, “microphone”, “recenter” and “keep awake”. Queries are not sent to
+Steam, app catalogues, analytics or models. Choosing a workflow link opens its
+existing screen; it does not install, cast, open a helper or change a setting.
+Home, Games, Android, Tools and Devices retain their existing features.
+
+The overview and detail cards use the shared `/api/status` sample: charge and
+power, user/system storage, memory, Wi-Fi, IP, OS/build, uptime, detected services
+and VR timings. Values refresh with the normal 30-second poll. A failed status
+request, lost connection, headset switch or sample received more than 90 seconds
+ago clears current readings and disables audio writes. The client receipt time
+and failed-read state are retained through page startup and UI redraws. Only a
+new successful status read clears a failure; reusing the retained sample does not.
+The headset timestamp is shown without assuming
+its clock matches this computer. Missing sensors show **Unavailable**;
+they are not converted to zero. Compositor FPS is separate from application FPS;
+GPU time is render time, not GPU utilisation. The temperature is the hottest
+readable sensor. Thermal trip warnings use per-zone kernel hot/critical limits,
+not a guessed universal temperature threshold.
+
+**Audio** controls the default output sink through the existing `/api/volume`
+endpoint. Moving its slider prepares a value; **Apply volume** sends it. **Mute**
+and **Unmute** send explicit mute states. The UI captures the selected headset,
+blocks duplicate/pending actions, and requests status after command acknowledgment
+for readback, draining an earlier poll first. Mute preserves an unapplied volume
+draft; switching headsets discards it. It reports
+unconfirmed or differing output separately from confirmed state. API validation
+rejects invalid types, out-of-range levels and invalid mute states before SSH.
+
+Other settings link to the existing forms and their validation, progress,
+confirmations and reset behavior: per-instance Android resolution/density/text,
+comfort sessions and alerts, media layouts, Mac streaming quality, privacy,
+sources and artwork. Android display links reveal **On your Frame** before
+scrolling to the form. Mac streaming remains searchable on all platforms, with
+its action shown only when the server is on macOS.
+
+Hardware guidance is deliberately separate from controls. Microphone/routing,
+brightness, refresh selection, optics, controllers, Bluetooth, passthrough,
+tracking-origin changes, saved spatial layouts, firmware updates and recovery
+have no verified remote setting here. Use the headset's own controls or the
+documented manual procedures. Movement comfort remains per-game; automatic
+sleep is in Steam Settings → Power → Sleep after inactivity. Keep-awake and
+Android data backup/restore remain script/MCP capabilities, not new UI switches.
+
+**Verification:** the Control Center's JavaScript runs under Node with mocked
+API and DOM boundaries; the server tests mock SSH and reject invalid values
+before any device command. Packaging tests cover the shared CSS/JS in desktop
+and iPhone bundles. These checks establish wiring, search, navigation, offline,
+error and device-switch behavior; they do not establish wearer experience,
+physical settings persistence or a new hardware capability.
 
 ## How it works
 
