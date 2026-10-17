@@ -114,6 +114,14 @@ def manage_repo(action, **kwargs):
     return getattr(module, action)(**kwargs)
 
 
+def set_token(source_id, token):
+    """Save (token) or remove (None) a source's access token; status is in sources()."""
+    module, _ = resolve(source_id)
+    if not hasattr(module, 'set_token'):
+        raise SourceError('This source does not use an access token')
+    return module.set_token(token) if token is not None else module.clear_token()
+
+
 def normalise(name):
     return ' '.join(re.findall(r'\w+', unicodedata.normalize('NFKC', name or '').casefold()))
 
