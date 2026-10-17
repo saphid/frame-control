@@ -71,6 +71,31 @@ def valid_email(email):
     return len(email) <= EMAIL_MAX and bool(EMAIL_RE.fullmatch(email))
 
 
+def flag(body, key):
+    """A consent choice: true only when it really is true (not "false" or 1), left out is no."""
+    v = body.get(key)
+    if v is not None and not isinstance(v, bool):
+        raise ValueError(f'{key} must be true or false')
+    return v is True
+
+
+def from_report(email):
+    """Follow-up questions agreed to with a problem report: the address becomes the contact
+    email with that choice ticked, so it shows in Settings and is removed the same way. Update
+    notices stay on only for the same address: a different one replaces the old address with
+    follow-up questions only (the report form says so before sending). Returns (contact id,
+    rev) for the report to carry, read together with the change itself: a later change from
+    this copy has a higher rev, and the newest such change decides whether the report's
+    follow-up permission still stands, whatever the clocks say."""
+    with _lock:
+        s = load()
+        same = s['email'].lower() == email.lower()
+        changed, cid, rev = _apply({'email': s['email'] if same else email,
+                                    'updates': s['updates'] and same, 'followup': True})
+    _deliver(changed)
+    return cid, rev
+
+
 def state():
     """What the page shows. showPrompt: the one-time prompt hasn't been shown or answered yet,
     and the Frame has connected at least once (setup worked), so it never greets a new install."""
@@ -155,8 +180,14 @@ def redact_removed(event, started):
 def save(body):
     """Set, change or remove the address and the two choices. An address needs at least one
     choice ticked; an empty address (or neither ticked) removes it and withdraws both."""
+    _deliver(_apply(body)[0])
+    return state()
+
+
+def _apply(body):
+    """save()'s change, kept here and waiting to send. Returns (changed, contact id, rev)."""
     email = str(body.get('email') or '').strip()
-    updates, followup = bool(body.get('updates')), bool(body.get('followup'))
+    updates, followup = flag(body, 'updates'), flag(body, 'followup')
     if email and not valid_email(email):
         raise ValueError("that doesn't look like an email address")
     if email and not (updates or followup):
@@ -181,9 +212,12 @@ def save(body):
                 _forget_locally(old)
             except OSError:
                 pass
+        return changed, s['id'], s['rev']
+
+
+def _deliver(changed):
     if changed and not _send_pending(block=False):
         _wake.set()  # offline, or a send under way that will take this change with it
-    return state()
 
 
 def prompt(body):

@@ -21,9 +21,37 @@ The confidence labels are the same as in [ssh.md](ssh.md).
 | **ADB + scrcpy (Lepton only)** | A mirror of the Android container | **Guess** | `brew install scrcpy android-platform-tools`, then `adb connect frame.local:5555` while Lepton Development is running ([adb_lepton](https://partner.steamgames.com/doc/steamhardware/steamframe/adb_lepton)), then `scrcpy`. This only shows Android apps, not SteamOS. |
 | VNC server on the Frame (krfb / wayvnc) | A mirror of the Plasma desktop | **Inferred (SteamOS)** | Deck users run krfb in Desktop Mode ([one.vg](https://one.vg/blog/remote-control-your-steam-deck)). On the Frame, the in-headset desktop is a virtual screen, and krfb isn't known to be preinstalled. RDP and Steam Link cover this case, so it's not recommended. |
 
+**RDP from Windows, verified 2026-09-30:** Windows 11 25H2's Remote Desktop
+(`mstsc`) against BUILD_ID 20260925.6191901. xrdp picks TLS, not NLA, so
+Remote Desktop never asks for a user or password. It warns that the certificate
+(`www.xrdp.org`) can't be verified. After **Yes**, xrdp shows its own "Login to
+frame" box with the username blank. Any user but `steamos` gets "User does not
+exist, or could not be authenticated". Signing in as `steamos` with the
+Developer Mode password opens a Plasma (X11) desktop within about 6 seconds.
+It's a new session on display `:10`, separate from what the headset shows,
+and it uses about 1.3 GB of the Frame's memory. Closing Remote Desktop leaves
+it running, and the next sign-in reconnects to it. To end it, find its
+session with `loginctl list-sessions` over SSH (its leader is `xrdp-sesexec`)
+and run `loginctl terminate-session <id>`; the headset's own session keeps
+running.
+
 **Recommendation for A:** start with Steam Link for macOS, because Valve
 documents it. Use Windows App (RDP) when you want a proper Linux desktop on the
 Mac with keyboard, mouse, and clipboard.
+
+**Verified 2026-09-30** (Frame BUILD_ID 20260925.6191901, Windows 11 25H2,
+Remote Desktop Connection): signing in to xrdp as `steamos` with the Developer
+Mode password opens a Plasma (X11) desktop within about 6 seconds.
+
+- xrdp has no NLA, so the client shows a certificate warning (xrdp's own
+  `www.xrdp.org` certificate) and then xrdp's own login box. Frame Control
+  fills in `steamos` there on Windows, Remmina and FreeRDP.
+- The desktop is a separate login session (Xorg on display `:10`), not the
+  headset's view. It uses about 1.3 GB of the Frame's memory.
+- Closing the client leaves the session running, and the next login
+  reconnects to it. To end it over SSH, find it with `loginctl list-sessions`
+  and run `loginctl terminate-session <id>`. That doesn't touch the headset's
+  gamescope or SteamVR session.
 
 ## B. Show the Mac's desktop inside the Frame
 
@@ -250,6 +278,16 @@ How (**verified 2026-09-29**, SteamOS 0.4.1, build 20260925.6191901):
   -window_id <window> -i :<display>` works on gamescope's redirected windows,
   while grabbing the root gives black. It streams as H.264 like the headset view
   (about 30 fps at 720p).
+- **When no panel is found**, `frame_touch.py panels` says why (`"why"`), and the
+  Desktop view shows that instead of a bare "no app panel": X tools missing,
+  gamescope listing windows that aren't X11 windows on any display, the desktop
+  running but not listed, or nothing open. It reads gamescope's properties from
+  `:0` first (one `xprop` call) and probes the other displays, 2 s each, only if `:0`
+  has none. A whole run stops after 12 s, inside the server's 20 s, and says the headset
+  was too slow. Added for
+  [#73](https://github.com/saphid/frame-control/issues/73) (SteamOS 0.4.5, desktop
+  open but not found). The likely cause there was the page itself: a second
+  `loadPanels` (the panel switcher's) replaced the Desktop view's, fixed in #84.
 - Tested from the iPhone app (Simulator): a tap on the Desktop view focused a
   text box in the panel and the text field typed into it; a trackpad move went
   exactly (+40, +25).

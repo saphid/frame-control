@@ -6,6 +6,7 @@ identity line, then starts TLS as the *client*.
 
 Run: python3 -m unittest discover -s tests
 """
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
 import os
 import shutil
@@ -17,6 +18,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -821,3 +823,66 @@ class PadDelivery(unittest.TestCase):
             self.settle()
             self.assertEqual(self.s._kde_queue, [])
             self.assertEqual(self.typed(), [{"key": "é"}, {"key": "ü"}])
+
+
+class PadRoute(unittest.TestCase):
+    def setUp(self):
+        import server
+        self.s = server
+        self.agents = mock.patch.multiple(server, _touch=mock.Mock(), _input=mock.Mock())
+        self.agents.start()
+        self.addCleanup(self.agents.stop)
+        self.s._touch.send.return_value = {"state": "ready", "sent": True}
+        self.s._input.send.return_value = {"state": "ready", "sent": True}
+        self.s.reset_pad_route()
+        self.s._touch.reset_mock(); self.s._input.reset_mock()
+        self.addCleanup(self.s.reset_pad_route)
+
+    def switch(self):
+        with mock.patch.multiple(self.s, FRAME="frame-a", HOST_OPTS=[], MUX=[], SSH=[], macview=None), \
+             mock.patch.multiple(self.s.frame_android, FRAME="frame-a", SSH_OPTS=[]):
+            self.s.route("frame-b", [])
+
+    def test_switch_stops_both_input_agents_and_discards_old_queue(self):
+        self.s._kde_queue.append({"key": "old"})
+        self.s._kde_until = self.s._typed_until = time.time() + 60
+        cancel = self.s._kde_cancel
+        self.switch()
+        self.s._input.stop.assert_called_once()
+        self.s._touch.stop.assert_called_once()
+        self.assertEqual(self.s._kde_queue, [])
+        self.assertEqual((self.s._kde_until, self.s._typed_until), (0, 0))
+        self.assertTrue(cancel.is_set())
+
+    def test_switch_cancels_delayed_and_retrying_text_before_new_input(self):
+        for delaying in (True, False):
+            with self.subTest(delaying=delaying):
+                waiting, cancel = threading.Event(), threading.Event()
+                class ObservedCancel:
+                    def wait(self, timeout):
+                        waiting.set()
+                        return cancel.wait(timeout)
+                    def set(self):
+                        cancel.set()
+                self.s.reset_pad_route()
+                self.s._kde_cancel = ObservedCancel()
+                self.s._typed_until = time.time() + 60 if delaying else 0
+                self.s._input.reset_mock()
+                self.s._input.send.return_value = {"state": "starting", "sent": False}
+                self.s.remote_input({"events": [{"key": "é"}]})
+                worker = self.s._kde_worker[0]
+                self.assertTrue(waiting.wait(1), "worker never reached its cancellable delay")
+                self.switch()
+                worker.join(1)
+                self.assertFalse(worker.is_alive())
+                attempts = self.s._input.send.call_count
+                self.assertEqual(attempts, 0 if delaying else 1)
+                self.s._input.send.return_value = {"state": "ready", "sent": True}
+                self.s.remote_input({"events": [{"key": "ü"}]})
+                next_worker = self.s._kde_worker[0]
+                if next_worker:
+                    next_worker.join(1)
+                    self.assertFalse(next_worker.is_alive())
+                self.assertEqual(self.s._input.send.call_count, attempts + 1)
+                self.assertEqual(self.s._input.send.call_args.args[0], [{"key": "ü"}])
+                self.assertEqual(self.s._kde_queue, [])
