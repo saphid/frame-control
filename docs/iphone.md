@@ -226,6 +226,20 @@ Testing also exposed an enlarged, horizontally clipped page after text entry
 and navigation. Its cause has not yet been isolated. Restarting Frame Control
 restored the normal layout and automatically reconnected to the headset.
 
+### Mac follow-up
+
+On 2026-10-17, the installed Mac app **0.4.6** was tested with the headset
+unworn. Connection/status worked, and its connection test reported
+`Answered in 90 ms · SSH works`. Still capture completed but both eyes were
+blank. Live video failed with `Not a video capture device` when opening
+`/dev/video99`, then fell back to blank still captures. No visible scene or
+video playback was verified. The desktop was inactive; no headset services
+or settings were changed. Live was stopped and the existing app left on Home.
+These are Mac results; they do not verify the iPhone build or establish the
+cause of its earlier blank output.
+
+<img src="img/mac-live-error-20261017.png" alt="Mac Frame Control activity log reporting Live video failed: Not a video capture device" width="900">
+
 ### Physical-phone follow-up checklist
 
 - With the headset awake and worn, capture visible headset content, save it to
