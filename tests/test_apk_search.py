@@ -325,7 +325,7 @@ class EndpointTests(SettingsTest):
             mod.add_repo.side_effect = SourceError('repository fingerprint mismatch')
             job = self.wait(self.request('POST', '/api/sources', {'action': 'add', 'url': link})[1]['job'])
             self.assertEqual(job['error'], 'repository fingerprint mismatch')  # no "SourceError:" prefix
-            for url in ('http://repo.example/repo', 'fdroidrepo://repo.example/repo', 'https://u@repo.example/'):
+            for url in ('http://repo.example/repo', 'fdroidrepo://repo.example/repo', 'https://repo.example:x/'):
                 self.assertEqual(self.request('POST', '/api/sources', {'action': 'add', 'url': url})[0], 400)
             self.assertEqual(self.request('POST', '/api/sources', {'action': 'remove', 'source': 'fdroid'})[0], 200)
             mod.remove_repo.assert_called_once_with(source_id='fdroid')
