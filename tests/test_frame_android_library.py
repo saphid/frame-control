@@ -1,4 +1,5 @@
 """Offline artwork, Steam API and launcher supervision regressions."""
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import importlib.util
 import json
 import os
@@ -284,11 +285,14 @@ class ArtworkTests(unittest.TestCase):
     def test_steamgriddb_uses_the_bounded_fetch_without_redirects(self):
         import frame_steamgriddb as sgdb
         from apk_sources import _images
+        deadline = time.monotonic() + 5
         with patch.object(_images, 'get', return_value=b'{"success": true, "data": [1]}') as get:
-            self.assertEqual(sgdb._get('/search/x', 'secret', time.monotonic() + 5), [1])
+            self.assertEqual(sgdb._get('/search/x', 'secret', deadline), [1])
         self.assertEqual(get.call_args.kwargs['redirects'], 0)
         self.assertEqual(get.call_args.args[1]['Authorization'], 'Bearer secret')
-        self.assertLessEqual(get.call_args.kwargs['deadline'] - time.monotonic(), 5)
+        # The caller's deadline is passed on, never extended. (Comparing against a fresh
+        # time.monotonic() flaked on Windows, whose clock ticks coarsely.)
+        self.assertLessEqual(get.call_args.kwargs['deadline'], deadline)
 
     def test_supplied_jpeg(self):
         data = (FIXTURES / 'icon.jpg').read_bytes()
@@ -440,6 +444,19 @@ class InstallTests(unittest.TestCase):
         self.assertIn(('remove', '3346865537'), [c.args for c in api.call_args_list])
         self.assertTrue(any(c.args[0] == 'rm -rf Applications/Android/org.test.vr' for c in ssh.call_args_list))
 
+    def test_failed_update_removes_partial_apk_and_keeps_the_app(self):
+        with patch.object(android.frame_artwork, 'prepare', return_value=(self.images, [])), \
+                patch.object(android, 'read_meta', return_value=dict(self.existing)), \
+                patch.object(android, '_copy', side_effect=android.FrameError('copying x.apk to the Frame timed out')), \
+                patch.object(android, 'ssh', return_value='') as ssh, \
+                patch.object(android, 'shortcut_tool') as api:
+            with self.assertRaisesRegex(android.FrameError, 'timed out'):
+                android._install('x.apk', self.info, 'org.test.vr', False, None, None)
+        commands = [c.args[0] for c in ssh.call_args_list]
+        self.assertIn('rm -f Applications/Android/org.test.vr/app.apk.part', commands)
+        self.assertFalse(any(c.startswith('rm -rf') for c in commands))
+        api.assert_not_called()
+
     def test_remove_keeps_data_when_requested_and_survives_steam_failure(self):
         with patch.object(android, '_meta_or_fail', side_effect=lambda pkg: dict(self.existing)), \
                 patch.object(android, 'stop'), \
@@ -501,6 +518,49 @@ class InstallTests(unittest.TestCase):
             android.stop('org.test.vr')
         api.assert_called_once_with('stop', '3346865537')
         self.assertIn('podman stop -t 5 lepton-steamlaunch-2800000001', ssh.call_args.args[0])
+
+
+class CopyAndSshTests(unittest.TestCase):
+    """The commands behind an install fail as FrameErrors with readable words, and a large APK
+    gets the time it needs."""
+
+    def fake(self, stderr, code=1, stdout=b''):
+        """frame_host.run_ssh running a stand-in that writes these bytes, with the caller's options."""
+        script = (f'import sys; sys.stdout.buffer.write({stdout!r}); sys.stderr.buffer.write({stderr!r}); '
+                  f'sys.exit({code})')
+        return lambda argv, **kwargs: subprocess.run([sys.executable, '-c', script], **kwargs)
+
+    def test_large_apk_copy_timeout_grows_with_its_size(self):
+        seen = {}
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f, \
+                patch.object(android.frame_host, 'run_ssh', side_effect=lambda argv, **kw: seen.update(kw)), \
+                patch.object(android.os.path, 'getsize', return_value=2 * 1024 ** 3):
+            android._copy(f.name, 'Applications/Android/x/app.apk.part')
+        # 2 GB at the slowest rate allowed: 4096 s, not the old fixed 600 (300 MB at 4 Mbit/s).
+        self.assertGreaterEqual(seen['timeout'], 2 * 1024 ** 3 / (512 * 1024))
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f, \
+                patch.object(android.frame_host, 'run_ssh', side_effect=lambda argv, **kw: seen.update(kw)):
+            android._copy(f.name, 'x/launch.sh', timeout=120)
+        self.assertEqual(seen['timeout'], 120)  # a small file keeps the least time given
+
+    def test_copy_failure_in_another_encoding_is_a_frame_error(self):
+        # A message from a Windows code page, or a file name, isn't UTF-8.
+        with tempfile.NamedTemporaryFile(suffix='.apk') as f, \
+                patch.object(android.shutil, 'which', return_value=None), \
+                patch.object(android.frame_host, 'run_ssh', side_effect=self.fake(b'scp: Verbindung \x81ber\xff\n')):
+            with self.assertRaisesRegex(android.FrameError, r'\Acopying .* to the Frame failed: scp: Verbindung'):
+                android._copy(f.name, 'x/app.apk.part')
+
+    def test_ssh_failure_messages_are_text(self):
+        with patch.object(android.frame_host, 'run_ssh', side_effect=self.fake(b'mv: \xff cannot move\n')):
+            with self.assertRaisesRegex(android.FrameError, r'\Amv: .* cannot move\Z'):
+                android.ssh('mv a b')
+        with patch.object(android.frame_host, 'run_ssh', side_effect=self.fake(b'cat: write error: No space left on device\n')):
+            with self.assertRaises(android.FrameError) as caught:
+                android.ssh('cat > x', input=b'\x89PNG')  # bytes in, bytes out
+        self.assertEqual(str(caught.exception), 'cat: write error: No space left on device')
+        with patch.object(android.frame_host, 'run_ssh', side_effect=self.fake(b'', code=0, stdout=b'ok \xff\n')):
+            self.assertEqual(android.ssh('echo ok').strip(), 'ok �')
 
 
 class SteamAPITests(unittest.TestCase):

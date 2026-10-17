@@ -106,12 +106,24 @@ async function getJson(url, headers) {
   return JSON.parse(body);
 }
 
+// The release page the banner links to. update.json for 0.4.0 carried the draft's
+// address (releases/tag/untagged-...), which is dead once the release is published,
+// and a page from the manifest could also be steered elsewhere (e.g. tag/..\..\other/repo
+// normalizes to another repository) before shell.openExternal. So the given page is
+// ignored: the link is always this repository's tag page, built from a valid version.
+function releasePage(version) {
+  const v = parseVersion(version);
+  if (!v) return RELEASES;
+  return `${RELEASES}/tag/v${v.nums.join(".")}${v.pre ? "-" + v.pre : ""}`;
+}
+
 // update.json and the API's release both become { version, notes, page, assets }.
 function fromManifest(m) {
   if (!parseVersion(m.version) || !Array.isArray(m.assets)) throw new Error("update.json is malformed");
-  const base = `https://github.com/${REPO}/releases/download/v${String(m.version).replace(/^v/i, "")}/`;
-  return { version: String(m.version).replace(/^v/i, ""), notes: String(m.notes || "").slice(0, 4000),
-           page: m.page || RELEASES,
+  const version = String(m.version).replace(/^v/i, "");
+  const base = `https://github.com/${REPO}/releases/download/v${version}/`;
+  return { version, notes: String(m.notes || "").slice(0, 4000),
+           page: releasePage(version),
            // Assets always come from this repository's release, whatever the manifest says.
            assets: m.assets.map((a) => ({ name: String(a.name), url: base + encodeURIComponent(String(a.name)),
                                           size: a.size, digest: a.digest || null })) };
@@ -119,8 +131,9 @@ function fromManifest(m) {
 
 function fromApi(r) {
   if (r.draft || r.prerelease) throw new Error("GitHub returned an unpublished release");
-  return { version: String(r.tag_name || "").replace(/^v/i, ""), notes: String(r.body || "").slice(0, 4000),
-           page: r.html_url || RELEASES,
+  const version = String(r.tag_name || "").replace(/^v/i, "");
+  return { version, notes: String(r.body || "").slice(0, 4000),
+           page: releasePage(version),
            assets: (r.assets || []).map((a) => ({ name: a.name, url: a.browser_download_url, size: a.size,
                                                  digest: a.digest || null })) };
 }
