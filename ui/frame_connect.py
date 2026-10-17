@@ -24,10 +24,15 @@ import urllib.error
 import urllib.request
 from pathlib import Path
 
+# The app runs this with python -I, which leaves the script's folder off sys.path.
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+import frame_host  # noqa: E402
+
 FRAME_USER = os.environ.get("FRAME_USER", "steamos")
 USER_FROM_ENV = "FRAME_USER" in os.environ
 FRAME_ALIAS = os.environ.get("FRAME_ALIAS", "frame")
-SSH_DIR = Path.home() / ".ssh"
+# $FRAME_CONTROL_SSH_DIR in tests, as frame_devices.ssh_dir(), so they never touch the real one.
+SSH_DIR = Path(os.environ.get("FRAME_CONTROL_SSH_DIR") or Path.home() / ".ssh")
 KEY = SSH_DIR / "id_ed25519_frame"
 # The devkit service only accepts ssh-rsa keys (write_key in Valve's
 # steamos-devkit-service), so pairing uses a second key next to the ed25519 one.
@@ -330,8 +335,9 @@ def _write_config(host, port, user):
     block = config_block(host, port, user)
     tmp = CONFIG.with_name(f"config.frame-control.{os.getpid()}.tmp")
     tmp.write_text("\n".join(block + kept) + "\n", encoding="utf-8")
-    if os.name != "nt":
-        tmp.chmod(0o600)
+    if not frame_host.make_private(tmp):
+        say("    couldn't make ~/.ssh/config private; if ssh says \"Bad owner or permissions\", "
+            "Frame Control repairs it when it next connects")
     # On Windows a running ssh.exe (Frame Control's own, say) keeps the config open
     # and locked, so the swap can fail for a moment; keep trying for a while.
     for attempt in range(60):
@@ -349,9 +355,9 @@ def _write_config(host, port, user):
 
 def key_login_works():
     # accept-new: trust a first-seen host key (as the copy step does); a changed one still fails.
-    return subprocess.run(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
-                           "-o", "StrictHostKeyChecking=accept-new", FRAME_ALIAS, "true"],
-                          capture_output=True).returncode == 0
+    return frame_host.run_ssh(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=5",
+                               "-o", "StrictHostKeyChecking=accept-new", FRAME_ALIAS, "true"],
+                              capture_output=True).returncode == 0
 
 
 def configured_user():
