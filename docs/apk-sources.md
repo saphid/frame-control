@@ -45,10 +45,23 @@ search. Results outside the curated list stay page-only, even if a repository
 claims an open-source license. This prevents an arbitrary tagged mirror from
 becoming a trusted downloader. Extend the curated JSON after provenance review.
 
-Set optional `FRAME_GITHUB_TOKEN` in the process environment for a higher API
-quota. Tokens are sent only to `api.github.com`, never written to the cache,
-never sent to asset hosts, and removed on redirects. The adapter does not
-read `gh` credentials automatically. Metadata is cached for one hour under
+For a higher API quota, add a GitHub access token in the store's source
+settings (the GitHub row's token field) or through the server API
+(`POST /api/sources` with `action: "set-token"` or `"clear-token"` and
+`source: "github"`). `FRAME_GITHUB_TOKEN` in the process environment still
+works and wins over a saved token. A saved token is kept with repository
+logins in `source-credentials.json` (mode 0600, see
+[APK repositories](apk-repos.md#repositories-behind-a-login)). The source list
+reports only whether a token is set, where it came from and whether GitHub
+rejected it, never its value. Tokens are sent as `Authorization: Bearer` only to
+`api.github.com`, never written to the cache, never sent to asset hosts (public
+release downloads don't need them), and removed on redirects. If GitHub answers
+401 to the token, the request is retried once without it, as Obtainium does.
+The rejection is logged without the token and shown in source settings. The
+token is not tried again until it is saved again or the app restarts. Rate-limit
+backoff is kept per login (anonymous, or each token), so saving a token after
+anonymous requests were limited lets the next request go out with it. The
+adapter does not read `gh` credentials automatically. Metadata is cached for one hour under
 `frame_host.cache_dir('apk-sources', 'publisher')`. A cold details request
 fetches at most ten releases. Rate-limit errors are surfaced without retry
 loops. Asset IDs and release tags are not Android version codes: metadata

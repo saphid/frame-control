@@ -710,13 +710,14 @@ def launch(body):
     return {"message": f"Launching {appid}"}
 
 
-def steam_frame(*args, timeout=40):
-    """Run frame_steam.py on the Frame (it drives the Steam client) and return its JSON."""
+def steam_frame(*args, timeout=40, script="frame_steam.py"):
+    """Run frame_steam.py (it drives the Steam client), or another on-Frame
+    helper with the same JSON contract, on the Frame and return its JSON."""
     try:
         out = ssh("python3 - " + " ".join(map(shlex.quote, args)),
-                  stdin=(HERE / "frame_steam.py").read_text(), timeout=timeout)
+                  stdin=(HERE / script).read_text(), timeout=timeout)
     except Failure as e:
-        # frame_steam.py prints {"error": ...} on stdout when it fails, but ssh()
+        # The helper prints {"error": ...} on stdout when it fails, but ssh()
         # reports stderr instead if there was any, so look in both.
         for line in [*reversed(getattr(e, "stdout", "").splitlines()), *reversed(str(e).splitlines())]:
             try:
@@ -765,6 +766,20 @@ def vr(body):
     if result.get('error'):
         raise Failure(result['error'])
     return result
+
+
+# Downloads are about 20 MB; starting waits for the game, the injection and SteamVR.
+MOD_TIMEOUT = {"status": 40, "install": 600, "start": 900, "uninstall": 60}
+
+
+def mods(body):
+    """UEVR for one installed Unreal game: status, install, start (inject) or uninstall."""
+    appid, action = str(body.get("appid", "")), body.get("action")
+    if not APPID.match(appid):
+        raise Failure("bad appid", 400)
+    if action not in MOD_TIMEOUT:
+        raise Failure("action must be " + ", ".join(MOD_TIMEOUT), 400)
+    return steam_frame(action, appid, timeout=MOD_TIMEOUT[action], script="frame_mods.py")
 
 
 def steam_search(query):
@@ -2401,6 +2416,16 @@ def source_text(body, key, optional=False):
     return value.strip()
 
 
+def login_text(body, key):
+    """A username, password or token: kept exactly (no stripping) and never echoed back."""
+    value = body.get(key)
+    if value in (None, ''):
+        return None
+    if not isinstance(value, str) or len(value) > 4096:
+        raise Failure('Provide a valid ' + key, 400)
+    return value
+
+
 def source_search(query):
     args = parse_qs(query)
     q = args.get('q', [''])[0]
@@ -2439,19 +2464,31 @@ def source_manage(body):
         if action == 'add':
             url = source_text(body, 'url')
             fingerprint, name = source_text(body, 'fingerprint', True), source_text(body, 'name', True)
-            parts = urlparse(url)
-            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname or parts.username:
-                raise Failure('Use an HTTPS or fdroidrepos:// repository URL without credentials', 400)
+            username, password = login_text(body, 'username'), login_text(body, 'password')
+            try:
+                parts = urlparse(url)
+                parts.port
+            except ValueError:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400) from None
+            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400)
             apk_search.repo_module()  # fail now if this build can't manage repositories
 
             def add():  # downloads and verifies the whole index: a job, not a request
-                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name)
+                # A login (here or in the URL) is stored apart and never comes back in a response.
+                login = {'username': username, 'password': password} if username or password else {}
+                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name, **login)
                 message = 'Added ' + source['name']
                 if source.get('trust_on_first_use'):
                     message += '. Trusted on first use: ' + source['fingerprint'].upper()
                 return {'message': message, 'source': {k: source.get(k) for k in
                                                        ('id', 'name', 'fingerprint', 'trust_on_first_use')}}
             return start_job('Add repository', add)
+        if action in ('set-token', 'clear-token'):
+            token = login_text(body, 'token') if action == 'set-token' else None
+            if action == 'set-token' and not token:
+                raise Failure('Paste a token', 400)
+            return apk_search.set_token(source_text(body, 'source'), token)
         if action == 'game-data':
             package = source_text(body, 'package')
             return start_job('Add game data', lambda: apk_search.add_game_data(package))
@@ -2469,7 +2506,7 @@ POST = {
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
