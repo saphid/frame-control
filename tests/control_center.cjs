@@ -64,7 +64,7 @@ function sharedPage({productionApi=false} = {}) {
       const request=deferred();request.path=path;request.opts=opts;requests.push(request);return request.promise;
     };
     Object.assign(context,{renderPill(){},renderConnDlg(){},renderBanner(){},viaText(){},netLabel(){},
-      resetShots(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
+      resetShots(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
     vm.runInContext(`const UI_KEY = 'test-only';
       const link = {s:null,device:'frame-a',phase:'connected',rev:0,net:null};
       const disp = {}, gm = {seq:0}, cat = {}, wi = {};
@@ -450,7 +450,7 @@ test('every linked workflow selects its real page and section, preserving shortc
       if(!ids.has(id))return null;
       if(!sections.has(id))sections.set(id,{hidden:false,scrollIntoView(){scrolled=id;}});
       return sections.get(id);
-    },live:false,toggleLive(){},loadMacView(){},loadPanelSwitcher(){}};
+    },live:false,toggleLive(){},scrollToY(){},loadMacView(){},loadPanelSwitcher(){}};
   const androidStart=html.indexOf('function showAndroidTab(');
   const androidEnd=html.indexOf("document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick",androidStart);
   vm.createContext(context);vm.runInContext(html.slice(androidStart,androidEnd)+html.slice(start,end)+'\nPAGES.push("devices", "control");',context);
