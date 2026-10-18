@@ -138,7 +138,7 @@ class Gates(Base):
         tm.diagnostic("POST /api/android install", RuntimeError("boom"))
         tm.diagnostic("POST /api/comfort status", RuntimeError("ssh exited 255"))  # the command's own exit code?
         self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
-                         ["frame_unreachable", "other", "other", "other"])
+                         ["frame_unreachable", "internal_error", "other", "other"])
 
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
@@ -159,10 +159,78 @@ class Lifecycle(Base):
         e = self.queued()[-1]
         self.assertEqual((e["event"], e["properties"]["from_version"]), ("app_updated", "9.9.9"))
 
+    def test_opens_installs_and_updates_carry_the_country(self):
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": "Europe/Berlin"}):
+            tm.app_started()
+            with mock.patch.dict(os.environ, {"FRAME_CONTROL_VERSION": "10.0.0"}):
+                tm.app_started()
+        self.assertEqual([(e["event"], e["properties"].get("country")) for e in self.queued()],
+                         [("app_installed", "DE"), ("app_opened", "DE"), ("app_updated", "DE")])
+        self.assertNotIn("Europe/Berlin", tm.OUTBOX.read_text())
+
+    def test_only_zones_in_the_tz_table_give_a_country(self):
+        for tz, want in (("America/Argentina/Buenos_Aires", "AR"), ("Asia/Calcutta", "IN"), ("US/Pacific", "US"),
+                         ("Europe/Vaduz", "LI"), ("Africa/Asmera", "ER"), ("Africa/Asmara", "ER"), ("Pacific/Truk", "FM"),
+                         ("Pacific/Ponape", "FM"), ("America/Montreal", "CA"), ("America/Nassau", "BS"),
+                         ("Europe/Amsterdam", "NL"), ("Etc/GMT+10", None), ("CET", None),
+                         ("EET", None), ("WET", None), ("PST8PDT", None), ("HST", None), ("Pacific/Johnston", "UM"),
+                         ("Japan", "JP"), ("UTC", None), ("alice", None),
+                         ("home/alex/private", None), ("America/alex", None), ("../etc/passwd", None)):
+            with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": tz}):
+                self.assertEqual(tm.country(), want, tz)
+
+    def test_country_from_tz_or_localtime_in_a_checkout(self):
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": "", "TZ": ":Asia/Tokyo"}):
+            self.assertEqual(tm.country(), "JP")
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": "", "TZ": ""}):
+            for target, want in (("/usr/share/zoneinfo/Europe/Paris", "FR"),
+                                 ("/var/db/timezone/zoneinfo/Australia/Sydney", "AU"),
+                                 ("/home/alex/zoneinfo/alex/private", None), ("/etc/mytime", None)):
+                with mock.patch.object(tm.os.path, "realpath", return_value=target):
+                    self.assertEqual(tm.country(), want, target)
+
+    def test_a_new_user_who_opens_settings_first_still_gets_the_notice(self):
+        tm.update_settings({"compat": True})
+        self.assertFalse(tm.state()["noticeShown"])
+        tm.update_settings({"noticeShown": True})
+        self.assertTrue(tm.state()["noticeShown"])
+
     def test_frame_build_once(self):
         tm.frame_seen("20260922.1", "3.8")
         tm.frame_seen("20260922.1", "3.8")
         self.assertEqual(len(self.queued()), 1)
+
+    def test_frame_once_per_headset_with_saved_count(self):
+        tm.frame_seen("20260922.1", "3.8", "0123456789abcdef", 2)
+        tm.frame_seen("20260922.1", "3.8", "0123456789abcdef", 2)
+        tm.frame_seen("20260922.1", "3.8", "fedcba9876543210", 2)
+        props = [e["properties"] for e in self.queued()]
+        self.assertEqual([(p["headset_id"], p["headsets_saved"]) for p in props],
+                         [("0123456789abcdef", 2), ("fedcba9876543210", 2)])
+
+    def test_frame_many_headsets_are_not_sent_twice(self):
+        ids = ["%016x" % n for n in range(25)]
+        for _ in range(2):
+            for h in ids:
+                tm.frame_seen("20260922.1", "3.8", h, 25)
+        self.assertEqual(len(self.queued()), 25)
+
+    def test_frame_headset_id_must_be_the_hash(self):
+        tm.frame_seen("20260922.1", "3.8", "/etc/machine-id contents", None)
+        p = self.queued()[0]["properties"]
+        self.assertNotIn("headset_id", p)
+        self.assertNotIn("headsets_saved", p)
+
+
+class HeadsetId(unittest.TestCase):
+    def test_hash_of_machine_id_and_none_without_one(self):
+        import hashlib
+        import frame_status
+        with mock.patch.object(frame_status, "read", return_value="abc123"):
+            self.assertEqual(frame_status.headset_id(),
+                             hashlib.sha256(b"frame-control-headset:abc123").hexdigest()[:16])
+        with mock.patch.object(frame_status, "read", return_value=None):
+            self.assertIsNone(frame_status.headset_id())
 
 
 class Sending(Base):
@@ -197,6 +265,39 @@ class Sending(Base):
         self.assertEqual((path, body["api_key"], body["batch"][0]["event"]), ("/batch/", "phc_test", "app_opened"))
         self.assertEqual(self.queued(), [])
         self.assertEqual([e["event"] for e in tm.state()["sent"]], ["app_opened"])
+
+    def test_an_older_notice_still_sends(self):
+        got = self.serve()
+        tm._save({**tm._defaults(), "notice_shown": True, "notice_version": 1})
+        tm.capture("app_opened")
+        self.assertEqual(tm.flush(), 1)
+        self.assertEqual(len(got), 1)
+
+    def test_an_older_notice_is_shown_again_and_holds_back_the_country(self):
+        got = self.serve()
+        tm.SETTINGS.write_text(json.dumps({"id": "x", "notice_shown": True, "installed_sent": True,
+                                           "last_version": "9.9.9"}))  # as 0.4.5 saved it
+        self.assertFalse(tm.state()["noticeShown"])
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": "Europe/Berlin"}):
+            tm.app_started()
+            self.assertEqual(tm.flush(), 1)  # the usual statistics still go
+            tm.update_settings({"noticeShown": True})
+            self.assertTrue(tm.state()["noticeShown"])
+            tm._save({**tm.settings(), "last_open_day": None})  # the next day
+            tm.app_started()
+            self.assertEqual(tm.flush(), 1)
+        self.assertEqual([b["batch"][0]["properties"].get("country") for _, b in got], [None, "DE"])
+
+    def test_turning_usage_on_still_waits_for_the_new_notice(self):
+        got = self.serve()
+        tm.SETTINGS.write_text(json.dumps({"id": "x", "usage": False, "notice_shown": True, "installed_sent": True,
+                                           "last_version": "9.9.9"}))  # 0.4.5, usage off
+        tm.update_settings({"usage": True})
+        self.assertFalse(tm.state()["noticeShown"])  # so the page shows it
+        with mock.patch.dict(os.environ, {"FRAME_CONTROL_TIMEZONE": "Europe/Berlin"}):
+            tm.app_started()
+        self.assertEqual(tm.flush(), 1)
+        self.assertNotIn("country", got[0][1]["batch"][0]["properties"])
 
     def test_a_failed_send_keeps_the_events(self):
         self.serve(status=500)
@@ -262,6 +363,72 @@ class Scrub(unittest.TestCase):
                          "apk_repack_failed")
         self.assertEqual(tm.categorize(FileNotFoundError(2, "No such file or directory", "ssh"))[0], "tool_missing")
         self.assertEqual(tm.categorize("[WinError 2] The system cannot find the file specified")[0], "tool_missing")
+
+    def test_apk_install_failures_that_were_other(self):
+        """What frame_android.install can raise, worded as it is, that 0.4.x sent as 'other'
+        (or as frame_unreachable, when it was the Steam client or a slow copy)."""
+        tail = 'Traceback (most recent call last):\n  File "<stdin>", line 19, in target_ws\n'
+        cases = {
+            "steam_not_running": [
+                "SharedJSContext not found: is the Steam client running?",
+                tail + "urllib.error.URLError: <urlopen error [Errno 111] Connection refused>",
+                tail + "ConnectionRefusedError: [Errno 111] Connection refused",
+            ],
+            "steam_not_responding": [
+                "websocket handshake failed",
+                tail + "TimeoutError: timed out",
+                tail + "socket.timeout: timed out",
+                tail + '  File "<stdin>", line 45, in _read\nEOFError',
+            ],
+            "steam_js_error": ['JS error: {"exceptionId": 1, "text": "Uncaught", "exception": '
+                               '{"description": "Error: Steam artwork API unavailable; installation is incomplete"}}'],
+            "artwork_failed": [
+                "Steam artwork renderer did not produce every slot",
+                tail + "ValueError: incomplete artwork render",
+                tail + "ValueError: hero render is 0 bytes of png",
+                "could not prepare artwork: unknown artwork slot",
+                tail + "ValueError: all five Steam artwork slots are required",
+            ],
+            "copy_timeout": ["copying Big Game (timed out).apk to the Frame timed out",
+                             "copying launch.sh to the Frame timed out"],
+            "copy_failed": [
+                "copying game.apk to the Frame failed: rsync: connection unexpectedly closed (0 bytes received "
+                "so far) [sender]\nrsync error: error in rsync protocol data stream (code 12) at io.c(231)",
+                "copying game.apk to the Frame failed: ",
+            ],
+            "apk_unreadable": [
+                "x.apk: not a readable APK: [Errno 2] No such file or directory: 'x.apk'",
+                "x.apk: could not read the APK manifest: Error -3 while decompressing data: invalid block type",
+                "x.apk: the APK manifest has no package name",
+                "x.apk: lib/arm64-v8a/libx.so in the APK uses a compression Android does not",
+                "x.apk: AndroidManifest.xml in the APK is 40 MB, more than a real one (16 MB)",
+            ],
+        }
+        for category, messages in cases.items():
+            for message in messages:
+                self.assertEqual(tm.categorize(message)[0], category, message)
+        # Still where they were: ssh's own failures, and a full disk during a copy.
+        self.assertEqual(tm.categorize("timed out talking to frame")[0], "frame_unreachable")
+        self.assertEqual(tm.categorize("copying a.apk to the Frame failed: ssh: connect to host 10.0.0.2 "
+                                       "port 22: Connection refused")[0], "frame_unreachable")
+        self.assertEqual(tm.categorize("copying a.apk to the Frame failed: rsync: write failed on "
+                                       "\"app.apk.part\": No space left on device (28)")[0], "frame_disk_full")
+        self.assertEqual(tm.categorize("download failed: timed out")[0], "download_failed")
+
+    def test_python_errors_are_internal_whatever_they_say(self):
+        import json as _json
+        for error in (KeyError("paths"), TypeError("'NoneType' object is not subscriptable"),
+                      AttributeError("x"), _json.JSONDecodeError("Expecting value", "", 0),
+                      UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid start byte"),
+                      KeyError("timed out")):
+            self.assertEqual(tm.categorize(error)[0], "internal_error", repr(error))
+        self.assertEqual(tm.categorize("KeyError: 'paths'")[0], "other")  # only the exception itself
+        self.assertEqual(tm.categorize(OSError(28, "No space left on device"))[0], "frame_disk_full")
+
+    def test_privacy_doc_lists_every_category(self):
+        doc = (ROOT / "docs" / "privacy.md").read_text()
+        for name in {n for n, _ in tm.CATEGORIES} | {"internal_error", "other"}:
+            self.assertIn(f"`{name}`", doc)
 
 
 class Compat(Base):
@@ -376,14 +543,17 @@ class LinkFailureProvenance(Base):
         c.close()
         return result
 
-    def test_routes_that_rewrap_a_link_failure_keep_its_mark(self):
-        # Review round 4: /api/android and /api/titles re-raise frame_android's FrameError as a
-        # Failure; after the status poll's first connection failure, theirs are held back too,
-        # also past the 10-minute window.
+    def serve(self):
         self.httpd = self.server.ThreadingHTTPServer(("127.0.0.1", 0), self.server.Handler)
         threading.Thread(target=self.httpd.serve_forever, daemon=True).start()
         self.addCleanup(self.httpd.server_close)
         self.addCleanup(self.httpd.shutdown)
+
+    def test_routes_that_rewrap_a_link_failure_keep_its_mark(self):
+        # Review round 4: /api/android and /api/titles re-raise frame_android's FrameError as a
+        # Failure; after the first connection failure, theirs are held back too, also past the
+        # 10-minute window.
+        self.serve()
         down = subprocess.CompletedProcess(["ssh"], 255, "", "ssh: connect to host 10.0.0.5 port 22: Connection timed out\r\n")
         meta = {"label": "Test App", "game_id": 5, "shortcut": None}
         with mock.patch.object(frame_host, "run_ssh", return_value=down), \
@@ -399,7 +569,34 @@ class LinkFailureProvenance(Base):
                 self.assertEqual(self.request("/api/android", {"action": "launch", "package": "org.test"})[0], 502)
         sent = [(e["properties"]["where"], e["properties"]["error_category"]) for e in self.queued()
                 if e["event"] == "$exception"]
-        self.assertEqual(sent, [("POST /api/comfort status", "frame_unreachable"), ("POST /api/android launch", "other")])
+        # The comfort poll's own failure isn't one (see the next test).
+        self.assertEqual(sent, [("POST /api/android launch", "frame_unreachable"), ("POST /api/android launch", "other")])
+
+    def test_the_comfort_poll_meeting_an_unreachable_frame_is_not_sent(self):
+        # 0.4.2: most reports were this poll (every 5 s) finding the headset asleep, away or
+        # refusing ssh. Like GET /api/status, it isn't reported; a session started or cancelled
+        # by hand still is, once, and a real failure of the poll is too.
+        self.serve()
+        for stderr in ("ssh: connect to host 10.0.0.5 port 22: Connection timed out\r\n",
+                       "banner exchange: Connection to UNKNOWN port -1: Connection refused\r\n",
+                       "ssh: Could not resolve hostname frame: nodename nor servname provided\r\n",
+                       "@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @\r\nHost key verification failed.\r\n",
+                       "No ED25519 host key is known for frame-control-f7b4e9ac and you have requested strict "
+                       "checking.\r\nHost key verification failed.\r\n",
+                       "steamos@192.168.1.9: Permission denied (publickey,password).\r\n"):
+            down = subprocess.CompletedProcess(["ssh"], 255, "", stderr)
+            with mock.patch.object(frame_host, "run_ssh", return_value=down):
+                self.assertGreaterEqual(self.request("/api/comfort", {"action": "status"})[0], 500, stderr)
+        self.assertEqual(self.queued(), [])
+        down = subprocess.CompletedProcess(["ssh"], 255, "", "ssh: connect to host 10.0.0.5 port 22: Host is down\r\n")
+        with mock.patch.object(frame_host, "run_ssh", return_value=down):
+            self.request("/api/comfort", {"action": "cancel"})
+        broken = subprocess.CompletedProcess(["ssh"], 1, "", "Traceback (most recent call last):\nOSError: boom\n")
+        with mock.patch.object(frame_host, "run_ssh", return_value=broken):
+            self.assertEqual(self.request("/api/comfort", {"action": "status"})[0], 502)
+        sent = [(e["properties"]["where"], e["properties"]["error_category"]) for e in self.queued()
+                if e["event"] == "$exception"]
+        self.assertEqual(sent, [("POST /api/comfort cancel", "frame_unreachable"), ("POST /api/comfort status", "other")])
 
     def test_download_failures_after_a_poll_failure_are_still_sent(self):
         # Review round 3: these file names, in the real checksum message through the web-link worker,

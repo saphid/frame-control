@@ -79,6 +79,15 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(headers["X-Frame-Options"], "DENY")
         self.assertIn(b"<html", payload.lower())
 
+    def test_control_center_assets_served_with_correct_types(self):
+        for path, mime, marker in (('/control-center.js', 'text/javascript', b'createController'),
+                                   ('/control-center.css', 'text/css', b'.cc-workspace')):
+            with self.subTest(path=path):
+                status, headers, payload = self.request('GET', path)
+                self.assertEqual(status, 200)
+                self.assertIn(mime, headers['Content-Type'])
+                self.assertIn(marker, payload)
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
@@ -461,6 +470,11 @@ class PageScripts(unittest.TestCase):
     def test_store_app_page_renders(self):
         """tests/page/store_detail.mjs runs the real store functions from index.html."""
         r = subprocess.run(["node", str(ROOT / "tests" / "page" / "store_detail.mjs")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_meta_library_rows_render(self):
+        """tests/page/meta_rows.mjs runs the real Meta library row rendering from index.html."""
+        r = subprocess.run(["node", str(ROOT / "tests" / "page" / "meta_rows.mjs")], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 

@@ -47,6 +47,10 @@ class SourceError(Exception):
     """User-readable failure from a source (network, format, verification)."""
 
 
+class SourceAuthError(SourceError):
+    """The server refused our login (HTTP 401, or 403 when a login was sent)."""
+
+
 class SourceLimited(SourceError):
     """The source's host asked us to slow down; retry_after is in seconds."""
 
