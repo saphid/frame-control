@@ -19,8 +19,8 @@ function grab(name) {
   fail(`unbalanced ${name}`);
 }
 const names = ["esc", "storeName", "storeHue", "storeInitial", "storeText", "storeOpenSource", "sourcePage", "storeImage",
-               "storeArt", "storeIcon", "sourceMark", "storePrice", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
-               "updateInstall", "openStoreApp", "loadOfferDetails"];
+               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeKind", "storeArt", "storeIcon", "sourceMark", "storePrice", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
+               "updateInstall", "openStoreApp", "loadOfferDetails", "installStoreApp"];
 const code = names.map(grab).join("");
 
 // A fake page: elements by id. The install panel's elements exist only while
@@ -34,8 +34,10 @@ function page(api = async () => ({})) {
   const document = { activeElement: null, querySelector: () => null };
   const console = { error() {} };
   const calls = [];
-  const fns = new Function("$", "sourceState", "document", "console", "api", code + "; return { renderAppDetail, openStoreApp };")(
-    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); });
+  const fns = new Function("$", "sourceState", "document", "console", "api", "runJob", "loadAndroid", "act", "window", code + "; return { renderAppDetail, openStoreApp };")(
+    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); },
+    async (title, key, work) => work(), () => {}, async (title, work) => work(),
+    { open() { fail("an in-app installation opened an external page"); } });
   return { els, sourceState, calls, ...fns };
 }
 
@@ -79,7 +81,7 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
 {
   const p = page(async () => { throw new Error("offline"); });
   p.sourceState.apps = [{ name: "Broken", offers: [] }];
-  await p.openStoreApp(0);
+  await p.openStoreApp(0, true);
   if (!p.els.appDetail.open || !p.els.detailBody.innerHTML.includes('role="alert"')) fail("broken listing didn't open with the error");
   if (p.calls.length) fail("asked for details of a listing that couldn't render");
 }
@@ -100,5 +102,19 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
   await p.openStoreApp(0);
   if (!p.els.detailBody.innerHTML.includes('id="detailTitle">Open Brush<')) fail("page lost after a failed details request");
   if (!p.els.detailInstallNote.textContent.includes("couldn't be refreshed")) fail("no note after a failed details request");
+}
+// The featured Install starts a new or failed job, while a job already running or
+// installed opens its details without another install or a launch command.
+for (const [job, expected] of [[null, 1], [{ done: false }, 0],
+    [{ done: true, result: { package: offer.package } }, 0], [{ done: true, error: "offline" }, 1]]) {
+  const p = page(async path => path === "/api/sources/install" ? { package: offer.package } : {});
+  p.sourceState.apps = [{ name: "Open Brush", offers: [{ ...offer }] }];
+  if (job) p.sourceState.jobs.set(`${offer.source}:${offer.id}`, job);
+  await p.openStoreApp(0, true);
+  if (!p.els.appDetail.open || !p.els.detailBody.innerHTML.includes('id="detailInstall"')) fail("hero installation didn't open details");
+  const installs = p.calls.filter(([path]) => path === "/api/sources/install");
+  if (installs.length !== expected) fail(`expected ${expected} installation requests, got ${installs.length}`);
+  if (installs.some(([, body]) => body.source !== offer.source || body.id !== offer.id)) fail("installed a different offer");
+  if (p.calls.some(([path]) => path === "/api/android")) fail("hero Install launched an already installed app");
 }
 console.log("ok");
