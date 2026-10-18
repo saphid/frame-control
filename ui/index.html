@@ -713,6 +713,8 @@
   .source-repo-form input { margin-top:7px; display:block; border-radius:6px; }
   .source-repo-form details { font-size:11px; color:var(--muted); }
   .source-repo-form button { justify-self:start; border-radius:6px; }
+  .source-token { display:flex; flex-wrap:wrap; align-items:center; gap:7px; margin:8px 0 4px; }
+  .source-token input { flex:1; min-width:150px; border-radius:6px; font-size:12px; }
   #appStore :focus-visible, .store-dialog :focus-visible, .store-tabs :focus-visible { outline:2px solid var(--link); outline-offset:4px; }
   .store-search input:focus-visible { outline:0!important; }
   @media(min-width:1400px) { .store-grid { grid-template-columns:repeat(5,minmax(0,1fr)); } }
@@ -1428,7 +1430,7 @@
   <button class="store-close" data-close="sourcesDialog" aria-label="Close source settings">×</button>
   <div class="sources-intro"><h1 id="sourcesTitle">Sources</h1><p>Where Discover looks for apps. Turn a source off to hide its apps.</p></div>
   <div id="sourcesList"></div>
-  <form id="addSource" class="source-repo-form"><h2>Add a source</h2><p>Add an F-Droid repository by its address to browse its apps here.</p><label>Repository address<input name="url" type="url" required placeholder="https://example.org/fdroid/repo"></label><details><summary>Verify this source (optional)</summary><label>Repository fingerprint<input name="fingerprint" type="text" autocomplete="off" placeholder="Paste the fingerprint from the repository owner"></label></details><button class="action">Add source</button></form>
+  <form id="addSource" class="source-repo-form"><h2>Add a source</h2><p>Add an F-Droid repository by its address to browse its apps here.</p><label>Repository address<input name="url" type="url" required placeholder="https://example.org/fdroid/repo"></label><details><summary>Verify this source (optional)</summary><label>Repository fingerprint<input name="fingerprint" type="text" autocomplete="off" placeholder="Paste the fingerprint from the repository owner"></label></details><details><summary>This repository needs a login (optional)</summary><label>Username<input name="username" type="text" autocomplete="off" autocapitalize="none" spellcheck="false"></label><label>Password<input name="password" type="password" autocomplete="new-password"></label><p>Kept on this computer, apart from the address, and only sent to this repository over HTTPS.</p></details><button class="action">Add source</button></form>
   <p id="sourceError" class="store-notice" role="status" aria-live="polite"></p>
 </dialog>
 
@@ -3484,10 +3486,16 @@ function sourceDescription(s) {
                  sidequest:"VR games and apps. Its terms don't allow searching it from here, so browse it on its website."};
   return s.description || kinds[s.kind] || "Apps from this repository";
 }
+// GitHub's optional access token: only whether one is set is ever shown, never its value.
+function sourceToken(s) {
+  const t=s.token;if(!t)return "";
+  const note=t.rejected ? "GitHub rejected this token, so searches continue without it. Replace or clear it." : t.from==="env" ? "Using the token from FRAME_GITHUB_TOKEN." : t.set ? "A token is saved." : "Optional: a token raises GitHub's limit of 60 requests an hour.";
+  return `<form class="source-token" data-token="${esc(s.id)}"><input name="token" type="password" autocomplete="off" spellcheck="false" aria-label="${esc(storeName(s.name))} access token" placeholder="${t.set ? "Replace access token" : "Access token"}"><button class="small">Save</button>${t.from==="saved" ? `<button type="button" class="small" data-clear-token="${esc(s.id)}">Clear</button>` : ""}</form><small>${esc(note)}</small>`;
+}
 async function loadSources() {
   try {
     const {sources} = await api("/api/sources"); sourceState.sources = sources;
-    $("sourcesList").innerHTML = sources.map(s=>`<div class="source-setting">${sourceMark(s.name)}<div class="grow"><strong>${esc(storeName(s.name))}</strong><p>${esc(sourceDescription(s))}</p><small>${esc(({official:"Official store",community:"Community",user:"Added by you"})[s.trust] || "Community")}</small>${s.builtin === false ? `<button class="small" data-remove="${esc(s.id)}" aria-label="Remove ${esc(s.name)}">Remove</button>` : ""}</div>${s.page_only ? `<a class="source-web" href="${esc(sourcePage(s.url))}" target="_blank" rel="noopener" title="Its apps can't be searched from here">Website ↗</a>` : `<input class="source-toggle" role="switch" type="checkbox" aria-label="Enable ${esc(storeName(s.name))}" data-enable="${esc(s.id)}" ${s.enabled ? "checked" : ""}>`}</div>`).join("") || `<p class="store-notice">Your sources will appear here when they are available.</p>`;
+    $("sourcesList").innerHTML = sources.map(s=>`<div class="source-setting">${sourceMark(s.name)}<div class="grow"><strong>${esc(storeName(s.name))}</strong><p>${esc(sourceDescription(s))}</p><small>${esc(({official:"Official store",community:"Community",user:"Added by you"})[s.trust] || "Community")}${s.login ? " · Uses a login" : ""}</small>${sourceToken(s)}${s.builtin === false ? `<button class="small" data-remove="${esc(s.id)}" aria-label="Remove ${esc(s.name)}">Remove</button>` : ""}</div>${s.page_only ? `<a class="source-web" href="${esc(sourcePage(s.url))}" target="_blank" rel="noopener" title="Its apps can't be searched from here">Website ↗</a>` : `<input class="source-toggle" role="switch" type="checkbox" aria-label="Enable ${esc(storeName(s.name))}" data-enable="${esc(s.id)}" ${s.enabled ? "checked" : ""}>`}</div>`).join("") || `<p class="store-notice">Your sources will appear here when they are available.</p>`;
   } catch (e) { $("sourceError").textContent = e.message; }
 }
 // Will it run? Short enough for a card; the full sentence is in its tooltip and the details.
@@ -3638,7 +3646,8 @@ $("detailBody").onclick=e=>{if(e.target.closest('[data-close]'))return $("appDet
 $("detailBody").onchange=e=>{if(e.target.name==='storeOffer'){sourceState.detail.choice=+e.target.value;renderAppDetail();loadOfferDetails();}};
 $("sourcesOpen").onclick=()=>{loadSources();$('sourcesDialog').showModal();};
 $("sourcesList").onchange=e=>{if(e.target.matches('[data-enable]'))changeSource({action:'enable',source:e.target.dataset.enable,enabled:e.target.checked});};
-$("sourcesList").onclick=e=>{const b=e.target.closest('[data-remove]');if(b)changeSource({action:'remove',source:b.dataset.remove});};
+$("sourcesList").onclick=e=>{const b=e.target.closest('[data-remove]');if(b)changeSource({action:'remove',source:b.dataset.remove});const c=e.target.closest('[data-clear-token]');if(c)changeSource({action:'clear-token',source:c.dataset.clearToken});};
+$("sourcesList").onsubmit=e=>{const f=e.target.closest('[data-token]');if(!f)return;e.preventDefault();const token=f.elements.token.value.trim();f.reset();if(token)changeSource({action:'set-token',source:f.dataset.token,token});};
 async function addSource(body) {
   $("sourceError").textContent="Checking the repository. Large ones can take a minute…";
   let error="";
@@ -3646,7 +3655,49 @@ async function addSource(body) {
   $("sourceError").textContent=result ? result.message : error || "We couldn't add that repository.";
   if(result){$("addSource").reset();await loadSources();await searchSources();}
 }
-$("addSource").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);addSource({action:'add',url:f.get('url'),fingerprint:f.get('fingerprint')});};
+// A login typed into the address moves into the login fields, on the page too, before anything
+// is sent: the address is shown and logged, the login never. It stays there if adding fails.
+// Plain text, not the URL parser: an address it rejects (or a login it can't decode) must
+// still lose its login first. Decoding falls back to the text as typed.
+// Percent-decode what decodes; keep any byte sequence that isn't UTF-8 as typed.
+// One forward pass: each lead byte gives its sequence length (at most 4 bytes).
+function decodeLenient(s) {
+  return s.replace(/(?:%[0-9a-f]{2})+/gi, run => {
+    const b=run.match(/%[0-9a-f]{2}/gi); let out='', i=0;
+    while(i<b.length){
+      const v=parseInt(b[i].slice(1),16);
+      const n=v<0x80 ? 1 : v>=0xC2&&v<0xE0 ? 2 : v>=0xE0&&v<0xF0 ? 3 : v>=0xF0&&v<0xF5 ? 4 : 0;
+      if(n){ try { out+=decodeURIComponent(b.slice(i,i+n).join('')); i+=n; continue; } catch {} }
+      out+=b[i]; i++;
+    }
+    return out;
+  });
+}
+// Moves a login typed into the address into the login fields. Returns false for an
+// address the URL parser rejects that may hold a login: it is refused, not sent.
+function moveLogin(form) {
+  // Normalise the way URL parsers do: trim C0 controls and spaces, drop tabs and newlines.
+  const el=form.elements;
+  el.url.value=el.url.value.replace(/^[\u0000- ]+|[\u0000- ]+$/g,'').replace(/[\t\n\r]/g,'');
+  let u;
+  // A backslash and an '@' together are read differently by browsers and by the
+  // server, so the address can't be split safely: refuse it rather than guess.
+  if(el.url.value.includes('@') && el.url.value.includes('\\'))return false;
+  try { u=new URL(el.url.value); } catch { return !el.url.value.includes('@'); }
+  if(!u.username && !u.password)return true;
+  const user=decodeLenient(u.username), pass=decodeLenient(u.password);
+  u.username=''; u.password=''; el.url.value=u.href;
+  if(!el.username.value)el.username.value=user;
+  if(!el.password.value)el.password.value=pass;
+  el.username.closest('details').open=true;
+  return true;
+}
+$("addSource").onsubmit=e=>{
+  e.preventDefault();
+  if(!moveLogin(e.target)){ $("sourceError").textContent="That address isn't valid. Put the username and password in the login fields below, not in the address."; return; }
+  const f=new FormData(e.target), url=f.get('url'), username=f.get('username'), password=f.get('password');
+  addSource({action:'add',url,fingerprint:f.get('fingerprint'),...(username ? {username,password} : {})});
+};
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
 $('appDetail').addEventListener('close',()=>{sourceState.detailRequest++;});
 function showAndroidTab(tab) {
