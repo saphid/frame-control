@@ -443,20 +443,20 @@ test('every linked workflow selects its real page and section, preserving shortc
   const start=html.indexOf('const PAGES ='),end=html.indexOf('window.addEventListener("hashchange", showPage);',start);
   const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
   let activePage,scrolled;
-  const nodes=['home','games','android','tools','devices','control'].map(page=>({dataset:{page},classList:{toggle(key,on){if(on)activePage=page;}}}));
+  const nodes=['home','games','android','tools','devices','control','settings'].map(page=>({dataset:{page},classList:{toggle(key,on){if(on)activePage=page;}}}));
   const sections=new Map();
   const context={location:{hash:'#control'},document:{querySelectorAll:s=>s==='.page'?nodes:[],title:''},
     window:{scrollTo(){}},$:id=>{
       if(!ids.has(id))return null;
-      if(!sections.has(id))sections.set(id,{hidden:false,scrollIntoView(){scrolled=id;}});
+      if(!sections.has(id))sections.set(id,{hidden:false,classList:{toggle(){}},scrollIntoView(){scrolled=id;}});
       return sections.get(id);
     },live:false,toggleLive(){},scrollToY(){},loadMacView(){},loadPanelSwitcher(){}};
   const androidStart=html.indexOf('function showAndroidTab(');
   const androidEnd=html.indexOf("document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick",androidStart);
-  vm.createContext(context);vm.runInContext(html.slice(androidStart,androidEnd)+html.slice(start,end)+'\nPAGES.push("devices", "control");',context);
+  vm.createContext(context);vm.runInContext(html.slice(androidStart,androidEnd)+html.slice(start,end)+'\n'+html.match(/^PAGES\.push\([^\n]+/m)[0],context);
   vm.runInContext('showPage()',context);assert.equal(activePage,'control');
   const expected={view:'home',shots:'home',vrTools:'home',comfort:'home',pad:'home',library:'games',getgames:'games',sideloaded:'games',android:'android',display:'android',androidLibrary:'android',appStore:'android',
-    power:'tools',transfer:'tools',media:'tools',apps:'tools',artworkSettings:'tools',privacy:'tools',panels:'tools',macview:'tools',devices:'devices'};
+    power:'tools',transfer:'tools',media:'tools',apps:'tools',artworkSettings:'settings',privacy:'settings',panels:'tools',macview:'tools',devices:'devices'};
   for(const item of cc.catalog) for(const [href] of item.links||[]) {
     if(!href.startsWith('#')||href==='#connection')continue;
     const id=href.slice(1);assert.ok(ids.has(id)||['android','devices'].includes(id),href);
@@ -468,4 +468,5 @@ test('every linked workflow selects its real page and section, preserving shortc
   }
   assert.equal(vm.runInContext('PAGES[4]',context),'devices');
   assert.equal(vm.runInContext('PAGES[5]',context),'control');
+  assert.equal(vm.runInContext('PAGES[6]',context),'settings');
 });
