@@ -11,6 +11,10 @@
 const { contextBridge, ipcRenderer, webUtils } = require("electron");
 
 contextBridge.exposeInMainWorld("frameApp", {
+  preferences: {
+    read: () => ipcRenderer.invoke("preferences:read"),
+    write: (key, value) => ipcRenderer.invoke("preferences:write", key, value),
+  },
   notify: (message, request) => ipcRenderer.invoke("comfort:notify", message, request),
   readClipboard: () => ipcRenderer.invoke("clipboard:read"),
   writeImage: (bytes) => ipcRenderer.invoke("clipboard:writeImage", bytes),

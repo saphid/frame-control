@@ -8,7 +8,7 @@ const fail = msg => { console.log("FAIL " + msg); process.exit(1); };
 function page(api) {
   const pad = { state: "ready", queue: [], sending: false };
   const shown = [];
-  const fns = new Function("pad", "api", "padShow", code + "; return { padSend, padFlush };")(pad, api, s => { shown.push(s); pad.state = s.state; });
+  const fns = new Function("pad", "api", "padShow", "devGen", code + "; return { padSend, padFlush };")(pad, api, s => { shown.push(s); pad.state = s.state; }, 0);
   return { pad, shown, ...fns };
 }
 

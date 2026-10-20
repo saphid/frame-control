@@ -4,7 +4,7 @@ A SideQuest backup can contain a small APK and much larger `main.…obb` and
 `patch.…obb` files. All of them belong to the same game. Installing only the APK
 can leave the game unable to start because its assets are missing.
 
-In **Android → Import game files…**, choose the APK and its OBB files together.
+In **Add / Install → Import Android game** (or **Apps → Browse → Import Android game**), choose the APK and its OBB files together.
 You can also drop them anywhere in the window. In the desktop app, dropping the
 APK alone finds matching OBB files beside it; dropping a folder containing the
 APK and OBBs also works. Browsers can read only the files you explicitly choose.

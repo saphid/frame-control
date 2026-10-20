@@ -4,13 +4,6 @@ import Foundation
 import NIOCore
 import NIOSSH
 
-/// Where the Frame is and who to log in as.
-struct FrameSettings: Codable, Equatable {
-    var host: String
-    var port: Int = 22
-    var user: String = "steamos"
-}
-
 struct FrameFailure: LocalizedError {
     let message: String
     /// Retrying can't help: the Frame's identity changed, or it refused this phone's login.
@@ -140,12 +133,6 @@ final class FrameLink: @unchecked Sendable {
     }
 }
 
-/// True for the first caller only.
-final class Once: @unchecked Sendable {
-    private let lock = NSLock()
-    private var done = false
-    func claim() -> Bool { lock.withLock { defer { done = true }; return !done } }
-}
 
 func shellQuote(_ s: String) -> String {
     "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"

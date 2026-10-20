@@ -183,6 +183,63 @@ See
 [compat-db/README.md](../compat-db/README.md) and
 [apk-catalog/README.md](../apk-catalog/README.md).
 
+## Store and Library in Frame Control
+
+The Android tab has two views. **Store** finds apps across the sources (F-Droid,
+IzzyOnDroid, curated GitHub releases, itch.io). **Library** shows the apps on the
+Frame as cards, with Play and a menu for Test, Report and Remove; the display
+settings and recent reports are below it.
+
+The store groups apps by what a headset is good for, not by F-Droid's list:
+VR, Games, Emulators, Watch & listen, Read & learn, Create, Work, Web & chat
+and Tools (`ui/apk_sources/_categories.py`). A VR app is always in VR. Otherwise
+F-Droid's own categories decide, the finer one first (an app in *Multimedia* and
+*Social Network* is Web & chat).
+
+Apps built around a phone are hidden from browsing unless **Show phone-only
+apps** is on; a search always finds them, labelled *Phone app*. Hidden: apps in
+a category that only makes sense in a phone's own system (launchers, keyboards,
+wallpapers, Xposed modules), apps in a phone-side category (calls and SMS, VPNs,
+fitness, alarms, system tools) unless a useful category says otherwise
+(FluffyChat is in Phone & SMS, but it's a messenger), apps named for a phone
+part (a widget, a launcher, a battery tool), and apps that need hardware the
+Frame lacks (an IR blaster, a watch, NFC, root). They would install and run in
+Lepton, but do nothing useful on the Frame. In the October 2026 indexes that is
+about 1,600 of F-Droid's 4,500 apps and 550 of IzzyOnDroid's 1,300.
+
+Without a search, each source offers its best 300 for the chosen category:
+apps with a banner first, then with screenshots, then the newest.
+
+## The store in the headset: Frame Control's store as a panel (inferred, not yet run on the Frame)
+
+The **APK Store** panel is the Store above, drawn for the laser: the same
+sources, categories and artwork, with Install, Open, Stop and Remove, opened as
+its own floating panel:
+
+```sh
+scripts/store-on-frame.sh open     # copy the server over if it changed, start it, open the panel
+scripts/store-on-frame.sh close
+```
+
+`open` copies the same bundle the iPhone app uses
+(`ios/scripts/make_frame_bundle.py`) to
+`~/.local/share/frame-control/store-server/<version>` on the Frame. It then
+starts `ui/server.py` there with `FRAME_LOCAL=1` on `127.0.0.1:47812`, with a
+fresh `X-Frame-UI` key. Chromium XR (or the `org.chromium.Chromium` Flatpak)
+opens `/store` (`ui/store.html`) in a 1280×800 app window, tagged as panel
+`2001947812` ([panels.md](panels.md)). Downloads, SHA-256 checks and installs
+all run on the Frame, so the Mac can go away after `open`.
+
+The page has a category rail (Home, the store's categories, Installed), eight
+art cards a page, and a featured VR app on Home. It turns pages instead of
+scrolling, because a tagged panel gets mouse clicks and a drag would select
+text; the thumbstick (a mouse wheel) turns pages, and an on-screen keyboard is
+there for search. **Checked on the Mac only** (2026-10-14, 1280×800, against
+the real sources): Home, categories, Installed, the detail sheet. **Still to
+check in the headset:** that the panel opens and takes laser clicks, that an
+install completes when run on the Frame, and that **Open** brings up the app's
+panel.
+
 ## In-headset app store: F-Droid 1.17 (verified 2026-09-25)
 
 F-Droid 1.23 uses an old Compose and crashes on launch. **F-Droid 1.17.2**, the

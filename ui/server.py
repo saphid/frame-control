@@ -117,6 +117,12 @@ def route(alias, host_opts):
         moved = alias != FRAME
         if moved:
             frame_catalog._env.clear()  # the SteamOS and Lepton builds reports record are per headset
+            # Invalidate launches before publishing the new route. send/stop share
+            # a writer lock, so an old process cannot receive events after this.
+            for name in ("_input", "_touch"):
+                agent = globals().get(name)
+                if agent:
+                    agent.stop()
         FRAME = frame_android.FRAME = alias
         HOST_OPTS = list(host_opts)
         MUX[:] = [*MUX_BASE, *HOST_OPTS]
@@ -126,9 +132,6 @@ def route(alias, host_opts):
     mv = globals().get("macview")
     if mv:
         mv.retarget(alias, host_opts)  # its tunnel is its own ssh: it must follow the headset too
-    agent = globals().get("_input")
-    if moved and agent:
-        agent.stop()  # typing and pointing mustn't go on reaching the headset switched away from
 
 
 LINK = None  # the connector (frame_link.Link); None on the Frame itself
@@ -162,13 +165,42 @@ def busy_thread(fn, *args):
     with _work_lock:
         _work[0] += 1
 
+    released = False
+
+    def release():
+        nonlocal released
+        with _work_lock:
+            if not released:
+                released = True
+                _work[0] -= 1
+
     def run():
         try:
             fn(*args)
         finally:
-            with _work_lock:
-                _work[0] -= 1
-    return threading.Thread(target=run, daemon=True)
+            release()
+    try:
+        worker = threading.Thread(target=run, daemon=True)
+    except Exception:
+        release()
+        raise
+    start = worker.start
+
+    def start_counted():
+        try:
+            start()
+        except Exception:
+            release()
+            raise
+    worker.start = start_counted
+    return worker
+
+
+def agent_target():
+    """Stable identity and reviewable name for a human-approved agent action."""
+    device = LINK.active_device() if LINK else {"id": "local" if LOCAL else FRAME,
+                                               "name": "This headset" if LOCAL else FRAME}
+    return {"id": device["id"], "name": device["name"]}
 
 APPID = re.compile(r"^\d{1,10}$")
 FLATPAK_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+){2,}$")
@@ -257,18 +289,13 @@ _backfill = {"running": False, "last": 0.0}
 _backfill_lock = threading.Lock()
 
 
-def backfill_art(apps=(), titles=()):
+def backfill_art(apps=(), titles=(), meant=None):
     """Apply art Frame Control couldn't at install time (Steam wasn't running), once Steam is up.
 
     Only entries marked art_pending at install; it fills empty Steam slots and never replaces art or
     names the user may have customised. Runs in the background, at most once every five minutes."""
     pkgs = [a["package"] for a in apps if a.get("art_pending")]
     gids = [t["id"] for t in titles if t.get("art_pending")]
-    with _backfill_lock:
-        if not (pkgs or gids) or _backfill["running"] or time.time() - _backfill["last"] < 300:
-            return False
-        _backfill.update(running=True, last=time.time())
-
     def run():
         try:
             frame_android.shortcut_tool("list")  # Steam isn't up: try again on a later listing
@@ -283,7 +310,20 @@ def backfill_art(apps=(), titles=()):
         finally:
             with _backfill_lock:
                 _backfill["running"] = False
-    threading.Thread(target=run, daemon=True).start()
+    # Listing callers hold working() until this counted worker is registered.
+    # Other callers may supply the identity captured with their listing.
+    with working(meant):
+        with _backfill_lock:
+            if not (pkgs or gids) or _backfill["running"] or time.time() - _backfill["last"] < 300:
+                return False
+            previous = dict(_backfill)
+            _backfill.update(running=True, last=time.time())
+        try:
+            busy_thread(run).start()
+        except Exception:
+            with _backfill_lock:
+                _backfill.update(previous)
+            raise
     return True
 
 
@@ -416,22 +456,26 @@ def ensure_master():
         LINK.ensure()
 
 
-def ssh(remote, *, stdin=None, timeout=30, text=True):
-    route_gen = LINK.gen if LINK else None  # which headset this command is for
+def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
+    # Long-lived helper delivery/cleanup owns an immutable command prefix. It
+    # must not reconnect through the currently selected headset after a switch.
+    route_gen = LINK.gen if LINK and route is None else None
+    alias = route[-1] if route is not None else FRAME
     try:
-        ensure_master()
+        if route is None:
+            ensure_master()
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = frame_host.run_ssh([*SSH, FRAME, remote], capture_output=True, **feed,
+        r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], capture_output=True, **feed,
                                text=text, errors="replace" if text else None, timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise frame_host.link_failure(Failure(f"Timed out talking to {FRAME}"))
+        raise frame_host.link_failure(Failure(f"Timed out talking to {alias}"))
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
-            return ssh(remote, stdin=stdin, timeout=timeout, text=text)
-        if r.returncode == 255 and LINK and unreachable(err):
+            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route)
+        if r.returncode == 255 and LINK and route is None and unreachable(err):
             LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
         failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
         failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
@@ -965,6 +1009,18 @@ class InputAgent:
         self.packages = kdeconnect_packages() if packages is None else packages
         # generation counts stop()s; launching is the generation a launch is under way for.
         self.status, self.launching, self.generation = {"state": "off"}, None, 0
+        # Each launch thread retains its owner through delivery, retry and late
+        # cleanup, even when a new generation starts concurrently.
+        self._launch_local = threading.local()
+
+    def delivery_ssh(self, command, **kwargs):
+        context = getattr(self._launch_local, "context", None)
+        if context:
+            with self.lock:
+                if self.generation != context[0]:
+                    raise Failure("stopped")
+            return ssh(command, route=context[1], **kwargs)
+        return ssh(command, **kwargs)
 
     def command(self, folder=""):
         code = base64.b64encode(self.source.read_bytes()).decode()
@@ -987,14 +1043,14 @@ class InputAgent:
             return ""  # nothing to copy (the agent says so if it needed them)
         if not force:
             # Bytes, so Windows doesn't turn the stamp's line ends into CRLF.
-            have = ssh(f"{{ test -x /usr/lib/kdeconnectd || cmp -s - {KDECONNECT_HOME}/root/.frame-control-packages; }}"
+            have = self.delivery_ssh(f"{{ test -x /usr/lib/kdeconnectd || cmp -s - {KDECONNECT_HOME}/root/.frame-control-packages; }}"
                        " && echo yes || true", stdin=kdeconnect_stamp(self.packages).encode(), text=False, timeout=20)
             if have.strip() == b"yes":
                 return ""
         # A folder of its own: a cancelled start's agent may still be cleaning up another.
         folder = f"{KDECONNECT_HOME}/incoming/{secrets.token_hex(8)}"
-        ssh(f"mkdir -p {folder}", timeout=20)
         try:
+            self.delivery_ssh(f"mkdir -p {folder}", timeout=20)
             for name, sha in self.packages:
                 path = KDECONNECT / "packages" / name
                 if not path.is_file() or file_sha256(path) != sha:
@@ -1002,7 +1058,7 @@ class InputAgent:
                                   " (a build runs app/build/fetch-deps.js to add it)", 500)
                 report(f"Copying KDE Connect to the Frame ({name.rsplit('-', 3)[0]})")
                 quoted = shlex.quote(name)
-                ssh(f"cd {folder} && cat > {quoted}.part && mv {quoted}.part {quoted}",
+                self.delivery_ssh(f"cd {folder} && cat > {quoted}.part && mv {quoted}.part {quoted}",
                     stdin=path.read_bytes(), text=False, timeout=600)
         except (Failure, OSError):
             self.discard(folder)  # a partial copy is no use to anyone
@@ -1014,18 +1070,35 @@ class InputAgent:
         folder = folder.removeprefix("~/")
         if folder.startswith(f"{KDECONNECT_HOME}/incoming/") and not LOCAL:
             try:
-                ssh(f"rm -rf {folder}", timeout=20)
+                context = getattr(self._launch_local, "context", None)
+                ssh(f"rm -rf {folder}", timeout=20, **({"route": context[1]} if context else {}))
             except (Failure, OSError):
                 pass  # never let tidying up get in the way of reporting and retrying
 
     def start(self):
-        with self.lock:
+        with _route_lock, self.lock:
             if self.launching == self.generation or (self.proc and self.proc.poll() is None):
                 return
             # (A launch from before a stop() may still be finishing; it ends itself.)
             self.launching, self.status = self.generation, {"state": "starting"}
             generation = self.generation
-        threading.Thread(target=self._launch, args=(generation,), daemon=True).start()
+            route = tuple([*SSH, FRAME])
+
+        def run():
+            self._launch_local.context = (generation, route)
+            try:
+                self._launch(generation)
+            finally:
+                del self._launch_local.context
+        try:
+            threading.Thread(target=run, daemon=True).start()
+        except Exception:
+            with self.lock:
+                if self.launching == generation:
+                    self.launching = None
+                if self.generation == generation:
+                    self.status = {"state": "error", "message": "Couldn't start the input worker"}
+            raise
 
     def _launch(self, generation, force=False):
         try:
@@ -1038,22 +1111,43 @@ class InputAgent:
                     self.status = {"state": "error", "message": f"Couldn't start the keyboard and trackpad: {e}"}
 
     def _launch_once(self, generation, force):
+        previous = getattr(self._launch_local, "context", None)
+        if previous is None:  # direct synchronous callers, including offline probes
+            with _route_lock, self.lock:
+                self._launch_local.context = (generation, tuple([*SSH, FRAME]))
+        try:
+            self._launch_routed(generation, force, self._launch_local.context[1])
+        finally:
+            if previous is None:
+                del self._launch_local.context
+
+    def _launch_routed(self, generation, force, route):
         def report(message):
             with self.lock:
                 if self.generation == generation:
                     self.status = {"state": "installing", "message": message}
         folder = ""
+        errors = None
         try:
             errors = tempfile.TemporaryFile()
+            with self.lock:
+                if self.generation != generation:
+                    raise Failure("stopped")
             ensure_master()
+            with self.lock:
+                if self.generation != generation:
+                    raise Failure("stopped")
             folder = self.deliver(report, force)
             with self.lock:
                 stopped = self.generation != generation
+                command = [*route, self.command(folder)] if not stopped else None
             if stopped:  # turned off while copying
                 raise Failure("stopped")
-            proc = subprocess.Popen([*SSH, FRAME, self.command(folder)], stdin=subprocess.PIPE,
+            proc = subprocess.Popen(command, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE, stderr=errors)
         except (Failure, OSError) as e:
+            if errors is not None:
+                errors.close()
             self.discard(folder)  # no agent will take the copy over
             message = str(e)
             friendly = unreachable(message)
@@ -1072,8 +1166,11 @@ class InputAgent:
             if not stale:
                 self.proc = proc
         if stale:  # turned off meanwhile
-            proc.terminate()
-        wanted, heard = self._watch(proc, errors, retry=not force)
+            self.close(proc)
+        try:
+            wanted, heard = self._watch(proc, errors, retry=not force)
+        finally:
+            errors.close()
         if not heard:
             # The agent never started (or was stopped first), so it can't tidy the copy up.
             self.discard(folder)
@@ -1127,29 +1224,35 @@ class InputAgent:
         Returns the state, with "sent" saying whether the events went; if not,
         the page keeps them and sends them again once the state is "ready".
         """
-        with self.lock:
-            proc, ready = self.proc, self.status.get("state") == "ready"
-        sent = False
-        if not (proc and proc.poll() is None):
-            self.start()
-        elif ready and events:
-            try:
-                # One writer at a time: two devices sending at once mustn't tear a line.
-                with self.write_lock:
+        with self.write_lock:
+            with self.lock:
+                proc, ready = self.proc, self.status.get("state") == "ready"
+            sent = False
+            start = not (proc and proc.poll() is None)
+            if not start and ready and events:
+                try:
                     proc.stdin.write((json.dumps(events) + "\n").encode())
                     proc.stdin.flush()
-                sent = True
-            except (BrokenPipeError, OSError, ValueError):
-                pass  # _watch reports how it ended
+                    sent = True
+                except (BrokenPipeError, OSError, ValueError):
+                    pass  # _watch reports how it ended
+        # start() captures the route under _route_lock. Never acquire that lock
+        # under write_lock: route() takes them in the opposite order to stop us.
+        if start:
+            self.start()
         with self.lock:
             return {**self.status, "sent": sent}
 
     def stop(self):
-        with self.lock:
-            proc, self.proc, self.status = self.proc, None, {"state": "off"}
-            self.generation += 1
-        if proc and proc.poll() is None:
-            proc.terminate()
+        with self.write_lock:
+            with self.lock:
+                proc, self.proc, self.status = self.proc, None, {"state": "off"}
+                self.generation += 1
+            if proc and proc.poll() is None:
+                self.close(proc)
+
+    def close(self, proc):
+        proc.terminate()
 
 
 _input = InputAgent()
@@ -1265,6 +1368,14 @@ class TouchAgent(InputAgent):
 
     def __init__(self):
         super().__init__(source=HERE / "frame_touch.py", packages=[])
+
+    def close(self, proc):
+        # EOF lets the helper release held keys/buttons in finally, including
+        # when a start was invalidated while Popen was still returning.
+        try:
+            proc.stdin.close()
+        except (BrokenPipeError, OSError, ValueError):
+            proc.terminate()
 
     def deliver(self, report, force=False):
         return ""
@@ -2517,11 +2628,14 @@ def source_search(query):
     q = args.get('q', [''])[0]
     vr = args.get('vr', [''])[0]
     installable = args.get('installable', [''])[0]
-    if len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0'):
+    category, phone = args.get('category', [''])[0], args.get('phone', [''])[0]
+    if (len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0')
+            or phone not in ('', 'true', 'false', '1', '0') or len(category) > 40):
         raise Failure('Invalid search filters', 400)
     try:
         return apk_search.search(q, vr=None if not vr else vr in ('true', '1'),
-                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'))
+                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'),
+                                 category=category or None, phone=phone in ('true', '1'))
     except SourceError as e:
         raise Failure(str(e), 400)
 
@@ -2766,6 +2880,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self.send_bytes((HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/store":
+                # The Android store as a headset panel (scripts/store-on-frame.sh).
+                self.send_bytes((HERE / "store.html").read_bytes(), "text/html; charset=utf-8")
             elif path == "/api/settings/artwork":
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
@@ -2812,18 +2929,25 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/apk-versions":
                 self.send_json(apk_versions(url.query))
             elif path == "/api/android":
-                ensure_master()
-                apps = frame_android.list_apps()
-                backfill_art(apps=apps)
-                self.send_json({"apps": apps})
+                with working():
+                    ensure_master()
+                    apps = frame_android.list_apps()
+                    backfill_art(apps=apps)
+                try:  # store artwork for the library's cards, from saved indexes only
+                    art = apk_search.artwork_for(apps)
+                except Exception:
+                    art = {}
+                self.send_json({"apps": [dict(a, store_art=art[a['package']]) if a.get('package') in art else a
+                                         for a in apps]})
             elif path == "/api/quest":
                 self.send_json(quest_status(url.query))
             elif path == "/api/meta":
                 self.send_json(meta_status(url.query))
             elif path == "/api/titles":
-                ensure_master()
-                titles_list = frame_titles.list_titles()
-                backfill_art(titles=titles_list)
+                with working():
+                    ensure_master()
+                    titles_list = frame_titles.list_titles()
+                    backfill_art(titles=titles_list)
                 self.send_json({"titles": titles_list})
             elif path == "/api/titles/job":
                 self.send_json(title_job(url.query))
@@ -2831,10 +2955,19 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"notices": licenses()})
             elif path == "/api/panels":
                 self.send_json(panels())
-            elif path == "/api/touch":
-                self.send_json(_touch.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_touch.status))
-            elif path == "/api/input":
-                self.send_json(_input.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_input.status))
+            elif path in ("/api/touch", "/api/input"):
+                agent = _touch if path == "/api/touch" else _input
+                if parse_qs(url.query).get("start") == ["1"]:
+                    # Validate and reserve before start() captures its immutable
+                    # route and schedules a worker. Status-only polls stay free.
+                    meant = self.headers.get("X-Frame-Device")
+                    if LINK and not meant:
+                        raise Failure("Control start needs the intended X-Frame-Device headset", 400)
+                    with working(meant):
+                        result = agent.send([])
+                else:
+                    result = dict(agent.status)
+                self.send_json(result)
             elif path == "/api/job":
                 self.send_json(job_status(url.query))
             elif path == "/api/queue":

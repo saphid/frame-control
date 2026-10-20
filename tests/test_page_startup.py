@@ -9,7 +9,8 @@ import subprocess
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STUBS = ['$', 'toggleLive', 'scrollToY', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadTitles', 'showAndroidTab']
+STUBS = ['$', 'toggleLive', 'scrollToY', 'scroller', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadTitles', 'showAndroidTab',
+         'loadAndroid', 'loadDisplays', 'setGameSource', 'requestAnimationFrame']
 
 RUN = r'''
 const vm = require('vm');
@@ -31,8 +32,9 @@ class PageStartup(unittest.TestCase):
     def test_opening_any_page_or_section_at_startup_runs(self):
         page = (ROOT / 'ui/index.html').read_text(encoding='utf-8')
         first, second = re.findall(r'<script>(.*?)</script>', page, re.S)[:2]
-        tables = first[first.index('const PAGES ='):first.index('let page =')]
+        # The routing tables and the workspace helpers showPage uses, up to showPage itself.
         start = first.index('function showPage(')
+        tables = first[first.index('const PAGES ='):start]
         show = first[start:first.index('\n}\n', start) + 3]
         # Everything declared after the startup call is still uninitialised when it runs.
         call = re.search(r'^showPage\(\);', first, re.M).end()
@@ -41,10 +43,11 @@ class PageStartup(unittest.TestCase):
         self.assertIn('link', later)  # the name that broke #games
         stubs = ''.join(f'function {n}() {{ return {{ classList: {{ toggle() {{}} }}, scrollIntoView() {{}} }}; }}\n'
                         for n in STUBS if n != '$')
-        code = ('const $ = id => id === "nowhere" ? null : { classList: { toggle() {} }, scrollIntoView() {} };\n' + stubs + tables + 'let page = "home";\n' + show +
+        node = '{ classList: { toggle() {} }, scrollIntoView() {}, append() {}, prepend() {}, setAttribute() {}, removeAttribute() {} }'
+        code = (f'const $ = id => id === "nowhere" ? null : {node};\nconst gm = {{src: "owned"}};\n' + stubs + tables + show +
                 'showPage();\n' + ''.join(f'let {n};\n' for n in later))
         hashes = ['', '#home', '#games', '#android', '#tools', '#settings', '#devices', '#control', '#nowhere']
-        hashes += ['#' + k for k in re.findall(r'(\w+): "', tables)]
+        hashes += ['#' + k for k in re.findall(r'(\w+): ?"', tables[:tables.index('const workspace')])]
         r = subprocess.run(['node', '-e', RUN], input=json.dumps({'code': code, 'hashes': hashes}),
                            capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stderr)

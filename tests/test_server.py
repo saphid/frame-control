@@ -88,6 +88,12 @@ class ServerGuards(unittest.TestCase):
                 self.assertIn(mime, headers['Content-Type'])
                 self.assertIn(marker, payload)
 
+    def test_store_page_served_with_anti_framing_headers(self):
+        status, headers, payload = self.request("GET", "/store")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Frame-Options"], "DENY")
+        self.assertIn(b"<title>APK Store</title>", payload)
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):

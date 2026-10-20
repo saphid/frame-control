@@ -18,7 +18,8 @@ import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PATTERNS = ["ui/*.py", "ui/*.html", "ui/*.js", "ui/*.css", "ui/local-bin/*", "scripts/*.sh", "frame/android/*.sh", "frame/android/*.py",
+PATTERNS = ["ui/*.py", "ui/*.html", "ui/*.js", "ui/*.css", "ui/local-bin/*", "ui/apk_sources/*.py", "ui/apk_sources/*.json", "scripts/*.sh", "frame/android/*.sh", "frame/android/*.py", "frame/android/*.js",
+            "frame/openxr-compat/XrApiLayer_FRAME_compat.json", "frame/openxr-compat/prebuilt/arm64-v8a/*.so.gz",
             "frame/devkit-utils/**/*", "apk-catalog/*.py", "apk-catalog/pins.json", "apk-catalog/site/apps.js",
             "frame/kdeconnect/packages.json", "frame/kdeconnect/NOTICE.md", "frame/kdeconnect/LICENSES/*/*",
             "frame/kdeconnect/packages/*.pkg.tar.zst", "LICENSE", "THIRD_PARTY_NOTICES.md"]

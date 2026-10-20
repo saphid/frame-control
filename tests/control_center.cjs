@@ -14,7 +14,7 @@ function fixture() {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {id,hidden:false,disabled:false,textContent:'',innerHTML:'',value:'',dataset:{},
-      classList:{toggle(){}},querySelectorAll(){return [];},setAttribute(key,value){this[key]=value;},addEventListener(key,callback){this[key]=callback;},focus(){this.focused=true;}});
+      classList:{toggle(){}},querySelectorAll(){return [];},close(){this.open=false;},setAttribute(key,value){this[key]=value;},addEventListener(key,callback){this[key]=callback;},focus(){this.focused=true;}});
     return elements.get(id);
   }
   const cards = cc.catalog.map(item=>{const e=element(item.id);e.dataset.ccCard=item.id;return e;});
@@ -42,7 +42,7 @@ function sharedPage({productionApi=false} = {}) {
   const f=fixture(), requests=[], writes=[], host=deferred(), job=deferred();
   const context={document:f.document,FrameControlCenter:cc,window:{frameApp:{setUpConnection(){}}},
     Date,setInterval,clearInterval,setTimeout:()=>1,clearTimeout(){},$:f.element,QUICK:[],installing:new Set(),
-    battery(){},setVolume(){},gb:String,dur:String,esc:String,meter(){},toast(){},
+    battery(){},setVolume(){},renderHome(){},gb:String,dur:String,esc:String,meter(){},toast(){},
     runJob(title,id){context.installing.add(id);return job.promise;},
     api:(path,body,device)=>{
       if(path==='/api/host')return host.promise;
@@ -64,11 +64,12 @@ function sharedPage({productionApi=false} = {}) {
       const request=deferred();request.path=path;request.opts=opts;requests.push(request);return request.promise;
     };
     Object.assign(context,{renderPill(){},renderConnDlg(){},renderBanner(){},viaText(){},netLabel(){},
-      resetShots(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
+      padReset(){},ctrlReset(){},resetShots(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
     vm.runInContext(`const UI_KEY = 'test-only';
       const link = {s:null,device:'frame-a',phase:'connected',rev:0,net:null};
-      const disp = {}, gm = {seq:0}, cat = {}, wi = {};
-      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], titlesSeq = 0, page = 'control';`,context);
+      const disp = {}, gm = {seq:0}, cat = {}, wi = {}, sourceState = {jobs:new Map(),detail:null,detailRequest:0};
+      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], androidSeq = 0, titlesSeq = 0, page = 'control';
+      const androidPending = new Set();`,context);
     const apiStart=pageSource.indexOf('const HEADSET_FREE ='),apiEnd=pageSource.indexOf('// What a panel shows',apiStart);
     const onlineStart=pageSource.indexOf('function setOnline('),onlineEnd=pageSource.indexOf('function reloadAll()',onlineStart);
     const connectionStart=pageSource.indexOf('function onConnection('),connectionEnd=pageSource.indexOf('// Read the event stream',connectionStart);
@@ -438,35 +439,13 @@ test('mounted filters show empty state, counts, reset and host-dependent feature
   f.ui.host({os:'SteamOS',mobile:true});assert.equal(f.element('macLink').hidden,true);
   f.element('connectionLink').onclick({preventDefault(){}});assert.equal(f.opened,1);
 });
-test('every linked workflow selects its real page and section, preserving shortcuts', () => {
-  const html=fs.readFileSync(require.resolve('../ui/index.html'),'utf8');
-  const start=html.indexOf('const PAGES ='),end=html.indexOf('window.addEventListener("hashchange", showPage);',start);
-  const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
-  let activePage,scrolled;
-  const nodes=['home','games','android','tools','devices','control','settings'].map(page=>({dataset:{page},classList:{toggle(key,on){if(on)activePage=page;}}}));
-  const sections=new Map();
-  const context={location:{hash:'#control'},document:{querySelectorAll:s=>s==='.page'?nodes:[],title:''},
-    window:{scrollTo(){}},$:id=>{
-      if(!ids.has(id))return null;
-      if(!sections.has(id))sections.set(id,{hidden:false,classList:{toggle(){}},scrollIntoView(){scrolled=id;}});
-      return sections.get(id);
-    },live:false,toggleLive(){},scrollToY(){},loadMacView(){},loadPanelSwitcher(){}};
-  const androidStart=html.indexOf('function showAndroidTab(');
-  const androidEnd=html.indexOf("document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick",androidStart);
-  vm.createContext(context);vm.runInContext(html.slice(androidStart,androidEnd)+html.slice(start,end)+'\n'+html.match(/^PAGES\.push\([^\n]+/m)[0],context);
-  vm.runInContext('showPage()',context);assert.equal(activePage,'control');
-  const expected={view:'home',shots:'home',vrTools:'home',comfort:'home',pad:'home',library:'games',getgames:'games',sideloaded:'games',android:'android',display:'android',androidLibrary:'android',appStore:'android',
-    power:'tools',transfer:'tools',media:'tools',apps:'tools',artworkSettings:'settings',privacy:'settings',panels:'tools',macview:'tools',devices:'devices'};
+test('every Control Center workflow reaches its intentional workspace', () => {
+  const {workspaceFixture}=require('./workspace_fixture.cjs');
+  const f=workspaceFixture();
+  const expected={view:'capture',shots:'capture',vrTools:'tools',comfort:'tools',pad:'tools',library:'games',getgames:'games',sideloaded:'games',android:'apps',display:'settings',androidLibrary:'apps',appStore:'apps',power:'settings',transfer:'tools',media:'tools',linuxApps:'apps',artworkSettings:'settings',privacy:'settings',panels:'tools',macview:'tools',devices:'devices'};
   for(const item of cc.catalog) for(const [href] of item.links||[]) {
     if(!href.startsWith('#')||href==='#connection')continue;
-    const id=href.slice(1);assert.ok(ids.has(id)||['android','devices'].includes(id),href);
-    context.location.hash=href;scrolled=null;vm.runInContext('showPage()',context);
-    assert.equal(activePage,expected[id],href);
-    if(!['android','devices'].includes(id))assert.equal(scrolled,id,href);
-    if(id==='display'||id==='androidLibrary') { assert.equal(sections.get('androidLibrary').hidden,false);assert.equal(sections.get('appStore').hidden,true); }
-    if(id==='appStore') { assert.equal(sections.get('appStore').hidden,false);assert.equal(sections.get('androidLibrary').hidden,true); }
+    f.navigate(href);assert.equal(f.activePage,expected[href.slice(1)],href);
   }
-  assert.equal(vm.runInContext('PAGES[4]',context),'devices');
-  assert.equal(vm.runInContext('PAGES[5]',context),'control');
-  assert.equal(vm.runInContext('PAGES[6]',context),'settings');
+  assert.equal(f.run('PAGES.length'),4);
 });
