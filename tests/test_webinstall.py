@@ -394,7 +394,7 @@ class ServerJobs(unittest.TestCase):
             places = s._tmp_places()
             self.assertEqual({p for _, p in places}, {s.WEB_TMP_PREFIX, s.frame_titles.TMP_PREFIX,
                                                       s.frame_android.TMP_PREFIX, s.frame_agent.TMP_PREFIX,
-                                                      s.apk_fdroid.TMP_PREFIX})
+                                                      s.apk_fdroid.TMP_PREFIX, s.ANDROID_BACKUP_TMP})
             for folder, prefix in places:
                 folder.mkdir(parents=True, exist_ok=True)
                 gone = tempfile.mkdtemp(prefix=f"{prefix}{dead.pid}-", dir=folder)

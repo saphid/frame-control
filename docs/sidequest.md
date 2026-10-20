@@ -24,7 +24,7 @@ No SideQuest implementation code was copied.
 | Installed-app management (launch, uninstall, backup) | List, launch, stop, remove, probe | Already mostly covered. Backup added here. |
 | Update notices / account library | Compatible-version lookup; no source-aware installed update notices | Useful later, medium; needs original version code and source identity recorded on install. |
 | Custom repositories | Built-in F-Droid catalogue and compatible-version indexes | Separate user-repos worker. Legacy SideQuest source has a fixed SideQuestRepos index; arbitrary current custom-repo support was not verified. |
-| Drag-and-drop APK/OBB install | APK drag-and-drop already works | OBB backend added here; future UI can call it. UI drop wiring is not included. |
+| Drag-and-drop APK/OBB install | APK drag-and-drop already works | The [Android backup importer](android-backups.md) now groups the APK and matching OBBs, detects desktop siblings and guides installation and data setup. |
 | Tags, price, headset filters, reviews | Text search and Lepton verdicts, not Quest headset metadata | Useful, medium; search worker owns filters. Keep source headset claims distinct from tested Frame compatibility. |
 | Screenshot/video capture and streaming | Frame screenshots/VR capture already present | Reuse existing tools; do not port Quest capture commands. |
 | Device settings and ADB utilities | Frame/Android display settings, SSH and own-instance tools | Borrow selectively; Quest CPU/GPU presets and wireless-ADB setup do not map directly to Lepton. |
@@ -84,6 +84,9 @@ free/direct-download classification, and size/hash verification. A calculated
 local SHA-256 alone must not be called publisher verification.
 
 ## OBB files
+
+For the app's guided APK and OBB import, see [Import an Android game backup](android-backups.md).
+The CLI helper below remains available for a running instance.
 
 ```sh
 python3 ui/frame_android.py install-obb org.example.game main.42.org.example.game.obb
