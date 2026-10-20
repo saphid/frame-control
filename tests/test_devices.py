@@ -323,6 +323,15 @@ class Pins(Base):
 
 
 class Registry(Base):
+    def test_replaced_registry_is_read_even_when_timestamp_and_size_match(self):
+        d = self.reg.add_device('frame', name='First')
+        before = self.reg.path.stat()
+        other = fd.Registry(self.reg.path)
+        other.update_device(d['id'], name='Other')
+        os.utime(self.reg.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+        self.assertEqual(self.reg.path.stat().st_size, before.st_size)
+        self.assertEqual(self.reg.get(d['id'])['name'], 'Other')
+
     def test_an_address_added_first_wins_on_its_own_network(self):
         # The page's "Add 192.168.x.x" offer: the headset is reached over Tailscale, which has
         # worked here before. The LAN address has to go ahead of it to be used at home.
