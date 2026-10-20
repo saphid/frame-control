@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Private, non-agent admission and leased queue for saphid/frame-control only."""
 import argparse
+from datetime import datetime, timezone
 import base64
 import binascii
 import hashlib
@@ -38,11 +39,22 @@ SCHEMA = '''CREATE TABLE IF NOT EXISTS reports (
  activity_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, recorded INTEGER NOT NULL,
  kind TEXT NOT NULL, value TEXT NOT NULL, note TEXT NOT NULL,
  UNIQUE(fingerprint,kind,value,note));
+ CREATE INDEX IF NOT EXISTS history_activity_case ON history_activity(fingerprint,recorded);
  CREATE TABLE IF NOT EXISTS history_relations (
  left_id TEXT NOT NULL, right_id TEXT NOT NULL, note TEXT NOT NULL,
  PRIMARY KEY(left_id,right_id));
  CREATE INDEX IF NOT EXISTS reports_created ON reports(created);
  CREATE INDEX IF NOT EXISTS reports_fingerprint ON reports(fingerprint);'''
+
+
+def history_time(value):
+    if isinstance(value, (int, float)):
+        date = datetime.fromtimestamp(value, timezone.utc)
+    else:
+        date = datetime.fromisoformat(str(value).replace('Z', '+00:00'))
+        if date.tzinfo is None:
+            raise ValueError('history timestamp requires timezone')
+    return date.astimezone(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
 
 
 class Rejected(Exception):
@@ -57,7 +69,7 @@ class Queue:
             db.executescript(SCHEMA)
             # Metadata survives queue payload retention. Upgrade existing installations.
             db.execute('INSERT OR IGNORE INTO history_events SELECT id,fingerprint, '
-                       "json_extract(payload,'$.event.event'),CAST(created AS TEXT),'queue' FROM reports")
+                       "json_extract(payload,'$.event.event'),strftime('%Y-%m-%dT%H:%M:%fZ',created,'unixepoch'),'queue' FROM reports")
             db.execute('INSERT OR IGNORE INTO history_activity '
                        "SELECT 'finish:'||d.report_id,r.fingerprint,d.finished,'disposition',d.disposition,'' "
                        'FROM dispositions d JOIN reports r ON r.id=d.report_id')
@@ -135,9 +147,10 @@ class Queue:
                 raise ValueError()
             # Ignore arbitrary envelope instructions; preserve only event data for triage.
             payload = json.dumps({'repository': REPO, 'project_id': PROJECT, 'event': {'uuid': event_id, 'event': name, 'properties': props}}, allow_nan=False)
+            observed = history_time(event.get('timestamp', now))
             fingerprint = hashlib.sha256(json.dumps([name, props.get('$exception_type'), evidence],
                                                     ensure_ascii=True).encode()).hexdigest()
-        except (KeyError, TypeError, ValueError, AttributeError, RecursionError):
+        except (KeyError, TypeError, ValueError, OverflowError, AttributeError, RecursionError):
             raise Rejected(422) from None
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
@@ -147,7 +160,7 @@ class Queue:
             if prior and prior[0] != fingerprint:
                 raise Rejected(422)
             db.execute('INSERT OR IGNORE INTO history_events VALUES(?,?,?,?,?)',
-                       (event_id, fingerprint, name, str(event.get('timestamp', now)), 'webhook'))
+                       (event_id, fingerprint, name, observed, 'webhook'))
             if db.execute('SELECT 1 FROM reports WHERE id=? OR (fingerprint=? AND created>=?)',
                           (event_id, fingerprint, now - 7*86400)).fetchone():
                 return 'duplicate'
@@ -279,7 +292,7 @@ class Queue:
                 raise ValueError('invalid evidence')
             fingerprint = hashlib.sha256(json.dumps([name, props.get('$exception_type'), evidence],
                                                     ensure_ascii=True).encode()).hexdigest()
-            rows.append((eid, fingerprint, name, str(event['timestamp']), 'posthog-history'))
+            rows.append((eid, fingerprint, name, history_time(event['timestamp']), 'posthog-history'))
         with self.connect() as db:
             for row in rows:
                 old = db.execute('SELECT fingerprint FROM history_events WHERE event_id=?', (row[0],)).fetchone()

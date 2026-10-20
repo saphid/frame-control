@@ -103,6 +103,21 @@ class Intake(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.q.history(other['uuid'])
 
+    def test_history_live_uuid_conflict_and_bad_time_fail_closed(self):
+        body = self.body()
+        self.send(body)
+        body['event']['properties']['$exception_message'] = 'different'
+        body['event']['properties']['$exception_list'][0]['value'] = 'different'
+        with self.assertRaises(m.Rejected) as error:
+            self.send(body)
+        self.assertEqual(error.exception.status, 422)
+        invalid = self.body()
+        invalid['event']['timestamp'] = 'not a timestamp'
+        with self.assertRaises(m.Rejected) as error:
+            self.send(invalid)
+        self.assertEqual(error.exception.status, 422)
+        self.assertEqual(len(self.q.history_list()), 1)
+
     def test_native_standard_signatures_and_replays(self):
         raw = json.dumps(self.body()).encode()
         good = 'v1,' + base64.b64encode(hmac.new(self.key,
