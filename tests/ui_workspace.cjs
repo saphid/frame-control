@@ -287,3 +287,13 @@ test('expanded owned and store results survive source and destination returns',a
   assert.equal(f.el('gmGrid').innerHTML,ownedMarkup,'a late store response leaves current owned results intact');
   f.navigate('#steamStore');assert.equal(gm.shown,48);assert.equal(gm.storeQ,'new search');
 });
+test('Home shortcuts show their tool before focusing it, so typing works on the first tap',()=>{
+  const f=workspaceFixture(),pad={state:'on'},buttons=[{dataset:{go:'pad'}}];let focusedVisible=null;
+  f.context.document.querySelectorAll=(q=>s=>s==='[data-go]'?buttons:q(s))(f.context.document.querySelectorAll);
+  Object.assign(f.context,{pad,padStart(){}});
+  f.el('padType').focus=()=>{focusedVisible=f.activePage==='tools'&&!f.el('pad').hidden;};
+  f.navigate('#home');
+  const start=html.indexOf('document.querySelectorAll("[data-go]")'),end=html.indexOf('$("nowSend").onclick',start);
+  f.run(html.slice(start,end));buttons[0].onclick();
+  assert.equal(focusedVisible,true);
+});

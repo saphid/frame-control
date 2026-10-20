@@ -44,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
+import frame_android_import  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
@@ -1708,6 +1709,93 @@ def apk_installed(info, meta, error, seconds):
 frame_android.install_hooks.append(apk_installed)
 
 
+# ---- Local Android backups (one APK and its OBB game data) ---------------
+
+_android_backups = {}
+_android_backups_lock = threading.Lock()
+ANDROID_BACKUP_TMP = 'frame-android-backup-'
+
+
+def _discard_android_backup(entry):
+    for folder in entry['dirs']:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def _android_backup(token=None):
+    now = time.time()
+    with _android_backups_lock:
+        stale = [_android_backups.pop(t) for t, e in list(_android_backups.items())
+                 if now - e['time'] > 3600]
+        entry = _android_backups.get(token)
+    for old in stale:
+        _discard_android_backup(old)
+    if not entry:
+        raise Failure('This import expired. Choose the backup files again.', 400)
+    device = LINK.active_device()['id'] if LINK else None
+    if entry['device'] != device:
+        raise Failure('The headset changed. Choose the backup files again for this Frame.', 409)
+    entry['time'] = now
+    return entry
+
+
+def android_backup(body):
+    action = body.get('action')
+    if action == 'begin' or (action == 'inspect' and 'paths' in body):
+        paths = body.get('paths', [])
+        if not isinstance(paths, list) or len(paths) > 100 or any(
+                not isinstance(p, str) or not os.path.isabs(p) for p in paths):
+            raise Failure('Choose local Android backup files.', 400)
+        # A dropped PC-game folder continues through the existing title importer.
+        if body.get('probe') and len(paths) == 1 and Path(paths[0]).is_dir():
+            if not any(p.suffix.lower() in ('.apk', '.obb') for p in Path(paths[0]).iterdir()):
+                return {'android': False}
+        token = secrets.token_hex(12)
+        entry = {'paths': paths, 'dirs': [], 'plan': None, 'time': time.time(),
+                 'device': LINK.active_device()['id'] if LINK else None}
+        with _android_backups_lock:
+            _android_backups[token] = entry
+        _android_backup(token)  # also expire abandoned imports
+        if action == 'begin':
+            return {'token': token}
+    else:
+        token = str(body.get('token') or '')
+        entry = _android_backup(token)
+    if action == 'inspect':
+        try:
+            entry['plan'] = frame_android_import.inspect(entry['paths'], discover=not entry['dirs'])
+        except (frame_android.FrameError, OSError) as error:
+            with _android_backups_lock:
+                _android_backups.pop(token, None)
+            _discard_android_backup(entry)
+            raise Failure(str(error), 400, getattr(error, 'apk', None))
+        return {'android': True, 'token': token, 'plan': frame_android_import.public(entry['plan'])}
+    if action not in ('install', 'discard'):
+        raise Failure('Unknown Android backup action.', 400)
+    if action == 'install' and not entry['plan']:
+        raise Failure('Read the backup before importing it.', 400)
+    display = body.get('display', 'auto')
+    if display not in ('auto', 'flat', 'vr'):
+        raise Failure('Invalid Android display mode.', 400)
+    with _android_backups_lock:
+        if _android_backups.pop(token, None) is not entry:
+            raise Failure('This import was already started or cancelled. Choose the files again.', 409)
+    if action == 'discard':
+        _discard_android_backup(entry)
+        return {'message': 'Import cancelled'}
+
+    def work(report):
+        try:
+            return frame_android_import.install(entry['plan'], display, report)
+        finally:
+            _discard_android_backup(entry)
+    try:
+        ensure_master()
+        return start_job('Import ' + entry['plan']['checked']['label'], work, progress=True)
+    except BaseException:
+        _discard_android_backup(entry)
+        raise
+
+
 # ---- Sideloaded titles (Linux/Windows builds as Steam Devkit Games) --------
 #
 # Installing is two steps: inspect (a dropped file is uploaded and a zip
@@ -2323,7 +2411,7 @@ def _pid_alive(pid):
 def _tmp_places():
     """Where each kind of staging folder goes, and its name before the server's PID."""
     tmp = Path(tempfile.gettempdir())
-    return [(tmp, WEB_TMP_PREFIX), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
+    return [(tmp, WEB_TMP_PREFIX), (tmp, ANDROID_BACKUP_TMP), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
             (tmp, frame_agent.TMP_PREFIX), (frame_host.cache_dir("apk-sources"), apk_fdroid.TMP_PREFIX)]
 
 
@@ -2613,6 +2701,7 @@ def source_manage(body):
 
 
 POST = {
+    "/api/android/backup": android_backup,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
@@ -3070,7 +3159,14 @@ class Handler(BaseHTTPRequestHandler):
             raise Failure("empty or too-large upload", 400)
         if mode in ("apk", "apkinfo") and not name.lower().endswith(".apk"):
             raise Failure("APK install needs a .apk file", 400)
-        tmp = Path(tempfile.mkdtemp(prefix="frame-ui-"))
+        backup = None
+        if mode == 'android-backup':
+            backup = _android_backup(self.headers.get('X-Android-Backup'))
+            if (not name.lower().endswith(('.apk', '.obb')) or '/' in name or '\\' in name
+                    or len(backup['paths']) >= 100 or any(Path(p).name == name for p in backup['paths'])):
+                raise Failure('Choose one APK and its game data, with no duplicate filenames.', 400)
+        prefix = f'{ANDROID_BACKUP_TMP}{os.getpid()}-' if backup is not None else 'frame-ui-'
+        tmp = Path(tempfile.mkdtemp(prefix=prefix))
         keep = False
         try:
             dest = tmp / name
@@ -3082,6 +3178,16 @@ class Handler(BaseHTTPRequestHandler):
                         raise Failure("upload interrupted", 400)
                     f.write(chunk)
                     remaining -= len(chunk)
+            if backup is not None:
+                with _android_backups_lock:
+                    if _android_backups.get(self.headers.get('X-Android-Backup')) is not backup:
+                        raise Failure('This import was cancelled. Choose the backup files again.', 400)
+                    backup['paths'].append(str(dest))
+                    backup['dirs'].append(str(tmp))
+                    backup['plan'] = None
+                    backup['time'] = time.time()
+                keep = True
+                return {'message': f'Read {name}', 'token': self.headers.get('X-Android-Backup')}
             if mode == "media":
                 return push_media(dest)
             if mode == "apkinfo":

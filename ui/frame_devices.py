@@ -558,15 +558,21 @@ class Registry:
         self.config = Path(config) if config else None  # None: ssh_config() at call time
         self.lock = threading.RLock()
         self._depth = 0  # nested _changing() calls
-        self._mtime = None  # devices.json as last loaded or saved
+        self._stamp = None  # devices.json as last loaded or saved
         self.data = {"version": VERSION, "active": None, "devices": [], "networks": {}}
         self.load()
 
     # -- storage --
+    def _file_stamp(self):
+        stat = self.path.stat()
+        # Saves atomically replace the file. Fast consecutive saves can have the
+        # same timestamp and size; its identity still changes in that case.
+        return stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_size
+
     def load(self):
         with self.lock:
             try:
-                self._mtime = self.path.stat().st_mtime_ns
+                self._stamp = self._file_stamp()
                 data = json.loads(self.path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 return
@@ -607,14 +613,14 @@ class Registry:
             tmp = self.path.with_name(self.path.name + ".tmp")
             tmp.write_text(json.dumps(self.data, indent=1), encoding="utf-8")
             os.replace(tmp, self.path)
-            self._mtime = self.path.stat().st_mtime_ns
+            self._stamp = self._file_stamp()
 
     def _refresh(self):
         """Pick up what another Frame Control server saved (the app and a standalone
         server can share devices.json)."""
         with self.lock:
             try:
-                if self.path.stat().st_mtime_ns != self._mtime:
+                if self._file_stamp() != self._stamp:
                     self.load()
             except OSError:
                 pass

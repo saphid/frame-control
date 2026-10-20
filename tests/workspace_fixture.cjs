@@ -8,7 +8,7 @@ function workspaceFixture() {
   function el(id) {
     if (!elements.has(id)) elements.set(id,{id,hidden:false,disabled:false,open:false,innerHTML:'',textContent:'',value:'',dataset:{},classList:classes(),
       setAttribute(k,v){this[k]=v;},removeAttribute(k){delete this[k];},querySelectorAll(){return [];},
-      append(node){node.parent=this;},prepend(node){node.parent=this;},scrollIntoView(){calls.push(['section',id]);},
+      append(node){node.parent=node.parentNode=this;},prepend(node){node.parent=node.parentNode=this;},scrollIntoView(){calls.push(['section',id]);},
       showModal(){this.open=true;},close(){this.open=false;},addEventListener(k,fn){listeners[id+'-'+k]=fn;}});
     return elements.get(id);
   }
