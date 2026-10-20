@@ -2304,20 +2304,22 @@ $("testNotification").onclick = () => act("Test notification", async () => {
   await localNotification("Comfort notifications are enabled on this device.", true);
   return {message: "Test notification sent. Check your device's notification settings if it didn't appear."};
 });
+// Show a destination now, not at a later hashchange: focus or fullscreen afterwards must act on
+// a visible page while the click still counts as a user gesture (phones open the keyboard only
+// then). pushState fires no hashchange, so the page is shown once; Back still returns here.
+function showNow(to) {
+  if (location.hash !== "#" + to) history.pushState(null, "", "#" + to);
+  showPage();
+}
 // Home's shortcuts to the things people come to do next.
 document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => {
   const to = b.dataset.go;
-  // Show the destination now, not at a later hashchange: focus below must land on a visible
-  // field while this click still counts as a user gesture, or phones won't open the keyboard.
-  // pushState fires no hashchange, so the page is shown once; Back still returns here.
-  if (location.hash !== "#" + to) history.pushState(null, "", "#" + to);
-  showPage();
+  showNow(to);
   if (to === "pad") { if (pad.state === "off" || pad.state === "error") padStart(); $("padType").focus({ preventScroll: true }); }
 });
 $("nowSend").onclick = () => $("fileInput").click();
 $("castBtn").onclick = () => {
-  location.hash = "capture";
-  showPage();
+  showNow("capture");
   setView("headset");
   if (!live) toggleLive(true);
   $("viewer").scrollIntoView({behavior: "smooth", block: "center"});
