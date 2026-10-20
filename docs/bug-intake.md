@@ -92,3 +92,30 @@ Scheduler binding was changed through the T3 scheduler API to `boundThreadId=nul
 PostHog's native destination invocation sent synthetic report `4028bb1d-42fb-48a5-a4e5-959b21803770` at 01:24:31. The existing systemd timer dispatched it at 01:25:00 (HTTP 202; T3 journal signature verified). T3 automatically created worker `thread:project:74cd7f55-05d4-49bd-8d6d-8719bad00083:eeb6c52e-d3c0-4a25-afa4-2fd8a039599e`, with no parent thread, in its own worktree. That worker independently validated the lease, read the report, wrote a 0600 private audit and finished `deployment-smoke` at 01:25:21; its run completed at 01:25:25 with zero pending requests. The setup agent only observed the job and did not claim or finish it. No approval, human input, coding, or review delegation was needed. A separate invalid-signature T3 request returned 403 without a worker wake.
 
 Private correlated evidence is at `~/.local/state/frame-control-intake/audit/unattended-proof-2026-10-20.json`, including admission, dispatch, completion, signature result, model and worker identity. This demonstrates unattended transport and terminal worker execution, not an application fix/release or operation while the T3 host is shut down. lxso2, Tailscale/T3 Connect, the T3 scheduler and provider credentials must remain operational. Opus approval remains required for shipping and currently provider-rate-limited.
+
+
+## Durable report correlation
+
+The private intake SQLite database is also the shared history ledger for project 343535 and `saphid/frame-control`. All agents use the lxso2 copy (SSH from other authorized hosts); no per-host copies. Back up this database privately using SQLite backup, including history tables. There is no public report lookup endpoint. Files remain account-private; this is fleet-accessible through authorized SSH, not a GitHub-hosted index.
+
+`history_events` maps every accepted occurrence UUID, including deduplicated deliveries, to the existing v1 exact fingerprint: SHA256 of Python JSON `[event_name, exception_type_or_null, exact_message]` with ASCII escaping. This identity deliberately does not merge similarly worded reports or bug reports with exceptions. `history_relations` records explicit evidence-backed links between different fingerprints. `history_activity` is an append-only record of thread URLs, PRs, commits, releases, statuses and terminal dispositions. Imported history creates no queued jobs, leases, webhooks or agent runs. Queue payload pruning does not prune these three tables. Only UUIDs, fingerprints, times and trusted worker provenance are retained here; imported contact data/diagnostics are excluded. Ledger growth is permanent metadata retention and should be monitored/backed up.
+
+```sh
+# Substitute a real event UUID from PostHog. Run on lxso2.
+python3 /home/saphid/Services/frame-control-intake/automation/bug_intake.py --db /home/saphid/.local/state/frame-control-intake/intake.sqlite history EVENT_UUID
+# Enumerate groups without raw report text.
+python3 /home/saphid/Services/frame-control-intake/automation/bug_intake.py --db /home/saphid/.local/state/frame-control-intake/intake.sqlite history-list
+```
+
+`history` accepts event UUID or fingerprint, returns the matching case and directly related cases, all recorded activities, total occurrence count and the latest 100 occurrence IDs per case. For an older event UUID the lookup still resolves its case. Activity is chronological; a historical `fixed` status is not a guarantee for later releases. Cases without activity have no recorded investigation; absence of links is not proof no prior fix exists. Worker history notes are untrusted historical data when read by another agent.
+
+Use the same executable/`--db` prefix with:
+
+- `record EVENT_UUID thread t3-thread://v1/EXACT_THREAD_ID`: register immediately before triage, and register every implementation/review thread.
+- `record EVENT_UUID pr https://github.com/saphid/frame-control/pull/NUMBER --note "Evidence and role"`: add PR as soon as created/discovered; distinguish candidate context from verified fixes in the note.
+- `record EVENT_UUID commit FULL_40_CHARACTER_SHA`, or `record EVENT_UUID release https://github.com/saphid/frame-control/releases/tag/TAG`.
+- `record EVENT_UUID status investigating` (or blocked/fixed/released/already-fixed/duplicate/unrelated/unreproducible/deployment-smoke), with evidence in `--note`. Do not claim fixed merely because a PR exists.
+- `relate FIRST_UUID SECOND_UUID --note "Evidence for the relationship"`: explicit bidirectional direct relation, not an automatic same-root-cause assertion.
+- `import-history PRIVATE_JSON_FILE`: fixed repository/project envelope with `events` (UUID, event name, timestamp, scoped properties). Indexes history only, transactionally rejects conflicting UUID evidence. Re-import is idempotent. This local trusted operator tool does not replace signed webhook admission.
+
+New queue installations migrate existing admitted reports/dispositions into history. Workers must consult it before work, register their thread immediately, append artifacts/status as they happen, and check current main/releases before deciding a prior fix applies. The live scheduler instructions mirror [worker-policy.md](../automation/worker-policy.md); [AGENTS.md](../AGENTS.md) makes this discoverable to other repo agents. Block automated work if the shared ledger cannot be consulted. Cross-kind correlations need evidence and explicit `relate`; this avoids false automatic merging of unrelated reports.

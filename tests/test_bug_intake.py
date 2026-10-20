@@ -52,6 +52,57 @@ class Intake(unittest.TestCase):
         return self.q.admit_standard(raw, message_id, stamp, signature, self.key,
                                      self.now if now is None else now)
 
+    def test_history_keeps_duplicate_occurrences_and_artifacts_after_payload_pruning(self):
+        first, repeat = self.body(), self.body()
+        self.assertEqual(self.send(first), 'accepted')
+        self.assertEqual(self.send(repeat), 'duplicate')
+        eid = first['event']['uuid']
+        self.q.record_history(eid, 'pr', 'https://github.com/saphid/frame-control/pull/78')
+        self.q.record_history(eid, 'thread', 't3-thread://v1/00000000-0000-4000-8000-000000000001')
+        job = self.q.claim(self.now)
+        self.q.finish(eid, job['lease'], self.now, disposition='already-fixed')
+        self.now += 31*86400
+        self.send(self.body('later'))
+        reopened = m.Queue(self.path)
+        history = reopened.history(repeat['event']['uuid'])
+        self.assertEqual(len(history['cases'][0]['events']), 2)
+        self.assertEqual({a['kind'] for a in history['cases'][0]['activity']},
+                         {'pr', 'thread', 'disposition'})
+        with reopened.connect() as db:
+            self.assertIsNone(db.execute('SELECT 1 FROM reports WHERE id=?', (eid,)).fetchone())
+
+    def test_history_import_never_queues_and_links_different_event_kinds(self):
+        a = self.body()['event']
+        a['timestamp'] = '2026-10-01T00:00:00Z'
+        b = {'uuid': str(uuid.uuid4()), 'event': 'problem_report', 'timestamp': a['timestamp'],
+             'properties': {'$lib': 'frame-control', 'kind': 'bug', 'message': 'cannot connect'}}
+        data = {'repository': m.REPO, 'project_id': m.PROJECT, 'events': [a, b]}
+        self.assertEqual(self.q.import_history(data), {'indexed': 2, 'queued': 0})
+        self.q.import_history(data)
+        self.assertIsNone(self.q.claim(self.now))
+        self.q.relate_history(a['uuid'], b['uuid'], 'Confirmed shared failing connector path')
+        self.q.record_history(a['uuid'], 'status', 'investigating')
+        self.assertEqual(len(self.q.history(b['uuid'])['cases']), 2)
+        data['repository'] = 'someone/else'
+        with self.assertRaises(ValueError):
+            self.q.import_history(data)
+        with self.assertRaises(ValueError):
+            self.q.record_history(a['uuid'], 'pr', 'https://github.com/someone/else/pull/1')
+        with self.assertRaises(ValueError):
+            self.q.relate_history(a['uuid'], b['uuid'], '')
+
+    def test_history_import_uuid_conflicts_are_atomic(self):
+        a = self.body()['event']; a['timestamp'] = '2026-10-01T00:00:00Z'
+        data = {'repository': m.REPO, 'project_id': m.PROJECT, 'events': [a]}
+        self.q.import_history(data)
+        other = self.body()['event']; other['timestamp'] = a['timestamp']
+        a['properties']['$exception_message'] = 'changed evidence'
+        data['events'] = [other, a]
+        with self.assertRaises(ValueError):
+            self.q.import_history(data)
+        with self.assertRaises(ValueError):
+            self.q.history(other['uuid'])
+
     def test_native_standard_signatures_and_replays(self):
         raw = json.dumps(self.body()).encode()
         good = 'v1,' + base64.b64encode(hmac.new(self.key,
