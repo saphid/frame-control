@@ -572,7 +572,8 @@ class UpdateTests(unittest.TestCase):
                 for name, data in files.items():
                     self.assertEqual((d / name).read_bytes(), data, name)
                 self.assertFalse((d / 'lepton-show-flatscreen').exists())
-                self.assertTrue((d / 'launch.sh').stat().st_mode & 0o100)
+                if os.name != 'nt':  # Windows has no execute bit to restore
+                    self.assertTrue((d / 'launch.sh').stat().st_mode & 0o100)
                 self.assertFalse((d / 'app.apk.part').exists())
                 self.assertFalse((d / 'meta.json.tmp').exists())
             self.assertEqual((d / 'user-save').read_bytes(), b'precious data')
