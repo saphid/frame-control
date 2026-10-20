@@ -63,6 +63,7 @@ class Intake(unittest.TestCase):
         self.q.finish(eid, job['lease'], self.now, disposition='already-fixed')
         self.now += 31*86400
         self.send(self.body('later'))
+        self.assertEqual(self.send(first), 'duplicate')  # UUID history outlives payloads.
         reopened = m.Queue(self.path)
         history = reopened.history(repeat['event']['uuid'])
         self.assertEqual(len(history['cases'][0]['events']), 2)

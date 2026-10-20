@@ -161,7 +161,7 @@ class Queue:
                 raise Rejected(422)
             db.execute('INSERT OR IGNORE INTO history_events VALUES(?,?,?,?,?)',
                        (event_id, fingerprint, name, observed, 'webhook'))
-            if db.execute('SELECT 1 FROM reports WHERE id=? OR (fingerprint=? AND created>=?)',
+            if prior or db.execute('SELECT 1 FROM reports WHERE id=? OR (fingerprint=? AND created>=?)',
                           (event_id, fingerprint, now - 7*86400)).fetchone():
                 return 'duplicate'
             hour, day, active = db.execute("SELECT SUM(created>=?), SUM(created>=?), SUM(state IN ('pending','leased','held')) FROM reports",
