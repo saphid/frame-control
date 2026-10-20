@@ -298,3 +298,23 @@ test('Home shortcuts show their tool before focusing it, so typing works on the 
   f.run(html.slice(start,end).replace(/showPage\(\)/g,'globalThis.showPage()'));buttons[0].onclick();
   assert.equal(focusedVisible,true);assert.equal(shows,1);assert.equal(f.context.location.hash,'#pad');
 });
+test('a Home shortcut keeps the destination scroll and loads its tool once, with frames deferred',()=>{
+  const f=workspaceFixture(),frames=[],events=[],buttons=[{dataset:{go:'pad'}},{dataset:{go:'macview'}}];
+  // A hash assignment queues hashchange, which a browser may deliver before the next frame.
+  let hash=f.context.location.hash;
+  Object.defineProperty(f.context.location,'hash',{get:()=>hash,set(v){const next='#'+String(v).replace(/^#/,'');if(next!==hash){hash=next;events.push(()=>f.run('showPage({type:"hashchange"})'));}}});
+  const flush=()=>{while(events.length||frames.length)(events.length?events:frames).shift()();};
+  f.context.requestAnimationFrame=fn=>frames.push(fn);
+  f.context.document.querySelectorAll=(q=>s=>s==='[data-go]'?buttons:q(s))(f.context.document.querySelectorAll);
+  Object.assign(f.context,{pad:{state:'on'},padStart(){},history:{pushState(_,__,url){hash=url;}}});
+  f.el('padType').focus=()=>{};
+  f.navigate('#pad');flush();f.scroll(320);
+  f.navigate('#home');flush();f.scroll(150);
+  const start=html.indexOf('document.querySelectorAll("[data-go]")'),end=html.indexOf('$("nowSend").onclick',start);
+  f.run(html.slice(start,end));
+  buttons[0].onclick();flush();
+  assert.equal(f.context.window.scrollY,320);
+  f.navigate('#home');flush();f.calls.length=0;
+  buttons[1].onclick();flush();
+  assert.equal(f.calls.filter(c=>c[0]==='macview').length,1);
+});
