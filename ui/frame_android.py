@@ -185,6 +185,58 @@ def _write_meta(d, meta):
     ssh(f'cat > {d}/meta.json.tmp && mv {d}/meta.json.tmp {d}/meta.json', input=json.dumps(meta, indent=1))
 
 
+# Only files this installer owns. Lepton compatdata and any other files beside
+# the app (including user data) are never part of update rollback.
+UPDATE_FILES = ('app.apk', 'launch.sh', 'instance.id', 'lepton-show-flatscreen',
+                'shortcut.id', 'meta.json', 'artwork')
+
+
+class UpdateRecoveryPending(FrameError):
+    """A new attempt does not own, and must not rewrite, an earlier recovery."""
+
+
+def _update_guard(d):
+    return (f'if [ -e {d}/update-recovery.json ] || [ -e {d}/.frame-update-backup ]; '
+            'then echo FRAME_UPDATE_RECOVERY_PENDING; exit 0; fi; ')
+
+
+def _check_update_guard(reply, d):
+    if reply.strip() == 'FRAME_UPDATE_RECOVERY_PENDING':
+        pkg = d.rsplit('/', 1)[-1]
+        raise UpdateRecoveryPending(f'Pending APK update recovery at {d}; prior record and backup preserved. '
+                                    f'Repair with `python3 ui/frame_android.py refresh-art {pkg}` before retrying')
+
+
+def _backup_update(d):
+    backup = f'{d}/.frame-update-backup'
+    files = ' '.join(UPDATE_FILES[1:])
+    # The APK is only ever replaced by rename, so a hard link keeps its old bytes
+    # without a second multi-gigabyte copy. Smaller mutable files need copies.
+    reply = ssh(_update_guard(d) + f'set -eu; mkdir {backup}; ln {d}/app.apk {backup}/app.apk; '
+        f'for f in {files}; do if [ -e {d}/"$f" ]; then cp -pR {d}/"$f" {backup}/"$f"; fi; done; '
+        f'touch {backup}/ready', timeout=120)
+    _check_update_guard(reply, d)
+
+
+def _restore_update(d, keep_backup=False):
+    backup = f'{d}/.frame-update-backup'
+    # Retain the snapshot if any restore step fails, so refresh-art can retry.
+    ssh(f'set -eu; test -f {backup}/ready; '
+        f'for f in {" ".join(UPDATE_FILES)}; do '
+        f'if [ -e {backup}/"$f" ]; then '
+        f'rm -rf {d}/"$f"; cp -pR {backup}/"$f" {d}/"$f"; '
+        f'else rm -rf {d}/"$f"; fi; done; '
+        f'rm -f {d}/app.apk.part {d}/meta.json.tmp; '
+        + ('' if keep_backup else f'rm -rf {backup}'), timeout=120)
+
+
+def _finish_update_recovery(d):
+    # The durable repair_completed checkpoint is written before this command.
+    # A partial cleanup or lost reply can then be retried without another restore.
+    ssh(f'rm -rf {d}/.frame-update-backup && '
+        f'rm -f {d}/update-recovery.json {d}/update-recovery.json.tmp', timeout=30)
+
+
 # Called after every install, worked or not, as fn(info, meta, error, seconds):
 # info is None if the APK couldn't be read, meta None and error set if it failed.
 install_hooks = []
@@ -243,16 +295,22 @@ def _after_install(info, meta, error, start):
 
 
 def _install(apk_path, info, pkg, flatscreen, name, source, artwork=None):
+    d = f'{APPS_DIR}/{pkg}'
+    # Outside this attempt's transaction/error handler: a refusal cannot replace
+    # an earlier orphan ID, rollback uncertainty, snapshot or recovery record.
+    _check_update_guard(ssh(_update_guard(d)), d)
     try:
         images, art_warnings = frame_artwork.prepare(name or info['label'], info.get('icon_png'), artwork)
     except (ValueError, OSError) as e:
         raise FrameError(f'could not prepare artwork: {e}') from e
     iid = instance_id(pkg)
-    d = f'{APPS_DIR}/{pkg}'
     existing = read_meta(pkg)
-    ok, created = False, None
+    ok, created, backed_up, library_started = False, None, False, False
     try:
         ssh(f'mkdir -p {d}')
+        if existing:
+            _backup_update(d)
+            backed_up = True
         _copy(apk_path, f'{d}/app.apk.part')
         _copy(LAUNCHER, f'{d}/launch.sh', executable=True, timeout=120)
         marker = f'touch {d}/lepton-show-flatscreen' if flatscreen else f'rm -f {d}/lepton-show-flatscreen'
@@ -266,6 +324,7 @@ def _install(apk_path, info, pkg, flatscreen, name, source, artwork=None):
             if not shortcut:
                 raise FrameError(f'Steam did not return a shortcut id (got {reply[:80]!r})')
             created = shortcut
+        library_started = True  # configure can mutate Steam before raising
         presentation = apply_library(shortcut, name or info['label'], d, images,
                                      vr=not flatscreen, home=home,
                                      exe=f'{home}/{d}/launch.sh', start_dir=f'{home}/{d}',
@@ -281,26 +340,72 @@ def _install(apk_path, info, pkg, flatscreen, name, source, artwork=None):
                 'library_warnings': presentation.get('warnings', []),
                 'artwork': presentation.get('artwork', {}), 'library_version': 2}
         _write_meta(d, meta)
+        if backed_up:
+            ssh(f'rm -rf {d}/.frame-update-backup', timeout=30)
         ok = True
         return meta
+    except UpdateRecoveryPending:
+        raise  # a recovery appeared after preflight; this attempt still owns nothing
+    except Exception as error:
+        if existing:
+            orphan, cleanup_error = None, None
+            if created:
+                try:
+                    shortcut_tool('remove', str(created))
+                except Exception as e:
+                    orphan, cleanup_error = created, str(e) or type(e).__name__
+                created = None  # any failed cleanup is recorded and retried by repair
+            rollback_error = None
+            if backed_up:
+                try:
+                    _restore_update(d)
+                except Exception as e:
+                    rollback_error = str(e) or type(e).__name__
+            if library_started or rollback_error or cleanup_error or not backed_up:
+                repair = f'python3 ui/frame_android.py refresh-art {pkg}'
+                record = {'error': str(error) or type(error).__name__,
+                          'files_restored': backed_up and rollback_error is None,
+                          'files_unchanged': not backed_up,
+                          'library_may_have_changed': library_started,
+                          'rollback_error': rollback_error, 'repair': repair,
+                          'orphan_shortcut': orphan, 'cleanup_error': cleanup_error,
+                          'backup': f'{d}/.frame-update-backup'}
+                evidence_error = None
+                try:
+                    ssh(f'cat > {d}/update-recovery.json.tmp && '
+                        f'mv {d}/update-recovery.json.tmp {d}/update-recovery.json', input=json.dumps(record))
+                except Exception as e:
+                    evidence_error = str(e) or type(e).__name__
+                state = 'Previous app files restored' if record['files_restored'] else 'App file rollback unconfirmed'
+                message = (f'{error}. {state}; Steam library may need repair. '
+                           f'Repair with `{repair}`. Recovery: {d}/update-recovery.json; '
+                           f'backup: {record["backup"]}')
+                if rollback_error:
+                    message += f'; rollback failed: {rollback_error}'
+                if cleanup_error:
+                    message += f'; shortcut {orphan} cleanup failed: {cleanup_error}'
+                if evidence_error:
+                    message += f'; could not save recovery record: {evidence_error}'
+                raise FrameError(message) from error
+        raise
     finally:
         if not ok and created:
             try:
                 shortcut_tool('remove', str(created))
-            except FrameError:
+            except Exception:
                 pass
         if not ok and not existing:
             # A first install that failed part-way: don't leave an orphan folder behind.
             try:
                 ssh(f'rm -rf {d}', timeout=30)
-            except FrameError:
+            except Exception:
                 pass
-        elif not ok:
-            # An update that failed: the app still works, but a partial copy of the new APK
-            # (scp leaves one; it can be gigabytes) mustn't stay beside it.
+        elif not ok and backed_up:
+            # No executable files or backups are deleted here. Rollback above
+            # reports its own failure and retains the snapshot for repair.
             try:
                 ssh(f'rm -f {d}/app.apk.part', timeout=30)
-            except FrameError:
+            except Exception:
                 pass
 
 
@@ -376,9 +481,36 @@ def refresh_art(pkg=None, artwork=None, fill_only=False):
             except Exception as e:  # one app's failure must not stop the others
                 results.append({'package': app['package'], 'label': app.get('label'), 'error': str(e) or type(e).__name__})
         return results
+    if not PKG_RE.fullmatch(pkg or ''):
+        raise FrameError(f'bad package name {pkg!r}')
     with _install_lock:  # shared with install and remove: a removed app is never recreated
-        m = _meta_or_fail(pkg)
         d = f'{APPS_DIR}/{pkg}'
+        recovering = ssh(f'test -f {d}/update-recovery.json && echo yes || true').strip() == 'yes'
+        if not recovering and ssh(f'test -e {d}/.frame-update-backup && echo yes || true').strip() == 'yes':
+            raise FrameError(f'Update snapshot at {d}/.frame-update-backup has no recovery record; '
+                             'rollback is unconfirmed. Inspect and preserve the snapshot before repair')
+        recovery = json.loads(ssh(f'cat {d}/update-recovery.json')) if recovering else {}
+        if recovery.get('repair_completed') is True:
+            m = _meta_or_fail(pkg)
+            _finish_update_recovery(d)
+            return m
+        if recovering:
+            snapshot = ssh(f'if [ -f {d}/.frame-update-backup/ready ]; then echo ready; '
+                           f'elif [ -d {d}/.frame-update-backup ]; then echo incomplete; fi').strip()
+            if snapshot == 'ready':
+                _restore_update(d, keep_backup=True)
+            elif snapshot == 'incomplete':
+                raise FrameError(f'Incomplete update snapshot at {d}/.frame-update-backup; '
+                                 'original app files were not changed. Inspect and remove this '
+                                 'incomplete snapshot before retrying refresh-art')
+            elif not (recovery.get('files_restored') or recovery.get('files_unchanged')):
+                raise FrameError(f'App rollback is unconfirmed and {d}/.frame-update-backup is absent; '
+                                 'inspect the APK, launcher, display marker and metadata before repair. '
+                                 f'Keep {d}/update-recovery.json as evidence')
+        m = _meta_or_fail(pkg)
+        orphan = _int(recovery.get('orphan_shortcut'))
+        if orphan and orphan != m['shortcut']:
+            shortcut_tool('remove', str(orphan))
         # Parse the APK on the Frame, transferring only its icon/label, not the APK.
         modules = {}
         for module in ('frame_apk', 'frame_apk_vr'):
@@ -405,7 +537,7 @@ def refresh_art(pkg=None, artwork=None, fill_only=False):
         try:
             result = apply_library(m['shortcut'], m['label'], d, images, vr=not m.get('flatscreen', True),
                                    home=home, exe=f'{home}/{d}/launch.sh', start_dir=f'{home}/{d}', details=m,
-                                   fill_only=fill_only and not created)
+                                   fill_only=fill_only and not created and not recovering)
         except Exception:
             if created:
                 try:
@@ -417,6 +549,14 @@ def refresh_art(pkg=None, artwork=None, fill_only=False):
         m['library_warnings'] = warnings + result.get('warnings', [])
         m['artwork_refreshed'] = time.strftime('%Y-%m-%dT%H:%M:%S')
         _write_meta(d, m)
+        if recovering:
+            # Keep the original failure/orphan evidence and snapshot until the
+            # whole repair is committed. Persist completion before cleanup so
+            # any failed/lost cleanup response leaves a safe retry path.
+            recovery['repair_completed'] = True
+            ssh(f'cat > {d}/update-recovery.json.tmp && '
+                f'mv {d}/update-recovery.json.tmp {d}/update-recovery.json', input=json.dumps(recovery))
+            _finish_update_recovery(d)
         return m
 
 def _int(v):

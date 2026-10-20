@@ -29,6 +29,7 @@
     min-height: 52px; padding: 0 20px; cursor: pointer; }
   button:hover { background: #ffffff1c; }
   button:disabled { opacity: .45; cursor: default; }
+  :focus-visible { outline: 3px solid var(--link); outline-offset: 3px; }
   button.primary { background: var(--action); border: 0; font-weight: 600; color: #fff; }
   button.play { background: var(--play); border: 0; font-weight: 600; color: #fff; }
   button.danger { color: var(--bad); }
@@ -59,6 +60,9 @@
   .heading span { color: var(--dim); font-size: 16px; }
   .heading .note { margin-left: auto; font-size: 14px; color: var(--dim); max-width: 520px; text-align: right; }
   .content { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; }
+  .installed-status { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 10px 16px;
+    border: 1px solid var(--line); border-radius: 12px; background: #ffffff0a; font-size: 16px; }
+  .installed-status button { flex: none; }
   .grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); grid-template-rows: repeat(2, minmax(0, 1fr)); gap: 14px; }
   .grid.one-row { grid-template-rows: minmax(0, 1fr); }
   .card { display: flex; flex-direction: column; padding: 0; overflow: hidden; text-align: left; min-height: 0; border-radius: 14px;
@@ -106,7 +110,9 @@
   .skeleton { border-radius: 14px; background: linear-gradient(100deg, #1b2938 30%, #24364a 50%, #1b2938 70%); background-size: 300% 100%; animation: shimmer 1.4s infinite; }
   @keyframes shimmer { to { background-position: -150% 0; } }
   /* Detail sheet and keyboard sit over everything. */
-  .overlay { position: fixed; inset: 0; background: #000b; display: grid; place-items: center; z-index: 10; }
+  .overlay { position: fixed; inset: 0; background: transparent; color: inherit; display: grid; place-items: center; z-index: 10;
+    margin: 0; border: 0; padding: 0; width: 100%; height: 100%; max-width: none; max-height: none; }
+  .overlay::backdrop { background: #000b; }
   .sheet { background: #16212e; border: 1px solid var(--line); border-radius: 22px; width: 1000px; max-height: 740px; overflow: hidden;
     display: flex; flex-direction: column; box-shadow: 0 30px 80px #000c; }
   .sheet > .art { flex: 0 0 250px; }
@@ -161,7 +167,7 @@
   </main>
 </div>
 
-<div class="overlay" id="detail" hidden><div class="sheet" id="sheet"></div></div>
+<dialog class="overlay" id="detail" aria-labelledby="detailTitle" hidden><div class="sheet" id="sheet"></div></dialog>
 <div class="kbd" id="kbd" hidden></div>
 <div class="toast" id="toast" hidden></div>
 
@@ -189,7 +195,8 @@ const FIT = { works: "Works on the Frame", ready: "Fits the Frame", blocked: "Wo
 // installedFrom: offer key -> package it installed as (GitHub listings have no package);
 // needsData: installed packages still waiting for their game data (any view, while installed)
 const st = { view: "", q: "", phone: false, page: 0, apps: [], installed: new Map(), jobs: new Map(), installedFrom: new Map(),
-             needsData: new Set(), request: 0, loading: false, retry: 0 };
+             needsData: new Set(), installedState: "unknown", installedError: "", installedRequest: 0,
+             request: 0, loading: false, retry: 0 };
 
 async function api(path, body) {
   const opts = body === undefined ? { headers: { "X-Frame-UI": UI_KEY } } : {
@@ -231,11 +238,23 @@ const text = s => String(s || "").replace(/<[^>]*>/g, " ").replace(/&nbsp;/g, " 
 
 // ---- Data ----
 async function loadInstalled() {
+  const request = ++st.installedRequest;
+  st.installedState = "loading"; st.installedError = "";
+  $("instN").textContent = "?";
+  render(); if (typeof drawDetail === "function") drawDetail();
   try {
-    st.installed = new Map((await api("/api/android")).apps.map(a => [a.package, a]));
+    const result = await api("/api/android");
+    if (request !== st.installedRequest) return;
+    if (!Array.isArray(result.apps)) throw new Error("Invalid installed-app response");
+    st.installed = new Map(result.apps.map(a => [a.package, a]));
+    st.installedState = "ready";
     for (const pkg of st.needsData) if (!st.installed.has(pkg)) { st.needsData.delete(pkg); st.jobs.delete("data:" + pkg); }  // removed
-  } catch (e) { toast(`Couldn't list installed apps: ${e.message}`, true); }
-  $("instN").textContent = st.installed.size || "";
+  } catch (e) {
+    if (request !== st.installedRequest) return;
+    st.installedState = "error"; st.installedError = e.message;
+  }
+  $("instN").textContent = st.installedState === "ready" ? st.installed.size || "" : "?";
+  render(); if (typeof drawDetail === "function") drawDetail();
 }
 async function search(quiet) {
   const request = ++st.request;
@@ -276,7 +295,7 @@ function list() {
 }
 function card(app, i) {
   const o = app.offers[0], m = installedOf(app), job = st.jobs.get(offerKey(app));
-  const state = m ? `<span class="tag">${m.running ? "Running" : "Installed"}</span>`
+  const state = m ? `<span class="tag">${st.installedState !== "ready" ? "Installed (last read)" : m.running ? "Running" : "Installed"}</span>`
     : job && !job.done ? `<span class="tag">Installing…</span>`
     : FIT[o.verdict?.tone] ? `<span class="fit ${o.verdict.tone}">${FIT[o.verdict.tone]}</span>` : "";
   const kind = o.phone_only ? "Phone app" : catLabel(app.category || o.category) || (m ? (o.vr ? "VR app" : "Android app") : "Android app");
@@ -289,8 +308,15 @@ function render(error) {
   $("title").textContent = st.q ? `Results for “${st.q}”` : st.view === "installed" ? "Installed" : st.view ? catLabel(st.view) : "Home";
   document.querySelectorAll("[data-view]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.view === st.view)));
   const content = $("content");
+  const cached = st.installed.size > 0;
+  const installedNotice = st.installedState === "ready" ? "" : `<div class="installed-status" role="status"><span>${
+    st.installedState === "error" ? `Couldn't read installed apps: ${esc(st.installedError)}`
+      : st.installedState === "loading" ? "Reading installed apps…" : "Installed apps haven't been read yet."
+  }${cached ? " Showing last known apps; their status may be out of date." : " Installed status is unknown."}</span>${
+    st.installedState === "loading" ? "" : '<button data-retry-installed>Retry installed apps</button>'
+  }</div>`;
   if (st.loading) {
-    content.innerHTML = `<div class="grid">${Array.from({ length: PER_PAGE }, () => '<div class="skeleton"></div>').join("")}</div>`;
+    content.innerHTML = installedNotice + `<div class="grid">${Array.from({ length: PER_PAGE }, () => '<div class="skeleton"></div>').join("")}</div>`;
     $("count").textContent = ""; $("page").textContent = ""; $("prev").disabled = $("next").disabled = true; return;
   }
   // Home: a featured VR app and four picks, then pages of one app from each category in turn.
@@ -310,13 +336,15 @@ function render(error) {
   st.page = Math.min(st.page, pages - 1);
   const start = st.page === 0 ? 0 : first + (st.page - 1) * PER_PAGE;
   const shown = items.slice(start, start + (st.page === 0 ? first : PER_PAGE));
-  $("count").textContent = home ? "" : `${items.length.toLocaleString()} app${items.length === 1 ? "" : "s"}`;
+  $("count").textContent = home || (st.view === "installed" && !cached && st.installedState !== "ready") ? ""
+    : `${items.length.toLocaleString()} app${items.length === 1 ? "" : "s"}${st.view === "installed" && st.installedState !== "ready" ? " (last read)" : ""}`;
   $("page").textContent = `Page ${st.page + 1} of ${pages}`;
   $("prev").disabled = st.page === 0; $("next").disabled = st.page >= pages - 1;
   const empty = error ? `<div class="empty"><h2>No connection</h2>${esc(error)}</div>`
+    : st.view === "installed" && st.installedState !== "ready" && !cached ? `<div class="empty"><h2>${st.installedState === "loading" ? "Reading installed apps…" : "Installed apps unavailable"}</h2>Read the installed list before checking what's on your Frame.</div>`
     : st.view === "installed" && !st.q ? `<div class="empty"><h2>Nothing installed yet</h2>Pick an app in the store and press Install.<button class="primary" data-view="">Browse the store</button></div>`
     : `<div class="empty"><h2>No apps here</h2>Try another category${st.phone ? "" : ", or show phone-only apps"}.</div>`;
-  let html = "";
+  let html = installedNotice;
   if (st.page === 0 && st.home?.featured) {
     const f = st.home.featured, o = f.offers[0];
     html += `<button class="hero" data-feature="1" aria-label="${esc(f.name)}">${art(f.name, o.artwork)}<span class="copy">
@@ -333,10 +361,16 @@ function turn(by) {
 
 // ---- Detail sheet ----
 let current = null;  // {app, installed}
+let detailReturn = null, removeConfirmed = false;
+const detailIdentity = app => app.package || app.installed?.package || offerKey(app);
 const ver = v => String(v || "").replace(/^v/i, "");
 const size = n => n >= 1e9 ? (n / 1e9).toFixed(1) + " GB" : n >= 1e6 ? Math.round(n / 1e6) + " MB" : Math.max(1, Math.round(n / 1e3)) + " KB";
-function openDetail(app) {
+function openDetail(app, opener = document.activeElement) {
+  detailReturn = { node: opener, identity: detailIdentity(app) }; removeConfirmed = false;
   current = app; drawDetail(); $("detail").hidden = false;
+  $("detail").append($("toast"));  // Notifications stay above the native modal's backdrop.
+  if (!$("detail").open) $("detail").showModal();
+  $("detailTitle").focus();
   const o = app.offers[0];
   if (o.source && o.id && !app.detailed) {  // the full entry has all the screenshots
     api(`/api/sources/details?source=${encodeURIComponent(o.source)}&id=${encodeURIComponent(o.id)}`)
@@ -345,6 +379,8 @@ function openDetail(app) {
 }
 function drawDetail() {
   const app = current; if (!app) return;
+  const focused = document.activeElement, hadFocus = $("sheet").contains(focused);
+  const focusedAction = hadFocus && focused.dataset.act;
   const o = app.offers[0], m = installedOf(app), key = offerKey(app), job = st.jobs.get(key), data = m && st.jobs.get("data:" + m.package);
   if (app.installed && !m) return closeDetail();  // removed
   const shots = (o.artwork?.screenshots || []).filter(valid);
@@ -363,27 +399,57 @@ function drawDetail() {
     acts = progress(job);
   } else if (m) {
     acts = gameData + (m.running ? `<button data-act="stop">■ Stop</button>` : `<button class="play" data-act="launch">▶ Open</button>`)
-      + `<button class="danger" data-act="remove">Remove</button>`;
+      + `<button class="danger" data-act="remove"${removeConfirmed ? ' data-sure="1"' : ""}>${removeConfirmed ? "Remove it and its data?" : "Remove"}</button>`;
   } else if (!o.source) {
     acts = "";
   } else if (o.downloadable === false) {
     acts = `<button disabled>Get it from the developer's page</button>`;
   } else if (o.verdict?.tone === "blocked") {
     acts = `<button disabled>Won't run on the Frame</button>`;
+  } else if (st.installedState !== "ready") {
+    acts = `<button disabled>${st.installedState === "loading" ? "Checking installed apps…" : "Read installed apps before installing"}</button>`;
   } else {
     acts = `<button class="primary" data-act="install">Install</button>`;
   }
   const blurb = o.description || o.summary || (app.installed ? "" : app.summary);  // an Installed card's summary is its version, already in meta
   const failed = data?.error || job?.error;
-  const note = failed ? `<div class="meta" style="color:var(--bad)">${esc(failed)}</div>` : "";
+  const note = (failed ? `<div class="meta" style="color:var(--bad)">${esc(failed)}</div>` : "")
+    + (st.installedState === "ready" ? "" : `<div class="meta" role="status">${m ? "Showing last known installed status; it may be out of date." : "Installed status is unknown."}${st.installedState === "loading" ? " Reading installed apps…" : ' <button data-retry-installed>Retry installed apps</button>'}</div>`);
   $("sheet").innerHTML = `${top}<div class="inner">
-    <div class="top">${icon(app.name, o.artwork)}<div><h2>${esc(app.name)}</h2><div class="meta">${esc(meta)}</div></div>
+    <div class="top">${icon(app.name, o.artwork)}<div><h2 id="detailTitle" tabindex="-1">${esc(app.name)}</h2><div class="meta">${esc(meta)}</div></div>
       ${o.vr ? '<span class="vr" style="margin-left:auto">VR</span>' : ""}</div>
     ${blurb ? `<div class="text">${esc(text(blurb))}</div>` : ""}
     ${o.verdict ? `<div class="why"><b>${esc(o.verdict.label)}</b>${reasons.length ? `<ul>${reasons.slice(0, 3).map(r => `<li>${esc(r)}</li>`).join("")}</ul>` : ""}</div>` : ""}
     ${note}<div class="acts">${acts}<button class="close" data-act="close">Close</button></div></div>`;
+  if (hadFocus) {
+    const replacement = focusedAction ? $("sheet").querySelector(`[data-act="${focusedAction}"]`)
+      : focused.matches("[data-retry-installed]") ? $("sheet").querySelector("[data-retry-installed]") : $("detailTitle");
+    (replacement && !replacement.disabled ? replacement : $("sheet").querySelector('[data-act="close"]')).focus();
+  }
 }
-function closeDetail() { current = null; $("detail").hidden = true; }
+function closeDetail() {
+  if (!current && !$("detail").open) return;
+  const origin = detailReturn;
+  current = null; detailReturn = null; removeConfirmed = false;
+  if ($("detail").open) $("detail").close();
+  $("detail").hidden = true;
+  document.body.append($("toast"));
+  if (origin?.node?.isConnected) return origin.node.focus();
+  // Polling can replace the background cards too. Find the same app in the current page.
+  const items = list();
+  const card = [...document.querySelectorAll(".card[data-i]")].find(b => detailIdentity(items[+b.dataset.i]) === origin?.identity);
+  const feature = st.home?.featured && detailIdentity(st.home.featured) === origin?.identity && document.querySelector("[data-feature]");
+  (card || feature || $("q")).focus();
+}
+$("detail").onclose = () => { if (!$("detail").open) closeDetail(); };
+$("detail").oncancel = e => { e.preventDefault(); closeDetail(); };
+$("detail").onkeydown = e => {
+  if (e.key !== "Tab") return;
+  const buttons = [...$("sheet").querySelectorAll("button:not(:disabled)")];
+  const first = buttons[0], last = buttons[buttons.length - 1];
+  if (e.shiftKey && (document.activeElement === first || document.activeElement === $("detailTitle"))) { e.preventDefault(); last.focus(); }
+  else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+};
 
 async function runJob(key, start) {
   const job = { stage: "Downloading", percent: null, done: false };
@@ -429,6 +495,7 @@ $("sheet").onclick = async e => {
   }
   const pkg = m?.package; if (!pkg) return;
   if (act === "remove" && b.dataset.sure !== "1") {
+    removeConfirmed = true;
     b.dataset.sure = "1"; b.textContent = "Remove it and its data?"; return;  // no confirm(): a separate window the laser has to find
   }
   b.disabled = true;
@@ -446,15 +513,17 @@ $("detail").onclick = e => { if (e.target === $("detail")) closeDetail(); };
 // ---- Navigation ----
 $("cats").innerHTML = CATS.map(([id, label, path]) => `<button data-view="${id}" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true">${path}</svg>${esc(label)}</button>`).join("");
 document.addEventListener("click", e => {
+  if (e.target.closest("[data-retry-installed]")) { loadInstalled(); return; }
   const v = e.target.closest("[data-view]");
   if (v && !e.target.closest("#sheet")) {
     st.view = v.dataset.view; st.q = ""; $("q").value = "";
     if (st.view === "installed") loadInstalled().then(() => search()); else search();
     return;
   }
-  if (e.target.closest("[data-feature]")) return openDetail(st.home.featured);
+  const featured = e.target.closest("[data-feature]");
+  if (featured) return openDetail(st.home.featured, featured);
   const c = e.target.closest(".card[data-i]");
-  if (c) openDetail(list()[+c.dataset.i]);
+  if (c) openDetail(list()[+c.dataset.i], c);
 });
 $("phone").onchange = e => { st.phone = e.target.checked; search(); };
 $("prev").onclick = () => turn(-1);

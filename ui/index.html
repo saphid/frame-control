@@ -131,6 +131,9 @@
   @media (max-width: 1000px) { .dev-grid { grid-template-columns: 1fr; } }
   .dev-item { cursor: pointer; border-radius: 3px; padding: 10px !important; margin: 0 -10px; }
   .dev-item:hover { background: rgba(255,255,255,.04); }
+  .dev-details { display:flex; align-items:center; gap:12px; text-align:left; background:transparent; border:0; height:auto; min-height:44px; padding:6px; }
+  .dev-details .t, .dev-details .s { display:block; }
+  .dev-details:focus-visible { outline:2px solid var(--blue); outline-offset:2px; }
   .dev-item.sel { background: rgba(26,159,255,.12); }
   .dev-form { display: grid; grid-template-columns: 2fr 1.3fr 1fr .8fr; gap: 0 10px; align-items: end; }
   .dev-form input[readonly] { color: var(--muted); }
@@ -476,7 +479,9 @@
     .grid-top, .grid-3, .and-grid, .and-col { gap: 14px; }
     .toolbar { gap: 8px; }
     .toolbar .spacer { display: none; }
-    .view-actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .view-actions { flex: 1 1 100%; display: grid; grid-template-columns: repeat(6, 1fr); gap: 6px; }
+    .view-actions > button { grid-column:span 2; }
+    .view-actions > #copyBtn, .view-actions > #saveBtn { grid-column:span 3; }
     .view-actions button { justify-content: center; padding: 0 4px; }
     #panelPick { flex: 1 1 100%; max-width: none; }
     .shelf-head { flex-wrap: wrap; row-gap: 8px; }
@@ -745,6 +750,181 @@
   }
   @media(prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } .store-card, .source-toggle::after { transition:none; } .store-skeleton { animation:none; } }
 
+  /* Task hierarchy shared by desktop and phone. */
+  :root { --muted:#a1adba; }
+  .workspace-heading { display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap; }
+  .workspace-heading h1 { margin:4px 0 7px; color:white; font-size:32px; letter-spacing:-.8px; line-height:1.15; }
+  .workspace-heading p { margin:0; color:var(--muted); }
+  .eyebrow { color:var(--link); font-size:11px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase; }
+  .workspace-link { color:var(--link); display:inline-flex; align-items:center; min-height:44px; text-decoration:none; font-weight:500; }
+  .primary-link { padding:0 16px; background:#246fa3; color:white; border-radius:7px; }
+  .home-grid { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); gap:20px; }
+  .home-activity, .home-session { padding:26px; border:1px solid #ffffff0d; border-radius:12px; box-shadow:none; }
+  .home-activity h2, .home-session h2 { margin:12px 0 8px; color:white; font-size:24px; font-weight:600; }
+  .home-activity p, .home-session p { color:var(--muted); }
+  .home-actions { display:flex; gap:18px; align-items:center; flex-wrap:wrap; margin-top:24px; }
+  .home-running { display:flex; flex-wrap:wrap; gap:8px; }
+  .home-running button { min-height:44px; height:auto; text-align:left; padding:10px 14px; }
+  .home-running small { display:block; color:var(--muted); }
+  .quick-routes { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,230px),1fr)); gap:12px; }
+  .quick-routes a { padding:18px; display:flex; flex-direction:column; justify-content:center; gap:5px; min-height:96px; border:1px solid #ffffff12; border-radius:10px; background:#1b2a3a; text-decoration:none; }
+  .quick-routes a:hover { background:#243a50; border-color:#66c0f470; }
+  .quick-routes span { color:white; font-size:16px; font-weight:500; }
+  .quick-routes small { color:var(--muted); font-size:13px; }
+  .home-status > summary { cursor:pointer; color:var(--link); padding:14px 0; min-height:44px; }
+  .home-status #device { max-width:900px; }
+  [data-page=capture] .grid-top { display:block; }
+  .library-controls { display:grid; gap:12px; }
+  .scope-tabs { display:flex; gap:4px; flex-wrap:wrap; align-items:center; }
+  .scope-tabs button { min-height:44px; height:auto; padding:10px 16px; border-radius:7px; background:transparent; color:var(--muted); }
+  .scope-tabs [aria-pressed=true] { background:#28455e; color:white; box-shadow:inset 0 0 0 1px #66c0f440; }
+  #librarySources { padding-bottom:14px; border-bottom:1px solid #ffffff12; }
+  .lib-head { margin-bottom:12px; gap:12px; }
+  .lib-head h2 { margin:0 0 5px; font-size:17px; color:white; }
+  .lib-head p { font-size:13px; }
+  .lib-tools { gap:10px; }
+  .lib-tools input[type=search] { height:44px; }
+  .lib-grid { display:flex; flex-direction:column; gap:0; margin-bottom:0; border-top:1px solid #ffffff12; }
+  .lib-card, .lib-card:hover { display:grid; grid-template-columns:44px minmax(0,1fr) 82px 44px; align-items:center; gap:12px; padding:10px 4px; min-height:78px; border:0; border-bottom:1px solid #ffffff0d; border-radius:0; background:transparent; box-shadow:none; transform:none; }
+  .lib-card.running { box-shadow:inset 3px 0 #59bf40; background:#59bf4006; padding-left:12px; }
+  .lib-card > .store-icon { width:44px; height:44px; border-radius:11px; font-size:22px; }
+  .lib-name { min-width:0; min-height:48px; height:auto; padding:0; background:transparent; text-align:left; display:block; }
+  .lib-name:hover { background:transparent; }
+  .lib-name strong { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:white; font-size:15px; font-weight:500; }
+  .lib-name small { display:block; font-size:12px; color:var(--muted); margin-top:4px; }
+  .lib-card > button.play, .lib-card > button.stop, .lib-overflow { min-height:44px; height:auto; border-radius:7px; }
+  .lib-overflow { width:44px; padding:0; font-size:24px; }
+  .installed-detail { padding:28px; border-radius:12px; }
+  .installed-detail h2 { font-size:26px; text-transform:none; letter-spacing:-.5px; margin:10px 40px 8px 0; }
+  .installed-detail h3 { margin-top:26px; }
+  .installed-detail .store-close { position:absolute; right:12px; top:12px; margin:0; width:44px; height:44px; }
+  .installed-detail button, .installed-detail a { min-height:44px; }
+  .detail-actions { display:flex; flex-wrap:wrap; gap:10px; }
+  .inline-error { padding:12px; display:flex; align-items:center; gap:12px; border:1px solid #d9a23a60; border-radius:8px; margin-bottom:10px; }
+  .inline-error span { flex:1; }
+  .tool-group { margin-bottom:28px; }
+  .tool-group h2 { margin:0 0 12px; color:var(--muted); font-size:13px; font-weight:500; }
+  #toolWorkspace { display:block; }
+  #toolWorkspace > section { max-width:1040px; margin:0; }
+  #toolWorkspace .panel { box-shadow:none; border:1px solid #ffffff0d; border-radius:10px; }
+  #toolWorkspace button, #toolWorkspace summary, #toolWorkspace select { min-height:44px; height:auto; }
+  #toolWorkspace summary { cursor:pointer; }
+  #toolWorkspace #comfort { margin:0!important; padding:20px!important; }
+  #toolWorkspace .lib-manage { margin-top:18px; }
+  .power-actions { border-top:1px solid #ffffff16; padding-top:16px; }
+  .store-layout { display:flex; flex-direction:column; gap:18px; }
+  .store-main { width:100%; }
+  .store-side { position:static; order:2; width:100%; }
+  .store-cats { display:flex; flex-wrap:wrap; gap:6px; }
+  .store-cats button { width:auto; }
+  .store-side-opts { flex-direction:row; flex-wrap:wrap; }
+  .store-toolbar { display:flex; flex-direction:column; align-items:stretch; gap:12px; }
+  .store-search { width:100%; }
+  .store-search input, .store-search button, .store-cats button, .see-all { min-height:44px; height:auto; }
+  .store-heading .store-eyebrow { display:none; }
+  .store-heading h1 { font-size:23px; margin:0; }
+  .store-heading p { font-size:13px; margin:6px 0 0; }
+  :focus-visible { outline:2px solid var(--link); outline-offset:3px; }
+  @media(max-width:680px) {
+    main { gap:20px; }
+    .workspace-heading h1 { font-size:28px; }
+    .workspace-heading p { font-size:13px; }
+    .home-grid { grid-template-columns:1fr; gap:12px; }
+    .home-activity, .home-session { padding:20px; }
+    .home-activity h2, .home-session h2 { font-size:21px; }
+    .quick-routes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
+    .quick-routes a { padding:15px; min-height:105px; }
+    .quick-routes span { font-size:14px; }
+    .quick-routes small { font-size:12px; }
+    .scope-tabs button { padding:10px 12px; font-size:13px; }
+    .lib-tools { width:100%; }
+    .lib-tools .store-chips button { min-height:44px; height:auto; }
+    .lib-card, .lib-card:hover { grid-template-columns:40px minmax(0,1fr) 62px 44px; gap:8px; min-height:76px; padding:9px 0; }
+    .lib-card.running { padding-left:7px; }
+    .lib-card > .store-icon { width:40px; height:40px; font-size:20px; }
+    .lib-name strong { font-size:14px; }
+    .lib-name small { font-size:11px; }
+    .lib-card > button.play, .lib-card > button.stop { padding:0 8px; font-size:13px; }
+    .lib-head { gap:10px; }
+    .store-layout { display:flex; flex-direction:column; gap:16px; }
+    .store-main { width:100%; }
+    .store-side { order:2; }
+    .store-side { width:100%; }
+    .store-hero { height:230px; margin-bottom:20px; }
+    .store-cats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+    .store-heading h1 { font-size:21px; }
+    .store-heading p { display:block; max-width:none; }
+    .store-search { min-height:48px; }
+    .workspace-heading #sourcesOpen { min-height:44px; }
+    #nav a { min-width:0; }
+    .drawer.open { display:block; bottom:calc(58px + env(safe-area-inset-bottom)); }
+  }
+
+  .store-cats { flex-direction:row; align-items:center; }
+  .store-cats button { flex:none; }
+  .store-options > summary { min-height:44px; display:flex; align-items:center; color:var(--muted); cursor:pointer; font-size:12px; }
+  .store-options > summary::after { content:' +'; margin-left:8px; }
+  .store-options[open] > summary::after { content:' −'; }
+  .store-options .store-side-opts { padding:12px; border:1px solid #ffffff12; border-radius:8px; }
+  .library-filter-menu { position:relative; }
+  .library-filter-menu > summary { display:flex; align-items:center; padding:0 14px; min-height:44px; border-radius:7px; background:var(--btn); color:var(--text); cursor:pointer; list-style:none; }
+  .library-filter-menu > summary::-webkit-details-marker { display:none; }
+  .library-filter-menu > summary::after { content:'⌄'; padding-left:8px; }
+  .library-filter-menu .store-chips { position:absolute; right:0; top:calc(100% + 8px); z-index:10; width:220px; max-width:calc(100vw - 24px); padding:8px; background:#22374a; border:1px solid #ffffff24; border-radius:10px; box-shadow:0 12px 24px #0008; display:flex; flex-direction:column; align-items:stretch; gap:4px; }
+  .library-filter-menu .store-chips button { min-height:44px; text-align:left; border-radius:6px; }
+  @media(max-width:680px) {
+    [data-page=games] .workspace-heading p, [data-page=games] .workspace-heading .eyebrow { display:none; }
+    [data-page=games] .workspace-heading h1 { margin:0; }
+    [data-page=games] .workspace-heading > .workspace-link { font-size:12px; }
+    [data-page=games] { gap:16px; }
+    .library-controls { gap:6px; }
+    .lib-tools { flex-wrap:nowrap; }
+    .lib-tools input[type=search] { width:auto; min-width:0; flex:1; }
+    .store-cats { display:flex; flex-direction:row; flex-wrap:nowrap; overflow-x:auto; max-width:100%; padding-bottom:4px; }
+    .store-cats button { flex:none; white-space:nowrap; }
+    .store-toolbar { gap:10px; }
+    .store-heading p { display:none; }
+  }
+
+
+  .add-install { min-height:44px; height:auto; white-space:nowrap; }
+  [data-page=apps] #android { margin:0; }
+  #appsInstalled, #appsLinux { margin-top:18px; }
+  .app-browse-heading { display:flex; align-items:center; flex-wrap:wrap; justify-content:space-between; gap:12px; margin:16px 0 8px; }
+  .app-browse-heading p { margin:0; color:var(--muted); font-size:13px; }
+  #settingsWorkspace > section { max-width:1040px; margin:0; }
+  #settingsWorkspace button, #settingsWorkspace summary, #settingsWorkspace select, #appsLinux button { min-height:44px; height:auto; }
+  .install-chooser { width:min(620px,calc(100vw - 24px)); max-height:calc(100dvh - 32px); overflow:auto; }
+  .install-chooser .store-close { width:44px; height:44px; position:static; margin-left:auto; flex:none; }
+  .install-chooser-head { position:sticky; top:0; z-index:2; display:flex; align-items:center; gap:16px; background:rgb(30,35,41); margin:-1px -1px 0; padding:0 0 12px; }
+  .install-chooser-head .eyebrow { flex:1; }
+  .install-choices { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:20px 0; }
+  .install-choices a, .install-choices button { display:flex; flex-direction:column; align-items:flex-start; justify-content:center; text-align:left; gap:5px; min-height:80px; height:auto; padding:16px; background:#22374a; border:1px solid #ffffff16; border-radius:9px; text-decoration:none; }
+  .install-choices strong { color:white; font-size:15px; font-weight:500; }
+  .install-choices span { color:var(--muted); font-size:12px; line-height:1.4; }
+  #installLinkForm label { display:block; font-size:13px; color:var(--muted); margin-bottom:8px; }
+  .install-link-row { display:flex; gap:8px; }
+  .install-link-row input { min-width:0; flex:1; height:44px; }
+  .install-link-row button { min-height:44px; height:auto; }
+  #installLinkError { color:#ffb4a9; margin:10px 0; }
+  .install-chooser > .sub { font-size:12px; line-height:1.5; margin:16px 0 0; }
+  #wiDlg { max-width:calc(100vw - 24px); }
+  #wiFacts dd { overflow-wrap:anywhere; }
+  #wiDlg button, #getgames button { min-height:44px; height:auto; }
+  @media(max-width:680px) {
+    [data-page=apps] .workspace-heading .eyebrow, [data-page=apps] .workspace-heading p, [data-page=games] .workspace-heading .eyebrow { display:none; }
+    .add-install { font-size:13px; padding:10px 12px; }
+    .install-chooser { padding:20px; max-height:calc(100dvh - 20px); }
+    .install-chooser h2 { font-size:23px; }
+    .install-choices { grid-template-columns:1fr; gap:8px; margin:16px 0; }
+    .install-choices a, .install-choices button { padding:12px; min-height:64px; }
+    .install-link-row { flex-wrap:wrap; }
+    .install-link-row input { flex-basis:100%; }
+    .install-link-row button { width:100%; }
+    #appsInstalled, #appsLinux { margin-top:12px; }
+    #appsLinux .row { flex-wrap:wrap!important; }
+  }
+
 </style>
 <link rel="stylesheet" href="/control-center.css">
 </head>
@@ -759,13 +939,11 @@
     </svg>
     <b>FRAME CONTROL</b>
   </a>
-  <nav id="nav">
-    <a href="#home" class="on" title="Headset view, status and screenshots (1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2.5" y="7" width="19" height="10" rx="4"/><circle cx="8.5" cy="12" r="1.6"/><circle cx="15.5" cy="12" r="1.6"/></svg>Home<kbd>1</kbd></a>
-    <a href="#games" title="Steam games and sideloaded titles (2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8h12a4 4 0 0 1 4 4v1a4 4 0 0 1-7 2.6h-6A4 4 0 0 1 2 13v-1a4 4 0 0 1 4-4z"/><path d="M7 11v3M5.5 12.5h3"/><circle cx="16" cy="11.5" r=".6"/><circle cx="18" cy="13.5" r=".6"/></svg>Games<kbd>2</kbd></a>
-    <a href="#android" title="Android apps and their display (3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="9" width="14" height="11" rx="2"/><path d="M8 9a4 4 0 0 1 8 0M8 5l1.5 2M16 5l-1.5 2M9.5 13h.01M14.5 13h.01"/></svg>Android<kbd>3</kbd></a>
-    <a href="#tools" title="Files, clipboard, Linux apps, remote and power (4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L3.5 17.5a2.1 2.1 0 0 0 3 3l6-6a4 4 0 0 0 5.2-5.2l-2.5 2.5-2.5-2.5z"/></svg>Tools<kbd>4</kbd></a>
-    <a href="#devices" class="desk-only" title="Headsets, their addresses and the connection (5)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12.5a10 10 0 0 1 14 0M8.5 16a5 5 0 0 1 7 0"/><circle cx="12" cy="19.5" r="1"/><path d="M2 9a15 15 0 0 1 20 0"/></svg>Devices<kbd>5</kbd></a>
-    <a href="#control" title="Search controls, settings and live metrics (6)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18M8 3v6M16 9v6M10 15v6"/></svg>Control<kbd>6</kbd></a>
+  <nav id="nav" aria-label="Main navigation">
+    <a href="#apps" class="on" title="Apps and app installs (1)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Apps<kbd>1</kbd></a>
+    <a href="#games" title="Games and game installs (2)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M7 7h10c3 0 5 10 3 11-2 1-4-3-5-3H9c-1 0-3 4-5 3-2-1 0-11 3-11zM7 9v5M4.5 11.5h5M16 10h.01M18 13h.01"/></svg>Games<kbd>2</kbd></a>
+    <a href="#tools" title="Capture, files and remote controls (3)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.7 6.3a4 4 0 0 0-5.2 5.2L3.5 17.5a2.1 2.1 0 0 0 3 3l6-6a4 4 0 0 0 5.2-5.2l-2.5 2.5-2.5-2.5z"/></svg>Tools<kbd>3</kbd></a>
+    <a href="#settings" title="Connection and preferences (4)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="currentColor"/><circle cx="16" cy="12" r="2" fill="currentColor"/><circle cx="8" cy="18" r="2" fill="currentColor"/></svg>Settings<kbd>4</kbd></a>
   </nav>
   <div class="hdr-end">
   <button class="pill" id="conn" role="status" aria-live="polite" title="Connection details"><span class="dot wait"></span><span class="pt"><b>Connecting…</b><span></span></span></button>
@@ -856,6 +1034,45 @@
   </div>
 
   <div class="page on" data-page="home">
+    <div class="workspace-heading"><div><span class="eyebrow">Your Steam Frame</span><h1 id="homeTitle">Let's connect</h1><p id="homeReadiness" role="status">Checking your headset…</p></div><a class="workspace-link" href="#devices">Devices &amp; connection</a></div>
+    <div class="home-grid"><section class="panel home-activity"><span class="eyebrow">Current activity</span><h2 id="homeActivity">Connect to see what's running</h2><p id="homeActivityNote">Your installed apps and current downloads appear here.</p><div id="homeRunning" class="home-running"></div><div class="home-actions"><a href="#library" class="workspace-link primary-link">Open Games →</a><a href="#discover" class="workspace-link">Find something new</a></div></section>
+    <section class="panel home-session"><span class="eyebrow">Background tasks</span><h2 id="homeJobs">No active tasks</h2><p id="homeDownload">Install progress stays here while you explore.</p><button class="small" id="homeLog">View activity log</button></section></div>
+    <div class="quick-routes"><a href="#capture"><span>Capture &amp; Live</span><small>See and share the headset view</small></a><a href="#pad"><span>Keyboard &amp; trackpad</span><small>Control apps on your Frame</small></a><a href="#comfort"><span>Family &amp; comfort</span><small>Sessions, breaks and alerts</small></a><a href="#control"><span>Control Center</span><small>Search settings and live metrics</small></a></div>
+    <details class="home-status"><summary>Headset status &amp; audio</summary><section class="panel" id="device">
+      <div class="shelf-head"><h2>Device</h2><span class="count" id="devName"></span><span class="spacer"></span><span class="sub" id="updated"></span></div>
+      <div class="battery">
+        <svg viewBox="0 0 74 38" aria-hidden="true">
+          <rect x="1.5" y="1.5" width="64" height="35" rx="5" fill="none" stroke="#8f98a0" stroke-width="3"/>
+          <rect x="67" y="12" width="5.5" height="14" rx="2" fill="#8f98a0"/>
+          <rect id="battFill" x="6" y="6" width="0" height="26" rx="2.5" fill="#59bf40"/>
+          <path id="battBolt" d="M37 5 L27 21 H34 L31 33 L42 16 H35 Z" fill="#fff" stroke="#1e2329" stroke-width="1.6" stroke-linejoin="round" visibility="hidden"/>
+        </svg>
+        <div style="min-width:0">
+          <div class="pct" id="battPct">—</div>
+          <div class="state draining" id="battState">&nbsp;</div>
+          <div class="detail" id="battDetail">&nbsp;</div>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="k">Storage free</div><div class="v" id="sDisk">—</div><div class="meter"><i id="mDisk"></i></div></div>
+        <div class="stat"><div class="k">Memory used</div><div class="v" id="sMem">—</div><div class="meter"><i id="mMem"></i></div></div>
+        <div class="stat"><div class="k">Temperature</div><div class="v" id="sTemp">—</div><div class="d" id="dTemp">&nbsp;</div></div>
+        <div class="stat"><div class="k">Wi-Fi</div><div class="v" id="sWifi">—</div><div class="d" id="dWifi">&nbsp;</div></div>
+        <div class="stat"><div class="k">Uptime</div><div class="v" id="sUp">—</div><div class="d" id="dUp">&nbsp;</div></div>
+        <div class="stat"><div class="k">SteamOS</div><div class="v" id="sOs">—</div><div class="d" id="dOs">&nbsp;</div></div>
+      </div>
+      <div class="chips" id="services"></div>
+      <div class="vol">
+        <button class="small" id="muteBtn" aria-label="Mute">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="volWaves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
+        <input type="range" id="vol" min="0" max="100" step="1" value="0" aria-label="Volume">
+        <span class="num" id="volNum">—</span>
+      </div>
+    </section></details>
+  </div>
+  <div class="page" data-page="capture">
+  <div class="workspace-heading"><div><a class="workspace-link" href="#tools">← Tools</a><h1>Capture &amp; Live</h1><p>See the headset, capture a moment, or control a desktop panel.</p></div><a class="workspace-link" href="#shots">Screenshots</a></div>
   <div class="grid-top" id="view">
     <section class="panel">
       <div class="toolbar">
@@ -919,41 +1136,116 @@
       <div class="hint" id="viewHint"></div>
     </section>
 
-    <section class="panel" id="device">
-      <div class="shelf-head"><h2>Device</h2><span class="count" id="devName"></span><span class="spacer"></span><span class="sub" id="updated"></span></div>
-      <div class="battery">
-        <svg viewBox="0 0 74 38" aria-hidden="true">
-          <rect x="1.5" y="1.5" width="64" height="35" rx="5" fill="none" stroke="#8f98a0" stroke-width="3"/>
-          <rect x="67" y="12" width="5.5" height="14" rx="2" fill="#8f98a0"/>
-          <rect id="battFill" x="6" y="6" width="0" height="26" rx="2.5" fill="#59bf40"/>
-          <path id="battBolt" d="M37 5 L27 21 H34 L31 33 L42 16 H35 Z" fill="#fff" stroke="#1e2329" stroke-width="1.6" stroke-linejoin="round" visibility="hidden"/>
-        </svg>
-        <div style="min-width:0">
-          <div class="pct" id="battPct">—</div>
-          <div class="state draining" id="battState">&nbsp;</div>
-          <div class="detail" id="battDetail">&nbsp;</div>
-        </div>
-      </div>
-      <div class="stats">
-        <div class="stat"><div class="k">Storage free</div><div class="v" id="sDisk">—</div><div class="meter"><i id="mDisk"></i></div></div>
-        <div class="stat"><div class="k">Memory used</div><div class="v" id="sMem">—</div><div class="meter"><i id="mMem"></i></div></div>
-        <div class="stat"><div class="k">Temperature</div><div class="v" id="sTemp">—</div><div class="d" id="dTemp">&nbsp;</div></div>
-        <div class="stat"><div class="k">Wi-Fi</div><div class="v" id="sWifi">—</div><div class="d" id="dWifi">&nbsp;</div></div>
-        <div class="stat"><div class="k">Uptime</div><div class="v" id="sUp">—</div><div class="d" id="dUp">&nbsp;</div></div>
-        <div class="stat"><div class="k">SteamOS</div><div class="v" id="sOs">—</div><div class="d" id="dOs">&nbsp;</div></div>
-      </div>
-      <div class="chips" id="services"></div>
-      <div class="vol">
-        <button class="small" id="muteBtn" aria-label="Mute">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z"/><path id="volWaves" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-        </button>
-        <input type="range" id="vol" min="0" max="100" step="1" value="0" aria-label="Volume">
-        <span class="num" id="volNum">—</span>
-      </div>
-    </section>
+
   </div>
 
-  <section class="panel" id="vrTools">
+
+
+
+
+
+
+  <section id="shots">
+    <div class="shelf-head"><h2>Screenshots</h2><span class="count" id="shotCount"></span><span class="spacer"></span>
+      <button class="small" id="shotsRefresh">Refresh</button>
+      <button class="small" id="shotsFolder" title="Open the SteamFrame folder in your Pictures">Show folder</button>
+      <button class="action small" id="shotsSaveNew" disabled>Save new to this computer</button>
+    </div>
+    <div class="shot-grid" id="shotGrid"><div class="sub">Loading…</div></div>
+    <div class="hint">Screenshots you take in the headset with Steam's screenshot shortcut. New ones appear on their own. Click one to open it in the viewer, Copy puts it on the clipboard, and Save copies it to <code>~/Pictures/SteamFrame</code>. Right-click for more.</div>
+  </section>
+  </div>
+
+  <div class="page" data-page="games">
+  <div class="workspace-heading"><div><span class="eyebrow">Play on your Frame</span><h1>Games</h1><p>Your Steam library and games you add yourself.</p></div><button class="action add-install" data-open-install>＋ Add / Install</button></div>
+  <div class="library-controls"><div class="scope-tabs" id="libraryScope" aria-label="Game library"><button data-scope="installed" aria-pressed="true">Installed</button><button data-scope="owned" aria-pressed="false">Owned</button><button data-scope="store" aria-pressed="false">Store</button></div>
+    <div class="scope-tabs" id="librarySources" aria-label="Installed content source"><button data-library-source="all" aria-pressed="true">All</button><button data-library-source="steam" aria-pressed="false">Steam</button><button data-library-source="sideloaded" aria-pressed="false">Sideloaded</button></div></div>
+  <div id="libraryOwned"></div><div id="steamDiscover" hidden></div>
+  <section id="library">
+    <div class="shelf-head"><h2>Steam games</h2><span class="count" id="gameCount"></span></div>
+    <div class="shelf" id="games"><div class="sub">Loading…</div></div>
+  </section>
+
+<div class="lib" id="androidLibrary">
+      <div class="lib-head"><div><h2>Installed apps</h2><p id="libSummary">Installed on this Frame. Open an app or choose More for its settings.</p></div>
+        <div class="lib-tools"><input id="libQ" type="search" aria-label="Filter your apps" placeholder="Filter your apps">
+          <details id="libFilterMenu" class="library-filter-menu"><summary id="libFilterLabel">Filters</summary><div class="store-chips" id="libFilters"><button data-lib="all" aria-pressed="true">All apps</button><button data-lib="vr" aria-pressed="false">VR</button><button data-lib="flat" aria-pressed="false">Flat-screen</button><button data-lib="running" aria-pressed="false">Running</button></div></details></div></div>
+      <div id="androidLoadError" class="inline-error" role="status" hidden><span id="androidLoadMessage"></span><button id="androidRetry">Retry</button></div><div class="lib-grid" id="andApps"><div class="sub">Loading…</div></div>
+      <div hidden>
+<div hidden>        <div class="shelf-head"><h2>Find apps</h2><span class="count" id="catCount"></span></div>
+        <div class="cat-tools">
+          <input type="text" id="catQ" placeholder="Search F-Droid apps rated for the Frame…">
+          <select id="catCat" aria-label="Category"><option value="">All categories</option></select>
+        </div>
+        <div class="vchips" id="catChips"></div>
+        <div class="cat-grid" id="catGrid"><div class="sub">Loading the catalogue…</div></div>
+        <div class="row" style="margin-top:12px"><button class="small" id="catMore" hidden>Show more</button></div>
+        <div class="hint">Verdicts come from checks of each APK against what Lepton supports (Android 11,
+          64-bit ARM, no clipboard or Play Services) and from reports made on a Frame. See docs/apks.md.</div></div>
+      </div>
+    </div>
+  <section class="panel" id="sideloaded">
+    <div class="shelf-head"><h2>Sideloaded titles</h2><span class="count" id="titleCount"></span><span class="spacer"></span>
+      <button class="small" id="titleAdd" title="Pick a game's .zip or .exe to add to the Steam library">+ Add a game…</button></div>
+    <div class="list" id="titleList"><div class="sub">Loading…</div></div>
+    <div class="hint">Your own Linux or Windows builds, added to the Steam library as Devkit Games. Drop a game's
+      <code>.zip</code>, folder or <code>.exe</code> anywhere in this window.</div>
+  </section>
+
+  <section id="getgames">
+    <div class="shelf-head"><h2 id="steamScopeTitle">Owned, not installed</h2><span class="count" id="gmCount"></span><span class="spacer"></span>
+      <span class="sub" id="gmDl"></span></div>
+    <div class="panel">
+      <div class="cat-tools">
+        <div hidden class="seg" id="gmSrc" aria-label="Where to look">
+          <button data-src="owned" class="on">Your games</button>
+          <button data-src="store">Steam store</button>
+        </div>
+        <input type="text" id="gmQ" placeholder="Filter your games…">
+        <button class="small" id="gmReload" title="Read the library again, e.g. after buying something">Refresh</button>
+      </div>
+      <div class="vchips" id="gmChips"></div>
+      <div class="cat-grid" id="gmGrid"><div class="sub">Loading your library…</div></div>
+      <div class="row" style="margin-top:12px"><button class="small" id="gmMore" hidden>Show more</button></div>
+      <div class="hint">Install downloads a game you own straight to the Frame and accepts Steam's default options;
+        EULAs and license prompts still need answering in the headset. To buy, open the store page in your browser
+        (signed in to Steam) or in the headset, then Refresh and install. Ratings are Valve's Steam Frame
+        compatibility categories.</div>
+    </div>
+  </section>
+  </div>
+
+  <div class="page" data-page="apps">
+  <section id="android">
+    <div class="workspace-heading"><div><span class="eyebrow">Made for your Frame</span><h1>Apps</h1><p>VR experiences, Android apps and desktop apps.</p></div><button class="action add-install" data-open-install>＋ Add / Install</button></div>
+    <div class="scope-tabs" id="appViews" aria-label="App library"><button data-app-view="installed" aria-pressed="true">Installed</button><button data-app-view="browse" aria-pressed="false">Browse</button><button data-app-view="linux" aria-pressed="false">Linux apps</button></div>
+    <div id="appsInstalled"></div><div id="appsLinux" hidden></div>
+    <div class="app-browse-heading" id="appBrowseHeading" hidden><p>Find something for your headset, then install from its app page.</p><button id="sourcesOpen" class="small">Manage sources</button></div><button class="small" id="repNew" hidden>Report an APK</button><span id="andCount" hidden></span>
+    <section id="appStore" aria-label="Android store">
+      <div class="store-layout">
+      <div class="store-main">
+      <div class="store-toolbar"><div class="store-heading" id="storeHeading"><div class="store-eyebrow">Android apps for your Frame</div><h1>Store</h1><p>VR games, emulators, video and reading apps that work in a panel. Free, from open sources.</p></div>
+      <form id="sourceSearch" class="store-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="sourceQ" type="search" aria-label="Search games and apps" placeholder="Search games and apps"><button type="submit" class="small">Search</button></form><div id="storeCats" class="store-cats"></div><details class="store-options"><summary>Source &amp; compatibility</summary>        <div class="store-side-opts">
+          <label class="store-check"><input type="checkbox" id="storeFits"> Only apps that fit the Frame</label>
+          <label class="store-check" title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools. Searching always finds them."><input type="checkbox" id="storePhone"> Show phone-only apps</label>
+          <label class="store-source-select"><span>Source</span><select id="sourceFilter"><option value="">All sources</option></select></label>
+        </div>
+</details></div>
+      <div id="sourceStatus" class="store-notice" role="status" aria-live="polite" hidden></div>
+      <div id="searchCount" class="store-result-count" aria-live="polite"></div>
+      <div id="searchGrid" aria-busy="false"></div>
+      </div>
+      </div>
+    </section>
+
+  </section>
+  </div>
+
+  <div class="page" data-page="tools">
+<div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Manage artwork and image sources</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad"><span>Keyboard & trackpad</span><small>Type and point in desktop apps</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+  <div class="grid-3" id="toolWorkspace">
+<section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
     <div class="stats" id="vrMetrics"></div>
     <div class="hint">Compositor FPS measures SteamVR output, not game FPS. Application FPS is unavailable when no app supplies timing. GPU time is render time, not GPU utilisation. Temperature is the hottest readable sensor.</div>
@@ -970,9 +1262,7 @@
       <button class="small" id="vrUtilitiesRefresh">Check ownership and reports</button>
       <div class="list" id="vrUtilities"><div class="sub">Load this optional list to check the Frame account.</div></div>
     </details>
-  </section>
-
-  <section class="panel" id="comfort" style="margin:20px 0;padding:16px">
+  </section><section class="panel" id="comfort" style="margin:20px 0;padding:16px">
     <div class="shelf-head"><h2>Family and comfort</h2><span class="spacer"></span>
       <button class="action small" id="castBtn">Cast headset view</button>
     </div>
@@ -1000,9 +1290,7 @@
     </details>
     <div id="comfortEvents" class="hint"></div>
     <span id="comfortAnnouncement" class="sr-only" aria-live="polite"></span>
-  </section>
-
-  <section class="panel" id="pad">
+  </section><section class="panel" id="pad">
     <div class="shelf-head"><h2>Keyboard and trackpad</h2><span class="sub" id="padState"></span><span class="spacer"></span>
       <button class="small" id="padOn">Turn on</button>
     </div>
@@ -1031,84 +1319,7 @@
       don't take it. It works through KDE Connect, which comes with Frame Control: the first time, it copies Valve's build
       for the Frame (3.6 MB, 18 MB unpacked) into your home folder there and pairs with it. No internet needed, and nothing
       else to install. <a href="#" data-about>Licences</a></div>
-  </section>
-
-  <section id="shots">
-    <div class="shelf-head"><h2>Screenshots</h2><span class="count" id="shotCount"></span><span class="spacer"></span>
-      <button class="small" id="shotsRefresh">Refresh</button>
-      <button class="small" id="shotsFolder" title="Open the SteamFrame folder in your Pictures">Show folder</button>
-      <button class="action small" id="shotsSaveNew" disabled>Save new to this computer</button>
-    </div>
-    <div class="shot-grid" id="shotGrid"><div class="sub">Loading…</div></div>
-    <div class="hint">Screenshots you take in the headset with Steam's screenshot shortcut. New ones appear on their own. Click one to open it in the viewer, Copy puts it on the clipboard, and Save copies it to <code>~/Pictures/SteamFrame</code>. Right-click for more.</div>
-  </section>
-  </div>
-
-  <div class="page" data-page="games">
-  <section id="library">
-    <div class="shelf-head"><h2>Installed</h2><span class="count" id="gameCount"></span></div>
-    <div class="shelf" id="games"><div class="sub">Loading…</div></div>
-  </section>
-
-  <section class="panel" id="sideloaded">
-    <div class="shelf-head"><h2>Sideloaded titles</h2><span class="count" id="titleCount"></span><span class="spacer"></span>
-      <button class="small" id="titleAdd" title="Pick a game's .zip or .exe to add to the Steam library">+ Add a game…</button></div>
-    <div class="list" id="titleList"><div class="sub">Loading…</div></div>
-    <div class="hint">Your own Linux or Windows builds, added to the Steam library as Devkit Games. Drop a game's
-      <code>.zip</code>, folder or <code>.exe</code> anywhere in this window.</div>
-  </section>
-
-  <section id="getgames">
-    <div class="shelf-head"><h2>Get games</h2><span class="count" id="gmCount"></span><span class="spacer"></span>
-      <span class="sub" id="gmDl"></span></div>
-    <div class="panel">
-      <div class="cat-tools">
-        <div class="seg" id="gmSrc" aria-label="Where to look">
-          <button data-src="owned" class="on">Your games</button>
-          <button data-src="store">Steam store</button>
-        </div>
-        <input type="text" id="gmQ" placeholder="Filter your games…">
-        <button class="small" id="gmReload" title="Read the library again, e.g. after buying something">Refresh</button>
-      </div>
-      <div class="vchips" id="gmChips"></div>
-      <div class="cat-grid" id="gmGrid"><div class="sub">Loading your library…</div></div>
-      <div class="row" style="margin-top:12px"><button class="small" id="gmMore" hidden>Show more</button></div>
-      <div class="hint">Install downloads a game you own straight to the Frame and accepts Steam's default options;
-        EULAs and license prompts still need answering in the headset. To buy, open the store page in your browser
-        (signed in to Steam) or in the headset, then Refresh and install. Ratings are Valve's Steam Frame
-        compatibility categories.</div>
-    </div>
-  </section>
-  </div>
-
-  <div class="page" data-page="android">
-  <section id="android">
-    <div class="store-tabs" aria-label="Android sections"><div class="store-switch"><button class="on" data-store-tab="browse" aria-pressed="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 7h16l-1.5 12.5a1 1 0 0 1-1 .9H6.5a1 1 0 0 1-1-.9z"/><path d="M8.5 9V6a3.5 3.5 0 0 1 7 0v3"/></svg>Store</button><button data-store-tab="library" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3.5" y="4" width="7" height="7" rx="1.5"/><rect x="13.5" y="4" width="7" height="7" rx="1.5"/><rect x="3.5" y="14" width="7" height="7" rx="1.5"/><rect x="13.5" y="14" width="7" height="7" rx="1.5"/></svg>Library <span id="andCount"></span></button></div><span class="spacer"></span><button id="sourcesOpen" class="small">Sources <span aria-hidden="true">⚙</span></button><button class="small" id="repNew" hidden>+ Report an APK</button></div>
-    <section id="appStore" aria-label="Android store">
-      <div class="store-layout">
-      <div class="store-side" role="navigation" aria-label="Store categories">
-        <div id="storeCats" class="store-cats"></div>
-        <div class="store-side-opts">
-          <label class="store-check"><input type="checkbox" id="storeFits"> Only apps that fit the Frame</label>
-          <label class="store-check" title="Apps built around a phone: calls and SMS, launchers, keyboards, widgets, fitness, system tools. Searching always finds them."><input type="checkbox" id="storePhone"> Show phone-only apps</label>
-          <label class="store-source-select"><span>Source</span><select id="sourceFilter"><option value="">All sources</option></select></label>
-        </div>
-      </div>
-      <div class="store-main">
-      <div class="store-toolbar"><div class="store-heading" id="storeHeading"><div class="store-eyebrow">Android apps for your Frame</div><h1>Store</h1><p>VR games, emulators, video and reading apps that work in a panel. Free, from open sources.</p></div>
-      <form id="sourceSearch" class="store-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg><input id="sourceQ" type="search" aria-label="Search games and apps" placeholder="Search games and apps"><button type="submit" class="small">Search</button></form></div>
-      <div id="sourceStatus" class="store-notice" role="status" aria-live="polite" hidden></div>
-      <div id="searchCount" class="store-result-count" aria-live="polite"></div>
-      <div id="searchGrid" aria-busy="false"></div>
-      </div>
-      </div>
-    </section>
-    <div class="lib" id="androidLibrary" hidden>
-      <div class="lib-head"><div><div class="store-eyebrow">On your Frame</div><h1>Library</h1><p id="libSummary">Your Android apps. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.</p></div>
-        <div class="lib-tools"><div class="store-chips" id="libFilters"><button data-lib="all" aria-pressed="true">All</button><button data-lib="vr" aria-pressed="false">VR</button><button data-lib="flat" aria-pressed="false">Flat</button><button data-lib="running" aria-pressed="false">Running</button></div>
-          <input id="libQ" type="search" aria-label="Filter your apps" placeholder="Filter your apps"></div></div>
-      <div class="lib-grid" id="andApps"><div class="sub">Loading…</div></div>
-      <h2 class="lib-section">Display and reports</h2>
+  </section><section id="androidSettings">      <h2 class="lib-section">Display and reports</h2>
       <div class="lib-manage">
       <section class="panel disp" id="display">
       <div class="shelf-head"><h2>Android display</h2><span class="count">Lepton</span><span class="spacer"></span>
@@ -1152,25 +1363,7 @@
           reported, including ones not on F-Droid.</div>
       </div>
       </div>
-      <div hidden>
-<div hidden>        <div class="shelf-head"><h2>Find apps</h2><span class="count" id="catCount"></span></div>
-        <div class="cat-tools">
-          <input type="text" id="catQ" placeholder="Search F-Droid apps rated for the Frame…">
-          <select id="catCat" aria-label="Category"><option value="">All categories</option></select>
-        </div>
-        <div class="vchips" id="catChips"></div>
-        <div class="cat-grid" id="catGrid"><div class="sub">Loading the catalogue…</div></div>
-        <div class="row" style="margin-top:12px"><button class="small" id="catMore" hidden>Show more</button></div>
-        <div class="hint">Verdicts come from checks of each APK against what Lepton supports (Android 11,
-          64-bit ARM, no clipboard or Play Services) and from reports made on a Frame. See docs/apks.md.</div></div>
-      </div>
-    </div>
-  </section>
-  </div>
-
-  <div class="page" data-page="tools">
-  <section class="panel"><h2>Assistant and AI agents</h2><p>Use your own model endpoint, or review a proposed MCP action. Nothing is sent to a model until you opt in.</p><a href="/assistant">Open assistant</a></section>
-  <div class="grid-3">
+</section>
     <section class="panel" id="transfer">
       <div class="shelf-head"><h2>Send to Frame</h2></div>
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files to send">
@@ -1222,7 +1415,7 @@
     </section>
 
     <section class="panel" id="apps">
-      <div class="shelf-head"><h2>Linux apps</h2><span class="count">Flatpak</span></div>
+      <div class="shelf-head"><h2>Linux apps</h2><span class="count">Flatpak</span><span class="spacer"></span><a href="https://flathub.org" target="_blank" rel="noopener">Browse Flathub ↗</a></div>
       <div class="list" id="flatpaks"><div class="sub">Loading…</div></div>
       <div class="row" style="margin-top:14px; flex-wrap:nowrap">
         <input type="text" id="fpId" placeholder="Flathub ID, e.g. org.mozilla.firefox">
@@ -1246,12 +1439,13 @@
       <button id="refreshAndroidArt" class="small" style="margin-top:12px">Refresh artwork for installed apps and titles</button>
     </section>
     <section class="panel" id="power">
-      <div class="shelf-head"><h2>Remote &amp; power</h2></div>
+      <div class="shelf-head"><h2>Remote access</h2></div>
       <div class="actions">
         <button data-open="terminal"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 17l6-5-6-5M12 19h8"/></svg>SSH</button>
         <button data-open="sftp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 4v16M3 8l4-4 4 4M17 20V4M13 16l4 4 4-4"/></svg>SFTP</button>
         <button data-open="steamlink"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 5l12 7-12 7z"/></svg>Steam Link</button>
         <button data-open="rdp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="12" rx="1.5"/><path d="M8 20h8M12 16v4"/></svg>Remote desktop</button>
+      </div><h3>Device power</h3><div class="actions power-actions">
         <button data-open="suspend" data-confirm="Put the Frame to sleep?"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5z"/></svg>Sleep</button>
         <button data-open="reboot" data-confirm="Restart the Frame?"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M21 12a9 9 0 1 1-3-6.7"/><path d="M21 3v6h-6"/></svg>Restart</button>
         <button data-open="poweroff" data-confirm="Shut the Frame down?" class="danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 3v9"/><path d="M6.3 7.3a8 8 0 1 0 11.4 0"/></svg>Shut down</button>
@@ -1328,8 +1522,19 @@
     </section>
   </div>
   </div>
+  <div class="page" data-page="settings">
+    <div class="workspace-heading"><div><a href="#settings" id="settingsBack" class="workspace-link" hidden>← All settings</a><h1 id="settingsTitle">Settings</h1><p id="settingsSubtitle">Connection, headset controls and Frame Control preferences.</p></div></div>
+    <div id="settingsDirectory" class="quick-routes"><a href="#devices"><span>Devices &amp; connection</span><small>Connect a Frame or switch headsets</small></a><a href="#control"><span>Control Center</span><small>Live metrics and searchable controls</small></a><a href="#home"><span>Frame activity</span><small>Readiness, running apps and downloads</small></a><a href="#display"><span>App display &amp; reports</span><small>Resolution, scale and compatibility</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Images and artwork sources</small></a><a href="#privacy"><span>Privacy &amp; updates</span><small>Sharing preferences and app updates</small></a><a href="#power"><span>Remote &amp; power</span><small>Remote access, sleep and restart</small></a></div>
+    <div id="settingsWorkspace" hidden></div>
+  </div>
+
   <div class="page" data-page="devices">
-  <div class="dev-grid">
+  <section class="panel" id="mobileConnection" hidden>
+    <h1>Headset connection</h1><p id="mobileConnectionStatus" role="status"></p>
+    <button class="action" id="mobileConnectionSetup">Change headset…</button>
+    <p class="sub" id="mobileConnectionNote"></p>
+  </section>
+  <div class="dev-grid" id="desktopConnections">
     <section class="panel">
       <div class="shelf-head"><h2>Headsets</h2><span class="count" id="devCount"></span><span class="spacer"></span>
         <button class="action small" id="devAdd">+ Add a headset…</button></div>
@@ -1352,13 +1557,14 @@
   <span class="sub">Files go to <code>~/Downloads</code>; <code>.apk</code> files install as Android apps;
   a game's <code>.zip</code>, folder or <code>.exe</code> becomes a Steam library title.</span></div></div>
 
-<div class="drawer" id="drawer"><div class="log" id="log"></div></div>
+<div class="drawer" id="drawer"><button class="small" id="closeLog">Close activity log</button><div class="log" id="log"></div></div>
 <div class="bottombar" id="bottombar" role="button" aria-label="Show activity">
   <span class="label">ACTIVITY</span>
   <span class="jobs" id="jobs" hidden><span class="spinner"></span><span id="jobsText"></span></span>
   <span class="last" id="lastLog">Ready</span>
   <span class="sub" id="drawerHint">Show ▴</span>
 </div>
+<dialog class="dlg installed-detail" id="installedDetail" aria-labelledby="installedTitle"><button class="store-close" data-close="installedDetail" aria-label="Close app details">×</button><div id="installedDetailBody"></div></dialog>
 <dialog id="appDetail" class="store-dialog" aria-labelledby="detailTitle">
   <button class="store-close" data-close="appDetail" aria-label="Close app details">×</button>
   <div id="detailBody"></div>
@@ -1460,10 +1666,18 @@
       <button type="submit" class="action small" id="titleInstall">Install</button></div>
   </form>
 </dialog>
+<dialog id="installChooser" class="dlg installed-detail install-chooser" aria-labelledby="installChooserTitle">
+  <div class="install-chooser-head"><span class="eyebrow">Add to your Frame</span><button type="button" id="installChooserClose" class="store-close" aria-label="Close Add or install">×</button></div>
+  <h2 id="installChooserTitle">What would you like to install?</h2>
+  <div class="install-choices"><a href="#appStore"><strong>Browse apps</strong><span>VR, Android games, media and utilities</span></a><a href="#getgames"><strong>Owned Steam games</strong><span>Install straight from your Steam library</span></a><a href="#steamStore"><strong>Find a Steam game</strong><span>Search the store, buy or get, then install</span></a><a href="#linuxApps"><strong>Linux apps</strong><span>Desktop apps from Flathub</span></a><button type="button" id="installChooseFile"><strong>Choose a file</strong><span>Android APK · Windows EXE · game ZIP</span></button></div>
+  <input type="file" id="installFileInput" accept=".apk,.zip,.exe" multiple hidden>
+  <form id="installLinkForm"><label for="installUrl">Or paste a download or Frame Control install link</label><div class="install-link-row"><input id="installUrl" type="text" inputmode="url" placeholder="https://example.com/game.zip" autocomplete="off" required><button class="action" type="submit">Review link</button></div><p id="installLinkError" class="sub" role="alert" hidden></p></form>
+  <p class="sub">Link installs show the title, source and file before you confirm, then use automatic launch and runtime settings. Choose a ZIP or EXE file to pick those settings yourself. Compatibility varies by title.</p>
+</dialog>
 <dialog id="wiDlg" aria-labelledby="wiTitle">
   <h2 id="wiTitle">Install from a website</h2>
   <dl id="wiFacts"></dl>
-  <p id="wiWarn">A website asked Frame Control to install this. Nothing is downloaded until you click Install.
+  <p id="wiWarn">Nothing is downloaded from this link until you click Install.
     Only install software from sites you trust.</p>
   <div class="progress" id="wiProg" hidden><i></i></div>
   <div class="row rep-actions"><span class="sub" id="wiMsg"></span><span class="spacer"></span>
@@ -1591,7 +1805,16 @@ function applyHostWording(h) {
   if (!h.mobile) $("shotsFolder").textContent = h.fileManager === "your file manager" ? "Open folder" : `Show in ${h.fileManager}`;
   $("shotsSaveNew").textContent = h.mobile ? `Save all to ${h.computer}` : `Save new to ${h.computer}`;
   $("clipMac").textContent = `Send ${h.computer} clipboard`;
-  if (h.mobile) $("offSetup").textContent = "Change headset…";
+  $('mobileConnection').hidden = !h.mobile;
+  $('desktopConnections').hidden = !!h.mobile;
+  if (h.mobile) {
+    $('offSetup').textContent = 'Change headset…';
+    const setup = window.frameApp?.setUpConnection;
+    $('mobileConnectionStatus').textContent = online === false ? 'The Frame is disconnected. Retry or check its address in connection setup.' : 'This page uses the Frame serving this session.';
+    $('mobileConnectionSetup').hidden = !setup;
+    $('mobileConnectionSetup').onclick = () => window.frameApp?.setUpConnection?.();
+    $('mobileConnectionNote').textContent = setup ? 'Connection setup manages the headset address, pairing and SSH access.' : 'To change headsets, open connection setup in the Frame Control app, or open the other Frame’s address in your browser.';
+  }
 }
 // Images to the phone (the app offers Save Image to Photos, Files and so on).
 function blobBase64(blob) {
@@ -1622,10 +1845,10 @@ async function api(path, body, device = window.connDevice) {
       throw err;
     }
   };
-  // Changes name the headset the page was showing, so the server refuses one meant
-  // for a headset it has since switched away from.
+  // Requests name the headset the page was showing, including GETs that start
+  // input helpers, so the server can refuse a stale target before starting work.
   const dev = device ? { "X-Frame-Device": device } : {};
-  const opts = body === undefined ? { headers: {"X-Frame-UI": UI_KEY} } : {
+  const opts = body === undefined ? { headers: {"X-Frame-UI": UI_KEY, ...dev} } : {
     method: "POST", headers: {"Content-Type": "application/json", "X-Frame-UI": UI_KEY, ...dev}, body: JSON.stringify(body) };
   let r;
   try { r = await fetch(path, opts); }
@@ -1675,7 +1898,9 @@ function setOnline(ok, why) {
   const was = online;
   online = ok;
   window.frameControlCenter?.connection(ok);
-  $("offline").hidden = ok;
+  renderHome();
+  if (HOST.mobile) $('mobileConnectionStatus').textContent = ok ? 'Connected to the Frame serving this session.' : 'The Frame is disconnected. Retry or check its address in connection setup.';
+  $('offline').hidden = ok;
   if (!ok) {
     $("offMsg").textContent = why || "Can't reach the Frame";
     setConn(false, "Offline");
@@ -1714,6 +1939,7 @@ function refresh() {
     } catch (e) {
       renderPerformance(null);
       if (!e.stale) stateRead = {valid: false, error: e};
+      renderHome();
       window.frameControlCenter?.unavailable(e);
       if (!e.offline) { setConn(false, "Error"); log("Status failed: " + e.message, "e"); }
       if (!state) ["games", "flatpaks"].forEach(id => failed($(id), e));
@@ -1855,6 +2081,8 @@ $("testNotification").onclick = () => act("Test notification", async () => {
   return {message: "Test notification sent. Check your device's notification settings if it didn't appear."};
 });
 $("castBtn").onclick = () => {
+  location.hash = "capture";
+  showPage();
   setView("headset");
   if (!live) toggleLive(true);
   $("viewer").scrollIntoView({behavior: "smooth", block: "center"});
@@ -1907,6 +2135,7 @@ function battery(b, power) {
 
 function render(s) {
   renderPerformance(s);
+  renderHome(s);
   window.frameControlCenter?.status(s, stateReceivedAt, stateRead);
   battery(s.battery, s.power);
   $("devName").textContent = `${s.hostname} · ${s.ip ?? "no IP"}`;
@@ -2034,7 +2263,7 @@ $("canvas").addEventListener("pointerdown", e => {
   $("canvas").addEventListener("pointerup", up, { once: true });
 });
 document.addEventListener("keydown", e => {
-  if (page !== "home" || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey) return;
+  if (page !== "capture" || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || e.metaKey || e.ctrlKey) return;
   if (ctrl.on && document.activeElement === $("viewer")) return;  // keys are going to the Frame
   if (e.key === "c") return $("ctrlBtn").click();
   if ($("canvas").hidden) return;
@@ -2409,15 +2638,16 @@ function ctrlToggle(on) {
 }
 $("ctrlBtn").onclick = () => ctrlToggle(!ctrl.on);
 // Until it's ready, check on the Frame side every half second (for up to 15 s).
-async function ctrlPoll(n) {
-  if (!ctrl.on) return;
+async function ctrlPoll(n, gen = devGen) {
+  if (!ctrl.on || gen !== devGen) return;
   try {
     const r = await api(n ? "/api/touch" : "/api/touch?start=1");
+    if (gen !== devGen) return;
     ctrl.state = r.state; ctrl.message = r.message || "";
-  } catch (e) { ctrl.state = "error"; ctrl.message = e.message; }
+  } catch (e) { if (gen !== devGen) return; ctrl.state = "error"; ctrl.message = e.message; }
   if (!ctrl.on) return;  // turned off while connecting
   ctrlShow();
-  if (ctrl.state !== "ready" && ctrl.state !== "error" && n < 30) return setTimeout(() => ctrlPoll(n + 1), 500);
+  if (ctrl.state !== "ready" && ctrl.state !== "error" && n < 30) return setTimeout(() => ctrlPoll(n + 1, gen), 500);
   if (ctrl.state === "ready") return ctrlFlush();
   if (ctrl.state !== "error") {
     ctrl.state = "error"; ctrl.message = "The Frame didn't answer. Turn Control off and on to try again.";
@@ -2430,6 +2660,16 @@ $("viewer").addEventListener("blur", () => { ctrlRelease(); if (window.frameApp?
 document.addEventListener("visibilitychange", () => { if (document.hidden) ctrlRelease(); });
 window.addEventListener("blur", () => ctrlRelease());  // another app took the keyboard
 
+function ctrlReset() {
+  clearTimeout(ctrl.retry); cancelAnimationFrame(ctrl.raf);
+  if (ctrl.g?.timer) clearTimeout(ctrl.g.timer);
+  ctrl.on = false; ctrl.queue = []; ctrl.sending = false; ctrl.state = 'off'; ctrl.message = '';
+  ctrl.move = null; ctrl.rel = [0,0]; ctrl.raf = 0; ctrl.retryAt = 0;
+  ctrl.held.clear(); ctrl.keys.clear(); ctrl.pointers.clear(); ctrl.g = null;
+  desk.panels = []; desk.focus = null; desk.shown = null; desk.pick = ''; desk.loaded = false; desk.error = '';
+  window.frameApp?.captureKeys?.(false);
+  ctrlShow();
+}
 const isMoveEvent = e => ("fx" in e || "dx" in e) && !("button" in e) && !("key" in e);
 const isRelease = e => ("button" in e || "key" in e) && e.down === false;
 // While it connects, keep clicks and keys, each with the last position before it, so a
@@ -2469,6 +2709,7 @@ async function ctrlFlush() {
     return;
   }
   ctrl.sending = true;
+  const gen = devGen;
   // Up to 200 events, and at most about 100 characters of text: the Frame types a batch
   // key by key before reading the next, and a release mustn't wait behind a long paste.
   let n = 0, chars = 0;
@@ -2480,6 +2721,7 @@ async function ctrlFlush() {
   let again = 0;
   try {
     const r = await api("/api/touch", { events: batch });
+    if (gen !== devGen) return;
     ctrl.state = r.state; ctrl.message = r.message || "";
     if (r.stale && typeof loadPanels === "function") loadPanels();  // focus moved on: catch up now
     if (!r.sent && r.state === "error") {
@@ -2491,10 +2733,12 @@ async function ctrlFlush() {
       again = 300;
     }
   } catch (e) {
+    if (gen !== devGen) return;
     ctrl.state = "error"; ctrl.message = e.message;
     ctrl.queue.unshift(...batch.filter(isRelease));
     again = 1000;  // try the releases again in a moment, not in a tight loop
   } finally {
+    if (gen !== devGen) return;
     ctrl.sending = false;
     ctrlShow();
     clearTimeout(ctrl.retry);
@@ -2716,7 +2960,7 @@ $("ctrlKeys").addEventListener("click", e => {
 });
 
 // ---- controls ----
-$("refreshAll").onclick = () => { refresh(); loadTitles(); };  // titles too: the Frame may have been asleep at start
+$("refreshAll").onclick = () => { refresh(); loadTitles(); loadAndroid(); };  // titles too: the Frame may have been asleep at start
 document.addEventListener("keydown", e => {
   if (e.key === "r" && !e.metaKey && !e.ctrlKey && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) $("refreshAll").onclick();
 });
@@ -2744,7 +2988,8 @@ const installing = new Set();
 let jobsRunning = 0;
 function showJobs() {
   $("jobs").hidden = !jobsRunning;
-  $("jobsText").textContent = `${jobsRunning} install${jobsRunning === 1 ? "" : "s"} running`;
+  $("jobsText").textContent = `${jobsRunning} task${jobsRunning === 1 ? "" : "s"} running`;
+  renderHome();
 }
 async function runJob(label, key, start, onProgress = () => {}) {
   installing.add(key); jobsRunning++; showJobs();
@@ -3162,10 +3407,10 @@ $("titleAdd").onclick = () => $("fileInput").click();
 // ---- Steam games: install owned games, find and buy on the store ----
 const FLABEL = { 3: "Frame Verified", 2: "Playable", 1: "Unsupported", 0: "Unknown" };
 const FCLASS = { 3: "v-works", 2: "v-maybe", 1: "v-no", 0: "f-0" };
-const gm = { src: "owned", owned: null, byId: new Map(), country: null, dl: null, q: "",
+const gm = { src: "owned", owned: null, byId: new Map(), country: null, dl: null, q: "", storeDraft: "",
              // Rating filters per view: most store results aren't rated yet, so show them all there.
-             filters: { owned: new Set(["3", "2"]), store: new Set(["3", "2", "0", "1"]) },
-             results: [], shown: 0, store: [], storeQ: null, poll: null, seq: 0 };
+             filters: { owned: new Set(["3", "2", "0", "1"]), store: new Set(["3", "2", "0", "1"]) },
+             results: [], shown: 0, shownBySource: {owned:0, store:0}, store: [], storeQ: null, poll: null, seq: 0 };
 
 async function loadOwned() {
   $("gmReload").disabled = true;
@@ -3187,7 +3432,7 @@ async function loadOwned() {
   // Keep polling while something downloads so the progress and Installed tags update.
   clearTimeout(gm.poll);
   if (d) gm.poll = setTimeout(loadOwned, document.hidden ? 30000 : 5000);
-  renderChips(); filterGames(true);
+  renderChips(); filterGames(true); renderHome();
 }
 
 function renderChips() {
@@ -3202,7 +3447,7 @@ function filterGames(keepScroll) {
   if (gm.src === "owned") {
     if (!gm.owned) return;
     const terms = gm.q.toLowerCase().split(/\s+/).filter(Boolean);
-    gm.results = gm.owned.filter(g => gm.filters.owned.has(String(g.frame)) && terms.every(t => g.name.toLowerCase().includes(t)));
+    gm.results = gm.owned.filter(g => !g.installed && gm.filters.owned.has(String(g.frame)) && terms.every(t => g.name.toLowerCase().includes(t)));
     // Installed and downloading first, then recently played, then by name.
     gm.results.sort((a, b) => (b.installed - a.installed) || (b.lastPlayed - a.lastPlayed) || a.sort.localeCompare(b.sort));
     $("gmCount").textContent = `${gm.results.length.toLocaleString()} of ${gm.owned.length.toLocaleString()} owned`;
@@ -3253,37 +3498,45 @@ function moreGames(count = 48) {
     </div>`;
   }).join(""));
   gm.shown += next.length;
+  gm.shownBySource[gm.src] = gm.shown;
   $("gmMore").hidden = gm.shown >= gm.results.length;
 }
 
 async function searchStore() {
+  const seq = ++gm.seq;  // clearing the query invalidates earlier work too
   const q = $("gmQ").value.trim();
   if (!q) { gm.store = []; gm.storeQ = null; renderChips(); return filterGames(); }
   if (!gm.country) await loadOwned();  // the store search needs the account's country
+  if (seq !== gm.seq) return;
   if (!gm.country) return toast("Couldn't read the Steam account's country from the Frame", true);
-  const seq = ++gm.seq;
-  $("gmGrid").innerHTML = `<div class="sub">Searching the Steam store…</div>`;
+  if (gm.src === 'store') $("gmGrid").innerHTML = `<div class="sub">Searching the Steam store…</div>`;
   try {
     const r = await api(`/api/steam/search?q=${encodeURIComponent(q)}&cc=${gm.country}`);
     if (seq !== gm.seq) return;
     gm.store = r.results; gm.storeQ = q;
-  } catch (e) { if (seq === gm.seq) $("gmGrid").innerHTML = `<div class="sub">${esc(e.message)}</div>`; return; }
-  renderChips(); filterGames();
+  } catch (e) { if (seq === gm.seq && gm.src === 'store') $("gmGrid").innerHTML = `<div class="sub">${esc(e.message)}</div>`; return; }
+  gm.shownBySource.store = 0;
+  if (gm.src === 'store') { renderChips(); filterGames(); }
 }
 
 function setGameSource(src) {
+  if (gm.src === 'owned') gm.q = $('gmQ').value;
+  else gm.storeDraft = $('gmQ').value;
+  gm.shownBySource[gm.src] = gm.shown;
   gm.src = src;
+  gm.shown = gm.shownBySource[src] || 0;
   document.querySelectorAll("[data-src]").forEach(b => b.classList.toggle("on", b.dataset.src === src));
   $("gmQ").placeholder = src === "owned" ? "Filter your games…" : "Search the Steam store, then press Enter…";
-  $("gmQ").value = src === "owned" ? gm.q : gm.storeQ || "";
-  renderChips(); filterGames();
+  $("gmQ").value = src === "owned" ? gm.q : gm.storeDraft;
+  renderChips(); filterGames(true);
 }
 
 $("gmSrc").onclick = e => { const b = e.target.closest("[data-src]"); if (b) setGameSource(b.dataset.src); };
 let gmTimer;
 $("gmQ").oninput = e => {
-  if (gm.src !== "owned") return;
-  clearTimeout(gmTimer); gmTimer = setTimeout(() => { gm.q = e.target.value; filterGames(); }, 150);
+  if (gm.src !== 'owned') { gm.storeDraft = e.target.value; return; }
+  gm.q = e.target.value;
+  clearTimeout(gmTimer); gmTimer = setTimeout(() => { if (gm.src === 'owned') filterGames(); }, 150);
 };
 $("gmQ").addEventListener("keydown", e => { if (e.key === "Enter" && gm.src === "store") searchStore(); });
 $("gmReload").onclick = loadOwned;
@@ -3378,7 +3631,8 @@ function renderCats() {
     $("storeCats").innerHTML = STORE_CATS.map(([id, label]) => `<button data-cat="${id}" aria-pressed="false">${catIcon(id)}<span>${esc(label)}</span></button>`).join("");
   $("storeCats").querySelectorAll("[data-cat]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cat === sourceState.category)));
   const [, label, eyebrow, blurb] = storeCat(sourceState.category);
-  $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Store")}</h1><p>${esc(blurb)}</p>`;
+  $("storeHeading").hidden = !sourceState.category;
+  $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Apps & VR")}</h1><p>${esc(blurb)}</p>`;
 }
 function renderStore() {
   const apps=sourceState.apps, q=$("sourceQ").value.trim(), browsing=!q && !sourceState.category && !sourceState.installable && !sourceState.source;
@@ -3422,7 +3676,7 @@ async function searchSources(quiet) {
     clearTimeout(sourceState.retry);
     if(loading.length)sourceState.retry=setTimeout(()=>{ if(request===sourceState.request)searchSources(true); },6000);
     renderStore();await loadSources();
-  } catch(e) { if(request===sourceState.request) { $("searchGrid").innerHTML=storeEmpty();$("sourceStatus").hidden=false;$("sourceStatus").textContent="We couldn't reach the app shelves. Try again in a moment."; } }
+  } catch(e) { if(request===sourceState.request) { $("searchGrid").innerHTML='<div class="lib-empty"><h2>App shelves unavailable</h2><p>Your installed apps are still in Apps.</p><button data-retry-sources>Retry shelves</button></div>';$("sourceStatus").hidden=false;$("sourceStatus").textContent=e.message; } }
   finally { if(request===sourceState.request)$("searchGrid").setAttribute("aria-busy","false"); }
 }
 function currentOffer() { return sourceState.detail?.app.offers[sourceState.detail.choice]; }
@@ -3449,6 +3703,12 @@ function renderAppDetailBody() {
 function updateInstall() {
   const o=currentOffer();if(!o || !$("detailInstall"))return;
   const job=sourceState.jobs.get(`${o.source}:${o.id}`), blocked=o.verdict?.tone==='blocked', page=sourcePage(o.page), b=$("detailInstall");
+  if (!job && o.package && androidApps.some(app => app.package === o.package)) {
+    b.disabled=false; b.textContent='View installed app'; $('detailProgress').hidden=true;
+    $('detailInstallNote').textContent='Already on this Frame. Open its details to launch it or manage its settings.';
+    $('detailOffers').querySelectorAll('input').forEach(input=>input.disabled=false);
+    return;
+  }
   b.disabled=!!(job && !job.done) || !!job?.addingData || (blocked && !job?.result) || (!o.downloadable && !page);
   b.textContent=job?.result?.game_data ? (job.addingData ? 'Adding game data…' : 'Add game data') : job?.result ? 'Open in Steam' : job && !job.done ? (job.stage||'Downloading')+(job.percent!=null?` ${Math.round(job.percent)}%`:'…') : blocked ? 'Not compatible' : o.downloadable ? (job?.error?'Try again':'Install on Frame') : 'Get from the creator ↗';
   $("detailProgress").hidden=!job || job.done;
@@ -3472,10 +3732,15 @@ async function loadOfferDetails() {
   } catch(e) { const note=$("detailInstallNote");if(d===sourceState.detail && note)note.textContent="Some app details couldn't be refreshed. You can still view this listing."; }
 }
 async function installStoreApp() {
-  const o=currentOffer(), key=`${o.source}:${o.id}`, existing=sourceState.jobs.get(key);
+  const gen=devGen, o=currentOffer();if(!o)return;
+  const key=`${o.source}:${o.id}`, existing=sourceState.jobs.get(key);
+  if (!existing && o.package && androidApps.some(app => app.package === o.package)) {
+    $('appDetail').close(); openInstalledApp(o.package); return;
+  }
   if(existing?.result?.game_data) {
     let error="";existing.addingData=true;existing.dataError="";updateInstall();
-    const added=await runJob(`Add game data for ${o.name}`,`${key}:data`,()=>api('/api/sources',{action:'game-data',package:existing.result.package}),j=>{error=j.error||"";});
+    const added=await runJob(`Add game data for ${o.name}`,`${key}:data`,()=>api('/api/sources',{action:'game-data',package:existing.result.package}),j=>{if(gen===devGen)error=j.error||"";});
+    if(gen!==devGen)return;
     Object.assign(existing,{addingData:false,dataError:added?"":error||"We couldn't add the game data. Try again."});
     if(added)existing.result={...existing.result,game_data:false};
     updateInstall();return;
@@ -3484,7 +3749,8 @@ async function installStoreApp() {
   if(!o.downloadable) { const url=sourcePage(o.page);if(url)window.open(url,'_blank','noopener,noreferrer');return; }
   if(existing&&!existing.done)return;
   const state={stage:'Downloading',percent:null,done:false};sourceState.jobs.set(key,state);updateInstall();
-  const result=await runJob(`Install ${o.name}`,key,()=>api('/api/sources/install',{source:o.source,id:o.id,version_code:o.version_code??null}),j=>{Object.assign(state,{stage:j.stage||'Downloading',percent:j.percent??null,error:j.error});updateInstall();});
+  const result=await runJob(`Install ${o.name}`,key,()=>api('/api/sources/install',{source:o.source,id:o.id,version_code:o.version_code??null}),j=>{if(gen!==devGen)return;Object.assign(state,{stage:j.stage||'Downloading',percent:j.percent??null,error:j.error});updateInstall();});
+  if(gen!==devGen)return;
   Object.assign(state,{done:true,result,error:result?null:state.error||"We couldn't finish the installation. Try again."});updateInstall();
   if(result)loadAndroid();
 }
@@ -3500,7 +3766,7 @@ $("sourceFilter").onchange=e=>{sourceState.source=e.target.value;searchSources()
 $("storeCats").onclick=e=>{const b=e.target.closest('[data-cat]');if(b)storeCategory(b.dataset.cat);};
 $("storeFits").onchange=e=>{sourceState.installable=e.target.checked;searchSources();};
 $("storePhone").onchange=e=>{sourceState.phone=e.target.checked;searchSources();};
-$("searchGrid").onclick=e=>{const c=e.target.closest('[data-cat]');if(c)return storeCategory(c.dataset.cat);const b=e.target.closest('[data-app]');if(b)openStoreApp(+b.dataset.app);if(e.target.closest('#storeReset')){$('sourceQ').value='';sourceState.vr=null;sourceState.installable=false;sourceState.phone=false;sourceState.category='';sourceState.source='';$('sourceFilter').value='';storeChips();searchSources();}};
+$("searchGrid").onclick=e=>{if(e.target.closest("[data-retry-sources]"))return searchSources();const c=e.target.closest('[data-cat]');if(c)return storeCategory(c.dataset.cat);const b=e.target.closest('[data-app]');if(b)openStoreApp(+b.dataset.app);if(e.target.closest('#storeReset')){$('sourceQ').value='';sourceState.vr=null;sourceState.installable=false;sourceState.phone=false;sourceState.category='';sourceState.source='';$('sourceFilter').value='';storeChips();searchSources();}};
 $("detailBody").onclick=e=>{if(e.target.closest('[data-close]'))return $("appDetail").close();if(e.target.closest('#detailInstall'))installStoreApp();const b=e.target.closest('[data-gallery]');if(b)$('detailGallery').scrollBy({left:+b.dataset.gallery*$('detailGallery').clientWidth*.86,behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'instant':'smooth'});};
 $("detailBody").onchange=e=>{if(e.target.name==='storeOffer'){sourceState.detail.choice=+e.target.value;renderAppDetail();loadOfferDetails();}};
 $("sourcesOpen").onclick=()=>{loadSources();$('sourcesDialog').showModal();};
@@ -3517,13 +3783,8 @@ $("addSource").onsubmit=e=>{e.preventDefault();const f=new FormData(e.target);ad
 document.querySelectorAll('[data-close]').forEach(b=>b.onclick=()=>$(b.dataset.close).close());
 $('appDetail').addEventListener('close',()=>{sourceState.detailRequest++;});
 function showAndroidTab(tab) {
-  const browse = tab === 'browse';
-  $('appStore').hidden = !browse; $('androidLibrary').hidden = browse;
-  $('repNew').hidden = browse; $('sourcesOpen').hidden = !browse;
-  document.querySelectorAll('[data-store-tab]').forEach(button => {
-    const selected = button.dataset.storeTab === tab;
-    button.classList.toggle('on', selected); button.setAttribute('aria-pressed', String(selected));
-  });
+  const target = tab === 'browse' ? '#appStore' : '#androidLibrary';
+  if (location.hash === target) showPage(); else location.hash = target;
 }
 document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick = () => {
   showAndroidTab(button.dataset.storeTab);
@@ -3536,61 +3797,79 @@ loadSources().then(()=>searchSources());
 const VLABEL = { works: "Works on Frame", likely: "Should work", maybe: "Might work", unlikely: "Probably crashes", no: "Won't work" };
 const cat = { apps: null, q: "", cat: "", v: new Set(["works", "likely"]), shown: 0, results: [] };
 let androidApps = [];
+let androidSeq = 0, installedPackage = null;
+const androidPending = new Set();
 
 const libState = { filter: "all", q: "" };
 function libCard(a) {
   const pkg = esc(a.package), name = a.label || a.package;
-  const o = { name, artwork: a.store_art || {} };  // the store's artwork for it, when a source lists it
-  const kind = a.vr && !a.flatscreen ? '<span class="store-vr">VR</span>' : "";
-  const version = String(a.version || "").replace(/^v/i, "");
-  const from = a.source && !/\.apk$/i.test(a.source) ? ` · ${a.source}` : "";
-  const issues = (a.vr_issues || []).filter(n => !/\(good\)\.?$/.test(n));  // frame_apk_vr.py also notes good news
-  const warn = issues.length ? `<div class="lib-warn" title="${esc(issues.join(" "))}">${esc(issues[0])}</div>` : "";
+  const o = { name, artwork: a.store_art || {} };
+  const pending = androidPending.has(a.package);
   return `<article class="lib-card${a.running ? " running" : ""}" data-pkg="${pkg}">
-    ${storeArt(o, "", false, null, `${name} artwork`, kind + (a.running ? '<span class="lib-running">Running</span>' : ""))}
-    <div class="lib-body">${storeIcon(o)}<div><strong title="${esc(name)}">${esc(name)}</strong><small title="${pkg}">${version ? "v" + esc(version) : esc(a.package)}${esc(from)}</small></div></div>${warn}
-    <div class="lib-actions">
-      ${a.running ? `<button class="stop" data-and="stop" data-pkg="${pkg}">■ Stop</button>`
-                  : `<button class="play" data-and="launch" data-pkg="${pkg}">▶ Play</button>`}
-      <details class="lib-more"><summary aria-label="More for ${esc(name)}" title="More">⋯</summary><div class="lib-menu">
-        ${a.art_missing ? `<button data-and="refresh-art" data-pkg="${pkg}" data-name="${esc(name)}">Add artwork<small>Its Steam library tile has none yet</small></button>` : ""}
-        <button data-and="probe" data-pkg="${pkg}">Test<small>Launch it and record whether it stays up</small></button>
-        <button data-and="rate" data-pkg="${pkg}" data-ver="${esc(a.version)}" data-name="${esc(name)}" data-src="${esc(a.source || "")}">Report how it worked<small>Goes to the shared compatibility list</small></button>
-        <button class="danger" data-and="remove" data-pkg="${pkg}" data-name="${esc(name)}">Remove from the Frame</button>
-      </div></details>
-    </div></article>`;
+    ${storeIcon(o)}<button class="lib-name" data-app-details="${pkg}"><strong>${esc(name)}</strong><small>${a.running ? "Running" : "Ready to open"}${a.vr && !a.flatscreen ? " · VR" : " · Flat-screen"}</small></button>
+    <button class="${a.running ? "stop" : "play"}" data-and="${a.running ? "stop" : "launch"}" data-pkg="${pkg}" data-name="${esc(name)}" ${pending ? 'disabled aria-busy="true"' : ""}>${pending ? "Wait…" : a.running ? "Stop" : "Open"}</button>
+    <button class="lib-overflow" data-app-details="${pkg}" aria-label="More for ${esc(name)}">⋯</button></article>`;
+}
+function openInstalledApp(pkg) {
+  const a = androidApps.find(app => app.package === pkg);
+  if (!a) return;
+  installedPackage = pkg;
+  const name = a.label || a.package, data = `data-pkg="${esc(pkg)}" data-name="${esc(name)}"`, pending = androidPending.has(pkg);
+  $('installedDetailBody').innerHTML = `<span class="eyebrow">Installed on this Frame</span><h2 id="installedTitle">${esc(name)}</h2><p>${a.running ? "Running" : "Ready to open"}${a.vr && !a.flatscreen ? " · VR" : " · Flat-screen"}</p>
+    <div class="row"><button class="${a.running ? 'stop' : 'play'}" data-and="${a.running ? 'stop' : 'launch'}" ${data} ${pending ? 'disabled aria-busy="true"' : ''}>${pending ? 'Wait…' : a.running ? 'Stop' : 'Open'}</button><a href="#display" class="workspace-link" data-installed-display>Display settings</a></div>
+    ${(a.vr_issues || []).length ? `<p class="hint">${esc(a.vr_issues.join(' '))}</p>` : ''}
+    <h3>App information</h3><dl class="facts"><dt>Package</dt><dd>${esc(pkg)}</dd><dt>Version</dt><dd>${esc(a.version || 'Unknown')}</dd><dt>Source</dt><dd>${esc(a.source || 'Sideloaded APK')}</dd></dl>
+    <h3>Compatibility &amp; maintenance</h3><div class="detail-actions"><button data-and="probe" ${data}>Test on Frame</button><button data-and="rate" ${data} data-ver="${esc(a.version)}" data-src="${esc(a.source || '')}">Report how it worked</button>${a.art_missing ? `<button data-and="refresh-art" ${data}>Add artwork</button>` : ''}<button class="danger" data-and="remove" ${data}>Remove app &amp; data…</button></div>`;
+  if (!$('installedDetail').open) $('installedDetail').showModal();
 }
 function renderLibrary() {
   const q = libState.q.trim().toLowerCase(), f = libState.filter;
   const shown = androidApps.filter(a => (f === "all" || (f === "vr" ? a.vr && !a.flatscreen : f === "flat" ? !(a.vr && !a.flatscreen) : a.running))
     && (!q || `${a.label} ${a.package}`.toLowerCase().includes(q)));
   const vr = androidApps.filter(a => a.vr && !a.flatscreen).length, running = androidApps.filter(a => a.running).length;
-  $("libSummary").textContent = androidApps.length
-    ? `${androidApps.length} ${androidApps.length === 1 ? "app" : "apps"} on your Frame${vr ? `, ${vr} in VR` : ""}${running ? `; ${running} running now` : ""}. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.`
-    : "Your Android apps. Each runs in its own Lepton instance, keeps its data, and is in the Steam library under its own name.";
+  $("libSummary").textContent = `${androidApps.length} installed${running ? ` · ${running} running` : ''}${vr ? ` · ${vr} VR` : ''}`;
+  $('libFilterLabel').textContent = f === 'all' ? 'Filters' : ({vr:'VR',flat:'Flat-screen',running:'Running'})[f];
   $("libFilters").querySelectorAll("[data-lib]").forEach(b => b.setAttribute("aria-pressed", b.dataset.lib === f));
   $("andApps").innerHTML = shown.length ? shown.map(libCard).join("")
     : androidApps.length ? `<div class="lib-empty"><h2>Nothing matches</h2><p>Try another filter.</p></div>`
     : `<div class="lib-empty"><h2>No Android apps yet</h2><p>Find VR games, emulators and video apps in the store, or drop an .apk on Send to Frame.</p><button class="action" data-store-go="browse">Open the store</button></div>`;
 }
-$("libFilters").onclick = e => { const b = e.target.closest("[data-lib]"); if (b) { libState.filter = b.dataset.lib; renderLibrary(); } };
+$("libFilters").onclick = e => { const b = e.target.closest("[data-lib]"); if (b) { libState.filter = b.dataset.lib; $('libFilterMenu').open = false; renderLibrary(); } };
 $("libQ").oninput = e => { libState.q = e.target.value; renderLibrary(); };
 $("andApps").addEventListener("click", e => {
   if (e.target.closest("[data-store-go]")) showAndroidTab("browse");
-  if (e.target.closest(".lib-menu button")) e.target.closest("details").open = false;
+
 });
 document.addEventListener("click", e => { document.querySelectorAll(".lib-more[open]").forEach(d => { if (!d.contains(e.target)) d.open = false; }); });
 async function loadAndroid() {
+  const seq = ++androidSeq;
+  $('andApps').setAttribute('aria-busy', 'true');
   try {
-    androidApps = (await api("/api/android")).apps;
-  } catch (e) { return failed($("andApps"), e); }
-  $("andCount").textContent = androidApps.length ? String(androidApps.length) : "";
-  renderLibrary();
-  const installed = new Set(androidApps.map(a => a.package));
-  document.querySelectorAll('#catGrid [data-and="install"]').forEach(b => {
-    if (installed.has(b.dataset.pkg)) b.outerHTML = `<span class="tag">Installed</span>`;
-  });
+    const result = await api('/api/android');
+    if (seq !== androidSeq) return;
+    androidApps = result.apps;
+    $('andCount').textContent = String(androidApps.length);
+    $('androidLoadError').hidden = true;
+    renderLibrary();
+    renderHome();
+    if ($('appDetail').open) updateInstall();
+    if ($('installedDetail').open) {
+      if (androidApps.some(a => a.package === installedPackage)) openInstalledApp(installedPackage);
+      else $('installedDetail').close();
+    }
+  } catch (e) {
+    if (seq !== androidSeq || e.stale) return;
+    $('androidLoadError').hidden = false;
+    $('androidLoadMessage').textContent = `Couldn't refresh installed apps: ${e.message}`;
+    if (!androidApps.length) $('andApps').innerHTML = '<p class="sub">Installed apps will appear after a successful refresh.</p>';
+  } finally { if (seq === androidSeq) $('andApps').setAttribute('aria-busy', 'false'); }
 }
+$('androidRetry').onclick = loadAndroid;
+document.body.addEventListener('click', e => {
+  const b = e.target.closest('[data-app-details]');
+  if (b) openInstalledApp(b.dataset.appDetails);
+  if (e.target.closest('[data-installed-display]')) $('installedDetail').close();
+});
 
 async function loadCatalog() {
   try { cat.apps = (await api("/api/android/catalog")).apps; }
@@ -3603,7 +3882,6 @@ async function loadCatalog() {
   $("catChips").innerHTML = Object.keys(VLABEL).map(k =>
     `<button class="chip vchip v-${k}" data-v="${k}" aria-pressed="${cat.v.has(k)}">${VLABEL[k]} (${(counts[k] || 0).toLocaleString()})</button>`).join("");
   filterCatalog();
-  loadAndroid();  // icons for installed apps come from the catalogue
 }
 
 function filterCatalog() {
@@ -3654,6 +3932,24 @@ $("catChips").onclick = e => {
 document.body.addEventListener("click", async e => {
   const b = e.target.closest("[data-and]"); if (!b) return;
   const pkg = b.dataset.pkg, action = b.dataset.and;
+  if (androidPending.has(pkg)) return;
+  if (action === 'rate') {
+    $('installedDetail').close();
+    openReport({package:pkg, version:b.dataset.ver, label:b.dataset.name, source:b.dataset.src});
+    return;
+  }
+  const actionGeneration = devGen;
+  androidPending.add(pkg);
+  b.disabled = true;
+  const originalLabel = b.textContent;
+  const primaryAction = action === 'launch' || action === 'stop';
+  if (primaryAction) {
+    for (const button of new Set([b, ...document.querySelectorAll('[data-and="launch"], [data-and="stop"]')])) {
+      if (button.dataset.pkg !== pkg) continue;
+      button.disabled = true; button.textContent = 'Wait…'; button.ariaBusy = 'true';
+    }
+  }
+  try {
   if (action === "install") {
     if (installing.has(pkg)) return;
     toast(`Installing ${b.dataset.name}. The first time takes a minute…`);
@@ -3671,13 +3967,21 @@ document.body.addEventListener("click", async e => {
     return;
   } else {
     if (action === "probe") toast(`Testing ${pkg}: launching it and watching for 20 s…`);
-    await act(`${action[0].toUpperCase() + action.slice(1)} ${pkg}`, () => api("/api/android", { action, package: pkg }), b);
+    await act(`${action[0].toUpperCase() + action.slice(1)} ${pkg}`, () => api("/api/android", { action, package: pkg }), primaryAction ? null : b);
     if (action === "probe") { loadCatalog(); loadReports(); }
   }
-  loadAndroid();
+  await loadAndroid();
+  } finally {
+    b.disabled = false;
+    if (primaryAction) { b.textContent = originalLabel; b.ariaBusy = 'false'; }
+    if (actionGeneration === devGen) {
+      androidPending.delete(pkg); renderLibrary();
+      if ($('installedDetail').open && androidApps.some(a => a.package === installedPackage)) openInstalledApp(installedPackage);
+    }
+  }
   if (cat.apps) { const y = window.scrollY; filterCatalog(); window.scrollTo(0, y); }
 });
-loadCatalog();
+loadAndroid();
 
 // ---- Android display (wm size / wm density / font_scale per Lepton instance) ----
 const disp = { list: [], port: null, error: null, seq: 0 };
@@ -3985,12 +4289,13 @@ async function openShot(s) {
     $("srcBadge").textContent = `Screenshot · ${shotApp(s.appid)}`;
     $("stamp").hidden = false; $("stamp").textContent = new Date(s.time * 1000).toLocaleString();
     $("saveBtn").disabled = $("copyBtn").disabled = false;
-    $("view").scrollIntoView({ behavior: "smooth" });
+    location.hash = "view";
+    showPage();
   } catch (e) {
-    toast("Couldn't open the screenshot: " + e.message, true);
+    if (gen === viewGen) toast("Couldn't open the screenshot: " + e.message, true);
   } finally {
     if (url) URL.revokeObjectURL(url);
-    $("viewer").classList.remove("busy");
+    if (gen === viewGen) $("viewer").classList.remove("busy");
   }
 }
 async function saveShots(list, btn) {
@@ -4139,7 +4444,7 @@ async function loadMacView(restart) {
   const seq = ++mvSeq;
   let s, err;
   try { s = await api("/api/macview" + (restart ? "?restart=1" : "")); } catch (e) { err = e; }
-  if (seq !== mvSeq) return;
+  if (seq !== mvSeq || location.hash !== "#macview") return;
   const box = $("macview");
   if (err) { box.hidden = false; return failed($("mvWindows"), err); }
   if (!s.available) { box.hidden = true; return; }
@@ -4167,8 +4472,41 @@ async function loadMacView(restart) {
   if (live.size) mvTimer = setTimeout(tick, 3000);
 }
 $("mvRefresh").onclick = () => loadMacView(true);
-$("mvSeparate").checked = localStorage.getItem("mvSeparate") !== "0";
-$("mvSeparate").onchange = e => localStorage.setItem("mvSeparate", e.target.checked ? "1" : "0");
+// ---- client preferences: native storage survives changing localhost origins ----
+const clientPreferences = (() => {
+  const keys = ['mvSeparate', 'padUsed'], values = {}, changed = new Set();
+  const valid = value => value === '0' || value === '1';
+  const remember = (key, value) => {
+    values[key] = value;
+    try { localStorage.setItem(key, value); } catch {} // private browsing/storage denial
+  };
+  for (const key of keys) {
+    try { const value = localStorage.getItem(key); if (valid(value)) values[key] = value; } catch {}
+  }
+  const native = window.frameApp?.preferences;
+  const ready = (async () => {
+    if (!native) return;
+    try {
+      const saved = await native.read();
+      for (const key of keys) {
+        if (changed.has(key)) continue;
+        if (valid(saved?.[key])) remember(key, saved[key]);
+        else if (valid(values[key])) { try { await native.write(key, values[key]); } catch {} }
+      }
+    } catch {} // local values remain usable if the host bridge is unavailable
+  })();
+  return { ready, get: key => values[key], set(key, value) {
+    if (!keys.includes(key) || !valid(value)) return;
+    changed.add(key); remember(key, value);
+    if (native) ready.then(() => native.write(key, value)).catch(() => {});
+  } };
+})();
+$('mvSeparate').disabled = true;
+clientPreferences.ready.then(() => {
+  $('mvSeparate').checked = clientPreferences.get('mvSeparate') !== '0';
+  $('mvSeparate').disabled = false;
+});
+$('mvSeparate').onchange = e => clientPreferences.set('mvSeparate', e.target.checked ? '1' : '0');
 $("macview").onclick = async e => {
   const b = e.target.closest("[data-mv]"); if (!b) return;
   const src = b.dataset.src;
@@ -4189,25 +4527,190 @@ $("macview").onclick = async e => {
   setTimeout(loadMacView, 800);
 };
 
-// ---- pages: #home, #games, #android, #tools (older section links still work) ----
-const PAGES = ["home", "games", "android", "tools"];
-const SECTION_PAGE = { view: "home", device: "home", shots: "home", vrTools: "home", comfort: "home", pad: "home", library: "games", sideloaded: "games", getgames: "games",
-                       display: "android", androidLibrary: "android", appStore: "android", transfer: "tools", media: "tools", artworkSettings: "tools", apps: "tools", power: "tools", macview: "tools", privacy: "tools", panels: "tools" };
-let page = "home";
-function showPage() {
-  const id = location.hash.slice(1);
-  const next = PAGES.includes(id) ? id : SECTION_PAGE[id] || "home";
-  if (next !== page && page === "home" && live) toggleLive(false);  // don't stream video nobody is watching
-  page = next;
-  document.querySelectorAll(".page").forEach(p => p.classList.toggle("on", p.dataset.page === page));
-  document.querySelectorAll("nav a").forEach(a => a.classList.toggle("on", a.getAttribute("href") === "#" + page));
-  document.title = page === "home" ? "Frame Control" : `${page[0].toUpperCase() + page.slice(1)} · Frame Control`;
-  if (id === "display" || id === "androidLibrary") showAndroidTab("library");
-  else if (id === "appStore") showAndroidTab("browse");
-  const section = !PAGES.includes(id) && id && $(id);
-  if (section) section.scrollIntoView(); else window.scrollTo(0, 0);
-  if (page === "tools") { loadMacView(); loadPanelSwitcher(); }
+// ---- shared destinations and intentional secondary workspaces ----
+const PAGES = ["apps", "games", "tools", "settings"];
+const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
+const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
+  vrTools:"tools", comfort:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools"};
+const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork",
+  pad:"Keyboard & trackpad", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates"};
+const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
+let page = "apps";
+// Reuse the existing live lists and form handlers in their new destinations.
+$('appsInstalled').append($('androidLibrary'));
+$('appsLinux').append($('apps'));
+function primaryPage(next) { return next === 'capture' ? 'tools' : SECONDARY_PAGES.includes(next) ? 'settings' : next; }
+function saveWorkspaceScroll() {
+  if (workspace.key) workspace.scroll.set(workspace.key, workspace.y);
 }
+function restoreWorkspaceScroll(key, section) {
+  const y = workspace.scroll.get(key);
+  requestAnimationFrame(() => {
+    // A second navigation can win before the next frame.
+    if (workspace.key !== key) return;
+    if (section) section.scrollIntoView({behavior:"instant", block:"start"});
+    else if (y !== undefined) window.scrollTo({top:y, behavior:"instant"});
+    else window.scrollTo({top:0, behavior:"instant"});
+    workspace.y = window.scrollY;
+  });
+}
+function selectLibrary(source = workspace.source, scope = workspace.scope, restore = true) {
+  if (restore) saveWorkspaceScroll();
+  workspace.source = ['all','steam','sideloaded'].includes(source) ? source : 'all';
+  workspace.scope = ['installed','owned','store'].includes(scope) ? scope : 'installed';
+  const installed = workspace.scope === 'installed', store = workspace.scope === 'store';
+  $('library').hidden = !installed || !['all','steam'].includes(workspace.source);
+  $('sideloaded').hidden = !installed || !['all','sideloaded'].includes(workspace.source);
+  $('librarySources').hidden = !installed;
+  $('libraryOwned').hidden = installed || store;
+  $('steamDiscover').hidden = !store;
+  document.querySelectorAll('[data-library-source]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.librarySource === workspace.source)));
+  document.querySelectorAll('[data-scope]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.scope === workspace.scope)));
+  if (!installed) {
+    $(store ? 'steamDiscover' : 'libraryOwned').append($('getgames'));
+    const src = store ? 'store' : 'owned';
+    if (gm.src !== src) setGameSource(src);
+  }
+  $('getgames').hidden = installed;
+  $('steamScopeTitle').textContent = store ? 'Steam store' : 'Owned, not installed';
+  if (restore) { workspace.key = `games:${workspace.scope}:${workspace.source}`; restoreWorkspaceScroll(workspace.key); }
+}
+function selectApps(view = workspace.apps, restore = true) {
+  if (restore) saveWorkspaceScroll();
+  workspace.apps = ['installed','browse','linux'].includes(view) ? view : 'installed';
+  $('appsInstalled').hidden = workspace.apps !== 'installed';
+  $('androidLibrary').hidden = workspace.apps !== 'installed';
+  $('appStore').hidden = workspace.apps !== 'browse';
+  $('appBrowseHeading').hidden = workspace.apps !== 'browse';
+  $('appsLinux').hidden = workspace.apps !== 'linux';
+  document.querySelectorAll('[data-app-view]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.appView === workspace.apps)));
+  if (restore) {
+    if (workspace.apps === 'installed') loadAndroid();
+    workspace.key = `apps:${workspace.apps}`; restoreWorkspaceScroll(workspace.key);
+  }
+}
+// Compatibility for existing callers that used the old source-based discovery switch.
+function selectDiscover(source = 'android') {
+  location.hash = source === 'steam' ? 'steamStore' : 'appStore';
+  showPage();
+}
+function showPage() {
+  saveWorkspaceScroll();
+  const id = location.hash.slice(1), previousPage = page;
+  const next = PAGES.includes(id) || SECONDARY_PAGES.includes(id) ? id : SECTION_PAGE[id] || 'apps';
+  if (next !== page && page === 'capture') {
+    viewGen++; $('viewer').classList.remove('busy');
+    if (live) toggleLive(false);
+  }
+  page = next;
+  if (id === 'library') workspace.scope = 'installed';
+  if (id === 'sideloaded') workspace.source = 'sideloaded', workspace.scope = 'installed';
+  if (id === 'getgames') workspace.scope = 'owned';
+  if (id === 'steamStore') workspace.scope = 'store';
+  if (['discover','android','appStore'].includes(id)) workspace.apps = 'browse';
+  if (id === 'androidLibrary') workspace.apps = 'installed';
+  if (id === 'linuxApps') workspace.apps = 'linux';
+  document.querySelectorAll('.page').forEach(p => p.classList.toggle('on', p.dataset.page === page));
+  document.querySelectorAll('#nav a').forEach(a => {
+    const selected = a.getAttribute('href') === '#' + primaryPage(page);
+    a.classList.toggle('on', selected);
+    if (selected) a.setAttribute('aria-current','page'); else a.removeAttribute('aria-current');
+  });
+  if (page === 'games') selectLibrary(workspace.source, workspace.scope, false);
+  if (page === 'apps') {
+    selectApps(workspace.apps, false);
+    if ((previousPage !== 'apps' || id === 'androidLibrary') && workspace.apps === 'installed') loadAndroid();
+  }
+  const tool = id === 'display' ? 'androidSettings' : TOOL_TITLES[id] ? id : null;
+  Object.keys(TOOL_TITLES).forEach(key => { $(key).hidden = key !== tool; });
+  for (const kind of ['tools','settings']) {
+    const activeTool = page === kind ? tool : null;
+    $(kind === 'tools' ? 'toolDirectory' : 'settingsDirectory').hidden = !!activeTool;
+    $(kind === 'tools' ? 'toolWorkspace' : 'settingsWorkspace').hidden = !activeTool;
+    $(kind === 'tools' ? 'toolBack' : 'settingsBack').hidden = !activeTool;
+    $(kind === 'tools' ? 'toolTitle' : 'settingsTitle').textContent = TOOL_TITLES[activeTool] || (kind === 'tools' ? 'Tools' : 'Settings');
+    $(kind === 'tools' ? 'toolSubtitle' : 'settingsSubtitle').hidden = !!activeTool;
+    if (activeTool) $(kind === 'tools' ? 'toolWorkspace' : 'settingsWorkspace').append($(activeTool));
+  }
+  if (tool === 'macview') loadMacView();
+  if (tool === 'panels') loadPanelSwitcher();
+  if (tool === 'androidSettings') {
+    $('repNew').hidden = false; $('androidSettings').prepend($('repNew')); loadDisplays();
+  }
+  document.title = `${tool ? TOOL_TITLES[tool] : page === 'home' ? 'Frame activity' : page[0].toUpperCase()+page.slice(1)} · Frame Control`;
+  workspace.hash = location.hash;
+  workspace.key = page === 'games' ? `games:${workspace.scope}:${workspace.source}` : page === 'apps' ? `apps:${workspace.apps}` : tool ? `${page}:${tool}` : page;
+  if (id === 'device') document.querySelector('.home-status').open = true;
+  const section = ['view','shots','device','display'].includes(id) ? $(id) : null;
+  restoreWorkspaceScroll(workspace.key, section);
+}
+window.addEventListener('scroll', () => {
+  if (workspace.hash === location.hash) workspace.y = window.scrollY;
+}, {passive:true});
+$('libraryScope').onclick = e => { const b=e.target.closest('[data-scope]'); if (b) selectLibrary(workspace.source,b.dataset.scope); };
+$('librarySources').onclick = e => { const b=e.target.closest('[data-library-source]'); if (b) selectLibrary(b.dataset.librarySource); };
+$('appViews').onclick = e => { const b=e.target.closest('[data-app-view]'); if (b) selectApps(b.dataset.appView); };
+$('homeLog').onclick = () => $('drawer').classList.toggle('open');
+$('closeLog').onclick = () => $('drawer').classList.remove('open');
+function openInstallChooser() {
+  $('installLinkError').hidden = true;
+  if (!$('installChooser').open) $('installChooser').showModal();
+}
+function installLinkRequest(raw) {
+  const value = String(raw || '').trim();
+  if (value.length > 4096) throw new Error('That link is too long. Paste a direct download or Frame Control install link.');
+  let link;
+  try { link = new URL(value); } catch { throw new Error('Paste a complete https:// download link or Frame Control install link.'); }
+  let kind = 'url', target = value;
+  if (link.protocol === 'frame-control:') {
+    const keys = [...new Set(link.searchParams.keys())];
+    if (link.hostname !== 'install' || !['','/'].includes(link.pathname) || keys.length !== 1 || !['url','manifest'].includes(keys[0]) || link.searchParams.getAll(keys[0]).length !== 1) throw new Error('This Frame Control install link is not valid.');
+    kind = keys[0]; target = link.searchParams.get(kind);
+    try { link = new URL(target); } catch { throw new Error('The install link needs a complete download URL.'); }
+  }
+  if (!target || target.length > 2048 || !['https:','http:'].includes(link.protocol) || link.username || link.password) throw new Error('Use a public download URL without a username or password.');
+  return {kind,target}; // The server still validates scheme, hosts, redirects and file type.
+}
+$('installChooserClose').onclick = () => $('installChooser').close();
+$('installChooser').onclick = e => {
+  const link = e.target.closest('a[href]');
+  if (!link) return;
+  $('installChooser').close();
+  // Sub-tabs keep the route in place. Reapply its explicit destination even
+  // when choosing the same link would otherwise produce no hashchange.
+  if (location.hash === link.getAttribute('href')) { e.preventDefault(); showPage(); }
+};
+document.querySelectorAll('[data-open-install]').forEach(b => b.onclick = openInstallChooser);
+$('installChooseFile').onclick = () => $('installFileInput').click();
+$('installFileInput').onchange = () => {
+  const files = [...$('installFileInput').files];
+  if (!files.length) return;
+  $('installChooser').close(); location.hash = 'transfer';
+  sendFiles(files); $('installFileInput').value = '';
+};
+$('installLinkForm').onsubmit = e => {
+  e.preventDefault();
+  try {
+    const request = installLinkRequest($('installUrl').value);
+    if (wi.queue.length >= 5) throw new Error('Finish or close an install link before adding another.');
+    wi.queue.push(request); $('installChooser').close(); wiNext();
+  } catch (error) { $('installLinkError').hidden = false; $('installLinkError').textContent = error.message; }
+};
+function renderHome(sample = state) {
+  const valid = sample && stateRead.valid && online !== false;
+  $('homeTitle').textContent = valid ? 'Ready when you are' : online === false ? 'Reconnect your Frame' : "Let's connect";
+  $('homeReadiness').textContent = valid ? `${sample.hostname || 'Steam Frame'} connected${sample.battery?.percent != null ? ` · ${sample.battery.percent}% battery` : ''}` : online === false ? 'Check the connection to see current activity and open apps.' : 'Checking your headset…';
+  const running = valid ? androidApps.filter(a => a.running) : [];
+  $('homeActivity').textContent = running.length ? `${running.length} app${running.length===1 ? '' : 's'} running` : valid ? 'Choose what to open next' : 'Current activity unavailable';
+  $('homeActivityNote').textContent = running.length ? 'Android apps currently running on this Frame.' : valid ? 'Open Apps or Games to choose what to use next.' : 'Connect your Frame to read its current state.';
+  $('homeRunning').innerHTML = running.map(a => `<button data-app-details="${esc(a.package)}">${esc(a.label || a.package)} <small>View app →</small></button>`).join('');
+  const d = valid ? gm.dl : null, taskCount = jobsRunning + (d ? 1 : 0);
+  $('homeJobs').textContent = taskCount ? `${taskCount} task${taskCount===1 ? '' : 's'} in progress` : 'No active tasks';
+  $('homeDownload').textContent = valid && d ? `${d.paused ? 'Paused' : 'Downloading'} ${gm.byId.get(d.appid)?.name || d.appid} · ${d.percent ?? 0}%` : 'Install progress stays here while you explore.';
+}
+
 window.addEventListener("hashchange", showPage);
 // While a text field has focus, phones hide the bottom tab bar (see body.typing in the CSS).
 const typesText = el => el?.matches?.('textarea, input:not([type=range], [type=checkbox], [type=radio], [type=file], [type=button])');
@@ -4242,12 +4745,20 @@ function padShow(status) {
     : "Click here to use your mouse and keyboard on the Frame (Esc to stop), or drag like a trackpad.";
   clearTimeout(pad.poll);
   if (ready && pad.queue.length) padFlush();
-  if (busy) pad.poll = setTimeout(async () => padShow(await api("/api/input").catch(e => ({ state: "error", message: e.message }))), 1000);
+  if (busy) {
+    const gen = devGen;
+    pad.poll = setTimeout(async () => {
+      const status = await api('/api/input').catch(e => ({state:'error', message:e.message}));
+      if (gen === devGen) padShow(status);
+    }, 1000);
+  }
 }
 async function padStart() {
-  localStorage.padUsed = "1";  // from now on it turns on with the page
-  padShow({ state: "starting" });
-  padShow(await api("/api/input?start=1").catch(e => ({ state: "error", message: e.message })));
+  clientPreferences.set('padUsed', '1');
+  const gen = devGen;
+  padShow({ state: 'starting' });
+  const status = await api('/api/input?start=1').catch(e => ({state:'error', message:e.message}));
+  if (gen === devGen) padShow(status);
 }
 $("padOn").onclick = padStart;
 
@@ -4272,20 +4783,34 @@ function padSend(event) {
 function padKeep(events) {
   pad.queue = [...events, ...pad.queue].filter(e => !isMove(e)).filter((e, i) => i < 200 || e.singlerelease);
 }
+function padReset() {
+  clearTimeout(pad.poll); pad.poll = null;
+  pad.queue = []; pad.sending = false; pad.held = false; pad.captured = false;
+  touches.clear(); gesture = null; padType.value = ''; padType.blur();
+  window.frameApp?.captureKeys?.(false);
+  if (document.pointerLockElement === $('padArea')) document.exitPointerLock();
+  $('padArea').classList.remove('captured');
+  padShow({state:'off'});
+}
 async function padFlush() {
   if (pad.sending || !pad.queue.length || pad.state !== "ready") return;
   pad.sending = true;
+  const gen = devGen;
   const events = pad.queue.splice(0, 200);
   try {
     const status = await api("/api/input", { events });
+    if (gen !== devGen) return;
     if (!status.sent) padKeep(events);
     if (status.state !== "ready") padShow(status);
   } catch (e) {
+    if (gen !== devGen) return;
     padKeep(events);
     padShow({ state: "error", message: e.message });
   } finally {
-    pad.sending = false;
-    if (pad.queue.length) padFlush();
+    if (gen === devGen) {
+      pad.sending = false;
+      if (pad.queue.length) padFlush();
+    }
   }
 }
 function padKey(e) {
@@ -4425,11 +4950,17 @@ document.querySelector("#pad .pad-keys").addEventListener("click", e => {
   if (b.dataset.padClick) padSend({ [b.dataset.padClick]: true });
   else if (b.dataset.padKey) padSend({ specialKey: +b.dataset.padKey });
 });
-api("/api/input").then(s => s.state === "off" && localStorage.padUsed ? padStart() : padShow(s), () => padShow({ state: "off" }));
+clientPreferences.ready.then(async () => {
+  const gen = devGen;
+  const status = await api('/api/input').catch(() => ({state:'off'}));
+  if (gen !== devGen) return;
+  if (status.state === 'off' && clientPreferences.get('padUsed') === '1') padStart();
+  else padShow(status);
+});
 showPage();
 document.addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector("dialog[open]")) return;
-  const n = PAGES[+e.key - 1];
+  const n = [...PAGES, 'devices', 'control'][+e.key - 1];
   if (n) location.hash = n;
 });
 
@@ -4550,20 +5081,32 @@ document.querySelectorAll("nav a").forEach(a => a.addEventListener("click", () =
 }));
 
 // ---- report a problem (ui/frame_report.py): sent privately to PostHog, with diagnostics ----
-const bug = { preview: "" };
+const bug = { preview: '', generation: 0, consent: null };
+function bugDiagnostics() {
+  return $('bugDiag').checked && bug.consent === String($('bugLogs').checked) ? bug.preview : '';
+}
 const activityLines = () => [...$("log").children].slice(0, 25).map(el => el.textContent.trim());
 function bugReportText() {
   const email = $("bugFollowup").checked ? $("bugContact").value.trim() : "";
-  const body = `Kind: ${$("bugKind").value}${email ? `\nFollow-up questions welcome: ${email}` : ""}\n\n${$("bugText").value.trim()}${bug.preview ? "\n\n---\nDiagnostics:\n```\n" + bug.preview + "\n```" : ""}`;
+  const diagnostics = bugDiagnostics();
+  const body = `Kind: ${$("bugKind").value}${email ? `\nFollow-up questions welcome: ${email}` : ""}\n\n${$("bugText").value.trim()}${diagnostics ? "\n\n---\nDiagnostics:\n```\n" + diagnostics + "\n```" : ""}`;
   return { title: $("bugTitleIn").value.trim(), body };
 }
 // The preview is a snapshot: exactly this text is sent, even if more activity happens meanwhile.
 async function loadBugPreview() {
-  if (!$("bugDiag").checked) { bug.preview = ""; $("bugDiagText").textContent = "Nothing: diagnostics are off."; return; }
-  $("bugDiagText").textContent = "Loading…";
-  try { bug.preview = (await api("/api/report/preview", { activity: activityLines(), includeLogs: $("bugLogs").checked })).text; }
-  catch (e) { bug.preview = ""; $("bugDiagText").textContent = `Couldn't collect diagnostics: ${e.message}`; return; }
-  $("bugDiagText").textContent = bug.preview;
+  const generation = ++bug.generation, includeLogs = $('bugLogs').checked;
+  bug.preview = ''; bug.consent = null; // invalidate immediately, before any request
+  if (!$('bugDiag').checked) { $('bugDiagText').textContent = 'Nothing: diagnostics are off.'; return; }
+  $('bugDiagText').textContent = 'Loading…';
+  const current = () => generation === bug.generation && $('bugDiag').checked && includeLogs === $('bugLogs').checked;
+  try {
+    const result = await api('/api/report/preview', {activity:activityLines(), includeLogs});
+    if (!current()) return;
+    bug.preview = result.text; bug.consent = String(includeLogs);
+    $('bugDiagText').textContent = bug.preview;
+  } catch (e) {
+    if (current()) $('bugDiagText').textContent = `Couldn't collect diagnostics: ${e.message}`;
+  }
 }
 function openBugReport() {
   $("bugForm").reset();
@@ -4609,7 +5152,7 @@ $("bugForm").onsubmit = async e => {
     const res = await api("/api/report", {
       kind: $("bugKind").value, title: $("bugTitleIn").value, message: $("bugText").value,
       contactFollowup: $("bugFollowup").checked, contact: $("bugFollowup").checked ? $("bugContact").value : "",
-      diagnostics: $("bugDiag").checked ? bug.preview : "" });
+      diagnostics: bugDiagnostics() });
     $("bugMsg").textContent = `Sent, thank you. Your reference is ${res.id}.`;
     $("bugCancel").textContent = "Close";
     log(res.message, "ok");
@@ -4905,6 +5448,9 @@ function onConnection(s) {
     stateRead = {valid: false, error: null};
     online = null;
     devGen++;               // answers still on their way are about the other headset
+    padReset(); ctrlReset();
+    sourceState.jobs.clear(); sourceState.detail = null; sourceState.detailRequest++;
+    $('appDetail').close();
     window.frameControlCenter?.reset();
     refreshing = null;      // and the next status check must be a new one
     if (live) toggleLive(false);  // the other headset's video or captures
@@ -4921,8 +5467,9 @@ function onConnection(s) {
     });
     disp.list = []; disp.port = null;
     // The lists behind those panels too, so filters can't bring the old ones back.
-    gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.seq++;
-    androidApps = []; resetShots();
+    gm.storeDraft = ""; gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.shownBySource = {owned:0, store:0}; gm.seq++;
+    androidApps = []; androidSeq++; androidPending.clear(); $('installedDetail').close(); resetShots();
+    renderHome();
     titlesSeq++; disp.seq++;  // answers to loads already on their way are ignored
     if (cat.apps) filterCatalog();  // "Installed" tags were the other headset's
     // Confirmations still open were checked against the other headset.
@@ -5012,7 +5559,7 @@ function setUpActive() {
 $("connSetup").onclick = setUpActive;
 
 // ---- Devices tab ----
-PAGES.push("devices", "control");
+// Secondary pages remain outside the four primary keyboard destinations.
 let devicesSeq = 0;  // an older answer arriving late mustn't bring back the old selection
 async function loadDevices() {
   if (!link.live) return;
@@ -5063,18 +5610,24 @@ function deviceStatus(d) {
 
 function renderDevices() {
   if (!dv.data) return;
-  $("devCount").textContent = dv.list.length;
+  const focus = document.activeElement?.closest?.('[data-dev-details], [data-use]');
+  const focusedId = focus?.dataset.devDetails || focus?.dataset.use;
+  const focusedAction = focus?.dataset.devDetails ? 'data-dev-details' : 'data-use';
+  $('devCount').textContent = dv.list.length;
   $("devList").innerHTML = dv.list.map(d => {
     const [dot, text, full] = deviceStatus(d);
     return `<div class="item dev-item${d.id === dv.sel ? " sel" : ""}" data-dev="${esc(d.id)}">
-      <span class="dot ${dot}"></span><div class="grow"><div class="t">${esc(d.name)} ${d.active ? '<span class="tag">In use</span>' : ""}</div>
-      <div class="s"${full ? ` title="${esc(full)}"` : ""}>ssh ${esc(d.alias)} · ${esc(text)}</div></div>
+      <button class="dev-details grow" data-dev-details="${esc(d.id)}" aria-pressed="${d.id === dv.sel}" aria-label="Details for ${esc(d.name)}"><span class="dot ${dot}"></span><span><span class="t">${esc(d.name)} ${d.active ? '<span class="tag">In use</span>' : ''}</span>
+      <span class="s"${full ? ` title="${esc(full)}"` : ''}>ssh ${esc(d.alias)} · ${esc(text)}</span></span></button>
       ${d.active ? "" : `<button class="small" data-use="${esc(d.id)}">Use this headset</button>`}</div>`;
   }).join("") || `<div class="sub">No headsets yet. Add one to get started.</div>`;
   $("devList").querySelectorAll("[data-dev]").forEach(el => el.onclick = e => {
     if (e.target.closest("[data-use]")) return useDevice(e.target.closest("[data-use]").dataset.use);
-    dv.sel = el.dataset.dev; dv.found = null; dv.editing = null; renderDevices();
+    if (e.target.closest('[data-dev-details]')) {
+      dv.sel = el.dataset.dev; dv.found = null; dv.editing = null; renderDevices();
+    }
   });
+  if (focusedId) [...$('devList').querySelectorAll(`[${focusedAction}]`)].find(b => (b.dataset.devDetails || b.dataset.use) === focusedId)?.focus();
   const n = dv.data.network;
   $("netNow").textContent = n ? `${n.name}${n.gateway && !n.name.includes(n.gateway) ? ` (router ${n.gateway})` : ""}${n.tailscale && n.tailscale.up ? " · Tailscale on" : ""}` : "Checking…";
   if (document.activeElement !== $("netName")) {
@@ -5322,6 +5875,7 @@ showPage();  // #devices is a page now
 api("/api/host").then(h => {
   Object.assign(HOST, h);
   window.frameControlCenter?.host(h);
+  $("macToolLink").hidden = h.mobile || h.os !== "macOS";
   if (h.mobile) return;
   $("offSetup").hidden = false; $("offSetup").onclick = setUpActive;  // the server opens it in a terminal
   watchConnection();

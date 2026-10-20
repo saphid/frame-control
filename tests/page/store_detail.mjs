@@ -25,7 +25,7 @@ const code = names.map(grab).join("");
 
 // A fake page: elements by id. The install panel's elements exist only while
 // #detailBody holds the real app page, as in the browser.
-function page(api = async () => ({})) {
+function page(api = async () => ({}), androidApps = []) {
   const els = { appDetail: { open: false, scrollTop: 0, showModal() { this.open = true; } } };
   const inPage = id => ["detailInstall", "detailInstallNote", "detailProgress", "detailOffers"].includes(id);
   const $ = id => inPage(id) && !(els.detailBody?.innerHTML || "").includes(`id="${id}"`) ? null
@@ -34,8 +34,8 @@ function page(api = async () => ({})) {
   const document = { activeElement: null, querySelector: () => null };
   const console = { error() {} };
   const calls = [];
-  const fns = new Function("$", "sourceState", "document", "console", "api", code + "; return { renderAppDetail, openStoreApp };")(
-    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); });
+  const fns = new Function("$", "sourceState", "document", "console", "api", "androidApps", code + "; return { renderAppDetail, openStoreApp };")(
+    $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); }, androidApps);
   return { els, sourceState, calls, ...fns };
 }
 
@@ -52,6 +52,14 @@ const offer = { source: "fdroid", id: "org.example.brush", source_name: "F-Droid
   if (!html.includes('id="detailTitle">Open Brush<')) fail("app page has no title: " + html.slice(0, 200));
   if (!html.includes('id="detailInstall"') || !html.includes("Get it from")) fail("app page has no install panel");
   if (html.includes('role="alert"')) fail("a good listing showed the error state");
+}
+
+// A catalogue listing that is already installed offers its management page.
+{
+  const p = page(undefined, [{ package: offer.package }]);
+  p.sourceState.detail = { app: { name: offer.name, offers: [{ ...offer }] }, choice: 0 };
+  if (p.renderAppDetail() !== true) fail("an installed listing reported a render failure");
+  if (p.els.detailInstall.textContent !== "View installed app") fail("installed listing offered another install");
 }
 
 // A listing that can't render (no offer to show) gets a clear message, not an empty dialog.

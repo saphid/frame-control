@@ -11,6 +11,7 @@ const os = require("os");
 const path = require("path");
 const { SCHEME, parseInstallLink, linkFromArgv } = require("./install-link");
 const updater = require("./updater");
+const { preferenceStore } = require("./preferences");
 
 const run = promisify(execFile);
 
@@ -27,6 +28,7 @@ const LOG_DIR = IS_MAC ? path.join(os.homedir(), "Library", "Logs", "Frame Contr
 const LOG = path.join(LOG_DIR, "server.log");
 const BG = "#0d1117";
 const FRAME = process.env.FRAME_ALIAS || "frame";
+const preferences = preferenceStore(path.join(app.getPath("userData"), "client-preferences.json"));
 
 let server = null;
 let url = null;
@@ -279,6 +281,8 @@ ipcMain.handle("server:restart", (e) => {
   if (win && e.sender === win.webContents && e.senderFrame && e.senderFrame.url.startsWith("data:")) restartServer();
 });
 ipcMain.handle("clipboard:read", (e) => fromUi(e) ? clipboard.readText() : "");
+ipcMain.handle("preferences:read", (e) => fromUi(e) ? preferences.read() : {});
+ipcMain.handle("preferences:write", (e, key, value) => fromUi(e) ? preferences.write(key, value) : false);
 // A PNG or JPEG (a screenshot) onto the clipboard as an image.
 ipcMain.handle("clipboard:writeImage", (e, bytes) => {
   if (!fromUi(e) || !(bytes instanceof Uint8Array)) return false;
