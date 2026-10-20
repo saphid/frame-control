@@ -135,6 +135,88 @@ is an error rather than a reason to fall back to `index-v1.jar`. `entry.jar`
 must be signed with SHA-2 (SHA-1 is still accepted for legacy `index-v1.jar`).
 Removing a repository clears its state.
 
+## My itch.io purchases
+
+The store can also install the Android (Quest) builds of games you **own** on
+itch.io: bought, claimed free, from a bundle or a gift. It is opt-in. In the
+store, open the sources dialog and use **My itch.io purchases**: create an API
+key on itch.io (account settings › API keys) and paste it there. Frame Control
+checks it with itch.io (`GET /profile`) before saving it; a wrong or revoked key
+is reported and nothing is saved. Once connected, a source called
+**itch.io (my purchases)** appears, and its games are marked **Owned on
+itch.io** instead of Free. **Disconnect itch.io** deletes the key file.
+
+How it works, using the documented
+[server-side API](https://itch.io/docs/api/serverside) with
+`Authorization: Bearer <key>`:
+
+- `GET https://api.itch.io/profile/owned-keys` lists your download keys, page by
+  page until an empty page (500 per page, at most 40 pages). Games whose
+  `traits` don't include `p_android` are left out; one entry per game, with the
+  newest key.
+- Opening a game asks `GET /games/<game_id>/uploads?download_key_id=<key id>`
+  for its files. Android uploads are those marked `p_android` (in `traits`, or
+  as a `p_android`/`platforms.android` flag) or named `.apk`. `.apk` files come
+  first, then full games before demos, newest first. Soundtracks, pre-orders and
+  externally hosted files are skipped.
+- Installing asks `GET /uploads/<upload_id>/download?download_key_id=<key id>`.
+  The answer accepted is a redirect to itch.io's storage host, a JSON body
+  with a `url` field naming it, or the file itself. Frame Control follows the
+  first two without the key, to HTTPS on port 443 only, and only to host names
+  whose every address is public. For IPv4 that means outside every special
+  block (`0/8`, `10/8`, `100.64/10`, `127/8`, `169.254/16`, `172.16/12`,
+  `192.0.0/24`, `192.0.2/24`, `192.88.99/24`, `192.168/16`, `198.18/15`,
+  `198.51.100/24`, `203.0.113/24`, `224/4`, `240/4`), however written. IPv6 is
+  an allow-list: global unicast (`2000::/3`) only, minus 6to4, Teredo,
+  documentation, ORCHID and benchmarking blocks, so mapped or NAT64 IPv4,
+  site-local, unique-local and the rest are all refused. It connects only to
+  the addresses it checked, trying each in turn within one 20-second budget
+  for connecting and the TLS handshake, and checks again on each further
+  redirect. A storage URL, first or after any redirect, that contains the API
+  key (or 8+ characters of it, in any case, plain or percent-encoded) or an
+  `api_key` parameter is refused before it is looked up, so the key never
+  reaches the storage server. The APK then takes
+  the normal install path, with the same ABI, OpenXR layer and Meta-services
+  checks and warnings as any other store download.
+
+The key is stored in `frame_host.data_dir('itch-account.json')`
+(`~/Library/Application Support/Frame Control/itch-account.json` on macOS),
+written through a new 0600 temporary file and moved into place. It is only
+sent to `https://api.itch.io`, in the `Authorization` header, never in a URL;
+Frame Control does not follow api.itch.io's redirects with it. The key, or any
+part of it from 8 characters, never appears in the page, API responses, errors
+or logs; the page clears the field as soon as it is sent. A disconnect made
+while a key is still being checked wins: that key is not saved.
+Owned-game lists are kept in memory for ten minutes and never written to the
+disk cache.
+
+When api.itch.io answers 401 or 403, Frame Control asks `GET /profile` with the
+same key. If that is refused too (or itch.io says "invalid key"), the key is
+deleted and the store says to connect again; otherwise only that game or
+download is refused, and the key stays. Rate limits (429) and network errors
+only fail that source's results, with a readable message. A storage host's
+refusal is reported as a download error, not as a rate limit.
+
+### What is verified and what isn't
+
+Not tested against a live itch.io account at all: everything below was tested
+with recorded and hand-made responses (`tests/test_itch_purchases.py`) only.
+
+| Part | Status |
+|---|---|
+| Bearer key, `GET /profile`, `/profile/owned-keys` paging and its fields, the `errors` array | Documented in the public reference (checked 2026-10-13) |
+| `GET /games/<id>/uploads` and `download_key_id` | Not in the public reference; paths and parameter from itch.io's app client, [go-itchio](https://github.com/itchio/go-itchio) |
+| Upload fields (`filename`, `display_name`, `size`, `storage`, `type`, `traits`, `updated_at`, `demo`, `preorder`) | Assumed from go-itchio and the API's snake_case convention |
+| The `p_android` trait, on games and uploads | Assumed from itch.io's `p_windows`/`p_linux`/`p_osx` naming |
+| What `/uploads/<id>/download` returns | Unknown: go-itchio only builds the URL and hands it to a downloader, so a redirect, a JSON `url` and the file are all accepted |
+| Whether that endpoint accepts the key as a Bearer header | Unknown: go-itchio puts it in the query string, which Frame Control refuses to do |
+| itch.io's storage host names and addresses | Unknown; any public HTTPS host is allowed |
+
+Limits: a game whose page doesn't mark Android, or whose Android build is
+inside a `.zip`, won't install. Android builds have no version codes on
+itch.io, so only the newest upload can be installed. Owning a game doesn't make
+it run on the Frame: Quest builds that need Meta's platform services won't.
+
 ## Publish your own repository
 
 Only publish free APKs you own or have the developer's permission to distribute.

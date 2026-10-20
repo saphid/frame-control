@@ -73,6 +73,8 @@ does not suppress the other at the aggregator level. Queries filter the current
 feed window locally: this is not an exhaustive historical itch search. Only
 explicit zero-price Android entries are returned. Covers are exposed in
 `images`; absent screenshots, APK version, ABI and minimum SDK stay unknown.
+Games the user owns on itch.io are a separate, opt-in source that downloads
+through their own API key: see [My itch.io purchases](apk-repos.md#my-itchio-purchases).
 Curated GitHub entries include publisher artwork and plain-language summaries.
 Repository image URLs are pinned to inspected commits. Open Brush screenshots
 come from its README-linked Steam listing; SuperTux uses the upstream gameplay
