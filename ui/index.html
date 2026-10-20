@@ -2307,9 +2307,11 @@ $("testNotification").onclick = () => act("Test notification", async () => {
 // Home's shortcuts to the things people come to do next.
 document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => {
   const to = b.dataset.go;
-  // Show the destination now, not at the later hashchange: focus below must land on a visible
+  // Show the destination now, not at a later hashchange: focus below must land on a visible
   // field while this click still counts as a user gesture, or phones won't open the keyboard.
-  location.hash = to; showPage();
+  // pushState fires no hashchange, so the page is shown once; Back still returns here.
+  if (location.hash !== "#" + to) history.pushState(null, "", "#" + to);
+  showPage();
   if (to === "pad") { if (pad.state === "off" || pad.state === "error") padStart(); $("padType").focus({ preventScroll: true }); }
 });
 $("nowSend").onclick = () => $("fileInput").click();

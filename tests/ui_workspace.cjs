@@ -290,10 +290,11 @@ test('expanded owned and store results survive source and destination returns',a
 test('Home shortcuts show their tool before focusing it, so typing works on the first tap',()=>{
   const f=workspaceFixture(),pad={state:'on'},buttons=[{dataset:{go:'pad'}}];let focusedVisible=null;
   f.context.document.querySelectorAll=(q=>s=>s==='[data-go]'?buttons:q(s))(f.context.document.querySelectorAll);
-  Object.assign(f.context,{pad,padStart(){}});
+  Object.assign(f.context,{pad,padStart(){},history:{pushState(_,__,url){f.context.location.hash=url;}}});
   f.el('padType').focus=()=>{focusedVisible=f.activePage==='tools'&&!f.el('pad').hidden;};
   f.navigate('#home');
   const start=html.indexOf('document.querySelectorAll("[data-go]")'),end=html.indexOf('$("nowSend").onclick',start);
-  f.run(html.slice(start,end));buttons[0].onclick();
-  assert.equal(focusedVisible,true);
+  let shows=0;f.run('const realShowPage=showPage;');f.context.showPage=()=>{shows++;f.run('realShowPage()');};
+  f.run(html.slice(start,end).replace(/showPage\(\)/g,'globalThis.showPage()'));buttons[0].onclick();
+  assert.equal(focusedVisible,true);assert.equal(shows,1);assert.equal(f.context.location.hash,'#pad');
 });
