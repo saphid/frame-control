@@ -57,6 +57,8 @@ import frame_link  # noqa: E402
 import frame_macview  # noqa: E402
 import frame_media  # noqa: E402
 import frame_panels  # noqa: E402
+import frame_quest  # noqa: E402
+import frame_meta  # noqa: E402
 import frame_report  # noqa: E402
 import frame_store  # noqa: E402
 import frame_telemetry  # noqa: E402
@@ -138,7 +140,7 @@ LINK = None  # the connector (frame_link.Link); None on the Frame itself
 # install's clean-up) to the other headset.
 _work_lock = threading.Lock()
 _work = [0]
-NOT_HEADSET_WORK = {"/api/devices", "/api/contact", "/api/contact/prompt"}
+NOT_HEADSET_WORK = {"/api/devices", "/api/contact", "/api/contact/prompt", "/api/queue"}
 
 
 @contextlib.contextmanager
@@ -324,38 +326,118 @@ def backfill_art(apps=(), titles=(), meant=None):
     return True
 
 
-def start_job(label, work, progress=False):
-    """Run work() in the background. It returns a dict with a "message"."""
+def _new_job_locked(label, **fields):
     now = time.time()
-    with _jobs_lock:
-        for j in [j for j, v in _jobs.items() if v["done"] and now - v["time"] > JOB_TTL]:
-            del _jobs[j]
-        job = secrets.token_hex(8)
-        _jobs[job] = {"label": label, "done": False, "error": None, "message": None, "result": None, "time": now}
+    for j in [j for j, v in _jobs.items() if v["done"] and now - v["time"] > JOB_TTL]:
+        del _jobs[j]
+    job = secrets.token_hex(8)
+    _jobs[job] = {"label": label, "done": False, "error": None, "message": None, "result": None, "time": now, **fields}
+    return job
 
+
+def _run_job(job, label, work, progress):
     def report(stage, percent=None):
         with _jobs_lock:
             _jobs[job].update(stage=stage, percent=percent)
 
-    def run():
-        fields = {}
-        try:
-            result = work(report) if progress else work()
-            fields = {"message": result.get("message") or f"{label}: done", "result": result}
-        except (Failure, frame_android.FrameError) as e:
-            fields = {"error": unreachable(str(e)) or str(e)}
-            frame_telemetry.diagnostic(f"job {label.split()[0]}", e)
-        except SourceError as e:  # already user-readable, and about a store, not the Frame
-            fields = {"error": str(e)}
-        except Exception as e:
-            fields = {"error": f"{type(e).__name__}: {e}"}
-            frame_telemetry.diagnostic(f"job {label.split()[0]}", e)
-        finally:
-            with _jobs_lock:
-                _jobs[job].update(fields, done=True, time=time.time())
+    fields = {}
+    try:
+        result = work(report) if progress else work()
+        fields = {"message": result.get("message") or f"{label}: done", "result": result}
+    except (Failure, frame_android.FrameError) as e:
+        fields = {"error": unreachable(str(e)) or str(e)}
+        frame_telemetry.diagnostic(f"job {label.split()[0]}", e)
+    except SourceError as e:  # already user-readable, and about a store, not the Frame
+        fields = {"error": str(e)}
+    except Exception as e:
+        fields = {"error": f"{type(e).__name__}: {e}"}
+        frame_telemetry.diagnostic(f"job {label.split()[0]}", e)
+    finally:
+        with _jobs_lock:
+            _jobs[job].update(fields, done=True, time=time.time())
 
-    busy_thread(run).start()
+
+def start_job(label, work, progress=False):
+    """Run work() in the background. It returns a dict with a "message"."""
+    with _jobs_lock:
+        job = _new_job_locked(label)
+    busy_thread(_run_job, job, label, work, progress).start()
     return {"message": f"{label}…", "job": job}
+
+
+# ---- The install queue: Android games and apps, one after another ----------
+#
+# Installs from the Android store, Import from my Quest and My Meta library each copy
+# a game into a Lepton instance, and each refuses to start while another is running.
+# Queued, the page can line up several: one worker runs them in order, each as a
+# normal job (/api/job) that reads "queued" until its turn. A queued install can be
+# removed until it starts; each runs on the headset it was queued for, or not at all.
+
+_queue = []  # [job, label, work, progress, headset id], in order; the running one is not here
+_queue_state = {"worker": False, "running": None}
+
+
+def _restage_locked():
+    ahead = 1 if _queue_state["running"] else 0
+    for i, (job, *_) in enumerate(_queue):
+        n = ahead + i
+        _jobs[job]["stage"] = f"Queued: {n} install{'' if n == 1 else 's'} before it" if n else "Queued: next"
+
+
+def queue_job(label, work, progress=False):
+    """Like start_job, but runs after every install queued before it."""
+    device = LINK.active_device()["id"] if LINK else None
+    with _jobs_lock:
+        job = _new_job_locked(label, queued=True, stage=None, percent=None)
+        _queue.append([job, label, work, progress, device])
+        _restage_locked()
+        ahead = len(_queue) - 1 + (1 if _queue_state["running"] else 0)
+        start, _queue_state["worker"] = not _queue_state["worker"], True
+    if start:
+        threading.Thread(target=_drain_queue, daemon=True).start()
+    return {"message": f"{label}: queued, {ahead} before it" if ahead else f"{label}…", "job": job, "queued": ahead}
+
+
+def _drain_queue():
+    while True:
+        with _jobs_lock:
+            if not _queue:
+                _queue_state.update(worker=False, running=None)
+                return
+            job, label, work, progress, device = _queue.pop(0)
+            _queue_state["running"] = job
+            _jobs[job].update(queued=False, stage=None)
+            _restage_locked()
+
+        def guarded(*report, work=work, device=device):
+            with working(device):  # refused if the app switched headsets since it was queued
+                return work(*report)
+        _run_job(job, label, guarded, progress)
+
+
+def install_queue():
+    """The running install and those waiting, in order."""
+    with _jobs_lock:
+        ids = ([_queue_state["running"]] if _queue_state["running"] else []) + [q[0] for q in _queue]
+        return {"jobs": [{"job": j, "label": _jobs[j]["label"], "queued": bool(_jobs[j].get("queued")),
+                          "stage": _jobs[j].get("stage"), "percent": _jobs[j].get("percent")}
+                         for j in ids if j in _jobs]}
+
+
+def queue_action(body):
+    """{"action": "remove", "job"}: take a waiting install out of the queue."""
+    if body.get("action") != "remove":
+        raise Failure("unknown action", 400)
+    job = body.get("job")
+    with _jobs_lock:
+        for i, q in enumerate(_queue):
+            if q[0] == job:
+                del _queue[i]
+                _jobs[job].update(done=True, queued=False, cancelled=True, stage=None, time=time.time(),
+                                  error="Removed from the install queue")
+                _restage_locked()
+                return {"message": f"Removed {_jobs[job]['label']} from the install queue"}
+    raise Failure("that install isn't waiting in the queue (it may have started or finished)", 409)
 
 
 def job_status(query):
@@ -671,13 +753,14 @@ def launch(body):
     return {"message": f"Launching {appid}"}
 
 
-def steam_frame(*args, timeout=40):
-    """Run frame_steam.py on the Frame (it drives the Steam client) and return its JSON."""
+def steam_frame(*args, timeout=40, script="frame_steam.py"):
+    """Run frame_steam.py (it drives the Steam client), or another on-Frame
+    helper with the same JSON contract, on the Frame and return its JSON."""
     try:
         out = ssh("python3 - " + " ".join(map(shlex.quote, args)),
-                  stdin=(HERE / "frame_steam.py").read_text(), timeout=timeout)
+                  stdin=(HERE / script).read_text(), timeout=timeout)
     except Failure as e:
-        # frame_steam.py prints {"error": ...} on stdout when it fails, but ssh()
+        # The helper prints {"error": ...} on stdout when it fails, but ssh()
         # reports stderr instead if there was any, so look in both.
         for line in [*reversed(getattr(e, "stdout", "").splitlines()), *reversed(str(e).splitlines())]:
             try:
@@ -726,6 +809,20 @@ def vr(body):
     if result.get('error'):
         raise Failure(result['error'])
     return result
+
+
+# Downloads are about 20 MB; starting waits for the game, the injection and SteamVR.
+MOD_TIMEOUT = {"status": 40, "install": 600, "start": 900, "uninstall": 60}
+
+
+def mods(body):
+    """UEVR for one installed Unreal game: status, install, start (inject) or uninstall."""
+    appid, action = str(body.get("appid", "")), body.get("action")
+    if not APPID.match(appid):
+        raise Failure("bad appid", 400)
+    if action not in MOD_TIMEOUT:
+        raise Failure("action must be " + ", ".join(MOD_TIMEOUT), 400)
+    return steam_frame(action, appid, timeout=MOD_TIMEOUT[action], script="frame_mods.py")
 
 
 def steam_search(query):
@@ -1407,7 +1504,7 @@ def android(body):
                 m = frame_apk_versions.install(pkg, url) if url else frame_catalog.install(pkg)
                 message = f"Installed {m['label']}. It's in the Steam library; launching it opens its own panel."
                 return {"message": f"{message} {frame_android.layer_note(m)}".strip(), "app": m}
-            return start_job(f"Install {pkg}", work)
+            return queue_job(f"Install {pkg}", work)
         if action == "refresh-art":
             if not pkg and not body.get("all"):
                 raise Failure('choose a package or all apps', 400)
@@ -1438,6 +1535,149 @@ def android(body):
             return {"message": f"Saved your report for {name}{where}", "report": r}
     except frame_android.FrameError as e:
         raise Failure(str(e)) from e  # from e: keeps frame_host.link_failure's mark for diagnostics
+    raise Failure("unknown action", 400)
+
+
+# ---- Import from my Quest (frame_quest.py, docs/quest-import.md) --------------
+
+QUEST_ON_FRAME = "Import from my Quest runs on your computer, with the Quest plugged into it by USB."
+QUEST_SERIAL = re.compile(r"^[A-Za-z0-9._:\[\]-]{1,128}$")
+
+
+def quest_serial(value):
+    if value in (None, ""):
+        return None
+    if not isinstance(value, str) or not QUEST_SERIAL.match(value):
+        raise Failure("invalid Quest serial", 400)
+    return value
+
+
+def quest_status(query):
+    """The Quest on this computer's USB (or what to do), and the apps on it."""
+    if LOCAL:
+        return {"quest": None, "devices": [], "guidance": QUEST_ON_FRAME, "apps": []}
+    try:
+        return frame_quest.status(quest_serial((parse_qs(query).get("serial") or [None])[0]))
+    except frame_android.FrameError as e:
+        raise Failure(str(e)) from e
+
+
+def quest(body):
+    """{"action": "import", "package", "serial"?, "data"?}: a background job with progress."""
+    if LOCAL:
+        raise Failure(QUEST_ON_FRAME, 400)
+    if body.get("action") != "import":
+        raise Failure("unknown action", 400)
+    pkg = str(body.get("package", ""))
+    if not frame_android.PKG_RE.match(pkg):
+        raise Failure("invalid Android package id", 400)
+    serial, data, older = quest_serial(body.get("serial")), body.get("data", False), body.get("allowDowngrade", False)
+    if type(data) is not bool or type(older) is not bool:
+        raise Failure("data and allowDowngrade must be true or false", 400)
+    ensure_master()
+    return queue_job(f"Import {pkg} from Quest",
+                     lambda report: frame_quest.import_game(pkg, serial, data=data, progress=report,
+                                                            allow_downgrade=older), progress=True)
+
+
+# ---- My Meta library, Experimental (frame_meta.py, docs/meta-library.md) ------
+#
+# Never echoes the token: answers come from frame_meta.status() and _public(), and every
+# error passes through frame_meta.redact().
+
+META_APP_ID = re.compile(r"^[0-9]{1,25}$")
+
+
+def _meta_failure(e):
+    if isinstance(e, frame_meta.SignInCancelled):
+        return Failure(frame_meta.redact(e, 600), 409)
+    status = 400 if isinstance(e, frame_meta.TokenRejected) or "token" in str(e).lower() else 502
+    return Failure(frame_meta.redact(e, 600), status)
+
+
+def meta_sharing():
+    """Whether test results reach the shared compatibility database (Privacy settings)."""
+    blocked = frame_telemetry.blocked()
+    return {"shared": bool(frame_catalog.compat_db.shared() or frame_telemetry.enabled("compat")),
+            "blocked": blocked or None}
+
+
+def meta_status(query):
+    """The connected account (never its token) and, with library=1, the Quest games it owns
+    with any community verdicts."""
+    q = parse_qs(query)
+    out = dict(frame_meta.status(), sharing=meta_sharing())
+    if out["connected"] and q.get("library") == ["1"]:
+        try:
+            apps = frame_meta.with_verdicts(frame_meta.library(refresh=q.get("refresh") == ["1"]))
+            out["apps"] = [frame_meta._public(a) for a in apps]
+        except frame_android.FrameError as e:
+            raise _meta_failure(e) from None
+    return out
+
+
+def meta(body):
+    """{"action": "connect", "token", "acknowledged": true, "attempt"?} | {"action": "disconnect"} |
+    {"action": "cancel-signin", "attempt"} |
+    {"action": "install", "app", "test"?, "allowDowngrade"?} | {"action": "test", "package"}."""
+    action = body.get("action")
+    try:
+        if action == "connect":
+            if body.get("acknowledged") is not True:
+                raise Failure("My Meta library is experimental: tick that you understand the warning first", 400)
+            if not isinstance(body.get("token"), str):
+                raise Failure("paste your Meta access token", 400)
+            attempt = body.get("attempt")
+            if attempt is not None and not (isinstance(attempt, str) and frame_meta.SIGNIN_ATTEMPT.fullmatch(attempt)):
+                raise Failure("invalid sign-in attempt id", 400)
+            return dict(frame_meta.connect(body["token"], attempt=attempt), sharing=meta_sharing(),
+                        message="Connected your Meta account (Experimental)")
+        if action == "cancel-signin":
+            attempt = body.get("attempt")
+            if not (isinstance(attempt, str) and frame_meta.SIGNIN_ATTEMPT.fullmatch(attempt)):
+                raise Failure("invalid sign-in attempt id", 400)
+            return dict(frame_meta.cancel_signin(attempt), sharing=meta_sharing(),
+                        message="Cancelled that Sign in with Meta; it won't be saved")
+        if action == "disconnect":
+            return dict(frame_meta.disconnect(), sharing=meta_sharing(),
+                        message="Disconnected your Meta account; its token was deleted from this computer")
+        if action == "install":
+            app_id, test, older = str(body.get("app", "")), body.get("test", False), body.get("allowDowngrade", False)
+            if not META_APP_ID.match(app_id):
+                raise Failure("invalid Meta app id", 400)
+            if type(test) is not bool or type(older) is not bool:
+                raise Failure("test and allowDowngrade must be true or false", 400)
+            ensure_master()
+
+            def work(report):
+                try:
+                    return frame_meta.install(app_id, test=test, progress=report, allow_downgrade=older)
+                except frame_android.FrameError as e:
+                    raise frame_meta.MetaError(frame_meta.redact(e, 1200)) from None
+                except Exception as e:  # never let an unexpected error's text carry the token
+                    raise frame_meta.MetaError(frame_meta.redact(f"{type(e).__name__}: {e}", 600)) from None
+            return queue_job(f"{'Install and test' if test else 'Install'} {app_id} from Meta", work, progress=True)
+        if action == "test":
+            pkg = str(body.get("package", ""))
+            if not frame_android.PKG_RE.match(pkg):
+                raise Failure("invalid Android package id", 400)
+            ensure_master()
+
+            def test():
+                # run_test's own errors are fixed texts; anything else could carry the game's
+                # log (an ssh error is its output), so it is never shown, not even redacted.
+                try:
+                    return frame_meta.run_test(pkg)
+                except frame_meta.MetaError:
+                    raise
+                except frame_android.FrameError:
+                    raise frame_meta.MetaError(frame_meta.LOG_UNREADABLE) from None
+                except Exception as e:
+                    raise frame_meta.MetaError(f"The test stopped unexpectedly ({type(e).__name__}); "
+                                               "try again.") from None
+            return start_job(f"Test {pkg}", test)
+    except frame_meta.MetaError as e:
+        raise _meta_failure(e) from None
     raise Failure("unknown action", 400)
 
 
@@ -2285,6 +2525,16 @@ def source_text(body, key, optional=False):
     return value.strip()
 
 
+def login_text(body, key):
+    """A username, password or token: kept exactly (no stripping) and never echoed back."""
+    value = body.get(key)
+    if value in (None, ''):
+        return None
+    if not isinstance(value, str) or len(value) > 4096:
+        raise Failure('Provide a valid ' + key, 400)
+    return value
+
+
 def source_search(query):
     args = parse_qs(query)
     q = args.get('q', [''])[0]
@@ -2313,7 +2563,7 @@ def source_install(body):
             raise SourceError('This source is disabled')
     except SourceError as e:
         raise Failure(str(e), 400)
-    return start_job('Install ' + entry, lambda report: apk_search.install(source, entry, version, report), progress=True)
+    return queue_job('Install ' + entry, lambda report: apk_search.install(source, entry, version, report), progress=True)
 
 
 def source_manage(body):
@@ -2326,19 +2576,31 @@ def source_manage(body):
         if action == 'add':
             url = source_text(body, 'url')
             fingerprint, name = source_text(body, 'fingerprint', True), source_text(body, 'name', True)
-            parts = urlparse(url)
-            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname or parts.username:
-                raise Failure('Use an HTTPS or fdroidrepos:// repository URL without credentials', 400)
+            username, password = login_text(body, 'username'), login_text(body, 'password')
+            try:
+                parts = urlparse(url)
+                parts.port
+            except ValueError:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400) from None
+            if parts.scheme not in ('https', 'fdroidrepos') or not parts.hostname:
+                raise Failure('Use an HTTPS or fdroidrepos:// repository URL', 400)
             apk_search.repo_module()  # fail now if this build can't manage repositories
 
             def add():  # downloads and verifies the whole index: a job, not a request
-                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name)
+                # A login (here or in the URL) is stored apart and never comes back in a response.
+                login = {'username': username, 'password': password} if username or password else {}
+                source = apk_search.manage_repo('add_repo', url=url, fingerprint=fingerprint, name=name, **login)
                 message = 'Added ' + source['name']
                 if source.get('trust_on_first_use'):
                     message += '. Trusted on first use: ' + source['fingerprint'].upper()
                 return {'message': message, 'source': {k: source.get(k) for k in
                                                        ('id', 'name', 'fingerprint', 'trust_on_first_use')}}
             return start_job('Add repository', add)
+        if action in ('set-token', 'clear-token'):
+            token = login_text(body, 'token') if action == 'set-token' else None
+            if action == 'set-token' and not token:
+                raise Failure('Paste a token', 400)
+            return apk_search.set_token(source_text(body, 'source'), token)
         if action == 'game-data':
             package = source_text(body, 'package')
             return start_job('Add game data', lambda: apk_search.add_game_data(package))
@@ -2356,7 +2618,7 @@ POST = {
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
@@ -2588,6 +2850,10 @@ class Handler(BaseHTTPRequestHandler):
                     art = {}
                 self.send_json({"apps": [dict(a, store_art=art[a['package']]) if a.get('package') in art else a
                                          for a in apps]})
+            elif path == "/api/quest":
+                self.send_json(quest_status(url.query))
+            elif path == "/api/meta":
+                self.send_json(meta_status(url.query))
             elif path == "/api/titles":
                 with working():
                     ensure_master()
@@ -2615,6 +2881,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(result)
             elif path == "/api/job":
                 self.send_json(job_status(url.query))
+            elif path == "/api/queue":
+                self.send_json(install_queue())
             elif path == "/api/android/displays":
                 self.send_json(android_displays())
             elif path == "/api/android/reports":

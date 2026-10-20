@@ -189,7 +189,7 @@ entry to `~/.ssh/config` and keys at `~/.ssh/id_ed25519_frame` and
 
 This is a first public test, so reports are really useful, especially from
 Windows and Linux. The quickest way is **Report a problem** in the app (the
-warning-sign button at the top, or **Help → Report a Problem…**). It adds
+speech-bubble button at the top, or **Help → Report a Problem…**). It adds
 diagnostics with personal details removed, shows you exactly what's included,
 and sends it privately to the maintainer; nothing is published. Without the app,
 use the [feedback form](https://frame-control.pages.dev/feedback/). Please include:
@@ -213,16 +213,18 @@ Frame's software fits together, all checked against a real headset and labelled
 | [Scripts and headset setup](docs/scripts.md) | The command-line helpers, minimum typing, streaming options, floating panels |
 | [How the Frame works](docs/how-the-frame-works.md) | SteamVR → gamescope → Plasma, verified facts, debugging |
 | [Android apps (Lepton)](docs/apks.md) | Sideloading, the rated F-Droid catalogue, per-app instances |
+| [Import from my Quest](docs/quest-import.md) | Copy games you own off your Quest by USB; what runs, and why licence-checked games may not |
+| [My Meta library](docs/meta-library.md) | Experimental: install and test Quest games your Meta account owns, with your own token |
 | [Sideloading Linux and Windows games](docs/sideloading.md) | A .zip, folder or .exe as a Steam Devkit Game, runtime detection |
 | [Install links for websites](docs/web-install.md) | `frame-control://install` links and manifests, the rules, a button to paste |
 | [VR comfort and HUD](docs/vr-utilities.md) · [Steam games](docs/steam-games.md) · [VR video](docs/vr-video.md) · [WebXR in Chromium](docs/webxr-chromium.md) | Installing and buying, watching VR180/360, the Chromium build |
 | [Mac in the headset](docs/mac-in-headset.md) | Mac windows and screens as panels in the Frame, with laser and keyboard input |
-| [VR mods and custom songs](docs/mods.md) | Per-game feasibility, real-Frame results and blockers; no installer yet |
+| [VR mods and custom songs](docs/mods.md) | UEVR for Unreal games from Frame Control (install, play in VR, remove), the per-game table, Beat Saber blockers |
 | [SSH](docs/ssh.md) · [Streaming](docs/streaming.md) · [Files](docs/file-transfer.md) · [Panels](docs/panels.md) · [Tailscale](docs/tailscale.md) | Topic notes |
 | [Frame Control for iPhone](docs/iphone.md) | The iPhone and iPad app, how it runs the server on the Frame, pairing |
 | [Recovery and OS images](docs/recovery-and-images.md) | Where to download the Frame's OS, what's inside, testing without the headset |
 | [AI agents and assistant](docs/agents.md) | Key-free MCP tools, human approvals, and an opt-in assistant panel |
-| [Testing](docs/testing.md) | Unit tests, end-to-end tests against a fake Frame in Docker, and the headset smoke test |
+| [Testing](docs/testing.md) | Unit tests, end-to-end tests against a fake Frame in Docker, the headset smoke test and a Windows test VM |
 | [Open questions](docs/open-questions.md) | What's still unchecked |
 
 <details>

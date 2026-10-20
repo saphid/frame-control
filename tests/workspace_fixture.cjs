@@ -9,7 +9,7 @@ function workspaceFixture() {
     if (!elements.has(id)) elements.set(id,{id,hidden:false,disabled:false,open:false,innerHTML:'',textContent:'',value:'',dataset:{},classList:classes(),
       setAttribute(k,v){this[k]=v;},removeAttribute(k){delete this[k];},querySelectorAll(){return [];},
       append(node){node.parent=this;},prepend(node){node.parent=this;},scrollIntoView(){calls.push(['section',id]);},
-      showModal(){this.open=true;},close(){this.open=false;}});
+      showModal(){this.open=true;},close(){this.open=false;},addEventListener(k,fn){listeners[id+'-'+k]=fn;}});
     return elements.get(id);
   }
   const pages=[...html.matchAll(/data-page="([^"]+)"/g)].map((m,i)=>Object.assign(el('page-'+i),{dataset:{page:m[1]}}));
@@ -23,8 +23,8 @@ function workspaceFixture() {
   const win={scrollY:0,scrollTo(a,b){this.scrollY=typeof a==='object'?a.top:b;calls.push(['scroll',this.scrollY]);},addEventListener(k,fn){listeners[k]=fn;}};
   let hash='#apps';const location={get hash(){return hash;},set hash(value){hash=value&&!String(value).startsWith('#')?'#'+value:String(value);}};
   const context={URL,document:{querySelectorAll:s=>s==='.page'?pages:s==='#nav a'?links:controls[s]||[],title:'',body:{addEventListener(k,fn){listeners['body-'+k]=fn;}}},
-    window:win,location,requestAnimationFrame:fn=>fn(),$:el,live:false,toggleLive(on){this.live=on;calls.push(['live',on]);},
-    loadAndroid(){calls.push(['android']);},
+    window:win,location,scroller:()=>({get scrollTop(){return win.scrollY;},scrollTo:o=>win.scrollTo(o)}),scrollToY:y=>win.scrollTo({top:y}),requestAnimationFrame:fn=>fn(),$:el,live:false,toggleLive(on){this.live=on;calls.push(['live',on]);},
+    loadAndroid(){calls.push(['android']);},closeDevPop(){},metaLib:{connected:false},renderMetaApps(){},
     loadMacView(){calls.push(['macview']);},loadPanelSwitcher(){calls.push(['panels']);},loadDisplays(){calls.push(['displays']);},
     gm:{src:'owned',dl:null,byId:new Map(),shown:0,shownBySource:{owned:0,store:0}},setGameSource(src){context.gm.src=src;},state:null,stateRead:{valid:false},online:null,devGen:0,androidApps:[],jobsRunning:0,viewGen:0,
     esc:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};

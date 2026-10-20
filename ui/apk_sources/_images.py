@@ -9,7 +9,7 @@ import threading
 import time
 from urllib.parse import urljoin, urlsplit
 
-from apk_sources import SourceError
+from apk_sources import SourceError, _credentials
 
 _lock = threading.Lock()
 _urls = OrderedDict()  # token -> URL, oldest first
@@ -168,7 +168,11 @@ def get(url, headers=None, redirects=3, deadline=None, limit=MAX_IMAGE):
         path = p.path or '/'
         if p.query:
             path += '?' + p.query
-        conn.request('GET', path, headers={'User-Agent': 'FrameControl/0.3.1', **(headers or {})})
+        sent = {'User-Agent': 'FrameControl/0.3.1', **(headers or {})}
+        login = _credentials.for_url(url)  # a repository behind a login: its own artwork only, per hop
+        if login:
+            sent['Authorization'] = login.header()
+        conn.request('GET', path, headers=sent)
         live[0].settimeout(min(10, left()))
         response = conn.getresponse()
         if response.status in (301, 302, 303, 307, 308) and redirects:
