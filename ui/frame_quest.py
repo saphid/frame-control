@@ -256,7 +256,7 @@ def inspect(package_name, base, splits=()):
             with zipfile.ZipFile(path) as z:
                 names |= set(z.namelist())
         except (zipfile.BadZipFile, OSError) as e:
-            raise QuestError(f'{os.path.basename(path)} copied from the Quest is not a readable APK: {e}')
+            raise QuestError(f'{os.path.basename(path)} is not a readable APK: {e}')
     info = android.apk_info(base)
     label = info['label']
     if info['package'] != package_name:
@@ -457,8 +457,8 @@ def _check_target(pkg, meta, checked):
     have, new = _installed_code(pkg, meta), checked['version_code']
     if have is None or new is None or int(have) != int(new):
         raise QuestError(f"{label} is open on the Frame with a different version (Frame: "
-                         f"{_version(meta.get('version'), have)}; Quest: {_version(checked['version'], new)}). "
-                         "Close it, then import again to install the Quest's version.")
+                         f"{_version(meta.get('version'), have)}; import: {_version(checked['version'], new)}). "
+                         "Close it, then import again to install that version.")
     return meta
 
 
@@ -474,8 +474,7 @@ def _check_android_package(meta, code):
     if not found:
         raise QuestError(f'Android in {container} does not have {pkg} installed')
     if int(found.group(1)) != int(code):
-        raise QuestError(f'Android in {container} has {pkg} version code {found.group(1)}, not the '
-                         f"Quest's {code}")
+        raise QuestError(f'Android in {container} has {pkg} version code {found.group(1)}, expected {code}')
 
 
 def _close(pkg):

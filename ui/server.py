@@ -44,6 +44,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
+import frame_android_import  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
@@ -306,6 +307,8 @@ def _run_job(job, label, work, progress):
         fields = {"message": result.get("message") or f"{label}: done", "result": result}
     except (Failure, frame_android.FrameError) as e:
         fields = {"error": unreachable(str(e)) or str(e)}
+        if getattr(e, 'apk', None):
+            fields['apk'] = e.apk
         frame_telemetry.diagnostic(f"job {label.split()[0]}", e)
     except SourceError as e:  # already user-readable, and about a store, not the Frame
         fields = {"error": str(e)}
@@ -333,7 +336,7 @@ def start_job(label, work, progress=False):
 # normal job (/api/job) that reads "queued" until its turn. A queued install can be
 # removed until it starts; each runs on the headset it was queued for, or not at all.
 
-_queue = []  # [job, label, work, progress, headset id], in order; the running one is not here
+_queue = []  # [job, label, work, progress, headset id, cleanup], waiting entries only
 _queue_state = {"worker": False, "running": None}
 
 
@@ -344,12 +347,12 @@ def _restage_locked():
         _jobs[job]["stage"] = f"Queued: {n} install{'' if n == 1 else 's'} before it" if n else "Queued: next"
 
 
-def queue_job(label, work, progress=False):
+def queue_job(label, work, progress=False, cleanup=None):
     """Like start_job, but runs after every install queued before it."""
     device = LINK.active_device()["id"] if LINK else None
     with _jobs_lock:
         job = _new_job_locked(label, queued=True, stage=None, percent=None)
-        _queue.append([job, label, work, progress, device])
+        _queue.append([job, label, work, progress, device, cleanup])
         _restage_locked()
         ahead = len(_queue) - 1 + (1 if _queue_state["running"] else 0)
         start, _queue_state["worker"] = not _queue_state["worker"], True
@@ -364,7 +367,7 @@ def _drain_queue():
             if not _queue:
                 _queue_state.update(worker=False, running=None)
                 return
-            job, label, work, progress, device = _queue.pop(0)
+            job, label, work, progress, device, cleanup = _queue.pop(0)
             _queue_state["running"] = job
             _jobs[job].update(queued=False, stage=None)
             _restage_locked()
@@ -372,7 +375,11 @@ def _drain_queue():
         def guarded(*report, work=work, device=device):
             with working(device):  # refused if the app switched headsets since it was queued
                 return work(*report)
-        _run_job(job, label, guarded, progress)
+        try:
+            _run_job(job, label, guarded, progress)
+        finally:
+            if cleanup:
+                cleanup()
 
 
 def install_queue():
@@ -396,8 +403,14 @@ def queue_action(body):
                 _jobs[job].update(done=True, queued=False, cancelled=True, stage=None, time=time.time(),
                                   error="Removed from the install queue")
                 _restage_locked()
-                return {"message": f"Removed {_jobs[job]['label']} from the install queue"}
-    raise Failure("that install isn't waiting in the queue (it may have started or finished)", 409)
+                message = f"Removed {_jobs[job]['label']} from the install queue"
+                cleanup = q[5]
+                break
+        else:
+            raise Failure("that install isn't waiting in the queue (it may have started or finished)", 409)
+    if cleanup:
+        cleanup()
+    return {"message": message}
 
 
 def job_status(query):
@@ -1582,8 +1595,83 @@ def apk_installed(info, meta, error, seconds):
 frame_android.install_hooks.append(apk_installed)
 
 
+# ---- Local Android files -------------------------------------------------
+
+# Browsers upload APK/split/OBB selections without building a multi-GB archive
+# in memory. One-use tokens stay tied to the headset selected at upload.
+_android_uploads = {}
+_android_uploads_lock = threading.Lock()
+ANDROID_UPLOAD_TTL = 3600
+
+
+def _purge_android_uploads(now=None):
+    now = time.time() if now is None else now
+    with _android_uploads_lock:
+        expired = [_android_uploads.pop(t) for t, e in list(_android_uploads.items())
+                   if now - e['time'] > ANDROID_UPLOAD_TTL]
+    for entry in expired:
+        shutil.rmtree(entry['dir'], ignore_errors=True)
+
+
+def stage_android_file(path, temp_dir=None):
+    _purge_android_uploads()
+    if Path(path).suffix.lower() not in frame_android_import.EXTENSIONS:
+        raise Failure('Android import needs APK, OBB, XAPK, APKS, APKM or ZIP files', 400)
+    own = temp_dir
+    try:
+        if not own:  # local ZIP inspection must never retain/delete the user's original
+            own = tempfile.mkdtemp(prefix=f'{frame_android_import.TMP_PREFIX}{os.getpid()}-')
+            copied = Path(own) / Path(path).name
+            shutil.copyfile(path, copied)
+            path = copied
+        size = Path(path).stat().st_size
+        token = secrets.token_hex(16)
+        with _android_uploads_lock:
+            if len(_android_uploads) >= 128 or size + sum(e['size'] for e in _android_uploads.values()) > frame_android_import.MAX_BYTES:
+                raise Failure('Too many staged Android files; finish the current import or restart the app', 400)
+            _android_uploads[token] = {'path': str(path), 'dir': own, 'time': time.time(), 'size': size,
+                                      'device': LINK.active_device()['id'] if LINK else None}
+        return {'android': True, 'token': token, 'message': 'Read Android file: ' + Path(path).name}
+    except BaseException:
+        if own:
+            shutil.rmtree(own, ignore_errors=True)
+        raise
+
+
+def android_import(body):
+    _purge_android_uploads()
+    tokens, action = body.get('tokens'), body.get('action')
+    if (action not in ('import', 'discard') or not isinstance(tokens, list) or not 1 <= len(tokens) <= 128
+            or any(not isinstance(t, str) for t in tokens) or len(set(tokens)) != len(tokens)):
+        raise Failure('Choose staged Android files to import or discard', 400)
+    display = body.get('display', 'auto')
+    if display not in ('auto', 'flat', 'vr'):
+        raise Failure('invalid APK display mode', 400)
+    device = LINK.active_device()['id'] if LINK and action == 'import' else None
+    with _android_uploads_lock:
+        entries = [_android_uploads.get(t) for t in tokens]
+        if action == 'import' and any(e is None for e in entries):
+            raise Failure('Android upload expired or was already used; drop the files again', 400)
+        if action == 'import' and any(e and e['device'] != device for e in entries):
+            raise Failure('Frame Control switched headsets since these files were read; drop them again', 409)
+        entries = [_android_uploads.pop(t) for t in tokens if t in _android_uploads]
+
+    def cleanup():
+        for entry in entries:
+            shutil.rmtree(entry['dir'], ignore_errors=True)
+    if action == 'discard':
+        cleanup()
+        return {'message': 'Discarded Android upload'}
+    try:
+        ensure_master()
+        return queue_job('Import Android files', lambda report: frame_android_import.import_files(
+            [e['path'] for e in entries], display=display, progress=report), progress=True, cleanup=cleanup)
+    except BaseException:
+        cleanup()
+        raise
+
+
 # ---- Sideloaded titles (Linux/Windows builds as Steam Devkit Games) --------
-#
 # Installing is two steps: inspect (a dropped file is uploaded and a zip
 # unpacked here, once) returns a token and the detected target and runtime for
 # the page to confirm; install then runs in the background with progress the
@@ -1614,6 +1702,8 @@ def _purge_titles(now=None):
 def stage_title(path, temp_dir=None, name=None):
     """Inspect a .zip, folder or program and keep it for install; returns the plan and a token."""
     _purge_titles()
+    if Path(path).suffix.lower() == '.zip' and frame_android_import.is_bundle(path):
+        return stage_android_file(path, temp_dir)
     try:
         plan = frame_titles.inspect(path, name)
     except BaseException as e:
@@ -2197,7 +2287,7 @@ def _pid_alive(pid):
 def _tmp_places():
     """Where each kind of staging folder goes, and its name before the server's PID."""
     tmp = Path(tempfile.gettempdir())
-    return [(tmp, WEB_TMP_PREFIX), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
+    return [(tmp, WEB_TMP_PREFIX), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX), (tmp, frame_android_import.TMP_PREFIX),
             (tmp, frame_agent.TMP_PREFIX), (frame_host.cache_dir("apk-sources"), apk_fdroid.TMP_PREFIX)]
 
 
@@ -2467,7 +2557,7 @@ POST = {
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/android-import": android_import, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
@@ -2787,7 +2877,8 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(body, dict):
                 raise Failure("request body must be a JSON object", 400)
             # Not headset work: switching headsets mustn't wait for (or refuse) these.
-            with (contextlib.nullcontext() if path in NOT_HEADSET_WORK else working(meant)):
+            local = path in NOT_HEADSET_WORK or (path == '/api/android-import' and action_of(body) == 'discard')
+            with (contextlib.nullcontext() if local else working(meant)):
                 result = handler(body)
             self.send_json(result)
         except ClientGone:
@@ -2890,7 +2981,7 @@ class Handler(BaseHTTPRequestHandler):
 
     def upload(self):
         """Raw file body. X-Filename names it; X-Mode is 'push', 'apk' (install), 'apkinfo' (read only)
-        or 'title' (a .zip or program to sideload: inspected and kept for /api/titles install)."""
+        'android' (staged for grouped import), or 'title' (a .zip or program to inspect)."""
         name = os.path.basename(unquote(self.headers.get("X-Filename", "")))
         mode = self.headers.get("X-Mode", "push")
         length = int(self.headers.get("Content-Length") or 0)
@@ -2900,7 +2991,8 @@ class Handler(BaseHTTPRequestHandler):
             raise Failure("empty or too-large upload", 400)
         if mode in ("apk", "apkinfo") and not name.lower().endswith(".apk"):
             raise Failure("APK install needs a .apk file", 400)
-        tmp = Path(tempfile.mkdtemp(prefix="frame-ui-"))
+        prefix = f'{frame_android_import.TMP_PREFIX}{os.getpid()}-' if mode in ('android', 'title') else 'frame-ui-'
+        tmp = Path(tempfile.mkdtemp(prefix=prefix))
         keep = False
         try:
             dest = tmp / name
@@ -2912,6 +3004,10 @@ class Handler(BaseHTTPRequestHandler):
                         raise Failure("upload interrupted", 400)
                     f.write(chunk)
                     remaining -= len(chunk)
+            if mode == 'android':
+                result = stage_android_file(dest, str(tmp))
+                keep = True
+                return result
             if mode == "media":
                 return push_media(dest)
             if mode == "apkinfo":
@@ -3046,6 +3142,7 @@ def main():
             if proc.poll() is None:
                 proc.terminate()
         _purge_titles(now=float("inf"))  # unconfirmed title uploads
+        _purge_android_uploads(now=float('inf'))
         # Staging folders of work still running (a patched APK mid-copy, an index
         # download): leaving below skips the cleanup their TemporaryDirectory would
         # get at interpreter exit. sweep_tmp at the next start catches any missed.

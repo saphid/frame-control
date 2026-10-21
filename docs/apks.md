@@ -43,7 +43,9 @@ Split APKs (a base plus `split_*.apk` files) install as one app:
 `python3 ui/frame_android.py install base.apk split1.apk …`. Lepton runs one
 APK, so splits that add native libraries or assets are merged into the base
 and re-signed; density and language splits are refused. See
-[quest-import.md](quest-import.md#split-apks). Not yet tried on a real Frame.
+[quest-import.md](quest-import.md#split-apks). A generated native app plus asset
+split was installed and relaunched on a real Frame on 2026-10-18; this does not
+verify arbitrary games or unsupported split types.
 
 Verified with AntennaPod and Tabletop Tools: installed in about 7 s, launched
 from the shortcut, stopped, and relaunched with their data intact. ADB and
@@ -57,6 +59,130 @@ Apps installed that way are deleted when it exits (see below). No pairing or
 Lepton Development must be installed once. Over SSH,
 `ssh frame 'steam steam://install/3056000'` queues it, but the install still
 needs to be confirmed or started in the headset.
+
+## Games with extra data or split APKs
+
+**Send to Frame accepts Android package sets, not just single APKs.** Select
+matching files together or drop a ZIP-based Android bundle. Files are grouped
+by their actual manifest package; the base is identified from its manifest,
+not its filename or selection order. Imports wait in the existing install
+queue and stay tied to the selected headset.
+
+| Input | What happens |
+|---|---|
+| One `.apk` | Checks API/ABI/VR compatibility and installs as its own app, retaining its filename and install reporting. Replacing an installed app with an older standalone APK remains possible. A split without its base, or a base marked as requiring missing splits, is refused. |
+| Base plus split `.apk` files selected together | Merges supported native-library and asset splits into one APK for Lepton. All must match the package and version. |
+| `.xapk`, `.apks`, `.apkm` | Unpacks and checks one app's APK set, standard OBB files and `Android/data` files, then uses the same install/data paths. |
+| Android `.zip` | Detected by its APK/OBB/data contents. PC-game ZIPs keep the title-import route. A ZIP containing PC executables takes that route even if it includes an Android build. |
+| `.obb` with its APK, or after installing the APK | Associates standard main/patch filenames with their package and copies into that app's running Android instance, not `~/Downloads`. |
+| `.aab` | A publishing bundle, not an installable app. Export a device APK/APKS set using the developer's build tools first. |
+
+This grouped local-file importer is the source change for issue
+[#102](https://github.com/saphid/frame-control/issues/102).
+
+**Verified with generated fixtures, 2026-10-18:** a real arm64 app and asset
+split installed on a Steam Frame. A second import copied matching OBB and
+`Android/data` bytes, closed the app, and relaunch confirmed all three payloads
+were readable inside it. RE4 gameplay and updates remain unverified.
+
+### Games with companion data take two imports
+
+An APK can install successfully but quit, hang or request a download when its
+assets are missing. For a local bundle or APK/OBB selection:
+
+1. Drop the files together. Frame Control checks the entire selection before
+   changing any app, installs the APK and says if game data still needs copying.
+2. Start that game's Steam shortcut and leave it open. Drop the **same files**
+   again (or just the matching OBB). Frame Control checks the installed package
+   and exact APK version, copies the data and closes the game.
+3. Relaunch from Steam. A successful copy verifies transfer integrity, not
+   whether those assets are the right ones for that game build.
+
+Standard archive layouts are `base.apk` (or another base filename), split APKs,
+`Android/obb/<package>/main|patch.<version>.<package>.obb` (or a standard OBB at
+archive root or in `<package>/`), and `Android/data/<package>/...`. One shared
+enclosing folder is accepted. OBB filenames must belong to
+the app; use its matching assets, rather than renaming unrelated files. To
+import an external data folder, ZIP its `Android/data/<package>/...` tree;
+a loose folder drop still uses the PC-game workflow.
+
+**Limits:** only native-library and asset splits can be merged. Resource,
+density, language, code and feature splits fail with a specific reason; they
+are never silently omitted. A universal APK or a compatible device-specific
+set from the developer is needed instead. Bundles with multiple base APKs
+(e.g. several device variants) are refused rather than choosing arbitrarily.
+Repacking re-signs the APK, as the existing launcher fix does. See
+[split limits](quest-import.md#split-apks).
+
+Archives reject unsafe/duplicate paths, encrypted entries, links, special
+files and unrecognised payload files. Recognised metadata (manifest/info JSON,
+SAI v1/v2 JSON, icon, APKS table and APK incremental-signature files), Finder
+`__MACOSX` sidecars, `.DS_Store` files and files named `._*` (AppleDouble) are
+not installed, including inside `Android/data`. Metadata still
+counts against archive limits and must pass the path/link/encryption checks.
+Loose filenames follow the same portable path rules: rename files with colons,
+trailing dots/spaces or Windows device names before importing them. Empty
+companion files reject the selection before upload; they are never omitted
+silently. Sets with splits or companion data cannot replace a newer or unknown
+installed version. Close a running app before replacing it.
+The import limit is 4,096 archive entries/files and 16 GiB in total; each
+uploaded file is also subject to the server's 8 GiB upload limit. Staging must
+have sufficient free disk space. Abandoned uploads expire after an hour;
+finished, failed or removed queued imports clean up their uploaded files.
+
+Data copying still needs the game's own Lepton instance to stay running.
+**A game that exits immediately without its assets cannot use this data path
+yet.** Frame Control does not start games implicitly or guess a host-side
+`/sdcard` location. The generated fixture verified app-side readability after
+relaunch; persistence through app or SteamOS updates and individual games'
+storage requirements remain unverified.
+
+If the game is already on your Quest, [Import from my Quest](quest-import.md)
+uses the same two-step data workflow and can bring supported splits and
+optional external app data. Quest import is on main/draft 0.4.7, absent from
+public 0.4.6. The [local OBB CLI helper](sidequest.md#obb-files) remains available:
+
+```sh
+python3 ui/frame_android.py info /path/to/game.apk
+python3 ui/frame_android.py install-obb org.example.game /path/to/main.42.org.example.game.obb
+python3 ui/frame_android.py stop org.example.game
+```
+
+For that CLI path, install the APK and start its Steam shortcut first, wait
+for a successful copy, then stop and relaunch. Retry the complete data set
+after a partial failure before playing.
+
+**Installation is not a compatibility verdict.** OBB files cannot fix an
+unsupported ABI, a newer Android requirement, missing VrApi/OpenXR features,
+or Meta services/licence checks. See [Quest compatibility limits](quest-import.md#what-wont-run-and-why).
+
+## Diagnosing an APK game report (including RE4, issue [#102](https://github.com/saphid/frame-control/issues/102))
+
+The RE4 screenshot says the APK "didn't work" and suggests missing OBBs. It
+doesn't identify the game edition/build or show an error, so missing OBBs
+remain a hypothesis. There is no verified RE4 compatibility result here.
+
+1. Record the computer OS, Frame Control version, SteamOS/Lepton build and
+   exact game edition/platform. List filenames and sizes (APK, base/splits,
+   OBB, `Android/data`) without sharing game assets. From a source checkout,
+   `python3 ui/frame_android.py info /path/to/game.apk` reads local package,
+   version, minimum API, ABI and VR warnings without connecting to a headset.
+2. Identify the first failure: upload/installation error, no Steam shortcut,
+   Lepton not starting, or the game opening then quitting/hanging/asking for
+   data. Save the exact Activity error and **Frame → Show Server Log** excerpt.
+   Remove credentials, account details and private paths before sharing.
+3. If installation succeeded, establish whether that exact build needs
+   companion data. Use the matching data workflow above, then relaunch. A
+   successful transfer only proves the bytes reached Android. Don't uninstall
+   as a first diagnostic step: it deletes saved data.
+4. If it still fails, **Test** in Android apps (or
+   `python3 ui/frame_android.py probe org.example.game`) launches the game and
+   reports instance-start failure, a running process or a crash summary.
+   "Runs" means the process survived a short check, not that gameplay works.
+   A missing-assets error supports the OBB hypothesis; a VrApi, entitlement,
+   missing-library or Android-service error points elsewhere. Review relevant
+   crash-log excerpts if the summary is empty; an empty crash buffer does not
+   establish compatibility.
 
 ## When an app needs a newer Android
 

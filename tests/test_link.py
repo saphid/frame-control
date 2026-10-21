@@ -1377,6 +1377,24 @@ class ServerConnection(unittest.TestCase):
         self.assertIn("switched headsets", json.loads(r.read())["error"])
         conn.close()
 
+    def test_android_discard_is_local_even_with_a_previous_headset_header(self):
+        conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=20)
+        conn.request('POST', '/api/upload', body=b'owned temporary bytes',
+                     headers={'X-Frame-UI': '1', 'X-Mode': 'android', 'X-Filename': 'test.apk'})
+        response = conn.getresponse()
+        self.assertEqual(response.status, 200)
+        token = json.loads(response.read())['token']
+        conn.close()
+        for action, expected in [('import', 409), ('discard', 200), ('discard', 200)]:
+            conn = http.client.HTTPConnection('127.0.0.1', self.port, timeout=20)
+            conn.request('POST', '/api/android-import',
+                         body=json.dumps({'action': action, 'tokens': [token]}),
+                         headers={'X-Frame-UI': '1', 'X-Frame-Device': 'previous-headset'})
+            response = conn.getresponse()
+            payload = response.read()
+            self.assertEqual(response.status, expected, payload)
+            conn.close()
+
     def test_guards_and_validation(self):
         self.assertEqual(self.request("GET", "/api/connection", key="")[0], 403)
         self.assertEqual(self.request("GET", "/api/devices", key="nope")[0], 403)

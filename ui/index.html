@@ -1126,11 +1126,17 @@
       <div class="shelf-head"><h2>Send to Frame</h2></div>
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose files to send">
         <b><span class="desk-only">Drop files here, or click to choose</span><span class="mobile-only">Tap to choose files</span></b>
-        Files land in <code>~/Downloads</code>. <code>.apk</code> files install as their own Android app;
-        a game's <code>.zip</code>, folder or <code>.exe</code> becomes a title in the Steam library.
+        Android <code>.apk</code>, <code>.xapk</code>, <code>.apks</code> and <code>.apkm</code> files install as apps.
+        Select a base APK, its splits and OBB files together.
+        A game's <code>.zip</code>, folder or <code>.exe</code> becomes a title in the Steam library.
         <span class="desk-only">You can also drop files anywhere in this window.</span>
         <input type="file" id="fileInput" multiple hidden>
       </div>
+      <div class="hint">Android ZIP bundles are detected too. For game data: import once, start the game from Steam,
+        then drop the same files again to copy data and close the game. Other files go to <code>~/Downloads</code>.
+        <a href="https://github.com/saphid/frame-control/blob/main/docs/apks.md#games-with-extra-data-or-split-apks" target="_blank" rel="noopener noreferrer">APK and game-data help</a>.
+        Installing an APK doesn't guarantee the game will run.</div>
+      <div class="hint" id="androidImportState" role="status"></div>
       <label class="sub" for="apkDisplay">Android display</label>
       <select id="apkDisplay" aria-label="Android app display mode">
         <option value="auto">Automatic (detect VR)</option>
@@ -1300,8 +1306,9 @@
   </div>
 </main>
 <div class="dropzone" id="dropzone" hidden><div><b>Drop to send to the Frame</b>
-  <span class="sub">Files go to <code>~/Downloads</code>; <code>.apk</code> files install as Android apps;
-  a game's <code>.zip</code>, folder or <code>.exe</code> becomes a Steam library title.</span></div></div>
+  <span class="sub">APKs, split sets and Android bundles install as Android apps;
+  a game's <code>.zip</code>, folder or <code>.exe</code> becomes a Steam library title.
+  Select companion OBB files with their APK. Other files go to <code>~/Downloads</code>.</span></div></div>
 
 <div class="drawer" id="drawer"><div class="log" id="log"></div></div>
 <div class="bottombar" id="bottombar" role="button" aria-label="Show activity">
@@ -2973,9 +2980,43 @@ document.addEventListener("click", async e => {
 $("aboutClose").onclick = () => $("aboutDlg").close();
 
 const TITLE_EXT = /\.(zip|exe)$/i;
+const ANDROID_EXT = /\.(apk|obb|xapk|apks|apkm)$/i;
+async function importAndroidTokens(tokens, dev) {
+  if (window.connDevice !== dev) throw new Error("Switched headsets; drop the Android files again");
+  const result = await runJob("Import Android files", "files:" + tokens.join(":"),
+    () => api("/api/android-import", {action: "import", tokens, display: $("apkDisplay").value}, dev),
+    j => { if (j.stage) $("androidImportState").textContent = j.stage;
+           if (j.error && j.apk?.blocker && window.connDevice === dev) checkApkAlternatives(j.apk, dev); });
+  $("androidImportState").textContent = result?.message || "Import did not finish; see Activity for the reason.";
+  if (result && !result.needs_game_data) {
+    for (const app of result.apps || []) await offerTest(app);
+  }
+  return result;
+}
+async function sendAndroidFiles(files, dev) {
+  const tokens = [];
+  try {
+    const empty = files.find(file => !file.size);
+    if (empty) throw new Error(`${empty.name}: empty files aren't supported; choose the complete nonempty set`);
+    for (const file of files) {
+      if (window.connDevice !== dev) throw new Error("Switched headsets; drop the Android files again");
+      const staged = await upload(file, "android", dev);
+      tokens.push(staged.token);
+    }
+    return await importAndroidTokens(tokens, dev);
+  } catch (e) {
+    const message = "Android import failed: " + e.message;
+    $("androidImportState").textContent = message;
+    log(message, "e"); toast(message, true);
+  } finally {
+    if (tokens.length) api("/api/android-import", {action: "discard", tokens}, dev).catch(() => {});
+  }
+}
 async function sendFiles(files, dirs = new Set()) {
   const dev = window.connDevice;  // the whole batch is for the headset it was dropped on
+  const sent = new Set();
   for (const [i, f] of files.entries()) {
+    if (sent.has(i)) continue;
     if (window.connDevice !== dev) {
       toast(`Switched headsets: didn't send ${files.length - i} remaining file${files.length - i === 1 ? "" : "s"}`, true);
       break;
@@ -2986,11 +3027,20 @@ async function sendFiles(files, dirs = new Set()) {
       else toast(`${f.name}: zip the folder first (folders need the Frame Control app)`, true);
       continue;
     }
+    if (ANDROID_EXT.test(f.name)) {
+      const group = files.filter((file, n) => n >= i && !dirs.has(n) && ANDROID_EXT.test(file.name));
+      files.forEach((file, n) => { if (n >= i && !dirs.has(n) && ANDROID_EXT.test(file.name)) sent.add(n); });
+      await sendAndroidFiles(group, dev);
+      continue;
+    }
     if (!f.size) { toast(`${f.name}: empty files aren't supported`, true); continue; }
+    if (/\.aab$/i.test(f.name)) {
+      const message = `${f.name} not installed: an Android App Bundle is a publishing file. Export a device APK/APKS set with the developer's build tools first.`;
+      log(message, "e"); toast(message, true);
+      continue;
+    }
     if (TITLE_EXT.test(f.name)) { await sideload(f, path); continue; }
-    const apk = f.name.toLowerCase().endsWith(".apk");
-    const res = await act(apk ? `Install ${f.name}` : `Copy ${f.name} to ~/Downloads`, () => upload(f, apk ? "apk" : "push", dev));
-    if (apk && res && res.app) await offerTest(res.app);
+    await act(`Copy ${f.name} to ~/Downloads`, () => upload(f, "push", dev));
   }
   $("fileInput").value = "";
   refresh();
@@ -3032,6 +3082,11 @@ async function sideloadOne(file, path, isDir = false, dev = window.connDevice) {
     log(`${file.name}: ${e.message}`, "e");
     if (canPush && confirm(`${file.name}: ${e.message}\n\nCopy it to ~/Downloads instead?`))
       await act(`Copy ${file.name} to ~/Downloads`, () => upload(file, "push", dev));
+    return;
+  }
+  if (r.android) {
+    try { await importAndroidTokens([r.token], dev); }
+    finally { api("/api/android-import", {action: "discard", tokens: [r.token]}, dev).catch(() => {}); }
     return;
   }
   // Its own fresh list, so the dialog can say whether this replaces an installed title.

@@ -390,11 +390,11 @@ class ServerJobs(unittest.TestCase):
         with tempfile.TemporaryDirectory() as cache, \
                 mock.patch.object(s.frame_host, "cache_dir", lambda *parts: Path(cache).joinpath(*parts)):
             # Downloads, title staging, patched VR APKs, files staged for the
-            # assistant, and app-index downloads (in the cache folder).
+            # assistant, Android import staging, and app-index downloads (in the cache folder).
             places = s._tmp_places()
             self.assertEqual({p for _, p in places}, {s.WEB_TMP_PREFIX, s.frame_titles.TMP_PREFIX,
                                                       s.frame_android.TMP_PREFIX, s.frame_agent.TMP_PREFIX,
-                                                      s.apk_fdroid.TMP_PREFIX})
+                                                      s.apk_fdroid.TMP_PREFIX, s.frame_android_import.TMP_PREFIX})
             for folder, prefix in places:
                 folder.mkdir(parents=True, exist_ok=True)
                 gone = tempfile.mkdtemp(prefix=f"{prefix}{dead.pid}-", dir=folder)

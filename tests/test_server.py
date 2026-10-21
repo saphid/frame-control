@@ -171,6 +171,24 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.post("/api/titles", {"action": "discard", "token": r["token"]})[0], 200)
         self.assertEqual(self.post("/api/titles", {"action": "install", "token": r["token"]})[0], 400)
 
+    def test_android_upload_and_zip_detection_stage_one_use_tokens(self):
+        from apk_fixtures import apk, manifest
+        payload = apk({'AndroidManifest.xml': manifest('org.example.game', 0, 0, 30)})
+        archive = io.BytesIO()
+        with zipfile.ZipFile(archive, 'w') as z:
+            z.writestr('base.apk', payload)
+        for mode, name in (('android', 'game.xapk'), ('title', 'game.zip')):
+            with self.subTest(mode=mode):
+                status, _, raw = self.request('POST', '/api/upload', archive.getvalue(),
+                    {'X-Frame-UI': '1', 'X-Mode': mode, 'X-Filename': name})
+                staged = json.loads(raw)
+                self.assertEqual(status, 200, staged)
+                self.assertTrue(staged['android'])
+                body = {'action': 'discard', 'tokens': [staged['token']]}
+                self.assertEqual(self.post('/api/android-import', body)[0], 200)
+                body['action'] = 'import'
+                self.assertEqual(self.post('/api/android-import', body)[0], 400)
+
     def test_title_input_validation(self):
         status, _, _ = self.request("POST", "/api/upload", b"not a zip",
                                     {"X-Frame-UI": "1", "X-Mode": "title", "X-Filename": "x.zip"})

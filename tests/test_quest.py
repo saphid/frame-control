@@ -811,7 +811,7 @@ class AndroidChecks(unittest.TestCase):
         self.assertIn("podman exec lepton-steamlaunch-2800000001 /system/bin/sh -c 'dumpsys package "
                       f"{PKG}'", ssh.call_args[0][0])
         with patch.object(android, 'ssh', return_value=dump):
-            with self.assertRaisesRegex(quest.QuestError, 'version code 100, not the Quest.s 999'):
+            with self.assertRaisesRegex(quest.QuestError, 'version code 100, expected 999'):
                 quest._check_android_package(self.META, 999)
         with patch.object(android, 'ssh', return_value=''):
             with self.assertRaisesRegex(quest.QuestError, 'does not have'):
