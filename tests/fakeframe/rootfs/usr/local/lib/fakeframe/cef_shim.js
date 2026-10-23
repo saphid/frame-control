@@ -79,6 +79,12 @@ function build(steam) {
         return s ? { strShortcutExe: s.exe, strShortcutStartDir: s.start_dir, bShortcutIsVR: !!s.vr } : null;
       },
     },
+    // Guess: the running list as Steam's client code and plugin loaders read it
+    // (SteamUIStore.RunningApps of app overviews); not seen on the Frame. fakesteam
+    // passes the ids of launches that haven't exited.
+    SteamUIStore: {
+      get RunningApps() { return (steam.running || []).map(id => allApps().find(a => a.appid === id) || { appid: id }); },
+    },
     appStore: {
       get allApps() { return allApps(); },
       GetAppOverviewByAppID(id) { return allApps().find(a => a.appid === Number(id)) || null; },
@@ -109,7 +115,8 @@ function build(steam) {
           if (s?.artwork) delete s.artwork[type];
         },
         // Container fallback in frame_android.stop performs the simulated stop.
-        TerminateApp(gameid) { steam.last_terminate = gameid; },
+        // fakesteam ends pid-less launches for the ids in `terminated`.
+        TerminateApp(gameid) { steam.last_terminate = gameid; (steam.terminated ||= []).push(String(gameid)); },
         RemoveShortcut(id) {
           steam.shortcuts = steam.shortcuts.filter(s => s.appid !== Number(id));
           delete steam.compat_tools[String(id)];

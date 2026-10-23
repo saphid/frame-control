@@ -47,6 +47,12 @@ COMPAT_LOG = fs.STEAM_ROOT + '/logs/compat_log.txt'
 DEVTOOLS_PORT = 8080
 TARGET_ID = 'F0CA11ED5EA4ED0000000000000000AB'
 GAME_LOGS = '/var/log/fakeframe'
+# Steam starts a game under its reaper, `reaper SteamLaunch AppId=<id> -- <command>`,
+# which stays the game's parent until it ends (guess for the Frame: that's how Steam
+# launches on Linux desktops and the Steam Deck; docs/steam-games.md). The fake's
+# reaper is bash with that command line: it waits for the game and exits with its status.
+REAPER = fs.STEAM_ROOT + '/ubuntu12_32/reaper'
+REAPER_SH = 'while [ "$1" != "--" ]; do shift; done; shift; "$@" & wait $!'
 
 # The 403 text /register returned while Steam wasn't on "Pair new host"
 # (docs/ssh.md, verified 2026-09-26). approve-ssh-key passes the Steam
@@ -105,11 +111,24 @@ class JS:
                 self._start()
             self.next += 1
             with fs.update() as state:
-                self.proc.stdin.write(json.dumps({'id': self.next, 'expression': expression,
-                                                  'awaitPromise': await_promise, 'steam': state['steam']}) + '\n')
+                # What Steam counts as running: launches that started and haven't exited.
+                running = sorted({l['appid'] for l in state['launches']
+                                  if l.get('started') and l.get('appid') and l.get('exit') is None})
+                self.proc.stdin.write(json.dumps({'id': self.next, 'expression': expression, 'awaitPromise': await_promise,
+                                                  'steam': dict(state['steam'], running=running)}) + '\n')
                 self.proc.stdin.flush()
                 reply = json.loads(self.proc.stdout.readline())
-                state['steam'] = reply['steam']
+                steam = reply['steam']
+                steam.pop('running', None)
+                for gid in map(int, steam.pop('terminated', [])):
+                    appid = gid >> 32 if gid >= 1 << 32 else gid
+                    # Guess: TerminateApp ends a launch the fake didn't really run (a Steam
+                    # game, a Proton title). A real process it leaves alone, so Frame
+                    # Control's own fallback (SIGTERM, SIGKILL) is what the e2e tests see.
+                    for l in state['launches']:
+                        if l.get('appid') == appid and l.get('exit') is None and not l.get('pid'):
+                            l['exit'] = 'terminated'
+                state['steam'] = steam
             return reply['result']
 
 
@@ -253,8 +272,10 @@ def add_launch(record):
         os.makedirs(GAME_LOGS, exist_ok=True)
         with open(f'{GAME_LOGS}/{label}.log', 'ab') as log:
             try:
-                proc = subprocess.Popen([path], cwd=cwd if os.path.isdir(cwd) else HOME, env={**os.environ, **env},
-                                        stdin=subprocess.DEVNULL, stdout=log, stderr=log, start_new_session=True)
+                argv = [REAPER, '-c', REAPER_SH, 'reaper', 'SteamLaunch', f"AppId={record['appid']}", '--', path]
+                proc = subprocess.Popen(argv, executable='/bin/bash', cwd=cwd if os.path.isdir(cwd) else HOME,
+                                        env={**os.environ, **env}, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
+                                        start_new_session=True)
                 record['pid'] = proc.pid
             except OSError as e:
                 record.update(pid=None, exec_error=str(e))
