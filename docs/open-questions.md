@@ -143,6 +143,15 @@ check in the headset:
 - Keys from SteamVR's on-screen keyboard.
 - Whether Flathub Chromium decodes H.264 (otherwise use Compatible).
 
+## Battery charge limit (2026-10-23)
+
+Can an 80% charge limit be set over SSH or adb? **Not safely yet.** SteamOS
+Manager's `BatteryChargeLimit1` (the interface Steam's own setting uses) has
+no backend in the Frame's device config, and the battery node is a
+`max1720x` fuel gauge with no `charge_control_end_threshold`. Research and
+read-only headset checks are in [charge-limit.md](charge-limit.md). Not tested
+on a headset.
+
 ## Unconfirmed claims made in these docs
 
 - `/home` and `/etc` persist across Frame OS updates. This is inferred from
