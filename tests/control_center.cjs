@@ -64,7 +64,7 @@ function sharedPage({productionApi=false} = {}) {
       const request=deferred();request.path=path;request.opts=opts;requests.push(request);return request.promise;
     };
     Object.assign(context,{renderPill(){},renderConnDlg(){},renderBanner(){},viaText(){},netLabel(){},
-      padReset(){},ctrlReset(){},resetShots(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
+      padReset(){},ctrlReset(){},resetShots(){},resetClips(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
     vm.runInContext(`const UI_KEY = 'test-only';
       const link = {s:null,device:'frame-a',phase:'connected',rev:0,net:null};
       const disp = {}, gm = {seq:0}, cat = {}, wi = {}, sourceState = {jobs:new Map(),detail:null,detailRequest:0};

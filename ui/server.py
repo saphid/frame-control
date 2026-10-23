@@ -49,6 +49,7 @@ from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
+import frame_clips  # noqa: E402
 import frame_devices  # noqa: E402
 import frame_steamgriddb
 import frame_comfort  # noqa: E402
@@ -744,6 +745,77 @@ def stream_command(query):
             f"-g {fps * 2} -bf 0 -b:v {rate}M -maxrate {rate}M -bufsize {rate // 2 or 1}M "
             f"-x264-params aud=1:repeat-headers=1 -f h264 - & p=$!; "
             f"exec >&-; cat >/dev/null; kill $p 2>/dev/null; wait $p")
+
+
+# Recordings of the headset view with its sound, and Steam's own clips, saved as .mp4
+# in ~/Videos/SteamFrame (frame_clips.py has the commands and the Frame-side half).
+
+def fetch_file(remote, local):
+    """Copy one file from the Frame (a path relative to its home) to `local`."""
+    ensure_master()
+    try:
+        # Modern scp uses SFTP, so the remote path isn't parsed by a shell. -p keeps its time.
+        r = frame_host.run_ssh(["scp", "-p", *SSH[1:], f"{FRAME}:{remote}", str(local)], capture_output=True,
+                               stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
+    except subprocess.TimeoutExpired:
+        raise Failure(f"Copying {Path(remote).name} timed out")
+    if r.returncode != 0:
+        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"scp exited {r.returncode}")
+
+
+def _record_channel(command, stderr):
+    ensure_master()
+    proc = subprocess.Popen([*SSH, FRAME, command], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr)
+    _live_tunnels.add(proc)  # killed if the server stops: the Frame then finishes the file
+    return proc
+
+
+recorder = frame_clips.Recorder(_record_channel, lambda cmd, timeout: ssh(cmd, timeout=timeout), fetch_file,
+                                lambda fn: busy_thread(fn).start(), release=lambda proc: _live_tunnels.discard(proc))
+
+
+def _clips_here():
+    if LOCAL:
+        raise Failure("Recordings are saved to a computer: use Frame Control on your computer", 400)
+
+
+def record(body):
+    """{"action": "start"|"stop"}: record what the headset shows, with its sound."""
+    _clips_here()
+    action = body.get("action")
+    if action not in ("start", "stop"):
+        raise Failure("action must be start or stop", 400)
+    try:
+        return recorder.start() if action == "start" else recorder.stop()
+    except frame_clips.ClipError as e:
+        raise Failure(str(e), e.status)
+
+
+def _clips_frame(args, timeout):
+    return steam_frame(*args, timeout=timeout, script="frame_clips.py")
+
+
+def list_clips():
+    _clips_here()
+    try:
+        return frame_clips.list_clips(_clips_frame)
+    except frame_clips.ClipError as e:
+        raise Failure(str(e), e.status)
+
+
+def export_clip(body):
+    """{"id"}: stitch one of Steam's recordings on the Frame and copy the .mp4 here (a job)."""
+    _clips_here()
+    clip_id = body.get("id")
+    name = frame_clips.export_name(clip_id)  # ValueError, so 400, for a bad id
+
+    def work():
+        try:
+            return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                           fetch_file)
+        except frame_clips.ClipError as e:
+            raise Failure(str(e), e.status)
+    return start_job(f"Export {name}", work)
 
 
 def launch(body):
@@ -1532,6 +1604,10 @@ def open_thing(body):
             SHOTS_DIR.mkdir(parents=True, exist_ok=True)
             frame_host.open_path(SHOTS_DIR)
             return {"message": f"Opened {SHOTS_DIR} in {frame_host.FILE_MANAGER}"}
+        if what == "videos":
+            frame_clips.VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+            frame_host.open_path(frame_clips.VIDEOS_DIR)
+            return {"message": f"Opened {frame_clips.VIDEOS_DIR} in {frame_host.FILE_MANAGER}"}
         if what == "shot":
             saved = SHOTS_DIR / shot_path(body.get("id")).rsplit("/", 1)[-1]
             if not saved.exists():
@@ -2773,6 +2849,7 @@ POST = {
     "/api/settings/artwork": frame_steamgriddb.save_settings,
     "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
+        "/api/record": record, "/api/clips/export": export_clip,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
         "/api/telemetry": frame_telemetry.update_settings, "/api/telemetry/event": frame_telemetry.page_event,
@@ -3065,6 +3142,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(list_shots())
             elif path == "/api/shots/image":
                 self.send_bytes(*shot_image(url.query))
+            elif path == "/api/record":
+                _clips_here()
+                self.send_json(recorder.status())
+            elif path == "/api/clips":
+                self.send_json(list_clips())
             elif path == "/api/stream":
                 self.stream_video(url.query)
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["panel"]:
