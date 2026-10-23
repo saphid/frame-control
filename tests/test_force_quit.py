@@ -6,7 +6,6 @@ Run: python3 -m unittest discover -s tests
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
 import os
-import signal
 import subprocess
 import sys
 import tempfile
@@ -179,7 +178,7 @@ class World:
         if pid not in self.procs:
             raise ProcessLookupError
         self.sent.append((pid, sig))
-        if pid in self.unkillable or (sig == signal.SIGTERM and pid in self.ignore):
+        if pid in self.unkillable or (sig == frame_running.SIGTERM and pid in self.ignore):
             return
         self.procs.pop(pid)
         # A reaper exits once its last child has.
@@ -212,7 +211,7 @@ class Escalation(unittest.TestCase):
         self.assertEqual(world.escalate(), "term")
         self.assert_only_game(world)
         self.assertEqual({pid for pid, sig in world.sent}, self.GAME)
-        self.assertTrue(all(sig == signal.SIGTERM for _, sig in world.sent))
+        self.assertTrue(all(sig == frame_running.SIGTERM for _, sig in world.sent))
         # Deepest first, and the reaper isn't signalled while its children are alive.
         self.assertEqual([pid for pid, _ in world.sent], [403, 402, 401])
         self.assertNotIn(400, world.procs)
@@ -222,10 +221,10 @@ class Escalation(unittest.TestCase):
         world = World(frame(), ignore={403})
         self.assertEqual(world.escalate(), "kill")
         self.assert_only_game(world)
-        self.assertIn((403, signal.SIGTERM), world.sent)
-        self.assertIn((403, signal.SIGKILL), world.sent)
+        self.assertIn((403, frame_running.SIGTERM), world.sent)
+        self.assertIn((403, frame_running.SIGKILL), world.sent)
         self.assertGreaterEqual(world.now, frame_running.TERM_WAIT)
-        kills = [pid for pid, sig in world.sent if sig == signal.SIGKILL]
+        kills = [pid for pid, sig in world.sent if sig == frame_running.SIGKILL]
         self.assertEqual(kills[0], 403)
 
     def test_survivor_is_an_error(self):
@@ -246,7 +245,7 @@ class Escalation(unittest.TestCase):
             return procs
         world.scan = scan
         world.escalate()
-        self.assertNotIn((402, signal.SIGKILL), world.sent)
+        self.assertNotIn((402, frame_running.SIGKILL), world.sent)
 
     def test_nothing_left(self):
         world = World({pid: p for pid, p in frame().items() if pid < 400})
@@ -257,7 +256,7 @@ class Escalation(unittest.TestCase):
         procs = {pid: p for pid, p in frame().items() if pid not in self.GAME and pid not in (404, 405)}
         world = World(procs)
         self.assertEqual(world.escalate(), "term")
-        self.assertEqual(world.sent, [(400, signal.SIGTERM)])
+        self.assertEqual(world.sent, [(400, frame_running.SIGTERM)])
 
     def test_protected_never_signalled_even_as_the_root(self):
         # A reaper whose only children are protected: nothing to signal but the reaper itself.
@@ -275,7 +274,7 @@ class Quit(unittest.TestCase):
         patches = [mock.patch.object(frame_running, "Page", return_value=self.page),
                    mock.patch.object(frame_running, "running", return_value=[
                        {"appid": 620, "gameid": "620", "name": "Portal 2", "kind": "steam", "processes": 4}]),
-                   mock.patch.object(frame_running.os, "getuid", return_value=ME)]
+                   mock.patch.object(frame_running.os, "getuid", return_value=ME, create=True)]  # none on Windows
         for p in patches:
             p.start()
             self.addCleanup(p.stop)

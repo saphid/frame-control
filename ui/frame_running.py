@@ -30,10 +30,12 @@ import time
 
 from frame_steam import Fail, Page
 
+# The Frame is Linux; "/" also keeps the unit tests' paths the same on Windows.
 HOME = os.path.expanduser("~")
-STEAM = os.path.join(HOME, ".local/share/Steam")
-DEVKIT = os.path.join(HOME, "devkit-game")
-ANDROID = os.path.join(HOME, "Applications/Android")   # frame_android.APPS_DIR
+STEAM = HOME + "/.local/share/Steam"
+DEVKIT = HOME + "/devkit-game"
+ANDROID = HOME + "/Applications/Android"               # frame_android.APPS_DIR
+SIGTERM, SIGKILL = signal.SIGTERM, getattr(signal, "SIGKILL", 9)  # Windows (unit tests) has no SIGKILL
 SHORTCUT_BIT = 0x80000000                               # non-Steam shortcut ids have the top bit set
 APPID_ARG = re.compile(r"AppId=(\d{1,10})")
 # Never signalled, even when found under a game's reaper: Steam, the
@@ -173,7 +175,7 @@ def escalate(appid, me=None, uid=None, scan=snapshot, kill=os.kill, sleep=time.s
             sleep(0.2)
 
     method = "gone"
-    for sig, seconds, include_roots in ((signal.SIGTERM, TERM_WAIT, False), (signal.SIGKILL, KILL_WAIT, True)):
+    for sig, seconds, include_roots in ((SIGTERM, TERM_WAIT, False), (SIGKILL, KILL_WAIT, True)):
         _, left = targets(include_roots)
         if not left:
             # The reaper exits when its last child does; a lingering one is all that's left.
@@ -187,7 +189,7 @@ def escalate(appid, me=None, uid=None, scan=snapshot, kill=os.kill, sleep=time.s
                 pass
             except PermissionError:
                 continue
-        method = "term" if sig == signal.SIGTERM else "kill"
+        method = "term" if sig == SIGTERM else "kill"
         if not wait(seconds, True):
             return method
     raise Fail(f"{len(targets(True)[1])} of its processes are still running after SIGKILL")
