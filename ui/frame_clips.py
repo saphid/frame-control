@@ -412,7 +412,8 @@ def describe(userdata, clip_id):
             pass
         if duration is not None:
             break
-    appid, when = None, max(s.st_mtime for s in stats)
+    newest = max(s.st_mtime for s in stats)
+    appid, when = None, newest
     for p in parts[2:]:
         m = STAMP.search(p)
         if m:
@@ -426,7 +427,9 @@ def describe(userdata, clip_id):
             "size": sum(s.st_size for s in stats), "streams": len(streams),
             "chunks": sum(len(s) - 1 for s in streams.values()),
             "gaps": sum(chunk_gaps(s) for s in streams.values()), "duration": duration,
-            "file": export_name(clip_id)}
+            "file": export_name(clip_id),
+            # Seconds since Steam last wrote to it, by the Frame's clock: still recording if small.
+            "idle": round(max(0.0, time.time() - newest), 1)}
 
 
 def list_recordings(userdata):

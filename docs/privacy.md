@@ -287,3 +287,12 @@ then every 6 hours: the latest release's `update.json` on GitHub, or
 `api.github.com/repos/saphid/frame-control/releases/latest` if that fails.
 Those requests carry no id. To stop it, set
 `FRAME_CONTROL_NO_UPDATE_CHECK=1`. See [releasing.md](releasing.md).
+
+## Screenshots and clips
+
+Copying screenshots and Steam clips to your computer, by hand or with
+**Settings → Copy to this computer**, goes straight from the headset to your
+computer over the same SSH connection as everything else. Nothing is uploaded
+anywhere. What automatic copying has copied is listed, by file id, in
+`auto-sync.json` in Frame Control's data folder; see
+[recording.md](recording.md#copying-new-ones-automatically).

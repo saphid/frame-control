@@ -50,6 +50,7 @@ from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
 import frame_clips  # noqa: E402
+import frame_autosync  # noqa: E402
 import frame_devices  # noqa: E402
 import frame_steamgriddb
 import frame_comfort  # noqa: E402
@@ -816,6 +817,54 @@ def export_clip(body):
         except frame_clips.ClipError as e:
             raise Failure(str(e), e.status)
     return start_job(f"Export {name}", work)
+
+
+# Copying new screenshots and clips here on their own (frame_autosync.py). Each copy
+# counts as work on the headset it was listed on, so a switch can't send it elsewhere.
+
+def _sync_device():
+    if not LINK or LINK.snapshot().get("phase") != "connected":
+        return None
+    return LINK.active_device().get("id")
+
+
+def _sync_shots(device, ids):
+    with working(device):
+        return save_shots({"ids": ids})
+
+
+def _sync_clip(device, clip_id):
+    with working(device):
+        return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                       fetch_file)
+
+
+def _sync_list(listing):
+    def run():
+        with working(_sync_device()):
+            return listing()
+    return run
+
+
+_stop_sync = threading.Event()
+autosync = frame_autosync.AutoSync(_sync_list(list_shots), _sync_shots, _sync_list(list_clips), _sync_clip,
+                                   _sync_device, lambda: _work[0] > 0, offline=lambda e: unreachable(str(e)),
+                                   shots_folder=SHOTS_DIR, clips_folder=frame_clips.VIDEOS_DIR)
+
+
+def auto_sync(body):
+    """{"action": "settings", "screenshots", "clips"} | {"action": "now"} | {"action": "resume"}."""
+    _clips_here()
+    action = body.get("action")
+    if action == "settings":
+        return autosync.update({k: body[k] for k in ("screenshots", "clips") if isinstance(body.get(k), bool)})
+    if action == "now":
+        if not _sync_device():
+            raise Failure("Connect a headset first", 409)
+        return dict(autosync.copy_all(), message="Copying everything that isn't on this computer yet…")
+    if action == "resume":
+        return dict(autosync.resume(), message="Copying again")
+    raise Failure("action must be settings, now or resume", 400)
 
 
 def launch(body):
@@ -2849,7 +2898,7 @@ POST = {
     "/api/settings/artwork": frame_steamgriddb.save_settings,
     "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
-        "/api/record": record, "/api/clips/export": export_clip,
+        "/api/record": record, "/api/clips/export": export_clip, "/api/autosync": auto_sync,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
         "/api/telemetry": frame_telemetry.update_settings, "/api/telemetry/event": frame_telemetry.page_event,
@@ -3147,6 +3196,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(recorder.status())
             elif path == "/api/clips":
                 self.send_json(list_clips())
+            elif path == "/api/autosync":
+                _clips_here()
+                self.send_json(autosync.state())
             elif path == "/api/stream":
                 self.stream_video(url.query)
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["panel"]:
@@ -3437,6 +3489,8 @@ def main():
         frame_report.link = LINK  # its connection summary goes in every report's diagnostics
         frame_report.start_ssh_check()  # ...with which ssh this is, found once in the background
         LINK.start()
+        if not PRIVATE:  # one worker per user, in the app's server
+            threading.Thread(target=autosync.run, args=(_stop_sync,), daemon=True).start()
     if not frame_host.WINDOWS:
         signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
     if args.exit_on_eof:
@@ -3459,6 +3513,7 @@ def main():
         # mid-cleanup would abort it and leave the SSH master running.
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        _stop_sync.set()
         webinstall_shutdown()
         macview.shutdown()  # close the headset's viewers before the agent goes
         # The master was started with -N, so it stays up until told to exit.
