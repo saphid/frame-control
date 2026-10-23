@@ -6,7 +6,7 @@ const pick = (s,a,b) => s.slice(s.indexOf(a),s.indexOf(b,s.indexOf(a)));
 const tick = async () => { for (let i=0;i<16;i++) await Promise.resolve(); };
 function connectionFixture() {
   const f=workspaceFixture(), c=f.context;
-  Object.assign(c,{URLSearchParams,Date,clearTimeout,link:{s:{phase:'connected'},device:'a',phase:'connected',rev:0},disp:{list:[],seq:0},cat:{apps:null},wi:{},devGen:1,androidSeq:0,androidPending:new Set(),titlesSeq:0,volTimer:null,refreshing:null,lastImg:null,lastShot:null,
+  Object.assign(c,{URLSearchParams,Date,clearTimeout,link:{s:{phase:'connected'},device:'a',phase:'connected',rev:0},disp:{list:[],seq:0},cat:{apps:null},wi:{},devGen:1,androidSeq:0,androidPending:new Set(),titlesSeq:0,runningGames:[],runningSeq:0,volTimer:null,refreshing:null,lastImg:null,lastShot:null,
     sourceState:{jobs:new Map(),detail:null,detailRequest:0},touches:new Map(),gesture:null,padType:{blur(){},value:''},
     log(){},renderPill(){},renderConnDlg(){},renderHome(){},resetShots(){},renderBanner(){},loadDevices(){},renderDevices(){},renderTests(){},viaText(){return 'test';},netLabel(){return 'test';},refresh:()=>Promise.resolve(),reloadAll(){},checkContactPrompt(){},ctrlReset(){},padShow:s=>{c.pad.state=s.state;}});
   c.window.connDevice='a';

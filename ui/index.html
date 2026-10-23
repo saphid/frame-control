@@ -1253,6 +1253,11 @@
   <div class="workspace-heading"><div><span class="eyebrow">Play on your Frame</span><h1>Games</h1><p>Your Steam library and games you add yourself.</p></div><button class="action add-install" data-open-install>＋ Add / Install</button></div>
   <div class="library-controls"><div class="scope-tabs" id="libraryScope" aria-label="Game library"><button data-scope="installed" aria-pressed="true">Installed</button><button data-scope="owned" aria-pressed="false">Owned</button><button data-scope="store" aria-pressed="false">Store</button></div>
     <div class="scope-tabs" id="librarySources" aria-label="Installed content source"><button data-library-source="all" aria-pressed="true">All</button><button data-library-source="steam" aria-pressed="false">Steam</button><button data-library-source="sideloaded" aria-pressed="false">Sideloaded</button></div></div>
+  <section class="panel now-running" id="nowRunning" aria-labelledby="nowRunningTitle" hidden>
+    <div class="shelf-head"><h2 id="nowRunningTitle">Running now</h2><span class="spacer"></span><button class="small" id="runningCheck">Check again</button></div>
+    <div class="list" id="runningList"></div>
+    <div class="hint">Force quit a game that has stopped responding. Steam is asked to quit it first; unsaved progress is lost.</div>
+  </section>
   <div id="libraryOwned"></div><div id="steamDiscover" hidden></div>
   <section id="library">
     <div class="shelf-head"><h2>Steam games</h2><span class="count" id="gameCount"></span></div>
@@ -2415,6 +2420,7 @@ function render(s) {
         <div class="name">${esc(g.name)}</div>
         <div class="size">${gb(g.size)}</div>
         <button class="play small" data-launch="${g.appid}" data-name="${esc(g.name)}">▶ Play</button>
+        <button class="small danger" data-force-quit-app="${g.appid}" data-name="${esc(g.name)}" title="Quit it if it has stopped responding">Force quit…</button>
       </div>
     </div>`).join("") : `<div class="sub">No games installed.</div>`;
   // Tall library art, falling back to the wide header, then to the name card.
@@ -3207,7 +3213,7 @@ $("ctrlKeys").addEventListener("click", e => {
 });
 
 // ---- controls ----
-$("refreshAll").onclick = () => { refresh(); loadTitles(); loadAndroid(); };  // titles too: the Frame may have been asleep at start
+$("refreshAll").onclick = () => { refresh(); loadTitles(); loadAndroid(); loadRunning().catch(() => {}); };  // titles too: the Frame may have been asleep at start
 document.addEventListener("keydown", e => {
   if (e.key === "r" && !e.metaKey && !e.ctrlKey && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) $("refreshAll").onclick();
 });
@@ -3215,6 +3221,7 @@ document.body.addEventListener("click", async (e) => {
   const b = e.target.closest("button");
   if (!b) return;
   if (b.dataset.launch) act(`Launch ${b.dataset.name}`, () => api("/api/launch", { appid: b.dataset.launch }), b);
+  else if (b.dataset.forceQuitApp) forceQuitFrom(g => String(g.appid) === b.dataset.forceQuitApp, b.dataset.name, b);
   else if (b.dataset.uninstall) {
     if (confirm(`Remove ${b.dataset.name} from the Frame?`))
       act(`Remove ${b.dataset.name}`, () => api("/api/flatpak", { action: "uninstall", id: b.dataset.uninstall }), b).then(refresh);
@@ -3783,6 +3790,7 @@ async function loadTitles() {
       <button class="play small" data-title="launch" data-id="${esc(t.id)}" title="Launch in the headset">Play</button>
       <details class="lib-more"><summary aria-label="More for ${esc(t.id)}">⋯</summary><div class="lib-menu">
         ${t.art_missing ? `<button data-title="refresh-art" data-id="${esc(t.id)}">Add artwork<small>Its Steam library tile has none yet</small></button>` : ""}
+        <button class="danger" data-title="force-quit" data-id="${esc(t.id)}">Force quit…<small>If it has stopped responding</small></button>
         <button class="danger" data-title="remove" data-id="${esc(t.id)}">Remove…<small>Deletes the game and its files</small></button>
       </div></details>
     </div>`).join("") : `<div class="sub">None yet.</div>`;
@@ -3795,6 +3803,8 @@ $("titleList").onclick = async e => {
     if (!confirm(`Remove ${id} and its files from the Frame?`)) return;
     await act(`Remove ${id}`, () => api("/api/titles", { action: "remove", id }), b);
     loadTitles();
+  } else if (b.dataset.title === "force-quit") {
+    forceQuitFrom(g => g.kind === "devkit" && g.title === id, id, b);
   } else if (b.dataset.title === "refresh-art") {
     await runJob(`Add Steam artwork for ${id}`, "art-" + id, () => api("/api/titles", { action: "refresh-art", id }));
     loadTitles();
@@ -3802,6 +3812,48 @@ $("titleList").onclick = async e => {
 };
 loadTitles();
 $("titleAdd").onclick = () => $("fileInput").click();
+
+// ---- what's running, and force quit (frame_running.py on the Frame) ----
+let runningGames = [], runningSeq = 0;
+async function loadRunning() {
+  const seq = ++runningSeq;
+  try {
+    const list = (await api("/api/running")).running;
+    if (seq === runningSeq) runningGames = list;
+  } catch (e) {
+    if (seq === runningSeq && !e.stale) runningGames = [];
+    throw e;
+  } finally { if (seq === runningSeq) renderRunning(); }
+  return seq === runningSeq;
+}
+const RUNNING_KIND = { steam: "Steam game", devkit: "Sideloaded game", shortcut: "Non-Steam shortcut", android: "Android app" };
+function renderRunning() {
+  $("nowRunning").hidden = !runningGames.length;
+  $("runningList").innerHTML = runningGames.map(g => `
+    <div class="item"><div class="grow"><div class="t">${esc(g.name)}</div><div class="s">${RUNNING_KIND[g.kind] || "Running"} · running on the Frame</div></div>
+      <button class="small danger" data-force-quit="${esc(g.appid)}">Force quit…</button></div>`).join("");
+}
+async function forceQuit(appid, btn) {
+  const g = runningGames.find(x => String(x.appid) === String(appid));
+  if (!g) return;
+  if (!confirm(`Force quit ${g.name}? Unsaved progress will be lost.`)) return;
+  await act(`Force quit ${g.name}`, () => api("/api/running", { action: "quit", appid: String(g.appid) }), btn);
+  loadRunning().catch(() => {});
+  if (g.kind === "android") loadAndroid();
+}
+// From a game's own menu: check it's running first, so a stopped game says so.
+async function forceQuitFrom(match, name, btn) {
+  if (btn) btn.disabled = true;
+  try { if (!await loadRunning()) return; }
+  catch (e) { if (!e.stale) toast(`Couldn't check what's running: ${e.message}`, true); return; }
+  finally { if (btn) btn.disabled = false; }
+  const g = runningGames.find(match);
+  if (!g) { log(`${name} isn't running`); toast(`${name} isn't running`); return; }
+  forceQuit(g.appid, btn);
+}
+$("runningList").onclick = e => { const b = e.target.closest("[data-force-quit]"); if (b) forceQuit(b.dataset.forceQuit, b); };
+$("runningCheck").onclick = () => loadRunning().then(() => { if (!runningGames.length) toast("Nothing is running on the Frame"); },
+                                                     e => { if (!e.stale) toast(`Couldn't check what's running: ${e.message}`, true); });
 
 
 // ---- Steam games: install owned games, find and buy on the store ----
@@ -5339,7 +5391,7 @@ function showPage(e) {
   if (page === 'games') selectLibrary(workspace.source, workspace.scope, false);
   // Another computer may have added or removed a title: phones have no Refresh button. Only
   // on navigating here (e: the hashchange); at startup the first load is already on its way.
-  if (e && page === 'games' && previousPage !== 'games') loadTitles();
+  if (e && page === 'games' && previousPage !== 'games') { loadTitles(); loadRunning().catch(() => {}); }
   if (page === 'apps') {
     selectApps(workspace.apps, false);
     if ((previousPage !== 'apps' || id === 'androidLibrary') && workspace.apps === 'installed') loadAndroid();
@@ -6332,7 +6384,8 @@ function onConnection(s) {
     gm.storeDraft = ""; gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.shownBySource = {owned:0, store:0}; gm.seq++;
     androidApps = []; androidSeq++; androidPending.clear(); $('installedDetail').close(); resetShots();
     renderHome();
-    titlesSeq++; disp.seq++;  // answers to loads already on their way are ignored
+    titlesSeq++; disp.seq++; runningSeq++;  // answers to loads already on their way are ignored
+    runningGames = []; $("nowRunning").hidden = true; $("runningList").innerHTML = "";
     if (cat.apps) filterCatalog();  // "Installed" tags were the other headset's
     // Confirmations still open were checked against the other headset.
     ["titleDlg", "apkAltDlg", "pwDlg", "repDlg"].forEach(id => { if ($(id) && $(id).open) $(id).close(); });
@@ -6756,7 +6809,7 @@ api("/api/host").then(h => {
 <script>
 window.frameControlCenter = FrameControlCenter.mount({document, api, refresh, refreshAudio: refreshAfterAudio,
   getContext: () => ({sample: state, online, generation: devGen, device: window.connDevice}),
-  openConnection: () => $("conn").click(), platform: window.frameApp?.platform || ""});
+  openConnection: () => $("conn").click(), platform: window.frameApp?.platform || "", confirm: text => confirm(text)});
 window.frameControlCenter.host(HOST);
 if (state) window.frameControlCenter.status(state, stateReceivedAt, stateRead);
 else if (stateRead.error) window.frameControlCenter.unavailable(stateRead.error);

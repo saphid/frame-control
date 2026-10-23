@@ -101,6 +101,61 @@ Store search uses `store.steampowered.com/api/storesearch/?term=…&cc=…`. It
 returns nothing without `cc`, so Frame Control takes the country from
 `SteamClient.User.GetIPCountry()` on the Frame.
 
+## Force quitting a running game
+
+**Running now**, at the top of Games, lists what's running on the Frame: Steam
+games, sideloaded titles, non-Steam shortcuts and Android apps. A game's library
+tile, a sideloaded title's ⋯ menu and the Control Center's **Force quit a game**
+card have **Force quit…** too. Each asks first ("Unsaved progress will be
+lost"); from a game's own menu it checks that the game is running and says so if
+it isn't.
+
+`ui/frame_running.py` does the work on the Frame, piped over SSH with
+`frame_steam.py` as its DevTools client:
+
+```sh
+scp ui/frame_steam.py ui/frame_running.py frame:/tmp/
+ssh frame 'python3 /tmp/frame_running.py list'       # {"running": [{appid, gameid, name, kind, ...}]}
+ssh frame 'python3 /tmp/frame_running.py quit 620'   # {"name", "method", "message"}
+```
+
+1. **What's running.** Steam starts every game, shortcut and devkit title under
+   its `reaper`, as `reaper SteamLaunch AppId=<id> -- <command>`, and the reaper
+   stays the parent of the game's processes. So a running game is one of your
+   own processes whose program is named `reaper`, with `SteamLaunch` and an
+   `AppId=` before `--`; the game is that reaper's process tree. Steam's own list
+   (`SteamUIStore.RunningApps`) and Android apps whose Lepton container is up
+   (`podman ps`) are added. Names come from `appStore`, else the app manifest,
+   the Android app's `meta.json` or the devkit title's folder.
+2. **Steam first.** `SteamClient.Apps.TerminateApp(<game id>, false)`, the
+   call Steam's own Stop makes for Android apps ([vr-apks.md](vr-apks.md)). The
+   game id is the appid, or `(appid << 32) | 0x02000000` for a non-Steam
+   shortcut. An Android app's container is also stopped, as the Apps tab's Stop
+   does (`podman stop -t 5 lepton-steamlaunch-<instance>`).
+3. **Then signals.** If the game's processes are still there after 5 seconds,
+   they get SIGTERM, deepest first; whatever is left 3 seconds later gets
+   SIGKILL, the reaper last, so nothing it holds is orphaned unsignalled. A pid
+   is only signalled while its start time still matches, so a reused pid is safe.
+
+Nothing is found by name. These are never signalled, even inside a game's tree:
+init, the helper itself and every process above it (the SSH session), other
+users' processes, and anything named `steam`, `steamwebhelper`, `gamescope`,
+`gamescope-wl`, `gamescopereaper`, `gamescope-session`, `sshd`, `sshd-session`,
+`ssh-agent`, `systemd`, `dbus-daemon`, `dbus-broker`, `pipewire`,
+`pipewire-pulse`, `wireplumber`, `plasmashell`, `kwin_wayland`, `kwin_x11`,
+`Xwayland`, `sddm`, `vrserver`, `vrcompositor`, `vrmonitor`, `vrdashboard`,
+`vrwebhelper` or `vrstartup`, with everything under them.
+
+**Not tested on a headset.** The reaper command line is how Steam launches games
+on Linux desktops and the Steam Deck, **inferred** for the Frame.
+`SteamUIStore.RunningApps` comes from Steam's client code as plugin loaders use
+it and hasn't been seen on the Frame's build; without it, the reapers alone
+decide. `TerminateApp` with a shortcut's game id is the call Steam's Stop was
+seen making for an Android app (docs/vr-apks.md); for Steam games it is
+**inferred**. Unit tests (`tests/test_force_quit.py`) cover the parsing, the
+process selection and the escalation; the fake Frame launches its games under a
+stand-in `reaper` so `tests/e2e/test_running.py` force quits a real process tree.
+
 ## Not yet checked
 
 - Free-to-play games: `steam://install` should stop at state 3 (free license)

@@ -754,12 +754,12 @@ def launch(body):
     return {"message": f"Launching {appid}"}
 
 
-def steam_frame(*args, timeout=40, script="frame_steam.py"):
+def steam_frame(*args, timeout=40, script="frame_steam.py", source=None):
     """Run frame_steam.py (it drives the Steam client), or another on-Frame
     helper with the same JSON contract, on the Frame and return its JSON."""
     try:
         out = ssh("python3 - " + " ".join(map(shlex.quote, args)),
-                  stdin=(HERE / script).read_text(), timeout=timeout)
+                  stdin=source or (HERE / script).read_text(), timeout=timeout)
     except Failure as e:
         # The helper prints {"error": ...} on stdout when it fails, but ssh()
         # reports stderr instead if there was any, so look in both.
@@ -770,6 +770,43 @@ def steam_frame(*args, timeout=40, script="frame_steam.py"):
                 continue
         raise
     return json.loads(out)
+
+
+def running_frame(*args, timeout=40):
+    """frame_running.py on the Frame, with frame_steam.py (its DevTools client) as a module."""
+    source = ("import sys, types\nm = types.ModuleType('frame_steam'); sys.modules['frame_steam'] = m\n"
+              f"exec({(HERE / 'frame_steam.py').read_text()!r}, m.__dict__)\n" + (HERE / "frame_running.py").read_text())
+    return steam_frame(*args, timeout=timeout, source=source)
+
+
+def running_games():
+    games = running_frame("list")["running"]
+    return {"running": games, "message": None if games else "Nothing is running on the Frame"}
+
+
+def force_quit(body):
+    """Quit a running game: Steam's own terminate, then its processes (frame_running.py).
+    An Android app's Lepton container is stopped the way the Apps tab's Stop does."""
+    appid = str(body.get("appid", ""))
+    if body.get("action") != "quit":
+        raise Failure("action must be quit", 400)
+    if not APPID.match(appid):
+        raise Failure("bad appid", 400)
+    app = next((a for a in running_frame("list")["running"] if str(a.get("appid")) == appid), None)
+    if not app:
+        raise Failure("That game isn't running any more", 409)
+    stopped = False
+    if app.get("kind") == "android" and app.get("package"):
+        ensure_master()
+        try:
+            frame_android.stop(app["package"])
+            stopped = True
+        except frame_android.FrameError:
+            pass  # the process fallback below still runs
+    res = running_frame("quit", appid, timeout=60)
+    if res.get("method") == "gone":
+        res["message"] = f"{'Stopped' if stopped else 'Quit'} {app['name']}"
+    return dict(res, appid=int(appid), name=app["name"])
 
 
 def steam(body):
@@ -2707,7 +2744,7 @@ POST = {
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/running": force_quit, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
@@ -2991,6 +3028,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_computer.py").read_text(), timeout=20)))
             elif path == "/api/status":
                 self.send_json(status({}))
+            elif path == "/api/running":
+                self.send_json(running_games())
             elif path == "/api/steam/owned":
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":

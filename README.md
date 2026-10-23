@@ -50,7 +50,7 @@ Charge, charging watts and time left, storage, memory, temperature, Wi-Fi, and w
 <td valign="top">
 
 **🎮 Steam games**<br>
-Everything you own with its Steam Frame rating. Install onto the headset with live progress, and search the store.
+Everything you own with its Steam Frame rating. Install onto the headset with live progress, search the store, and force quit a game that stops responding.
 
 </td>
 <td valign="top">
