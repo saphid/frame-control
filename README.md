@@ -91,6 +91,14 @@ SSH, SFTP, Steam Link, remote desktop, volume, sleep, restart and shut down.
 
 </td>
 </tr>
+<tr>
+<td colspan="2" valign="top">
+
+**💾 Backup and recovery**<br>
+Copy game saves, settings and Android app data to your computer, and restore them after a factory reset. Sign-in files and keys are never copied. A Return to Game Mode button helps when the headset is stuck in Desktop Mode. Not tested on a headset yet. [How it works](docs/backup-and-recovery.md).
+
+</td>
+</tr>
 </table>
 
 The optional [Family and comfort](docs/family-comfort.md) card adds session

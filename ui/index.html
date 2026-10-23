@@ -1412,7 +1412,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
 <section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
@@ -1642,6 +1642,41 @@
       <div class="row" style="margin-top:12px"><button class="small action" id="panelsOpen">Open in headset</button></div>
       <div class="hint">Choose a panel to show it in SteamVR. The headset switcher stays available from Steam's dashboard.
         Saved spatial layouts are not available yet.</div>
+    </section>
+
+    <section class="panel" id="backup" hidden>
+      <div class="shelf-head"><h2>Back up the Frame</h2><span class="spacer"></span>
+        <button class="small" id="backupFolder">Open backups folder</button></div>
+      <p class="sub">Copies game saves, settings and Android app data from the headset to a dated folder on this computer.
+        It only reads the headset. Games themselves aren't copied: reinstall them from Steam.</p>
+      <div class="chips" id="backupKinds">
+        <label><input type="checkbox" value="saves" checked> Game saves</label>
+        <label><input type="checkbox" value="settings" checked> Steam and desktop settings</label>
+        <label><input type="checkbox" value="android" checked> Android app data</label>
+      </div>
+      <div class="row" style="margin-top:12px"><button class="small" id="backupPreview">See what's included</button>
+        <button class="small action" id="backupStart">Back up now</button></div>
+      <div class="sub" id="backupProgress" role="status" aria-live="polite"></div>
+      <div class="list" id="backupSummary"></div>
+      <div class="hint">Never copied: Steam sign-in files (steam.token, config.vdf, loginusers.vdf), SSH keys,
+        keyrings and other passwords. Backups aren't encrypted, and game folders can hold launcher logins, so keep them private.
+        Close Android apps first: open ones are skipped.</div>
+
+      <div class="shelf-head" style="margin-top:20px"><h2>Restore</h2><span class="spacer"></span>
+        <button class="small" id="backupRefresh">Refresh</button></div>
+      <div class="list" id="backupList"><div class="sub">Open this tool to see your backups.</div></div>
+      <div id="restorePlan"></div>
+      <div class="hint">After a factory reset, sign in to Steam, reinstall your games and start each once, and reinstall
+        your Android apps. Then restore. Parts that can't go back yet are skipped, not failed. Files a restore replaces are
+        kept on the headset in ~/.local/share/frame-control/restore-previous.</div>
+
+      <div class="shelf-head" style="margin-top:20px"><h2>Stuck in Desktop Mode?</h2><span class="spacer"></span>
+        <button class="small" id="sessionCheck">Check</button></div>
+      <div class="sub" id="sessionState">Check which mode the headset is in.</div>
+      <div class="row" style="margin-top:12px"><button class="small" id="sessionGame" disabled>Return to Game Mode</button></div>
+      <div class="hint">Uses the same switch as Valve's developer tools (<code>steamos-session-select gamescope</code>).
+        It closes the desktop and anything open in it. If the headset can't be reached, hold Power for 10 seconds to
+        restart it; <a href="https://github.com/saphid/frame-control/blob/main/docs/backup-and-recovery.md#stuck-in-desktop-mode" target="_blank">more ways back</a>.</div>
     </section>
 
     <section class="panel" id="macview" hidden>
@@ -5268,6 +5303,138 @@ $("panelList").onclick = e => {
   act("Show panel", () => api("/api/panels", {action: "focus", key: b.dataset.panel}), b);
 };
 
+// ---- Backup and recovery kit (ui/frame_backup.py) ----
+const BACKUP_KIND = {saves: "Game saves", settings: "Settings", android: "Android app data"};
+function sizeText(n) {
+  if (n == null) return "";
+  for (const unit of ["bytes", "KB", "MB", "GB"]) {
+    if (n < 1000 || unit === "GB") return unit === "bytes" ? `${n} bytes` : `${n.toFixed(1)} ${unit}`;
+    n /= 1000;
+  }
+}
+const backupKinds = () => [...$("backupKinds").querySelectorAll("input:checked")].map(i => i.value);
+let backupSeq = 0, backupBusy = false;
+async function loadBackups() {
+  const seq = ++backupSeq;
+  try {
+    const r = await api("/api/backup", {action: "list"});
+    if (seq !== backupSeq) return;
+    $("backupList").innerHTML = r.backups.length ? r.backups.map(b => `<div class="item"><div class="grow">
+        <div class="t">${esc(b.name)}</div><div class="s">${b.error ? esc(b.error) :
+        esc([b.headset, b.build && `SteamOS build ${b.build}`, `${b.parts} part${b.parts === 1 ? "" : "s"}`, sizeText(b.bytes)].filter(Boolean).join(" · "))}</div></div>
+        ${b.error ? "" : `<button class="small" data-backup-plan="${esc(b.name)}">Restore…</button>`}</div>`).join("")
+      : `<div class="sub">No backups in ${esc(r.folder)} yet.</div>`;
+  } catch (e) { if (seq === backupSeq) failed($("backupList"), e); }
+}
+function backupPartRow(p, restore) {
+  const detail = restore
+    ? (p.status === "ok" ? [p.replace ? `replaces ${p.replace} file${p.replace === 1 ? "" : "s"}` : "", p.new ? `${p.new} new` : "",
+                            p.held && p.held.reference ? `${p.held.reference} kept for reference` : ""].filter(Boolean).join(", ") || "ready"
+                         : p.reason || p.status)
+    : [`${p.files} file${p.files === 1 ? "" : "s"}`, sizeText(p.bytes), p.skipped && p.skipped.length ? `${p.skipped.length} too big, skipped` : ""].filter(Boolean).join(" · ");
+  const box = restore ? `<input type="checkbox" data-restore-part="${esc(p.id)}" ${p.status === "ok" ? "checked" : "disabled"} aria-label="Restore ${esc(p.label)}"> ` : "";
+  return `<div class="item"><div class="grow"><div class="t">${box}${esc(p.label)}</div><div class="s">${esc(detail)}</div></div></div>`;
+}
+$("backupPreview").onclick = e => act("Check what a backup includes", async () => {
+  const r = await api("/api/backup", {action: "preview"}), kinds = backupKinds();
+  const rows = r.parts.filter(p => kinds.includes(p.kind)).map(p => backupPartRow(p, false));
+  if (kinds.includes("android")) rows.push(...r.android.map(a => `<div class="item"><div class="grow"><div class="t">${esc(a.label)} (Android app data)</div>
+      <div class="s">${a.running ? "Open now: close it or it's skipped" : "Saved while closed"}</div></div></div>`));
+  if (r.android_error && kinds.includes("android")) rows.push(`<div class="sub">Android apps couldn't be listed: ${esc(r.android_error)}</div>`);
+  $("backupSummary").innerHTML = (rows.join("") || '<div class="sub">Nothing to back up for that choice.</div>') +
+    `<details><summary>Never copied</summary><ul>${r.excluded.map(x => `<li>${esc(x)}</li>`).join("")}</ul></details>`;
+  return {message: `SteamOS build ${r.build || "unknown"}: ${rows.length} part${rows.length === 1 ? "" : "s"} to back up`};
+}, e.currentTarget);
+// Like runJob, without counting as an install in the header.
+async function backupJob(label, start) {
+  log(label + "…");
+  try {
+    const { job } = await start();
+    for (let misses = 0; ;) {
+      await new Promise(ok => setTimeout(ok, 1500));
+      let j;
+      try { j = await api(`/api/job?id=${encodeURIComponent(job)}`); misses = 0; }
+      catch (e) { if (++misses >= 20 || /no such job/.test(e.message)) throw e; continue; }
+      backupProgress(j);
+      if (!j.done) continue;
+      if (j.error) throw new Error(j.error);
+      log(j.message, "ok"); toast(j.message);
+      return j.result || {};
+    }
+  } catch (e) {
+    log(`${label} failed: ${e.message}`, "e"); toast(`${label} failed: ${e.message}`, true);
+  }
+}
+function backupProgress(j) {
+  $("backupProgress").textContent = j.done ? "" : `${j.stage || "Starting"}${j.percent != null ? ` · ${Math.round(j.percent)}%` : ""}`;
+}
+$("backupStart").onclick = async e => {
+  const kinds = backupKinds();
+  if (!kinds.length) return toast("Choose something to back up", true);
+  if (backupBusy) return;
+  backupBusy = true; e.currentTarget.disabled = true;
+  try {
+    const r = await backupJob("Back up the Frame", () => api("/api/backup", {action: "backup", kinds}));
+    if (r) {
+      $("backupSummary").innerHTML = `<div class="sub">${esc(r.message)}</div>` + (r.skipped || []).map(s =>
+        `<div class="item"><div class="grow"><div class="t">${esc(s.label || s.id)}${s.path ? `: ${esc(s.path)}` : ""}</div>
+         <div class="s">Skipped: ${esc(s.reason)}</div></div></div>`).join("");
+      loadBackups();
+    }
+  } finally { backupBusy = false; $("backupStart").disabled = false; $("backupProgress").textContent = ""; }
+};
+$("backupFolder").onclick = e => act("Open backups folder", () => api("/api/backup", {action: "open"}), e.currentTarget);
+$("backupRefresh").onclick = loadBackups;
+let restoreName = null;
+$("backupList").onclick = async e => {
+  const b = e.target.closest("[data-backup-plan]"); if (!b) return;
+  restoreName = b.dataset.backupPlan;
+  $("restorePlan").innerHTML = '<div class="sub">Checking what can go back…</div>';
+  try {
+    const r = await api("/api/backup", {action: "plan", name: restoreName});
+    if (r.name !== restoreName) return;
+    $("restorePlan").innerHTML = `<h3>Restore ${esc(r.name)}</h3>` + r.parts.map(p => backupPartRow(p, true)).join("") +
+      `<div class="row" style="margin-top:12px"><button class="small danger" id="restoreStart">Restore selected</button>
+       <button class="small" data-backup-open="${esc(r.name)}">Show files</button></div>`;
+    $("restorePlan").plan = r;
+  } catch (err) { failed($("restorePlan"), err); }
+};
+$("restorePlan").onclick = async e => {
+  const open = e.target.closest("[data-backup-open]");
+  if (open) return act("Show backup files", () => api("/api/backup", {action: "open", name: open.dataset.backupOpen}), open);
+  if (!e.target.closest("#restoreStart") || backupBusy) return;
+  const plan = $("restorePlan").plan;
+  const parts = [...$("restorePlan").querySelectorAll("[data-restore-part]:checked")].map(i => i.dataset.restorePart);
+  if (!plan || !parts.length) return toast("Choose something to restore", true);
+  const chosen = plan.parts.filter(p => parts.includes(p.id));
+  const replacing = chosen.reduce((n, p) => n + (p.replace || 0), 0);
+  if (!confirm(`Restore ${chosen.length} part${chosen.length === 1 ? "" : "s"} from ${plan.name}?\n\n` +
+               `${replacing ? `This replaces ${replacing} file${replacing === 1 ? "" : "s"} or app data folder${replacing === 1 ? "" : "s"} on the headset. ` : ""}` +
+               "Replaced files are kept on the headset. Close the games and apps you're restoring first.")) return;
+  backupBusy = true;
+  try {
+    const r = await backupJob("Restore from backup", () => api("/api/backup", {action: "restore", name: plan.name, parts, confirm: true}));
+    if (r) $("restorePlan").innerHTML = `<div class="sub">${esc(r.message)}</div>` + (r.skipped || []).map(s =>
+      `<div class="item"><div class="grow"><div class="t">${esc(s.label || s.id)}</div><div class="s">Skipped: ${esc(s.reason)}</div></div></div>`).join("");
+  } finally { backupBusy = false; $("backupProgress").textContent = ""; }
+};
+const SESSION_TEXT = {game: "Game Mode: the headset is running normally. A desktop you see is a panel; close it from the Steam dashboard.",
+  desktop: "Desktop Mode: the headset started the full desktop instead of Game Mode.",
+  unknown: "Couldn't tell which mode the headset is in."};
+$("sessionCheck").onclick = async e => {
+  e.currentTarget.disabled = true;
+  try {
+    const s = await api("/api/backup", {action: "session"});
+    $("sessionState").textContent = SESSION_TEXT[s.mode] + (s.selector ? "" : " This SteamOS build has no session switch command; use the manual steps.");
+    $("sessionGame").disabled = s.mode === "game" || !s.selector;
+  } catch (err) { failed($("sessionState"), err); }
+  finally { $("sessionCheck").disabled = false; }
+};
+$("sessionGame").onclick = e => {
+  if (!confirm("Return the headset to Game Mode?\n\nThis closes the desktop and any apps open in it, then starts Steam's Game Mode.")) return;
+  act("Return to Game Mode", () => api("/api/backup", {action: "gamemode", confirm: true}), e.currentTarget);
+};
+
 // ---- Mac in the headset: windows and displays as panels (ui/frame_macview.py) ----
 let mvSeq = 0, mvTimer = 0;
 // streaming: the src it's shown as (a window may be "separate:<id>"), or "".
@@ -5381,10 +5548,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", backup:"tools"};
 const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -5490,6 +5657,7 @@ function showPage(e) {
   }
   if (tool === 'macview') loadMacView();
   if (tool === 'panels') loadPanelSwitcher();
+  if (tool === 'backup') loadBackups();
   if (tool === 'androidSettings') {
     $('repNew').hidden = false; $('androidSettings').prepend($('repNew')); loadDisplays();
   }
@@ -6881,6 +7049,7 @@ api("/api/host").then(h => {
   Object.assign(HOST, h);
   window.frameControlCenter?.host(h);
   $("macToolLink").hidden = h.mobile || h.os !== "macOS";
+  $("backupToolLink").hidden = !!h.mobile;  // backups are folders on a computer
   if (h.mobile) return;
   $("offSetup").hidden = false; $("offSetup").onclick = setUpActive;  // the server opens it in a terminal
   watchConnection();
