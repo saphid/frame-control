@@ -144,7 +144,7 @@ capture it.
 
 ## Input: type and point in the Frame from the Mac or iPhone
 
-**Built: Home → Keyboard and trackpad**, in every version of Frame Control
+**Built: Home → Type on the headset** (or press `T`), in every version of Frame Control
 (Mac, Windows, Linux, iPhone and iPad), with nothing to install on the device
 you're holding. On a phone the panel is a trackpad (drag to move, tap to click,
 two fingers to scroll, two-finger tap to right-click) plus a text field that

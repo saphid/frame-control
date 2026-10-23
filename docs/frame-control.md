@@ -25,7 +25,7 @@ settings, reports), **Tools** (in the headset: your computer's windows, the medi
 player and the panel switcher; then sending files and text, Flatpaks, remote and
 power), **Devices** (your headsets and their addresses), and **Control** (the
 searchable Control Center, metrics, supported settings and headset guidance).
-Keys 1–6 switch between them. The gear in the header (key 7) opens **Settings**:
+Keys 1–6 switch between them, and `T` opens Type on the headset. The gear in the header (key 7) opens **Settings**:
 privacy and updates, library artwork and the assistant. The battery chip opens
 the headset's details: storage, memory, temperature, Wi-Fi, uptime and SteamOS
 build. Files can be dropped anywhere in the window. A
@@ -80,8 +80,14 @@ counts them while they run.
   their own Android app. A game's `.zip`, folder or `.exe` becomes a title in
   the Steam library (Valve's Devkit Game path, with Proton or the Steam Linux
   Runtime picked from the program's header), listed under **Sideloaded titles**
-  with Launch and Remove; see [sideloading.md](sideloading.md). Send typed text, or your computer's clipboard, to the
-  Frame clipboard.
+  with Launch and Remove; see [sideloading.md](sideloading.md).
+- **Type on the headset** (on Home, in Tools, in the Control Center, or press
+  `T`): use your computer's keyboard and mouse, or a phone's touchscreen, in the
+  Frame's apps through KDE Connect, and move clipboard text both ways. Send
+  typed text or your computer's clipboard to the headset, or copy the headset's
+  clipboard back: copy in a desktop app on the Frame, then **Copy the headset's
+  clipboard**. The clipboard needs the desktop panel open in the headset; it's
+  text only, up to 1 MB. See [file-transfer.md](file-transfer.md#clipboard).
 - **Mac in the headset** (macOS): show any Mac window, or a whole screen, as
   its own panel in the headset. Place it with the SteamVR dashboard, click and
   scroll with the laser, and type on the Mac. Streams hardware H.264 through
@@ -220,8 +226,8 @@ Google publishes no arm64 Linux platform-tools. Set Up Connection runs
 `ui/frame_connect.py` in your terminal emulator (GNOME Terminal, Konsole, xterm
 and others). The log is at
 `~/.config/Frame Control/logs/server.log`. Running `ui/server.py` in a browser
-instead of the app, sending the clipboard needs `wl-clipboard` (Wayland) or
-`xclip` (X11).
+instead of the app, sending the clipboard, or copying the headset's to this
+computer, needs `wl-clipboard` (Wayland), `xclip` or `xsel` (X11).
 
 ## Building
 

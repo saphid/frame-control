@@ -63,8 +63,8 @@ About 4,500 F-Droid apps rated for the Frame. One click installs each as its own
 <tr>
 <td valign="top">
 
-**📁 Files, games and clipboard**<br>
-Drag files onto the window to send them. Drop a game's .zip, folder or .exe to add it to the Steam library, with Proton or the Linux runtime picked for you. Send text or your clipboard straight to the headset's desktop.
+**📁 Files and games**<br>
+Drag files onto the window to send them. Drop a game's .zip, folder or .exe to add it to the Steam library, with Proton or the Linux runtime picked for you.
 
 </td>
 <td valign="top">
@@ -72,8 +72,8 @@ Drag files onto the window to send them. Drop a game's .zip, folder or .exe to a
 **📸 Screenshots**<br>
 Browse the shots you take in the headset and save them to your Pictures folder.
 
-**⌨️ Keyboard and trackpad**<br>
-Type and point in the Frame's apps from your computer or phone, through KDE Connect, which Frame Control brings along and sets up on the Frame. Nothing else to install, anywhere.
+**⌨️ Type on the headset**<br>
+Type and point in the Frame's apps from your computer or phone, through KDE Connect, which Frame Control brings along and sets up on the Frame. Copy text to the headset's clipboard and back again. Nothing else to install, anywhere. Press T to open it.
 
 </td>
 </tr>
