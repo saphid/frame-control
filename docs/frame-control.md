@@ -49,6 +49,10 @@ counts them while they run.
   gamescope's flat layer instead.
 - **Screenshots** you take in the headset with Steam's shortcut: browse them and
   save them to `~/Pictures/SteamFrame`.
+- **Record** what the headset shows, with its sound, to an `.mp4` in
+  `~/Videos/SteamFrame`, and **Steam clips**: export clips and background
+  recordings from Steam's game recording at any length, without re-encoding.
+  See [recording.md](recording.md). Not tested on a headset yet.
 - **Battery** with charging state: charge rate in watts, time to full or empty,
   charger type and wattage (for example USB-C PD 20 W), and battery temperature.
 - **Status**: storage, memory, temperature, Wi-Fi, uptime, and whether SteamVR,
