@@ -46,6 +46,9 @@ PROTECTED = frozenset({
     "pipewire", "pipewire-pulse", "wireplumber", "plasmashell", "kwin_wayland", "kwin_x11", "Xwayland",
     "sddm", "vrserver", "vrcompositor", "vrmonitor", "vrdashboard", "vrwebhelper", "vrstartup",
 })
+# Steam launches SteamVR under a reaper too, but on the Frame it's the headset's view,
+# not a game: it's never listed or quit (SteamVR and SteamVR Beta).
+NOT_GAMES = frozenset({250820, 1009850})
 STEAM_WAIT = 5      # seconds for Steam's own terminate to end the game
 TERM_WAIT = 3       # then SIGTERM, and this long before SIGKILL
 KILL_WAIT = 2
@@ -108,7 +111,7 @@ def reapers(procs, uid):
     out = {}
     for pid, p in procs.items():
         appid = launch_appid(p["argv"])
-        if appid and p["uid"] == uid and p["state"] != "Z":
+        if appid and appid not in NOT_GAMES and p["uid"] == uid and p["state"] != "Z":
             out.setdefault(appid, []).append(pid)
     return out
 
@@ -262,7 +265,8 @@ def running(procs=None, uid=None, steam=steam_view, android=android_apps, contai
             found.setdefault(int(m["shortcut"]), [])
     listed, names = steam(set(found))
     for appid in listed or ():
-        found.setdefault(int(appid), [])
+        if int(appid) not in NOT_GAMES:
+            found.setdefault(int(appid), [])
     out = []
     for appid, roots in sorted(found.items()):
         pids = tree(procs, roots, set())

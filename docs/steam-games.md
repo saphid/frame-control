@@ -108,7 +108,8 @@ games, sideloaded titles, non-Steam shortcuts and Android apps. A game's library
 tile, a sideloaded title's ⋯ menu and the Control Center's **Force quit a game**
 card have **Force quit…** too. Each asks first ("Unsaved progress will be
 lost"); from a game's own menu it checks that the game is running and says so if
-it isn't.
+it isn't. SteamVR (app 250820, and its beta 1009850) is never listed or quit:
+on the Frame it shows the headset view, so quitting it isn't a way out of a game.
 
 `ui/frame_running.py` does the work on the Frame, piped over SSH with
 `frame_steam.py` as its DevTools client:

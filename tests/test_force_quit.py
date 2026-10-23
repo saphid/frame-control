@@ -83,6 +83,15 @@ class Parsing(unittest.TestCase):
         procs[700] = proc(303, "reaper", [REAPER, "SteamLaunch", "AppId=777"], state="Z")
         self.assertEqual(frame_running.reapers(procs, ME), {620: [400], 999: [500]})
 
+    def test_steamvr_is_never_a_game(self):
+        procs = frame()
+        procs[710] = proc(303, "reaper", [REAPER, "SteamLaunch", "AppId=250820", "--", "vrstartup"])
+        procs[711] = proc(710, "vrcompositor-launcher")
+        self.assertNotIn(250820, frame_running.reapers(procs, ME))
+        found = frame_running.running(procs, ME, steam=lambda ids: ([250820], {}),
+                                      android=dict, containers=set)
+        self.assertNotIn(250820, [a["appid"] for a in found])
+
     def test_gameid(self):
         self.assertEqual(frame_running.gameid(620), "620")
         # A non-Steam shortcut: (appid << 32) | 0x02000000, as steam_shortcuts.py stop sends.
