@@ -2,7 +2,7 @@
 
 Two separate opt-in choices, both off until ticked:
 
-- updates: occasional notices about Frame Control releases and updates
+- updates: the mailing list, occasional emails about new features and updates
 - followup: the maintainer may ask follow-up questions, mainly about problem reports
 
 The address and the choices are kept on this computer (frame_host.data_dir('contact')) and
@@ -97,12 +97,12 @@ def from_report(email):
 
 
 def state():
-    """What the page shows. showPrompt: the one-time prompt hasn't been shown or answered yet,
-    and the Frame has connected at least once (setup worked), so it never greets a new install."""
+    """What the page shows. showPrompt: the one-time mailing list offer hasn't been shown or
+    answered yet. It's offered on first launch (the page shows it after the first-run privacy
+    notice is closed, never both at once), and works whether or not the Frame is set up."""
     s = load()
-    set_up = bool(frame_telemetry.settings().get('frames_seen'))
     return {'email': s['email'], 'updates': s['updates'], 'followup': s['followup'],
-            'waiting': s['pending'] is not None, 'showPrompt': s['prompt'] == 'new' and set_up}
+            'waiting': s['pending'] is not None, 'showPrompt': s['prompt'] == 'new'}
 
 
 def _event(s):

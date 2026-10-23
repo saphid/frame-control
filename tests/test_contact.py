@@ -228,10 +228,9 @@ class Contact(Base):
 
     # ---- the one-time prompt
 
-    def test_the_prompt_waits_for_a_working_setup_then_stays_dismissed(self):
-        self.assertFalse(fc.state()["showPrompt"])  # a new install: the Frame hasn't connected yet
-        tm.frame_seen("20260901.1", "3.8")
-        self.assertTrue(fc.state()["showPrompt"])
+    def test_the_prompt_is_offered_on_first_launch_then_stays_dismissed(self):
+        self.assertTrue(fc.state()["showPrompt"])  # a new install, before the Frame has connected
+        self.assertEqual(self.got, [])  # offering it sends nothing
         fc.prompt({"prompt": "dismissed"})
         fc.prompt({"prompt": "shown"})  # a later session can't bring it back
         self.assertEqual(fc.load()["prompt"], "dismissed")
@@ -241,11 +240,23 @@ class Contact(Base):
             fc.prompt({"prompt": "reset"})
 
     def test_the_prompt_is_shown_once_and_saving_answers_it(self):
-        tm.frame_seen("20260901.1", "3.8")
         fc.prompt({"prompt": "shown"})
         self.assertFalse(fc.state()["showPrompt"])
         fc.save({"email": "me@example.com", "followup": True, "fromPrompt": True})
         self.assertEqual(fc.load()["prompt"], "answered")
+
+    def test_joining_from_the_prompt_is_the_mailing_list_opt_in_only(self):
+        fc.save({"email": " me@example.com ", "updates": True, "fromPrompt": True})
+        self.assertEqual((fc.load()["prompt"], fc.state()["showPrompt"]), ("answered", False))
+        props = self.events()[-1]["properties"]
+        self.assertEqual((props["email"], props["updates"], props["followup"], props["action"]),
+                         ("me@example.com", True, False, "set"))
+
+    def test_a_failed_send_never_blocks_joining(self):
+        with self.offline():
+            s = fc.save({"email": "me@example.com", "updates": True, "fromPrompt": True})
+        self.assertTrue(s["updates"] and s["waiting"])  # kept here, sent later by the retrier
+        self.assertFalse(s["showPrompt"])
 
     # ---- reports and the maintainer's list
 

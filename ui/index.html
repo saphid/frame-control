@@ -704,15 +704,12 @@
     <button class="action small" id="noticeOk">OK</button>
   </div>
   <form class="notice" id="contactNotice" hidden>
-    <div class="grow"><b>Leave an email address?</b> Optional: Frame Control works the same either way, and
-      you can change or remove it any time in Privacy &amp; updates.
-      <div><input type="email" id="cpEmail" maxlength="254" placeholder="you@example.com" aria-label="Email address" required></div>
-      <div class="contact-opts">
-        <label><input type="checkbox" id="cpUpdates"> Email me about Frame Control updates</label>
-        <label><input type="checkbox" id="cpFollowup"> The maintainer may contact me with follow-up questions</label></div></div>
+    <div class="grow"><b>Want to hear about new features?</b> Join the Frame Control mailing list.
+      Optional, unsubscribe any time in Privacy &amp; updates.
+      <div><input type="email" id="cpEmail" maxlength="254" placeholder="you@example.com" aria-label="Email address" required></div></div>
     <span class="sub" id="cpMsg" role="status"></span>
     <button type="button" class="small" id="cpNo">No thanks</button>
-    <button type="submit" class="action small" id="cpSave">Save</button>
+    <button type="submit" class="action small" id="cpSave">Join</button>
   </form>
   <div class="banner" id="offline" role="alert" hidden>
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M2 8.5a15 15 0 0 1 20 0M5.5 12a10 10 0 0 1 13 0M9 15.5a5 5 0 0 1 6 0"/><circle cx="12" cy="19" r="1.2" fill="currentColor"/><path d="M3 3l18 18"/></svg>
@@ -1261,17 +1258,17 @@
         <span class="sub">Error messages and where in Frame Control they happened, with your home
           folder, user name, addresses and keys removed.</span></label>
       <div class="hint" id="tStatus"></div>
-      <h3 style="margin-top:22px">Contact email (optional)</h3>
+      <h3 style="margin-top:22px" id="mailingList">Mailing list and contact email (optional)</h3>
       <form id="contactForm">
         <input type="email" id="cEmail" maxlength="254" placeholder="you@example.com" aria-label="Email address">
         <div class="contact-opts">
-          <label><input type="checkbox" id="cUpdates"> Email me about Frame Control updates</label>
+          <label><input type="checkbox" id="cUpdates"> Join the mailing list: new features and updates</label>
           <label><input type="checkbox" id="cFollowup"> The maintainer may contact me with follow-up questions</label></div>
         <div class="row" style="margin-top:10px"><button type="submit" class="small action" id="cSave">Save</button>
           <button type="button" class="small" id="cRemove">Remove my email</button></div>
       </form>
       <div class="hint" id="cStatus">Sent privately to the Frame Control maintainer, never shared or published.
-        Updates are occasional release notices; follow-up questions are mainly about problem reports you send.</div>
+        The mailing list is occasional news about new features and updates; follow-up questions are mainly about problem reports you send.</div>
       <details id="tSentBox"><summary>Show what's been sent</summary><div class="sentlog" id="tSent"></div></details>
       <div class="row" style="margin-top:14px"><button class="small action" data-report>Report a problem</button>
         <button class="small" id="updateCheck" hidden>Check for updates</button>
@@ -4301,7 +4298,7 @@ $("macview").onclick = async e => {
 // ---- pages: #home, #games, #android, #tools (older section links still work) ----
 const PAGES = ["home", "games", "android", "tools"];
 const SECTION_PAGE = { view: "home", device: "home", shots: "home", vrTools: "home", comfort: "home", pad: "home", library: "games", sideloaded: "games", getgames: "games",
-                       display: "android", androidLibrary: "android", appStore: "android", transfer: "tools", media: "tools", artworkSettings: "tools", apps: "tools", power: "tools", macview: "tools", privacy: "tools", panels: "tools" };
+                       display: "android", androidLibrary: "android", appStore: "android", transfer: "tools", media: "tools", artworkSettings: "tools", apps: "tools", power: "tools", macview: "tools", privacy: "tools", mailingList: "tools", panels: "tools" };
 let page = "home";
 function showPage() {
   const id = location.hash.slice(1);
@@ -4553,7 +4550,6 @@ async function offerTest(m) {
 
 // ---- privacy: anonymous analytics levels (ui/frame_telemetry.py, docs/privacy.md) ----
 const telemetry = { usage: false, compat: false, blocked: "not loaded" };
-let privacyNoticeShown = false;  // this visit: then the contact prompt waits for another one
 function renderTelemetry(s) {
   Object.assign(telemetry, s);
   setRepHint();
@@ -4564,7 +4560,6 @@ function renderTelemetry(s) {
                                          : "Nothing sent yet.";
   const showNotice = !s.blocked && !s.noticeShown && s.usage;
   $("privacyNotice").hidden = !showNotice;
-  if (showNotice) privacyNoticeShown = true;
   if (showNotice) api("/api/telemetry", { noticeShown: true }).catch(() => {});
 }
 async function loadTelemetry() {
@@ -4578,24 +4573,25 @@ $("tUsage").onchange = e => setTelemetry({ usage: e.target.checked });
 $("tCompat").onchange = e => setTelemetry({ compat: e.target.checked });
 $("tDiag").onchange = e => setTelemetry({ diagnostics: e.target.checked });
 $("tSentBox").ontoggle = () => { if ($("tSentBox").open) loadTelemetry(); };
-$("noticeOk").onclick = () => { $("privacyNotice").hidden = true; };
+$("noticeOk").onclick = () => { $("privacyNotice").hidden = true; checkContactPrompt(); };
 $("noticeMore").onclick = async () => {
   $("privacyNotice").hidden = true;
+  checkContactPrompt();
   await setTelemetry({ compat: true, diagnostics: true });
   toast("Thanks! Compatibility results and error details will be shared too. Change it any time in Privacy.");
 };
-$("noticeSettings").onclick = () => { $("privacyNotice").hidden = true; location.hash = "#privacy"; };
+$("noticeSettings").onclick = () => { $("privacyNotice").hidden = true; location.hash = "#privacy"; checkContactPrompt(); };
 const telemetryLoaded = loadTelemetry();
 
-// ---- contact email: two separate opt-ins (ui/frame_contact.py, docs/privacy.md) ----
+// ---- mailing list and contact email: two separate opt-ins (ui/frame_contact.py, docs/privacy.md) ----
 const contact = { email: "", updates: false, followup: false };
 function renderContact(s) {
   Object.assign(contact, s);
   $("cEmail").value = s.email; $("cUpdates").checked = s.updates; $("cFollowup").checked = s.followup;
   $("cRemove").hidden = !s.email;
   $("cStatus").textContent = s.waiting ? "Saved here; it's sent to the maintainer when Frame Control can reach PostHog."
-    : s.email ? `Saved. ${s.email} may get ${[s.updates && "update notices", s.followup && "follow-up questions"].filter(Boolean).join(" and ")}. Remove it any time.`
-    : "Sent privately to the Frame Control maintainer, never shared or published. Updates are occasional release notices; follow-up questions are mainly about problem reports you send.";
+    : s.email ? `Saved. ${s.email} may get ${[s.updates && "mailing list emails", s.followup && "follow-up questions"].filter(Boolean).join(" and ")}. Remove it any time.`
+    : "Sent privately to the Frame Control maintainer, never shared or published. The mailing list is occasional news about new features and updates; follow-up questions are mainly about problem reports you send.";
 }
 async function saveContact(change) {
   const s = await api("/api/contact", change);
@@ -4607,25 +4603,26 @@ async function loadContact() {
   try { renderContact(await api("/api/contact")); } catch { return; }
   checkContactPrompt();
 }
-// One time only, only once the Frame has connected, and never in a visit that showed the privacy
-// notice (two asks in a row is nagging): checked at load and whenever the Frame connects.
+// The mailing list offer: once, on first launch, and never on screen with the first-run privacy
+// notice (it waits for that to be closed). Checked at load, when the notice closes and when the
+// Frame connects (in case the server couldn't be asked earlier).
 async function checkContactPrompt() {
   await telemetryLoaded;
-  if (privacyNoticeShown || !$("contactNotice").hidden) return;
+  if (!$("privacyNotice").hidden || !$("contactNotice").hidden) return;
   let s;
   try { s = await api("/api/contact"); } catch { return; }
-  if (!s.showPrompt || privacyNoticeShown || !$("contactNotice").hidden) return;
+  if (!s.showPrompt || !$("privacyNotice").hidden || !$("contactNotice").hidden) return;
   $("contactNotice").hidden = false;
   api("/api/contact/prompt", { prompt: "shown" }).catch(() => {});
 }
 $("contactNotice").onsubmit = async e => {
   e.preventDefault();
-  if (!$("cpUpdates").checked && !$("cpFollowup").checked) { $("cpMsg").textContent = "Tick at least one, or choose No thanks."; return; }
   $("cpSave").disabled = true;
   try {
-    await saveContact({ email: $("cpEmail").value, updates: $("cpUpdates").checked, followup: $("cpFollowup").checked, fromPrompt: true });
+    // Joining is the mailing list only; follow-up questions keep whatever was agreed before.
+    await saveContact({ email: $("cpEmail").value, updates: true, followup: contact.followup && contact.email.toLowerCase() === $("cpEmail").value.trim().toLowerCase(), fromPrompt: true });
     $("contactNotice").hidden = true;
-    toast("Thanks! Change or remove it any time in Privacy & updates.");
+    toast("Thanks for joining! Unsubscribe any time in Privacy & updates.");
   } catch (err) { $("cpMsg").textContent = `Couldn't save: ${err.message}`; }
   finally { $("cpSave").disabled = false; }
 };
@@ -4648,6 +4645,13 @@ $("cRemove").onclick = async () => {
   catch (err) { toast(`Couldn't remove it: ${err.message}`, true); }
 };
 loadContact();
+// Help → Join the Mailing List… (desktop app): the Privacy & updates section, where joining later lives.
+function openMailingList() {
+  location.hash = "#mailingList";
+  showPage();  // also when the hash was already this, so hashchange doesn't fire
+  $("cEmail").focus({ preventScroll: true });
+}
+if (window.frameApp && window.frameApp.onJoinMailingList) window.frameApp.onJoinMailingList(openMailingList);
 function pageEvent(event, properties) {
   if (telemetry.usage && !telemetry.blocked) api("/api/telemetry/event", { event, properties }).catch(() => {});
 }

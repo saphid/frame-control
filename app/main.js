@@ -602,6 +602,9 @@ function buildMenu() {
           if (win && url && linkPage === win.webContents) win.webContents.send("report:open");
           else shell.openExternal("https://frame-control.pages.dev/feedback/");  // the page isn't up
         } },
+        { label: "Join the Mailing List…", click: () => {
+          if (win && url && linkPage === win.webContents) win.webContents.send("mailing:open");
+        } },
         { label: "Release Notes", click: () => shell.openExternal(updater.RELEASES) },
         { label: "Project on GitHub", click: () => shell.openExternal("https://github.com/saphid/steam-frame") },
       ],

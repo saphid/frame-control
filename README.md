@@ -118,8 +118,9 @@ a computer. Build it from [`ios/`](ios) in Xcode; see [docs/iphone.md](docs/ipho
 The app brings its own Python and `adb`; SSH is built into macOS and Windows.
 From 0.4 it updates itself: when a new version is published, a banner offers
 **Update and restart**. It sends anonymous usage statistics, which you can turn
-off. Sharing compatibility results and error details is opt-in. See
-[docs/privacy.md](docs/privacy.md).
+off. Sharing compatibility results and error details is opt-in, and so is the
+mailing list it offers once on first launch (just an email address, **No
+thanks** to skip). See [docs/privacy.md](docs/privacy.md).
 Google doesn't publish `adb` for arm64 Linux, so that build uses your
 distribution's. If you already have `adb`, the app uses yours.
 

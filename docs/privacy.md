@@ -218,21 +218,27 @@ The maintainer reads reports on the Frame Control dashboard in PostHog, or
 with `python3 ui/frame_report.py inbox [days]`, which uses the same personal
 API key as `frame_compat_db.py sync`.
 
-## Contact email (optional)
+## Mailing list and contact email (optional)
 
 Frame Control never needs an email address. If you'd like to leave one, there
 are two separate choices, both off until you tick them:
 
 | Choice | What it's for |
 |---|---|
-| **Email me about Frame Control updates** | Occasional notices about new releases and updates |
+| **Join the mailing list: new features and updates** | Occasional emails about new features and updates |
 | **The maintainer may contact me with follow-up questions** | Questions about problem reports you send, mostly |
 
-You're asked once, in a bar at the top of the page, after the Frame has
-connected for the first time, and never in the same visit as the first-run
-privacy notice. **No thanks** hides it for good, and it isn't
-shown again even if you ignore it. **Contact email** in **Privacy & updates**
-is where you add, change or remove the address and either choice at any time.
+The first time Frame Control opens, a bar at the top of the page asks
+"Want to hear about new features? Join the Frame Control mailing list." with
+an empty email field, **Join** and **No thanks**. It only asks about the
+mailing list; follow-up questions are a separate choice in **Privacy &
+updates**. If the first-run privacy notice is showing, it waits until that's
+closed, so the two never appear together. It doesn't need the Frame to be set
+up. **No thanks** hides it for good, and it isn't shown again even if you
+ignore it. **Mailing list and contact email** in **Privacy & updates** (also
+**Help → Join the Mailing List…** in the desktop app) is where you join later,
+or change or remove the address and either choice, at any time. Unticking the
+mailing list is unsubscribing.
 
 **What's sent, and where.** The address and the two choices go privately to
 Frame Control's PostHog project, the same place as problem reports, as a
@@ -267,7 +273,9 @@ sooner, ask the maintainer (for example in a problem report).
 Nothing sends email yet: this only records who agreed to what. The
 maintainer lists the addresses with
 `python3 ui/frame_report.py contacts [updates|followup]`, which uses the same
-personal API key as `inbox`.
+personal API key as `inbox`; `contacts updates` is the mailing list. If those
+addresses are ever moved to an email service to send the newsletter, this
+page will name it first.
 
 ## Turning it all off
 

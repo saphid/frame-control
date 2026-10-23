@@ -40,6 +40,11 @@ contextBridge.exposeInMainWorld("frameApp", {
     ipcRenderer.removeAllListeners("report:open");
     ipcRenderer.on("report:open", () => cb());
   },
+  // Help → Join the Mailing List… opens the page's mailing list setting (ui/frame_contact.py).
+  onJoinMailingList: (cb) => {
+    ipcRenderer.removeAllListeners("mailing:open");
+    ipcRenderer.on("mailing:open", () => cb());
+  },
   // Sign in with Meta (app/meta-signin.js): Meta's login page in its own window. The
   // answer is the server's (connected, display name), never the token.
   meta: {
