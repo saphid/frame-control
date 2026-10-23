@@ -36,3 +36,28 @@ desktop has to be running in the headset. It's text only, and pastes over about
 
 A simpler fallback: `ssh frame 'cat > ~/clip.txt'` < file, then open it in the
 headset.
+
+### In Frame Control
+
+**Tools → Type on the headset** (also on Home, and press `T` anywhere) has the
+clipboard next to the keyboard and trackpad, both ways:
+
+- **Send text** or **Send this computer's clipboard** puts text on the headset's
+  clipboard, as above.
+- **Copy the headset's clipboard** brings it back: copy something in a desktop
+  app on the Frame, then press it, and paste on your computer. It calls
+  Klipper's `getClipboardContents` on the same D-Bus bus, and sends the text
+  back as base64, so accents, emoji and line breaks arrive unchanged. The
+  desktop app and the iPhone app put it on their own clipboard. With the server
+  in a browser, the server sets the clipboard of the computer it runs on:
+  `pbcopy` on macOS, PowerShell's `Set-Clipboard` (or `clip.exe`) on Windows,
+  `wl-copy`, `xclip` or `xsel` on Linux.
+
+It's text only, and copying back takes up to 1 MB; a bigger clipboard is
+refused with a message, so send big things as a file. An empty clipboard, or
+one holding an image, says so. Neither the server nor its log ever records what
+was on the clipboard.
+
+**Not tested on a headset yet.** Reading uses the same Klipper interface as
+sending, which was verified on 2026-09-25, but `getClipboardContents` itself
+hasn't been tried on a Frame. The fake Frame (`tests/fakeframe`) answers it.

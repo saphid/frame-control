@@ -55,6 +55,7 @@ struct WebShell: UIViewRepresentable {
         },
         notify: (message, request) => call("notify", { message, request }),
         readClipboard: () => call("readClipboard"),
+        writeClipboard: (text) => call("writeClipboard", text),
         setUpConnection: () => call("setUpConnection"),
         open: (what) => call("open", what),
         saveImages: (images) => call("saveImages", images),
@@ -143,6 +144,10 @@ struct WebShell: UIViewRepresentable {
                 replyHandler(true, nil)
             case "readClipboard":
                 replyHandler(UIPasteboard.general.string ?? "", nil)
+            case "writeClipboard":
+                guard let text = arg as? String else { return replyHandler(nil, "Expected text") }
+                UIPasteboard.general.string = text
+                replyHandler(true, nil)
             case "setUpConnection":
                 model.showSetup()
                 replyHandler(nil, nil)

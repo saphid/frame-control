@@ -282,6 +282,12 @@ ipcMain.handle("server:restart", (e) => {
   if (win && e.sender === win.webContents && e.senderFrame && e.senderFrame.url.startsWith("data:")) restartServer();
 });
 ipcMain.handle("clipboard:read", (e) => fromUi(e) ? clipboard.readText() : "");
+// Text from the headset's clipboard onto this computer's.
+ipcMain.handle("clipboard:write", (e, text) => {
+  if (!fromUi(e) || typeof text !== "string") return false;
+  clipboard.writeText(text);
+  return true;
+});
 ipcMain.handle("preferences:read", (e) => fromUi(e) ? preferences.read() : {});
 ipcMain.handle("preferences:write", (e, key, value) => fromUi(e) ? preferences.write(key, value) : false);
 // A PNG or JPEG (a screenshot) onto the clipboard as an image.

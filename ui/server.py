@@ -856,20 +856,22 @@ def set_volume(body):
     return {"message": "Volume updated"}
 
 
-# Runs on the Frame, clipboard text on stdin. Verified 2026-09-25 (SteamOS 0.3.0
-# vr, build 20260922): the headset desktop is a nested Plasma Wayland session
-# inside gamescope with its own D-Bus bus, and wl-copy/xclip are not installed.
-# Klipper (org.kde.klipper, served by plasmashell) is reachable with qdbus6, so
-# borrow plasmashell's bus address. Same as scripts/paste-to-frame.sh.
-PASTE = r"""set -u
-text=$(cat; printf x); text=${text%x}
-pid=$(pgrep -u "$(id -u)" -x plasmashell | head -n 1)
+# The headset desktop's session bus. Verified 2026-09-25 (SteamOS 0.3.0 vr, build
+# 20260922): the headset desktop is a nested Plasma Wayland session inside
+# gamescope with its own D-Bus bus, and wl-copy/xclip are not installed. Klipper
+# (org.kde.klipper, served by plasmashell) is reachable with qdbus6, so borrow
+# plasmashell's bus address. Same as scripts/paste-to-frame.sh.
+DESKTOP_BUS = r"""pid=$(pgrep -u "$(id -u)" -x plasmashell | head -n 1)
 if [ -z "$pid" ]; then
   echo "The headset's desktop isn't open (plasmashell is not running). Open the desktop in the headset, then try again." >&2
   exit 2
 fi
 bus=$(tr '\0' '\n' < "/proc/$pid/environ" | sed -n 's/^DBUS_SESSION_BUS_ADDRESS=//p')
-if DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
+"""
+# Runs on the Frame, clipboard text on stdin.
+PASTE = r"""set -u
+text=$(cat; printf x); text=${text%x}
+""" + DESKTOP_BUS + r"""if DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
      org.kde.klipper.klipper.setClipboardContents "$text" >/dev/null; then
   echo "copied via Klipper (${#text} chars)"
 else
@@ -877,12 +879,77 @@ else
   exit 2
 fi
 """
-DESKTOP_CLOSED = "plasmashell is not running"  # what PASTE says when the headset's desktop isn't open
+DESKTOP_CLOSED = "plasmashell is not running"  # what PASTE and COPY say when the headset's desktop isn't open
 # base64 keeps the script intact through every local shell's quoting rules.
 PASTE_CMD = 'bash -c "$(echo %s | base64 -d)"' % base64.b64encode(PASTE.encode()).decode()
 
+# The other way: Klipper's getClipboardContents, printed by qdbus6 with a newline
+# after it, sent back as base64 so no shell or console encoding touches it.
+# Not tested on a headset: the method is Klipper's, the same interface PASTE uses.
+CLIPBOARD_LIMIT = 1_000_000  # bytes of UTF-8, about a 500-page book
+CLIPBOARD_TOO_BIG = "too much to copy"
+COPY = r"""set -u
+""" + DESKTOP_BUS + r"""out=$(mktemp) || exit 2
+trap 'rm -f "$out"' EXIT
+if ! DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
+     org.kde.klipper.klipper.getClipboardContents >"$out"; then
+  echo "Klipper call failed (bus: ${bus:-none})" >&2
+  exit 2
+fi
+if [ "$(wc -c <"$out")" -gt %d ]; then
+  echo "The headset's clipboard holds %s (over 1 MB). Copy less, or send it as a file." >&2
+  exit 3
+fi
+base64 -w 0 <"$out"
+""" % (CLIPBOARD_LIMIT + 1, CLIPBOARD_TOO_BIG)
+COPY_CMD = 'bash -c "$(echo %s | base64 -d)"' % base64.b64encode(COPY.encode()).decode()
+# Klipper's text for an image it holds, e.g. "▨ 640x480 32bpp" (HistoryImageItem::text in
+# Klipper's source; not seen on a headset).
+KLIPPER_IMAGE = re.compile(r"▨ \d+x\d+ \d+bpp")
+CLIPBOARD_EMPTY = "The headset's clipboard is empty"
+
+
+def desktop_failure(e):
+    """The headset's desktop being closed is the person's to change, not a fault: a 409 isn't reported as one."""
+    if DESKTOP_CLOSED in str(e):
+        return Failure(str(e), 409)
+    if CLIPBOARD_TOO_BIG in str(e):
+        return Failure(str(e), 413)
+    return None
+
+
+def headset_clipboard():
+    """The text on the headset desktop's clipboard. Never logged: it can hold anything."""
+    try:
+        out = ssh(COPY_CMD, timeout=30)
+    except Failure as e:
+        raise desktop_failure(e) or e from None
+    try:
+        text = base64.b64decode(out.strip(), validate=True).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        raise Failure("The headset's clipboard couldn't be read as text", 502) from None
+    text = text[:-1] if text.endswith("\n") else text  # qdbus6's newline, not the clipboard's
+    if KLIPPER_IMAGE.fullmatch(text):
+        raise Failure("The headset's clipboard holds an image. Only text can be copied.", 400)
+    if not text:
+        raise Failure(CLIPBOARD_EMPTY + " (or holds something other than text)", 400)
+    return text
+
 
 def clipboard(body):
+    if body.get("read") is True:
+        # The page puts it on the clipboard where it runs (the app, or the iPhone).
+        text = headset_clipboard()
+        return {"text": text, "message": f"Copied {len(text):,} characters from the headset's clipboard"}
+    if body.get("toComputer") is True:
+        if LOCAL:
+            raise Failure("This server runs on the headset: copy from the Frame Control app instead", 400)
+        text = headset_clipboard()
+        try:
+            frame_host.set_clipboard_text(text)
+        except frame_host.HostError as e:
+            raise Failure(str(e), 500)
+        return {"message": f"Copied {len(text):,} characters from the headset to this computer's clipboard"}
     if body.get("fromMac") or body.get("fromComputer"):
         try:
             text = frame_host.clipboard_text()
@@ -897,10 +964,7 @@ def clipboard(body):
     try:
         return {"message": ssh(PASTE_CMD, stdin=text, timeout=30).strip()}
     except Failure as e:
-        if DESKTOP_CLOSED in str(e):
-            # The headset's state, for the person to change, not a fault: a 409 isn't reported as one.
-            raise Failure(str(e), 409) from None
-        raise
+        raise desktop_failure(e) or e from None
 
 
 # ---- keyboard and pointer (KDE Connect on the Frame, see frame_input_agent.py) ----

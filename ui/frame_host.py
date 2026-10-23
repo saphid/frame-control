@@ -5,6 +5,7 @@ Everything here runs on your computer, not the Frame. Python stdlib only.
 CLI (used by the Electron app, so terminal handling lives in one place):
   python3 ui/frame_host.py terminal -- CMD [ARG...]   # open CMD in a terminal window
 """
+import base64
 import hashlib
 import io
 import os
@@ -306,6 +307,38 @@ def clipboard_text():
     if LINUX:
         raise HostError("Can't read the clipboard: install wl-clipboard (Wayland) or xclip (X11)")
     raise HostError("Can't read the clipboard")
+
+
+def set_clipboard_text(text):
+    """Put TEXT on this computer's clipboard."""
+    data = text.encode("utf-8")
+    env = None
+    if MAC:
+        # pbcopy reads stdin in the locale's encoding, and the app may start with none (MacRoman).
+        cmds, env = [["pbcopy"]], {**os.environ, "LC_CTYPE": "UTF-8"}
+    elif WINDOWS:
+        # Base64 on stdin, so no console code page touches the text. clip.exe takes UTF-16 with a BOM.
+        script = ("Set-Clipboard -Value ([Text.Encoding]::UTF8.GetString("
+                  "[Convert]::FromBase64String([Console]::In.ReadToEnd())))")
+        cmds = [["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script], ["clip.exe"]]
+    else:
+        cmds = [["wl-copy"], ["xclip", "-selection", "clipboard", "-in"], ["xsel", "--clipboard", "--input"]]
+    for cmd in cmds:
+        if not shutil.which(cmd[0]):
+            continue
+        feed = (base64.b64encode(data) if cmd[0] == "powershell.exe"
+                else b"\xff\xfe" + text.encode("utf-16-le") if cmd[0] == "clip.exe" else data)
+        # wl-copy and xclip stay behind to serve the clipboard: give them no pipes to hold open.
+        try:
+            r = subprocess.run(cmd, input=feed, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               env=env, timeout=10)
+        except subprocess.TimeoutExpired:
+            continue
+        if r.returncode == 0:
+            return
+    if LINUX:
+        raise HostError("Can't set the clipboard: install wl-clipboard (Wayland) or xclip (X11)")
+    raise HostError("Can't set the clipboard")
 
 
 # What Windows' OpenSSH says when it refuses ~/.ssh/config (or a key) for its ACL.

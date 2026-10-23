@@ -1143,7 +1143,7 @@
     <div class="workspace-heading"><div><span class="eyebrow">Your Steam Frame</span><h1 id="homeTitle">Let's connect</h1><p id="homeReadiness" role="status">Checking your headset…</p></div><a class="workspace-link" href="#devices">Devices &amp; connection</a></div>
     <div class="home-grid"><section class="panel home-activity"><span class="eyebrow">Current activity</span><h2 id="homeActivity">Connect to see what's running</h2><p id="homeActivityNote">Your installed apps and current downloads appear here.</p><div id="homeRunning" class="home-running"></div><div class="home-actions"><a href="#library" class="workspace-link primary-link">Open Games →</a><a href="#discover" class="workspace-link">Find something new</a></div></section>
     <section class="panel home-session"><span class="eyebrow">Background tasks</span><h2 id="homeJobs">No active tasks</h2><p id="homeDownload">Install progress stays here while you explore.</p><button class="small" id="homeLog">View activity log</button></section></div>
-    <div class="quick-routes"><a href="#capture"><span>Capture &amp; Live</span><small>See and share the headset view</small></a><a href="#pad"><span>Keyboard &amp; trackpad</span><small>Control apps on your Frame</small></a><a href="#comfort"><span>Family &amp; comfort</span><small>Sessions, breaks and alerts</small></a><a href="#control"><span>Control Center</span><small>Search settings and live metrics</small></a></div>
+    <div class="quick-routes"><a href="#capture"><span>Capture &amp; Live</span><small>See and share the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#comfort"><span>Family &amp; comfort</span><small>Sessions, breaks and alerts</small></a><a href="#control"><span>Control Center</span><small>Search settings and live metrics</small></a></div>
     <section class="panel now" id="device">
       <div class="shelf-head"><h2>Right now</h2></div>
       <p class="now-state" id="nowState">Waiting for the Frame…</p>
@@ -1159,7 +1159,7 @@
         <button data-go="media">Play a video or photo</button>
         <button data-go="macview" id="nowMac" hidden>Show a Mac window</button>
         <button id="nowSend">Send files…</button>
-        <button data-go="pad">Type on the Frame</button>
+        <button data-go="pad" title="Type on the headset (T)">Type on the headset</button>
       </div>
       <p class="hint">Casting shows everything the wearer sees, including anything private.</p>
     </section>
@@ -1402,7 +1402,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad"><span>Keyboard & trackpad</span><small>Type and point in desktop apps</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
 <section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
@@ -1479,6 +1479,15 @@
       for the Frame (3.6 MB, 18 MB unpacked) into your home folder there and pairs with it. No internet needed, and nothing
       else to install. <a href="#" data-about>Licences</a></div>
     </div>
+    <div class="shelf-head" style="margin-top:18px"><h2>Clipboard</h2></div>
+    <textarea id="clipText" placeholder="Text to put on the Frame's clipboard…"></textarea>
+    <div class="row" style="margin-top:8px">
+      <button class="action small" id="clipSend">Send text</button>
+      <button class="small" id="clipMac">Send this computer's clipboard</button>
+      <button class="small" id="clipFrom">Copy the headset's clipboard here</button>
+    </div>
+    <div class="hint">Text goes both ways between here and the headset's desktop: copy in an app on the Frame, then
+      Copy the headset's clipboard. Needs the desktop panel open in the headset. Text only, up to 1 MB.</div>
   </section><section id="androidSettings">      <h2 class="lib-section">Display and reports</h2>
       <div class="lib-manage">
       <section class="panel disp" id="display">
@@ -1541,13 +1550,7 @@
         <option value="vr">VR app</option>
       </select>
       <div class="progress" id="prog"><i></i></div>
-      <div class="shelf-head" style="margin-top:18px"><h2>Clipboard</h2></div>
-      <textarea id="clipText" placeholder="Text to put on the Frame's clipboard…"></textarea>
-      <div class="row" style="margin-top:8px">
-        <button class="action small" id="clipSend">Send text</button>
-        <button class="small" id="clipMac">Send this computer's clipboard</button>
-      </div>
-      <div class="hint">Clipboard needs the desktop panel open in the headset.</div>
+      <div class="hint">Clipboard text, both ways, is in <a href="#pad">Type on the headset</a>.</div>
     </section>
 
     <section class="panel" id="media">
@@ -2018,6 +2021,7 @@ function applyHostWording(h) {
   if (!h.mobile) $("shotsFolder").textContent = h.fileManager === "your file manager" ? "Open folder" : `Show in ${h.fileManager}`;
   $("shotsSaveNew").textContent = h.mobile ? `Save all to ${h.computer}` : `Save new to ${h.computer}`;
   $("clipMac").textContent = `Send ${h.computer} clipboard`;
+  $("clipFrom").textContent = `Copy the headset's clipboard to this ${h.computer}`;
   $('mobileConnection').hidden = !h.mobile;
   $('desktopConnections').hidden = !!h.mobile;
   if (h.mobile) {
@@ -2312,10 +2316,16 @@ function showNow(to) {
   showPage();
 }
 // Home's shortcuts to the things people come to do next.
+// Type on the headset: Home's button and the T key turn the keyboard on and put the cursor in its field.
+function typeOnHeadset() {
+  showNow("pad");
+  if (pad.state === "off" || pad.state === "error") padStart();
+  $("padType").focus({ preventScroll: true });
+}
 document.querySelectorAll("[data-go]").forEach(b => b.onclick = () => {
   const to = b.dataset.go;
+  if (to === "pad") return typeOnHeadset();
   showNow(to);
-  if (to === "pad") { if (pad.state === "off" || pad.state === "error") padStart(); $("padType").focus({ preventScroll: true }); }
 });
 $("nowSend").onclick = () => $("fileInput").click();
 $("castBtn").onclick = () => {
@@ -3357,6 +3367,15 @@ async function sendComputerClipboard() {
   return api("/api/clipboard", { text }, device);
 }
 $("clipMac").onclick = () => act($("clipMac").textContent, sendComputerClipboard, $("clipMac"));
+// The other way. The app (or the iPhone app) writes the clipboard itself; in a browser, the
+// server does, on the computer it runs on. The text is never logged.
+async function copyHeadsetClipboard() {
+  if (!window.frameApp?.writeClipboard) return api("/api/clipboard", { toComputer: true });
+  const { text, message } = await api("/api/clipboard", { read: true });
+  await window.frameApp.writeClipboard(text);
+  return { message };
+}
+$("clipFrom").onclick = () => act("Copy the headset's clipboard", copyHeadsetClipboard, $("clipFrom"));
 
 // ---- file drop ----
 const drop = $("drop");
@@ -5252,7 +5271,7 @@ const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"ca
   vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
   display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools"};
 const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork",
-  pad:"Keyboard & trackpad", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
+  pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
   power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
@@ -5684,6 +5703,10 @@ clientPreferences.ready.then(async () => {
 showPage();
 document.addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName) || document.querySelector("dialog[open]")) return;
+  if ((e.key === "t" || e.key === "T") && !(ctrl.on && document.activeElement === $("viewer"))) {
+    e.preventDefault();  // or the T lands in the field it focuses, and goes to the Frame
+    return typeOnHeadset();
+  }
   const n = [...PAGES, 'devices', 'control'][+e.key - 1];
   if (n) location.hash = n;
 });
