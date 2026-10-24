@@ -8,13 +8,15 @@ installed; the desktop app does not bundle this command.
 
 ```sh
 scripts/frame-doctor.sh
-scripts/frame-doctor.sh --alias bedroom --lan frame.local
+scripts/frame-doctor.sh --alias bedroom --lan 192.168.1.40
 scripts/frame-doctor.sh --alias frame --lan 192.168.1.40
 ```
 
 Use only addresses belonging to your intended headset. The command tries the
 existing `frame` SSH alias first (Tailscale if setup configured it that way),
-then `frame.local`, then USB-C at `10.86.200.233`. `--alias`, `--lan` and `--usb`
+then an optional `--lan` address, then USB-C at `10.86.200.233`. SteamOS 0.5.6
+stopped publishing mDNS names, so use a known IP for `--lan` if `.local` no longer
+resolves. `--alias`, `--lan` and `--usb`
 override those defaults. It reports the successful path without printing its
 address. It neither discovers other devices nor enables Tailscale.
 

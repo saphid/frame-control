@@ -323,6 +323,16 @@ class Pins(Base):
 
 
 class Registry(Base):
+    def test_mdns_result_remembers_numeric_ip_only_on_its_network(self):
+        d = self.reg.add_device("frame-cache", hosts=["frame-cache.local"])
+        self.reg.record_success(d["id"], "frame-cache.local", "n-home", 2.0, ip="192.168.1.40")
+        a = fd.Registry(self.reg.path).get(d["id"])["addresses"][0]
+        self.assertEqual((a["last_ip"], a["last_ip_network"]), ("192.168.1.40", "n-home"))
+        self.reg.record_success(d["id"], "frame-cache.local", "n-home", 2.0, ip="host;bad")
+        self.assertEqual(self.reg.get(d["id"])["addresses"][0]["last_ip"], "192.168.1.40")
+        self.reg.update_address(d["id"], "frame-cache.local", new_host="frame-next.local")
+        self.assertNotIn("last_ip", self.reg.get(d["id"])["addresses"][0])
+
     def test_replaced_registry_is_read_even_when_timestamp_and_size_match(self):
         d = self.reg.add_device('frame', name='First')
         before = self.reg.path.stat()

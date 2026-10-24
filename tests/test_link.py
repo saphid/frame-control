@@ -58,6 +58,50 @@ class FailureDetail(unittest.TestCase):
 
 
 class Probe(unittest.TestCase):
+    def test_mdns_falls_back_only_to_ip_authenticated_on_this_network(self):
+        address = {"host": "frame.local", "kind": "mdns", "last_ip": "192.168.1.40",
+                   "last_ip_network": "n-home"}
+        def result(host, port, **kwargs):
+            return {"state": "answered", "ip": host, "rtt_ms": 1} if host == "192.168.1.40" else \
+                   {"state": "unresolved", "detail": "Can't find name"}
+        with mock.patch.object(fl, "probe", side_effect=result) as probe:
+            self.assertEqual(fl.probe_address(address, 22, "n-home")["ip"], "192.168.1.40")
+            self.assertEqual([c.args[0] for c in probe.call_args_list], ["frame.local", "192.168.1.40"])
+            probe.reset_mock()
+            self.assertEqual(fl.probe_address(address, 22, "n-cafe")["state"], "unresolved")
+            probe.assert_called_once()
+
+    def test_find_uses_cached_ip_and_neighbours_without_trusting_them(self):
+        device = {"id": "d1", "alias": "frame", "port": 22, "addresses": [{"host": "frame.local", "kind": "mdns",
+                  "last_ip": "192.168.1.40", "last_ip_network": "n-test"}]}
+        link = mock.Mock()
+        link.active_device.return_value = device
+        link.state = {"network": NET}
+        def answer(host, port, timeout=3):
+            return {"state": "answered" if host in ("192.168.1.40", "192.168.1.41") else "unresolved",
+                    "detail": "test", "ip": host if host.startswith("192.") else None, "rtt_ms": 1}
+        with mock.patch.object(fl, "probe", side_effect=answer), \
+             mock.patch.object(fl.frame_network, "local_scan_candidates", return_value=["192.168.1.40", "192.168.1.41"]), \
+             mock.patch.object(fl.frame_network, "neighbour_cache", return_value=""), \
+             mock.patch.object(fl.frame_devices, "pinned_keys", return_value=[("ssh-ed25519", "SHA256:test")]), \
+             mock.patch.object(fl, "matches_pinned_key", return_value=True), \
+             mock.patch.object(fl.frame_host, "which", return_value=None), \
+             mock.patch("frame_connect.discover_devkit", return_value=[]):
+            found = fl.mdns_find(link)
+        self.assertEqual(found["scanned"], 1)  # cached IP is tried once
+        self.assertEqual({h["host"] for h in found["hosts"]}, {"192.168.1.40", "192.168.1.41"})
+        self.assertTrue(found["hosts"][0]["added"] is False)
+
+    def test_scan_requires_saved_matching_ssh_key(self):
+        key = ("ssh-ed25519", fd.fingerprint("a2V5"))
+        response = subprocess.CompletedProcess([], 0, "192.168.1.41 ssh-ed25519 a2V5\n", "")
+        with mock.patch.object(fl.frame_host, "which", return_value="ssh-keyscan"), \
+             mock.patch.object(fl.frame_host, "run_ssh", return_value=response):
+            self.assertTrue(fl.matches_pinned_key("192.168.1.41", 22, [key]))
+            self.assertFalse(fl.matches_pinned_key("192.168.1.41", 22, [("ssh-ed25519", "SHA256:other")]))
+            self.assertFalse(fl.matches_pinned_key("name;bad", 22, [key]))
+            self.assertFalse(fl.matches_pinned_key("192.168.1.41", 22, []))
+
     def test_answers_refusals_and_unknown_names(self):
         with socket.socket() as srv:
             srv.bind(("127.0.0.1", 0))

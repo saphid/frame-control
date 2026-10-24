@@ -31,6 +31,14 @@ GAMES = 'devkit-game'                     # ditto; steamos-prepare-upload makes 
 STAMP = '.frame-control-stamp'
 PY = 'python3 ~/' + UTILS + '/'
 
+
+def devkit_script(name, args=''):
+    """Prefer Valve's holo name when a newer devkit ships it; use our vendored copy otherwise."""
+    if name not in ('prepare-upload', 'delete'):
+        raise ValueError('unknown devkit script')
+    return (f'if [ -f ~/{UTILS}/holo-{name} ]; then {PY}holo-{name} {args}; '
+            f'else {PY}steamos-{name} {args}; fi')
+
 # Valve's reserved sideload names: uploading one of these replaces the Steam client itself.
 # devkit-steam is the trampoline file that switches SteamOS to a sideloaded client
 # (select_steam.sh); a folder there breaks Valve's devkit tools.
@@ -675,7 +683,7 @@ def _install(plan, step, artwork=None):
     ensure_utils()
     existed = ssh(f'test -d {GAMES}/{gid} && echo yes || true', timeout=30).strip() == 'yes'
     step('Preparing the title folder', 0.05)
-    ready = _json_out(ssh(f'{PY}steamos-prepare-upload --gameid {gid}', timeout=60), 'steamos-prepare-upload')
+    ready = _json_out(ssh(devkit_script('prepare-upload', f'--gameid {gid}'), timeout=60), 'steamos-prepare-upload')
     directory = str(ready.get('directory') or '')
     if not DIR_RE.match(directory) or not directory.endswith(f'/{GAMES}/{gid}'):
         raise FrameError(f'steamos-prepare-upload returned an unexpected folder {directory!r}')
@@ -726,7 +734,7 @@ def _install(plan, step, artwork=None):
                 if shortcut:
                     frame_android.shortcut_tool('remove', str(shortcut))
                 else:
-                    ssh(f'{PY}steamos-delete --delete-title {gid}', timeout=120)
+                    ssh(devkit_script('delete', f'--delete-title {gid}'), timeout=120)
             except FrameError:
                 pass
             registered = False
@@ -896,7 +904,7 @@ def remove(gid):
             shortcut = None
         # steamos-delete removes the folder, the shortcut and its Proton prefix (found through the
         # shortcut), so it runs first; its json files stay, so clear them too.
-        ssh(f'{PY}steamos-delete --delete-title {gid}', timeout=120)
+        ssh(devkit_script('delete', f'--delete-title {gid}'), timeout=120)
         ssh(f'rm -f {_json_files(gid)}', timeout=30)
         # Then tidy what it leaves (artwork, collections); best effort.
         if shortcut:
