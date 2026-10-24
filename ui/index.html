@@ -1270,6 +1270,7 @@
     <div class="sub sync-note" id="clipsSyncNote" hidden></div>
     <div class="hint">Clips and background recordings from Steam's game recording in the headset. Export joins one into a single <code>.mp4</code> in <code>~/Videos/SteamFrame</code>, however long it is, without re-encoding it. Recordings you make with <b>Record</b> go there too.</div>
   </section>
+
   </div>
 
   <div class="page" data-page="games">
@@ -1498,8 +1499,7 @@
     <div class="shelf-head"><h2>Keyboard and trackpad</h2><span class="sub" id="padState"></span><span class="spacer"></span>
       <button class="small" id="padOn">Turn on</button>
     </div>
-    <p class="sub" id="padIntro">Use this computer's keyboard and mouse in apps on the Frame, such as Chromium or the
-      desktop's Linux apps.</p>
+    <p class="sub" id="padIntro">Use this computer's keyboard and mouse in the panel you're using in the headset.</p>
     <div id="padBody" hidden>
     <div class="pad-area" id="padArea" tabindex="0" role="application" aria-label="Trackpad for the Frame">
       <div class="pad-hint" id="padHint"></div>
@@ -1522,10 +1522,9 @@
         <button data-pad-key="12" title="Enter">Enter</button>
       </span>
     </div>
-    <div class="hint">Types and points in apps on the Frame, such as Chromium or the desktop's Linux apps; Steam's own VR menus
-      don't take it. It works through KDE Connect, which comes with Frame Control: the first time, it copies Valve's build
-      for the Frame (3.6 MB, 18 MB unpacked) into your home folder there and pairs with it. No internet needed, and nothing
-      else to install. <a href="#" data-about>Licences</a></div>
+    <div class="hint">Types and points in whichever panel has focus in the headset, through Valve's own input path: nothing to
+      install and no internet needed. Accents and emoji go through KDE Connect, which comes with Frame Control and starts
+      the first time you type one (it copies Valve's build for the Frame, 3.6 MB, into your home folder there). <a href="#" data-about>Licences</a></div>
     </div>
     <div class="shelf-head" style="margin-top:18px"><h2>Clipboard</h2></div>
     <textarea id="clipText" placeholder="Text to put on the Frame's clipboard…"></textarea>
@@ -6088,11 +6087,11 @@ const typesText = el => el?.matches?.('textarea, input:not([type=range], [type=c
 document.addEventListener("focusin", e => document.body.classList.toggle("typing", !!typesText(e.target)));
 document.addEventListener("focusout", () => document.body.classList.remove("typing"));
 
-// ---- keyboard and trackpad: events go to KDE Connect on the Frame (see ui/frame_input_agent.py) ----
+// ---- keyboard and trackpad: events go to the Frame through gamescope (ui/frame_touch.py); accents and emoji through KDE Connect ----
 const pad = { state: "off", queue: [], sending: false, poll: null, captured: false };
 const PAD_STATES = {
-  off: "", starting: "Connecting…", installing: "Setting up KDE Connect on the Frame (first time only)…",
-  pairing: "Pairing with KDE Connect…", ready: "On",
+  off: "", starting: "Connecting…", installing: "Setting up (first time only)…",
+  pairing: "Pairing with KDE Connect…", waiting: "Waiting for queued text…", ready: "On",
 };
 // KDE Connect's specialKey numbers (plugins/mousepad in its source).
 const PAD_SPECIAL = { Backspace: 1, Tab: 2, ArrowLeft: 4, ArrowUp: 5, ArrowRight: 6, ArrowDown: 7, PageUp: 8,
@@ -6111,14 +6110,14 @@ function padShow(status) {
   $("padArea").classList.toggle("off", !ready);
   $("padBody").hidden = pad.state === "off";
   $("padIntro").hidden = pad.state !== "off";
-  $("padHint").textContent = pad.state === "error" ? status.message || "Couldn't reach KDE Connect on the Frame."
+  $("padHint").textContent = pad.state === "error" ? status.message || "Couldn't reach the Frame."
     : !ready ? (busy ? PAD_STATES[pad.state] : "Turn on to use this as a trackpad for the Frame.")
     : TOUCH ? "Drag to move the pointer · tap to click · two fingers to scroll · two-finger tap to right-click"
     : pad.captured ? "Your mouse and keyboard now control the Frame. Press Esc to stop."
     : "Click here to use your mouse and keyboard on the Frame (Esc to stop), or drag like a trackpad.";
   clearTimeout(pad.poll);
   if (ready && pad.queue.length) padFlush();
-  if (busy) {
+  if (busy || status.queued) {
     const gen = devGen;
     pad.poll = setTimeout(async () => {
       const status = await api('/api/input').catch(e => ({state:'error', message:e.message}));
@@ -6141,7 +6140,7 @@ function padSend(event) {
   // While it reconnects, keys and clicks wait in the queue; pointer moves would be stale.
   // A button release is always kept, so a drag never leaves the button held on the Frame.
   const room = pad.queue.length < 200 || event.singlerelease;
-  const reconnecting = ["starting", "pairing", "installing"].includes(pad.state) && room;
+  const reconnecting = ["starting", "pairing", "installing", "waiting"].includes(pad.state) && room;
   // Even after an error: a button pressed on the Frame must be let go once it's back.
   const release = event.singlerelease && pad.state !== "off";
   if (pad.state !== "ready" && !(reconnecting && !isMove(event)) && !release) return;
@@ -6174,7 +6173,7 @@ async function padFlush() {
     const status = await api("/api/input", { events });
     if (gen !== devGen) return;
     if (!status.sent) padKeep(events);
-    if (status.state !== "ready") padShow(status);
+    if (status.state !== "ready" || status.queued) padShow(status);
   } catch (e) {
     if (gen !== devGen) return;
     padKeep(events);

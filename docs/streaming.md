@@ -154,10 +154,31 @@ two fingers to scroll, two-finger tap to right-click) plus a text field that
 types on the Frame. On a computer, clicking the pad passes your mouse and
 keyboard through to the Frame until you press Esc (⌘ is sent as Ctrl on a Mac).
 
-It goes through **KDE Connect**, the first-party route (KDE makes the Frame's
-desktop): Frame Control's server runs [`ui/frame_input_agent.py`](../ui/frame_input_agent.py)
-on the Frame, which talks KDE Connect's own LAN protocol to the Frame's
-`kdeconnectd` as if it were a phone. KDE Connect does the typing and clicking.
+Since Control (below), the pad goes through **gamescope's own input socket**
+([`ui/frame_touch.py`](../ui/frame_touch.py)), so it reaches whichever panel has
+focus, Steam's own menus included, and needs nothing installed on the Frame.
+Only characters that aren't on a US keyboard (accents, emoji) go through
+**KDE Connect** as below; it starts the first time you type one. (Before
+Control, everything went through KDE Connect, which is why the notes below
+describe it in detail.)
+
+The server keyboard queue holds at most 200 events, including text being sent.
+A batch with an accent sends its whole keyboard part through KDE Connect, and
+later keys follow it there while typing is pending. If the batch will not fit,
+the server rejects it before sending any clicks or keys; the page keeps it and
+retries after polling. Accepted events are never evicted to make room. A timeout
+or helper failure retains unsent text and shows **Try again**; that button resumes
+the retained queue. The queue lives in memory and is lost if the server exits.
+Switching headsets cancels queued text and stops both input helpers before the
+new route is published. Both controls validate the intended headset before they
+start. Ordering between the two input services uses a typing-time estimate;
+neither service acknowledges when characters reach the application.
+
+[PR #66 verification on 2026-10-24](evidence/pad-gamescope-2026-10-24.md)
+records an owned focused X11 panel receiving a click and `Frame66` plus Enter
+on a real Frame with SteamOS 0.5.6, after the shared headset became available.
+The helper, window and owner-marked lock were cleaned up. This is ASCII input
+proof, not wearer-visible, Unicode or packaged Electron GUI verification.
 
 **Verified 2026-09-28** (SteamOS 0.4.1, build 20260925.6191901):
 

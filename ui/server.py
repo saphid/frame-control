@@ -69,6 +69,7 @@ import frame_report  # noqa: E402
 import frame_store  # noqa: E402
 import frame_telemetry  # noqa: E402
 import frame_titles  # noqa: E402
+import frame_touch  # noqa: E402
 import frame_webinstall  # noqa: E402
 import frame_vr  # noqa: E402
 import frame_utilities  # noqa: E402
@@ -111,7 +112,9 @@ frame_android.SSH_OPTS = SSH[1:]
 
 
 _power = frame_power.Observation()
-_route_lock = threading.Lock()
+# Pad delivery reserves the route before its own locks; InputAgent.start()
+# captures that same route synchronously, so this lock must be reentrant.
+_route_lock = threading.RLock()
 
 
 def route(alias, host_opts):
@@ -123,13 +126,10 @@ def route(alias, host_opts):
         moved = alias != FRAME
         if moved:
             _power.stop('Headset switched; received samples retained for the previous headset')
+            reset_pad = globals().get("reset_pad_route")
+            if reset_pad:
+                reset_pad()  # cancel queued input and both agents before publishing the new route
             frame_catalog._env.clear()  # the SteamOS and Lepton builds reports record are per headset
-            # Invalidate launches before publishing the new route. send/stop share
-            # a writer lock, so an old process cannot receive events after this.
-            for name in ("_input", "_touch"):
-                agent = globals().get(name)
-                if agent:
-                    agent.stop()
         FRAME = frame_android.FRAME = alias
         HOST_OPTS = list(host_opts)
         MUX[:] = [*MUX_BASE, *HOST_OPTS]
@@ -1499,12 +1499,244 @@ def licenses():
     return notices
 
 
+# KDE Connect's specialKey numbers -> Linux key codes (KEY_BACKSPACE, KEY_TAB, ...).
+PAD_KEYS = {1: 14, 2: 15, 4: 105, 5: 103, 6: 106, 7: 108, 8: 104, 9: 109, 10: 102, 11: 107, 12: 28, 13: 111, 14: 1,
+            **{21 + i: code for i, code in enumerate([59, 60, 61, 62, 63, 64, 65, 66, 67, 68, 87, 88])}}
+PAD_MODS = (("ctrl", 29), ("alt", 56), ("shift", 42), ("super", 125))
+PAD_CLICKS = {"singleclick": "left", "rightclick": "right", "middleclick": "middle"}
+PAD_NOTCH = 15  # scroll units for one wheel notch
+
+
+def typed_in_kde(events):
+    """Whether these events must go the KDE Connect way: they hold an accent or emoji, or
+    earlier ones are queued, being sent or still being typed there (typing must stay in
+    order, so it can't be split between the two ways)."""
+    with _kde_lock:
+        waiting = bool(_kde_queue) or time.time() < _kde_until
+    return waiting or any(ch not in frame_touch.ASCII for e in events for ch in e.get("key", ""))
+
+
+def pad_events(events, kde=False):
+    """The trackpad's and key row's events as (gamescope events, KDE Connect events).
+
+    Gamescope's own input reaches every panel and needs nothing installed, but types only
+    US-keyboard characters. With kde, the keyboard goes to KDE Connect as it was sent, so
+    text stays in order; the pointer always goes through gamescope.
+    """
+    ascii_keys = frame_touch.ASCII
+    out, slow = [], []
+
+    def tap(code, mods):
+        down = [{"key": c, "down": True} for c in mods]
+        out.extend(down + [{"key": code, "down": True}, {"key": code, "down": False}]
+                   + [{"key": c, "down": False} for c in reversed(mods)])
+    for e in events:
+        mods = [code for name, code in PAD_MODS if e.get(name)]
+        if "dx" in e or "dy" in e:
+            if not e.get("scroll"):
+                out.append({k: e[k] for k in ("dx", "dy") if k in e})
+        if e.get("scroll"):
+            out.append({"scroll": [0, -(e.get("dy") or 0) * PAD_NOTCH]})
+        for flag, button in PAD_CLICKS.items():
+            if e.get(flag):
+                out += [{"button": button, "down": True}, {"button": button, "down": False}]
+        if e.get("doubleclick"):
+            out += [{"button": "left", "down": d} for d in (True, False, True, False)]
+        if e.get("singlehold"):
+            out.append({"button": "left", "down": True})
+        if e.get("singlerelease"):
+            out.append({"button": "left", "down": False})
+        if kde and ("key" in e or "specialKey" in e):
+            slow.append({k: e[k] for k in ("key", "specialKey", "ctrl", "alt", "shift", "super") if k in e})
+            continue
+        if "specialKey" in e and e["specialKey"] in PAD_KEYS:
+            tap(PAD_KEYS[e["specialKey"]], mods)
+        if "key" in e:
+            for ch in e["key"]:
+                if ch not in ascii_keys:
+                    continue  # only reached when kde is wrong; the caller checks typed_in_kde first
+                elif mods:
+                    code, shifted = ascii_keys[ch]
+                    tap(code, mods + ([42] if shifted and 42 not in mods else []))
+                else:
+                    if out and "text" in out[-1] and len(out[-1]["text"]) < 100:
+                        out[-1]["text"] += ch
+                    else:
+                        out.append({"text": ch})
+    return out, slow
+
+
 def remote_input(body):
-    """{"events": [...]} sends keyboard and pointer events; {} (or none yet) just starts the agent."""
+    """{"events": [...]} sends keyboard and pointer events; {} (or none yet) just starts the agent.
+
+    "sent" in the answer means the whole batch is taken (the page keeps it and tries again
+    if not), so the keyboard's share is queued only once that's so.
+    """
     events = body.get("events", [])
     if not isinstance(events, list) or len(events) > INPUT_BATCH_LIMIT:
         raise Failure(f"events must be a list of at most {INPUT_BATCH_LIMIT}", 400)
-    return _input.send([input_event(e) for e in events])
+    events = [input_event(e) for e in events]
+    # Serialize admission with other requests and the sender. Keep route -> pad
+    # order: either agent may synchronously capture its route during send().
+    with _route_lock, _pad_send_lock:
+        touch, slow = pad_events(events, typed_in_kde(events))
+        with _kde_lock:
+            blocked = slow and (_kde_error or len(_kde_queue) + len(slow) > KDE_QUEUE_LIMIT)
+        if blocked:
+            # Refuse the WHOLE batch before sending its clicks/moves. The page
+            # retains it and polls, so a retry cannot duplicate pointer events.
+            return pad_status({"state": "waiting", "sent": False})
+        status = _touch.send(touch)
+        if touch and not status.get("sent"):
+            return status
+        if touch:
+            _note_typed(touch)
+        if slow:
+            _queue_for_kde(slow)
+        # Poll at least once after accepting text, even if its worker finished
+        # already, so an asynchronous error is visible without another keypress.
+        return pad_status({**status, "sent": True}, pending=bool(slow))
+
+
+# Typing KDE Connect is to do: it starts the first time it's needed, so this waits for it.
+# Nothing on the Frame says when typed text has landed, so each way holds the other back
+# for as long as what it was given should take (a short margin on a time estimate).
+_kde_queue = []
+_kde_lock = threading.Lock()
+_pad_send_lock = threading.Lock()
+_kde_worker = [None]
+_kde_error = None
+_kde_until = 0.0     # keys typed through KDE Connect should have landed by then
+_typed_until = 0.0   # when gamescope's agent will have typed everything it's been given
+_kde_route = object()
+_kde_cancel = threading.Event()
+KDE_QUEUE_LIMIT = 200
+KDE_WAIT = 90  # seconds to wait before pausing queued text for an explicit retry
+TYPING_SETTLE = 0.6  # seconds past the estimate, once
+
+
+def reset_pad_route():
+    """Discard input for the headset being left, including batches waiting for an agent."""
+    global _kde_route, _kde_cancel, _kde_until, _typed_until, _kde_error
+    with _route_lock, _pad_send_lock, _kde_lock:
+        _kde_cancel.set()
+        _kde_cancel = threading.Event()
+        _kde_route = object()
+        _kde_queue.clear()
+        _kde_worker[0] = None
+        _kde_error = None
+        _kde_until = _typed_until = 0.0
+        _input.stop()
+        _touch.stop()
+
+
+def typing_seconds(touch):
+    """How long gamescope's agent takes over these: it sleeps 8 ms after every key transition."""
+    transitions = 0
+    for e in touch:
+        if "text" in e:
+            transitions += sum(2 + 2 * frame_touch.ASCII[ch][1] for ch in e["text"] if ch in frame_touch.ASCII)
+        elif "key" in e:
+            transitions += 1
+    return transitions * 0.008
+
+
+def _note_typed(touch):
+    global _typed_until
+    seconds = typing_seconds(touch)
+    if seconds:
+        with _kde_lock:  # the end of the work, which queues up; the margin is added once, where it's checked
+            _typed_until = max(_typed_until, time.time()) + seconds
+
+
+def pad_status(status, pending=False):
+    with _kde_lock:
+        if _kde_error:
+            return {**status, "state": "error", "message": _kde_error}
+        if (_kde_queue or pending) and status.get("state") != "error":
+            return {**status, "queued": len(_kde_queue) or 1}
+    return status
+
+
+def start_pad():
+    with _route_lock, _pad_send_lock:
+        status = _touch.send([])
+        with _kde_lock:
+            if _kde_queue and _kde_worker[0] is None:
+                _start_kde_locked()  # explicit Try again retries retained text
+        return pad_status(status)
+
+
+def _start_kde_locked():
+    global _kde_error
+    _kde_error = None
+    try:
+        worker = threading.Thread(target=_drain_kde, args=(_kde_route, _kde_cancel), daemon=True)
+        _kde_worker[0] = worker
+        worker.start()
+    except Exception:
+        _kde_worker[0] = None
+        _kde_error = "Couldn't start queued typing. Text is retained; try again."
+
+
+def _queue_for_kde(events):
+    with _kde_lock:
+        if len(_kde_queue) + len(events) > KDE_QUEUE_LIMIT:
+            return False
+        _kde_queue.extend(events)
+        if _kde_worker[0] is None and not _kde_error:
+            _start_kde_locked()
+        return True
+
+
+def _drain_kde(route, cancel):
+    """One sender, in order. In-flight text stays in the bounded queue until sent.
+    Errors retain it for an explicit retry; only a headset switch cancels it."""
+    global _kde_until, _kde_error
+    deadline = time.time() + KDE_WAIT
+    try:
+        while True:
+            with _kde_lock:
+                if route is not _kde_route:
+                    return
+                batch = _kde_queue[:INPUT_BATCH_LIMIT]
+                if not batch:
+                    _kde_worker[0] = None
+                    return
+                wait = _typed_until + TYPING_SETTLE - time.time()
+                _kde_until = time.time() + 3600  # held while in flight
+            if wait > 0 and cancel.wait(wait):
+                return
+            # Match route()/reset_pad_route()'s lock order. send() may start an
+            # agent and take _route_lock again to capture its immutable route.
+            with _route_lock, _pad_send_lock:
+                with _kde_lock:
+                    if route is not _kde_route:
+                        return
+                status = _input.send(batch)
+            with _kde_lock:
+                if route is not _kde_route:
+                    return
+                if status.get("sent"):
+                    del _kde_queue[:len(batch)]
+                    _kde_until = time.time() + len(batch) * 0.03 + TYPING_SETTLE
+                    deadline = time.time() + KDE_WAIT
+                    continue
+                _kde_until = 0.0
+                if status.get("state") == "error" or time.time() > deadline:
+                    _kde_error = "Queued typing didn't reach the input service. Text is retained; try again."
+                    _kde_worker[0] = None
+                    return
+            if cancel.wait(0.4):
+                return
+    except Exception:
+        # A stale worker must never retire the new route's worker or alter its
+        # queue/timing. Retain unsent text and let the page report/retry failure.
+        with _kde_lock:
+            if route is _kde_route:
+                _kde_until = 0.0
+                _kde_worker[0] = None
+                _kde_error = "Queued typing failed. Text is retained; try again."
 
 
 # ---- touch: the headset's panels, through gamescope's own input (frame_touch.py) ----
@@ -3302,7 +3534,7 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/panels":
                 self.send_json(panels())
             elif path in ("/api/touch", "/api/input"):
-                agent = _touch if path == "/api/touch" else _input
+                agent = _touch  # both controls use gamescope; KDE Connect starts only for Unicode
                 if parse_qs(url.query).get("start") == ["1"]:
                     # Validate and reserve before start() captures its immutable
                     # route and schedules a worker. Status-only polls stay free.
@@ -3310,9 +3542,11 @@ class Handler(BaseHTTPRequestHandler):
                     if LINK and not meant:
                         raise Failure("Control start needs the intended X-Frame-Device headset", 400)
                     with working(meant):
-                        result = agent.send([])
+                        result = start_pad() if path == "/api/input" else agent.send([])
                 else:
                     result = dict(agent.status)
+                    if path == "/api/input":
+                        result = pad_status(result)
                 self.send_json(result)
             elif path == "/api/job":
                 self.send_json(job_status(url.query))

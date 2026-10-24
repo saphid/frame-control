@@ -18,6 +18,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest import mock
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -631,3 +632,428 @@ class PageQueue(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class PadEvents(unittest.TestCase):
+    """The trackpad and key row go through gamescope; accents and emoji go the KDE Connect way."""
+
+    @classmethod
+    def setUpClass(cls):
+        import server
+        cls.pad = staticmethod(server.pad_events)
+
+    def test_moves_clicks_and_scroll(self):
+        out, extra = self.pad([{"dx": 3, "dy": -2}, {"singleclick": True}, {"singlehold": True},
+                               {"singlerelease": True}, {"scroll": True, "dy": 1}, {"rightclick": True}])
+        self.assertEqual(out[0], {"dx": 3, "dy": -2})
+        self.assertEqual(out[1:3], [{"button": "left", "down": True}, {"button": "left", "down": False}])
+        self.assertEqual(out[3:5], [{"button": "left", "down": True}, {"button": "left", "down": False}])
+        self.assertEqual(out[5], {"scroll": [0, -15]})  # up = content follows the finger
+        self.assertEqual(out[6:], [{"button": "right", "down": True}, {"button": "right", "down": False}])
+        self.assertEqual(extra, [])
+
+    def test_keys_and_modifiers(self):
+        out, _ = self.pad([{"specialKey": 12}, {"specialKey": 1, "ctrl": True}, {"key": "c", "ctrl": True}])
+        self.assertEqual(out[:2], [{"key": 28, "down": True}, {"key": 28, "down": False}])
+        self.assertEqual([e["key"] for e in out[2:6]], [29, 14, 14, 29])  # Ctrl+Backspace
+        self.assertEqual([(e["key"], e["down"]) for e in out[6:]],
+                         [(29, True), (46, True), (46, False), (29, False)])  # Ctrl+C
+
+    def test_text_stays_ascii_through_gamescope(self):
+        out, slow = self.pad([{"key": "Hi "}, {"key": "there"}])
+        self.assertEqual(out, [{"text": "Hi there"}])
+        self.assertEqual(slow, [])
+
+    def test_keyboard_goes_to_kde_whole_and_in_order(self):
+        events = [{"key": "a"}, {"key": "é"}, {"specialKey": 12}, {"key": "c", "ctrl": True}, {"dx": 2, "dy": 1}]
+        out, slow = self.pad(events, kde=True)
+        self.assertEqual(out, [{"dx": 2, "dy": 1}])  # the pointer still goes through gamescope
+        self.assertEqual(slow, events[:4])  # the keyboard as sent, in order
+
+    def test_shifted_key_with_modifier(self):
+        out, _ = self.pad([{"key": "A", "ctrl": True}])
+        self.assertEqual([e["key"] for e in out], [29, 42, 30, 30, 42, 29])
+
+
+class PadDelivery(unittest.TestCase):
+    """remote_input's promises: "sent" means the whole batch is taken; accents go once, in order."""
+
+    class Agent:
+        def __init__(self, sent=True, state="ready"):
+            self.sent, self.state, self.got = sent, state, []
+
+        def send(self, events):
+            if events and self.sent:
+                self.got.append(events)
+            return {"state": self.state, "sent": self.sent and bool(events)}
+
+    def setUp(self):
+        import server
+        self.s = server
+        self.saved = (server._touch, server._input, server.KDE_WAIT)
+        server._touch, server._input = self.Agent(), self.Agent()
+        self.reset()
+
+    def tearDown(self):
+        self.s._touch, self.s._input, self.s.KDE_WAIT = self.saved
+        self.settle()
+        self.reset()
+
+    def reset(self):
+        self.s._kde_queue.clear()
+        self.s._kde_error = None
+        self.s._kde_until = self.s._typed_until = 0.0
+        self.s._kde_worker[0] = None
+
+    def settle(self):
+        worker = self.s._kde_worker[0]
+        if worker:
+            worker.join(5)
+
+    def typed(self):
+        return [e for batch in self.s._input.got for e in batch]
+
+    def test_accent_only_batch_is_acknowledged_and_typed_once(self):
+        status = self.s.remote_input({"events": [{"key": "é"}]})
+        self.assertTrue(status["sent"])  # so the page doesn't send it again
+        self.settle()
+        self.assertEqual(self.typed(), [{"key": "é"}])
+
+    def test_mixed_text_stays_in_one_ordered_stream(self):
+        self.s.remote_input({"events": [{"key": "aéb"}, {"specialKey": 12}]})
+        self.settle()
+        self.assertEqual(self.typed(), [{"key": "aéb"}, {"specialKey": 12}])
+        self.assertEqual(self.s._touch.got, [])  # none of it split off through gamescope
+
+    def test_batch_gamescope_didnt_take_is_not_queued(self):
+        self.s._touch = self.Agent(sent=False, state="starting")
+        status = self.s.remote_input({"events": [{"dx": 1, "dy": 1}, {"key": "é"}]})
+        self.assertFalse(status["sent"])  # the page tries the whole batch again...
+        self.assertEqual(self.s._kde_queue, [])  # ...so the accent isn't queued twice
+
+    def test_waits_for_kde_connect_then_sends_without_more_input(self):
+        self.s._input = self.Agent(sent=False, state="starting")
+        self.s.remote_input({"events": [{"key": "é"}]})
+        time.sleep(0.2)
+        self.assertEqual(self.s._kde_queue, [{"key": "é"}])
+        self.s._input.sent = True
+        self.settle()
+        self.assertEqual(self.typed(), [{"key": "é"}])
+        self.assertEqual(self.s._kde_queue, [])
+
+    def test_later_ascii_waits_behind_a_pending_accent(self):
+        self.s._input = self.Agent(sent=False, state="starting")
+        self.s.remote_input({"events": [{"key": "é"}]})
+        self.s.remote_input({"events": [{"key": "x"}]})
+        self.assertEqual(self.s._touch.got, [])  # "x" can't overtake the "é"
+        self.assertEqual(self.s._kde_queue, [{"key": "é"}, {"key": "x"}])
+        self.s._input.sent = True
+        self.settle()
+        self.assertEqual(self.typed(), [{"key": "é"}, {"key": "x"}])
+
+    def test_errors_and_timeout_retain_accepted_text_for_explicit_retry(self):
+        events = [{"key": "é"}] * 150
+        for state in ("error", "starting"):
+            with self.subTest(state=state):
+                self.reset()
+                self.s._input = self.Agent(sent=False, state=state)
+                self.s.KDE_WAIT = 0
+                self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                self.settle()
+                self.assertEqual(self.s._kde_queue, events)
+                self.assertIsNone(self.s._kde_worker[0])
+                self.assertEqual(self.s._kde_until, 0)
+                status = self.s.pad_status({"state": "ready"})
+                self.assertEqual(status["state"], "error")
+                self.assertIn("retained", status["message"])
+                self.assertFalse(self.s.remote_input({"events": [{"key": "x"}]})["sent"])
+                self.s._input = self.Agent()
+                self.s.start_pad()
+                self.settle()
+                self.assertEqual(self.typed(), events)
+                self.assertEqual(self.s._kde_queue, [])
+                self.assertIsNone(self.s._kde_error)
+
+    def test_worker_exception_and_start_failure_are_visible_and_retryable(self):
+        for start_failure in (False, True):
+            with self.subTest(start_failure=start_failure):
+                self.reset()
+                events = [{"key": "é"}]
+                if start_failure:
+                    with mock.patch.object(threading.Thread, "start", side_effect=RuntimeError("no thread")):
+                        self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                else:
+                    with mock.patch.object(self.s._input, "send", side_effect=OSError("send failed")):
+                        self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                        self.settle()
+                self.assertEqual(self.s._kde_queue, events)
+                self.assertIsNone(self.s._kde_worker[0])
+                self.assertEqual(self.s._kde_until, 0)
+                self.assertEqual(self.s.pad_status({"state": "ready"})["state"], "error")
+                self.s._input = self.Agent()
+                self.s.start_pad()
+                self.settle()
+                self.assertEqual(self.typed(), events)
+
+    def test_ascii_just_after_an_accent_stays_behind_it(self):
+        self.s.remote_input({"events": [{"key": "é"}]})
+        self.settle()
+        self.s.remote_input({"events": [{"key": "x"}]})  # KDE Connect may still be typing the é
+        self.settle()
+        self.assertEqual(self.s._touch.got, [])
+        self.assertEqual(self.typed(), [{"key": "é"}, {"key": "x"}])
+
+    def test_accent_just_after_gamescope_text_waits_for_it(self):
+        self.s.remote_input({"events": [{"key": "x" * 50}]})
+        self.assertEqual(self.s._touch.got, [[{"text": "x" * 50}]])
+        start = time.time()
+        self.s.remote_input({"events": [{"key": "é"}]})
+        self.settle()
+        self.assertGreater(time.time() - start, 0.6)  # 50 keys at 16 ms, plus the margin
+        self.assertEqual(self.typed(), [{"key": "é"}])
+
+    def test_typing_time_counts_every_key_transition(self):
+        t = self.s.typing_seconds
+        self.assertAlmostEqual(t([{"text": "ab"}]), 4 * 0.008)
+        self.assertAlmostEqual(t([{"text": "A"}]), 4 * 0.008)  # shift down, key down, key up, shift up
+        self.assertAlmostEqual(t([{"text": "x" * 500}]), 8.0)  # a long paste
+        self.assertAlmostEqual(t([{"key": 29, "down": True}, {"dx": 3, "dy": 0}]), 0.008)
+
+    def test_the_margin_is_added_once_not_per_request(self):
+        for _ in range(10):
+            self.s.remote_input({"events": [{"key": "ab"}]})
+        # ten requests of 4 transitions each: the work queues up, with no margin added per request
+        self.assertLess(self.s._typed_until - time.time(), 10 * 4 * 0.008 + 0.05)
+
+    def hold_worker(self):
+        entered, release = threading.Event(), threading.Event()
+        class Gate:
+            def wait(self, timeout):
+                entered.set()
+                if not release.wait(3):
+                    raise RuntimeError("test did not release worker")
+                return False
+        patch = mock.patch.object(self.s, "_kde_cancel", Gate())
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.addCleanup(release.set)
+        return entered, release
+
+    def test_saturation_rejects_whole_batch_and_retry_delivers_every_accepted_event_once(self):
+        entered, release = self.hold_worker()
+        self.s._typed_until = time.time() + 60
+        first = [{"key": "é"}] * 150
+        remainder = [{"key": "ü"}] * 50
+        overflow = [{"singleclick": True}, {"key": "ß"}] * 75
+        self.assertTrue(self.s.remote_input({"events": first})["sent"])
+        self.assertTrue(entered.wait(1))  # batch is in flight, waiting for prior ASCII
+        try:
+            self.assertTrue(self.s.remote_input({"events": remainder})["sent"])
+            status = self.s.remote_input({"events": overflow})
+            self.assertFalse(status["sent"])
+            self.assertEqual(status["state"], "waiting")
+            self.assertEqual(self.s._kde_queue, first + remainder)
+            self.assertEqual(len(self.s._kde_queue), self.s.KDE_QUEUE_LIMIT)
+            self.assertEqual(self.s._touch.got, [])  # rejected clicks cannot be duplicated
+        finally:
+            self.s._typed_until = 0
+            release.set()
+            self.settle()
+        self.assertEqual(self.typed(), first + remainder)
+        self.assertTrue(self.s.remote_input({"events": overflow})["sent"])
+        self.settle()
+        self.assertEqual(self.typed(), first + remainder + [{"key": "ß"}] * 75)
+        self.assertEqual(self.s._touch.got, [[e for _ in range(75) for e in (
+            {"button": "left", "down": True}, {"button": "left", "down": False})]])
+
+    def test_retrying_batch_keeps_its_capacity_and_order(self):
+        entered, release = self.hold_worker()
+        self.s._input = self.Agent(sent=False, state="starting")
+        first, second = [{"key": "é"}] * 150, [{"key": "ü"}] * 150
+        self.assertTrue(self.s.remote_input({"events": first})["sent"])
+        self.assertTrue(entered.wait(1))  # first send failed; worker is in retry delay
+        try:
+            self.assertFalse(self.s.remote_input({"events": second})["sent"])
+            self.assertEqual(self.s._kde_queue, first)
+        finally:
+            self.s._input.sent = True
+            release.set()
+            self.settle()
+        self.assertTrue(self.s.remote_input({"events": second})["sent"])
+        self.settle()
+        self.assertEqual(self.typed(), first + second)
+
+    def test_concurrent_requests_cannot_both_claim_the_last_capacity(self):
+        entered, release = self.hold_worker()
+        self.s._typed_until = time.time() + 60
+        first = [{"key": "é"}]
+        self.s.remote_input({"events": first})
+        self.assertTrue(entered.wait(1))
+        barrier, results = threading.Barrier(3), []
+        def request(key):
+            barrier.wait(2)
+            batch = [{"key": key}] * 150
+            results.append((batch, self.s.remote_input({"events": batch})["sent"]))
+        threads = [threading.Thread(target=request, args=(key,)) for key in ("ü", "ß")]
+        try:
+            for thread in threads:
+                thread.start()
+            barrier.wait(2)
+            for thread in threads:
+                thread.join(2)
+                self.assertFalse(thread.is_alive())
+            self.assertEqual(sorted(sent for _, sent in results), [False, True])
+        finally:
+            self.s._typed_until = 0
+            release.set()
+            self.settle()
+        accepted = next(batch for batch, sent in results if sent)
+        rejected = next(batch for batch, sent in results if not sent)
+        self.assertEqual(self.typed(), first + accepted)
+        self.assertTrue(self.s.remote_input({"events": rejected})["sent"])
+        self.settle()
+        self.assertEqual(self.typed(), first + accepted + rejected)
+
+    def test_input_queued_as_the_worker_finishes_is_still_sent(self):
+        for _ in range(40):
+            self.reset()
+            self.s._input.got.clear()
+            self.s.remote_input({"events": [{"key": "é"}]})
+            time.sleep(0.002)
+            self.s.remote_input({"events": [{"key": "ü"}]})
+            self.settle()
+            self.assertEqual(self.s._kde_queue, [])
+            self.assertEqual(self.typed(), [{"key": "é"}, {"key": "ü"}])
+
+
+class PadRoute(unittest.TestCase):
+    def test_unicode_start_and_headset_switch_do_not_deadlock(self):
+        # Real InputAgent.send/start takes the route lock. Race it with route(),
+        # which cancels the pad worker; mocks of send() hide this lock inversion.
+        # A child keeps a regression's blocked daemon threads out of this suite.
+        code = r'''
+import sandbox
+import server as s
+import threading
+from unittest import mock
+
+entered, release, switching = threading.Event(), threading.Event(), threading.Event()
+s._input = s.InputAgent(packages=[])
+s._input._launch = lambda *args: None  # exercise real start, without any SSH
+s._touch = mock.Mock()
+send = s._input.send
+def held(events):
+    entered.set()
+    assert release.wait(2)
+    return send(events)
+s._input.send = held
+s._power.stop = lambda *args: switching.set()
+s._queue_for_kde([{'key': 'é'}])
+worker = s._kde_worker[0]
+assert entered.wait(2), 'Unicode worker never reached send'
+switch = threading.Thread(target=s.route, args=('frame-pr66-new', []), daemon=True)
+switch.start()
+switching.wait(0.2)
+release.set()
+worker.join(2)
+switch.join(2)
+assert not worker.is_alive(), 'Unicode worker deadlocked starting input during headset switch'
+assert not switch.is_alive(), 'headset switch deadlocked cancelling Unicode input'
+assert not s._kde_queue
+'''
+        env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / 'tests'), str(ROOT / 'ui')])}
+        result = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True,
+                                text=True, timeout=8)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+    def setUp(self):
+        import server
+        self.s = server
+        self.agents = mock.patch.multiple(server, _touch=mock.Mock(), _input=mock.Mock())
+        self.agents.start()
+        self.addCleanup(self.agents.stop)
+        self.s._touch.send.return_value = {"state": "ready", "sent": True}
+        self.s._input.send.return_value = {"state": "ready", "sent": True}
+        self.s.reset_pad_route()
+        self.s._touch.reset_mock(); self.s._input.reset_mock()
+        self.addCleanup(self.s.reset_pad_route)
+
+    def switch(self):
+        with mock.patch.multiple(self.s, FRAME="frame-a", HOST_OPTS=[], MUX=[], SSH=[], macview=None), \
+             mock.patch.multiple(self.s.frame_android, FRAME="frame-a", SSH_OPTS=[]):
+            self.s.route("frame-b", [])
+
+    def test_stale_worker_exception_cannot_damage_new_route(self):
+        entered, release = threading.Event(), threading.Event()
+        class BrokenWait:
+            def wait(self, timeout):
+                entered.set()
+                if not release.wait(2):
+                    raise RuntimeError("test did not release old worker")
+                raise OSError("old route wait failed")
+            def set(self):
+                pass  # hold its exception until the new route has been published
+        self.s._kde_cancel = BrokenWait()
+        self.s._typed_until = time.time() + 60
+        self.s.remote_input({"events": [{"key": "é"}]})
+        worker = self.s._kde_worker[0]
+        try:
+            self.assertTrue(entered.wait(1))
+            self.switch()
+            marker = object()
+            with self.s._kde_lock:
+                self.s._kde_queue.append({"key": "new"})
+                self.s._kde_worker[0] = marker
+                self.s._kde_until = 42
+        finally:
+            release.set()
+            worker.join(2)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(self.s._kde_queue, [{"key": "new"}])
+        self.assertIs(self.s._kde_worker[0], marker)
+        self.assertEqual(self.s._kde_until, 42)
+        self.assertIsNone(self.s._kde_error)
+
+    def test_switch_stops_both_input_agents_and_discards_old_queue(self):
+        self.s._kde_queue.append({"key": "old"})
+        self.s._kde_until = self.s._typed_until = time.time() + 60
+        cancel = self.s._kde_cancel
+        self.switch()
+        self.s._input.stop.assert_called_once()
+        self.s._touch.stop.assert_called_once()
+        self.assertEqual(self.s._kde_queue, [])
+        self.assertEqual((self.s._kde_until, self.s._typed_until), (0, 0))
+        self.assertTrue(cancel.is_set())
+
+    def test_switch_cancels_delayed_and_retrying_text_before_new_input(self):
+        for delaying in (True, False):
+            with self.subTest(delaying=delaying):
+                waiting, cancel = threading.Event(), threading.Event()
+                class ObservedCancel:
+                    def wait(self, timeout):
+                        waiting.set()
+                        return cancel.wait(timeout)
+                    def set(self):
+                        cancel.set()
+                self.s.reset_pad_route()
+                self.s._kde_cancel = ObservedCancel()
+                self.s._typed_until = time.time() + 60 if delaying else 0
+                self.s._input.reset_mock()
+                self.s._input.send.return_value = {"state": "starting", "sent": False}
+                self.s.remote_input({"events": [{"key": "é"}]})
+                worker = self.s._kde_worker[0]
+                self.assertTrue(waiting.wait(1), "worker never reached its cancellable delay")
+                self.switch()
+                worker.join(1)
+                self.assertFalse(worker.is_alive())
+                attempts = self.s._input.send.call_count
+                self.assertEqual(attempts, 0 if delaying else 1)
+                self.s._input.send.return_value = {"state": "ready", "sent": True}
+                self.s.remote_input({"events": [{"key": "ü"}]})
+                next_worker = self.s._kde_worker[0]
+                if next_worker:
+                    next_worker.join(1)
+                    self.assertFalse(next_worker.is_alive())
+                self.assertEqual(self.s._input.send.call_count, attempts + 1)
+                self.assertEqual(self.s._input.send.call_args.args[0], [{"key": "ü"}])
+                self.assertEqual(self.s._kde_queue, [])

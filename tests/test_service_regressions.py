@@ -2,6 +2,7 @@
 import sandbox  # noqa: F401
 import contextlib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -54,6 +55,7 @@ class TargetTests(unittest.TestCase):
         self.stack.enter_context(mock.patch.object(server, '_backfill', {'running': False, 'last': 0.0}))
         self.stack.enter_context(mock.patch.object(server.macview, 'retarget'))
         self.stack.enter_context(mock.patch.object(server._input, 'stop'))
+        self.real_devices_action = server.frame_link.devices_action
         self.stack.enter_context(mock.patch.object(server.frame_link, 'devices_action', self.switch))
 
     def switch(self, link, body, setup, busy):
@@ -111,6 +113,39 @@ class TargetTests(unittest.TestCase):
                 thread.join(2)
                 server._live_tunnels.discard(proc)
                 server.route(*before)
+
+    def test_input_post_reserves_headset_through_send_and_enqueue(self):
+        body = json.dumps({'events': [{'singleclick': True}, {'key': 'é'}]}).encode()
+        handler = server.Handler.__new__(server.Handler)
+        handler.path = '/api/input'
+        handler.local_request = lambda: True
+        handler.headers = {'Content-Length': str(len(body)), 'X-Frame-Device': 'a'}
+        handler.rfile = io.BytesIO(body)
+        handler.send_json, handler.send_error_json = mock.Mock(), mock.Mock()
+        stages = []
+        def check_switch(stage):
+            self.assertEqual(server._work[0], 1)
+            with self.assertRaises(server.Failure):
+                server.devices_post({'action': 'use', 'id': 'b'})
+            stages.append(stage)
+        def send(events):
+            check_switch('send')
+            return {'state': 'ready', 'sent': True}
+        def enqueue(events):
+            check_switch('enqueue')
+            self.assertEqual(events, [{'key': 'é'}])
+            return True
+        with mock.patch.object(server.frame_link, 'devices_action', self.real_devices_action), \
+                mock.patch.object(server._touch, 'send', side_effect=send), \
+                mock.patch.object(server, '_queue_for_kde', side_effect=enqueue):
+            handler.do_POST()
+        handler.send_error_json.assert_not_called()
+        self.assertTrue(handler.send_json.call_args.args[0]['sent'])
+        self.assertEqual(stages, ['send', 'enqueue'])
+        self.assertEqual(self.active['id'], 'a')
+        self.assertEqual(server._work[0], 0)
+        server.devices_post({'action': 'use', 'id': 'b'})
+        self.assertEqual(self.active['id'], 'b')
 
     def test_backfill_counts_work_until_error_cleanup(self):
         entered, release = threading.Event(), threading.Event()
@@ -402,9 +437,9 @@ class FinalGetStartTests(unittest.TestCase):
         self.active.update(id='b', name='Headset B')
         for name in ('input', 'touch'):
             with self.subTest(name=name):
-                fresh = server.InputAgent(packages=[]) if name == 'input' else server.TouchAgent()
+                fresh = server.TouchAgent()
                 handler = self.handler('/api/%s?start=1' % name, 'a')
-                with mock.patch.object(server, '_' + name, fresh), mock.patch.object(fresh, 'start') as start:
+                with mock.patch.object(server, '_touch', fresh), mock.patch.object(fresh, 'start') as start:
                     handler.do_GET()
                 start.assert_not_called()
                 self.assertEqual(handler.send_error_json.call_args.args[1], 409)
@@ -413,13 +448,45 @@ class FinalGetStartTests(unittest.TestCase):
     def test_desktop_get_start_requires_an_intended_device(self):
         for name in ('input', 'touch'):
             with self.subTest(name=name):
-                fresh = server.InputAgent(packages=[]) if name == 'input' else server.TouchAgent()
+                fresh = server.TouchAgent()
                 handler = self.handler('/api/%s?start=1' % name, None)
-                with mock.patch.object(server, '_' + name, fresh), mock.patch.object(fresh, 'start') as start:
+                with mock.patch.object(server, '_touch', fresh), mock.patch.object(fresh, 'start') as start:
                     handler.do_GET()
                 start.assert_not_called()
                 self.assertEqual(handler.send_error_json.call_args.args[1], 400)
                 self.assertEqual(server._work[0], 0)
+
+    def test_input_get_starts_and_polls_gamescope_without_starting_kde_connect(self):
+        touch, kde = mock.Mock(), mock.Mock()
+        touch.status = {'state': 'ready', 'focus': 7}
+        touch.send.return_value = {'state': 'starting', 'sent': False}
+        with mock.patch.object(server, '_touch', touch), mock.patch.object(server, '_input', kde):
+            start = self.handler('/api/input?start=1', 'a')
+            start.do_GET()
+            touch.send.assert_called_once_with([])
+            start.send_json.assert_called_once_with(touch.send.return_value)
+            status = self.handler('/api/input', 'a')
+            status.do_GET()
+            status.send_json.assert_called_once_with(touch.status)
+        kde.send.assert_not_called()
+        kde.start.assert_not_called()
+
+    def test_input_poll_exposes_retained_text_error_and_start_retries(self):
+        touch = mock.Mock(status={'state': 'ready'})
+        touch.send.return_value = {'state': 'ready', 'sent': False}
+        with mock.patch.object(server, '_touch', touch), \
+                mock.patch.object(server, '_kde_queue', [{'key': 'é'}]), \
+                mock.patch.object(server, '_kde_error', 'Text is retained; try again.'), \
+                mock.patch.object(server, '_kde_worker', [None]), \
+                mock.patch.object(server, '_start_kde_locked') as retry:
+            status = self.handler('/api/input', 'a')
+            status.do_GET()
+            self.assertEqual(status.send_json.call_args.args[0]['state'], 'error')
+            retry.assert_not_called()  # polling never retries typing on its own
+            start = self.handler('/api/input?start=1', 'a')
+            start.do_GET()
+            retry.assert_called_once_with()
+            touch.send.assert_called_once_with([])
 
     def test_get_start_validation_and_thread_registration_are_one_reservation(self):
         attempts = []
@@ -480,10 +547,10 @@ class FinalGetStartTests(unittest.TestCase):
                                     (None, None, '?start=1')):
             for name in ('input', 'touch'):
                 with self.subTest(name=name, query=query, local=link is None):
-                    fresh = server.InputAgent(packages=[]) if name == 'input' else server.TouchAgent()
+                    fresh = server.TouchAgent()
                     handler = self.handler('/api/' + name + query, meant)
                     with mock.patch.object(server, 'LINK', link), mock.patch.object(server, 'LOCAL', link is None), \
-                            mock.patch.object(server, '_' + name, fresh), mock.patch.object(fresh, 'start') as start:
+                            mock.patch.object(server, '_touch', fresh), mock.patch.object(fresh, 'start') as start:
                         handler.do_GET()
                     self.assertEqual(start.call_count, 1 if query else 0)
                     handler.send_error_json.assert_not_called()
