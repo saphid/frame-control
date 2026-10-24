@@ -32,7 +32,7 @@ class Sampler(unittest.TestCase):
         # production sysfs spelling in returned paths while using a portable
         # name inside this temporary fixture tree.
         def local_path(path):
-            return self.root / path.lstrip('/').replace(':', '__COLON__')
+            return self.root / str(path).replace('\\', '/').lstrip('/').replace(':', '__COLON__')
 
         for path, value in files.items():
             node = local_path(path)
