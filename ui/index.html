@@ -175,7 +175,8 @@
   .dev-panel select, .dlg select { background: rgba(0,0,0,.28); color: var(--text); border: 1px solid transparent; border-radius: 3px;
                                    padding: 8px 8px; font: inherit; font-size: 13px; }
   .addr .t { overflow-wrap: anywhere; }
-  .addr .s, .dev-problem .s { white-space: normal; }
+  .addr .s { white-space: normal; }
+  .item.dev-problem .s { white-space: normal; overflow-wrap: anywhere; }
   .addr-edit { display: grid; grid-template-columns: 2fr 1fr 1.4fr auto auto; gap: 8px; align-items: center; width: 100%; }
   .addr-add { display: grid; grid-template-columns: 2fr 1.4fr auto; gap: 8px; margin-top: 12px; }
   @media (max-width: 700px) { .dev-form, .addr-edit, .addr-add, .adv .dev-form, .conn-add, .conn-edit { grid-template-columns: 1fr; } }
@@ -6627,7 +6628,7 @@ function renderPill() {
   }
   $("conn").innerHTML = `<span class="dot ${dot}"></span><span class="pt"><b>${esc(dev)}</b><span>${esc(word)}` +
     `${via ? `<span class="via"> · ${esc(via)}</span>` : ""}</span></span>`;
-  $("conn").title = `${dev}: ${detail}. Click to see or change its addresses.`;
+  $("conn").title = `${dev}: ${detail.replace(/[.\s]+$/, "")}. Click to see or change its addresses.`;
   return true;
 }
 window.connPill = renderPill;

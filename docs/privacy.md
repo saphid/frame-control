@@ -203,9 +203,11 @@ and display name of the headset being tried (whole, whatever their case), and
 then any name ssh gives after "hostname", "host" or "to", become `<host>`; a Windows home folder's
 whole name (spaces and apostrophes included) becomes `<user>`, and ssh's
 whole `user@host:` field (spaces, `DOMAIN\user` and full domain names
-included) becomes `<user>@<host>:`; then the scrubbing below. A host name ssh mentions
-in some other wording can still get through, so check the log lines in **Show
-exactly what's included** before sending. A failure that repeats on every
+included) becomes `<user>@<host>:`; then the scrubbing below. Whole display names
+are hidden even when they contain a scrubber token such as `<host>` or overlap
+ssh's wording. Those overlaps also preserve redaction of URLs, home folders,
+and keys. A host name ssh mentions in some other wording can still get through,
+so check the log lines in **Show exactly what's included** before sending. A failure that repeats on every
 retry is written at most once every 5 minutes.
 
 Everything is scrubbed like error details and limited to what fits in the
