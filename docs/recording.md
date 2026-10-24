@@ -8,13 +8,13 @@ Both are on **Tools → Capture & Live**. Everything is saved to
 Nothing needs installing on the computer or on the Frame: the work is done by
 the `ffmpeg` that SteamOS ships.
 
-**Recording is tested on a headset; Steam clip export isn't yet.** On a Frame
+**Recording and Steam clip export have each been tested on a headset.** On a Frame
 running SteamOS 0.5.6 (build 20261015.6141207), Record and Stop saved an
 8-second 1080p H.264 recording with AAC sound to the computer, Stop took about a
-second, and nothing was left running or stored on the Frame. That Frame had no
-Steam recordings, so the clip list came back empty and export has only been
-tested with files in Steam's format made by `ffmpeg`. The parts we're least sure
-of are listed under [What hasn't been checked](#what-hasnt-been-checked).
+second, and nothing was left running or stored on the Frame. A later test on
+that build created a saved clip with Steam's own recorder and exported it with
+Frame Control's production export function. The parts we're least sure of are
+listed under [What hasn't been checked](#what-hasnt-been-checked).
 
 ## Record
 
@@ -147,19 +147,31 @@ stand-in `ffmpeg`, so Stop, the time limit and the clean-up are tested as they
 run on the Frame. Where `ffmpeg` is installed, they also make a 65-second DASH
 recording with Steam's file names and export it with the real `ffmpeg`.
 
-## What hasn't been checked
+## Real Steam clip verification and remaining checks
 
-The 2026-10-24 read-only clip list on build `20261015.6141207` again returned
-zero clips: its `gamerecordings` directory held only `gamerecording.pb`. No
-Steam recording was created during that check, so a real Steam clip export is
-still unverified. The recording and Stop path were verified earlier on that
-build, as described above. Remaining checks:
+On 2026-10-24, v0.4.15 on build `20261015.6141207` recorded a ten-second
+reserved test session through Steam's own game recorder, saved it as a clip,
+then exported it with `frame_clips.export_clip`, the same implementation used
+by the desktop API. The 159,829-byte MP4 decoded completely: 10.29 seconds,
+1920×1080 H.264 video and stereo AAC audio (SHA-256
+`f8a476eefb2bde7ba5cb464632ec9b952eea3ab1610b5bed2098bf1f11d62cf1`).
+All 616 decoded video frames and the decoded audio matched Steam's source
+segments. Recording mode was restored
+to off; the reserved title and its processes were removed, the shared test lock
+was released, and the battery remained at 99%. The Steam source clip was kept.
 
-- Audio and video sync. Both inputs are stamped with the wall clock, because
-  the camera device and the audio server otherwise count from different clocks.
-- The exact layout of `gamerecordings` on the Frame's SteamOS build, and
-  whether a clip's segments start mid-recording. The parser is deliberately
-  loose about the layout.
+The inspected frame is nearly black in both Steam's source and the export, so
+this establishes file creation and faithful export, **not visible gameplay
+capture**. The literal desktop **Export** button was not clicked. Remaining
+checks include:
+
+- Perceptual audio/video sync and audible content. Frame Control's separate
+  **Record** path stamps camera and audio inputs with the wall clock because
+  they otherwise count from different clocks.
+- Long saved clips, trims starting partway through a Steam recording, and the
+  desktop **Export** button. One real saved clip's
+  directory layout was checked; the parser remains deliberately loose for
+  other layouts.
 - How much x264 at 1080p30 costs the Frame while a game is running.
 - Automatic copying: that 30 seconds without a write is a safe sign Steam has
   finished saving a clip, and how a once-a-minute listing feels on the Frame.
