@@ -164,6 +164,33 @@ does). A cleanup that fails counts as a failed step. Results go to
 screen; it exits 0 when every step passed, 1 if one failed, 2 if the headset
 isn't reachable.
 
+Smoke process cleanup runs before and after title removal and during the
+initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
+`fc_smoke_x86_64`, `fc_smoke_exe` IDs and their legacy `fc-smoke-` equivalents.
+On the target, `tests/smoke/stop_processes.py` requires the SSH user's uid and
+an exact title directory in `/proc` cwd/exe or an individual absolute command
+argument; similarly named folders and shell command substrings do not count.
+Deleted cwd/exe paths still count, so a process left after file removal can be
+found. It sends SIGTERM, waits up to three seconds, then uses SIGKILL with
+another three-second bound, rescanning for survivors. PID handles prevent PID
+reuse from signalling another process. Linux Python 3.9+ with pidfd support
+is required; missing support, inspection/signal errors and survivors fail the
+cleanup step. Stopped PIDs are recorded in the results JSON.
+If the initial leftover cleanup fails, the run skips installs and pairing and
+records the failure instead of overwriting an active test title.
+
+This deliberately does not stop shared Wine/Proton services by name or prefix,
+Steam, SteamVR, process groups or arbitrary descendants. A process that drops
+all title-path evidence cannot safely be attributed and is outside this
+check. A real Proton launch still needs coordinated headset verification.
+The local regression suite runs real Linux processes in temporary fake title
+directories (including deleted folders and a TERM-resistant wrapper); it checks
+exit, escalation and survival of unrelated processes without SSH or a headset:
+
+```sh
+python3 -m unittest discover -s tests -p test_smoke_cleanup.py -v
+```
+
 `--pair` asks the devkit service to pair a new RSA key, which needs someone
 in the headset to open **Settings → Developer → Pair new host** and approve
 it; the key is checked and then taken out of `authorized_keys` again.
