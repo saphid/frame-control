@@ -99,6 +99,7 @@ class Safety(unittest.TestCase):
             with self.subTest(ids=ids), self.assertRaises(ValueError):
                 stop_processes.stop(ids)
 
+    @unittest.skipUnless(sys.platform == 'linux', 'Linux signalling helper')
     def test_lost_ownership_after_open_never_signalled(self):
         with mock.patch.object(stop_processes, 'candidates', side_effect=[[123], [], []]), \
                 mock.patch.object(stop_processes.os, 'pidfd_open', return_value=9, create=True), \
@@ -108,6 +109,7 @@ class Safety(unittest.TestCase):
             self.assertEqual(stop_processes.stop(['fc_smoke_exe'], grace=0), {'stopped_pids': []})
             send.assert_not_called()
 
+    @unittest.skipUnless(sys.platform == 'linux', 'Linux signalling helper')
     def test_survivor_is_a_failure(self):
         with mock.patch.object(stop_processes, 'candidates', return_value=[123]), \
                 mock.patch.object(stop_processes.os, 'pidfd_open', return_value=9, create=True), \
