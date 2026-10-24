@@ -12,6 +12,12 @@ A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/ste
 
 ## Unit tests
 
+The read-only power/heat sampler has fixture and transport tests in
+`tests/test_power_sample.py`. Run
+`python3 -m unittest discover -s tests -p test_power_sample.py -v`.
+See [power-and-heat.md](power-and-heat.md) for sampling, smoke-lock behavior and
+real-device verification limits.
+
 ```sh
 python3 -m unittest discover -s tests
 ```

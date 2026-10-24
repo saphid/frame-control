@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add `scripts/frame-power-sample.sh`, a bounded read-only SSH sampler for
+  battery, CPU, named temperatures, fan and available power rails (issue #52).
+  JSON samples/summaries and CSV exports retain explicit unavailable states;
+  active smoke-test locks stop measurement. No power settings are changed.
+
 - Show saved Android compatibility reports on store search cards and app details.
   Reports refresh in the background, so a stalled database or credential lookup
   cannot delay search. Warnings allow installation; build compatibility blockers
