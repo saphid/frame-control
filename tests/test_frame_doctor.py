@@ -106,8 +106,10 @@ class FrameDoctor(unittest.TestCase):
             self.assertEqual(doctor.report(data), 1)
 
     def test_help_shell_entry_point_is_offline(self):
-        # Bash is optional on Windows test runners; the Python CLI is portable.
-        import shutil
+        # This Bash wrapper is for macOS/Linux; Windows uses the Python CLI.
+        import os, shutil
+        if os.name == 'nt':
+            self.skipTest('POSIX shell wrapper')
         if not shutil.which('bash'):
             self.skipTest('bash unavailable')
         r = subprocess.run(['bash', str(ROOT / 'scripts/frame-doctor.sh'), '--help'],
