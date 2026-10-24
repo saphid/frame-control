@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Fix experimental PC screen capture on Windows builds whose streaming libraries
+  lack Windows Graphics Capture. Whole screens use Desktop Duplication; individual
+  windows are hidden with an explanation instead of failing when shown. A Windows
+  VM streamed a real desktop to the Frame; physical input remains unverified.
+
+- Add read-only battery health in Tools: charging state, temperature, cycle count,
+  and available capacity with explicit unknown states. The parser was checked
+  on a real Frame; the connected desktop UI was tested with synthetic readings.
+
 - Add Tools → Game storage: read-only headset filesystem capacity and Steam
   library/game install-size breakdown, with unknown sizes, partial inventories
   and permission/missing-drive states. Includes instructions for Steam's own

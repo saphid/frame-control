@@ -141,7 +141,7 @@ class PageTests(unittest.TestCase):
     def test_card_says_experimental_and_what_is_unverified(self):
         self.assertIn('<span class="tag" id="mvTag" hidden>Experimental</span>', self.page)
         self.assertIn('<input type="checkbox" id="mvPcOn">', self.page)
-        self.assertIn("hasn't been tried on a real\n          Windows desktop or with a headset yet", self.page)
+        self.assertIn('Tested in a Windows VM; physical PCs, hardware encoding and laser clicks remain unverified.', self.page)
         self.assertIn('docs/pc-in-headset.md', self.page)
 
     def test_opt_in_is_remembered_with_the_client_preferences(self):
@@ -151,6 +151,55 @@ class PageTests(unittest.TestCase):
 
 
 class AdapterTests(unittest.TestCase):
+    def test_dxgi_only_bundle_captures_displays_without_optional_wgc_properties(self):
+        p = capture.pipeline(dict(src='display:65537', capture_api='dxgi'), 'win32', 'mfh264enc', 640, 360, 30, 1000000)
+        self.assertIn('monitor-handle=65537', p)
+        self.assertNotIn('capture-api=', p)
+        self.assertNotIn('show-border=', p)
+        self.assertIn('mfh264enc', p)
+        for source in (dict(src='window:42', capture_api='dxgi'),
+                       dict(src='display:42', capture_api='dxgi ! fakesink')):
+            with self.assertRaises(ValueError):
+                capture.pipeline(source, 'win32', 'mfh264enc', 640, 360, 30, 1000000)
+
+    def test_windows_sources_follow_actual_wgc_capabilities(self):
+        for wgc in (False, True):
+            with self.subTest(wgc=wgc):
+                native, windows = mock.Mock(), mock.Mock()
+                native.has_property.return_value = wgc
+                windows.sources.side_effect = lambda: ([dict(src='window:12', w=800, h=600)],
+                                                       [dict(src='display:4', w=1920, h=1080)])
+                with mock.patch.object(agent.sys, 'platform', 'win32'), \
+                        mock.patch.object(agent, 'Windows', return_value=windows):
+                    host = agent.Agent(native, 'test', ROOT/'ui/mac-view.html')
+                wins, displays = host.lists()
+                self.assertEqual(len(wins), int(wgc))
+                self.assertEqual(displays[0]['capture_api'], 'wgc' if wgc else 'dxgi')
+                self.assertEqual(host.source('display:4')['capture_api'], displays[0]['capture_api'])
+                if wgc:
+                    self.assertEqual(host.source('window:12')['capture_api'], 'wgc')
+                    self.assertEqual(host.window_capture_reason, '')
+                else:
+                    with self.assertRaisesRegex(ValueError, 'Individual windows are unavailable'):
+                        host.source('window:12')
+                    self.assertIn('whole screen', host.window_capture_reason)
+                # Synthetic encoder/protocol checks remain available without WGC.
+                self.assertEqual(host.source('test')['src'], 'test')
+
+    def test_pc_card_receives_window_capture_limitation(self):
+        view = frame_pcview.PCView([], lambda *a: None, 'frame')
+        view.enabled = True
+        view.call = mock.Mock(side_effect=lambda path: {
+            '/status': dict(screen=True, accessibility=True, windowCaptureReason=agent.WINDOW_CAPTURE_UNAVAILABLE),
+            '/windows': dict(windows=[]), '/displays': dict(displays=[dict(src='display:4')])}[path])
+        with mock.patch.object(frame_pcview.sys, 'platform', 'win32'), \
+                mock.patch.object(frame_pcview, 'LIBRARY', mock.Mock(is_file=lambda: True)):
+            state = view.state()
+        self.assertTrue(state['available'])
+        self.assertEqual(state['windowCaptureReason'], agent.WINDOW_CAPTURE_UNAVAILABLE)
+        self.assertEqual(state['windows'], [])
+        self.assertEqual(state['displays'], [dict(src='display:4')])
+
     def test_windows_uses_wgc_and_media_foundation(self):
         for kind in ('window', 'display'):
             pipeline = capture.pipeline(dict(src=kind+':42'), 'win32', 'mfh264enc', 640, 360, 30, 1000000)
@@ -365,6 +414,19 @@ class NativeTests(unittest.TestCase):
 
     def tearDown(self):
         self.request('/close?k='+self.token, 'POST')
+
+    def test_native_property_probe_checks_the_instantiated_element(self):
+        code = """
+from frame_pc_capture import Native
+n = Native()
+assert n.has_property('fakesink', 'sync')
+assert not n.has_property('fakesink', 'not-a-gstreamer-property')
+assert not n.has_property('not-a-gstreamer-element', 'sync')
+"""
+        env = frame_pcview.PCView([], lambda *a: None, 'frame').agent_environment()
+        env['PYTHONPATH'] = str(ROOT/'ui')
+        result = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
     @unittest.skipUnless(sys.platform.startswith('linux'), 'Linux PipeWire client libraries')
     def test_bundled_pipewire_context_needs_no_system_modules(self):

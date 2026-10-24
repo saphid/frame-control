@@ -255,15 +255,19 @@ tests the installer's own bundle with its bundled Python and checks x264 isn't
 in it. `FRAME_PC_REQUIRE_NATIVE=1` and `FRAME_PC_REQUIRE_X264=1` make a missing
 bundle or encoder fail CI instead of skipping.
 
-None of this captures a desktop, exercises Media Foundation or a GPU, or
-checks laser alignment. The [Windows test VM](#windows-test-vm) is the next
-step for that. See [what's verified](pc-in-headset.md#whats-verified).
+These automated CI checks do not capture a desktop, exercise Media Foundation
+or a GPU, or check laser alignment. A [Windows test VM](#windows-test-vm) run
+on 2026-10-24 captured its actual desktop with Desktop Duplication, encoded
+with Media Foundation and streamed to a real Frame. It found MSYS2 disables
+WGC: an element name alone does not prove its optional capture properties
+exist. Native property-probe tests and source-selection regressions now cover
+that boundary. [Dated evidence and limits](evidence/windows-vm-2026-10-24.md);
+[what's verified](pc-in-headset.md#whats-verified).
 
 ## Windows test VM
 
-The unit tests run on Windows in CI, but the app itself doesn't. Anything that
-depends on the Windows desktop (Remote Desktop, the installer, the bundled
-Python, file dialogs) needs a real Windows machine. This is a Windows 11 VM in a
+Windows CI runs the unit tests and checks installer contents. Desktop capture,
+installer launch and interactive behavior need a Windows machine. This is a Windows 11 VM in a
 [dockur/windows](https://github.com/dockur/windows) container on a Linux machine
 with KVM, driven from the Mac with `scripts/windows-vm.sh`.
 
@@ -283,7 +287,14 @@ Setting it up, once, on the Linux machine:
   `~/.ssh/id_ed25519_winvm` on the Mac) in
   `C:\ProgramData\ssh\administrators_authorized_keys`.
 - Give it 4 cores, 8 GB of memory and a 32 GB disk. That's enough for the app
-  and the tests.
+  and the tests. Inspect free memory/disk, KVM access and existing VMs before
+  starting; leave other VMs alone. The first install can take tens of minutes
+  (the 2026-10-24 run took about 16 minutes to reach the desktop), rather than
+  the 1–2 minute startup of an already installed guest.
+- For PC streaming, check the actual bundled capture properties. MSYS2's
+  GStreamer build disables WGC: this app falls back to Desktop Duplication for
+  whole screens and explains why individual windows are unavailable. A VM
+  capture test does not prove physical GPU encoding or laser alignment.
 
 Using it, with `WINVM_HOST` set to the Linux machine's ssh alias:
 

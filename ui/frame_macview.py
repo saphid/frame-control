@@ -460,6 +460,7 @@ class MacView:
         windows = self.call("/windows").get("windows", []) if status.get("screen") else []
         displays = self.call("/displays").get("displays", [])
         return {"available": True, "host": self.host, "selecting": status.get("selecting", False),
+                **({"windowCaptureReason": status["windowCaptureReason"]} if status.get("windowCaptureReason") else {}),
                 "selectionError": status.get("selectionError", ""), "screen": status.get("screen", False),
                 "accessibility": status.get("accessibility", False), "streams": status.get("streams", []),
                 "windows": windows, "displays": displays, "tunnel": self.tunnel_up(),

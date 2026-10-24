@@ -38,6 +38,7 @@ class Native:
         signatures = {
             'fc_now': (C.c_int64, []), 'fc_gst_init': (None, []),
             'fc_has_element': (C.c_int, [C.c_char_p]),
+            'fc_has_property': (C.c_int, [C.c_char_p, C.c_char_p]),
             'fc_new': (C.c_void_p, [C.c_int, C.c_int]), 'fc_free': (None, [C.c_void_p]),
             'fc_ceiling': (None, [C.c_void_p, C.c_int]),
             'fc_gate': (C.c_int, [C.c_void_p, C.c_int64, C.c_int]),
@@ -68,6 +69,10 @@ class Native:
 
     def has(self, name):
         return bool(self.lib.fc_has_element(name.encode()))
+
+    def has_property(self, element, name):
+        """Check optional element properties in the initialized capture DLL."""
+        return bool(self.lib.fc_has_property(element.encode(), name.encode()))
 
     def now(self):
         return self.lib.fc_now()
@@ -133,8 +138,13 @@ def pipeline(source, platform, encoder, w, h, fps, bitrate, codec='h264'):
         kind, ident = source['src'].split(':')
         if kind not in ('window', 'display') or not re.fullmatch(r'[0-9]+', ident):
             raise ValueError('Invalid Windows capture source')
+        api = source.get('capture_api', 'wgc')
+        if api not in ('wgc', 'dxgi') or (api == 'dxgi' and kind != 'display'):
+            raise ValueError('This build can only capture whole screens without Windows Graphics Capture')
         prop = 'window-handle' if kind == 'window' else 'monitor-handle'
-        capture = 'd3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true %s=%d' % (prop, int(ident))
+        # DXGI-only builds don't expose capture-api or show-border at all.
+        mode = ' capture-api=wgc show-border=true' if api == 'wgc' else ''
+        capture = 'd3d11screencapturesrc%s show-cursor=true %s=%d' % (mode, prop, int(ident))
     else:
         capture = 'pipewiresrc fd=%d path=%d do-timestamp=true' % (source['fd'], source['node'])
     # The source gate runs before conversion/encoding. There is no leaky queue
