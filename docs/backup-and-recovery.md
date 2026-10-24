@@ -25,8 +25,28 @@ tested in another full Plasma session under a three-minute rollback timer.
 `ui/frame_backup.py session` reported Desktop Mode despite gamescope, and
 `ui/frame_backup.py game-mode` invoked the same guarded Return function used by
 the button. Game Mode became active and a second call made no switch. Battery
-remained at 99%; the timer and lock were removed. The literal desktop button
-was not clicked in this test, and older SteamOS builds remain fixture-tested.
+remained at 99%; the timer and lock were removed. That test used the production
+CLI rather than clicking the desktop button.
+
+Later on 2026-10-24, the published **v0.4.17 Linux x86_64 AppImage** passed the
+literal packaged-button check on the same Frame/build. With the shared lock and
+a verified three-minute rollback timer, the headset entered full Plasma Desktop
+Mode. In the packaged Electron window, **Tools → Backup & recovery → Check**
+reported Desktop Mode despite gamescope. A trusted automated pointer click on
+the visible **Return to Game Mode** button, accepting its confirmation, returned
+`switched: true` and `steamosctl switch-to-game-mode`. The systemd targets then
+confirmed Game Mode. A second confirmed button click returned `switched: false`;
+the Game Mode service invocation and SteamVR PID stayed unchanged. **Check**
+then reported Game Mode and disabled Return. The test app/server and virtual
+display were stopped; the timer and shared lock were removed. Steam and SteamVR remained running
+at 99% battery. [Commands, responses, cleanup and limits](evidence/return-game-mode-packaged-2026-10-24.json),
+[before](evidence/return-game-mode-packaged-2026-10-24-before.png) and
+[after](evidence/return-game-mode-packaged-2026-10-24-after.png).
+
+This used the unchanged extracted AppImage payload with its bundled Python on
+Xvfb (`--no-sandbox --disable-gpu`), following the packaged Export test in #156.
+FUSE mounting, desktop integration, hardware rendering and the view inside a
+worn headset were not checked. Older SteamOS builds remain fixture-tested.
 
 ## Back up
 
