@@ -8,6 +8,11 @@
   original headset. Shared sampler/report modules ship with the app; no power or
   thermal controls are added. Download before replacing a report or quitting.
 
+- Fix Return to Game Mode misidentifying full Plasma Desktop Mode when its VR
+  overlay also runs gamescope (issue #142). Session targets now determine the
+  mode; conflicting or incomplete evidence stays unknown. Use SteamOS's
+  `steamosctl` switch when available, with older selector commands retained.
+
 - Export read-only power and heat observations to an offline accessible HTML
   report with JSON/CSV downloads. `--html FILE` limits sessions to ten minutes;
   Ctrl+C saves received samples with an explicit incomplete state. Units,
