@@ -68,7 +68,7 @@ function sharedPage({productionApi=false} = {}) {
     vm.runInContext(`const UI_KEY = 'test-only';
       const link = {s:null,device:'frame-a',phase:'connected',rev:0,net:null};
       const disp = {}, gm = {seq:0}, cat = {}, wi = {}, sourceState = {jobs:new Map(),detail:null,detailRequest:0};
-      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], androidSeq = 0, titlesSeq = 0, page = 'control';
+      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], androidSeq = 0, titlesSeq = 0, runningGames = [], runningSeq = 0, page = 'control';
       const androidPending = new Set();`,context);
     const apiStart=pageSource.indexOf('const HEADSET_FREE ='),apiEnd=pageSource.indexOf('// What a panel shows',apiStart);
     const onlineStart=pageSource.indexOf('function setOnline('),onlineEnd=pageSource.indexOf('function reloadAll()',onlineStart);
@@ -448,4 +448,68 @@ test('every Control Center workflow reaches its intentional workspace', () => {
     f.navigate(href);assert.equal(f.activePage,expected[href.slice(1)],href);
   }
   assert.equal(f.run('PAGES.length'),4);
+});
+// Force quit: an explicit check, a confirmation naming the game, and the captured headset.
+function quitPage({confirmAnswer=true, running=[{appid:620,name:'Portal <2>',kind:'steam'}], quit} = {}) {
+  const asked=[], calls=[];
+  const f=mounted({confirm:text=>{asked.push(text);return confirmAnswer;},
+    api:async(path,body,device)=>{calls.push({path,body,device});
+      if(body===undefined)return {running};
+      return quit ? quit(body) : {message:'Quit Portal 2',method:'steam'};}});
+  return Object.assign(f,{asked,apiCalls:calls,click:appid=>f.element('ccRunningList').onclick({target:{closest:()=>({dataset:{ccQuit:String(appid)}})}})});
+}
+test('force quit lists what is running and says so when nothing is', async t => {
+  const f=quitPage({running:[]});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  assert.deepEqual(f.apiCalls,[{path:'/api/running',body:undefined,device:'frame-a'}]);
+  assert.equal(f.element('ccRunningResult').textContent,'Nothing is running on the Frame.');
+  assert.equal(f.element('ccRunningList').innerHTML,'');
+  const g=quitPage();t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();
+  assert.match(g.element('ccRunningList').innerHTML,/Portal &lt;2&gt;<small>Steam game<\/small>.*data-cc-quit="620"/);
+  assert.match(g.element('ccRunningResult').textContent,/^1 running/);
+});
+test('force quit confirms with the unsaved-progress warning before any request', async t => {
+  const f=quitPage({confirmAnswer:false});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  f.click(620);await flush();
+  assert.deepEqual(f.asked,['Force quit Portal <2>? Unsaved progress will be lost.']);
+  assert.equal(f.apiCalls.length,1,'declining sends nothing');
+  const g=quitPage();t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();
+  g.click(620);await flush();
+  assert.deepEqual(g.apiCalls[1],{path:'/api/running',body:{action:'quit',appid:'620'},device:'frame-a'});
+  assert.equal(g.element('ccRunningResult').textContent,'Quit Portal 2');
+  assert.equal(g.element('ccRunningList').innerHTML,'');
+  g.click(999);await flush();
+  assert.equal(g.apiCalls.length,2,'an id that was not listed is ignored');
+});
+test('force quit shows errors, refuses duplicates and offline use, and ignores a switched headset', async t => {
+  const pending=deferred();
+  const f=quitPage({quit:()=>pending.promise});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  f.click(620);f.click(620);await flush();
+  assert.equal(f.asked.length,1);
+  assert.match(f.element('ccRunningList').innerHTML,/disabled/);
+  pending.reject(Error("That game isn't running any more"));await flush();
+  assert.equal(f.element('ccRunningResult').textContent,"Couldn’t force quit Portal <2>: That game isn't running any more");
+  assert.doesNotMatch(f.element('ccRunningList').innerHTML,/disabled/);
+  // A switch while quitting: the old answer is dropped and the list cleared.
+  const late=deferred(),g=quitPage({quit:()=>late.promise});t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();g.click(620);await flush();
+  g.context={online:true,generation:2,device:'frame-b'};g.ui.reset();
+  late.resolve({message:'Quit Portal 2'});await flush();
+  assert.equal(g.element('ccRunningResult').textContent,'');
+  assert.equal(g.element('ccRunningList').innerHTML,'');
+  const h=quitPage();t.after(()=>h.ui.destroy());h.context={online:false,generation:1,device:'frame-a'};
+  await h.element('ccRunningCheck').onclick();
+  assert.equal(h.apiCalls.length,0);
+  assert.match(h.element('ccRunningResult').textContent,/Connect to the Frame/);
+  const controller=cc.createController({api:async()=>assert.fail('no request'),getContext:()=>({online:true,generation:1})});
+  await assert.rejects(controller.forceQuit({appid:'620; reboot'}),/Choose a running game/);
+});
+test('the Control Center finds force quit by what a stuck game looks like', () => {
+  const item=cc.catalog.find(i=>i.id==='forcequit');
+  for(const q of ['frozen game','hung','not responding','kill','stuck app'])assert.ok(cc.matches(item,q,'all'),q);
+  assert.ok(cc.matches(item,'','apps'));
 });

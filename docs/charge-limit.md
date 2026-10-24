@@ -3,11 +3,20 @@
 **Question:** can Frame Control set an 80% battery charge limit on the Frame
 over SSH or adb, safely?
 
-**Verdict: don't build it yet; it needs a headset check.** Valve's supported
-mechanism (the one Steam's own charge-limit setting uses on the Deck) is not
-configured for the Frame. The only control the Frame seems to have is a
-vendor charger attribute that Valve's own charging daemon also manages.
-Research as of 2026-10-23. **Not tested on a headset.**
+**Verdict: don't build it.** Valve's supported mechanism (the one Steam's own
+charge-limit setting uses on the Deck) is not configured for the Frame. The
+only control the Frame has is a vendor charger attribute that Valve's own
+charging daemon also manages. Research as of 2026-10-23, confirmed with the
+read-only checks below on a Frame running SteamOS 0.5.6 (build 20261015.6141207):
+
+- `steamosctl get-max-charge-level` fails with `UnknownInterface: ...BatteryChargeLimit1`.
+- `/usr/share/steamos-manager/devices/` has `[battery_charge_limit]` only for
+  the Steam Deck, ROG Ally, ROG Xbox Ally and MSI Claw, not the Frame.
+- Power supplies: `max1720x_bat_7-36` (Battery, driver `max1720x`),
+  `pm8550b-charger` (driver `qcom,pm8550b-charger`) and the USB-C `tcpm-source-psy-…`.
+  No `charge_control_end_threshold` anywhere; `pm8550b-charger` has
+  `charging_enable` and `charging_pause`, both `root`-only (`-rw-r--r--`).
+- `deckard-charger.service` (Deckard Battery Charger service) is enabled and running.
 
 ## How Steam does it on other devices
 

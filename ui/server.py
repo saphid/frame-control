@@ -51,6 +51,7 @@ from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
 import frame_clips  # noqa: E402
+import frame_autosync  # noqa: E402
 import frame_devices  # noqa: E402
 import frame_steamgriddb
 import frame_comfort  # noqa: E402
@@ -819,6 +820,54 @@ def export_clip(body):
     return start_job(f"Export {name}", work)
 
 
+# Copying new screenshots and clips here on their own (frame_autosync.py). Each copy
+# counts as work on the headset it was listed on, so a switch can't send it elsewhere.
+
+def _sync_device():
+    if not LINK or LINK.snapshot().get("phase") != "connected":
+        return None
+    return LINK.active_device().get("id")
+
+
+def _sync_shots(device, ids):
+    with working(device):
+        return save_shots({"ids": ids})
+
+
+def _sync_clip(device, clip_id):
+    with working(device):
+        return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                       fetch_file)
+
+
+def _sync_list(listing):
+    def run():
+        with working(_sync_device()):
+            return listing()
+    return run
+
+
+_stop_sync = threading.Event()
+autosync = frame_autosync.AutoSync(_sync_list(list_shots), _sync_shots, _sync_list(list_clips), _sync_clip,
+                                   _sync_device, lambda: _work[0] > 0, offline=lambda e: unreachable(str(e)),
+                                   shots_folder=SHOTS_DIR, clips_folder=frame_clips.VIDEOS_DIR)
+
+
+def auto_sync(body):
+    """{"action": "settings", "screenshots", "clips"} | {"action": "now"} | {"action": "resume"}."""
+    _clips_here()
+    action = body.get("action")
+    if action == "settings":
+        return autosync.update({k: body[k] for k in ("screenshots", "clips") if isinstance(body.get(k), bool)})
+    if action == "now":
+        if not _sync_device():
+            raise Failure("Connect a headset first", 409)
+        return dict(autosync.copy_all(), message="Copying everything that isn't on this computer yet…")
+    if action == "resume":
+        return dict(autosync.resume(), message="Copying again")
+    raise Failure("action must be settings, now or resume", 400)
+
+
 def launch(body):
     appid = str(body.get("appid", ""))
     if not APPID.match(appid):
@@ -827,12 +876,12 @@ def launch(body):
     return {"message": f"Launching {appid}"}
 
 
-def steam_frame(*args, timeout=40, script="frame_steam.py"):
+def steam_frame(*args, timeout=40, script="frame_steam.py", source=None):
     """Run frame_steam.py (it drives the Steam client), or another on-Frame
     helper with the same JSON contract, on the Frame and return its JSON."""
     try:
         out = ssh("python3 - " + " ".join(map(shlex.quote, args)),
-                  stdin=(HERE / script).read_text(), timeout=timeout)
+                  stdin=source or (HERE / script).read_text(), timeout=timeout)
     except Failure as e:
         # The helper prints {"error": ...} on stdout when it fails, but ssh()
         # reports stderr instead if there was any, so look in both.
@@ -843,6 +892,43 @@ def steam_frame(*args, timeout=40, script="frame_steam.py"):
                 continue
         raise
     return json.loads(out)
+
+
+def running_frame(*args, timeout=40):
+    """frame_running.py on the Frame, with frame_steam.py (its DevTools client) as a module."""
+    source = ("import sys, types\nm = types.ModuleType('frame_steam'); sys.modules['frame_steam'] = m\n"
+              f"exec({(HERE / 'frame_steam.py').read_text()!r}, m.__dict__)\n" + (HERE / "frame_running.py").read_text())
+    return steam_frame(*args, timeout=timeout, source=source)
+
+
+def running_games():
+    games = running_frame("list")["running"]
+    return {"running": games, "message": None if games else "Nothing is running on the Frame"}
+
+
+def force_quit(body):
+    """Quit a running game: Steam's own terminate, then its processes (frame_running.py).
+    An Android app's Lepton container is stopped the way the Apps tab's Stop does."""
+    appid = str(body.get("appid", ""))
+    if body.get("action") != "quit":
+        raise Failure("action must be quit", 400)
+    if not APPID.match(appid):
+        raise Failure("bad appid", 400)
+    app = next((a for a in running_frame("list")["running"] if str(a.get("appid")) == appid), None)
+    if not app:
+        raise Failure("That game isn't running any more", 409)
+    stopped = False
+    if app.get("kind") == "android" and app.get("package"):
+        ensure_master()
+        try:
+            frame_android.stop(app["package"])
+            stopped = True
+        except frame_android.FrameError:
+            pass  # the process fallback below still runs
+    res = running_frame("quit", appid, timeout=60)
+    if res.get("method") == "gone":
+        res["message"] = f"{'Stopped' if stopped else 'Quit'} {app['name']}"
+    return dict(res, appid=int(appid), name=app["name"])
 
 
 def steam(body):
@@ -2915,9 +3001,9 @@ POST = {
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/running": force_quit, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
-        "/api/record": record, "/api/clips/export": export_clip,
+        "/api/record": record, "/api/clips/export": export_clip, "/api/autosync": auto_sync,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
         "/api/telemetry": frame_telemetry.update_settings, "/api/telemetry/event": frame_telemetry.page_event,
@@ -3200,6 +3286,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_computer.py").read_text(), timeout=20)))
             elif path == "/api/status":
                 self.send_json(status({}))
+            elif path == "/api/running":
+                self.send_json(running_games())
             elif path == "/api/steam/owned":
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":
@@ -3215,6 +3303,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(recorder.status())
             elif path == "/api/clips":
                 self.send_json(list_clips())
+            elif path == "/api/autosync":
+                _clips_here()
+                self.send_json(autosync.state())
             elif path == "/api/stream":
                 self.stream_video(url.query)
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["panel"]:
@@ -3505,6 +3596,8 @@ def main():
         frame_report.link = LINK  # its connection summary goes in every report's diagnostics
         frame_report.start_ssh_check()  # ...with which ssh this is, found once in the background
         LINK.start()
+        if not PRIVATE:  # one worker per user, in the app's server
+            threading.Thread(target=autosync.run, args=(_stop_sync,), daemon=True).start()
     if not frame_host.WINDOWS:
         signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
     if args.exit_on_eof:
@@ -3527,6 +3620,7 @@ def main():
         # mid-cleanup would abort it and leave the SSH master running.
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        _stop_sync.set()
         webinstall_shutdown()
         macview.shutdown()  # close the headset's viewers before the agent goes
         # The master was started with -N, so it stays up until told to exit.

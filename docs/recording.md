@@ -8,10 +8,13 @@ Both are on **Tools → Capture & Live**. Everything is saved to
 Nothing needs installing on the computer or on the Frame: the work is done by
 the `ffmpeg` that SteamOS ships.
 
-**Not tested on a headset yet.** This is built from what the code already does
-on the Frame (the live view, the media player) and from how Steam is reported
-to store its recordings. The parts we're least sure of are listed under
-[What hasn't been checked](#what-hasnt-been-checked). Please report what you see.
+**Recording is tested on a headset; Steam clip export isn't yet.** On a Frame
+running SteamOS 0.5.6 (build 20261015.6141207), Record and Stop saved an
+8-second 1080p H.264 recording with AAC sound to the computer, Stop took about a
+second, and nothing was left running or stored on the Frame. That Frame had no
+Steam recordings, so the clip list came back empty and export has only been
+tested with files in Steam's format made by `ffmpeg`. The parts we're least sure
+of are listed under [What hasn't been checked](#what-hasnt-been-checked).
 
 ## Record
 
@@ -36,8 +39,11 @@ the Frame, converted to `.mp4` there (without re-encoding) and copied to
 - **Where it waits on the Frame**: `~/.cache/frame-control/video/`, not `/tmp`,
   which is a RAM disk on SteamOS. It's deleted once copied.
 - **If the connection drops or the app quits** while recording, the Frame
-  stops `ffmpeg` cleanly when the SSH channel closes, as the live view does. A
-  recording that was never copied is deleted when the next one starts.
+  stops `ffmpeg` cleanly when the SSH channel closes: it types `q` into
+  `ffmpeg`'s input, as at its keyboard, and kills it if it's still there 10
+  seconds later. Not a signal: SteamOS's `ffmpeg` 7.0 catches SIGTERM and
+  SIGINT and carries on recording. A recording that was never copied is
+  deleted when the next one starts.
 
 Recording and **Live** can run together; both read the same device.
 
@@ -74,10 +80,42 @@ The listing doesn't rely on the folder names: any folder under `clips/` or
 missing its init segment or its chunks is left out. Missing chunk numbers are
 shown as "pieces missing"; the rest still exports.
 
+## Copying new ones automatically
+
+**Settings → Copy to this computer** copies new screenshots and Steam clips
+here on their own. It's off until you turn it on, with a switch each for
+screenshots and Steam clips. While a headset is connected, Frame Control looks
+about once a minute and copies what's new with the same code as **Save** and
+**Export**: screenshots to `~/Pictures/SteamFrame`, clips to
+`~/Videos/SteamFrame`.
+
+- **Only what's new.** It copies what you take after turning it on, so the
+  shots and clips already on the headset don't all arrive at once. **Copy
+  everything now** copies everything that isn't on this computer yet, once.
+- **Deleted stays deleted.** What it has copied is remembered, per headset, in
+  `auto-sync.json` in Frame Control's data folder, so a file you delete here
+  isn't copied again (**Copy everything now** would bring it back).
+- **Saved clips only.** Steam's background recording is a rolling buffer, not
+  something you chose to keep, so it isn't copied; export it by hand. A clip
+  Steam wrote to in the last 30 seconds is still being saved and waits for the
+  next look.
+- **It gives way.** It waits while an install, an export, a recording or
+  anything else is running on the headset, and stops between files if one
+  starts. While a copy is running, switching headsets waits for it, as it does
+  for an export. When the headset can't be reached it waits longer each time,
+  up to 15 minutes, and starts over once it answers.
+- **When this computer is full** (under 512 MB free, or a copy runs out of
+  space) it pauses and says so in Settings and above the lists. Free some space
+  and press **Resume**.
+- **With several headsets** it copies from the one you're connected to.
+
+Settings shows when it last checked, how many files it last copied and when,
+and the last problem it had. The screenshot and clip lists say when it's on.
+
 ## For developers
 
-`ui/frame_clips.py` holds the logic, so other features (such as syncing clips
-automatically) can reuse it:
+`ui/frame_clips.py` holds the logic, so other features can reuse it (automatic
+copying, in `ui/frame_autosync.py`, does):
 
 - `list_clips(run_frame)` and `export_clip(id, run_frame, run, fetch)` are the
   computer's side; the server passes how to reach the Frame.
@@ -96,11 +134,15 @@ The API, with the same guards as every other request:
 | `GET /api/clips` | Steam's recordings on the Frame, each with `saved` |
 | `POST /api/clips/export {"id"}` | Starts an export; poll `/api/job` |
 | `POST /api/open {"what": "videos"}` | Opens `~/Videos/SteamFrame` |
+| `GET /api/autosync` | Automatic copying: `screenshots`, `clips`, `since` (the watermark), `checked`, `copied`, `copied_time`, `error`, `paused`, `waiting` (clips still being written) |
+| `POST /api/autosync {"action": "settings", "screenshots", "clips"}` | Turn either on or off; turning it on sets `since` to now |
+| `POST /api/autosync {"action": "now"\|"resume"}` | Copy everything not here yet, once; or resume after running out of space |
 
 They aren't available when the server runs on the Frame itself (the iPhone
 app), since they save to a computer.
 
-Tests: `tests/test_clips.py`. They run the recording's shell under bash with a
+Tests: `tests/test_clips.py`, and `tests/test_autosync.py` for automatic
+copying (with a fake headset). They run the recording's shell under bash with a
 stand-in `ffmpeg`, so Stop, the time limit and the clean-up are tested as they
 run on the Frame. Where `ffmpeg` is installed, they also make a 65-second DASH
 recording with Steam's file names and export it with the real `ffmpeg`.
@@ -118,3 +160,5 @@ None of this has run on a Steam Frame yet. In particular:
   whether a clip's segments start mid-recording. The parser is deliberately
   loose about the layout.
 - How much x264 at 1080p30 costs the Frame while a game is running.
+- Automatic copying: that 30 seconds without a write is a safe sign Steam has
+  finished saving a clip, and how a once-a-minute listing feels on the Frame.

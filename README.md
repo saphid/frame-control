@@ -50,7 +50,7 @@ Charge, charging watts and time left, storage, memory, temperature, Wi-Fi, and w
 <td valign="top">
 
 **🎮 Steam games**<br>
-Everything you own with its Steam Frame rating. Install onto the headset with live progress, and search the store.
+Everything you own with its Steam Frame rating. Install onto the headset with live progress, search the store, and force quit a game that stops responding.
 
 </td>
 <td valign="top">
@@ -70,7 +70,7 @@ Drag files onto the window to send them. Drop a game's .zip, folder or .exe to a
 <td valign="top">
 
 **📸 Screenshots and recordings**<br>
-Browse the shots you take in the headset and save them to your Pictures folder. Record what the headset shows, with its sound, or export Steam's clips at any length, as .mp4 files in your Videos folder ([not tested on a headset yet](docs/recording.md)).
+Browse the shots you take in the headset and save them to your Pictures folder, or have new ones and your Steam clips copied over automatically. Record what the headset shows, with its sound, or export Steam's clips at any length, as .mp4 files in your Videos folder ([not tested on a headset yet](docs/recording.md)).
 
 **⌨️ Type on the headset**<br>
 Type and point in the Frame's apps from your computer or phone, through KDE Connect, which Frame Control brings along and sets up on the Frame. Copy text to the headset's clipboard and back again. Nothing else to install, anywhere. Press T to open it.

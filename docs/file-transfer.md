@@ -15,6 +15,10 @@ depends on SSH working through the `frame` alias from `scripts/connect.sh`.
 | KDE Connect | KDE Connect on both | Guess | There's a macOS build of KDE Connect, but whether it's present or installable on the Frame wasn't confirmed. It would give you clipboard sync, file send, and remote input. Worth checking on-device. |
 | microSD | Physical card | Confirmed that the slot exists ([Wikipedia](https://en.wikipedia.org/wiki/Steam_Frame)) | Offline fallback. |
 
+Screenshots and Steam clips have their own buttons on **Tools → Capture &
+Live**, and **Settings → Copy to this computer** copies new ones here
+automatically: see [recording.md](recording.md#copying-new-ones-automatically).
+
 ## Clipboard
 
 `scripts/paste-to-frame.sh` sends the Mac clipboard (or stdin) to the

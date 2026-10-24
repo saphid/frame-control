@@ -76,8 +76,8 @@ its guards want.
 | `sshd` with key and password logins, `rsync`, `python3` | Real |
 | Valve's steamos-devkit-service on port 32000 and its hooks, vendored unmodified in `tests/fakeframe/steamos-devkit-service` | Real; only its `dbus` import (for mDNS through systemd-resolved) is a stand-in that logs the registration |
 | Valve's devkit-utils, copied over by Frame Control itself | Real |
-| **fakesteam**: `~/.steam/steam.pid`, `steam.token` and the `steam.pipe` FIFO; answers `approve-ssh-key`, `create-shortcut`, `run-game`, `list-shortcuts` and `delete-shortcut` with the response files devkit-utils waits for; takes `steam://rungameid`, `install` and `store` URLs | Fake |
-| DevTools on `127.0.0.1:8080` with a `SharedJSContext` target. The JavaScript Frame Control sends runs for real in Node against stand-in `SteamClient`, `appStore` and `downloadsStore` objects (`cef_shim.js`), so async functions, optional chaining and `Map`s behave as in Steam's CEF | The JS engine is real; the objects are fake |
+| **fakesteam**: `~/.steam/steam.pid`, `steam.token` and the `steam.pipe` FIFO; answers `approve-ssh-key`, `create-shortcut`, `run-game`, `list-shortcuts` and `delete-shortcut` with the response files devkit-utils waits for; takes `steam://rungameid`, `install` and `store` URLs. Games it really runs start under a stand-in `reaper SteamLaunch AppId=<id> -- <command>` (bash with that command line), so force quit finds a real process tree | Fake |
+| DevTools on `127.0.0.1:8080` with a `SharedJSContext` target. The JavaScript Frame Control sends runs for real in Node against stand-in `SteamClient`, `appStore` and `downloadsStore` objects (`cef_shim.js`), so async functions, optional chaining and `Map`s behave as in Steam's CEF. `SteamUIStore.RunningApps` lists launches that haven't exited; `TerminateApp` ends only launches that never ran a process, so a running program needs Frame Control's signals | The JS engine is real; the objects are fake |
 | `steam`, `wpctl`, `flatpak`, `podman`, `nmcli`, `qdbus6`, `gamescopectl`, SteamOS's `steamos-enable-sshd` helper, and Lepton's launcher | Stubs that record their calls |
 | Battery, charger and thermal zones under `/sys/class` | Files the supervisor writes. `/sys` is read-only in a container and Docker's AppArmor profile refuses writes under it, so each folder is a volume mounted twice: over `/sys/class/...` for `frame_status.py` to read, and under `/var/lib/fakeframe/sys` for the supervisor to write |
 | `vrserver` and `plasmashell` | Renamed `sleep` processes, so the status page and the clipboard find them |
@@ -266,6 +266,17 @@ BUILD_ID 20260925.6191901. The script was used to install Frame Control 0.4.0,
 connect it to the Frame and follow Remote Desktop through to the Frame's
 desktop ([what it does](streaming.md#a-see-and-control-the-frame-from-the-mac)).
 `frame-key` left `authorized_keys` byte-for-byte as it was.
+
+## Force quit
+
+`tests/test_force_quit.py` feeds `ui/frame_running.py` made-up process tables:
+the `reaper SteamLaunch AppId=` parsing, naming from Steam, manifests, Android
+`meta.json` and devkit folders, and a Frame's worth of Steam, gamescope, SteamVR,
+sshd and session processes that must never be signalled. Processes that ignore
+SIGTERM, survive SIGKILL or exit and have their pid reused check the escalation.
+The Control Center's confirmation, duplicate and headset-switch handling run in
+`tests/control_center.cjs`. `tests/e2e/test_running.py` force quits real process
+trees on the fake Frame. None of it has run on a headset.
 
 ## Owned media player
 

@@ -63,6 +63,13 @@ counts them while they run.
 - **Status**: storage, memory, temperature, Wi-Fi, uptime, and whether SteamVR,
   the desktop, Lepton and xrdp are running.
 - **Library** shelf with Steam cover art and a Play button (`steam://rungameid`).
+- **Force quit** a game that has stopped responding: Steam games, sideloaded
+  titles, non-Steam shortcuts and Android apps. **Running now** at the top of
+  Games lists what's running; each game's own **Force quit…** (on its library
+  tile, or in a sideloaded title's ⋯ menu) and the Control Center's **Force quit
+  a game** card do the same. Each asks first, because unsaved progress is lost.
+  Steam is asked to quit the game, then its processes get SIGTERM and SIGKILL;
+  see [steam-games.md](steam-games.md#force-quitting-a-running-game).
 - **Get games**: every game you own with its Steam Frame rating (Verified,
   Playable, Unsupported, Unknown). Install on Frame downloads it to the headset
   with live progress. Search the Steam store with prices and Frame ratings; Buy
@@ -141,6 +148,12 @@ they are not converted to zero. Compositor FPS is separate from application FPS;
 GPU time is render time, not GPU utilisation. The temperature is the hottest
 readable sensor. Thermal trip warnings use per-zone kernel hot/critical limits,
 not a guessed universal temperature threshold.
+
+**Force quit a game** lists what's running only when you choose **Check what's
+running**, and says so when nothing is. Each **Force quit…** names the game and
+warns that unsaved progress will be lost before anything is sent; it uses the
+selected headset, refuses a second quit while one is running, and drops the
+list when you switch headsets.
 
 **Audio** controls the default output sink through the existing `/api/volume`
 endpoint. Moving its slider prepares a value; **Apply volume** sends it. **Mute**

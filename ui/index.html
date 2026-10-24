@@ -388,6 +388,7 @@
   .popt { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; align-items: start; margin: 0 0 14px; cursor: pointer; }
   .popt input { margin: 3px 0 0; width: 16px; height: 16px; accent-color: var(--blue); }
   .popt b { font-weight: 600; color: var(--text); }
+  .sync-note { margin: 10px 0 0; }
   .popt .sub { grid-column: 2; line-height: 1.45; }
   .sentlog { max-height: 260px; overflow: auto; background: rgba(0,0,0,.3); border-radius: 3px; padding: 10px;
              font: 11.5px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre-wrap; word-break: break-all; margin: 8px 0 0; }
@@ -1247,6 +1248,7 @@
       <button class="action small" id="shotsSaveNew" disabled>Save new to this computer</button>
     </div>
     <div class="shot-grid" id="shotGrid"><div class="sub">Loading…</div></div>
+    <div class="sub sync-note" id="shotsSyncNote" hidden></div>
     <div class="hint">Screenshots you take in the headset with Steam's screenshot shortcut. New ones appear on their own. Click one to open it in the viewer, Copy puts it on the clipboard, and Save copies it to <code>~/Pictures/SteamFrame</code>. Right-click for more.</div>
   </section>
   <section id="clips">
@@ -1255,6 +1257,7 @@
       <button class="small" id="videosFolder" title="Open the SteamFrame folder in your Videos">Show folder</button>
     </div>
     <div class="list" id="clipList"><div class="sub">Loading…</div></div>
+    <div class="sub sync-note" id="clipsSyncNote" hidden></div>
     <div class="hint">Clips and background recordings from Steam's game recording in the headset. Export joins one into a single <code>.mp4</code> in <code>~/Videos/SteamFrame</code>, however long it is, without re-encoding it. Recordings you make with <b>Record</b> go there too.</div>
   </section>
   </div>
@@ -1263,6 +1266,11 @@
   <div class="workspace-heading"><div><span class="eyebrow">Play on your Frame</span><h1>Games</h1><p>Your Steam library and games you add yourself.</p></div><button class="action add-install" data-open-install>＋ Add / Install</button></div>
   <div class="library-controls"><div class="scope-tabs" id="libraryScope" aria-label="Game library"><button data-scope="installed" aria-pressed="true">Installed</button><button data-scope="owned" aria-pressed="false">Owned</button><button data-scope="store" aria-pressed="false">Store</button></div>
     <div class="scope-tabs" id="librarySources" aria-label="Installed content source"><button data-library-source="all" aria-pressed="true">All</button><button data-library-source="steam" aria-pressed="false">Steam</button><button data-library-source="sideloaded" aria-pressed="false">Sideloaded</button></div></div>
+  <section class="panel now-running" id="nowRunning" aria-labelledby="nowRunningTitle" hidden>
+    <div class="shelf-head"><h2 id="nowRunningTitle">Running now</h2><span class="spacer"></span><button class="small" id="runningCheck">Check again</button></div>
+    <div class="list" id="runningList"></div>
+    <div class="hint">Force quit a game that has stopped responding. Steam is asked to quit it first; unsaved progress is lost.</div>
+  </section>
   <div id="libraryOwned"></div><div id="steamDiscover" hidden></div>
   <section id="library">
     <div class="shelf-head"><h2>Steam games</h2><span class="count" id="gameCount"></span></div>
@@ -1612,6 +1620,21 @@
       <div id="steamGridStatus" class="hint" role="status"></div>
       <button id="refreshAndroidArt" class="small" style="margin-top:12px">Refresh artwork for installed apps and titles</button>
     </section>
+    <section class="panel" id="autoSync">
+      <div class="shelf-head"><h2>Copy to this computer</h2></div>
+      <p class="sub">Copy new screenshots and clips to this computer automatically, about once a minute while a headset is connected.</p>
+      <label class="popt"><input type="checkbox" id="syncShots"><b>Screenshots</b>
+        <span class="sub">Into <code>~/Pictures/SteamFrame</code>, as Save does.</span></label>
+      <label class="popt"><input type="checkbox" id="syncClips"><b>Steam clips</b>
+        <span class="sub">Clips you save in Steam, as <code>.mp4</code> files in <code>~/Videos/SteamFrame</code>, once Steam has finished
+          writing them. Steam's background recording isn't copied.</span></label>
+      <div class="row"><button class="small" id="syncNow">Copy everything now</button>
+        <button class="small action" id="syncResume" hidden>Resume</button></div>
+      <div class="hint" id="syncStatus" role="status"></div>
+      <div class="hint">Only what you take after turning it on is copied; Copy everything now copies the rest, once. A file you
+        delete from this computer isn't copied again. It copies from the headset you're connected to, and waits while an
+        install, an export or a recording is running.</div>
+    </section>
     <section class="panel" id="power">
       <div class="shelf-head"><h2>Remote access</h2></div>
       <div class="actions">
@@ -1734,7 +1757,7 @@
   </div>
   <div class="page" data-page="settings">
     <div class="workspace-heading"><div><a href="#settings" id="settingsBack" class="workspace-link" hidden>← All settings</a><h1 id="settingsTitle">Settings</h1><p id="settingsSubtitle">Connection, headset controls and Frame Control preferences.</p></div></div>
-    <div id="settingsDirectory" class="quick-routes"><a href="#devices"><span>Devices &amp; connection</span><small>Connect a Frame or switch headsets</small></a><a href="#control"><span>Control Center</span><small>Live metrics and searchable controls</small></a><a href="#home"><span>Frame activity</span><small>Readiness, running apps and downloads</small></a><a href="#display"><span>App display &amp; reports</span><small>Resolution, scale and compatibility</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Images and artwork sources</small></a><a href="#privacy"><span>Privacy &amp; updates</span><small>Sharing preferences and app updates</small></a><a href="#power"><span>Remote &amp; power</span><small>Remote access, sleep and restart</small></a></div>
+    <div id="settingsDirectory" class="quick-routes"><a href="#devices"><span>Devices &amp; connection</span><small>Connect a Frame or switch headsets</small></a><a href="#control"><span>Control Center</span><small>Live metrics and searchable controls</small></a><a href="#home"><span>Frame activity</span><small>Readiness, running apps and downloads</small></a><a href="#display"><span>App display &amp; reports</span><small>Resolution, scale and compatibility</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Images and artwork sources</small></a><a href="#autoSync" id="syncLink"><span>Copy to this computer</span><small>New screenshots and clips, automatically</small></a><a href="#privacy"><span>Privacy &amp; updates</span><small>Sharing preferences and app updates</small></a><a href="#power"><span>Remote &amp; power</span><small>Remote access, sleep and restart</small></a></div>
     <div id="settingsWorkspace" hidden></div>
   </div>
 
@@ -2062,6 +2085,7 @@ function applyHostWording(h) {
   document.body.classList.toggle("mobile", !!h.mobile);
   $("shotsFolder").hidden = !!h.mobile;
   $("recBtn").hidden = $("clips").hidden = !!h.mobile;  // recordings are saved to a computer
+  $("syncLink").hidden = !!h.mobile;  // and so are automatic copies
   $("quest").hidden = !!h.mobile;
   $("metaLib").hidden = !!h.mobile;  // the Quest plugs into a computer; the phone app's server runs on the Frame
   if (!h.mobile) $("shotsFolder").textContent = $("videosFolder").textContent = h.fileManager === "your file manager" ? "Open folder" : `Show in ${h.fileManager}`;
@@ -2471,6 +2495,7 @@ function render(s) {
         <div class="name">${esc(g.name)}</div>
         <div class="size">${gb(g.size)}</div>
         <button class="play small" data-launch="${g.appid}" data-name="${esc(g.name)}">▶ Play</button>
+        <button class="small danger" data-force-quit-app="${g.appid}" data-name="${esc(g.name)}" title="Quit it if it has stopped responding">Force quit…</button>
       </div>
     </div>`).join("") : `<div class="sub">No games installed.</div>`;
   // Tall library art, falling back to the wide header, then to the name card.
@@ -3263,7 +3288,7 @@ $("ctrlKeys").addEventListener("click", e => {
 });
 
 // ---- controls ----
-$("refreshAll").onclick = () => { refresh(); loadTitles(); loadAndroid(); };  // titles too: the Frame may have been asleep at start
+$("refreshAll").onclick = () => { refresh(); loadTitles(); loadAndroid(); loadRunning().catch(() => {}); };  // titles too: the Frame may have been asleep at start
 document.addEventListener("keydown", e => {
   if (e.key === "r" && !e.metaKey && !e.ctrlKey && !/INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) $("refreshAll").onclick();
 });
@@ -3271,6 +3296,7 @@ document.body.addEventListener("click", async (e) => {
   const b = e.target.closest("button");
   if (!b) return;
   if (b.dataset.launch) act(`Launch ${b.dataset.name}`, () => api("/api/launch", { appid: b.dataset.launch }), b);
+  else if (b.dataset.forceQuitApp) forceQuitFrom(g => String(g.appid) === b.dataset.forceQuitApp, b.dataset.name, b);
   else if (b.dataset.uninstall) {
     if (confirm(`Remove ${b.dataset.name} from the Frame?`))
       act(`Remove ${b.dataset.name}`, () => api("/api/flatpak", { action: "uninstall", id: b.dataset.uninstall }), b).then(refresh);
@@ -3848,6 +3874,7 @@ async function loadTitles() {
       <button class="play small" data-title="launch" data-id="${esc(t.id)}" title="Launch in the headset">Play</button>
       <details class="lib-more"><summary aria-label="More for ${esc(t.id)}">⋯</summary><div class="lib-menu">
         ${t.art_missing ? `<button data-title="refresh-art" data-id="${esc(t.id)}">Add artwork<small>Its Steam library tile has none yet</small></button>` : ""}
+        <button class="danger" data-title="force-quit" data-id="${esc(t.id)}">Force quit…<small>If it has stopped responding</small></button>
         <button class="danger" data-title="remove" data-id="${esc(t.id)}">Remove…<small>Deletes the game and its files</small></button>
       </div></details>
     </div>`).join("") : `<div class="sub">None yet.</div>`;
@@ -3860,6 +3887,8 @@ $("titleList").onclick = async e => {
     if (!confirm(`Remove ${id} and its files from the Frame?`)) return;
     await act(`Remove ${id}`, () => api("/api/titles", { action: "remove", id }), b);
     loadTitles();
+  } else if (b.dataset.title === "force-quit") {
+    forceQuitFrom(g => g.kind === "devkit" && g.title === id, id, b);
   } else if (b.dataset.title === "refresh-art") {
     await runJob(`Add Steam artwork for ${id}`, "art-" + id, () => api("/api/titles", { action: "refresh-art", id }));
     loadTitles();
@@ -3867,6 +3896,48 @@ $("titleList").onclick = async e => {
 };
 loadTitles();
 $("titleAdd").onclick = () => $("fileInput").click();
+
+// ---- what's running, and force quit (frame_running.py on the Frame) ----
+let runningGames = [], runningSeq = 0;
+async function loadRunning() {
+  const seq = ++runningSeq;
+  try {
+    const list = (await api("/api/running")).running;
+    if (seq === runningSeq) runningGames = list;
+  } catch (e) {
+    if (seq === runningSeq && !e.stale) runningGames = [];
+    throw e;
+  } finally { if (seq === runningSeq) renderRunning(); }
+  return seq === runningSeq;
+}
+const RUNNING_KIND = { steam: "Steam game", devkit: "Sideloaded game", shortcut: "Non-Steam shortcut", android: "Android app" };
+function renderRunning() {
+  $("nowRunning").hidden = !runningGames.length;
+  $("runningList").innerHTML = runningGames.map(g => `
+    <div class="item"><div class="grow"><div class="t">${esc(g.name)}</div><div class="s">${RUNNING_KIND[g.kind] || "Running"} · running on the Frame</div></div>
+      <button class="small danger" data-force-quit="${esc(g.appid)}">Force quit…</button></div>`).join("");
+}
+async function forceQuit(appid, btn) {
+  const g = runningGames.find(x => String(x.appid) === String(appid));
+  if (!g) return;
+  if (!confirm(`Force quit ${g.name}? Unsaved progress will be lost.`)) return;
+  await act(`Force quit ${g.name}`, () => api("/api/running", { action: "quit", appid: String(g.appid) }), btn);
+  loadRunning().catch(() => {});
+  if (g.kind === "android") loadAndroid();
+}
+// From a game's own menu: check it's running first, so a stopped game says so.
+async function forceQuitFrom(match, name, btn) {
+  if (btn) btn.disabled = true;
+  try { if (!await loadRunning()) return; }
+  catch (e) { if (!e.stale) toast(`Couldn't check what's running: ${e.message}`, true); return; }
+  finally { if (btn) btn.disabled = false; }
+  const g = runningGames.find(match);
+  if (!g) { log(`${name} isn't running`); toast(`${name} isn't running`); return; }
+  forceQuit(g.appid, btn);
+}
+$("runningList").onclick = e => { const b = e.target.closest("[data-force-quit]"); if (b) forceQuit(b.dataset.forceQuit, b); };
+$("runningCheck").onclick = () => loadRunning().then(() => { if (!runningGames.length) toast("Nothing is running on the Frame"); },
+                                                     e => { if (!e.stale) toast(`Couldn't check what's running: ${e.message}`, true); });
 
 
 // ---- Steam games: install owned games, find and buy on the store ----
@@ -5180,6 +5251,45 @@ $("shotsFolder").onclick = e => act($("shotsFolder").textContent, () => api("/ap
 // window is visible and the Frame is reachable, and again on coming back to it.
 setInterval(() => { if (!document.hidden && online) loadShots(true); }, SHOTS_POLL_MS);
 
+// ---- Copying new screenshots and clips here on their own (ui/frame_autosync.py) ----
+const autoSync = { s: null, copied: null };
+const syncWhen = t => new Date(t * 1000).toLocaleString([], { dateStyle: "medium", timeStyle: "short" });
+function renderAutoSync(s) {
+  autoSync.s = s;
+  $("syncShots").checked = s.screenshots; $("syncClips").checked = s.clips;
+  $("syncResume").hidden = !s.paused;
+  const on = s.screenshots || s.clips, lines = [];
+  if (s.paused) lines.push(s.paused);
+  else if (s.error) lines.push(`Last problem: ${s.error}`);
+  if (s.running || s.pending) lines.push("Copying…");
+  if (s.copied_time) lines.push(`Last copied ${s.copied} file${s.copied === 1 ? "" : "s"} on ${syncWhen(s.copied_time)}.`);
+  if (on && s.checked) lines.push(`Last checked ${syncWhen(s.checked)}.`);
+  if (on && s.waiting) lines.push(`${s.waiting} clip${s.waiting === 1 ? " is" : "s are"} still being written; copied once Steam finishes.`);
+  if (on && s.since) lines.push(`Copying what's new since ${syncWhen(s.since)}.`);
+  $("syncStatus").textContent = lines.length ? lines.join(" ") : "Off.";
+  for (const [id, key, what] of [["shotsSyncNote", "screenshots", "New screenshots"], ["clipsSyncNote", "clips", "New Steam clips"]]) {
+    $(id).hidden = !s[key] || !!HOST.mobile;
+    $(id).innerHTML = s.paused ? `${esc(s.paused)} <a href="#autoSync">Settings</a>`
+      : `${what} are copied to this ${esc(HOST.computer)} automatically${s.copied_time ? `; last copy ${esc(syncWhen(s.copied_time))}` : ""}. <a href="#autoSync">Change</a>`;
+  }
+  // Something new arrived here: show it as saved.
+  if (autoSync.copied !== null && s.copied_time !== autoSync.copied) { loadShots(true); if (!HOST.mobile) loadClips(); }
+  autoSync.copied = s.copied_time;
+}
+async function loadAutoSync() {
+  try { renderAutoSync(await api("/api/autosync")); } catch {}  // not on the iPhone app's server
+}
+async function setAutoSync(body, label) {
+  try { renderAutoSync(await api("/api/autosync", body)); }
+  catch (e) { toast(`${label} failed: ${e.message}`, true); loadAutoSync(); }
+}
+$("syncShots").onchange = e => setAutoSync({ action: "settings", screenshots: e.target.checked }, "Saving");
+$("syncClips").onchange = e => setAutoSync({ action: "settings", clips: e.target.checked }, "Saving");
+$("syncNow").onclick = async e => { const r = await act("Copy everything now", () => api("/api/autosync", { action: "now" }), e.currentTarget); if (r) renderAutoSync(r); };
+$("syncResume").onclick = async e => { const r = await act("Resume copying", () => api("/api/autosync", { action: "resume" }), e.currentTarget); if (r) renderAutoSync(r); };
+loadAutoSync();
+setInterval(() => { const s = autoSync.s; if (!document.hidden && s && (s.screenshots || s.clips || s.pending || s.running)) loadAutoSync(); }, 20000);
+
 // ---- Recording the headset view, and Steam's own clips (server.py, frame_clips.py) ----
 // A recording runs on the Frame until Stop; the server then copies the .mp4 here
 // and the page follows it by polling /api/record.
@@ -5548,8 +5658,8 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", backup:"tools"};
-const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork",
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", backup:"tools"};
+const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
   power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
@@ -5637,7 +5747,7 @@ function showPage(e) {
   if (page === 'games') selectLibrary(workspace.source, workspace.scope, false);
   // Another computer may have added or removed a title: phones have no Refresh button. Only
   // on navigating here (e: the hashchange); at startup the first load is already on its way.
-  if (e && page === 'games' && previousPage !== 'games') loadTitles();
+  if (e && page === 'games' && previousPage !== 'games') { loadTitles(); loadRunning().catch(() => {}); }
   if (page === 'apps') {
     selectApps(workspace.apps, false);
     if ((previousPage !== 'apps' || id === 'androidLibrary') && workspace.apps === 'installed') loadAndroid();
@@ -6635,7 +6745,8 @@ function onConnection(s) {
     gm.storeDraft = ""; gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.shownBySource = {owned:0, store:0}; gm.seq++;
     androidApps = []; androidSeq++; androidPending.clear(); $('installedDetail').close(); resetShots(); resetClips();
     renderHome();
-    titlesSeq++; disp.seq++;  // answers to loads already on their way are ignored
+    titlesSeq++; disp.seq++; runningSeq++;  // answers to loads already on their way are ignored
+    runningGames = []; $("nowRunning").hidden = true; $("runningList").innerHTML = "";
     if (cat.apps) filterCatalog();  // "Installed" tags were the other headset's
     // Confirmations still open were checked against the other headset.
     ["titleDlg", "apkAltDlg", "pwDlg", "repDlg"].forEach(id => { if ($(id) && $(id).open) $(id).close(); });
@@ -7060,7 +7171,7 @@ api("/api/host").then(h => {
 <script>
 window.frameControlCenter = FrameControlCenter.mount({document, api, refresh, refreshAudio: refreshAfterAudio,
   getContext: () => ({sample: state, online, generation: devGen, device: window.connDevice}),
-  openConnection: () => $("conn").click(), platform: window.frameApp?.platform || ""});
+  openConnection: () => $("conn").click(), platform: window.frameApp?.platform || "", confirm: text => confirm(text)});
 window.frameControlCenter.host(HOST);
 if (state) window.frameControlCenter.status(state, stateReceivedAt, stateRead);
 else if (stateRead.error) window.frameControlCenter.unavailable(stateRead.error);
