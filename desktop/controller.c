@@ -1,5 +1,8 @@
-/* Extracted from the Mac agent's RateController. Same gate, demand protection,
- * bitrate recovery and tier hysteresis for every host. Bounded sample buffers. */
+/* A C port of the Mac agent's RateController (mac/frame-mac-view/Sources/
+ * Controller.swift) for the Windows host. Same gate, demand protection, bitrate
+ * recovery and tier hysteresis; bounded sample buffers. The Mac agent keeps its
+ * Swift original, so a change to either must be made to both:
+ * tests/test_pc_controller.py checks this one against the Swift trace. */
 #include "controller.h"
 #include <stdlib.h>
 #include <string.h>

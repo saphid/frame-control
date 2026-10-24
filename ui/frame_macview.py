@@ -173,8 +173,7 @@ class MacView:
     def _stale(self):
         try:
             built = AGENT.stat().st_mtime
-            return any(p.stat().st_mtime > built for p in [*(SOURCES / "Sources").glob("*.swift"),
-                       ROOT / "desktop" / "controller.c", ROOT / "desktop" / "controller.h"])
+            return any(p.stat().st_mtime > built for p in (SOURCES / "Sources").glob("*.swift"))
         except OSError:
             return False
 
