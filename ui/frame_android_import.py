@@ -1,12 +1,152 @@
 """Import a local Android backup: one APK and its matching expansion files."""
 import re
 import time
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import shutil
+import stat
+import struct
+import zipfile
+import zlib
+
+import frame_apk
 
 import frame_android as android
 import frame_quest as quest
 
 OBB = re.compile(r'(main|patch)\.[0-9]+\.([A-Za-z0-9_]+(?:\.[A-Za-z0-9_]+)+)\.obb')
+
+ARCHIVES = {'.xapk', '.apks', '.apkm'}
+MAX_BYTES = 16 * 1024**3
+MAX_FILES = 4096
+METADATA = {'manifest.json', 'info.json', 'icon.png', 'toc.pb', 'meta.sai_v1.json', 'meta.sai_v2.json'}
+WINDOWS_DEVICE = re.compile(r'(?:CON|PRN|AUX|NUL|COM[1-9¹²³]|LPT[1-9¹²³])(?:\..*)?', re.I)
+
+
+def _finder_metadata(name):
+    parts = PurePosixPath(name).parts
+    return bool(parts) and (parts[0] == '__MACOSX' or parts[-1] == '.DS_Store' or parts[-1].startswith('._'))
+
+
+def _members(archive):
+    """Ignore Finder sidecars and strip at most one shared enclosing folder.
+
+    Original member names are still checked by _unpack before extraction.
+    Android itself is a payload root, never an enclosing folder.
+    """
+    members = archive.infolist()
+    names = [m.filename for m in members if not m.is_dir() and not _finder_metadata(m.filename)]
+    first = names[0].split('/')[0] if names else ''
+    prefix = first + '/' if first and first != 'Android' and all(n.startswith(first + '/') for n in names) else ''
+    return [(m, m.filename[len(prefix):] if prefix and m.filename.startswith(prefix) else m.filename)
+            for m in members]
+
+
+def _path(name):
+    parts = PurePosixPath(name.rstrip('/')).parts
+    if (not parts or len(name) > 512 or len(parts) > 32 or name.startswith('/') or '\\' in name or
+            any(p in ('.', '..') or ':' in p or p.rstrip(' .') != p or WINDOWS_DEVICE.fullmatch(p)
+                for p in parts) or
+            '/'.join(parts) != name.rstrip('/')):
+        raise android.FrameError('unsafe path in Android bundle: ' + name[:200])
+    return parts
+
+
+def _kind(name):
+    parts = _path(name)
+    if len(parts) >= 4 and parts[:2] == ('Android', 'data') and android.PKG_RE.fullmatch(parts[2]):
+        raise android.FrameError('Android/data restore is not supported by this importer; choose an APK/OBB-only backup')
+    if name.lower().endswith('.apk'):
+        return 'apk', None, None
+    if name.lower().endswith('.obb'):
+        match = OBB.fullmatch(parts[-1])
+        if not match or not (len(parts) == 1 or
+                len(parts) == 2 and parts[0] == match[2] or
+                len(parts) == 4 and parts[:2] == ('Android', 'obb') and parts[2] == match[2]):
+            raise android.FrameError('OBB needs its standard main/patch.<version>.<package>.obb name and Android/obb/<package> location')
+        return 'obb', match[2], None
+    if (len(parts) == 1 and name in METADATA) or name.lower().endswith('.apk.idsig'):
+        return 'metadata', None, None
+    raise android.FrameError('Unsupported Android bundle file: ' + name + '; no files were installed')
+
+
+def _unpack(path, root, budget):
+    output, seen = [], set()
+    with zipfile.ZipFile(path) as archive:
+        members = _members(archive)
+        if len(members) + budget['files'] > MAX_FILES:
+            raise android.FrameError('Android import has too many files')
+        declared = sum(m.file_size for m, _ in members)
+        if declared + budget['bytes'] > MAX_BYTES or declared > max(0, shutil.disk_usage(root).free - 64 * 1024**2):
+            raise android.FrameError('Android bundle exceeds the size limit or available staging space')
+        # Validate the entire directory before creating any file.
+        for member, name in members:
+            _path(member.filename)
+            key = member.filename.rstrip('/').casefold()
+            mode = stat.S_IFMT(member.external_attr >> 16)
+            if key in seen or member.flag_bits & 1 or mode not in (0, stat.S_IFREG, stat.S_IFDIR):
+                raise android.FrameError('Android bundle contains duplicate paths, encrypted files, links or special files')
+            seen.add(key)
+            if not member.is_dir() and not _finder_metadata(member.filename):
+                _kind(name)
+        for member, name in members:
+            if member.is_dir():
+                continue
+            if _finder_metadata(member.filename):
+                budget['bytes'] += member.file_size
+                continue
+            kind, pkg, rel = _kind(name)
+            target = root.joinpath(*_path(member.filename))
+            target.parent.mkdir(parents=True, exist_ok=True)
+            size = 0
+            with archive.open(member) as src, target.open('xb') as dst:
+                while True:
+                    chunk = src.read(1024 * 1024)
+                    if not chunk:
+                        break
+                    size += len(chunk)
+                    budget['bytes'] += len(chunk)
+                    if budget['bytes'] > MAX_BYTES or size > member.file_size:
+                        raise android.FrameError('Android bundle exceeds the size limit')
+                    dst.write(chunk)
+            if size != member.file_size:
+                raise android.FrameError('Incomplete file in Android bundle: ' + member.filename)
+            if kind != 'metadata':
+                output.append((target, kind, pkg, rel))
+        budget['files'] += len(members)
+    return output
+
+
+def unpack_bundle(path, root):
+    """Extract a single explicit Android bundle into caller-owned staging.
+
+    Reuse the regular backup inspector and installer; no archive metadata is
+    trusted as package identity, and ordinary PC ZIPs keep their existing route.
+    """
+    try:
+        entries = _unpack(Path(path), Path(root), {'bytes': 0, 'files': 0})
+    except android.FrameError:
+        raise
+    except (OSError, ValueError, RuntimeError, EOFError, struct.error, zlib.error,
+            zipfile.BadZipFile) as error:
+        raise android.FrameError('Could not read Android bundle: ' + str(error)) from error
+    paths = [str(local) for local, _, _, _ in entries]
+    if not any(Path(p).suffix.lower() == '.apk' for p in paths):
+        raise android.FrameError('Android bundles must contain one standalone APK and optional OBB files.')
+    return paths
+
+
+def _check_standalone(path):
+    try:
+        with zipfile.ZipFile(path) as archive:
+            elements = frame_apk.manifest_elements(
+                frame_apk._read(archive, 'AndroidManifest.xml', frame_apk.MAX_MANIFEST))
+        if any((tag == 'manifest' and attrs.get('split', (None, None, None))[2]) or
+               (tag == 'application' and attrs.get('isSplitRequired', (None, 0, None))[1])
+               for tag, attrs in elements):
+            raise android.FrameError('This backup needs split APKs. This importer accepts only a standalone APK; '
+                                     'use the documented Quest/CLI split workflow for supported library/asset splits.')
+    except (zipfile.BadZipFile, frame_apk.ApkError, OSError, ValueError, struct.error, IndexError) as error:
+        raise android.FrameError('Could not read APK manifest: ' + str(error)) from error
 
 
 def inspect(paths, discover=False):
@@ -32,6 +172,7 @@ def inspect(paths, discover=False):
         raise android.FrameError('Choose one game at a time. Split APK backups are not supported by this importer.')
     apk = apks[0] if apks else None
     if apk:
+        _check_standalone(apk)
         info = android.apk_info(str(apk))
         try:
             android.check_installable(info)

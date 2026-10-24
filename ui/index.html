@@ -1367,10 +1367,10 @@
       <div class="store-owned" id="storeOwned">
       <section class="panel" id="androidBackup">
         <div class="shelf-head"><h2>Import Android game</h2></div>
-        <p class="sub">Have a SideQuest backup? Choose the game's APK and all its .obb game-data files together.
+        <p class="sub">Have a backup? Choose the game's APK and all its .obb files together, or one XAPK/APKS/APKM bundle containing a standalone APK. Split sets and Android/data restore are not supported here.
           Frame Control installs the app and puts its data in the right place.</p>
         <button class="action small" id="androidBackupChoose">Choose game files…</button>
-        <input type="file" id="androidBackupInput" accept=".apk,.obb" multiple hidden>
+        <input type="file" id="androidBackupInput" accept=".apk,.obb,.xapk,.apks,.apkm" multiple hidden>
         <p class="hint desk-only">In the desktop app, drop the backup folder or its APK. Matching game data in the same folder is found automatically.</p>
       </section>
       <section class="panel" id="quest">
@@ -1821,7 +1821,7 @@
 </main>
 </div>
 <div class="dropzone" id="dropzone" hidden><div><b>Drop to send to the Frame</b>
-  <span class="sub">Android backups: drop the <code>.apk</code> and its <code>.obb</code> game data together.
+  <span class="sub">Android backups: drop an APK with its OBB files, or one XAPK/APKS/APKM bundle (standalone APK only).
   Other files go to <code>~/Downloads</code>;
   a game's <code>.zip</code>, folder or <code>.exe</code> becomes a Steam library title.</span></div></div>
 
@@ -3657,8 +3657,8 @@ function sendFiles(files, dirs = new Set()) {
   return fileSendQueue;
 }
 async function sendFilesOne(files, dirs, dev) {
-  const androidFiles = files.filter((f, i) => !dirs.has(i) && /\.(apk|obb)$/i.test(f.name));
-  const grouped = androidFiles.some(f => /\.obb$/i.test(f.name));
+  const androidFiles = files.filter((f, i) => !dirs.has(i) && /\.(apk|obb|xapk|apks|apkm)$/i.test(f.name));
+  const grouped = androidFiles.length > 1 || androidFiles.some(f => /\.(obb|xapk|apks|apkm)$/i.test(f.name));
   if (grouped && window.connDevice === dev) await importAndroidFiles(androidFiles, dev);
   for (const [i, f] of files.entries()) {
     if (window.connDevice !== dev) {

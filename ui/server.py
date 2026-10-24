@@ -1990,7 +1990,15 @@ def android_backup(body):
         entry = _android_backup(token)
     if action == 'inspect':
         try:
-            entry['plan'] = frame_android_import.inspect(entry['paths'], discover=not entry['dirs'])
+            paths = entry['paths']
+            bundles = [p for p in paths if Path(p).suffix.lower() in frame_android_import.ARCHIVES]
+            if bundles:
+                if len(paths) != 1:
+                    raise frame_android.FrameError('Choose one complete Android bundle, or loose APK/OBB files together.')
+                folder = tempfile.mkdtemp(prefix=f'{ANDROID_BACKUP_TMP}{os.getpid()}-')
+                entry['dirs'].append(folder)
+                paths = frame_android_import.unpack_bundle(bundles[0], folder)
+            entry['plan'] = frame_android_import.inspect(paths, discover=not entry['dirs'])
         except (frame_android.FrameError, OSError) as error:
             with _android_backups_lock:
                 _android_backups.pop(token, None)
@@ -3477,7 +3485,7 @@ class Handler(BaseHTTPRequestHandler):
         backup = None
         if mode == 'android-backup':
             backup = _android_backup(self.headers.get('X-Android-Backup'))
-            if (not name.lower().endswith(('.apk', '.obb')) or '/' in name or '\\' in name
+            if (not name.lower().endswith(('.apk', '.obb', '.xapk', '.apks', '.apkm')) or '/' in name or '\\' in name
                     or len(backup['paths']) >= 100 or any(Path(p).name == name for p in backup['paths'])):
                 raise Failure('Choose one APK and its game data, with no duplicate filenames.', 400)
         prefix = f'{ANDROID_BACKUP_TMP}{os.getpid()}-' if backup is not None else 'frame-ui-'

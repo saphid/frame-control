@@ -1,6 +1,11 @@
 """Local APK/OBB backups: inspect as a unit, verify the target, and finish setup."""
 import sandbox  # noqa: F401
 import io
+import json
+import shutil
+import stat
+import subprocess
+import zipfile
 from pathlib import Path
 import sys
 import tempfile
@@ -171,6 +176,153 @@ class StagingTests(unittest.TestCase):
         (pc / 'game.exe').write_bytes(b'program')
         self.assertEqual(server.android_backup({'action': 'inspect', 'paths': [str(pc)], 'probe': True}),
                          {'android': False})
+
+
+class BundleTests(unittest.TestCase):
+    setUp = BackupTests.setUp
+    tearDown = StagingTests.tearDown
+    def bundle(self, entries=None, suffix='.xapk'):
+        path = self.root / ('backup' + suffix)
+        path.write_bytes(apk(entries if entries is not None else {
+            'backup/game.apk': self.apk.read_bytes(),
+            f'backup/Android/obb/{PKG}/{self.obb[0].name}': b'game data',
+            'backup/manifest.json': b'{"package_name":"untrusted.metadata"}',
+        }))
+        return path
+
+    def test_all_explicit_extensions_use_current_preview_and_cancel_cleanup(self):
+        for suffix in ('.xapk', '.apks', '.apkm'):
+            with self.subTest(suffix=suffix):
+                source = self.bundle(suffix=suffix)
+                with patch.object(backup.android, 'ssh') as ssh:
+                    read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+                ssh.assert_not_called()
+                self.assertEqual(read['plan']['package'], PKG)
+                self.assertEqual(read['plan']['obb'][0]['name'], self.obb[0].name)
+                folders = list(server._android_backups[read['token']]['dirs'])
+                server.android_backup({'action': 'discard', 'token': read['token']})
+                self.assertTrue(all(not Path(p).exists() for p in folders))
+                self.assertTrue(source.exists())
+
+    def test_browser_upload_bundle_is_staged_and_removed_with_extraction(self):
+        source = self.bundle()
+        token = server.android_backup({'action': 'begin'})['token']
+        class Request:
+            headers = {'X-Filename': source.name, 'X-Mode': 'android-backup',
+                       'X-Android-Backup': token, 'Content-Length': str(source.stat().st_size)}
+            rfile = io.BytesIO(source.read_bytes())
+        server.Handler.upload(Request())
+        read = server.android_backup({'action': 'inspect', 'token': token})
+        self.assertEqual(read['plan']['package'], PKG)
+        self.assertEqual(len(server._android_backups[token]['dirs']), 2)
+        folders = list(server._android_backups[token]['dirs'])
+        server.android_backup({'action': 'discard', 'token': token})
+        self.assertTrue(all(not Path(p).exists() for p in folders))
+
+    def test_reject_layouts_before_any_headset_access_and_cleanup_failed_stage(self):
+        cases = [
+            ({'base.apk': self.apk.read_bytes(), 'split.apk': self.apk.read_bytes()}, 'Split APK'),
+            ({'base.apk': self.apk.read_bytes(), f'Android/data/{PKG}/save': b'private'}, 'restore'),
+            ({'base.apk': self.apk.read_bytes(), 'main.1.org.other.game.obb': b'wrong'}, 'does not belong'),
+            ({'base.apk': self.apk.read_bytes(), '../outside.obb': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), '/outside.obb': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), 'CON.apk': b'bad'}, 'unsafe'),
+            ({'base.apk': self.apk.read_bytes(), 'other.exe': b'bad'}, 'Unsupported'),
+            ({'base.apk': self.apk.read_bytes(), 'BASE.apk': b'bad'}, 'duplicate'),
+            ({'manifest.json': b'{}'}, 'standalone APK'),
+        ]
+        for entries, message in cases:
+            with self.subTest(message=message), patch.object(backup.android, 'ssh') as ssh:
+                source = self.bundle(entries)
+                with self.assertRaisesRegex(server.Failure, message):
+                    server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+                self.assertFalse(server._android_backups)
+                ssh.assert_not_called()
+                self.assertTrue(source.exists())
+
+    def test_links_limits_bad_zip_and_mixed_selection_are_refused(self):
+        source = self.bundle({'base.apk': self.apk.read_bytes()})
+        link = zipfile.ZipInfo('link.apk')
+        link.external_attr = (stat.S_IFLNK | 0o777) << 16
+        with zipfile.ZipFile(source, 'a') as archive:
+            archive.writestr(link, 'somewhere')
+        destination = self.root / 'extract'
+        destination.mkdir()
+        with self.assertRaisesRegex(backup.android.FrameError, 'links'):
+            backup.unpack_bundle(source, destination)
+        self.assertEqual(list(destination.iterdir()), [])
+        source = self.bundle()
+        for limit, value, message in [('MAX_FILES', 1, 'too many'), ('MAX_BYTES', 1, 'size limit')]:
+            with patch.object(backup, limit, value):
+                with self.assertRaisesRegex(backup.android.FrameError, message):
+                    backup.unpack_bundle(source, destination)
+        with patch.object(backup.shutil, 'disk_usage', return_value=type('Disk', (), {'free': 0})()):
+            with self.assertRaisesRegex(backup.android.FrameError, 'staging space'):
+                backup.unpack_bundle(source, destination)
+        with self.assertRaisesRegex(server.Failure, 'one complete'):
+            server.android_backup({'action': 'inspect', 'paths': [str(source), str(self.apk)]})
+        source.write_bytes(b'not a zip')
+        with self.assertRaisesRegex(server.Failure, 'Could not read'):
+            server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        self.assertFalse(server._android_backups)
+
+    def test_manifest_split_and_required_split_are_refused(self):
+        from test_quest import axml
+        for attrs in ({'split': 'config.arm64'}, {'split_required': True},
+                      {'split_required': True, 'resmap': True}):
+            data = axml(PKG, **attrs)
+            if attrs.get('resmap'):
+                # Strip the attribute name, retaining the Android resource ID.
+                data = data.replace('isSplitRequired'.encode('utf-16-le'),
+                                    ('x' * len('isSplitRequired')).encode('utf-16-le'))
+            self.apk.write_bytes(apk({'AndroidManifest.xml': data}))
+            with self.subTest(attrs=attrs):
+                with self.assertRaisesRegex(backup.android.FrameError, 'needs split APKs'):
+                    backup.inspect([str(self.apk)])
+
+    def test_bundle_install_uses_existing_queue_and_cleans_after_failure(self):
+        source = self.bundle()
+        read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        entry = server._android_backups[read['token']]
+        folders = list(entry['dirs'])
+        def job(label, work, **kwargs):
+            return work(lambda *args: None)
+        with patch.object(server, 'ensure_master'), patch.object(server, 'start_job', side_effect=job), \
+                patch.object(backup, 'install', side_effect=backup.android.FrameError('fixture install failure')) as install:
+            with self.assertRaisesRegex(backup.android.FrameError, 'fixture install failure'):
+                server.android_backup({'action': 'install', 'token': read['token']})
+        install.assert_called_once_with(entry['plan'], 'auto', unittest.mock.ANY)
+        self.assertFalse(server._android_backups)
+        self.assertTrue(all(not Path(p).exists() for p in folders))
+        self.assertTrue(source.exists())
+
+    @unittest.skipUnless(shutil.which('node'), 'needs node')
+    def test_actual_send_handler_routes_bundle_to_importer_and_pc_zip_to_titles(self):
+        page = (Path(__file__).resolve().parents[1] / 'ui/index.html').read_text()
+        function = page[page.index('async function sendFilesOne('):page.index('$("androidBackupChoose").onclick')]
+        script = r"""
+const calls = [];
+global.window = {connDevice:'fixture'};
+global.$ = () => ({});
+global.refresh = () => {};
+global.toast = msg => {throw new Error(msg)};
+global.TITLE_EXT = /\.(zip|exe)$/i;
+global.importAndroidFiles = async files => calls.push(['android', files.map(f => f.name)]);
+global.sideload = async file => calls.push(['title', file.name]);
+global.act = () => {throw new Error('unexpected copy')};
+(async () => {
+  for (const name of ['game.xapk', 'game.apks', 'game.apkm', 'pc.zip']) {
+    await sendFilesOne([{name, size:123}], new Set(), 'fixture');
+  }
+  await sendFilesOne([{name:'base.apk',size:123},{name:'split.apk',size:123}], new Set(), 'fixture');
+  process.stdout.write(JSON.stringify(calls));
+})().catch(e => {console.error(e); process.exitCode = 1});
+"""
+        result = subprocess.run(['node', '-e', function + script], capture_output=True, text=True, check=True)
+        self.assertEqual(json.loads(result.stdout), [
+            ['android', ['game.xapk']], ['android', ['game.apks']],
+            ['android', ['game.apkm']], ['title', 'pc.zip'],
+            ['android', ['base.apk', 'split.apk']]])
 
 
 if __name__ == '__main__':
