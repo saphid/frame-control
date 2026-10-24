@@ -10,6 +10,7 @@ import signal
 import socket
 import subprocess
 import sys
+import threading
 
 
 PACKET = 188
@@ -52,6 +53,20 @@ def relay(source, destination):
     return total
 
 
+def watch_control(stream, proc):
+    """A desktop app closes its pipe to stop SSH, including on Windows.
+
+    Windows TerminateProcess does not run Python's finally block. The pipe also
+    closes if the app crashes, so the SSH connection is closed in either case.
+    """
+    try:
+        stream.read(1)
+    except OSError:
+        pass
+    if proc.poll() is None:
+        proc.terminate()
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--frame', default='frame', help='SSH host or alias (default: frame)')
@@ -59,6 +74,7 @@ def main(argv=None):
     parser.add_argument('--height', type=int, choices=(720, 1080), default=720)
     parser.add_argument('--fps', type=int, choices=(30, 60), default=30)
     parser.add_argument('--no-audio', action='store_true', help='video only when the Frame audio monitor is unavailable')
+    parser.add_argument('--control-stdin', action='store_true', help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if not 1024 <= args.port <= 65535:
         parser.error('port must be between 1024 and 65535')
@@ -71,6 +87,8 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
         proc = subprocess.Popen(ssh, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+        if args.control_stdin:
+            threading.Thread(target=watch_control, args=(sys.stdin.buffer, proc), daemon=True).start()
         try:
             amount = relay(proc.stdout, _Sender(udp, target))
             code = proc.wait(timeout=10)

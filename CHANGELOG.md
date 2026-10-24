@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Enable the in-app OBS source Start/Stop control on Windows. A control pipe
+  lets the Python relay close its SSH child on Stop, app quit or parent exit;
+  add a short [Discord guide](docs/streaming-to-discord.md).
+
 - Add a read-only wired connection doctor for a PC using the Frame's observed
   USB-C network: show the local route, SSH port and pinned-key login result
   without changing IP, host keys or headset settings.

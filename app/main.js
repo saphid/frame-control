@@ -304,13 +304,13 @@ ipcMain.handle("update:get", (e) => fromUi(e) ? publicUpdate() : null);
 ipcMain.handle("update:check", (e) => fromUi(e) ? checkForUpdate({ manual: true }).then(publicUpdate) : null);
 ipcMain.handle("update:install", (e) => { if (fromUi(e)) installUpdate(); });
 
-// The OBS source is local to this computer. The Python relay owns its SSH/ffmpeg
-// process and cleans it up on SIGTERM. Keep one relay per app, and stop it when
-// the selected headset changes or the app quits.
+// The OBS source is local to this computer. Closing the Python relay's control
+// pipe lets it stop SSH on every platform, including Windows where SIGTERM
+// terminates Python without running its cleanup block.
 const OBS_SCRIPT = path.join(SCRIPTS, "obs-headset-source.py");
 let obsChild = null;
 let obsState = { state: "idle", alias: "", error: "" };
-function publicObs() { return { ...obsState, supported: !IS_WIN }; }
+function publicObs() { return { ...obsState, supported: true }; }
 function setObs(state, alias = "", error = "") {
   obsState = { state, alias, error };
   if (win && !win.isDestroyed()) win.webContents.send("obs:state", publicObs());
@@ -319,13 +319,12 @@ function setObs(state, alias = "", error = "") {
 function stopObs() {
   if (!obsChild) return publicObs();
   setObs("stopping", obsState.alias);
-  obsChild.kill("SIGTERM");
+  if (obsChild.stdin && !obsChild.stdin.writableEnded) obsChild.stdin.end();
   return publicObs();
 }
 ipcMain.handle("obs:status", (e) => fromUi(e) ? publicObs() : null);
 ipcMain.handle("obs:start", async (e) => {
   if (!fromUi(e)) return null;
-  if (IS_WIN) throw new Error("The OBS source currently supports Linux and macOS computers.");
   if (obsChild) return publicObs();
   const alias = activeAlias();
   if (!ALIAS_RE.test(alias)) throw new Error("Select a valid headset first.");
@@ -336,8 +335,8 @@ ipcMain.handle("obs:start", async (e) => {
   // A concurrent click or a headset switch may have happened while finding Python.
   if (obsChild) return publicObs();
   if (alias !== activeAlias()) throw new Error("The selected headset changed; try again.");
-  const child = spawn(executable, [...PY_FLAGS, OBS_SCRIPT, "--frame", alias],
-                      { env, stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
+  const child = spawn(executable, [...PY_FLAGS, OBS_SCRIPT, "--frame", alias, "--control-stdin"],
+                      { env, stdio: ["pipe", "ignore", "pipe"], windowsHide: true });
   obsChild = child;
   setObs("starting", alias);
   let output = "";
@@ -699,6 +698,34 @@ if (!app.requestSingleInstanceLock()) {
   });
   app.on("activate", () => { if (!win) createWindow(); });
   app.on("window-all-closed", () => app.quit());
-  app.on("before-quit", () => { quitting = true; stopObs(); stopServer(); });
+  let obsQuitWaiting = false;
+  let obsQuitReady = false;
+  app.on("before-quit", (event) => {
+    quitting = true;
+    stopServer();
+    if (!obsChild || obsQuitReady) return;
+    event.preventDefault();
+    if (obsQuitWaiting) return;
+    obsQuitWaiting = true;
+    const child = obsChild;
+    let timer;
+    child.once("close", () => {
+      clearTimeout(timer);
+      obsQuitReady = true;
+      app.quit();
+    });
+    stopObs();
+    timer = setTimeout(() => {
+      if (child.exitCode === null) {
+        if (IS_WIN) {
+          // Only the helper and its SSH child: never enumerate unrelated SSH jobs.
+          spawn("taskkill", ["/PID", String(child.pid), "/T", "/F"],
+                { stdio: "ignore", windowsHide: true, detached: true }).unref();
+        } else child.kill("SIGKILL");
+      }
+      obsQuitReady = true;
+      app.quit();
+    }, 8000);
+  });
   process.on("exit", () => { stopObs(); stopServer(); });
 }
