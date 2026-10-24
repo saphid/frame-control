@@ -4388,7 +4388,7 @@ function renderCats() {
   $("storeCats").querySelectorAll("[data-cat]").forEach(b => b.setAttribute("aria-pressed", String(b.dataset.cat === sourceState.category)));
   const [, label, eyebrow, blurb] = storeCat(sourceState.category);
   $("storeHeading").hidden = !sourceState.category;
-  $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Apps & VR")}</h1><p>${esc(blurb)}</p>`;
+  $("storeHeading").innerHTML = `<div class="store-eyebrow">${esc(sourceState.category ? eyebrow : "Android apps for your Frame")}</div><h1>${esc(sourceState.category ? label : "Apps & VR")}</h1><p>${esc(blurb)}</p>${sourceState.category === "emulators" ? '<p><a href="https://github.com/saphid/frame-control/blob/main/docs/emulators.md" target="_blank" rel="noopener noreferrer">Set up an emulator and your own games →</a></p>' : ""}`;
 }
 function renderStore() {
   const apps=sourceState.apps, q=$("sourceQ").value.trim(), browsing=!q && !sourceState.category && !sourceState.installable && !sourceState.source;
