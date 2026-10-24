@@ -4,6 +4,10 @@
 Run on the target architecture after installing GStreamer development packages.
 No GStreamer executable or desktop streaming application is shipped or invoked.
 Linux libc, display/GPU drivers and the portal service remain platform pieces.
+
+x264 is GPL, so the bundle the Windows installer ships leaves it out: Windows
+encodes with Media Foundation. --with-x264 adds it for CI's headless protocol
+tests, which have no GPU or desktop to encode with.
 """
 import argparse
 import json
@@ -21,7 +25,7 @@ def output(*args):
     return subprocess.check_output(args, text=True).strip()
 
 
-def build(destination):
+def build(destination, with_x264=False):
     win = sys.platform == 'win32'
     destination.mkdir(parents=True, exist_ok=True)
     modules = ['gstreamer-1.0', 'gstreamer-app-1.0', 'gstreamer-video-1.0']
@@ -39,7 +43,9 @@ def build(destination):
     plugins_out, libs_out = destination / 'lib' / 'gstreamer-1.0', destination / ('bin' if win else 'lib')
     plugins_out.mkdir(parents=True, exist_ok=True)
     libs_out.mkdir(parents=True, exist_ok=True)
-    names = ['coreelements', 'videotestsrc', 'videoconvertscale', 'app', 'jpeg', 'videoparsersbad', 'x264']
+    names = ['coreelements', 'videotestsrc', 'videoconvertscale', 'app', 'jpeg', 'videoparsersbad']
+    if with_x264:
+        names.append('x264')
     names += ['d3d11', 'mediafoundation'] if win else ['pipewire', 'va']
     pending = [lib]
     for name in names:
@@ -108,11 +114,13 @@ def build(destination):
         for path in Path('/usr/share/doc').glob('*/copyright'):
             shutil.copy2(path, licenses / (path.parent.name + '.copyright'))
     (destination / 'libraries.json').write_text(json.dumps(dict(gstreamer=output('pkg-config', '--modversion', 'gstreamer-1.0'),
-        libraries=sorted(copied), packages=packages), indent=2))
+        plugins=names, libraries=sorted(copied), packages=packages), indent=2))
     print(lib)
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--out', type=Path, default=ROOT / 'bundle')
-    build(parser.parse_args().out.resolve())
+    parser.add_argument('--with-x264', action='store_true', help='add the GPL x264 encoder (CI tests only, never shipped)')
+    args = parser.parse_args()
+    build(args.out.resolve(), args.with_x264)

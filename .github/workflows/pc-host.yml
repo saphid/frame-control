@@ -1,7 +1,13 @@
 name: PC host libraries
+# PC in the headset (Experimental). The Windows job builds the native adapter
+# and runs the real-encoder protocol tests; the installer's own bundle is
+# tested in release.yml. The Linux adapter from PR #38 isn't shipped or offered
+# in the app, but shares capture.c and controller.c, so it's still built here.
+# These builds add the GPL x264 encoder for headless tests only: they're never
+# uploaded or shipped.
 on:
   pull_request:
-    paths: ["desktop/**", "ui/**", "tests/**", "mac/frame-mac-view/**", "scripts/macview-bench.py", ".github/workflows/pc-host.yml"]
+    paths: ["desktop/**", "ui/**", "tests/**", "scripts/macview-bench.py", ".github/workflows/pc-host.yml"]
   workflow_dispatch:
 jobs:
   linux:
@@ -16,15 +22,12 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libglib2.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire libpipewire-0.3-modules libspa-0.2-modules
-          python3 desktop/build.py
+          python3 desktop/build.py --with-x264
       - name: Tests (real x264, fake capture consent/input)
         env:
           FRAME_PC_REQUIRE_NATIVE: "1"
+          FRAME_PC_REQUIRE_X264: "1"
         run: python3 -m unittest discover -s tests -p 'test_pc*.py' -v
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pc-host-${{ matrix.os }}
-          path: desktop/bundle
   windows:
     runs-on: windows-latest
     steps:
@@ -45,9 +48,5 @@ jobs:
       - name: Native build and tests (x264; WGC and MF need a desktop/GPU)
         shell: msys2 {0}
         run: |
-          python desktop/build.py
-          FRAME_PC_REQUIRE_NATIVE=1 python -m unittest discover -s tests -p 'test_pc*.py' -v
-      - uses: actions/upload-artifact@v4
-        with:
-          name: pc-host-windows
-          path: desktop/bundle
+          python desktop/build.py --with-x264
+          FRAME_PC_REQUIRE_NATIVE=1 FRAME_PC_REQUIRE_X264=1 python -m unittest discover -s tests -p 'test_pc*.py' -v
