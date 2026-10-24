@@ -12,18 +12,21 @@ with no sign-in files or keys in the archives. Restoring one game's saves on top
 of identical files wrote nothing and left nothing behind. The session check
 reported Game Mode, so **Return to Game Mode** changed nothing. Not tested on a
 headset: a restore after a real factory reset, a restore that replaces files,
-Android data restore, and the switch out of a real Desktop Mode session. Unit
-tests and the fake Frame cover those (see [Verification](#verification)).
+Android data restore. Unit tests and the fake Frame cover those (see
+[Verification](#verification)).
 On 2026-10-24, the real-device reproduction in [issue #142](https://github.com/saphid/frame-control/issues/142)
 confirmed full Plasma Desktop Mode on the same build: the Plasma session target
 was active and the Game Mode target inactive. Desktop Mode also ran gamescope
 for `steamvr-plasma.service`, so the old process check incorrectly reported
 Game Mode. SteamOS's `steamosctl switch-to-game-mode` restored Game Mode and
 reversed the target states; battery stayed at 99%, and the rollback timer and
-shared lock were cleaned up. This is evidence for SteamOS's command, not a
-verified Frame Control Return button test. The corrected button path still
-needs a real-device retest after review and CI, under the shared lock with a
-timed rollback.
+shared lock were cleaned up. After #143 passed CI, the corrected code was
+tested in another full Plasma session under a three-minute rollback timer.
+`ui/frame_backup.py session` reported Desktop Mode despite gamescope, and
+`ui/frame_backup.py game-mode` invoked the same guarded Return function used by
+the button. Game Mode became active and a second call made no switch. Battery
+remained at 99%; the timer and lock were removed. The literal desktop button
+was not clicked in this test, and older SteamOS builds remain fixture-tested.
 
 ## Back up
 
