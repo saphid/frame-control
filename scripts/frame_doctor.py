@@ -4,6 +4,7 @@ Only fixed summaries leave the probe: no raw journals, addresses, account IDs,
 process arguments, environment, key material or HTTP response bodies.
 """
 import argparse
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -215,16 +216,100 @@ def report(data):
     return int(any(c[0] != 'OK' for c in checks))
 
 
+def valid_data(data):
+    """Validate before saving, comparing or deriving any recommendation."""
+    if (not isinstance(data, dict) or set(data) != {'guard', 'checks'}
+            or data.get('guard') not in ('stable', 'loop', 'risk', 'unknown')):
+        return False
+    checks = data.get('checks')
+    if data['guard'] != 'stable':
+        return checks == []
+    return (isinstance(checks, list) and len(checks) == len(SECTIONS)
+            and all(isinstance(c, list) and len(c) == 2
+                    and c[0] in ('OK', 'WARN', 'BROKEN', 'UNKNOWN')
+                    and isinstance(c[1], str) and c[1] in MESSAGES for c in checks))
+
+
+def repair_plan(data):
+    print('Repair plan (READ-ONLY): no commands executed; no automatic repair is available.')
+    if data['guard'] != 'stable':
+        print('BLOCKED: Restart safety is unverified or unsafe. Needs your hands: review the runbook health-check recovery with the headset user; do not restart services.')
+        return
+    # Each action needs the exact section, severity AND recognized evidence.
+    actions = {
+        (1, 'WARN', 'Wi-Fi is unavailable or disconnected; check Steam Settings > Internet. Never reload ath12k.'):
+            'Needs your hands: check Steam Settings > Internet. Do not reload ath12k.',
+        (2, 'WARN', 'Display timeouts observed; follow display recovery before touching Steam.'):
+            'Needs your hands: inspect the display in-headset and review display recovery before any Steam action.',
+        (3, 'BROKEN', 'Less than 16 MiB free; review storage in Frame Control before installing.'):
+            'Needs your hands: review Game storage and use Steam storage management after choosing what to keep; no files are deleted by doctor.',
+        (3, 'WARN', 'Less than 256 MiB free; review storage before large installs.'):
+            'Needs your hands: review Game storage before installing; choose any storage changes yourself.',
+        (3, 'WARN', 'Steam install marker is missing; do not restart Steam for diagnosis. Consult the runbook.'):
+            'Needs your hands: inspect Steam installation/extraction locally with the runbook. A missing marker does not authorize repair or restart.',
+        (4, 'WARN', 'Keep-awake is active; leave it with its owner.'):
+            'Leave keep-awake with its owner; do not take ownership or change idle settings.',
+    }
+    for i, (status, message) in enumerate(data['checks']):
+        if status == 'OK':
+            continue
+        action = actions.get((i, status, message))
+        if action is None:
+            action = ('Collect missing evidence locally; no repair is justified.' if status == 'UNKNOWN'
+                      else 'Review this signal locally with the runbook; it does not establish a safe automatic fix.')
+        print(f'PLAN {i + 1}. {SECTIONS[i]}: {action}')
+
+
+def compare(before, after):
+    print('Before/after diagnostics: observations only; changes do not prove repair or causation.')
+    print('Restart safety: ' + before['guard'] + ' -> ' + after['guard'])
+    if before['guard'] != 'stable' or after['guard'] != 'stable':
+        print('Comparison blocked: deeper checks were skipped in at least one sample; no improvement claimed.')
+        return
+    for i, label in enumerate(SECTIONS):
+        a, b = before['checks'][i], after['checks'][i]
+        detail = 'unchanged' if a == b else 'evidence changed'
+        print(f'{i + 1}. {label}: {a[0]} -> {b[0]} ({detail})')
+        if a != b:
+            print('  Before evidence: ' + a[1])
+            print('  After evidence: ' + b[1])
+
+
+def load_baseline(path):
+    # Local reports are untrusted too; bound input and never echo file contents.
+    with open(path, 'rb') as stream:
+        raw = stream.read(65537)
+    if len(raw) > 65536:
+        raise ValueError()
+    saved = json.loads(raw)
+    if (not isinstance(saved, dict) or saved.get('version') != 1
+            or not isinstance(saved.get('target'), str)
+            or not re.fullmatch('[a-f0-9]{64}', saved['target'])
+            or not valid_data(saved.get('diagnostics'))):
+        raise ValueError()
+    return saved
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Read-only Frame setup diagnostics. Never pairs, repairs or asks for a password.')
     parser.add_argument('--alias', default='frame', help='Existing trusted SSH alias (default: frame)')
     parser.add_argument('--lan', default='frame.local', help='LAN fallback host/IP')
     parser.add_argument('--usb', default='10.86.200.233', help='USB fallback IP; use only with the intended headset connected')
+    parser.add_argument('--plan', action='store_true', help='Print a read-only repair plan from recognized evidence')
+    parser.add_argument('--save-report', metavar='FILE', help='Create a local JSON baseline (never overwrite an existing file)')
+    parser.add_argument('--compare-before', metavar='FILE', help='Compare a saved baseline with this fresh read-only run')
     args = parser.parse_args(argv)
+    baseline = None
+    if args.compare_before:
+        try:
+            baseline = load_baseline(args.compare_before)
+        except (OSError, ValueError, TypeError, UnicodeError, RecursionError):
+            print('UNKNOWN Baseline: Cannot read a valid doctor report; no comparison performed.')
+            return 2
     for value in (args.alias, args.lan, args.usb):
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,252}', value):
             parser.error('Use a plain alias, hostname or IP address.')
-    print('Frame doctor: read-only; no passwords, pairing, repairs or raw logs. No report is saved.')
+    print('Frame doctor: read-only; no passwords, pairing, repairs or raw logs. Reports are saved only with --save-report.')
     if not shutil.which('ssh'):
         print('BROKEN Setup: Install an OpenSSH client, then run Set Up Connection.')
         return 2
@@ -234,19 +319,42 @@ def main(argv=None):
         return 2
     settings = dict(line.split(' ', 1) for line in config.stdout.splitlines() if ' ' in line)
     identity = settings.get('hostkeyalias') or settings.get('hostname', args.alias)
+    # Bind reports to the configured logical SSH target, across LAN/USB fallback.
+    # This is configuration continuity, not proof of physical headset identity.
+    target = hashlib.sha256(json.dumps([args.alias, identity, settings.get('hostname'),
+                                      settings.get('user'), settings.get('port'), args.lan, args.usb]).encode()).hexdigest()
+    if baseline is not None and baseline['target'] != target:
+        print('UNKNOWN Baseline: SSH target configuration differs; comparison refused.')
+        return 2
     source = Path(__file__).read_text()
     for label, host in (('configured alias (Tailscale if configured)', None), ('LAN', args.lan), ('USB-C', args.usb)):
         result = run(ssh_args(args.alias, host, identity) + ['python3 -B - --probe'], timeout=90, input=source)
         if result is not None and result.returncode == 0:
             try:
                 data = json.loads(result.stdout)
-                if not isinstance(data, dict):
+                if not valid_data(data):
                     raise ValueError()
-            except ValueError:
+            except (ValueError, RecursionError):
                 print('UNKNOWN Probe: Invalid response; check Python 3 availability on the headset. No raw output displayed.')
                 return 1
             print('OK Connection: ' + label + '; verified SSH identity and key login.')
-            return report(data)
+            code = report(data)
+            if args.plan:
+                repair_plan(data)
+            if baseline is not None:
+                compare(baseline['diagnostics'], data)
+            if args.save_report:
+                try:
+                    # Exclusive create prevents clobbering a baseline or following a symlink.
+                    fd = os.open(args.save_report, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+                    with os.fdopen(fd, 'w') as stream:
+                        json.dump({'version': 1, 'target': target, 'diagnostics': data}, stream)
+                        stream.write('\n')
+                    print('OK Report: Local baseline created; review it before sharing.')
+                except OSError:
+                    print('UNKNOWN Report: Could not create local baseline; existing files are never overwritten.')
+                    return 2
+            return code
         if result is not None and result.returncode != 255:
             print('UNKNOWN Probe: SSH connected but diagnostics failed; check Python 3 on the headset.')
             return 1
@@ -268,7 +376,18 @@ def main(argv=None):
 def messages():
     import ast
     tree = ast.parse(Path(__file__).read_text())
-    return {node.value for node in ast.walk(tree) if isinstance(node, ast.Constant) and isinstance(node.value, str)}
+    allowed = set()
+    for function in tree.body:
+        if not isinstance(function, ast.FunctionDef) or function.name not in ('probe', 'storage', 'signal_check'):
+            continue
+        for node in ast.walk(function):
+            if (isinstance(node, ast.List) and len(node.elts) == 2
+                    and all(isinstance(e, ast.Constant) and isinstance(e.value, str) for e in node.elts)
+                    and node.elts[0].value in ('OK', 'WARN', 'BROKEN', 'UNKNOWN')):
+                allowed.add(node.elts[1].value)
+            if isinstance(node, ast.Call) and isinstance(node.func, ast.Name) and node.func.id == 'signal_check':
+                allowed.update(arg.value for arg in node.args[2:4] if isinstance(arg, ast.Constant))
+    return allowed
 
 
 if __name__ == '__main__':
