@@ -7,5 +7,15 @@ compat-db/.lakebed/
 tests/smoke/results/
 mac/bin/
 
+# Shared desktop streaming controller build products
+desktop/controller.dll
+desktop/controller.dylib
+desktop/controller.so
+desktop/*.obj
+desktop/*.lib
+desktop/*.exp
+desktop/bundle/
+app/build/desktop/
+
 # Downloaded at build time (frame/kdeconnect/fetch.py, app/build/fetch-deps.js)
 frame/kdeconnect/packages/
