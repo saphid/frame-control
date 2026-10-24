@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Record packaged v0.4.17 Desktop Capture succeeding on a mapped nested KDE
+  compositor on a real Frame with SteamOS 0.5.6. Headset overlay visibility was
+  not established; this is evidence, not a new fix or resolution of issue #73.
+
 - Distinguish an unreadable gamescope panel list from a confirmed empty list in
   Desktop Capture and Control (issue #73). Failed discovery now asks users to
   check SteamVR and report the exact message and SteamOS version, rather than
