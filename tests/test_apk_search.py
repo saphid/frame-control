@@ -1,3 +1,4 @@
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import http.client
 import json
 from pathlib import Path
@@ -26,6 +27,9 @@ def fake(source_id='one', fn=None):
 
 class SettingsTest(unittest.TestCase):
     def setUp(self):
+        p = patch.object(search, 'compat_reports', None)
+        p.start()
+        self.addCleanup(p.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         p = patch.object(search, 'settings_path', return_value=Path(self.tmp.name) / 'enabled.json')
@@ -121,7 +125,7 @@ class SearchTests(SettingsTest):
                     break
                 time.sleep(.01)
             self.assertTrue(arrived[1]['event'].wait(2))
-        self.assertEqual(arrived[1]['query'], ('second', 50))
+        self.assertEqual(arrived[1]['query'][:2], ('second', 50))
 
     def test_set_enabled_does_not_hold_search_lock_in_source(self):
         free = []
@@ -324,7 +328,7 @@ class EndpointTests(SettingsTest):
             mod.add_repo.side_effect = SourceError('repository fingerprint mismatch')
             job = self.wait(self.request('POST', '/api/sources', {'action': 'add', 'url': link})[1]['job'])
             self.assertEqual(job['error'], 'repository fingerprint mismatch')  # no "SourceError:" prefix
-            for url in ('http://repo.example/repo', 'fdroidrepo://repo.example/repo', 'https://u@repo.example/'):
+            for url in ('http://repo.example/repo', 'fdroidrepo://repo.example/repo', 'https://repo.example:x/'):
                 self.assertEqual(self.request('POST', '/api/sources', {'action': 'add', 'url': url})[0], 400)
             self.assertEqual(self.request('POST', '/api/sources', {'action': 'remove', 'source': 'fdroid'})[0], 200)
             mod.remove_repo.assert_called_once_with(source_id='fdroid')

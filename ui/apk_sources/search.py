@@ -2,7 +2,7 @@
 
 Optional store metadata: images {icon, banner, screenshots}, developer,
 description, popularity, open_source, requires_meta_services, frame_tested.
-Only an explicit frame_tested=True produces a working-on-Frame verdict.
+An explicit frame_tested=True or a saved working report produces a working verdict.
 """
 import importlib
 import inspect
@@ -15,7 +15,7 @@ import time
 import unicodedata
 
 import frame_host
-from apk_sources import SourceError, SourceLimited
+from apk_sources import SourceError, SourceLimited, _categories as categories
 
 _lock = threading.RLock()
 _running = {}
@@ -23,6 +23,47 @@ _pending = {}  # source id -> newest query waiting for the running one
 _game_data = {}  # package -> downloaded OBB paths waiting for "Add game data"
 _status = {}
 TIMEOUT = 12
+BROWSE_LIMIT = 300  # apps per source when browsing without a query, before grouping
+compat_reports = None  # optional memory-only snapshot hook; enabled at server start, not import
+
+
+class ReportCache:
+    """Stale-while-refresh reports. Never hold the snapshot lock while loading.
+
+    The loader may block on disk, credentials or the database. Only its daemon
+    worker calls it; readers keep the last complete snapshot, even after errors.
+    """
+    def __init__(self, loader, report_verdict, ttl=60):
+        self.loader, self.report_verdict, self.ttl = loader, report_verdict, ttl
+        self._lock = threading.Lock()
+        self._snapshot, self._at, self._running = {}, None, False
+
+    def read(self):
+        with self._lock:
+            snapshot = self._snapshot
+            if not self._running and (self._at is None or time.monotonic() - self._at >= self.ttl):
+                self._running = True
+                threading.Thread(target=self._refresh, daemon=True).start()
+            return snapshot
+
+    def _refresh(self):
+        try:
+            by = {}
+            for report in self.loader():
+                if report.get('package'):
+                    by.setdefault(report['package'], []).append(report)
+            snapshot = {pkg: v for pkg, rows in by.items() if (v := self.report_verdict(rows))}
+            with self._lock:
+                self._snapshot = snapshot
+        except Exception:
+            pass  # optional evidence must never break search or discard a good snapshot
+        finally:
+            with self._lock:
+                self._at, self._running = time.monotonic(), False
+
+
+def _reports():
+    return compat_reports() if compat_reports else {}
 
 
 def modules():
@@ -113,6 +154,14 @@ def manage_repo(action, **kwargs):
     return getattr(module, action)(**kwargs)
 
 
+def set_token(source_id, token):
+    """Save (token) or remove (None) a source's access token; status is in sources()."""
+    module, _ = resolve(source_id)
+    if not hasattr(module, 'set_token'):
+        raise SourceError('This source does not use an access token')
+    return module.set_token(token) if token is not None else module.clear_token()
+
+
 def normalise(name):
     return ' '.join(re.findall(r'\w+', unicodedata.normalize('NFKC', name or '').casefold()))
 
@@ -140,7 +189,7 @@ def fit(entry):
             'reasons': reasons}
 
 
-def verdict(entry):
+def verdict(entry, report=None):
     compatibility = fit(entry)
     hints = ' '.join(str(entry.get(k) or '') for k in ('engine', 'vr_engine', 'vr_hints', 'vr_issues')).lower()
     if entry.get('requires_meta_services') is True:
@@ -151,6 +200,12 @@ def verdict(entry):
         return {'label': "This version isn't made for the Frame", 'tone': 'blocked'}
     if 'vrapi' in hints:
         return {'label': "Made for older Quest headsets; won't run on the Frame", 'tone': 'blocked'}
+    if report:
+        kind, _ = report
+        return {'label': {'works': 'Reported working on the Frame',
+                          'maybe': 'Reported issues on the Frame',
+                          'no': 'Reported not working on the Frame'}[kind],
+                'tone': {'works': 'works', 'maybe': 'issues', 'no': 'warning'}[kind]}
     if entry.get('frame_tested') is True:
         return {'label': 'Works on the Frame', 'tone': 'works'}
     if compatibility['installable'] is True:
@@ -158,9 +213,14 @@ def verdict(entry):
     return {'label': 'Not yet checked on the Frame', 'tone': 'unknown'}
 
 
-def decorate(entry):
+def decorate(entry, shots=12, reports=None):
+    """shots: screenshots to offer; a listing card shows three, the detail page all of them."""
     from apk_sources import _images
-    return dict(entry, fit=fit(entry), verdict=verdict(entry), artwork=_images.artwork(entry))
+    report = (reports if reports is not None else _reports()).get(entry.get('package'))
+    evidence = {'verdict': report[0], 'lines': list(report[1])} if report else None
+    return dict(entry, fit=fit(entry), verdict=verdict(entry, report), compat_report=evidence,
+                artwork=_images.artwork(entry, shots),
+                **categories.classify(entry))
 
 
 def details(source_id, entry_id):
@@ -178,10 +238,13 @@ def offer_rank(entry):
             entry.get('trust') == 'official')
 
 
-def group(entries, query='', vr=None, installable=False):
+def group(entries, query='', vr=None, installable=False, category=None, phone=False):
     groups = {}
+    reports = _reports()  # one complete snapshot for every offer in this response
     for entry in entries:
-        entry = decorate(entry)
+        entry = decorate(entry, shots=3, reports=reports)
+        if not categories.matches(entry, category, phone):
+            continue
         if vr is not None and (entry.get('vr') is True) != vr:  # unknown counts as flat
             continue
         if installable and entry['fit']['installable'] is not True:
@@ -195,7 +258,7 @@ def group(entries, query='', vr=None, installable=False):
         offers.sort(key=offer_rank, reverse=True)
         best = offers[0]
         result.append({'name': best.get('name'), 'package': best.get('package'),
-                       'summary': best.get('summary'), 'offers': offers})
+                       'summary': best.get('summary'), 'category': best.get('category'), 'offers': offers})
     q = normalise(query)
 
     def browse(a):  # a headset store: VR first, then apps with artwork, newest first
@@ -215,10 +278,10 @@ def group(entries, query='', vr=None, installable=False):
     return result
 
 
-def _launch(module, source, query, limit):
+def _launch(module, source, query, limit, category=None, phone=False):
     """One search per source at a time; the newest different query runs next."""
     key = source['id']
-    task = {'event': threading.Event(), 'query': (query, limit), 'started': time.monotonic(),
+    task = {'event': threading.Event(), 'query': (query, limit, category or None, bool(phone)), 'started': time.monotonic(),
             'job': (module, source)}
     with _lock:
         old = _running.get(key)
@@ -237,13 +300,17 @@ def _launch(module, source, query, limit):
 
 def _start(key, task):
     module, source = task['job']
-    query, limit = task['query']
+    query, limit, category, phone = task['query']
+    kwargs = {}
+    if (category or not phone) and 'keep' in inspect.signature(module.search).parameters:
+        # Large sources filter before their limit, so a category browse isn't cut to the first few hundred.
+        kwargs['keep'] = lambda e: categories.matches(dict(e, **categories.classify(e)), category, phone)
 
     def run():
         queued = None
         try:
             task['entries'] = [dict(e, source=key, source_name=source['name'], trust=source.get('trust'))
-                               for e in module.search(source, query, limit=limit) if e.get('free') is True]
+                               for e in module.search(source, query, limit=limit, **kwargs) if e.get('free') is True]
             task['stale'] = bool(getattr(module, 'stale', lambda s: False)(source))
         except Exception as e:
             task['error'] = str(e)
@@ -259,14 +326,20 @@ def _start(key, task):
     threading.Thread(target=run, daemon=True).start()
 
 
-def search(query='', vr=None, source=None, installable=False, timeout=TIMEOUT, limit=50):
+def search(query='', vr=None, source=None, installable=False, timeout=TIMEOUT, limit=50, category=None, phone=False):
     items, errors = registry()
     if source and source not in [s['id'] for _, s in items]:
         raise SourceError('Unknown source')
+    if category and category not in categories.IDS:
+        raise SourceError('Unknown category')
+    if not query.strip():
+        limit = max(limit, BROWSE_LIMIT)
+    else:
+        phone = True  # the phone-only guess hides apps from browsing, never from a search for them
     chosen = [(m, s) for m, s in items if s['enabled'] and (not source or s['id'] == source)]
     # Page-only sources (SideQuest) can't be searched; offer a link to browse them instead.
     elsewhere = [{'name': s['name'], 'url': s['url']} for m, s in chosen if s.get('page_only')]
-    tasks = [(s, _launch(m, s, query, limit)) for m, s in chosen if not s.get('page_only')]
+    tasks = [(s, _launch(m, s, query, limit, category, phone)) for m, s in chosen if not s.get('page_only')]
     entries, statuses = [], list(errors)
     for s, task in tasks:
         status = {'id': s['id'], 'name': s['name']}
@@ -281,17 +354,47 @@ def search(query='', vr=None, source=None, installable=False, timeout=TIMEOUT, l
         statuses.append(status)
         with _lock:
             _status[s['id']] = {k: v for k, v in status.items() if k not in ('id', 'name')}
-    return {'apps': group(entries, query, vr, installable), 'sources': statuses, 'elsewhere': elsewhere}
+    return {'apps': group(entries, query, vr, installable, category, phone), 'sources': statuses, 'elsewhere': elsewhere,
+            'categories': [{'id': c, 'label': label} for c, label in categories.CATEGORIES]}
 
 
 def warm():
     """Start every enabled source's index download in the background (server start, new repo)."""
+    _reports()  # warm independently of potentially slow source indexes
     from apk_sources import _web
     _web.prune()
     items, _ = registry()
     for m, s in items:
         if s['enabled'] and not s.get('page_only'):
-            _launch(m, s, '', 50)  # same as the first browse, so that search reuses it
+            _launch(m, s, '', BROWSE_LIMIT)  # same as the first browse, so that search reuses it
+
+
+def artwork_for(apps):
+    """Store artwork for installed apps ({'package', 'label'} each), from saved indexes only:
+    by package where a source has one, else by name (curated GitHub apps). {package: artwork}."""
+    from apk_sources import _images
+    items, _ = registry()
+    wanted = {a['package']: normalise(a.get('label')) for a in apps if a.get('package')}
+    found = {}
+    for module, source in items:
+        if not source['enabled'] or source.get('page_only'):
+            continue
+        try:
+            if hasattr(module, 'lookup'):
+                hits = module.lookup(source, [p for p in wanted if p not in found])
+            elif module.KIND == 'github':  # a small local list; its entries have names, not packages
+                names = {n: p for p, n in wanted.items() if n and p not in found}
+                hits = {names[normalise(e['name'])]: e for e in module.search(source, '', limit=100)
+                        if normalise(e.get('name')) in names}
+            else:
+                continue
+        except (SourceError, OSError, ValueError, KeyError, TypeError):
+            continue
+        for package, entry in hits.items():
+            art = _images.artwork(entry)
+            if art['icon'] or art['banner'] or art['screenshots']:
+                found.setdefault(package, art)
+    return found
 
 
 def install(source_id, entry_id, version_code=None, progress=None):

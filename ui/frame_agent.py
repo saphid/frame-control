@@ -9,6 +9,8 @@ import subprocess
 import threading
 import time
 
+TMP_PREFIX = 'frame-agent-'  # then the server's PID, so server.sweep_tmp can clear a stopped run's
+
 
 class Approvals:
     def __init__(self):
@@ -88,6 +90,13 @@ def validate(name, args):
 
 
 def call(server, body):
+    # Keep target validation, token consumption and dispatch inside one work
+    # reservation, including direct callers outside the HTTP handler.
+    with server.working():
+        return _call(server, body)
+
+
+def _call(server, body):
     name, args = body.get('name'), body.get('arguments', {})
     action = validate(name, args)
     if name in ('install', 'uninstall', 'panel') and not server.FLATPAK_ID.fullmatch(args['id']):
@@ -96,6 +105,7 @@ def call(server, body):
         raise ValueError('Expected a Steam app ID')
     if name == 'keep_awake' and args['action'] == 'status':
         return keep_awake(server, 'status')
+    action['target'] = server.agent_target()
     token = body.get('confirmation')
     if not token:
         return approvals.request(action)
@@ -109,7 +119,7 @@ def call(server, body):
     if name == 'send_file':
         # Stage the reviewed bytes before the existing transfer helper reads them.
         import tempfile
-        with tempfile.TemporaryDirectory(prefix='frame-agent-') as tmp:
+        with tempfile.TemporaryDirectory(prefix=f'{TMP_PREFIX}{os.getpid()}-') as tmp:
             source = Path(action['arguments']['path'])
             with source.open('rb') as stream:
                 data = stream.read(16 * 1024**2 + 1)

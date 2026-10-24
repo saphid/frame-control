@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Doctor's read-only systemd queries in a container without a user manager.
+
+Stable NRestarts=0 and inactive keep-awake are harness assumptions, not observed
+device behavior. Real Frame query forms come from the historical doctor runbook
+(2026-09-28, BUILD_ID 20260925.6191901). No service control is emulated here.
+"""
+import sys
+
+args = sys.argv[1:]
+if args in (['--user', 'show', 'steam.service', '-p', 'NRestarts', '--value'],
+            ['--user', 'show', 'steamvr.service', '-p', 'NRestarts', '--value']):
+    print('0')
+elif args == ['--user', 'show', 'fc-keep-awake.service', '-p', 'ActiveState', '--value']:
+    print('inactive')
+else:
+    sys.exit(1)

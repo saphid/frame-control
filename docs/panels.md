@@ -125,7 +125,7 @@ a limit on the number of floating panels.
   separate from Frame Control. Public reports describe some Proton support;
   Windows-only does not by itself prove a Frame app cannot run. Local status
   and sources are in [VR utilities](vr-utilities.md).
-- **Our performance HUD:** Home → VR comfort and performance → Open HUD in
+- **Our performance HUD:** Home → VR performance (unfold it) → Open HUD in
   headset creates its own gamescope panel using built-in tools. It needs no
   third-party overlay app. [Metrics and verification](vr-utilities.md).
 
@@ -190,7 +190,24 @@ HTTP focus is not evidence of worn-headset laser input. Follow the
 
 ## Saved spatial layouts: blocked on the current panel route
 
-**Verified 2026-09-28**, same build, using a temporary xterm panel with
+**Rechecked 2026-10-24**, SteamOS 0.5.6, BUILD_ID `20261015.6141207`,
+SteamVR 2.18.2: a read-only probe of the existing Gamescope and Steam main
+panels still reports type 5 (`DashboardTab`), and both the absolute and
+tracked-device-relative getters return 18 (`WrongTransformType`). Width and
+curvature read successfully. **Some pose readback is available:**
+`GetTransformForOverlayCoordinates` at the panel center succeeds in standing
+space; seated and raw origins return 23 (`RequestFailed`). Both panels and the
+dashboard were hidden. That matrix snapshot does not identify docking, prove
+visible placement, or establish a restore operation. The shipped dashboard
+stores dock location and relative transforms internally; no supported external
+snapshot/restore pair was established. No setters or docking commands were run
+in this recheck. See the [exact probe, results, cleanup and remaining
+gaps](evidence/panel-layout-2026-10-24.md). Saved layouts remain unavailable.
+
+### Earlier mutation evidence (2026-09-28)
+
+**Verified 2026-09-28**, SteamOS 0.4.1, BUILD_ID `20260925.6191901`,
+SteamVR 2.18.1, using a temporary xterm panel with
 `STEAM_GAME=2000999031` and `FnTable:IVROverlay_028` from
 `/opt/steamvr/bin/linuxarm64/libopenvr_api.so`:
 

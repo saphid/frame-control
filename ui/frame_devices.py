@@ -28,8 +28,10 @@ remembered IP is caught.
 
 Python stdlib only.
 """
+import base64
 import contextlib
 import copy
+import hashlib
 import json
 import os
 import re
@@ -241,8 +243,7 @@ def _write_config(path, text, expected):
     try:
         with os.fdopen(fd_, "w", encoding="utf-8") as fh:
             fh.write(text)
-        if not frame_host.WINDOWS:
-            tmp.chmod(0o600)
+        frame_host.make_private(tmp)  # best effort: an edit still beats none (repair_permissions insists)
         for attempt in range(20):  # Windows: a running ssh.exe can hold the file for a moment
             if read_config(path) != expected:
                 return False
@@ -269,6 +270,37 @@ def _edit_config(path, change):
             if _write_config(path, "\n".join(new) + "\n", text):
                 return True
         raise OSError(f"{path} kept changing while Frame Control tried to update it")
+
+
+def repair_permissions(path=None):
+    """Give ~/.ssh/config make_private's ACL by swapping in a byte-for-byte copy: for a
+    file Windows' OpenSSH refuses ("Bad owner or permissions"). -> True only if the copy
+    got that ACL and replaced the file."""
+    path = Path(path or ssh_config())
+    with _config_lock, file_lock(path.with_name(LOCK_NAME)):
+        try:
+            data = path.read_bytes()
+        except OSError:
+            return False
+        fd_, tmp = tempfile.mkstemp(prefix="config.frame-control.", dir=str(path.parent))
+        tmp = Path(tmp)
+        try:
+            with os.fdopen(fd_, "wb") as fh:
+                fh.write(data)
+            if not frame_host.make_private(tmp):
+                return False
+            for attempt in range(20):  # a running ssh.exe can hold the file for a moment
+                if path.read_bytes() != data:
+                    return False
+                try:
+                    os.replace(tmp, path)
+                    return True
+                except PermissionError:
+                    time.sleep(0.25)
+            return False
+        finally:
+            if tmp.exists():
+                tmp.unlink()
 
 
 def rewrite_block(alias, path=None, hostname=None, user=None, port=None, expect=None):
@@ -333,8 +365,8 @@ def remove_block(alias, path=None):
 def effective_port(alias, config):
     """The port ssh uses for ALIAS with this config file (`ssh -F FILE -G ALIAS`), else 22."""
     try:
-        out = subprocess.run(["ssh", "-F", str(config), "-G", alias], capture_output=True, text=True,
-                             stdin=subprocess.DEVNULL, timeout=10).stdout
+        out = frame_host.run_ssh(["ssh", "-F", str(config), "-G", alias], capture_output=True, text=True,
+                                 stdin=subprocess.DEVNULL, timeout=10).stdout
     except (OSError, subprocess.TimeoutExpired):
         return 22
     m = re.search(r"^port (\d+)$", out, re.M)
@@ -346,8 +378,8 @@ def effective_port(alias, config):
 
 def _keygen(*args):
     try:
-        return subprocess.run(["ssh-keygen", *args], capture_output=True, stdin=subprocess.DEVNULL, text=True,
-                              timeout=10)
+        return frame_host.run_ssh(["ssh-keygen", *args], capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                                  timeout=10)
     except (OSError, subprocess.TimeoutExpired):
         return None
 
@@ -388,19 +420,100 @@ def seed_pin(device_id, hosts, port=22, sources=None):
                 if len(f) >= 3 and not line.startswith("#") and not f[0].startswith("@"):
                     keys.append(f"{name} {f[1]} {f[2]}")
         if keys:
-            target = known_hosts(device_id)
-            target.parent.mkdir(**({} if frame_host.WINDOWS else {"mode": 0o700}), parents=True, exist_ok=True)
-            fd_, tmp = tempfile.mkstemp(prefix=".seed-", dir=str(target.parent))
-            with os.fdopen(fd_, "w", encoding="utf-8") as fh:
-                fh.write("\n".join(dict.fromkeys(keys)) + "\n")
-            os.replace(tmp, target)  # whole file at once: ssh never sees half of it
+            _write_pin(device_id, keys)
             return True
     return False
 
 
+def pin_dir():
+    """Where the per-headset files go, created private: ssh won't create it itself."""
+    d = ssh_dir() / PIN_DIR
+    d.mkdir(**({} if frame_host.WINDOWS else {"mode": 0o700}), parents=True, exist_ok=True)
+    return d
+
+
+def _write_pin(device_id, lines):
+    target = known_hosts(device_id)
+    fd_, tmp = tempfile.mkstemp(prefix=".seed-", dir=str(pin_dir()))
+    with os.fdopen(fd_, "w", encoding="utf-8") as fh:
+        fh.write("\n".join(dict.fromkeys(lines)) + "\n")
+    frame_host.make_private(tmp)  # Windows: this user only, not the folder's inherited ACL
+    os.replace(tmp, target)  # whole file at once: ssh never sees half of it
+
+
+# The host key types OpenSSH writes to known_hosts.
+KEY_TYPE_RE = re.compile(r"ssh-ed25519|ssh-rsa|ssh-dss|ecdsa-sha2-nistp(?:256|384|521)|"
+                         r"sk-ssh-ed25519@openssh\.com|sk-ecdsa-sha2-nistp256@openssh\.com")
+
+
+def fingerprint(blob):
+    """OpenSSH's SHA256 fingerprint of a base64 key blob (what `ssh-keygen -l` and ssh -v print),
+    or None if it isn't base64."""
+    try:
+        raw = base64.b64decode(blob, validate=True)
+    except (ValueError, TypeError):
+        return None
+    return "SHA256:" + base64.b64encode(hashlib.sha256(raw).digest()).decode().rstrip("=")
+
+
+def key_entry(line, name):
+    """(type, blob, fingerprint) from a known_hosts line for `name`, or None."""
+    f = (line or "").split()
+    if len(f) < 3 or line.startswith("#") or name not in f[0].split(",") or not KEY_TYPE_RE.fullmatch(f[1]):
+        return None
+    fp = fingerprint(f[2])
+    return (f[1], f[2], fp) if fp else None
+
+
+def pinned_keys(device_id):
+    """[(type, fingerprint)] of the keys saved for a headset (plain entries only)."""
+    try:
+        lines = known_hosts(device_id).read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError):
+        return []
+    name = host_key_alias(device_id)
+    return [(e[0], e[2]) for e in (key_entry(line, name) for line in lines) if e]
+
+
+def pin_key(device_id, key_type, blob):
+    """Save one key as the headset's whole identity, replacing whatever was saved: what the
+    person confirmed after seeing its fingerprint (see frame_link.Link.trust_identity)."""
+    if not KEY_TYPE_RE.fullmatch(key_type or "") or not fingerprint(blob):
+        raise DeviceError("That isn't an SSH host key")
+    _write_pin(device_id, [f"{host_key_alias(device_id)} {key_type} {blob}"])
+
+
+def scan_file(device_id):
+    """(path, how ssh is told) for a throwaway known_hosts file that a key check writes the
+    headset's key to, without touching the saved one. `~` as in known_hosts_opt."""
+    name = f".scan-{device_id}-{secrets.token_hex(4)}"
+    path = pin_dir() / name
+    path.touch(**({} if frame_host.WINDOWS else {"mode": 0o600}))
+    frame_host.make_private(path)
+    return path, (str(path) if os.environ.get("FRAME_CONTROL_SSH_DIR") else f"~/.ssh/{PIN_DIR}/{name}")
+
+
+def identity_established(device):
+    """Whether this headset ever had an SSH identity here: the device's own flag (set once it
+    had a key or a connection that worked, and never cleared, whatever happens to its
+    addresses), a fingerprint recorded in devices.json, a pin file at all (even empty,
+    unreadable or not parseable), or an address that worked. Then a missing or unusable pin
+    fails closed, needing Check its key; only a headset with none of these may save the
+    first key it meets (accept-new)."""
+    if device.get("identity_established") or device.get("identity"):
+        return True
+    try:
+        if os.path.lexists(known_hosts(device["id"])):
+            return True
+    except OSError:
+        return True
+    return any(a.get("last_ok") for a in device.get("addresses") or ())
+
+
 def forget_pin(device_id):
-    """Drop a headset's saved key, e.g. after SteamOS was reinstalled. The next connection
-    trusts whatever key the headset shows, as a first connection does."""
+    """Drop a headset's saved key (the headset was removed, or the API's forget-identity).
+    The next connection trusts whatever key the headset shows, as a first connection does;
+    the page's Trust a new key flow (frame_link) shows the key first instead."""
     try:
         known_hosts(device_id).unlink()
         return True
@@ -445,15 +558,21 @@ class Registry:
         self.config = Path(config) if config else None  # None: ssh_config() at call time
         self.lock = threading.RLock()
         self._depth = 0  # nested _changing() calls
-        self._mtime = None  # devices.json as last loaded or saved
+        self._stamp = None  # devices.json as last loaded or saved
         self.data = {"version": VERSION, "active": None, "devices": [], "networks": {}}
         self.load()
 
     # -- storage --
+    def _file_stamp(self):
+        stat = self.path.stat()
+        # Saves atomically replace the file. Fast consecutive saves can have the
+        # same timestamp and size; its identity still changes in that case.
+        return stat.st_dev, stat.st_ino, stat.st_mtime_ns, stat.st_size
+
     def load(self):
         with self.lock:
             try:
-                self._mtime = self.path.stat().st_mtime_ns
+                self._stamp = self._file_stamp()
                 data = json.loads(self.path.read_text(encoding="utf-8"))
             except (OSError, ValueError):
                 return
@@ -480,6 +599,10 @@ class Registry:
             for a in d["addresses"]:
                 a.setdefault("networks", [])
                 a.setdefault("label", "")
+            if d.get("identity") or any(a.get("last_ok") for a in d["addresses"]):
+                # Files from before the flag existed: it had an identity (or a connection that
+                # worked, which saved one). Kept from now on, whatever happens to its addresses.
+                d["identity_established"] = True
             return NAME_RE.fullmatch(d.get("id", "")) is not None
         except (KeyError, TypeError, DeviceError):
             return False
@@ -490,14 +613,14 @@ class Registry:
             tmp = self.path.with_name(self.path.name + ".tmp")
             tmp.write_text(json.dumps(self.data, indent=1), encoding="utf-8")
             os.replace(tmp, self.path)
-            self._mtime = self.path.stat().st_mtime_ns
+            self._stamp = self._file_stamp()
 
     def _refresh(self):
         """Pick up what another Frame Control server saved (the app and a standalone
         server can share devices.json)."""
         with self.lock:
             try:
-                if self.path.stat().st_mtime_ns != self._mtime:
+                if self._file_stamp() != self._stamp:
                     self.load()
             except OSError:
                 pass
@@ -623,7 +746,9 @@ class Registry:
                 return a
         raise DeviceError(f"{host} isn't one of this headset's addresses")
 
-    def add_address(self, device_id, host, kind=None, label=""):
+    def add_address(self, device_id, host, kind=None, label="", first=False):
+        """Add an address at the end of the list, or at the front (first=True), where the
+        user's order makes it win over the others that work on the same network."""
         with self._changing():
             d = self._find(device_id)
             a = new_address(host, kind, label)
@@ -631,7 +756,7 @@ class Registry:
                 raise DeviceError(f"{a['host']} is already on the list")
             if len(d["addresses"]) >= 32:
                 raise DeviceError("That's enough addresses for one headset")
-            d["addresses"].append(a)
+            d["addresses"].insert(0 if first else len(d["addresses"]), a)
             self.save()
             return copy.deepcopy(a)
 
@@ -682,7 +807,24 @@ class Registry:
                 a["networks"] = (a["networks"] + [network_id])[-16:]
             a["last_ok"] = time.time()
             a["last_rtt_ms"] = rtt_ms
+            self._find(device_id)["identity_established"] = True  # survives editing the address away
             self.save()
+
+    def record_identity(self, device_id, fingerprints):
+        """Remember the fingerprints of the key saved for a headset, so that losing the pin
+        file later can't turn into trusting whatever answers (identity_established)."""
+        fingerprints = [f for f in fingerprints if isinstance(f, str) and f.startswith("SHA256:")][:8]
+        if not fingerprints:
+            return
+        with self._changing():
+            try:
+                d = self._find(device_id)
+            except DeviceError:
+                return
+            if d.get("identity") != fingerprints or not d.get("identity_established"):
+                d["identity"] = fingerprints
+                d["identity_established"] = True
+                self.save()
 
     def undismiss(self, alias):
         """Set Up Connection is about to run for this alias: import its block again."""
@@ -767,15 +909,17 @@ class Registry:
                         d["addresses"].append(dict(new_address(host), label="From Set Up Connection"))
                     d["config_host"] = host
                     changed = True
-                    if seed and host:
-                        seed_pin(d["id"], [host], b["port"])
+                    if seed and host and seed_pin(d["id"], [host], b["port"]):
+                        d["identity"] = [f for _, f in pinned_keys(d["id"])][:8] or d.get("identity")
+                        d["identity_established"] = True
                 elif host and host != d.get("config_host"):
                     # Set Up Connection ran again and found the headset somewhere new.
                     d["config_host"] = host
                     if not any(a["host"] == host for a in d["addresses"]):
                         d["addresses"].insert(0, dict(new_address(host), label="From Set Up Connection"))
-                    if seed:
-                        seed_pin(d["id"], [host], b["port"])
+                    if seed and seed_pin(d["id"], [host], b["port"]) and not d.get("identity"):
+                        d["identity"] = [f for _, f in pinned_keys(d["id"])][:8] or None
+                        d["identity_established"] = True
                     changed = True
                 if d.get("config_login") != [user, b["port"]]:
                     # Set Up Connection (or an edit) changed who to log in as, or the port.

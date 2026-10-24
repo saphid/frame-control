@@ -94,7 +94,7 @@ A new shortcut is rolled back if artwork fails; failure is never reported as
 an installed app with a blank tile.
 
 Artwork preference is **SteamGridDB → source images → generated fallback**.
-Set the optional free key in Frame Control's **Library artwork settings**, or
+Set the optional free key in Frame Control's **Settings → Library artwork**, or
 `STEAMGRIDDB_API_KEY` (`FRAME_STEAMGRIDDB_API_KEY` also works). Environment
 settings override the saved key. Without a key there are no provider calls or
 warnings. Saved keys stay in host app data, mode 0600 on POSIX, and are never
@@ -214,9 +214,16 @@ source-search endpoint remain unverified (the public install seam is tested).
 
 - **Meta entitlement.** Apps that call the Oculus Platform SDK
   (`libovrplatformloader.so`) to check the Quest store licence need Meta's
-  services. Frame Control won't work around that.
+  services. Frame Control won't work around that: no patching, no stub
+  libraries, no OVRPort or FramePort. Linking the SDK doesn't mean an app
+  enforces the check (Meta's VRC.Quest.Security.1 has only been
+  *Recommended* since 2021, and a failed check does nothing by itself; the app
+  decides), so [Import from my Quest](quest-import.md) and [My Meta
+  library](meta-library.md) install these with a warning: they may quit,
+  hang, or run without online features.
 - **VrApi-era apps** (`libvrapi.so`, before OpenXR) need an API translator,
-  not a patch.
+  not a patch. They install with a warning that they may not run: some
+  OpenXR games ship `libvrapi.so` without depending on it.
 
 ## Frame Control does this for you
 
@@ -249,6 +256,10 @@ the app wants 1.1 and enables the extensions that became 1.1 core; maps
 and keeps the current refresh rate when SteamVR refuses a requested one.
 `meta.json` records `"patched": ["openxr-compat"]`. Skip it with
 `install … --no-xr-compat`. Its decisions go to logcat under `FrameXrCompat`.
+If this copy of Frame Control is missing the layer's library (an incomplete
+install, or a file removed after installing), VR apps install without it and
+the install message says so; OpenXR 1.0 apps still run. Release builds fail
+to package without it (`app/build/check-resources.js`).
 
 Verified on the headset (2026-09-28):
 

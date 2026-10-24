@@ -8,5 +8,8 @@ cmake -S "$here" -B "$here/build-android" -G Ninja \
   -DANDROID_STL=c++_static -DCMAKE_BUILD_TYPE=Release
 cmake --build "$here/build-android"
 mkdir -p "$here/prebuilt/arm64-v8a"
-cp "$here/build-android/libXrApiLayer_FRAME_compat.so" "$here/prebuilt/arm64-v8a/"
-shasum -a 256 "$here/prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so"
+# Committed and shipped gzipped: electron-builder's 7-Zip applies its ARM64
+# branch filter to a bare arm64 ELF, which the Windows installer's extractor
+# can't decode, so the installed app silently lacked the library.
+shasum -a 256 "$here/build-android/libXrApiLayer_FRAME_compat.so"
+gzip -9 -n -c "$here/build-android/libXrApiLayer_FRAME_compat.so" > "$here/prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz"

@@ -1,0 +1,206 @@
+{
+  "date_utc": "2026-10-24",
+  "base_commit": "de931bc",
+  "issue": 73,
+  "result": "Packaged Desktop Capture passed for a mapped nested KDE compositor on the real Frame; wearer-visible overlay condition was not established. Do not close #73 from this test.",
+  "package": {
+    "tag": "v0.4.17",
+    "asset": "Frame-Control-linux-x86_64.AppImage",
+    "sha256": "b1b8eb82bf73a227b2cd36e8f0ef3a2ebdf7967c5853efb08a9634f38227015d",
+    "release_digest_matched": true,
+    "panel_helper_matches_base": true,
+    "unmodified_payload": true,
+    "host": "lxso2",
+    "display": "Xvfb :139",
+    "flags": [
+      "--no-sandbox",
+      "--disable-gpu"
+    ],
+    "private_profile_and_data": true,
+    "telemetry_and_update_checks_disabled": true
+  },
+  "preflight": {
+    "steamos_version": "0.5.6",
+    "build_id": "20261015.6141207",
+    "battery_percent": 99,
+    "battery_status": "Not charging",
+    "game_mode": true,
+    "full_plasma_session": false,
+    "nested_desktop_running": false,
+    "nested_runtime_present": false,
+    "lock_present": false,
+    "steam_pid": 297826,
+    "vrserver_pid": 297506,
+    "vrcompositor_pid": 297620,
+    "gamescope_service_invocation": "e8c1085b3bbd4e79a323b3e4a9bc6355",
+    "focusable_windows": [],
+    "focused_windows": []
+  },
+  "session": {
+    "started_utc": "2026-10-24T09:43:48Z",
+    "lock_acquired": true,
+    "launch": [
+      "systemd-run",
+      "--user",
+      "--unit=fc-issue73-desktop-20261024",
+      "--collect",
+      "--property=RuntimeMaxSec=180s",
+      "--property=TimeoutStopSec=15s",
+      "--property=KillMode=control-group",
+      "--setenv=DISPLAY=:0",
+      "--setenv=XDG_RUNTIME_DIR=/run/user/1000",
+      "--setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus",
+      "--setenv=XDG_SESSION_TYPE=x11",
+      "--setenv=XDG_CURRENT_DESKTOP=gamescope",
+      "/usr/bin/steamos-nested-desktop"
+    ],
+    "response": "Running as unit: fc-issue73-desktop-20261024.service; invocation ID: 92cff1e57c794212997d46c0a68877ec\n"
+  },
+  "discovery": {
+    "focus": 62914560,
+    "focus_display": ":0",
+    "panels": [
+      {
+        "window": 62914560,
+        "display": ":0",
+        "name": "KDE Wayland Compositor - Press right control key to grab input",
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "app": 0,
+        "focused": true
+      }
+    ]
+  },
+  "window_evidence": {
+    "xwininfo_map_state": "IsViewable",
+    "width": 1920,
+    "height": 1080,
+    "focused_after_show_request": true,
+    "steamvr_overlay_key": "valve.steam.desktopgame.0",
+    "steamvr_overlay_visibility_after_show_request": "not_visible"
+  },
+  "capture": {
+    "repeat_utc": "2026-10-24T09:44:47.323Z",
+    "route": "/api/screenshot?view=panel&window=62914560&display=%3A0",
+    "http": 200,
+    "content_type": "image/png",
+    "content_length": 1209980,
+    "source_header": "panel",
+    "decoded": {
+      "width": 1920,
+      "height": 1080,
+      "source": "panel",
+      "selected": {
+        "window": 62914560,
+        "display": ":0",
+        "name": "KDE Wayland Compositor - Press right control key to grab input",
+        "x": 0,
+        "y": 0,
+        "width": 1920,
+        "height": 1080,
+        "app": 0,
+        "focused": true
+      },
+      "stamp": "9:44:48 AM",
+      "badge": "Desktop \u00b7 KDE Wayland Compositor - Press right control key to grab input"
+    },
+    "canvas_png_bytes": 2011278,
+    "first_capture_pixel_statistics": {
+      "width": 1920,
+      "height": 1080,
+      "min": 2.3333333333333335,
+      "max": 255,
+      "hidden": false
+    },
+    "first_capture_click_event": {
+      "isTrusted": true,
+      "utc": "2026-10-24T09:44:12.738Z"
+    },
+    "actions": "Two Playwright locator.click() actions on the visible #shotBtn in the actual packaged Electron window; first click recorded isTrusted=true. No direct screenshot API invocation by harness."
+  },
+  "device_cleanup": {
+    "utc": "2026-10-24T09:45:33Z",
+    "before_stop": {
+      "exit": 0,
+      "out": "MainPID=300739\nControlGroup=/user.slice/user-1000.slice/user@1000.service/app.slice/fc-issue73-desktop-20261024.service\nActiveState=active\n",
+      "err": ""
+    },
+    "hide_dashboard": {
+      "exit": 0,
+      "out": "HideDashboard",
+      "err": ""
+    },
+    "stop_owned_unit": {
+      "exit": 0,
+      "out": "",
+      "err": ""
+    },
+    "after_stop": {
+      "exit": 0,
+      "out": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n",
+      "err": ""
+    },
+    "desktop_processes": {
+      "exit": 1,
+      "out": "",
+      "err": ""
+    },
+    "nested_runtime_exists": false,
+    "session": {
+      "exit": 0,
+      "out": "Id=gamescope-session.target\nActiveState=active\nInvocationID=a2fee8ebf55c42c7b546390d14cd985c\n\nId=plasma-workspace-wayland.target\nActiveState=inactive\nInvocationID=\n\nId=gamescope-session.service\nActiveState=active\nInvocationID=e8c1085b3bbd4e79a323b3e4a9bc6355\n",
+      "err": ""
+    },
+    "steam": {
+      "exit": 0,
+      "out": "297826 /home/steamos/.local/share/Steam/steamrtarm64/steam -cef-enable-debugging -deckard -gamepadui -steamdeck -steamos3 -vrgamepadui\n",
+      "err": ""
+    },
+    "steamvr": {
+      "exit": 0,
+      "out": "297506 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-297420\n297620 /opt/steamvr/bin/linuxarm64/vrcompositor\n",
+      "err": ""
+    },
+    "xprops": {
+      "exit": 0,
+      "out": "GAMESCOPE_FOCUSABLE_WINDOWS(CARDINAL) = \nGAMESCOPE_FOCUSED_WINDOW(CARDINAL) = \n",
+      "err": ""
+    },
+    "battery": {
+      "capacity": "99",
+      "status": "Not charging"
+    },
+    "owned_lock_released": true
+  },
+  "host_cleanup": {
+    "electron": {
+      "pid": 1578431,
+      "exists_after": false
+    },
+    "xvfb": {
+      "pid": 1578428,
+      "exists_after": false
+    },
+    "x_socket_absent": true
+  },
+  "delayed_final_readback": "2026-10-24T09:46:39Z\nshared-lock-absent\nLoadState=not-found\nActiveState=inactive\nId=gamescope-session.target\nActiveState=active\n\nId=plasma-workspace-wayland.target\nActiveState=inactive\nInvocationID=e8c1085b3bbd4e79a323b3e4a9bc6355\n297826 /home/steamos/.local/share/Steam/steamrtarm64/steam -cef-enable-debugging -deckard -gamepadui -steamdeck -steamos3 -vrgamepadui\n297506 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-297420\n297620 /opt/steamvr/bin/linuxarm64/vrcompositor\nnested-runtime-absent\n100\nFull\nGAMESCOPE_FOCUSABLE_WINDOWS(CARDINAL) = \nGAMESCOPE_FOCUSED_WINDOW(CARDINAL) = \n",
+  "validation": {
+    "focused_panel_suite": "42 tests passed in 14.805s (test_touch.py), including production-page Node behavior tests",
+    "website": "2 tests passed (node --test site/test/*.test.mjs)",
+    "node_panels": "Passed independently (node tests/page/desk_panels.mjs)",
+    "metadata_and_links": "JSON parsed; result/cleanup assertions and relative evidence/streaming/testing links passed",
+    "diff": "git diff --check passed"
+  },
+  "limits": [
+    "SteamVR continued reporting not_visible after ShowDashboard, despite mapped X window and confirmed focus. No worn-headset visual assessment; does not establish the reporter's visible-overlay condition.",
+    "SteamOS 0.5.6 only; reporter used 0.4.5 with unknown Frame Control version and no reproduction steps.",
+    "Nested desktop launched with SteamOS steamos-nested-desktop from a bounded transient user unit using Steam display/session variables; not launched through a wearer's Steam UI.",
+    "Extracted unchanged AppImage on a virtual X display with Chromium sandbox and GPU disabled; no FUSE, physical monitor or hardware-rendering test.",
+    "No Live video, Control input or full Desktop Mode test.",
+    "Nested-desktop journal included gamescope WSI/Vulkan-hook warnings. No warning was dismissed; captured compositor pixels were nonblank.",
+    "Initial CDP response.body() yielded zero bytes despite successful image decode. Repeat verified Content-Length, fresh decoded image, panel selection and PNG export from canvas; the initial raw-body size is not treated as capture failure or proof.",
+    "No private desktop pixels, issue screenshot or raw desktop journal committed."
+  ]
+}

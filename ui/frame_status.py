@@ -6,6 +6,7 @@ error. Sensor paths verified on SteamOS 0.3.0; OpenVR timing on 0.4.1
 """
 import ctypes as C
 import glob
+import hashlib
 import math
 import json
 import os
@@ -44,19 +45,40 @@ def num(path, scale=1.0):
 
 
 def battery():
-    for d in glob.glob("/sys/class/power_supply/*"):
+    # Prefer the documented Frame fuel gauge over controller/peripheral batteries.
+    supplies = sorted(glob.glob("/sys/class/power_supply/*"),
+                      key=lambda d: (os.path.basename(d) != "max1720x_bat_7-36", d))
+    for d in supplies:
         if read(d + "/type") != "Battery":
             continue
-        cap = read(d + "/capacity")
+        if read(d + "/scope") == "Device" or read(d + "/present") == "0":
+            continue
+
+        def value(name, scale=1, minimum=None, maximum=None):
+            n = num(d + "/" + name, scale)
+            if n is None or not math.isfinite(n):
+                return None
+            if (minimum is not None and n < minimum) or (maximum is not None and n > maximum):
+                return None
+            return n
+
         # max1720x reports microvolts/microamps; current is positive while charging.
-        volts, amps = num(d + "/voltage_now", 1e-6), num(d + "/current_now", 1e-6)
-        return {"percent": int(cap) if cap and cap.isdigit() else None,
+        volts, amps = value("voltage_now", 1e-6, 0), value("current_now", 1e-6)
+        full = value("charge_full", 1e-3, 0)
+        design = value("charge_full_design", 1e-3, 0)
+        return {"source": d,
+                "percent": value("capacity", minimum=0, maximum=100),
                 "status": read(d + "/status"),
                 "watts": round(volts * amps, 2) if volts is not None and amps is not None else None,
-                "timeToFull": num(d + "/time_to_full_now"),
-                "timeToEmpty": num(d + "/time_to_empty_now"),
-                "tempC": num(d + "/temp", 0.1),
-                "health": read(d + "/health")}
+                # Reject negative/unsigned sentinel estimates and implausible temperatures.
+                "timeToFull": value("time_to_full_now", minimum=1, maximum=604800),
+                "timeToEmpty": value("time_to_empty_now", minimum=1, maximum=604800),
+                "tempC": value("temp", 0.1, -273.15, 200),
+                "health": read(d + "/health"),
+                "cycleCount": value("cycle_count", minimum=0),
+                "fullMah": full if full else None,
+                "designMah": design if design else None,
+                "capacityHealthPercent": round(full / design * 100, 1) if full and design else None}
     return None
 
 
@@ -121,7 +143,16 @@ def os_release():
         k, _, v = line.partition("=")
         out[k] = v.strip('"')
     return {"version": out.get("VERSION_ID"), "build": out.get("BUILD_ID"),
-            "variant": out.get("VARIANT_ID")}
+            "variant": out.get("VARIANT_ID"), "headset": headset_id()}
+
+
+def headset_id():
+    """A one-way hash of the headset's /etc/machine-id: the same for this headset on every
+    computer, and the machine-id itself never leaves the headset. None without one."""
+    mid = read("/etc/machine-id")
+    if not mid:
+        return None
+    return hashlib.sha256(("frame-control-headset:" + mid).encode()).hexdigest()[:16]
 
 
 def volume():
@@ -292,6 +323,7 @@ def status():
         "disk": {"root": disk("/"), "home": disk("/home")},
         "memory": memory(),
         "temp": max_temp(),
+        "thermalAlerts": thermal_alerts(),
         "wifi": wifi(),
         "ip": ip_addr(),
         "volume": volume(),

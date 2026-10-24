@@ -30,7 +30,8 @@ it.) A dialog shows:
 
 Install copies it to the Frame and registers it with Steam; progress shows in
 the bar and the activity log. **Sideloaded titles** lists what's installed,
-with Launch and Remove. **Copy to ~/Downloads instead** keeps the old
+with Launch, Remove and, for a game that has stopped responding, **Force
+quit…** in its ⋯ menu ([how](steam-games.md#force-quitting-a-running-game)). **Copy to ~/Downloads instead** keeps the old
 behaviour for a zip that isn't a game.
 
 From a terminal:

@@ -1,4 +1,5 @@
 """Offline authenticated repository fixtures; no tests contact a server."""
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import io
 import json
 import os
@@ -80,7 +81,7 @@ class Repositories(unittest.TestCase):
             state.clear()
             self.addCleanup(state.clear)
 
-    def fetch(self, url, path, maximum):
+    def fetch(self, url, path, maximum, auth=None):
         name = url.rsplit('/', 1)[-1]
         if self.v1 and name == 'entry.jar':
             raise urllib.error.HTTPError(url, 404, 'missing', None, None)
@@ -256,6 +257,36 @@ class Repositories(unittest.TestCase):
         self.assertEqual(result['icon'], URL + 'icons/legacy.1.png')
         self.assertEqual(result['images']['screenshots'], [URL + 'org.example.app/fr/sevenInchScreenshots/tablet.png'])
 
+    def test_per_abi_builds_offer_and_download_the_arm64_one(self):
+        import hashlib
+
+        def build(code, name, abis):
+            self.files[name] = name.encode()
+            return {'manifest': {'versionName': '391', 'versionCode': code, 'usesSdk': {'minSdkVersion': 28},
+                                 'nativecode': abis},
+                    'file': {'name': '/' + name, 'sha256': hashlib.sha256(name.encode()).hexdigest(), 'size': code},
+                    'added': 0}
+        # One APK per ABI under different codes (the x86_64 one highest, as F-Droid often does),
+        # plus a universal and an arm64-only build sharing a code.
+        builds = [build(3911, 'app-armeabi-v7a.apk', ['armeabi-v7a']), build(3914, 'app-x86_64.apk', ['x86_64']),
+                  build(3913, 'app-x86.apk', ['x86']),
+                  build(3912, 'app-universal.apk', ['arm64-v8a', 'armeabi-v7a', 'x86_64']),
+                  build(3912, 'app-arm64-v8a.apk', ['arm64-v8a'])]
+        raw = self.root / 'splits.json'
+        raw.write_text(json.dumps({'packages': {'com.futo.platformplayer': {
+            'metadata': {'name': {'en-US': 'Grayjay'}},
+            'versions': {str(i): b for i, b in enumerate(builds)}}}}))
+        source = {'id': 'test', 'url': URL}
+        app = fdroid._reduce(raw, source)['com.futo.platformplayer']
+        self.assertEqual([v['name'] for v in app['versions']], ['/app-arm64-v8a.apk', '/app-universal.apk'])
+        self.assertEqual((app['version_code'], app['abis']), (3912, ['arm64-v8a']))
+        with patch.object(fdroid, 'details', return_value=app):
+            for code in (None, 3912):
+                fdroid.download(source, 'com.futo.platformplayer', version_code=code)
+                self.assertTrue(self.fetch_mock.call_args[0][0].endswith('/app-arm64-v8a.apk'))
+            with self.assertRaises(SourceError):  # the x86_64 build is never offered
+                fdroid.download(source, 'com.futo.platformplayer', version_code=3914)
+
     def test_v2_legacy_screenshot_keys_and_limit(self):
         meta = {'phoneScreenshots': {'fr': [{'name': '/phone/' + str(i) + '.png'} for i in range(8)]},
                 'sevenInchScreenshots': {'en-US': [{'name': '/tablet.png'}]}}
@@ -280,7 +311,7 @@ class Repositories(unittest.TestCase):
         source = self.add()
         other = dict(source, id='other-repo')
         started, release = threading.Event(), threading.Event()
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             if threading.current_thread().name == 'slow':
                 started.set()
                 release.wait(5)
@@ -324,7 +355,7 @@ class Repositories(unittest.TestCase):
         self.files['entry.jar'], _ = entry_jar(50)
         source = fdroid.add_repo(URL)
         jars = {'older': entry_jar(100)[0], 'newer': entry_jar(200)[0]}
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             name = threading.current_thread().name
             if name in jars and url.endswith('entry.jar'):
                 Path(path).write_bytes(jars[name])
@@ -370,7 +401,7 @@ class Repositories(unittest.TestCase):
         source = dict(id='overlap', name='Overlap', url=URL, fingerprint=None)
         self.v1 = True
         inner = []
-        def fetch(url, path, maximum):
+        def fetch(url, path, maximum, auth=None):
             if url.endswith('index-v1.jar') and not inner:
                 inner.append(1)  # the v1 load passed its fallback check; a v2 load finishes now
                 self.v1 = False
@@ -440,7 +471,7 @@ class Repositories(unittest.TestCase):
         source = self.add()
         self.expire(source)
         release = threading.Event()
-        def slow(url, path, maximum):
+        def slow(url, path, maximum, auth=None):
             release.wait(5)
             self.fetch(url, path, maximum)
         self.fetch_mock.side_effect = slow
@@ -497,7 +528,7 @@ class Repositories(unittest.TestCase):
         self.expire(source)
         before = self.fetch_mock.call_count
         release = __import__('threading').Event()
-        def slow(url, path, maximum):
+        def slow(url, path, maximum, auth=None):
             release.wait(5)
             self.fetch(url, path, maximum)
         self.fetch_mock.side_effect = slow

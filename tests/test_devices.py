@@ -17,6 +17,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "ui"))
 
 import frame_devices as fd  # noqa: E402
+import frame_host  # noqa: E402
 
 CONFIG = """Host lxso1
   HostName 192.168.1.109
@@ -263,6 +264,30 @@ class Pins(Base):
         self.assertFalse(fd.pinned("d1"))
         self.assertFalse(fd.forget_pin("d1"))
 
+    def test_a_trusted_key_replaces_the_saved_one_and_fingerprints_match_ssh_keygen(self):
+        key = self.dir / "hostkey"
+        frame_host.run_ssh(["ssh-keygen", "-q", "-t", "ed25519", "-N", "", "-f", str(key)], capture_output=True,
+                           stdin=subprocess.DEVNULL, check=True, timeout=20)
+        kind, blob = key.with_suffix(".pub").read_text().split()[:2]
+        want = frame_host.run_ssh(["ssh-keygen", "-l", "-E", "sha256", "-f", str(key.with_suffix(".pub"))],
+                                  capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=10).stdout.split()[1]
+        self.assertEqual(fd.fingerprint(blob), want)
+        self.assertIsNone(fd.fingerprint("not base64!"))
+        (self.ssh / "known_hosts").write_text(f"frame.local {KEY}\n")
+        fd.seed_pin("d1", ["frame.local"])
+        old = fd.pinned_keys("d1")
+        fd.pin_key("d1", kind, blob)
+        self.assertEqual(fd.known_hosts("d1").read_text(), f"frame-control-d1 {kind} {blob}\n")  # old key gone
+        self.assertEqual(fd.pinned_keys("d1"), [(kind, want)])
+        self.assertNotEqual(old, fd.pinned_keys("d1"))
+        self.assertTrue(fd.pinned("d1"))
+        for bad in (("ssh-ed25519\nHost *", blob), ("ssh-ed25519", "AAAA AAAA"), ("evil", blob)):
+            with self.assertRaises(fd.DeviceError):
+                fd.pin_key("d1", *bad)
+        # Only plain entries for this headset's alias count.
+        self.assertIsNone(fd.key_entry(f"frame-control-d2 {kind} {blob}", "frame-control-d1"))
+        self.assertIsNone(fd.key_entry(f"# frame-control-d1 {kind} {blob}", "frame-control-d1"))
+
     def test_each_headset_has_its_own_file(self):
         (self.ssh / "known_hosts").write_text(f"a.local {KEY}\nb.local {KEY}\n")
         fd.seed_pin("da", ["a.local"])
@@ -274,7 +299,8 @@ class Pins(Base):
     def test_hashed_and_non_default_port_entries(self):
         kh = self.ssh / "known_hosts"
         kh.write_text(f"[frame.local]:2222 {KEY}\n")
-        subprocess.run(["ssh-keygen", "-H", "-f", str(kh)], capture_output=True, check=True)
+        frame_host.run_ssh(["ssh-keygen", "-H", "-f", str(kh)], capture_output=True,
+                           stdin=subprocess.DEVNULL, check=True, timeout=10)
         self.assertFalse(fd.seed_pin("d3", ["frame.local"]))  # port 22: not that entry
         self.assertTrue(fd.seed_pin("d3", ["frame.local"], port=2222))
         self.assertIn(f"frame-control-d3 {KEY}", fd.known_hosts("d3").read_text())
@@ -283,7 +309,8 @@ class Pins(Base):
         target = fd.known_hosts("d4")
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(f"frame-control-d4 {KEY}\n")
-        subprocess.run(["ssh-keygen", "-H", "-f", str(target)], capture_output=True, check=True)
+        frame_host.run_ssh(["ssh-keygen", "-H", "-f", str(target)], capture_output=True,
+                           stdin=subprocess.DEVNULL, check=True, timeout=10)
         self.assertNotIn("frame-control-d4", target.read_text())
         self.assertTrue(fd.pinned("d4"))
         self.assertTrue(fd.forget_pin("d4"))
@@ -296,6 +323,29 @@ class Pins(Base):
 
 
 class Registry(Base):
+    def test_replaced_registry_is_read_even_when_timestamp_and_size_match(self):
+        d = self.reg.add_device('frame', name='First')
+        before = self.reg.path.stat()
+        other = fd.Registry(self.reg.path)
+        other.update_device(d['id'], name='Other')
+        os.utime(self.reg.path, ns=(before.st_atime_ns, before.st_mtime_ns))
+        self.assertEqual(self.reg.path.stat().st_size, before.st_size)
+        self.assertEqual(self.reg.get(d['id'])['name'], 'Other')
+
+    def test_an_address_added_first_wins_on_its_own_network(self):
+        # The page's "Add 192.168.x.x" offer: the headset is reached over Tailscale, which has
+        # worked here before. The LAN address has to go ahead of it to be used at home.
+        d = self.reg.add_device("frame-4", hosts=["frame.tail1234.ts.net"])
+        self.reg.record_success(d["id"], "frame.tail1234.ts.net", "n-home", 6.0)
+        self.reg.add_address(d["id"], "192.168.1.40", kind="lan", first=True)
+        self.reg.record_success(d["id"], "192.168.1.40", "n-home", 1.0)  # Test now found it
+        addrs = self.reg.get(d["id"])["addresses"]
+        self.assertEqual([a["host"] for a in addrs], ["192.168.1.40", "frame.tail1234.ts.net"])
+        at_home = [a["host"] for a, _ in fd.order_addresses(addrs, "n-home", True)]
+        self.assertEqual(at_home[0], "192.168.1.40")
+        away = [a["host"] for a, _ in fd.order_addresses(addrs, "n-cafe", True)]
+        self.assertEqual(away[0], "frame.tail1234.ts.net")  # elsewhere Tailscale still leads
+
     def test_address_editing(self):
         d = self.reg.add_device("frame-3", hosts=["192.168.1.40"])
         a = self.reg.add_address(d["id"], "frame-3.local", label="mDNS")

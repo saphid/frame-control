@@ -14,7 +14,10 @@ count. So a build reaches people only when you publish it, after testing it.
 
    `.github/workflows/release.yml` builds macOS, Windows and Linux, and
    attaches everything to a **draft** release for that tag. Nobody is
-   offered a draft.
+   offered a draft. Editing a draft while installers are uploading can make
+   GitHub temporarily show its tag as `untagged-…`. The workflow finds that
+   draft by its exact version title, restores the tag association and retries
+   the affected upload; it refuses ambiguous matches.
 
 2. Download the draft's installers and test them. An installed copy of the
    previous version won't offer the draft, so install it directly.
@@ -24,13 +27,20 @@ count. So a build reaches people only when you publish it, after testing it.
 4. Publish:
 
    ```sh
+   scripts/publish-release.sh --dry-run v0.4.0   # checks and shows update.json, changes nothing
    scripts/publish-release.sh v0.4.0
    ```
 
-   The script checks that all eight installers are attached, each with the
-   SHA-256 digest GitHub records. It attaches `update.json` (the version, the
-   notes and each installer's digest), then publishes the release and marks it
-   latest. From then on, running copies see the update. They check about 8
+   The script checks that the tag is on GitHub and that all eight installers
+   are attached, each with the SHA-256 digest GitHub records. It attaches
+   `update.json` (the version, the notes, the release page and each
+   installer's digest), then publishes the release and marks it latest. It
+   uses only the REST API: `gh release view` can't find a draft whose
+   `tag_name` still reads `untagged-…`, and GraphQL is often rate-limited.
+   Such a draft is found by its exact title (`Frame Control 0.4.0`, or that
+   followed by `: subtitle`) and tied to the tag when it's published. The release page in `update.json` is always
+   `releases/tag/<tag>`, because a draft's own address (`releases/tag/untagged-…`)
+   stops working once it's published. From then on, running copies see the update. They check about 8
    seconds after starting, then every 6 hours, and anyone can use **Check for
    Updates…** (the app menu on macOS, the Help menu elsewhere).
 

@@ -18,7 +18,9 @@ Report a problem dialog (frame_report.py) sends bug reports privately to the
 same project whatever is chosen here.
 
 Events are identified by a random id made on first run, not by the person or
-computer, and sent without person profiles or GeoIP. Nothing is sent without a
+computer, and sent without person profiles or GeoIP. Opens, installs and updates
+carry a country instead, worked out on this computer from its time zone setting
+(frame_timezones.py), to see roughly where Frame Control is used. Nothing is sent without a
 project key (ui/telemetry.json or $FRAME_CONTROL_POSTHOG_KEY), from a source
 checkout unless $FRAME_CONTROL_TELEMETRY=1, or when $DO_NOT_TRACK=1 or
 $FRAME_CONTROL_TELEMETRY=0.
@@ -43,6 +45,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 import frame_host
+import frame_timezones
 
 HERE = Path(__file__).resolve().parent
 STATE = frame_host.data_dir('telemetry')
@@ -50,16 +53,26 @@ SETTINGS = STATE / 'settings.json'
 OUTBOX = STATE / 'outbox.jsonl'
 SENT = STATE / 'sent.jsonl'
 SENT_KEEP = 200
+FRAMES_SEEN_KEEP = 100  # build/headset pairs already reported, enough for several headsets' updates
 OUTBOX_MAX = 2000  # events kept while offline; the oldest go first
 FLUSH_EVERY = 60
 REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this many seconds
+# Not faults in Frame Control: the headset asleep, away or not set up yet, or ssh and the headset
+# not trusting each other (a host key that changed, a key not authorised): the page says what to do
+# about each (Devices tab, Set Up Connection). The status poll
+# meets these every few seconds, so each is sent at most once per session, whatever the wording,
+# but only for an error marked where ssh ran as ssh failing to reach the headset
+# (frame_host.link_failure). The message alone isn't evidence: a download's "Connection reset by
+# peer", or a file name with ssh's words in it, keeps the usual window.
+EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up', 'frame_auth')
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
+NOTICE_VERSION = 2  # raise when the notice lists something new: it's shown again (2: country)
 # Events the page may send through /api/telemetry, and the properties each may carry.
 PAGE_EVENTS = {'tab_viewed': {'tab'}, 'update_offered': {'to_version'},
                'update_started': {'to_version'}, 'update_failed': {'to_version', 'error_category'}}
-TABS = {'home', 'games', 'android', 'tools'}
+TABS = {'home', 'games', 'android', 'tools', 'devices', 'control'}
 
 _lock = threading.RLock()
 _send_lock = threading.Lock()  # held while sending; consent changes wait for it
@@ -96,7 +109,7 @@ def blocked():
 
 def _defaults():
     return {'id': str(uuid.uuid4()), 'usage': True, 'compat': False, 'diagnostics': False,
-            'notice_shown': False, 'installed_sent': False, 'last_version': None, 'last_open_day': None,
+            'notice_shown': False, 'notice_version': 0, 'installed_sent': False, 'last_version': None, 'last_open_day': None,
             'frames_seen': [], 'compat_sent': []}
 
 
@@ -138,12 +151,12 @@ def update_settings(changes):
     under way finishes first, so nothing leaves after this returns."""
     with _send_lock, _lock:
         s = settings()
-        if 'noticeShown' in changes:
-            s['notice_shown'] = bool(changes['noticeShown']) or s['notice_shown']
+        if changes.get('noticeShown'):
+            s['notice_shown'], s['notice_version'] = True, NOTICE_VERSION
         for level in LEVELS:
             if level in changes:
                 s[level] = bool(changes[level])
-                s['notice_shown'] = True
+                s['notice_shown'] = True  # only the notice itself moves notice_version on
         _save(s)
         _drop_unwanted(s)
     if changes.get('compat'):
@@ -152,10 +165,16 @@ def update_settings(changes):
     return state()
 
 
+def _notice_current(s):
+    """Whether the notice this person saw lists everything that's sent now. If not, the page
+    shows it again, and what it added waits until it has been seen."""
+    return s['notice_shown'] and s['notice_version'] >= NOTICE_VERSION
+
+
 def state():
     """What the page shows: the choices, why sending is blocked, and what was sent."""
     s = settings()
-    return {'usage': s['usage'], 'compat': s['compat'], 'noticeShown': s['notice_shown'],
+    return {'usage': s['usage'], 'compat': s['compat'], 'noticeShown': _notice_current(s),
             'diagnostics': s['diagnostics'],
             'blocked': blocked(), 'id': s['id'], 'queued': len(_read_lines(OUTBOX)),
             'sent': list(reversed(_read_lines(SENT)))[:50]}
@@ -221,36 +240,75 @@ def _scrub_url(u):
     return f'{parts.scheme}://{host}/…' if host else '<url>'
 
 
-def scrub(text, limit=2000):
+def scrub(text, limit=2000, *, _sub=re.sub):
     """Text with URLs, home folders, user names, addresses, hosts, ids and keys replaced."""
+    # The internal substitution hook lets the connection log retain source ranges through
+    # this exact pipeline. Ordinary callers keep the same substitutions and output limit.
     if text is None:
         return None
-    t = URL_RE.sub(lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
+    t = _sub(URL_RE, lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
     home = str(Path.home())
     if len(home) > 3:
-        t = t.replace(home, '~')
-    t = re.sub(r'(/Users/|/home/|[A-Za-z]:\\Users\\)[^/\\\s]+', r'\1<user>', t)
+        t = _sub(re.escape(home), '~', t)
+    # A home folder's whole name ("C:\Users\Jane Doe", "/Users/O'Brien"), up to the next separator.
+    t = _sub(r'''(?i)(/Users/|/home/|[A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n"]+''', r'\1<user>', t)
+    # ssh's "user@host: ..." and "user@host's password:", the whole field: the user even with
+    # spaces or a DOMAIN\ prefix, the host even a full domain name. Before the email rule, which
+    # would otherwise take only the last word of the user.
+    t = _sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|"<]{1,64}@[\w.\[\]%:<>-]+?(?=:(?:\s|$)|'s\s)''',
+               '<user>@<host>', t)
     for pattern, repl in SCRUBS:
-        t = pattern.sub(repl, t)
-    t = IPV6_RE.sub(_ipv6, t)
+        t = _sub(pattern, repl, t)
+    t = _sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)  # any other word@host
+    t = _sub(IPV6_RE, _ipv6, t)
     for name in _user_names():
-        t = re.sub(r'\b%s\b' % re.escape(name), '<user>', t)
+        t = _sub(r'\b%s\b' % re.escape(name), '<user>', t)
     return t[:limit]
 
 
 # From the most to the least specific; the first match wins.
 CATEGORIES = [
+    # A web-link download (frame_webinstall) that broke or didn't check out: not the headset,
+    # whatever the reason, and first so a file name in the message can't put it elsewhere.
+    ('download_failed', re.compile(r"\A(?:download failed: |download cut off at |downloaded \d+ bytes; |"
+                                   r"the server says \d+ bytes; )|doesn't match the manifest's sha256; "
+                                   r"not installing it\Z")),
     ('android_installer', re.compile(r'INSTALL_(?:FAILED|PARSE_FAILED)_[A-Z_]+')),
     ('apk_needs_newer_android', re.compile(r'needs Android API')),
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
-    ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name')),
+    ('layer_missing', re.compile(r'OpenXR compatibility layer')),
+    ('apk_repack_failed', re.compile(r'could not prepare the APK for the Frame')),
+    ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)")),
+    ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name|'
+                                  r'not a readable APK|not an APK|APK manifest|in the APK (?:uses a compression|is )')),
     ('cant_run_on_frame', re.compile(r"can't run on the Frame")),
     ('steam_shortcut', re.compile(r'(?i)steam did not return a shortcut|shortcut list|no Steam shortcut')),
+    # The Frame-side scripts that talk to the Steam client's UI (frame/android/steam_shortcuts.py), which
+    # fail with their own words or a Python traceback, its last lines kept. Before frame_unreachable:
+    # "Connection refused" and "timed out" here are Steam's debug port on the Frame, not ssh.
+    ('steam_not_running', re.compile(r'SharedJSContext not found|'
+                                     r'URLError: <urlopen error \[Errno 111\] Connection refused>|'
+                                     r'ConnectionRefusedError: \[Errno 111\]')),
+    ('steam_not_responding', re.compile(r'websocket handshake failed|(?:socket\.timeout|TimeoutError): timed out|'
+                                        r'(?:\A|\n)EOFError\Z')),
+    ('steam_js_error', re.compile(r'JS error: ')),
+    ('artwork_failed', re.compile(r'incomplete artwork render|artwork renderer did not produce|'
+                                  r'render is \d+ bytes of|could not prepare artwork|all five Steam artwork slots')),
+    # Copying the APK (or its launcher) to the Frame: rsync or scp ran out of time.
+    ('copy_timeout', re.compile(r'to the Frame timed out\Z')),
     ('frame_not_set_up', re.compile(r'(?i)Could not resolve hostname|no "?frame"? (?:SSH )?alias')),
-    ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed')),
+    ('frame_auth', re.compile(r'(?i)Permission denied|Host key verification failed|'
+                              r'REMOTE HOST IDENTIFICATION HAS CHANGED|host key is known for')),
+    # Anything ssh says about its own connection: "ssh: connect to host … port 22: <reason>" (Windows
+    # says "Unknown error"), a dropped shared connection (mux_client_…, client_loop), and Windows'
+    # "banner exchange: Connection to UNKNOWN port -1" (its ssh can't name a peer whose connect
+    # failed late). Not a bare "ssh exited 255": a command on the Frame can exit 255 too.
     ('frame_unreachable', re.compile(r'(?i)timed out|Connection (?:refused|reset|closed)|No route to host|'
-                                     r'Network is unreachable|Operation timed out|asleep|kex_exchange')),
+                                     r'Network is unreachable|Host is down|asleep|kex_exchange|banner exchange|'
+                                     r'ssh: connect to host |mux_client_|client_loop: ')),
     ('frame_disk_full', re.compile(r'(?i)No space left|disk full|ENOSPC')),
+    # rsync or scp failed for another reason ("connection unexpectedly closed", or no words at all).
+    ('copy_failed', re.compile(r'\Acopying .+ to the Frame failed: ')),
     ('download_failed', re.compile(r'(?i)HTTP (?:Error )?\d{3}|URLError|download|certificate verify failed')),
     ('flatpak', re.compile(r'(?i)flatpak|flathub')),
     ('cancelled', re.compile(r'(?i)cancel')),
@@ -258,8 +316,16 @@ CATEGORIES = [
 ]
 
 
+# Python's own errors for a mistake in Frame Control's code, whatever their message says.
+BUG_ERRORS = (KeyError, IndexError, TypeError, AttributeError, NameError, AssertionError,
+              ZeroDivisionError, RecursionError, UnicodeError, json.JSONDecodeError)
+
+
 def categorize(message):
-    """(category, detail): a fixed category name, plus an Android installer code when there is one."""
+    """(category, detail): a fixed category name, plus an Android installer code when there is one.
+    message may be the exception itself: one of BUG_ERRORS is internal_error."""
+    if isinstance(message, BUG_ERRORS):
+        return 'internal_error', None
     text = str(message or '')
     for name, pattern in CATEGORIES:
         m = pattern.search(text)
@@ -318,39 +384,64 @@ def page_event(body):
     return {'queued': capture(name, props)}
 
 
+def country():
+    """The two-letter country of the computer's time zone setting, or None. Only names in the
+    tz database's table count, so nothing else in the setting can be sent. The app passes the
+    zone from Electron, which knows it on every OS; from a checkout it's read from /etc/localtime."""
+    tz = os.environ.get('FRAME_CONTROL_TIMEZONE') or os.environ.get('TZ', '').lstrip(':')
+    if not tz:
+        try:
+            tz = os.path.realpath('/etc/localtime').split('/zoneinfo/', 1)[1]
+        except (OSError, IndexError):
+            return None
+    return frame_timezones.COUNTRY.get(tz)
+
+
 def app_started():
-    """Once per server start: first install, an update, and one open a day."""
+    """Once per server start: first install, an update, and one open a day, with the country
+    (left out when sending if the notice this person saw came before it: flush)."""
     if blocked():
         return
     with _lock:
         s = settings()
         version, today = app_version(), time.strftime('%Y-%m-%d')
+        cc = country()
+        where = {'country': cc} if cc else {}
         if not s['installed_sent']:
-            capture('app_installed')
+            capture('app_installed', where)
             s['installed_sent'] = True
         elif s['last_version'] and s['last_version'] != version:
-            capture('app_updated', {'from_version': s['last_version']})
+            capture('app_updated', {'from_version': s['last_version'], **where})
         if s['last_open_day'] != today:
-            capture('app_opened')
+            capture('app_opened', where)
             s['last_open_day'] = today
         s['last_version'] = version
         _save(s)
 
 
-def frame_seen(build, version):
-    """The Frame's SteamOS build, once per build (public build numbers)."""
-    key = f'{build}/{version}'
+def frame_seen(build, version, headset=None, saved=None):
+    """The Frame's SteamOS build (public build numbers), once per build for each headset.
+    headset: the anonymous hash from frame_status.headset_id; saved: how many headsets
+    this copy of the app has set up."""
+    headset = headset if isinstance(headset, str) and re.fullmatch(r'[0-9a-f]{16}', headset) else None
+    key = f'{build}/{version}' + (f'/{headset}' if headset else '')
     with _lock:
         s = settings()
         if not build or key in s['frames_seen']:
             return
-        s['frames_seen'] = (s['frames_seen'] + [key])[-20:]
+        s['frames_seen'] = (s['frames_seen'] + [key])[-FRAMES_SEEN_KEEP:]
         _save(s)
-    capture('frame_connected', {'steamos_build': str(build)[:40], 'steamos_version': str(version or '')[:40]})
+    p = {'steamos_build': str(build)[:40], 'steamos_version': str(version or '')[:40]}
+    if headset:
+        p['headset_id'] = headset
+    if isinstance(saved, int) and saved >= 0:
+        p['headsets_saved'] = saved
+    capture('frame_connected', p)
 
 
-def install_finished(kind, ok, seconds=None, error=None, **props):
-    """kind: apk, flatpak, steam, title or web. props must already be public (no file names)."""
+def install_finished(kind, ok, seconds=None, error=None, diagnose=True, **props):
+    """kind: apk, flatpak, steam, title or web. props must already be public (no file names).
+    diagnose=False when the error is reported as a diagnostic elsewhere."""
     p = {'kind': kind, 'ok': bool(ok), **{k: v for k, v in props.items() if v is not None}}
     if seconds is not None:
         p['seconds'] = round(seconds, 1)
@@ -358,9 +449,23 @@ def install_finished(kind, ok, seconds=None, error=None, **props):
         p['error_category'], code = categorize(error)
         if code:
             p['installer_code'] = code
+    elif not ok:
+        p['error_category'] = 'other'
     capture('install_finished', p)
-    if error is not None and not ok:
+    if error is not None and not ok and diagnose:
         diagnostic(f'{kind} install failed', error)
+
+
+def link_failed(error):
+    """Whether an ssh helper marked this error (frame_host.link_failure) as ssh failing to reach the
+    headset: the error itself, or one it was re-raised from (`raise Failure(...) from e`)."""
+    for _ in range(10):  # a cause chain is short; never loop on a cycle
+        if error is None:
+            return False
+        if getattr(error, 'frame_link_failed', False):
+            return True
+        error = getattr(error, '__cause__', None)
+    return False
 
 
 def diagnostic(where, error, tb=None):
@@ -368,11 +473,17 @@ def diagnostic(where, error, tb=None):
     if not enabled('diagnostics'):
         return
     message = scrub(error)
-    fingerprint = f'{where}|{message[:120]}'
+    category = categorize(error)[0]
     now = time.time()
     with _lock:
-        if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
-            return
+        if category in EXPECTED_CATEGORIES and link_failed(error):
+            fingerprint = f'expected|{category}'
+            if fingerprint in _seen_errors:
+                return
+        else:
+            fingerprint = f'{where}|{message[:120]}'
+            if now - _seen_errors.get(fingerprint, 0) < REPEAT_WINDOW:
+                return
         _seen_errors[fingerprint] = now
     exc_type = type(error).__name__ if isinstance(error, BaseException) else 'Error'
     frames = []
@@ -385,7 +496,7 @@ def diagnostic(where, error, tb=None):
                                                 'mechanism': {'handled': True, 'type': 'generic'},
                                                 'stacktrace': {'type': 'raw', 'frames': frames[-30:]}}],
                            '$exception_type': exc_type, '$exception_message': message,
-                           'where': scrub(where, 200), 'error_category': categorize(error)[0]},
+                           'where': scrub(where, 200), 'error_category': category},
             level='diagnostics')
 
 
@@ -403,7 +514,7 @@ def compat_report(report):
         if k in p:
             p[k] = scrub(p[k], n)
     src = str(p.pop('source', '') or '')
-    if src == 'F-Droid':
+    if src in ('F-Droid', 'meta-store'):  # fixed source tags, never a person's file name
         p['source'] = src
     elif src.startswith(('http://', 'https://')) and _scrub_url(src) != '<url>':
         p['source'] = _scrub_url(src)
@@ -497,10 +608,14 @@ def flush(timeout=20):
         if blocked() or not settings()['notice_shown']:
             return 0
         with _lock:
-            _drop_unwanted(settings())
+            s = settings()
+            _drop_unwanted(s)
             batch = _read_lines(OUTBOX)[:100]
         if not batch:
             return 0
+        if not _notice_current(s):  # what a newer notice added stays here until it's been seen
+            for e in batch:
+                e['properties'].pop('country', None)
         try:
             post(batch, timeout)
         except SendError:
