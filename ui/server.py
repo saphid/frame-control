@@ -2765,7 +2765,7 @@ def push_media(path):
             "id": token + "/" + name}
 
 
-# ---- Mac in the headset (frame_macview.py) ----------------------------------
+# ---- Mac in the headset (frame_macview.py), PC in the headset (frame_pcview.py) ----
 
 # The tunnel gets its own connection: the shared master's options would win
 # over anything added after them.
@@ -2788,7 +2788,8 @@ def macview_state(query=None):
 
 
 def macview_action(body):
-    """{action: show|stop|permissions, src, quality, w, h}."""
+    """{action: show|stop|permissions, src, quality, w, h} | {action: enable, on}.
+    enable turns PC in the headset (Experimental, Windows only) on or off."""
     if LOCAL:
         raise Failure("Runs on your computer, not the headset.", 400)
     action = body.get("action")
@@ -2801,6 +2802,10 @@ def macview_action(body):
             return macview.stop(body.get("src") or None)
         if action == "permissions":
             return macview.request_permissions()
+        if action == "enable":
+            if not isinstance(macview, frame_pcview.PCView):
+                raise Failure("PC in the headset is only available on Windows.", 400)
+            return macview.set_enabled(body.get("on") is True)
     except frame_macview.MacViewError as e:
         raise Failure(str(e), 502)
     raise Failure("unknown action", 400)

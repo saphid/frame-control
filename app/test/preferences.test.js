@@ -36,7 +36,7 @@ test("client choices survive a new native session and local server origin", t =>
   assert.deepEqual(first.read(), { mvSeparate: "1", padUsed: "1" });
 });
 
-test("only the two non-sensitive binary choices can enter the native store", t => {
+test("only the non-sensitive binary choices can enter the native store", t => {
   const file = fixture(t), store = preferenceStore(file);
   for (const [key, value] of [["token", "secret"], ["__proto__", "1"], ["padUsed", true], ["mvSeparate", "yes"]]) {
     assert.throws(() => store.write(key, value), /Invalid preference/);
@@ -57,4 +57,12 @@ test("a missing or damaged preference file retains usable defaults", t => {
   }
   store.write("padUsed", "1");
   assert.deepEqual(store.read(), { padUsed: "1" });
+});
+
+test("the PC in the headset opt-in is remembered and off unless saved", t => {
+  const file = fixture(t), store = preferenceStore(file);
+  assert.equal(store.read().pcView, undefined);
+  store.write("pcView", "1");
+  assert.deepEqual(preferenceStore(file).read(), { pcView: "1" });
+  assert.throws(() => store.write("pcView", "on"), /Invalid preference/);
 });

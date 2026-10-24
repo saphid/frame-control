@@ -2,6 +2,10 @@
 Native tests require the bundled libraries; CI sets REQUIRE_NATIVE so a missing
 bundle is a failure, never a silent skip. No desktop consent or GPU is faked as
 successful real-host capture.
+
+The encoding tests need x264, which only CI's own builds bundle (it's GPL, so
+the installer leaves it out). FRAME_PC_REQUIRE_X264=1 makes its absence a
+failure; FRAME_PC_INSTALLER_BUNDLE=1 checks the installer's bundle instead.
 """
 import ctypes
 import http.client
@@ -50,6 +54,100 @@ class GrantsTests(unittest.TestCase):
         ticket = g.ticket('test')
         g.revoke()
         self.assertIsNone(g.redeem('test', {'t': ticket}))
+
+
+class GatingTests(unittest.TestCase):
+    """Experimental, Windows only, and off until the person turns it on."""
+
+    def view(self):
+        return frame_pcview.PCView(['ssh'], mock.Mock(), 'frame')
+
+    def test_only_windows_gets_the_pc_host(self):
+        for platform, cls in (('win32', frame_pcview.PCView), ('linux', frame_macview.MacView),
+                              ('darwin', frame_macview.MacView)):
+            with mock.patch.object(frame_pcview.sys, 'platform', platform):
+                view = frame_pcview.host_view(['ssh'], mock.Mock(), 'frame')
+            self.assertIs(type(view), cls, platform)
+
+    def test_off_by_default_starts_nothing(self):
+        view = self.view()
+        with mock.patch.object(frame_pcview.sys, 'platform', 'win32'), \
+                mock.patch.object(frame_macview.subprocess, 'Popen', side_effect=AssertionError('started while off')):
+            state = view.state()
+            self.assertEqual(state, {'available': False, 'reason': frame_pcview.OFF, 'host': view.host,
+                                     'experimental': True, 'enabled': False})
+            with self.assertRaises(frame_macview.MacViewError):
+                view.show('window:12')
+        view.run.assert_not_called()
+
+    def test_never_offered_off_windows_even_when_turned_on(self):
+        view = self.view()
+        view.enabled = True
+        with mock.patch.object(frame_pcview.sys, 'platform', 'linux'):
+            self.assertIn('only available on Windows', view.unavailable())
+
+    def test_turning_on_checks_for_the_bundled_libraries(self):
+        view = self.view()
+        missing = mock.Mock(is_file=mock.Mock(return_value=False))
+        with mock.patch.object(frame_pcview.sys, 'platform', 'win32'), \
+                mock.patch.object(frame_pcview, 'LIBRARY', missing):
+            state = view.set_enabled(True)
+        self.assertTrue(state['enabled'])
+        self.assertFalse(state['available'])
+        self.assertIn('libraries are missing', state['reason'])
+
+    def test_turning_off_stops_streams_and_the_helper(self):
+        view = self.view()
+        view.enabled = True
+        agent = mock.Mock()
+        agent.poll.return_value = None
+        view.agent, view.tunnel = agent, mock.Mock()
+        tunnel = view.tunnel
+        tunnel.poll.return_value = None
+        view.stop = mock.Mock()
+        with mock.patch.object(frame_pcview.sys, 'platform', 'win32'):
+            state = view.set_enabled(False)
+        view.stop.assert_called_once_with()
+        agent.stdin.close.assert_called_once()
+        agent.wait.assert_called()
+        tunnel.terminate.assert_called_once()
+        self.assertIsNone(view.agent)
+        self.assertEqual((state['enabled'], state['reason']), (False, frame_pcview.OFF))
+
+    def test_server_enable_action(self):
+        import sandbox  # noqa: F401  (keeps the server off real data and services)
+        import server
+        with mock.patch.object(server, 'macview', frame_macview.MacView(['ssh'], mock.Mock(), 'frame')):
+            with self.assertRaises(server.Failure) as e:
+                server.macview_action({'action': 'enable', 'on': True})
+            self.assertIn('only available on Windows', str(e.exception))
+        view = self.view()
+        view.set_enabled = mock.Mock(return_value={'enabled': True})
+        with mock.patch.object(server, 'macview', view):
+            self.assertEqual(server.macview_action({'action': 'enable', 'on': True}), {'enabled': True})
+            server.macview_action({'action': 'enable', 'on': 'yes'})  # anything but true is off
+        self.assertEqual([c.args for c in view.set_enabled.call_args_list], [(True,), (False,)])
+
+
+class PageTests(unittest.TestCase):
+    page = (ROOT / 'ui' / 'index.html').read_text(encoding='utf-8')
+
+    def test_tool_link_is_windows_only_and_marked_experimental(self):
+        self.assertIn('<a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span>'
+                      '<small>Experimental:', self.page)
+        self.assertIn('$("pcToolLink").hidden = h.mobile || h.os !== "Windows";', self.page)
+        self.assertIn('$("macToolLink").hidden = h.mobile || h.os !== "macOS";', self.page)
+
+    def test_card_says_experimental_and_what_is_unverified(self):
+        self.assertIn('<span class="tag" id="mvTag" hidden>Experimental</span>', self.page)
+        self.assertIn('<input type="checkbox" id="mvPcOn">', self.page)
+        self.assertIn("hasn't been tried on a real\n          Windows desktop or with a headset yet", self.page)
+        self.assertIn('docs/pc-in-headset.md', self.page)
+
+    def test_opt_in_is_remembered_with_the_client_preferences(self):
+        self.assertIn("const keys = ['mvSeparate', 'padUsed', 'pcView']", self.page)
+        prefs = (ROOT / 'app' / 'preferences.js').read_text(encoding='utf-8')
+        self.assertIn('const KEYS = ["mvSeparate", "padUsed", "pcView"];', prefs)
 
 
 class AdapterTests(unittest.TestCase):
@@ -209,6 +307,21 @@ class AdapterTests(unittest.TestCase):
         self.assertEqual(len(stats.frames), 4096)
 
 
+def x264_bundled():
+    return any((capture.NATIVE / 'lib' / 'gstreamer-1.0').glob('*gstx264*'))
+
+
+def needs_x264(test):
+    def run(self):
+        if not x264_bundled():
+            if os.environ.get('FRAME_PC_REQUIRE_X264') == '1':
+                raise AssertionError('CI required x264 in the native PC bundle (desktop/build.py --with-x264)')
+            raise unittest.SkipTest('x264 is only in CI test bundles, not the installer')
+        return test(self)
+    run.__name__, run.__doc__ = test.__name__, test.__doc__
+    return run
+
+
 class NativeTests(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -300,6 +413,24 @@ lib.pw_main_loop_destroy(loop)
         result = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True, timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_agent_reports_its_host_and_encoder(self):
+        self.assertEqual(self.request('/status')[0], 403)
+        status, body = self.request('/status?k='+self.token)
+        self.assertEqual(status, 200)
+        data = json.loads(body)
+        if sys.platform == 'win32':
+            self.assertEqual((data['host'], data['encoder']), ('windows', 'mfh264enc'))
+        self.assertEqual(data['streams'], [])
+
+    @unittest.skipUnless(os.environ.get('FRAME_PC_INSTALLER_BUNDLE') == '1', 'checks the installer\'s bundle')
+    def test_installer_bundle_leaves_out_gpl_x264(self):
+        self.assertFalse(x264_bundled())
+        self.assertFalse(list((capture.NATIVE / 'bin').glob('libx264*')))
+        plugins = [p.name for p in (capture.NATIVE / 'lib' / 'gstreamer-1.0').iterdir()]
+        for name in ('mediafoundation', 'd3d11', 'jpeg'):
+            self.assertTrue(any(p.endswith('gst%s.dll' % name) for p in plugins), (name, plugins))
+
+    @needs_x264
     def test_last_raw_picture_survives_a_closed_gate(self):
         # A source sends ONE changed frame, then becomes idle. It must reach
         # the encoder after congestion clears, without needing another update.
@@ -340,6 +471,7 @@ finally:
         result = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    @needs_x264
     def test_auth_and_real_h264_stats(self):
         self.assertEqual(self.request('/status')[0], 403)
         status, body = self.request('/ticket?src=test&k='+self.token, 'POST')
