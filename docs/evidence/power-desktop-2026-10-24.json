@@ -1,0 +1,36 @@
+{
+  "date": "2026-10-24",
+  "base": "c7489a8 (v0.4.14)",
+  "feature": "Desktop Tools power and heat observations",
+  "automated": {
+    "targeted": "python3 -m unittest discover -s tests -p 'test_power*.py': 35 passed",
+    "uiAndResourceGuard": "node --test tests/power_desktop.cjs: 7 passed",
+    "desktopApp": "node --test app/test/*.test.js: 37 passed",
+    "packaging": "Materialized ui/scripts resources selected by app/package.json; isolated Python -I imported frame_power, constructed remote payload including frame_status, and read idle status. Missing resource detection tested. Shared phone bundle import passed.",
+    "syntax": "Python compilation, sampler shell syntax and git diff --check passed",
+    "fullSuite": "python3 -m unittest discover -s tests -v: 1363 tests, OK (skipped=15), 153.274 seconds",
+    "transientFailure": "An earlier full run had one nested sandbox-test failure: the existing OneServer second-server child exited -11 (SIGSEGV), expected 1. Isolated sandbox rerun passed (6 tests), then the complete suite passed. No unrelated server-lifecycle code was changed."
+  },
+  "browser": {
+    "environment": "T3 collaborative Chromium preview, Linux, local Python Handler server; synthetic observation subprocess at accelerated one-second intervals; normal headset SSH disabled during start/stop/download verification",
+    "observations": [
+      "Opened #powerReport and verified labeled duration selector, disabled Stop/downloads before start and accessible sample progress.",
+      "Started a synthetic observation and observed 11 of 12 samples in progress; completion allowed another start.",
+      "Started again, observed progress, stopped, and saw 7 of 12 samples retained with explicit incomplete state and original frame alias.",
+      "Clicked HTML download and saw the UI acknowledge the request; T3's download list did not record the blob download, so filesystem save was not verified.",
+      "Fetched all three authenticated export endpoints in the browser: HTML 200 (7599 characters), JSON 200 (2618 characters, 7 samples), CSV 200 (977 characters); each retained the stop reason."
+    ]
+  },
+  "realFrame": {
+    "lock": "ssh frame 'mkdir /tmp/frame-test.lock' succeeded before real-device probe; this task removed only that owned empty lock with rmdir after verification",
+    "probe": "Ran the production desktop Observation using strict, batch SSH to frame. The first attempt exposed a missing structured reason on early remote lock refusal; fixed and reran successfully.",
+    "result": "0 of 12 samples; running=false; stopped='Smoke session active (/tmp/frame-test.lock); no sensors read'. Exported HTML included the same incomplete reason.",
+    "scope": "Lock refusal only. No successful real sensor session, installation, app launch/stop, power control or thermal control was performed for this feature."
+  },
+  "limitations": [
+    "Native Electron installers were not built or launched; resource staging and build-hook contracts were tested.",
+    "One latest report is retained only in server memory. Starting again, restarting the server or quitting discards it; the UI warns users to download first.",
+    "Stopping ends only the owned local SSH process. The bounded remote reader discovers closure on its next write; immediate remote cancellation is not guaranteed.",
+    "Phone-hosted observation starts are unsupported; the shared server bundle still imports without desktop sampler resources."
+  ]
+}

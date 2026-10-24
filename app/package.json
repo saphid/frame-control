@@ -68,7 +68,9 @@
         "from": "../scripts",
         "to": "scripts",
         "filter": [
-          "*.sh"
+          "*.sh",
+          "frame_power_sample.py",
+          "frame_power_report.py"
         ]
       },
       {

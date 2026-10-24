@@ -89,6 +89,28 @@ class Report(unittest.TestCase):
         self.assertIn('Stopped by user', report['stopped'])
         self.assertIsNotNone(children[0].poll())
 
+    def test_canceled_launch_does_not_open_ssh(self):
+        import threading
+        stop = threading.Event()
+        stop.set()
+        with mock.patch.object(power.subprocess, 'Popen') as spawn:
+            report = power.stream_report(['ssh', 'frame'], '', 12, 5, stop_event=stop)
+        spawn.assert_not_called()
+        self.assertIn('Stopped before collection', report['stopped'])
+
+    def test_stop_interrupts_child_that_never_reads_payload(self):
+        import threading
+        stop = threading.Event()
+        timer = threading.Timer(0.1, stop.set)
+        timer.start()
+        try:
+            report = power.stream_report([sys.executable, '-c', 'import time; time.sleep(30)'],
+                                         'x' * 1048576, 1, 1, stop_event=stop)
+        finally:
+            timer.cancel()
+        self.assertIn('Stopped', report['stopped'])
+        self.assertEqual(report['samples'], [])
+
     def test_invalid_stream_is_not_completed(self):
         report = self.collect('import sys; sys.stdin.read(); print("not json")')
         self.assertIn('interrupted', report['stopped'])

@@ -1430,8 +1430,22 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
+<section class="panel" id="powerReport">
+  <h2>Power &amp; heat report</h2>
+  <p class="sub">Observe battery, CPU, temperatures and available sensors without changing settings. One observation at a time, every five seconds, for at most five minutes.</p>
+  <label for="powerPreset">Observation length</label>
+  <select id="powerPreset"><option value="minute">1 minute · 12 samples</option><option value="five-minutes">5 minutes · 60 samples</option></select>
+  <div class="row"><button class="action" id="powerStart">Start observation</button><button id="powerStop" disabled>Stop and keep samples</button></div>
+  <progress id="powerProgress" max="12" value="0" aria-label="Samples received" hidden></progress>
+  <p id="powerStatus" role="status" aria-live="polite">No observation yet.</p>
+  <div class="row"><button data-power-format="html" disabled>Download HTML report</button><button data-power-format="json" disabled>Download JSON</button><button data-power-format="csv" disabled>Download CSV</button></div>
+  <p id="powerSaveStatus" role="status" aria-live="polite"></p>
+  <p class="hint">Download before starting again or quitting: only the latest observation is kept in memory. Downloads during collection are incomplete snapshots. Stop, disconnect or switching headsets keeps received samples, labeled with the original headset. A smoke session blocks sensor reads.</p>
+  <p class="hint">Open the saved HTML in your browser; it works offline and includes JSON/CSV downloads. Unknown readings are never treated as zero. Rails overlap; do not add them. Sensor accuracy is unverified. Reports include sensor paths and OS builds: review before sharing.</p>
+</section>
+
 <section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
     <div class="stats" id="vrMetrics"></div>
@@ -2158,7 +2172,7 @@ const savesToDevice = () => !!(window.frameApp && window.frameApp.saveImages);
 // then are about the old one, so they're dropped rather than shown.
 let devGen = 0;
 // Answers that don't depend on the headset (this computer's data, the catalogue, jobs).
-const HEADSET_FREE = /^\/api\/(devices|connection|host|job|titles\/job|webinstall\/job|apk-versions|android\/(catalog|reports)|steam\/search)\b/;
+const HEADSET_FREE = /^\/api\/(power|devices|connection|host|job|titles\/job|webinstall\/job|apk-versions|android\/(catalog|reports)|steam\/search)\b/;
 async function api(path, body, device = window.connDevice) {
   const gen = devGen;
   const checkGeneration = () => {
@@ -5454,6 +5468,63 @@ $("panelList").onclick = e => {
   act("Show panel", () => api("/api/panels", {action: "focus", key: b.dataset.panel}), b);
 };
 
+// ---- Read-only power observation ----
+let powerState = null, powerTimer = null, powerSeq = 0;
+function renderPower(s) {
+  powerState = s;
+  $('powerStart').disabled = !!s.running;
+  $('powerPreset').disabled = !!s.running;
+  $('powerStop').disabled = !s.running;
+  $('powerProgress').max = s.requested || 1;
+  $('powerProgress').value = s.received;
+  $('powerProgress').hidden = !s.id;
+  const identity = s.headset ? `Headset: ${s.headset.alias}. ` : '';
+  $('powerStatus').textContent = s.id ? identity + `${s.received} of ${s.requested} samples received. ` +
+    (s.running ? (s.stopped?.startsWith('Stopped') ? 'Stopping…' : 'Observing…') : s.stopped ? `Incomplete: ${s.stopped}` : 'Completed.') : 'No observation yet.';
+  document.querySelectorAll('[data-power-format]').forEach(b => b.disabled = !s.id);
+}
+async function loadPower() {
+  const seq = ++powerSeq;
+  clearTimeout(powerTimer);
+  try {
+    const s = await api('/api/power');
+    if (seq !== powerSeq) return;
+    renderPower(s);
+    if (s.running && location.hash === '#powerReport') powerTimer = setTimeout(loadPower, 1000);
+  } catch (e) {
+    if (seq !== powerSeq) return;
+    $('powerStatus').textContent = `Observation status unavailable: ${e.message}. Received samples remain on the local server while it is running.`;
+    if (location.hash === '#powerReport') powerTimer = setTimeout(loadPower, 3000);
+  }
+}
+$('powerStart').onclick = async () => {
+  $('powerStart').disabled = true;
+  try {
+    renderPower(await api('/api/power', {action:'start', preset:$('powerPreset').value}));
+    loadPower();
+  } catch (e) { $('powerStatus').textContent = e.message; $('powerStart').disabled = !!powerState?.running; }
+};
+$('powerStop').onclick = async () => {
+  if (!powerState?.id) return;
+  $('powerStop').disabled = true;
+  try { renderPower(await api('/api/power', {action:'stop', id:powerState.id})); loadPower(); }
+  catch (e) { $('powerStatus').textContent = e.message; $('powerStop').disabled = false; }
+};
+document.querySelectorAll('[data-power-format]').forEach(b => b.onclick = async () => {
+  if (!powerState?.id) return;
+  const id = powerState.id, format = b.dataset.powerFormat;
+  b.disabled = true;
+  try {
+    const r = await fetch(`/api/power/report?id=${encodeURIComponent(id)}&format=${format}`, {headers:{'X-Frame-UI':UI_KEY}});
+    if (!r.ok) throw new Error((await r.json()).error || `HTTP ${r.status}`);
+    const blob = await r.blob(), a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = `frame-power-${id}.${format}`; a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    $('powerSaveStatus').textContent = 'Download requested. Open the saved HTML in your browser to view it offline; it includes JSON and CSV downloads.';
+  } catch (e) { $('powerSaveStatus').textContent = `Download failed: ${e.message}`; }
+  finally { b.disabled = !powerState?.id; }
+});
+
 // ---- Read-only game storage ----
 let storageSeq = 0;
 const storageState = s => ({'permission-denied':'Permission denied', missing:'Missing or disconnected',
@@ -5761,10 +5832,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", backup:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", powerReport:"tools", backup:"tools"};
 const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", backup:"Backup & recovery"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", powerReport:"Power & heat report", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -5872,6 +5943,7 @@ function showPage(e) {
   if (tool === 'panels') loadPanelSwitcher();
   if (tool === 'backup') loadBackups();
   if (tool === 'storage') loadStorage();
+  if (tool === 'powerReport') loadPower();
   if (tool === 'androidSettings') {
     $('repNew').hidden = false; $('androidSettings').prepend($('repNew')); loadDisplays();
   }

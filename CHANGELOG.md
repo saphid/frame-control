@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add desktop Tools → Power & heat report: bounded read-only one/five-minute
+  observations with progress, stop and HTML/JSON/CSV downloads. Received samples
+  survive stop, disconnect and headset switch, labeled incomplete and tied to the
+  original headset. Shared sampler/report modules ship with the app; no power or
+  thermal controls are added. Download before replacing a report or quitting.
+
 - Fix Return to Game Mode misidentifying full Plasma Desktop Mode when its VR
   overlay also runs gamescope (issue #142). Session targets now determine the
   mode; conflicting or incomplete evidence stays unknown. Use SteamOS's
