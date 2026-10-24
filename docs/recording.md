@@ -1,6 +1,6 @@
 # Recording and Steam clips
 
-Frame Control can record what the headset shows, with its sound, and save it as
+Frame Control can record SteamVR's mirrored headset view, with its sound, and save it as
 an `.mp4` on your computer. It can also export the clips and background
 recordings from Steam's own game recording, at any length, as one `.mp4` each.
 Both are on **Tools → Capture & Live**. Everything is saved to
@@ -46,6 +46,21 @@ the Frame, converted to `.mp4` there (without re-encoding) and copied to
   deleted when the next one starts.
 
 Recording and **Live** can run together; both read the same device.
+
+### Does Record include passthrough?
+
+**Record captures SteamVR's `system.HeadsetView` mirror from `/dev/video99`.**
+Frame Control does not open the headset's passthrough cameras or add a separate
+camera layer to the MP4. If SteamVR puts passthrough into that mirror, it will
+appear in the recording; Frame Control cannot force or promise that result.
+Steam's own **Steam clips** use a separate game recording path and may differ.
+
+On 25 October 2026, the Frame was in standby. A frame captured from
+`/dev/video99` was black, as expected in standby, so this check **did not
+establish whether active passthrough appears in the mirror**. A wearer-visible
+passthrough session and its simultaneous mirror frame are still needed for a
+yes-or-no answer about passthrough pixels. See the
+[live compatibility evidence](evidence/steamos-compat-live-2026-10-25.md).
 
 ## Steam clips
 

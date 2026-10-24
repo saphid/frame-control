@@ -53,8 +53,13 @@ The battery reader selects a system battery by power-supply `type` and `scope`
 and reads standard sysfs fields. The memory reader uses `/proc/meminfo`.
 Neither relies on the performance overlay's labels or hard-coded SteamOS
 paths. SteamOS 0.5.6's improved overlay reporting does not establish a sysfs
-path change. The dominant-eye setting is not read yet; recording metadata
-must not claim an eye until its source and effect on `/dev/video99` are verified.
+path change. A live check on build `20261022.6153909` confirmed that Frame
+Control's existing readers return battery and memory values. The dominant-eye
+setting is not read yet; recording metadata must not claim an eye until its
+source and effect on `/dev/video99` are verified. The same check found the
+`beta` update branch, but the normal user could not query update availability
+through Atomupd; no update was applied. See the
+[live evidence](evidence/steamos-compat-live-2026-10-25.md).
 
 Sources: [SteamOS 3.9 news](https://store.steampowered.com/news/app/1675200),
 [Frame OS news](https://steamcommunity.com/app/4165890/allnews/), and the
