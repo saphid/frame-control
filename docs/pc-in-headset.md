@@ -1,15 +1,19 @@
 # PC in the headset (Experimental)
 
 **Tools → PC in the headset**, on Windows only. It's the Windows version of
-[Mac in the headset](mac-in-headset.md): a window or a whole screen on your PC
-becomes its own SteamVR panel in the Frame. Place it with the dashboard's Float
+[Mac in the headset](mac-in-headset.md): a whole screen on your PC
+becomes its own SteamVR panel in the Frame. Individual windows are available only
+with streaming libraries built with Windows Graphics Capture (WGC); the shipped
+MSYS2 libraries disable WGC, so this build explains that limitation and offers
+whole screens. Place the panel with the dashboard's Float
 in World, Move and Size, point and click with the laser, scroll with the
 thumbstick, and type on the PC's keyboard.
 
-**It's experimental and not yet tried on a real Windows desktop or with a
-headset.** It builds and passes its protocol tests on Windows in CI, but desktop
-capture, Media Foundation encoding and laser input have never run on a real
-PC. Expect it not to work yet. Reports are welcome through the
+**It's experimental.** A Windows 11 VM has captured its real desktop with
+Desktop Duplication and encoded it with Media Foundation and JPEG. Physical PCs,
+hardware encoding and physical laser input remain unverified. See
+[the dated evidence](evidence/windows-vm-2026-10-24.md) for results and limits.
+Reports are welcome through the
 [feedback form](https://frame-control.pages.dev/feedback/).
 
 ## Turning it on
@@ -31,17 +35,18 @@ streaming app. GStreamer is bundled as ordinary libraries.
 
 | | Windows |
 |---|---|
-| Capture | Windows.Graphics.Capture, through GStreamer's `d3d11screencapturesrc capture-api=wgc`, by window (HWND) or screen (HMONITOR) |
+| Capture | GStreamer's `d3d11screencapturesrc`: Desktop Duplication for whole screens in the shipped build; Windows.Graphics.Capture by window (HWND) or screen (HMONITOR) when that implementation is present |
 | Encoding | Media Foundation's H.264 encoder (`mfh264enc`), low latency, no B-frames. Whether it uses the GPU depends on the PC; **not verified** |
 | Input | `SendInput`, mapped through the source's bounds, with per-monitor DPI awareness |
 
-API choices are documented, not device-verified:
+API references:
 [Windows capture](https://learn.microsoft.com/en-us/windows/uwp/audio-video-camera/screen-capture),
 [GStreamer WGC](https://gstreamer.freedesktop.org/documentation/d3d11/d3d11screencapturesrc.html),
 [Media Foundation encoder](https://gstreamer.freedesktop.org/documentation/mediafoundation/mfh264enc.html).
 
-It needs Windows 10 or 11 with Windows.Graphics.Capture and a Media Foundation
-H.264 encoder (Windows "N" editions need the Media Feature Pack). Clicks and
+It needs Windows 10 or 11 with Desktop Duplication and a Media Foundation
+H.264 encoder (Windows "N" editions need the Media Feature Pack). WGC-enabled
+builds can also capture individual windows. Clicks and
 keys can't reach administrator apps or the sign-in screen, which an ordinary
 process can't drive. If Windows won't bring the chosen window to the front,
 input is refused rather than sent to the app covering it: bring the window
@@ -76,6 +81,13 @@ adapter and the controller), the GStreamer plugins it uses (`coreelements`,
 UCRT64 packages. `libraries.json` records the GStreamer version, the plugins,
 each copied DLL and the exact package versions; licence texts are in
 `licenses/`.
+
+MSYS2's `gst-plugins-bad` build disables `d3d11-wgc`. The presence of
+`d3d11screencapturesrc` alone does not prove WGC support: its `capture-api`,
+`window-handle` and `show-border` properties are conditional. The helper queries
+those properties on the instantiated element, advertises only supported
+sources, and omits all three properties for the DXGI whole-screen pipeline.
+It never substitutes a screen crop for an unavailable window capture.
 
 The x264 encoder is **not** in the installer. It's GPL, and Windows encodes
 with Media Foundation, so only CI's test builds include it
@@ -127,11 +139,17 @@ python scripts/macview-bench.py run --pc --scenario capture --source window:1234
   [earlier probe](../bench/results/2026-09-28-c5fc552-dirty-pc-agent-frame-arm64-hairpin.json).
 - **Verified, #38, on a Mac:** the C controller matched all 600 states of the
   Swift controller's congestion and recovery trace.
-- **Not verified:** anything on a real Windows desktop. Windows.Graphics.Capture,
-  Media Foundation (hardware or software), encoder restarts when the bitrate
+- **Verified, 2026-10-24:** Windows 11 VM build 26200.8037 on lxso2, using
+  the v0.4.10 installer with this fix, captured its actual desktop and streamed
+  H.264 to Frame BUILD_ID `20261015.6141207`: 219 sent frame records, 215 decoded
+  and drawn before the snapshot. The own-panel screenshot shows the Windows
+  desktop. This short, mostly idle run does not establish performance targets.
+  [Evidence, raw traces and cleanup](evidence/windows-vm-2026-10-24.md).
+- **Not verified:** Windows.Graphics.Capture, physical-PC capture, hardware
+  Media Foundation encoding, encoder restarts when the bitrate
   changes, mixed-DPI and multi-monitor input alignment, window resize and
   minimise, non-US keyboard layouts, physical laser input, and how it performs
   in a worn headset. No numbers are claimed for these. Not tested with a
-  headset from this branch.
+  worn headset. See the dated VM evidence for the separate automated checks.
 - **Not reviewed independently.** #38 tried an independent review that never
   completed.

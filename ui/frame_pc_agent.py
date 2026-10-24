@@ -29,6 +29,7 @@ from frame_stream_stats import Stats
 
 # Viewer fields are untrusted JSON: float('x'), int(None), m['t'] missing.
 MALFORMED = (ValueError, TypeError, KeyError, OverflowError)
+WINDOW_CAPTURE_UNAVAILABLE = 'Individual windows are unavailable in this build. Choose a whole screen instead.'
 
 
 class Grants:
@@ -386,6 +387,9 @@ class Agent:
         self.sessions, self.sources = {}, {}
         self.next_id, self.selecting, self.selection_error = 1, False, ''
         self.windows = Windows() if sys.platform == 'win32' else None
+        self.wgc = bool(self.windows) and all(native.has_property('d3d11screencapturesrc', p)
+                                            for p in ('capture-api', 'window-handle', 'show-border'))
+        self.window_capture_reason = WINDOW_CAPTURE_UNAVAILABLE if self.windows and not self.wgc else ''
         self.encoder = 'mfh264enc' if self.windows else 'vah264enc' if native.has('vah264enc') else 'x264enc'
         self.shutting_down = False
         self.selection_generation = 0
@@ -393,6 +397,10 @@ class Agent:
     def lists(self):
         if self.windows:
             windows, displays = self.windows.sources()
+            if not self.wgc:
+                windows = []
+            for source in windows + displays:
+                source['capture_api'] = 'wgc' if self.wgc else 'dxgi'
             self.sources = {s['src']: s for s in windows + displays}
             return windows, displays
         return [{k: v for k, v in s.items() if k not in ('portal', 'fd', 'node')} for s in self.sources.values()], []
@@ -400,6 +408,8 @@ class Agent:
     def source(self, src):
         if src == 'test':
             return dict(src='test', title='Test pattern', w=1280, h=720)
+        if self.window_capture_reason and isinstance(src, str) and src.startswith('window:'):
+            raise ValueError(self.window_capture_reason)
         self.lists()
         if src not in self.sources:
             raise ValueError('Choose a window or screen on this computer first')
@@ -498,6 +508,7 @@ class Handler(BaseHTTPRequestHandler):
                 windows, displays = agent.lists()
                 if method == 'GET' and url.path == '/status':
                     data = dict(version=1, host='windows' if agent.windows else 'linux', screen=True,
+                                windowCaptureReason=agent.window_capture_reason,
                                 accessibility=True, selecting=agent.selecting, selectionError=agent.selection_error,
                                 encoder=agent.encoder, finished=[], streams=[dict(id=i, src=s.src,
                                     title=s.source.get('title', ''), stats=s.stats.summary(), controller=s.controller.state())

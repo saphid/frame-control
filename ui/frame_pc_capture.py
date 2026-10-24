@@ -25,6 +25,7 @@ GATE = C.CFUNCTYPE(C.c_int, C.c_int, C.c_int64, C.c_int64, C.c_int64)
 
 class Native:
     def __init__(self, path=LIBRARY):
+        self.path = path
         self.dll_dirs = []
         if sys.platform == 'win32':
             # Set process coordinates before loading GStreamer: a plugin may
@@ -68,6 +69,30 @@ class Native:
 
     def has(self, name):
         return bool(self.lib.fc_has_element(name.encode()))
+
+    def has_property(self, element, name):
+        """An element can exist without its optional WGC implementation.
+
+        MSYS2 disables d3d11-wgc. Query the instantiated GObject class rather
+        than inferring support from the GStreamer version or factory name.
+        GTypeInstance's first member is its public g_class pointer.
+        """
+        gst = C.CDLL(str(self.path.parent / 'bin' / 'libgstreamer-1.0-0.dll')) if sys.platform == 'win32' else self.lib
+        obj = C.CDLL(str(self.path.parent / 'bin' / 'libgobject-2.0-0.dll')) if sys.platform == 'win32' else self.lib
+        gst.gst_element_factory_make.argtypes = [C.c_char_p, C.c_char_p]
+        gst.gst_element_factory_make.restype = C.c_void_p
+        gst.gst_object_unref.argtypes = [C.c_void_p]
+        gst.gst_object_unref.restype = None
+        obj.g_object_class_find_property.argtypes = [C.c_void_p, C.c_char_p]
+        obj.g_object_class_find_property.restype = C.c_void_p
+        ptr = gst.gst_element_factory_make(element.encode(), None)
+        if not ptr:
+            return False
+        try:
+            cls = C.cast(ptr, C.POINTER(C.c_void_p))[0]
+            return bool(obj.g_object_class_find_property(cls, name.encode()))
+        finally:
+            gst.gst_object_unref(ptr)
 
     def now(self):
         return self.lib.fc_now()
@@ -133,8 +158,13 @@ def pipeline(source, platform, encoder, w, h, fps, bitrate, codec='h264'):
         kind, ident = source['src'].split(':')
         if kind not in ('window', 'display') or not re.fullmatch(r'[0-9]+', ident):
             raise ValueError('Invalid Windows capture source')
+        api = source.get('capture_api', 'wgc')
+        if api not in ('wgc', 'dxgi') or (api == 'dxgi' and kind != 'display'):
+            raise ValueError('This build can only capture whole screens without Windows Graphics Capture')
         prop = 'window-handle' if kind == 'window' else 'monitor-handle'
-        capture = 'd3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true %s=%d' % (prop, int(ident))
+        # DXGI-only builds don't expose capture-api or show-border at all.
+        mode = ' capture-api=wgc show-border=true' if api == 'wgc' else ''
+        capture = 'd3d11screencapturesrc%s show-cursor=true %s=%d' % (mode, prop, int(ident))
     else:
         capture = 'pipewiresrc fd=%d path=%d do-timestamp=true' % (source['fd'], source['node'])
     # The source gate runs before conversion/encoding. There is no leaky queue
