@@ -7,6 +7,9 @@ This covers three directions, plus input:
 - **C. iPhone → Frame**: mirror the phone inside the headset.
 - **PC VR from Linux**: [feasibility and options](linux-vr-streaming.md),
   including Valve's streaming and USB support. No Linux host tested yet.
+- **Linux desktop → Frame panels**: [PC-host feasibility on lxso2](evidence/linux-pc-host-lxso2-2026-10-24.md).
+  Blocked on missing desktop portal/PipeWire and native build dependencies;
+  Linux desktop capture remains disabled and unverified.
 - **Input**: type and point in the Frame from the Mac or iPhone.
 - **Live view and Control**: watch a panel flat and tap on it to use it.
 
