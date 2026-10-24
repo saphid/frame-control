@@ -1,13 +1,13 @@
 # Headset view in OBS
 
 Frame Control can send SteamVR's headset mirror and the Frame's output audio to
-OBS on a Linux or macOS computer. The helper uses the same `/dev/video99` video
+OBS on a Windows, Linux or macOS computer. The helper uses the same `/dev/video99` video
 source and default-output monitor as **Capture & Live → Record**. It sends a
 local MPEG-TS stream; no port is opened to the LAN or internet.
 
 1. Connect to the Frame and start SteamVR. OBS runs on the computer; the Frame
    already has `ffmpeg`.
-2. In the **Linux or macOS Frame Control app**, open **Capture & Live** and click
+2. In the **Frame Control desktop app**, open **Capture & Live** and click
    **Start OBS source**. Keep Frame Control open; **Stop OBS source**, switching
    headsets, or quitting the app closes its SSH stream. It uses the selected
    headset and the app's bundled helper.
@@ -23,9 +23,13 @@ run:
    python3 scripts/obs-headset-source.py
    ```
 
-Ctrl+C stops the checkout helper. The app's Start/Stop control currently supports
-Linux and macOS; Windows users can run the checkout helper with Python 3 and
-OpenSSH from a terminal, but this path has not been verified on a Windows PC.
+Ctrl+C stops the checkout helper. The app closes a control pipe when you click
+Stop or quit; the helper then closes its SSH child, including on Windows. On
+Windows, install Python 3 and OpenSSH Client if Frame Control cannot find them.
+The Windows app Start/Stop path still needs a physical Windows/Frame test.
+
+To share the OBS view in a call, see the short
+[Discord setup guide](streaming-to-discord.md).
 
 `--height 1080 --fps 60` increases quality and Frame CPU use. The default is
 720p30. `--port 15100` selects another loopback port; use the same port in

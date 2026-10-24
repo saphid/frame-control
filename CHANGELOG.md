@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Enable the in-app OBS source Start/Stop control on Windows. A control pipe
+  lets the Python relay close its SSH child on Stop, app quit or parent exit;
+  add a short [Discord guide](docs/streaming-to-discord.md).
+
 - Start the Android app catalogue without waiting for the headset's installed-app
   list. Browsing remains available if that status request is slow or fails;
   installation still waits for a confirmed list to avoid duplicate installs.

@@ -56,7 +56,12 @@ class ObsSourceTests(unittest.TestCase):
         self.assertNotIn('@DEFAULT_MONITOR@', obs.remote_command(audio=False))
 
     @unittest.skipIf(sys.platform == 'win32', 'the packaged Start/Stop control is Linux/macOS only')
-    def test_relay_stops_its_ssh_child_on_app_signal(self):
+    def test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe(self):
+        for mode in ('signal', 'control-pipe'):
+            with self.subTest(mode=mode):
+                self._check_stop_mode(mode)
+
+    def _check_stop_mode(self, mode):
         with tempfile.TemporaryDirectory() as folder, socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as receiver:
             directory = Path(folder)
             stopped = directory / 'stopped'
@@ -75,15 +80,24 @@ class ObsSourceTests(unittest.TestCase):
             receiver.settimeout(8)
             env = {**os.environ, 'PATH': str(directory) + os.pathsep + os.environ.get('PATH', ''),
                    'FAKE_SSH_STOPPED': str(stopped)}
-            process = subprocess.Popen([sys.executable, str(SCRIPT), '--frame', 'fake-frame',
-                                        '--port', str(receiver.getsockname()[1])],
-                                       stdin=subprocess.DEVNULL, stdout=subprocess.PIPE,
+            arguments = [sys.executable, str(SCRIPT), '--frame', 'fake-frame',
+                         '--port', str(receiver.getsockname()[1])]
+            if mode == 'control-pipe':
+                arguments.append('--control-stdin')
+            process = subprocess.Popen(arguments,
+                                       stdin=subprocess.PIPE if mode == 'control-pipe' else subprocess.DEVNULL,
+                                       stdout=subprocess.PIPE,
                                        stderr=subprocess.PIPE, env=env)
             try:
                 packet, _ = receiver.recvfrom(1500)
                 self.assertEqual(packet, b'G' * 1316)
-                process.send_signal(signal.SIGTERM)
-                _, errors = process.communicate(timeout=8)
+                if mode == 'control-pipe':
+                    process.stdin.close()
+                    process.wait(timeout=8)
+                    errors = process.stderr.read()
+                else:
+                    process.send_signal(signal.SIGTERM)
+                    _, errors = process.communicate(timeout=8)
                 self.assertEqual(process.returncode, 0, errors.decode())
                 self.assertIn(b'Frame Control OBS stream is ready', errors)
                 for _ in range(30):
@@ -95,6 +109,8 @@ class ObsSourceTests(unittest.TestCase):
                 if process.poll() is None:
                     process.kill()
                     process.communicate(timeout=5)
+                process.stdout.close()
+                process.stderr.close()
 
 
 if __name__ == '__main__':
