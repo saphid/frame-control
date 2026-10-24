@@ -431,3 +431,49 @@ app instance and back up/restore a stopped instance's private app data. See
 [SideQuest features and limits](sidequest.md) for commands, archive scope and
 verification status. These paths have offline coverage; real Frame storage and
 permissions remain unverified. They do not change APK install or launch behavior.
+
+
+## Local APK/OBB backups and Android bundles
+
+In **Android apps → Import Android game → Choose game files…** (or **Send to Frame**), choose one
+standalone APK and its matching `main.<version>.<package>.obb` and/or
+`patch.<version>.<package>.obb` files together. The desktop app also discovers
+matching OBB files beside a lone selected APK. Browser uploads use only the
+files you selected. Installed apps can receive OBB-only imports.
+
+You can instead select **one `.xapk`, `.apks`, or `.apkm` archive** containing
+one standalone APK and optional matching OBBs. These extensions describe
+containers, not a guarantee that their contents are supported. OBBs may be
+at the archive root, under `<package>/`, or under `Android/obb/<package>/`;
+one enclosing backup folder is allowed. Known manifest/icon/signature
+sidecars are ignored; the APK manifest determines the package. Unknown files,
+unsafe paths, links, encrypted entries, duplicate paths (including case
+collisions), more than 4,096 entries, or more than 16 GiB unpacked are refused.
+Staging also keeps 64 MiB of free disk space. Payloads still have the regular
+one-APK/99-OBB limit. Ordinary `.zip` files keep the PC-title import route;
+extract an Android ZIP yourself and select its APK/OBBs.
+
+The importer previews the app and files before **Import game & data**.
+Confirming authorizes installing the app, starting it to prepare Android,
+checking the running package/version, copying OBBs through the existing
+verified data helper, and closing the game. Open it from Steam afterwards.
+If setup fails, read the error and retry the same backup; do not uninstall
+first, since that deletes saves. An app that cannot start may also prevent
+data setup. Uploaded and extracted staging is removed on cancellation,
+inspection failure, or job completion/failure; abandoned imports expire
+through the existing one-hour staging lifecycle. Original local files stay intact.
+
+**Limits:** this backup importer refuses multiple APKs, split-only APKs and
+bases marked as requiring splits. It does not select device variants or restore
+`Android/data`, private app data, saves, or entitlements. For the separate
+restricted native-library/asset split workflow see
+[Quest split APKs](quest-import.md#split-apks) and the CLI above. Resource,
+code and feature splits are not supported by that merger.
+
+For issue #102, the RE4 report only establishes that an APK attempt failed.
+Missing OBBs are a hypothesis; the edition/build, exact files, failing step,
+and runtime compatibility remain unknown. Record those details, Frame Control
+and SteamOS versions, and sanitized server/crash errors before diagnosing it.
+`python3 ui/frame_android.py info /path/to/game.apk` inspects the APK locally.
+Successful installation or fixture tests do not establish RE4 compatibility;
+OBBs cannot fix ABI/API, VrApi/OpenXR, entitlement or Android-service failures.

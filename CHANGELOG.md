@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Import standalone APK/OBB backups from XAPK/APKS/APKM archives through the
+  existing preview and game-data setup flow. Unsafe archives, split sets and
+  Android/data restores are refused with guidance. This does not establish RE4
+  compatibility or diagnose its reported failure (issue #102).
+
 - Add `scripts/frame-power-sample.sh`, a bounded read-only SSH sampler for
   battery, CPU, named temperatures, fan and available power rails (issue #52).
   JSON samples/summaries and CSV exports retain explicit unavailable states;
