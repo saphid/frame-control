@@ -14,13 +14,16 @@ reported Game Mode, so **Return to Game Mode** changed nothing. Not tested on a
 headset: a restore after a real factory reset, a restore that replaces files,
 Android data restore, and the switch out of a real Desktop Mode session. Unit
 tests and the fake Frame cover those (see [Verification](#verification)).
-On 2026-10-24 a read-only session check on the same build again reported Game
-Mode (`gamescope=true`, `plasma=false`, `nested_desktop=false`) and the
-`steamos-session-select` command was present. Opening the nested desktop for a
-clipboard test did not enter full Desktop Mode. A full session switch was not
-attempted because it restarts the headset session and a reliable return path
-was not established; the **Return to Game Mode** branch for a real full
-Desktop Mode session remains unverified.
+On 2026-10-24, the real-device reproduction in [issue #142](https://github.com/saphid/frame-control/issues/142)
+confirmed full Plasma Desktop Mode on the same build: the Plasma session target
+was active and the Game Mode target inactive. Desktop Mode also ran gamescope
+for `steamvr-plasma.service`, so the old process check incorrectly reported
+Game Mode. SteamOS's `steamosctl switch-to-game-mode` restored Game Mode and
+reversed the target states; battery stayed at 99%, and the rollback timer and
+shared lock were cleaned up. This is evidence for SteamOS's command, not a
+verified Frame Control Return button test. The corrected button path still
+needs a real-device retest after review and CI, under the shared lock with a
+timed rollback.
 
 ## Back up
 
@@ -118,29 +121,28 @@ normally runs *inside* it as one panel (`steamos-nested-desktop`, see
 [how-the-frame-works.md](how-the-frame-works.md#the-layer-cake)). If that panel
 is what you see, you're already in Game Mode: close it from the Steam dashboard.
 
-Full Desktop Mode is a different session. SteamOS picks the session through
-SDDM's autologin file, `/etc/sddm.conf.d/zz-steamos-autologin.conf` (or the
-default `/etc/sddm.conf.d/steamos.conf`), and switches with
-`steamos-session-select` (`holo-session-select` on newer images). This is what
-Valve's own devkit tools on the Frame read and run
-([`steamos-get-status`](../frame/devkit-utils/steamos-get-status),
-[`steamos-delete`](../frame/devkit-utils/steamos-delete)).
+Full Desktop Mode is a different session. **Check** reads the main user's
+systemd session targets over SSH: `gamescope-session.target` and
+`plasma-workspace-wayland.target`. Game Mode requires the former active and the
+latter inactive; Desktop Mode requires the reverse. This takes precedence over
+process names: full Desktop Mode can run gamescope for its VR overlay, and
+Game Mode can run a nested Plasma panel. Check changes nothing.
 
-**Check** reads that file and whether gamescope and Plasma are running; it
-changes nothing. On the Frame gamescope's process is `gamescope-wl`, started by
-`start-gamescope-session`, and either counts as Game Mode. Only when Plasma is
-running without gamescope (Desktop Mode) does **Return to Game Mode** run
-exactly `steamos-session-select gamescope` (or `holo-session-select
-gamescope`) over SSH, after asking. It closes the desktop and anything open in
-it. Frame Control never edits the SDDM files itself, and runs nothing when the
-headset is in Game Mode, when it can't tell which mode it's in, or when the
-image has neither command.
+Conflicting, transitional, failed or unreadable targets produce **unknown**.
+On older images where both targets are explicitly absent, the fallback accepts
+only gamescope without Plasma/nested desktop as Game Mode, or Plasma without
+gamescope/nested desktop as Desktop Mode. Mixed processes remain unknown.
+The SDDM autologin file is still reported as a login preference; it cannot
+establish which session is running.
 
-**Uncertain:** whether the Frame offers a full Desktop Mode session at all
-(only the nested desktop has been seen on BUILD_ID 20260922.6101926 and
-20260925.6191901), and whether `steamos-session-select` there works without
-the Developer Mode password. If the switch is refused, Frame Control says so and
-leaves the headset as it was.
+After confirmation, **Return to Game Mode** runs exactly
+`steamosctl switch-to-game-mode` when available, or the older
+`holo-session-select gamescope` / `steamos-session-select gamescope` command.
+It closes the desktop and anything open in it. Frame Control never edits the
+SDDM files itself, and runs no switch when the headset is in Game Mode, when
+its mode is unknown, or when no supported switch command is installed. A
+refused command reports an error; a request being sent does not verify that
+the new session has started.
 
 ### Manual fallback
 
@@ -151,7 +153,9 @@ If the button can't help, or the headset isn't reachable:
    Desktop Mode session, so a restart brings Game Mode back. That the Frame
    behaves the same is **inferred**, not tested.
 2. **Over SSH** (Developer Mode on), run Valve's switch yourself:
-   `ssh frame steamos-session-select gamescope`.
+   `ssh frame steamosctl switch-to-game-mode` (verified on SteamOS 0.5.6).
+   Older images may instead provide `steamos-session-select gamescope` or
+   `holo-session-select gamescope`.
 3. **Boot menu:** hold Power 10 seconds, then power on while holding the AUX
    button on top of Power. Choose `Current`, or `Previous` to start the other
    SteamOS slot; both keep your data. Details and the further options
@@ -172,3 +176,9 @@ restore replaces only its own files and keeps the old ones, unsafe archives
 names that try to leave the backups folder, and the exact Game Mode command.
 `tests/e2e/test_recovery_kit.py` backs up a Proton save from the fake Frame through
 the server, deletes it and restores it. Neither involves a real headset.
+
+Isolated session tests in the same suite reproduce full Plasma plus gamescope,
+Game Mode with and without the nested desktop, conflicting/transitional targets,
+missing targets on older builds, failed/timed-out systemd reads, selector
+compatibility, and the confirmed Return action with SSH mocked. Run them with
+`python3 -m unittest discover -s tests -p test_backup.py -v`.

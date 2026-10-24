@@ -373,15 +373,40 @@ def restore(part, stamp, source):
 # The Frame normally runs gamescope (Game Mode) with Plasma nested inside it as one panel
 # (steamos-nested-desktop). A full Desktop Mode session is SDDM autologin into Plasma
 # instead. Valve's own devkit tools (frame/devkit-utils: steamos-get-status, steamos-delete)
-# read the session from these files and switch with holo-session-select or
-# steamos-session-select, so that's what this reads and suggests.
+# read the login preference from these files. It is not the running session.
 
 SDDM_CONFS = ('/etc/sddm.conf.d/zz-steamos-autologin.conf', '/etc/sddm.conf.d/steamos.conf')
+SESSION_TARGETS = ('gamescope-session.target', 'plasma-workspace-wayland.target')
+
+
+def _session_target(unit):
+    """Read the main user's manager, not a nested Plasma session bus over SSH."""
+    runtime = '/run/user/%d' % os.getuid()
+    env = dict(os.environ, XDG_RUNTIME_DIR=runtime,
+               DBUS_SESSION_BUS_ADDRESS='unix:path=%s/bus' % runtime)
+    try:
+        result = subprocess.run(['systemctl', '--user', 'show', unit,
+                                 '--property=LoadState', '--property=ActiveState'],
+                                capture_output=True, text=True, timeout=5, env=env)
+    except (OSError, subprocess.TimeoutExpired):
+        return 'unknown'
+    if result.returncode:
+        return 'unknown'
+    properties = dict(line.split('=', 1) for line in result.stdout.splitlines() if '=' in line)
+    if properties.get('LoadState') == 'not-found':
+        return 'not-found'
+    if properties.get('LoadState') == 'loaded':
+        return properties.get('ActiveState', 'unknown')
+    return 'unknown'
 
 
 def _running(name, full=False):
+    # This module is sent as `python3 -c <source>`: unanchored pgrep -f would
+    # match the script names inside our own source, even when no script runs.
+    pattern = (r'^([^ ]*/)?((ba|da|z)?sh +([^ ]*/)?)?%s( |$)' % re.escape(name)
+               if full else name)
     try:
-        return subprocess.call(['pgrep', '-f' if full else '-x', name], stdout=subprocess.DEVNULL,
+        return subprocess.call(['pgrep', '-f' if full else '-x', pattern], stdout=subprocess.DEVNULL,
                                stderr=subprocess.DEVNULL) == 0
     except OSError:
         return False
@@ -397,21 +422,32 @@ def session():
         m = re.search(r'^\s*Session\s*=\s*(\S+)', text, re.M)
         conf, configured = path, (m.group(1) if m else None)
         break
-    selector = next((s for s in ('holo-session-select', 'steamos-session-select') if shutil.which(s)), None)
+    selector = next((s for s in ('steamosctl', 'holo-session-select', 'steamos-session-select') if shutil.which(s)), None)
     # On the Frame gamescope's process is named gamescope-wl (seen on build 20261015.6141207),
     # under the start-gamescope-session script.
     gamescope = (_running('gamescope') or _running('gamescope-wl') or
                  _running('start-gamescope-session', full=True))
     plasma = _running('plasmashell')
     nested = _running('steamos-nested-desktop', full=True)  # a script: its process name is the shell's
-    if gamescope:
+    targets = {unit: _session_target(unit) for unit in SESSION_TARGETS}
+    game, desktop = (targets[unit] for unit in SESSION_TARGETS)
+    mode = 'unknown'
+    source = 'session-targets'
+    if (game, desktop) == ('active', 'inactive'):
         mode = 'game'
-    elif plasma or (configured and 'plasma' in configured):
+    elif (game, desktop) == ('inactive', 'active'):
         mode = 'desktop'
-    else:
-        mode = 'unknown'
+    elif game == desktop == 'not-found':
+        # Older images have neither target. A compositor plus Plasma is ambiguous:
+        # Desktop Mode's steamvr-plasma.service also runs gamescope and nested scripts.
+        source = 'legacy-processes'
+        if gamescope and not plasma and not nested:
+            mode = 'game'
+        elif plasma and not gamescope and not nested:
+            mode = 'desktop'
     return {'mode': mode, 'gamescope': gamescope, 'plasma': plasma, 'nested_desktop': nested,
-            'configured': configured, 'config_file': conf, 'selector': selector}
+            'configured': configured, 'config_file': conf, 'selector': selector,
+            'session_targets': targets, 'mode_source': source}
 
 
 def main(argv):
