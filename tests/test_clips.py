@@ -149,6 +149,9 @@ class Sessions(unittest.TestCase):
         bg = by["123/video/bg_1172470_20261021_090000"]
         self.assertEqual((bg["kind"], bg["appid"], bg["streams"], bg["duration"]), ("background", "1172470", 1, None))
         self.assertIsNone(by["123/video/odd-name"]["appid"])
+        # How long since Steam last wrote to it: auto-sync waits for a clip still being recorded.
+        self.assertLess(clip["idle"], 60)
+        self.assertGreater(by["123/video/odd-name"]["idle"], 10**8)
         self.assertEqual(clips.list_recordings(self.dir / "missing"), [])
 
     def test_listing_marks_what_is_already_here(self):
