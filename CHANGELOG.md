@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Treat headset aliases and other CSV metadata as plain text in power and heat
+  exports, so spreadsheet formula prefixes cannot run when a report is opened.
+
 - Add desktop Tools → Power & heat report: bounded read-only one/five-minute
   observations with progress, stop and HTML/JSON/CSV downloads. Received samples
   survive stop, disconnect and headset switch, labeled incomplete and tied to the

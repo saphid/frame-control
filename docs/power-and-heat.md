@@ -94,7 +94,9 @@ in your browser to view the offline table and its embedded JSON/CSV downloads.
 Snapshots taken before completion explicitly say incomplete. Desktop CSV includes
 `collection.state`, `collection.requestedSamples` and `collection.receivedSamples`
 metadata rows with the original headset alias in the source column, even when no
-sensor sample arrived. JSON records the alias and device ID; HTML names the alias.
+sensor sample arrived. CSV text fields, including the alias, are escaped if they
+begin with a spreadsheet formula prefix. JSON records the alias and device ID;
+HTML names the alias.
 
 Only the latest observation is retained in server memory, including partial
 samples after stop or disconnect. **Download before starting another observation,
