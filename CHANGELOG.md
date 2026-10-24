@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix two cases where optional diagnostic logs could retain part of a headset
+  display name or an SSH host name, while preserving existing privacy redaction
+  (issue #81).
+
 - Keep the full host-key recovery explanation readable in Devices, including
   long addresses, and remove doubled punctuation from the connection tooltip
   (issue #87). Refresh stays within the header and switching headsets selects
