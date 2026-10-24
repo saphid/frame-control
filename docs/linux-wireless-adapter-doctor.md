@@ -88,8 +88,14 @@ and headset connection management, but no local USB/driver/rfkill adapter
 report or adapter diagnostic UI. The existing `frame-doctor.sh` diagnoses the
 headset through SSH and is a different tool. This doctor never calls it.
 General SteamOS 3.9.5 / Frame OS 0.5.6 compatibility and OS backend transition
-notes are a separate workstream; this feature relies on observed PC evidence
-rather than an OS-version assumption.
+notes are covered separately in
+[`docs/steamos-2026-10-compat.md`](https://github.com/saphid/frame-control/blob/9c7110c1f48d160b0fb3c3b9f658d4937bd2032d/docs/steamos-2026-10-compat.md)
+([PR #164](https://github.com/saphid/frame-control/pull/164)). Existing PC
+route/SSID diagnostics use NetworkManager's `nmcli` with an `iwgetid` SSID
+fallback, independently of whether NetworkManager uses wpa_supplicant (SteamOS
+3.9.5 new installs) or iwd (upgrades). This doctor reads actual PC evidence and
+does not infer a conflict, hardware identity or fix from those OS defaults.
+There is no adapter-specific device observation in that compatibility work.
 
 ## Verification
 
