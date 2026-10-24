@@ -1,5 +1,9 @@
 # PC in the headset (Experimental)
 
+For Steam's own Linux Wayland desktop-sharing flow, see the separate
+[Steam desktop sharing helper](steam-pipewire.md). It does not enable this
+feature on Linux.
+
 **Tools → PC in the headset**, on Windows only. It's the Windows version of
 [Mac in the headset](mac-in-headset.md): a whole screen on your PC
 becomes its own SteamVR panel in the Frame. Individual windows are available only
