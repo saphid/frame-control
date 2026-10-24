@@ -190,6 +190,35 @@ IzzyOnDroid, curated GitHub releases, itch.io). **Library** shows the apps on th
 Frame as cards, with Play and a menu for Test, Report and Remove; the display
 settings and recent reports are below it.
 
+Store search cards and app details also show **Reported not working** or
+**Reported issues** when saved compatibility reports say so. Details include
+the report date, version and notes. These are advisories: Install remains
+available unless the selected build has an existing compatibility blocker
+(for example, no arm64-v8a build or Android API above 30). Reports never clear
+those blockers. Apps reported not working are excluded from Home's featured
+app and recommendation shelves; search and category results still show them.
+An unrated install failure caused by the wrong APK architecture or Android API
+is ignored, using the same rules as the catalogue. A person's rating takes
+priority over automated results, with the latest rating winning.
+
+Reports warm in a background worker at server start. Search and details read
+only the last complete in-memory snapshot and schedule a single background
+refresh after 60 seconds; they never wait for disk, Keychain, a subprocess or
+the report database. During initial loading they show the usual build verdict;
+after a refresh, the next search or detail request sees the reports. Failed
+refreshes keep the previous snapshot and retry after another 60 seconds.
+
+**Availability:** public copies benefit from their own saved reports, including
+reports for apps outside the bundled catalogue, across every source with the
+same package name. This does not give public users the private shared ratings.
+The checked-in `apk-catalog/site/apps.js` contains predictions and no tested
+report verdicts, so it cannot supply a useful public report snapshot. No private
+reports, free-text notes or credentials are exported or published. The existing
+maintainer loader still uses its configured database access in the background;
+the search feature adds no sharing, endpoint or network destination. Tests leave
+the hook off by default (`FRAME_COMPAT_SEARCH_REPORTS=0` also disables it in
+server subprocesses) and use synthetic reports to exercise refresh behavior.
+
 The store groups apps by what a headset is good for, not by F-Droid's list:
 VR, Games, Emulators, Watch & listen, Read & learn, Create, Work, Web & chat
 and Tools (`ui/apk_sources/_categories.py`). A VR app is always in VR. Otherwise

@@ -2,7 +2,7 @@
 
 Optional store metadata: images {icon, banner, screenshots}, developer,
 description, popularity, open_source, requires_meta_services, frame_tested.
-Only an explicit frame_tested=True produces a working-on-Frame verdict.
+An explicit frame_tested=True or a saved working report produces a working verdict.
 """
 import importlib
 import inspect
@@ -24,6 +24,46 @@ _game_data = {}  # package -> downloaded OBB paths waiting for "Add game data"
 _status = {}
 TIMEOUT = 12
 BROWSE_LIMIT = 300  # apps per source when browsing without a query, before grouping
+compat_reports = None  # optional memory-only snapshot hook; enabled at server start, not import
+
+
+class ReportCache:
+    """Stale-while-refresh reports. Never hold the snapshot lock while loading.
+
+    The loader may block on disk, credentials or the database. Only its daemon
+    worker calls it; readers keep the last complete snapshot, even after errors.
+    """
+    def __init__(self, loader, report_verdict, ttl=60):
+        self.loader, self.report_verdict, self.ttl = loader, report_verdict, ttl
+        self._lock = threading.Lock()
+        self._snapshot, self._at, self._running = {}, None, False
+
+    def read(self):
+        with self._lock:
+            snapshot = self._snapshot
+            if not self._running and (self._at is None or time.monotonic() - self._at >= self.ttl):
+                self._running = True
+                threading.Thread(target=self._refresh, daemon=True).start()
+            return snapshot
+
+    def _refresh(self):
+        try:
+            by = {}
+            for report in self.loader():
+                if report.get('package'):
+                    by.setdefault(report['package'], []).append(report)
+            snapshot = {pkg: v for pkg, rows in by.items() if (v := self.report_verdict(rows))}
+            with self._lock:
+                self._snapshot = snapshot
+        except Exception:
+            pass  # optional evidence must never break search or discard a good snapshot
+        finally:
+            with self._lock:
+                self._at, self._running = time.monotonic(), False
+
+
+def _reports():
+    return compat_reports() if compat_reports else {}
 
 
 def modules():
@@ -149,7 +189,7 @@ def fit(entry):
             'reasons': reasons}
 
 
-def verdict(entry):
+def verdict(entry, report=None):
     compatibility = fit(entry)
     hints = ' '.join(str(entry.get(k) or '') for k in ('engine', 'vr_engine', 'vr_hints', 'vr_issues')).lower()
     if entry.get('requires_meta_services') is True:
@@ -160,6 +200,12 @@ def verdict(entry):
         return {'label': "This version isn't made for the Frame", 'tone': 'blocked'}
     if 'vrapi' in hints:
         return {'label': "Made for older Quest headsets; won't run on the Frame", 'tone': 'blocked'}
+    if report:
+        kind, _ = report
+        return {'label': {'works': 'Reported working on the Frame',
+                          'maybe': 'Reported issues on the Frame',
+                          'no': 'Reported not working on the Frame'}[kind],
+                'tone': {'works': 'works', 'maybe': 'issues', 'no': 'warning'}[kind]}
     if entry.get('frame_tested') is True:
         return {'label': 'Works on the Frame', 'tone': 'works'}
     if compatibility['installable'] is True:
@@ -167,10 +213,13 @@ def verdict(entry):
     return {'label': 'Not yet checked on the Frame', 'tone': 'unknown'}
 
 
-def decorate(entry, shots=12):
+def decorate(entry, shots=12, reports=None):
     """shots: screenshots to offer; a listing card shows three, the detail page all of them."""
     from apk_sources import _images
-    return dict(entry, fit=fit(entry), verdict=verdict(entry), artwork=_images.artwork(entry, shots),
+    report = (reports if reports is not None else _reports()).get(entry.get('package'))
+    evidence = {'verdict': report[0], 'lines': list(report[1])} if report else None
+    return dict(entry, fit=fit(entry), verdict=verdict(entry, report), compat_report=evidence,
+                artwork=_images.artwork(entry, shots),
                 **categories.classify(entry))
 
 
@@ -191,8 +240,9 @@ def offer_rank(entry):
 
 def group(entries, query='', vr=None, installable=False, category=None, phone=False):
     groups = {}
+    reports = _reports()  # one complete snapshot for every offer in this response
     for entry in entries:
-        entry = decorate(entry, shots=3)
+        entry = decorate(entry, shots=3, reports=reports)
         if not categories.matches(entry, category, phone):
             continue
         if vr is not None and (entry.get('vr') is True) != vr:  # unknown counts as flat
@@ -310,6 +360,7 @@ def search(query='', vr=None, source=None, installable=False, timeout=TIMEOUT, l
 
 def warm():
     """Start every enabled source's index download in the background (server start, new repo)."""
+    _reports()  # warm independently of potentially slow source indexes
     from apk_sources import _web
     _web.prune()
     items, _ = registry()

@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Show saved Android compatibility reports on store search cards and app details.
+  Reports refresh in the background, so a stalled database or credential lookup
+  cannot delay search. Warnings allow installation; build compatibility blockers
+  still apply. Public copies use this computer's reports, not private shared ratings.
+
 - Fix two cases where optional diagnostic logs could retain part of a headset
   display name or an SSH host name, while preserving existing privacy redaction
   (issue #81).

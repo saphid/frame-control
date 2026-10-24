@@ -13,13 +13,13 @@ function grab(name) {
   if (start < 0) fail(`no top-level ${name} in index.html`);
   let depth = 0;
   for (let i = start; i < lines.length; i++) {
-    for (const c of lines[i]) depth += c === "{" ? 1 : c === "}" ? -1 : 0;
+    for (const c of lines[i]) depth += c === "{" || c === "[" ? 1 : c === "}" || c === "]" ? -1 : 0;
     if (depth <= 0) return lines.slice(start, i + 1).join("\n") + "\n";
   }
   fail(`unbalanced ${name}`);
 }
 const names = ["esc", "storeName", "storeHue", "storeInitial", "storeText", "storeOpenSource", "sourcePage", "storeImage",
-               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeKind", "storeArt", "storeIcon", "sourceMark", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
+               "GLYPH_VR", "GLYPH_APP", "RUNS", "storeRuns", "storeReportDetails", "storePickEligible", "STORE_CATS", "storeCat", "storeCard", "storeRow", "storeKind", "storeArt", "storeIcon", "sourceMark", "currentOffer", "detailBadges", "renderAppDetail", "renderAppDetailBody",
                "updateInstall", "openStoreApp", "loadOfferDetails", "installStoreApp"];
 const code = names.map(grab).join("");
 
@@ -34,7 +34,7 @@ function page(api = async () => ({}), androidApps = []) {
   const document = { activeElement: null, querySelector: () => null };
   const console = { error() {} };
   const calls = [];
-  const fns = new Function("$", "sourceState", "document", "console", "api", "androidApps", "runJob", "loadAndroid", "act", "window", "devGen", code + "; return { renderAppDetail, openStoreApp };")(
+  const fns = new Function("$", "sourceState", "document", "console", "api", "androidApps", "runJob", "loadAndroid", "act", "window", "devGen", code + "; return { renderAppDetail, openStoreApp, storeCard, storeRow, storePickEligible };")(
     $, sourceState, document, console, (...a) => { calls.push(a); return api(...a); }, androidApps,
     async (title, key, work) => work(), () => {}, async (title, work) => work(),
     { open() { fail("an in-app installation opened an external page"); } }, 0);
@@ -114,4 +114,31 @@ for (const [job, expected] of [[null, 1], [{ done: false }, 0],
   if (installs.some(([, body]) => body.source !== offer.source || body.id !== offer.id)) fail("installed a different offer");
   if (p.calls.some(([path]) => path === "/api/android")) fail("hero Install launched an already installed app");
 }
+
+// Report warnings appear on real cards, shelves and details; they are advisory.
+for (const [kind, tone, label] of [['no', 'warning', 'Reported not working'], ['maybe', 'issues', 'Reported issues']]) {
+  const p = page();
+  const o = {...offer, verdict: {tone, label: label+' on the Frame'},
+    compat_report: {verdict: kind, lines: ['Reported <unsafe> notes', '2 reports, 0 working']}};
+  const app = {name: o.name, offers: [o]};
+  p.sourceState.apps = [app];
+  p.sourceState.detail = {app, choice: 0};
+  const card = p.storeCard(app), shelf = p.storeRow('VR picks', 'Synthetic fixtures', [app]);
+  if (!card.includes('>'+label+'</span>') || !shelf.includes('>'+label+'</span>')) fail('warning missing on card or shelf');
+  if (!p.renderAppDetail()) fail('report detail did not render');
+  const html = p.els.detailBody.innerHTML;
+  if (!html.includes('Saved compatibility reports') || !html.includes('Reported &lt;unsafe&gt; notes')) fail('report evidence missing or unescaped');
+  if (html.includes('Reported <unsafe>')) fail('report notes injected HTML');
+  if (p.els.detailInstall.disabled || p.els.detailInstall.textContent !== 'Install on the Frame') fail('report disabled installation');
+  if (kind==='no' && p.storePickEligible(o)) fail('broken report is eligible for featured/VR picks');
+  // A positive report cannot remove a hard blocker. Negative evidence stays visible too.
+  for (const reportKind of [kind, 'works']) {
+    const blocked = {...o, verdict: {tone: 'blocked', label: 'No arm64 build'}, compat_report: {...o.compat_report, verdict: reportKind}};
+    app.offers = [blocked];
+    if (!p.renderAppDetail() || !p.els.detailInstall.disabled) fail('report overrode hard blocker');
+    if (p.storePickEligible(blocked)) fail('blocked app eligible for picks');
+    if (reportKind!=='works' && !p.storeCard(app).includes('>'+label+'</span>')) fail('hard blocker hid report warning');
+  }
+}
+
 console.log("ok");
