@@ -84,7 +84,11 @@ counts them while they run.
 - **Volume** and mute (`wpctl`).
 - **Android apps**: search about 4,500 F-Droid apps rated for the Frame, install
   one with a click as its own Lepton instance (it keeps its data and shows in the
-  Steam library), then launch, stop, test or remove it. **Report an APK** records
+  Steam library), then launch, stop, test or remove it.
+  The catalogue can load while the installed-app list is still being read. If
+  that read fails, browsing remains available, but installation waits for a
+  confirmed list so Frame Control does not make a duplicate app instance.
+  **Report an APK** records
   whether any APK worked (F-Droid or not: pick a file, type a package, or use an
   installed app). Your reports are saved on your computer and change the verdicts
   you see. With **Share compatibility results** on (Privacy & updates), they also
