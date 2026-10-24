@@ -82,7 +82,10 @@ The production storage component was rendered with synthetic data at 390px and
 900px widths; both fit without horizontal overflow. This checks component
 layout, not the full connected application or headset browser.
 
-No storage probe, game move or other operation was performed on a real headset
-for this change. UI and metadata fixtures are synthetic. Actual removable-media,
-SteamOS UI and device permission behaviour remain to be checked under the shared
-lock and battery/restore procedure in [testing.md](testing.md#headset-smoke-test).
+On 2026-10-24 the uninstalled storage parser was piped read-only over SSH
+to a real Frame running SteamOS build `20261015.6141207`. It reported
+710.4 GiB free on the user filesystem, one available Steam library, 29
+readable app manifests, zero unknown sizes and zero parse/permission issues.
+No game names or raw metadata were printed in the test report. The
+connected UI, removable media, Steam's Move UI and an actual game move were
+not tested. UI and error-state fixtures remain synthetic.
