@@ -28,17 +28,25 @@ class Sampler(unittest.TestCase):
         return result
 
     def fixture(self, files):
+        # Windows cannot create a directory named iio:device8. Keep the
+        # production sysfs spelling in returned paths while using a portable
+        # name inside this temporary fixture tree.
+        def local_path(path):
+            return self.root / path.lstrip('/').replace(':', '__COLON__')
+
         for path, value in files.items():
-            node = self.root / path.lstrip('/')
+            node = local_path(path)
             node.parent.mkdir(parents=True, exist_ok=True)
             node.write_text(str(value))
         actual_glob = power.glob.glob
         def paths(pattern):
-            return [str(p)[len(str(self.root)):] for p in actual_glob(str(self.root) + pattern)]
+            return ['/' + Path(p).relative_to(self.root).as_posix().replace('__COLON__', ':')
+                    for p in actual_glob(str(local_path(pattern)))]
         actual_read = power.read
         self.patch(power.glob, 'glob', side_effect=paths)
-        self.patch(power, 'read', side_effect=lambda p: actual_read(str(self.root) + str(p)))
-        self.patch(status, 'read', side_effect=lambda p: actual_read(str(self.root) + str(p)))
+        self.patch(power, 'read', side_effect=lambda p: actual_read(str(local_path(str(p)))))
+        self.patch(status, 'read', side_effect=lambda p: actual_read(str(local_path(str(p)))))
+        return local_path
 
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
@@ -93,14 +101,14 @@ class Sampler(unittest.TestCase):
 
     def test_iio_units_and_permission_denied_proximity(self):
         node = '/sys/bus/iio/devices/iio:device8'
-        self.fixture({node + '/name': 'vcnl4000',
+        local_path = self.fixture({node + '/name': 'vcnl4000',
                       node + '/in_temp_pcba_at_wifi_input': '37500',
                       node + '/in_current_pm8550b_iin_fb_input': '241671',
                       '/etc/os-release': 'BUILD_ID=20261015.6141207\n'})
         # exists() is used only for optional known charger channels and lock.
         exists = Path.exists
         with mock.patch.object(Path, 'exists', lambda p: exists(p) if p == power.LOCK
-                               else exists(self.root / str(p).lstrip('/'))):
+                               else exists(local_path(str(p)))):
             sample, _ = power.snapshot(status, None)
         self.assertEqual(sample['osBuild'], '20261015.6141207')
         self.assertEqual(sample['readings']['board.iio:device8.in_temp_pcba_at_wifi_input']['value'], 37.5)
