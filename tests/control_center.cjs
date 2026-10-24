@@ -23,7 +23,8 @@ function fixture() {
   const page = element('controlCenter');
   page.querySelectorAll = selector => selector === '[data-cc-category]' ? buttons : selector === '[data-cc-metric]' ? metrics : selector === '[data-cc-mac-link]' ? [element('macLink')] : [];
   page.querySelector = selector => selector === '[href="#connection"]' ? element('connectionLink') : cards.find(e=>selector === `[data-cc-card="${e.dataset.ccCard}"]`);
-  return {document:{getElementById:element},element,cards,buttons};
+  const listeners = {};
+  return {document:{hidden:false,getElementById:element,addEventListener(name,callback){listeners[name]=callback;}},listeners,element,cards,buttons};
 }
 function mounted(options = {}) {
   const f = fixture(), calls = [];
@@ -39,8 +40,10 @@ const flush = async () => { for(let i=0;i<12;i++)await Promise.resolve(); };
 // bootstrap, including the real Home-to-Control status handoff. Only unrelated
 // rendering helpers, timers and transport are stubbed.
 function sharedPage({productionApi=false} = {}) {
-  const f=fixture(), requests=[], writes=[], host=deferred(), job=deferred();
-  const context={document:f.document,FrameControlCenter:cc,window:{frameApp:{setUpConnection(){}}},
+  const f=fixture(), requests=[], writes=[], notifications=[], host=deferred(), job=deferred();
+  let now=0;
+  const context={document:f.document,FrameControlCenter:cc,performance:{now:()=>now},
+    window:{frameApp:{setUpConnection(){},notify:async(message,request)=>{notifications.push({message,request});}}},
     Date,setInterval,clearInterval,setTimeout:()=>1,clearTimeout(){},$:f.element,QUICK:[],installing:new Set(),
     battery(){},setVolume(){},renderHome(){},gb:String,dur:String,esc:String,meter(){},toast(){},
     runJob(title,id){context.installing.add(id);return job.promise;},
@@ -52,7 +55,11 @@ function sharedPage({productionApi=false} = {}) {
     watchConnection(){context.watched=true;}};
   vm.createContext(context);
   const stateDeclaration=pageSource.match(/let state = null[^\n]*/)[0];
-  vm.runInContext(stateDeclaration+'\nlet online = true, devGen = 1; const HOST = {computer:"computer"}; window.connDevice="frame-a";',context);
+  vm.runInContext(stateDeclaration+'\nlet online = true, devGen = 1, comfortActive = false; const HOST = {computer:"computer"}; window.connDevice="frame-a";',context);
+  // Load the real alert state machine and DOM wiring used by render, refresh,
+  // setOnline and onConnection; do not stub away their lifecycle behavior.
+  const batteryStart=pageSource.indexOf('class DesktopBatteryAlert'),batteryEnd=pageSource.indexOf('// ---- battery ----',batteryStart);
+  vm.runInContext(pageSource.slice(batteryStart,batteryEnd),context);
   const refreshStart=pageSource.indexOf('let refreshing = null'),refreshEnd=pageSource.indexOf('// ---- our VR HUD',refreshStart);
   const renderStart=pageSource.indexOf('function render(s) {'),renderEnd=pageSource.indexOf('// ---- view ----',renderStart);
   vm.runInContext(pageSource.slice(renderStart,renderEnd)+pageSource.slice(refreshStart,refreshEnd),context);
@@ -80,12 +87,48 @@ function sharedPage({productionApi=false} = {}) {
   const hostStart=pageSource.lastIndexOf('api("/api/host").then(h =>'),hostEnd=pageSource.indexOf('</script>',hostStart);
   vm.runInContext(pageSource.slice(hostStart,hostEnd),context);
   const bootstrapStart=pageSource.indexOf('window.frameControlCenter = FrameControlCenter.mount('),bootstrapEnd=pageSource.indexOf('</script>',bootstrapStart);
-  return {...f,context,requests,writes,host,refresh:()=>vm.runInContext('refresh()',context),
+  return {...f,context,requests,writes,notifications,host,setNow(value){now=value;},refresh:()=>vm.runInContext('refresh()',context),
     switchHeadset:()=>vm.runInContext('onConnection({now:Date.now()/1000,phase:"connected",devices_rev:0,device:{id:"frame-b",name:"Second Frame"}})',context),
     installFlatpak:()=>vm.runInContext('installFlatpak("test.app")',context),
     mount(){vm.runInContext(pageSource.slice(bootstrapStart,bootstrapEnd),context);return context.window.frameControlCenter;}};
 }
 const response = data => ({ok:true,status:200,json:async()=>data});
+test('production refresh confirms desktop alerts and failures interrupt confirmation', async () => {
+  const f=sharedPage({productionApi:true});
+  const low=sample();low.battery={percent:15,status:'Discharging',watts:-4};
+  const read=async(now,data=low)=>{
+    f.setNow(now);const pending=f.refresh();
+    f.requests.at(-1).resolve(response(data));await pending;
+  };
+  await read(0);await read(30000);
+  assert.equal(f.notifications.length,0,'desktop alert starts off');
+  f.element('desktopBatteryAlert').checked=true;
+  f.element('desktopBatteryAlert').onchange();
+  await read(60000);
+  const failed=f.refresh();f.requests.at(-1).reject(Error('Status transport failed'));await failed;
+  await read(90000);
+  assert.equal(f.notifications.length,0,'failed status interrupts low-battery confirmation');
+  await read(120000);
+  assert.equal(f.notifications.length,1);
+  assert.match(f.notifications[0].message,/15%.*draining/);
+  assert.equal(f.notifications[0].request,false,'refresh never requests notification permission');
+  await read(150000);
+  assert.equal(f.notifications.length,1,'same episode stays latched');
+  assert.equal(f.requests.length,7,'only explicit existing status reads are used');
+});
+test('production headset switch clears desktop opt-in and pending confirmation', async () => {
+  const f=sharedPage({productionApi:true});
+  f.element('desktopBatteryAlert').checked=true;
+  const low=sample();low.battery={percent:10,status:'Discharging',watts:-3};
+  const pending=f.refresh();f.requests[0].resolve(response(low));await pending;
+  assert.equal(vm.runInContext('desktopBattery.pending.condition',f.context),'low');
+  f.setNow(30000);f.switchHeadset();
+  assert.equal(f.element('desktopBatteryAlert').checked,false);
+  assert.equal(vm.runInContext('desktopBattery.pending',f.context),null);
+  assert.match(f.element('desktopBatteryStatus').textContent,/Headset changed/);
+  f.requests[1].resolve(response(low));await flush();
+  assert.equal(f.notifications.length,0,'new headset cannot inherit the prior opt-in');
+});
 for(const rejection of ['transport','body'])for(const delayedMount of [false,true]) {
   test(`production ${rejection} rejection from A preserves B ${delayedMount ? 'before delayed mount' : 'after mount'}`, async t => {
     const f=sharedPage({productionApi:true});

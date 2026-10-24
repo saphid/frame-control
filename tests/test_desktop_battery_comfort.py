@@ -10,7 +10,7 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 @unittest.skipUnless(shutil.which('node'), 'Node exercises production page JavaScript')
 class DesktopBatteryComfort(unittest.TestCase):
     def test_alert_confirmation_and_lifecycle(self):
-        page = (ROOT / 'ui/index.html').read_text()
+        page = (ROOT / 'ui/index.html').read_text(encoding='utf-8')
         code = page.split('// ---- Desktop-only low-battery comfort:')[1].split('// ---- battery ----')[0]
         code = code[code.index('class DesktopBatteryAlert'):]
         js = r'''
@@ -94,7 +94,7 @@ const toast = message => toasts.push(message);
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_existing_status_path_and_switch_reset(self):
-        page = (ROOT / 'ui/index.html').read_text()
+        page = (ROOT / 'ui/index.html').read_text(encoding='utf-8')
         self.assertIn('desktopBatterySample(s.battery);', page)
         switch = page.split('if (link.device !== null && devId !== link.device)')[1].split('devGen++;')[0]
         self.assertIn('$("desktopBatteryAlert").checked = false;', switch)
