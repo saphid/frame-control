@@ -17,6 +17,9 @@ PNG = (Path(__file__).parent / 'fixtures/apk-search/artwork/brush-icon.png').rea
 
 class ArtworkTests(unittest.TestCase):
     def setUp(self):
+        p = patch.object(search, 'compat_reports', None)
+        p.start()
+        self.addCleanup(p.stop)
         with _images._lock:
             _images._urls.clear()
             _images._tokens.clear()

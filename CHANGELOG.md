@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Show saved Android compatibility reports on store search cards and app details.
+  Reports refresh in the background, so a stalled database or credential lookup
+  cannot delay search. Warnings allow installation; build compatibility blockers
+  still apply. Public copies use this computer's reports, not private shared ratings.
+
 - Fix experimental PC screen capture on Windows builds whose streaming libraries
   lack Windows Graphics Capture. Whole screens use Desktop Duplication; individual
   windows are hidden with an explanation instead of failing when shown. A Windows

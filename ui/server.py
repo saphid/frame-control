@@ -3593,6 +3593,9 @@ def main():
     args = ap.parse_args()
     httpd = LoopbackServer(("127.0.0.1", args.port), Handler)
     sweep_tmp()
+    if os.environ.get('FRAME_COMPAT_SEARCH_REPORTS') != '0':
+        apk_search.compat_reports = apk_search.ReportCache(
+            frame_compat_db.load, frame_catalog.reports.verdict, ttl=frame_compat_db.TTL).read
     threading.Thread(target=apk_search.warm, daemon=True).start()  # big indexes download before the first search
     frame_telemetry.start()
     frame_contact.start()

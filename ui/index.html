@@ -627,6 +627,8 @@
   .runs { font-size:11px; font-weight:500; padding:3px 8px; border-radius:10px; white-space:nowrap; }
   .runs.works { color:#c6efb0; background:#70bb5426; } .runs.ready { color:#b7d8ec; background:#6ec9ff1a; }
   .runs.unknown { color:#a8b5c2; background:#ffffff0d; } .runs.blocked { color:#f1c28a; background:#d9a23a22; }
+  .runs.warning, .runs.issues { color:#f1c28a; background:#d9a23a22; white-space:normal; }
+  .store-compat-badges { display:flex; flex-wrap:wrap; gap:4px; }
   .store-hero > .store-art { position:absolute; inset:0; }
   .store-hero::after { content:""; position:absolute; inset:0; background:linear-gradient(90deg,#081421ec 0%,#08142175 48%,#08142108 80%),linear-gradient(0deg,#08142170,transparent); z-index:2; }
   .hero-copy { position:relative; z-index:3; padding:30px; max-width:550px; display:flex; align-items:flex-start; flex-direction:column; gap:12px; }
@@ -773,6 +775,7 @@
   .detail-buy .store-primary { width:100%; min-height:46px; border-radius:7px; margin:8px 0; font-size:15px; }
   .detail-verdict { color:#b6d6a8; font-size:12px; line-height:1.55; margin:0 0 15px; }
   .detail-verdict.blocked { color:#e3b77a; }
+  .detail-verdict.warning, .detail-verdict.issues { color:#e3b77a; }
   .detail-verdict.unknown { color:#adbac7; }
   .detail-price { font-size:23px; color:white; font-weight:600; }
   .detail-small { font-size:11px; color:var(--muted); margin:4px 0 18px; }
@@ -4240,10 +4243,16 @@ async function loadSources() {
   } catch (e) { $("sourceError").textContent = e.message; }
 }
 // Keep installation confidence explicit, including apps that have not been checked yet.
-const RUNS = { works: ["✓ Works on the Frame", "works"], ready: ["Should install", "ready"], unknown: ["Not checked yet", "unknown"], blocked: ["May not run", "blocked"] };
+const RUNS = { works: ["✓ Works on the Frame", "works"], ready: ["Should install", "ready"], unknown: ["Not checked yet", "unknown"], blocked: ["May not run", "blocked"], warning: ["Reported not working", "warning"], issues: ["Reported issues", "issues"] };
 function storeRuns(o) {
   const [text, cls] = RUNS[o.verdict?.tone] || RUNS.unknown;
-  return `<span class="runs ${cls}" title="${esc(o.verdict?.label || "Not yet checked on the Frame")}">${text}</span>`;
+  const report=o.compat_report, extra=o.verdict?.tone==='blocked' && ['no','maybe'].includes(report?.verdict);
+  return `<span class="store-compat-badges"><span class="runs ${cls}" title="${esc(o.verdict?.label || "Not yet checked on the Frame")}">${text}</span>${extra ? `<span class="runs warning">${report.verdict==='no' ? 'Reported not working' : 'Reported issues'}</span>` : ''}</span>`;
+}
+function storePickEligible(o) { return o.verdict?.tone !== 'blocked' && o.compat_report?.verdict !== 'no'; }
+function storeReportDetails(o) {
+  const report=o.compat_report;
+  return report ? `<div class="detail-verdict ${report.verdict==='works' ? 'works' : 'warning'}"><strong>Saved compatibility reports</strong>${report.lines.map(line=>`<p>${esc(line)}</p>`).join('')}<p>Reports can cover other versions or runtimes. You can still try installing unless this build has a compatibility blocker.</p></div>` : '';
 }
 const storeKind = o => o.vr ? "VR" : o.vr === false ? "Flat-screen app" : "Android app";
 function storeCard(app) {
@@ -4271,7 +4280,7 @@ function renderStore() {
   if (!apps.length) { $("searchGrid").innerHTML=storeEmpty(); return; }
   if (!browsing) { $("searchGrid").innerHTML=`<div class="store-grid">${apps.map(storeCard).join("")}</div>`; return; }
   // Home: one featured VR app, then a shelf per category; each app appears once, blocked ones not at all.
-  const ok=apps.filter(a=>a.offers[0].verdict?.tone !== 'blocked'), shown=new Set();
+  const ok=apps.filter(a=>storePickEligible(a.offers[0])), shown=new Set();
   const day=Math.floor(Date.now()/864e5), heroes=ok.filter(a=>a.offers[0].vr && a.offers[0].artwork?.banner);
   const featured=heroes[day % (heroes.length || 1)] || ok.find(a=>a.offers[0].artwork?.banner) || ok[0];
   if (!featured) { $("searchGrid").innerHTML=storeEmpty(); return; }  // nothing here runs on the Frame
@@ -4327,7 +4336,7 @@ function renderAppDetail() {
 function renderAppDetailBody() {
   const restoreOfferFocus=document.activeElement?.name==='storeOffer';
   const d=sourceState.detail;if(!d)return;const o=currentOffer(), images=o.artwork?.screenshots||[], page=sourcePage(o.page);
-  $("detailBody").innerHTML=storeArt(o,"detail-banner",true)+`<div class="detail-content"><div class="detail-heading">${storeIcon(o)}<div><h1 id="detailTitle">${esc(o.name)}</h1><p>${esc(o.developer || o.author || 'From '+storeName(o.source_name))}</p></div></div><div class="store-badges">${detailBadges(o)}</div><div class="detail-layout"><div><div class="detail-gallery" id="detailGallery" aria-label="App screenshots" tabindex="0">${images.map((p,i)=>storeArt(o,"",false,p,`${o.name} screenshot ${i+1}`)).join("")}</div>${images.length ? `<div class="gallery-controls"><span>${images.length} screenshots · scroll to explore</span><div><button data-gallery="-1" aria-label="Previous screenshot">←</button> <button data-gallery="1" aria-label="Next screenshot">→</button></div></div>` : ''}<h2>About this app</h2><div class="detail-description">${esc(storeText(o.description || o.summary || "Discover this app on its developer's page."))}</div>${page ? `<p><a href="${esc(page)}" target="_blank" rel="noopener noreferrer">The developer's page ↗</a></p>` : ''}<details class="detail-technical"><summary>Technical details</summary><dl><dt>Package</dt><dd>${esc(o.package||"Unknown")}</dd><dt>Version</dt><dd>${esc(o.version||"Unknown")} (${esc(o.version_code??"unknown")})</dd><dt>Android API</dt><dd>${esc(o.min_sdk??"Unknown")}</dd><dt>Architecture</dt><dd>${esc(o.abis?.join(', ')||"Unknown / no native code")}</dd><dt>Updated</dt><dd>${esc(o.updated||"Unknown")}</dd><dt>Compatibility</dt><dd>${(o.fit?.reasons||[]).map(esc).join(' · ')||'No known installation blockers'}</dd></dl></details></div><aside class="detail-buy"><div class="detail-price">Free</div><p class="detail-small">No purchase needed.</p><p class="detail-verdict ${esc(o.verdict?.tone||'unknown')}">${esc(o.verdict?.label||'Not yet checked on the Frame')}</p><button id="detailInstall" class="action store-primary">Install</button><progress id="detailProgress" max="100" hidden aria-label="Installation progress"></progress><p id="detailInstallNote" class="detail-small" role="status" aria-live="polite"></p><h2>Get it from</h2><div id="detailOffers">${d.app.offers.map((v,j)=>`<label class="offer-choice"><input type="radio" name="storeOffer" value="${j}" ${j===d.choice?'checked':''}><span>${sourceMark(v.source_name)}</span><span><strong>${esc(storeName(v.source_name))}${j===0?' · Recommended':''}</strong><small>${v.verified===true?'✓ Verified download':'Verification not provided'}</small><small>${esc(v.version ? 'v'+v.version : 'Latest release')}${v.size!=null?' · '+(v.size/1048576).toFixed(0)+' MB':''}</small></span></label>`).join('')}</div></aside></div></div>`;
+  $("detailBody").innerHTML=storeArt(o,"detail-banner",true)+`<div class="detail-content"><div class="detail-heading">${storeIcon(o)}<div><h1 id="detailTitle">${esc(o.name)}</h1><p>${esc(o.developer || o.author || 'From '+storeName(o.source_name))}</p></div></div><div class="store-badges">${detailBadges(o)}</div><div class="detail-layout"><div><div class="detail-gallery" id="detailGallery" aria-label="App screenshots" tabindex="0">${images.map((p,i)=>storeArt(o,"",false,p,`${o.name} screenshot ${i+1}`)).join("")}</div>${images.length ? `<div class="gallery-controls"><span>${images.length} screenshots · scroll to explore</span><div><button data-gallery="-1" aria-label="Previous screenshot">←</button> <button data-gallery="1" aria-label="Next screenshot">→</button></div></div>` : ''}<h2>About this app</h2><div class="detail-description">${esc(storeText(o.description || o.summary || "Discover this app on its developer's page."))}</div>${page ? `<p><a href="${esc(page)}" target="_blank" rel="noopener noreferrer">The developer's page ↗</a></p>` : ''}<details class="detail-technical"><summary>Technical details</summary><dl><dt>Package</dt><dd>${esc(o.package||"Unknown")}</dd><dt>Version</dt><dd>${esc(o.version||"Unknown")} (${esc(o.version_code??"unknown")})</dd><dt>Android API</dt><dd>${esc(o.min_sdk??"Unknown")}</dd><dt>Architecture</dt><dd>${esc(o.abis?.join(', ')||"Unknown / no native code")}</dd><dt>Updated</dt><dd>${esc(o.updated||"Unknown")}</dd><dt>Compatibility</dt><dd>${(o.fit?.reasons||[]).map(esc).join(' · ')||'No known installation blockers'}</dd></dl></details></div><aside class="detail-buy"><div class="detail-price">Free</div><p class="detail-small">No purchase needed.</p><p class="detail-verdict ${esc(o.verdict?.tone||'unknown')}">${esc(o.verdict?.label||'Not yet checked on the Frame')}</p>${storeReportDetails(o)}<button id="detailInstall" class="action store-primary">Install</button><progress id="detailProgress" max="100" hidden aria-label="Installation progress"></progress><p id="detailInstallNote" class="detail-small" role="status" aria-live="polite"></p><h2>Get it from</h2><div id="detailOffers">${d.app.offers.map((v,j)=>`<label class="offer-choice"><input type="radio" name="storeOffer" value="${j}" ${j===d.choice?'checked':''}><span>${sourceMark(v.source_name)}</span><span><strong>${esc(storeName(v.source_name))}${j===0?' · Recommended':''}</strong><small>${v.verified===true?'✓ Verified download':'Verification not provided'}</small><small>${esc(v.version ? 'v'+v.version : 'Latest release')}${v.size!=null?' · '+(v.size/1048576).toFixed(0)+' MB':''}</small></span></label>`).join('')}</div></aside></div></div>`;
   updateInstall();
   if(restoreOfferFocus)document.querySelector('#detailOffers input:checked')?.focus();
 }

@@ -27,6 +27,9 @@ def fake(source_id='one', fn=None):
 
 class SettingsTest(unittest.TestCase):
     def setUp(self):
+        p = patch.object(search, 'compat_reports', None)
+        p.start()
+        self.addCleanup(p.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         p = patch.object(search, 'settings_path', return_value=Path(self.tmp.name) / 'enabled.json')
