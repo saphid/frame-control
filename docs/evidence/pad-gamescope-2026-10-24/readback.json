@@ -1,0 +1,280 @@
+{
+  "time": "2026-10-24T11:20:37.392607+00:00",
+  "owner": "pr66-7c2a8e8851f449bcb0bb6a040be94d99",
+  "base": "0da1fe5",
+  "route": "production server.remote_input -> TouchAgent SSH -> frame_touch.py -> gamescope EIS",
+  "events": [
+    {
+      "type": 6,
+      "window": 62914561,
+      "x": 320,
+      "y": 200,
+      "synthetic": false
+    },
+    {
+      "type": 6,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "synthetic": false
+    },
+    {
+      "type": 4,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 1,
+      "synthetic": false
+    },
+    {
+      "type": 5,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 1,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 50,
+      "synthetic": false,
+      "text": "",
+      "keysym": 65505
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 41,
+      "synthetic": false,
+      "text": "F",
+      "keysym": 70
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 41,
+      "synthetic": false
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 50,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 27,
+      "synthetic": false,
+      "text": "r",
+      "keysym": 114
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 27,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 38,
+      "synthetic": false,
+      "text": "a",
+      "keysym": 97
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 38,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 58,
+      "synthetic": false,
+      "text": "m",
+      "keysym": 109
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 58,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 26,
+      "synthetic": false,
+      "text": "e",
+      "keysym": 101
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 26,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 15,
+      "synthetic": false,
+      "text": "6",
+      "keysym": 54
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 15,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 15,
+      "synthetic": false,
+      "text": "6",
+      "keysym": 54
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 15,
+      "synthetic": false
+    },
+    {
+      "type": 2,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 36,
+      "synthetic": false,
+      "text": "\r",
+      "keysym": 65293
+    },
+    {
+      "type": 3,
+      "window": 62914561,
+      "x": 639,
+      "y": 399,
+      "code": 36,
+      "synthetic": false
+    },
+    {
+      "cleaned": true
+    }
+  ],
+  "initial_focus": {
+    "window": null
+  },
+  "initial_activity": 3,
+  "lock_acquired": true,
+  "recorder": {
+    "ready": true,
+    "window": 62914561,
+    "pid": 317210,
+    "display": ":0",
+    "appid": 2000999066
+  },
+  "focused_panel": {
+    "window": 62914561,
+    "display": ":0",
+    "name": "Frame Control PR66 disposable input probe",
+    "x": 0,
+    "y": 0,
+    "width": 640,
+    "height": 400,
+    "root": [
+      1920,
+      1080
+    ],
+    "app": 2000999066
+  },
+  "agent_status": {
+    "state": "ready",
+    "focus": 62914561
+  },
+  "position_response": {
+    "state": "ready",
+    "focus": 62914561,
+    "sent": true
+  },
+  "pad_response": {
+    "state": "ready",
+    "focus": 62914561,
+    "sent": true
+  },
+  "received_text": "Frame66\r",
+  "click_received": true,
+  "release_received": true,
+  "passed": true,
+  "input_helper_exited": true,
+  "recorder_exit": 0,
+  "recorder_stderr": "",
+  "final_focus": {
+    "window": null
+  },
+  "final_activity": 3,
+  "owned_lock_released": true,
+  "implementation_commit": "5641d3c316dfe225321f7233840cc83ff8c3f527",
+  "device": {
+    "steamos": "0.5.6",
+    "build_id": "20261015.6141207",
+    "steamvr": "2.18.2",
+    "battery_before": 98,
+    "battery_after": 98
+  },
+  "delayed_cleanup": {
+    "time": "2026-10-24T11:21:46Z",
+    "shared_lock_absent": true,
+    "owned_recorder_absent": true,
+    "game_mode": "active",
+    "full_plasma": "inactive",
+    "steam_pid": 297826,
+    "vrserver_pid": 297506,
+    "focusable_windows": [],
+    "focused_windows": [],
+    "activity_level": 3
+  },
+  "limits": [
+    "No wearer or packaged Electron/GUI interaction",
+    "ASCII only; Unicode and cross-service ordering not tested on device",
+    "The positioning setup reached the recorder edge (639,399); pixel-accurate absolute targeting is not established by this probe"
+  ]
+}

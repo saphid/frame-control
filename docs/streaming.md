@@ -170,9 +170,10 @@ start. Ordering between the two input services uses a typing-time estimate;
 neither service acknowledges when characters reach the application.
 
 [PR #66 verification on 2026-10-24](evidence/pad-gamescope-2026-10-24.md)
-separates the offline tests and earlier device observations from the current
-real-Frame preflight. A focused-panel click/key recheck was deferred while the
-shared headset was in use; no new delivery claim is made for SteamOS 0.5.6.
+records an owned focused X11 panel receiving a click and `Frame66` plus Enter
+on a real Frame with SteamOS 0.5.6, after the shared headset became available.
+The helper, window and owner-marked lock were cleaned up. This is ASCII input
+proof, not wearer-visible, Unicode or packaged Electron GUI verification.
 
 **Verified 2026-09-28** (SteamOS 0.4.1, build 20260925.6191901):
 

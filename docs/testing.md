@@ -20,7 +20,7 @@ handling, route cancellation, and intended-headset start/status guards.
 real queue and gesture functions in Node. These are offline tests; their
 acknowledgements do not prove that a real application received input.
 See [the 2026-10-24 PR #66 evidence](evidence/pad-gamescope-2026-10-24.md)
-for the real-device preflight and remaining focused-panel test.
+for the real focused-panel click/key observation, cleanup and remaining limits.
 
 The read-only power/heat sampler has fixture and transport tests in
 `tests/test_power_sample.py`. Run
