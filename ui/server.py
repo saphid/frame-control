@@ -45,6 +45,7 @@ import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 import frame_android_import  # noqa: E402
+import frame_backup  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
@@ -2696,6 +2697,73 @@ def panels_action(body):
     return result
 
 
+# ---- Backup and recovery kit (frame_backup.py) ------------------------------
+#
+# Backups are folders on this computer, so they run from the computer app only. One backup
+# or restore at a time: both are long jobs the page follows through /api/job.
+
+_backup_lock = threading.Lock()
+
+
+def backup_action(body):
+    action = body.get("action")
+    if LOCAL:
+        raise Failure("Backups are made from Frame Control on your computer", 400)
+    if action in ("plan", "restore") or (action == "open" and body.get("name") is not None):
+        try:
+            frame_backup.backup_path(body.get("name"))  # refused before anything reads or runs
+        except frame_backup.BackupError as e:
+            raise Failure(str(e), 400)
+    if action in ("gamemode", "restore") and body.get("confirm") is not True:
+        raise Failure("Confirm first: this changes the headset", 400)
+    if action == "list":
+        return frame_backup.list_backups()
+    if action == "preview":
+        return frame_backup.preview()
+    if action == "plan":
+        return frame_backup.restore_plan(body.get("name"))
+    if action == "session":
+        return frame_backup.session_status()
+    if action == "gamemode":
+        return frame_backup.return_to_game_mode(confirmed=True)
+    if action == "open":
+        folder = frame_backup.backup_root()
+        if body.get("name") is not None:
+            folder = frame_backup.backup_path(body.get("name"))
+        folder.mkdir(parents=True, exist_ok=True)
+        try:
+            frame_host.open_path(folder)
+        except frame_host.HostError as e:
+            raise Failure(str(e), 500)
+        return {"message": f"Opened {folder} in {frame_host.FILE_MANAGER}"}
+    if action == "backup":
+        kinds = body.get("kinds", list(frame_backup.KINDS))
+        if not isinstance(kinds, list) or not kinds or any(k not in frame_backup.KINDS for k in kinds):
+            raise Failure("Choose what to back up", 400)
+        name = agent_target()["name"]
+        work = lambda report: frame_backup.backup(report, kinds, headset=name)  # noqa: E731
+        label = "Back up the Frame"
+    elif action == "restore":
+        name, ids = body.get("name"), body.get("parts")
+        if not isinstance(ids, list) or not ids or not all(
+                isinstance(i, str) and frame_backup.PART.fullmatch(i) for i in ids):
+            raise Failure("Choose what to restore", 400)
+        work = lambda report: frame_backup.restore(name, ids, True, report)  # noqa: E731
+        label = "Restore from backup"
+    else:
+        raise Failure("Unknown backup action", 400)
+
+    def exclusive(report):
+        if not _backup_lock.acquire(blocking=False):
+            raise Failure("A backup or restore is already running", 409)
+        try:
+            return work(report)
+        finally:
+            _backup_lock.release()
+    ensure_master()
+    return start_job(label, exclusive, progress=True)
+
+
 # ---- Our Frame-side media player -----------------------------------------
 
 _MEDIA_LOCK = threading.Lock()
@@ -2934,7 +3002,7 @@ def source_manage(body):
 
 
 POST = {
-    "/api/android/backup": android_backup,
+    "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,

@@ -96,5 +96,6 @@ ssh frame 'cat /opt/steamvr/resources/webinterface/dashboard/localization/dashbo
 - Remote access from anywhere: [tailscale.md](tailscale.md)
 - Floating windows in space: [panels.md](panels.md)
 - Recovery images, what's in them, testing without the headset: [recovery-and-images.md](recovery-and-images.md)
+- Backing up saves and settings, restoring after a reset, leaving Desktop Mode: [backup-and-recovery.md](backup-and-recovery.md)
 - Frame Control on iPhone (the server running on the Frame itself): [iphone.md](iphone.md)
 - What's still unverified: [open-questions.md](open-questions.md)

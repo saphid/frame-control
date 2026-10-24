@@ -346,3 +346,14 @@ Chromium rendering and the same helper through HTTP. Close the switcher after
 testing. [The recorded device checks](panels.md#frame-controls-panel-switcher)
 cover actual focus, HTTP guards and an OpenXR sample transition, and separately
 identify the unverified Steam-game, spatial layout, reboot and laser behaviors.
+
+## Backup and recovery kit
+
+`tests/test_backup.py` runs the headset-side script `ui/frame_backup_remote.py`
+for real against a temporary folder laid out like the Frame's home, with only
+SSH faked: path selection and the secrets it must never copy, the manifest and
+checksums, restore checks after a reset, restore writing only its own files,
+unsafe archives and backup names, and the exact Game Mode command.
+`tests/e2e/test_recovery_kit.py` backs up and restores a Proton save on the fake
+Frame through the server. See [backup-and-recovery.md](backup-and-recovery.md#verification).
+No backup or restore has been run on a real headset yet.
