@@ -25,7 +25,7 @@ function workspaceFixture() {
   const context={URL,document:{querySelectorAll:s=>s==='.page'?pages:s==='#nav a'?links:controls[s]||[],title:'',body:{addEventListener(k,fn){listeners['body-'+k]=fn;}}},
     window:win,location,scroller:()=>({get scrollTop(){return win.scrollY;},scrollTo:o=>win.scrollTo(o)}),scrollToY:y=>win.scrollTo({top:y}),requestAnimationFrame:fn=>fn(),$:el,live:false,toggleLive(on){this.live=on;calls.push(['live',on]);},
     loadAndroid(){calls.push(['android']);},closeDevPop(){},metaLib:{connected:false},renderMetaApps(){},
-    loadMacView(){calls.push(['macview']);},loadPanelSwitcher(){calls.push(['panels']);},loadDisplays(){calls.push(['displays']);},
+    loadSteamPipewire(){calls.push(['steam-pipewire']);},loadMacView(){calls.push(['macview']);},loadPanelSwitcher(){calls.push(['panels']);},loadDisplays(){calls.push(['displays']);},
     gm:{src:'owned',dl:null,byId:new Map(),shown:0,shownBySource:{owned:0,store:0}},setGameSource(src){context.gm.src=src;},state:null,stateRead:{valid:false},online:null,devGen:0,androidApps:[],jobsRunning:0,viewGen:0,
     esc:s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))};
   vm.createContext(context);
