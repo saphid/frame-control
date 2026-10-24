@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a Linux PC Wireless Adapter doctor in Settings and Devices, with a source
+  CLI and local JSON report. Select observed hardware without assuming Valve
+  IDs; inspect USB/interface presence, driver/module binding, udev/permissions,
+  rfkill, channel/band and network manager evidence. Missing evidence stays
+  unknown; all checks are read-only and never contact the Frame.
+  [Usage and verification limits](docs/linux-wireless-adapter-doctor.md).
+
 - Use gamescope's input for the keyboard and trackpad, following the focused
   headset panel without installing an input service. Start KDE Connect only for
   accents and emoji, keeping queued text ordered and cancelling it on headset

@@ -73,6 +73,7 @@ import frame_touch  # noqa: E402
 import frame_webinstall  # noqa: E402
 import frame_vr  # noqa: E402
 import frame_utilities  # noqa: E402
+import frame_wireless_doctor  # noqa: E402
 import frame_compat_db  # noqa: E402
 
 frame_host.trust_bundled_cas()
@@ -3475,6 +3476,13 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/agent/approval":
                 token = (parse_qs(url.query).get("confirmation") or [""])[0]
                 self.send_json(frame_agent.approvals.inspect(token))
+            elif path == "/wireless-doctor":
+                self.send_bytes((HERE / "wireless-doctor.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/api/wireless-doctor":
+                # PC-only and independent of LINK/working(): never start or wait for SSH.
+                args = parse_qs(url.query)
+                self.send_json(frame_wireless_doctor.diagnose(
+                    (args.get("device") or [None])[0], local=LOCAL))
             elif path == "/api/host":
                 self.send_json({"os": "SteamOS", "fileManager": None, "computer": DEVICE, "mobile": True} if LOCAL else
                                {"os": frame_host.NAME, "fileManager": frame_host.FILE_MANAGER,

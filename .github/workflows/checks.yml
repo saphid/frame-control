@@ -41,6 +41,10 @@ jobs:
           python -m py_compile $(find frame/devkit-utils -type f ! -name '*.*' ! -name LICENSE) frame/devkit-utils/devkit_utils/*.py
       - name: Server tests
         run: python -m unittest discover -s tests -v
+      - name: Linux Wireless Adapter doctor (read-only PC smoke)
+        run: |
+          python ui/frame_wireless_doctor.py --json > "$RUNNER_TEMP/linux-wireless-doctor.json"
+          python -c 'import json, os; from pathlib import Path; d=json.loads((Path(os.environ["RUNNER_TEMP"]) / "linux-wireless-doctor.json").read_text()); assert d["supported"] and d["selected"] is None and d["schema"] == 1'
       - name: App syntax
         run: node --check app/main.js && node --check app/build/make-icon.js && node --check app/build/fetch-deps.js && node --check app/preload.js && node --check app/install-link.js && node --check app/updater.js
       - name: App tests
