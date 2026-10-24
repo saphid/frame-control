@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Start the Android app catalogue without waiting for the headset's installed-app
+  list. Browsing remains available if that status request is slow or fails;
+  installation still waits for a confirmed list to avoid duplicate installs.
+
 - Verify the packaged OBS Start and Stop control with a real Frame, and record
   37.600 seconds of headset mirror video and non-silent output audio in OBS.
   Listening, sync and active passthrough remain unverified.

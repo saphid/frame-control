@@ -95,8 +95,20 @@ test('Assistant Back encodes the injected key for the same-origin workspace only
   assert.match(html, /referrerpolicy="no-referrer"/);
 });
 
+test('catalogue browsing starts while installed-app discovery is still pending', async () => {
+  const f = fixture(read('store.html'));
+  assert.deepEqual(f.requests.map(r => r.url.split('?')[0]), ['/api/android', '/api/search']);
+  await f.answer(1, {apps: [{name: 'Example Game', category: 'games', package: 'example.game',
+    offers: [{source: 'test', id: 'example'}]}], sources: []});
+  assert.equal(f.run('st.installedState'), 'loading');
+  assert.match(f.element('content').innerHTML, /Example Game/);
+  await f.answer(0, {apps: [{package: 'example.game', label: 'Example Game'}]});
+  assert.match(f.element('content').innerHTML, /Installed/);
+});
+
 test('installed read failure is persistent, retry recovers, and cached entries are marked stale', async () => {
   const f = fixture(read('store.html'));
+  await f.answer(1, {apps: [], sources: []});
   f.run('st.view = "installed"; render()');
   assert.doesNotMatch(f.element('content').innerHTML, /Nothing installed yet/);
   f.requests[0].reject(Error('offline')); await tick();
@@ -105,16 +117,16 @@ test('installed read failure is persistent, retry recovers, and cached entries a
   assert.doesNotMatch(f.element('content').innerHTML, /Nothing installed yet/);
   const retry = f.element('content').querySelector('[data-retry-installed]');
   for (const listener of f.events.get('click')) listener({target: retry});
-  assert.equal(f.requests[1].url, '/api/android');
-  await f.answer(1, {apps: [{package: 'cached.app', label: 'Cached app'}]});
+  assert.equal(f.requests[2].url, '/api/android');
+  await f.answer(2, {apps: [{package: 'cached.app', label: 'Cached app'}]});
   assert.equal(f.run('st.installedState'), 'ready');
   const failed = f.run('loadInstalled()');
   assert.match(f.element('content').innerHTML, /last (?:known|read)|stale/i);
-  f.requests[2].reject(Error('refresh failed')); await failed;
+  f.requests[3].reject(Error('refresh failed')); await failed;
   assert.match(f.element('content').innerHTML, /Cached app/);
   assert.match(f.element('content').innerHTML, /last (?:known|read)|stale/i);
   assert.match(f.element('content').innerHTML, /data-retry-installed/);
-  const empty = f.run('loadInstalled()'); await f.answer(3, {apps: []}); await empty;
+  const empty = f.run('loadInstalled()'); await f.answer(4, {apps: []}); await empty;
   assert.match(f.element('content').innerHTML, /Nothing installed yet/);
   assert.doesNotMatch(f.element('content').innerHTML, /data-retry-installed/);
 });
@@ -122,12 +134,12 @@ test('installed read failure is persistent, retry recovers, and cached entries a
 test('newest installed read wins over older success and failure without pruning cached data', async () => {
   const f = fixture(read('store.html'));
   f.run('st.needsData.add("new.app"); st.jobs.set("data:new.app", {done: false})');
-  const newer = f.run('loadInstalled()'); await f.answer(1, {apps: [{package: 'new.app', label: 'New app'}]}); await newer;
+  const newer = f.run('loadInstalled()'); await f.answer(2, {apps: [{package: 'new.app', label: 'New app'}]}); await newer;
   await f.answer(0, {apps: []});
   assert.equal(f.run('st.installed.has("new.app")'), true);
   assert.equal(f.run('st.needsData.has("new.app")'), true);
   const old = f.run('loadInstalled()'), newest = f.run('loadInstalled()');
-  await f.answer(4, {apps: []}); await newest; // bootstrap's catalogue search is request 2
+  await f.answer(4, {apps: []}); await newest; // request 1 is the independent bootstrap catalogue search
   f.requests[3].reject(Error('late failure')); await old;
   assert.equal(f.run('st.installedState'), 'ready');
   assert.equal(f.run('st.installedError'), '');
@@ -137,12 +149,12 @@ test('newest installed read wins over older success and failure without pruning 
 test('an old success cannot mask the newest failure, and malformed data is not successful empty', async () => {
   const f = fixture(read('store.html'));
   f.run('st.view = "installed"');
-  const newest = f.run('loadInstalled()'); f.requests[1].reject(Error('latest offline')); await newest;
+  const newest = f.run('loadInstalled()'); f.requests[2].reject(Error('latest offline')); await newest;
   await f.answer(0, {apps: []});
   assert.equal(f.run('st.installedState'), 'error');
   assert.equal(f.run('st.installedError'), 'latest offline');
   assert.doesNotMatch(f.element('content').innerHTML, /Nothing installed yet/);
-  const malformed = f.run('loadInstalled()'); await f.answer(2, {}); await malformed;
+  const malformed = f.run('loadInstalled()'); await f.answer(3, {}); await malformed;
   assert.equal(f.run('st.installedState'), 'error');
   assert.match(f.element('content').innerHTML, /data-retry-installed/);
 });
@@ -197,12 +209,12 @@ test('named native Store dialog enters, contains and restores focus across async
 
 test('dialog Retry recovers installed knowledge without losing focus, and cancel restores its opener', async () => {
   const f = fixture(read('store.html'));
+  await f.answer(1, {apps: [], sources: []});
   f.context.app = {name: 'Example', detailed: true, offers: [{source: 'test', id: 'example'}]};
   f.run('st.view = "games"; st.apps = [app]; render()');
   const opener = f.element('content').querySelector('[data-i="0"]'); opener.focus();
   f.run('openDetail(app)');
   f.requests[0].reject(Error('offline')); await tick();
-  await f.answer(1, {apps: [f.context.app], sources: []});
   const retry = f.element('sheet').querySelector('[data-retry-installed]'); retry.focus();
   for (const listener of f.events.get('click')) listener({target: retry});
   assert.equal(f.document.activeElement.dataset.act, 'close');

@@ -552,7 +552,10 @@ $("kbd").onclick = e => {
 };
 $("kbdBtn").onclick = () => $("kbd").hidden = !$("kbd").hidden;
 
-loadInstalled().then(() => search());
+// The catalogue does not need the headset's installed-app list. A slow or
+// unavailable /api/android must not hold up browsing and search.
+loadInstalled();
+search();
 </script>
 </body>
 </html>
