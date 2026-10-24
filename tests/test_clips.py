@@ -332,8 +332,10 @@ class Commands(unittest.TestCase):
 
 
 # A stand-in for ffmpeg on the Frame: records how it was run, writes its output file,
-# and finishes the file when asked to stop (SIGTERM), as ffmpeg does. FAKE_FFMPEG_RUN
-# makes the recording end by itself after that many seconds (the time limit).
+# and finishes the file when q arrives on stdin. Like SteamOS's ffmpeg n7.0 (seen on a
+# Frame), it catches SIGTERM and SIGINT and carries on, exiting only after more than
+# three. FAKE_FFMPEG_RUN makes the recording end by itself after that many seconds (the
+# time limit); FAKE_FFMPEG_DEAF makes it ignore q too, so only SIGKILL ends it.
 FAKE_FFMPEG = r'''#!/usr/bin/env python3
 import json, os, signal, sys, time
 home = os.environ["HOME"]
@@ -344,8 +346,22 @@ if "-c" in sys.argv and sys.argv[sys.argv.index("-c") + 1] == "copy":   # the re
     src = sys.argv[sys.argv.index("-i") + 1]
     open(out, "wb").write(open(src, "rb").read() + b"+mp4")
     sys.exit(0)
-stop = []
-signal.signal(signal.SIGTERM, lambda *a: stop.append("TERM"))
+import threading
+stop, signals = [], []
+def caught(*a):
+    signals.append(1)
+    if len(signals) > 3:
+        os._exit(255)  # "Received > 3 system signals, hard exiting"
+signal.signal(signal.SIGTERM, caught)
+signal.signal(signal.SIGINT, caught)
+def keys():
+    while True:
+        ch = os.read(0, 1)
+        if not ch:
+            return
+        if ch == b"q" and not os.environ.get("FAKE_FFMPEG_DEAF"):
+            stop.append("q")
+threading.Thread(target=keys, daemon=True).start()
 f = open(out, "wb")
 f.write(b"v"); f.flush()
 with open(os.path.join(home, "ffmpeg.pid.tmp"), "w") as p:
@@ -436,7 +452,7 @@ class Recording(unittest.TestCase):
         self.assertEqual(rec.stop()["state"], "stopping")
         done = self.wait_for(rec, ("saved", "failed"))
         self.assertEqual(done["state"], "saved", done)
-        self.assertEqual((self.frame / "ffmpeg-ended").read_text(), "TERM")  # asked to finish, not killed
+        self.assertEqual((self.frame / "ffmpeg-ended").read_text(), "q")  # asked to finish, not killed
         saved = Path(done["file"])
         self.assertEqual(saved.parent, self.here)
         self.assertRegex(saved.name, r"^rec-\d{8}-\d{6}\.mp4$")
@@ -454,7 +470,20 @@ class Recording(unittest.TestCase):
         pid = int((self.frame / "ffmpeg.pid").read_text())
         self.channels[0].stdin.close()
         self.wait_for(rec, ("saved", "failed"))
-        self.assertEqual((self.frame / "ffmpeg-ended").read_text(), "TERM")
+        self.assertEqual((self.frame / "ffmpeg-ended").read_text(), "q")
+        with self.assertRaises(ProcessLookupError):
+            for _ in range(100):
+                os.kill(pid, 0)
+                time.sleep(0.05)
+
+    def test_an_ffmpeg_that_ignores_q_is_killed_not_left_recording(self):
+        self.env["FAKE_FFMPEG_DEAF"] = "1"
+        rec = self.recorder()
+        rec.start()
+        pid = int((self.frame / "ffmpeg.pid").read_text())
+        rec.stop()
+        self.wait_for(rec, ("saved", "failed"), timeout=30)
+        self.assertFalse((self.frame / "ffmpeg-ended").exists())  # it never finished by itself
         with self.assertRaises(ProcessLookupError):
             for _ in range(100):
                 os.kill(pid, 0)
