@@ -178,17 +178,33 @@ copied MP4 was **100.833 seconds** by `ffprobe` and decoded completely with
 `ffmpeg`; it was not cut at 60 seconds. The test restored Steam's recording
 mode, removed its reserved title and processes, and left Game Mode active at
 100% battery. See [the long-clip evidence](evidence/clip-long-2026-10-24.json).
-This did not click **Export** in the packaged desktop app or verify visible
-gameplay quality or perceptual audio/video sync.
+That code-path test did not click **Export** in the packaged desktop app or
+verify visible gameplay quality or perceptual audio/video sync.
+
+Later that day, the published v0.4.17 x86_64 Linux AppImage also passed the
+packaged desktop **Export** check against the retained 100.801-second clip.
+The asset SHA-256 was verified before launching its unchanged extracted payload
+in an isolated Electron profile on a virtual X desktop. An automated pointer
+click on the visible **Tools → Capture & Live → Steam clips → Export** button
+saved the MP4 and changed the row to **ON PC / Export again**. The saved file
+was 100.833335 seconds, decoded completely, and matched the prior production
+export by size and SHA-256. The app and test display were closed,
+the Frame export cache was empty, the source clip was retained, and the shared
+lock was released at 99% battery with Game Mode and SteamVR still running.
+See [the packaged export evidence](evidence/clip-packaged-export-2026-10-24.json)
+and its cropped before/after screenshots. This verifies the packaged Electron
+button and bundled export path; AppImage FUSE mounting, desktop integration,
+physical display/GPU rendering, gameplay quality and perceptual sync remain
+unverified. The virtual-display launch used `--no-sandbox --disable-gpu`.
 
 Remaining checks include:
 
 - Perceptual audio/video sync and audible content. Frame Control's separate
   **Record** path stamps camera and audio inputs with the wall clock because
   they otherwise count from different clocks.
-- Clips longer than the 100-second test, trims starting partway through a Steam
-  recording, and the packaged desktop app's **Export** button. Two real saved
-  clips' directory layouts were checked; the parser remains deliberately loose
+- Clips longer than the 100-second test and trims starting partway through a
+  Steam recording. Two real saved clips' directory layouts were checked; the
+  parser remains deliberately loose
   for other layouts.
 - How much x264 at 1080p30 costs the Frame while a game is running.
 - Automatic copying: that 30 seconds without a write is a safe sign Steam has
