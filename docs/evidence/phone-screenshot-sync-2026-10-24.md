@@ -111,8 +111,9 @@ Visual inspection used provider `codex`, `gpt-6-astra`, completed task
   location was found in the bounded checks. Existing App Store Connect signing
   access is not an APNs provider key.
 - Physical locked/background iPhone download and Photos export remain unproven.
-- No Android phone project was found in the inspected repository/main/iPhone
-  branch. Its location or scope for a new companion remains unresolved.
-  Android emulator tooling is unavailable in this environment.
+- A new native Android companion was subsequently authorized and implemented.
+  See [Android phone](../android-phone.md) for its explicit foreground-service
+  behavior and [Android evidence](android-phone-screenshot-sync-2026-10-24.md)
+  for the build and emulator checks. This does not supply physical-device proof.
 - No TestFlight upload, store submission or release was performed. The user's
   release condition requires the full behavior to be tested and working.

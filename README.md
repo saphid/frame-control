@@ -137,6 +137,10 @@ If the app is blocked, see the first-launch notes below before proceeding.
 **iPhone and iPad:** the same features from your phone, with nothing to install on
 a computer. Build it from [`ios/`](ios) in Xcode; see [docs/iphone.md](docs/iphone.md).
 
+**Android phones (development):** a native companion is in [`android/`](android).
+It can download new screenshots during a user-started sync session, with Gallery
+saving enabled by default. See [build instructions and current testing limits](docs/android-phone.md).
+
 The app brings its own Python and `adb`; SSH is built into macOS and Windows.
 From 0.4 it updates itself: when a new version is published, a banner offers
 **Update and restart**. It sends anonymous usage statistics, which you can turn
@@ -245,6 +249,7 @@ Frame's software fits together, all checked against a real headset and labelled
 | [VR mods and custom songs](docs/mods.md) | UEVR for Unreal games from Frame Control (install, play in VR, remove), the per-game table, Beat Saber blockers |
 | [SSH](docs/ssh.md) · [Streaming](docs/streaming.md) · [Files](docs/file-transfer.md) · [Panels](docs/panels.md) · [Tailscale](docs/tailscale.md) | Topic notes |
 | [Frame Control for iPhone](docs/iphone.md) | The iPhone and iPad app, how it runs the server on the Frame, pairing |
+| [Frame Control for Android phones](docs/android-phone.md) | Development build, pairing, screenshot downloads and foreground sync limits |
 | [Recovery and OS images](docs/recovery-and-images.md) | Where to download the Frame's OS, what's inside, testing without the headset |
 | [AI agents and assistant](docs/agents.md) | Key-free MCP tools, human approvals, and an opt-in assistant panel |
 | [Testing](docs/testing.md) | Unit tests, end-to-end tests against a fake Frame in Docker, the headset smoke test and a Windows test VM |

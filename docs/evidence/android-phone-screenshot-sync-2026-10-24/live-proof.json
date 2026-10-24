@@ -1,0 +1,57 @@
+{
+  "gallery": {
+    "id": "999999999990/108/20261024100101_1.png",
+    "sha256": "c9411d718c8a3477b7c7a6eed5ab827570605fce977bdeef5aaf11d29ba88316",
+    "bytes": 3620,
+    "createdAt": 1792836168.6100879,
+    "receipt": {
+      "destination": "saved",
+      "observations": 2,
+      "shot": {
+        "id": "999999999990/108/20261024100101_1.png",
+        "size": 3620,
+        "time": 1792836168.6217859
+      },
+      "state": "downloaded"
+    },
+    "readbackAt": 1792836209.819923
+  },
+  "appOnly": {
+    "id": "999999999990/108/20261024100102_1.png",
+    "sha256": "6a1513b2dc3459b457f7dd86adcde7298d99dccc31c73904d7c6698703edb961",
+    "bytes": 3623,
+    "createdAt": 1792836368.616906,
+    "background": "Home foreground; connectedDevice service active",
+    "receipt": {
+      "destination": "appOnly",
+      "observations": 2,
+      "shot": {
+        "id": "999999999990/108/20261024100102_1.png",
+        "size": 3623,
+        "time": 1792836368.6332257
+      },
+      "state": "downloaded"
+    },
+    "readbackAt": 1792836372.909552,
+    "elapsedSeconds": 4.293
+  },
+  "finalBackgroundGallery": {
+    "id": "999999999990/108/20261024101413_1.png",
+    "sha256": "c9411d718c8a3477b7c7a6eed5ab827570605fce977bdeef5aaf11d29ba88316",
+    "bytes": 3620,
+    "createdAt": 1792836871.5926661,
+    "background": "Home foreground; connectedDevice service active; final r5 APK",
+    "receipt": {
+      "destination": "saved",
+      "observations": 2,
+      "shot": {
+        "id": "999999999990/108/20261024101413_1.png",
+        "size": 3620,
+        "time": 1792836871.6072419
+      },
+      "state": "downloaded"
+    },
+    "readbackAt": 1792836876.8808918,
+    "elapsedSeconds": 5.288
+  }
+}
