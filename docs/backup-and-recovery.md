@@ -5,10 +5,15 @@ Steam Frame to your computer, puts it back afterwards, and gets the headset out
 of Desktop Mode. It runs from Frame Control on a computer, not from the iPhone
 app or the Frame itself.
 
-**Not tested on a headset yet.** Everything here is covered by unit tests and
-the fake Frame (see [Verification](#verification)); the save locations and the
-Desktop Mode switch are taken from Valve's tools and from Proton's layout, not
-from a backup and restore on a real Frame.
+**Partly tested on a headset.** On a Frame running SteamOS 0.5.6 (build
+20261015.6141207), a full backup saved 26 parts (40.7 MB): 14 games' Proton
+saves, Linux game saves, Steam and desktop settings and 9 Android apps' data,
+with no sign-in files or keys in the archives. Restoring one game's saves on top
+of identical files wrote nothing and left nothing behind. The session check
+reported Game Mode, so **Return to Game Mode** changed nothing. Not tested on a
+headset: a restore after a real factory reset, a restore that replaces files,
+Android data restore, and the switch out of a real Desktop Mode session. Unit
+tests and the fake Frame cover those (see [Verification](#verification)).
 
 ## Back up
 
