@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Add an explicit host window-switch button to whole-display panels: Alt-Tab
+  on Windows and Command-Tab on macOS. Single-window panels keep their own
+  source, so the button is hidden there.
+
 - Enable the in-app OBS source Start/Stop control on Windows. A control pipe
   lets the Python relay close its SSH child on Stop, app quit or parent exit;
   add a short [Discord guide](docs/streaming-to-discord.md).

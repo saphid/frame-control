@@ -7,6 +7,12 @@ the Mac's own keyboard. Find it under **Tools → Mac in the headset** (macOS
 only). On Windows there's an experimental port,
 [PC in the headset](pc-in-headset.md).
 
+On a **whole Mac display** panel, click **Switch Mac app (⌘Tab)** to send one
+Command-Tab chord to the Mac. The button is absent from single-window panels;
+those already keep their own source. It requires the same Mac Accessibility
+permission as other viewer keyboard input. The chord and button have automated
+checks, but a worn-headset click has not been verified.
+
 The confidence labels are the same as in [ssh.md](ssh.md).
 
 ## Why this design

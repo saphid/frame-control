@@ -13,6 +13,12 @@ whole screens. Place the panel with the dashboard's Float
 in World, Move and Size, point and click with the laser, scroll with the
 thumbstick, and type on the PC's keyboard.
 
+On a whole-screen panel, click **Switch PC window (Alt+Tab)** to switch the
+foreground Windows window. It sends one explicit Alt-Tab chord through the
+viewer's existing input channel. The button is absent from single-window panels
+when a WGC-enabled build supports them. A real Windows/Frame button click has
+not been verified; use the PC keyboard if focus does not move as expected.
+
 **It's experimental.** A Windows 11 VM has captured its real desktop with
 Desktop Duplication and encoded it with Media Foundation and JPEG. Physical PCs,
 hardware encoding and physical laser input remain unverified. See
