@@ -170,14 +170,26 @@ The temporary server stopped, the shared device lock was released, and the
 headset remained in Game Mode at 99% battery. See
 [`docs/evidence/clip-gui-export-2026-10-24.json`](evidence/clip-gui-export-2026-10-24.json)
 for the narrow proof. This did not exercise the packaged desktop installer.
+
+On 2026-10-24, the exact v0.4.17 tag exported a second real Steam-saved clip
+through `frame_clips.export_clip`, the same production path used by **Export**.
+Steam listed the clip at **100.801 seconds**, with 68 chunks and no gaps. The
+copied MP4 was **100.833 seconds** by `ffprobe` and decoded completely with
+`ffmpeg`; it was not cut at 60 seconds. The test restored Steam's recording
+mode, removed its reserved title and processes, and left Game Mode active at
+100% battery. See [the long-clip evidence](evidence/clip-long-2026-10-24.json).
+This did not click **Export** in the packaged desktop app or verify visible
+gameplay quality or perceptual audio/video sync.
+
 Remaining checks include:
 
 - Perceptual audio/video sync and audible content. Frame Control's separate
   **Record** path stamps camera and audio inputs with the wall clock because
   they otherwise count from different clocks.
-- Long saved clips, trims starting partway through a Steam recording, and the
-  packaged desktop app's **Export** button. One real saved clip's directory
-  layout was checked; the parser remains deliberately loose for other layouts.
+- Clips longer than the 100-second test, trims starting partway through a Steam
+  recording, and the packaged desktop app's **Export** button. Two real saved
+  clips' directory layouts were checked; the parser remains deliberately loose
+  for other layouts.
 - How much x264 at 1080p30 costs the Frame while a game is running.
 - Automatic copying: that 30 seconds without a write is a safe sign Steam has
   finished saving a clip, and how a once-a-minute listing feels on the Frame.
