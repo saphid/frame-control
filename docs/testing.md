@@ -60,8 +60,11 @@ scripts/e2e.sh test_doctor
 
 They cover privacy filtering, host-key preservation, restart safety and missing
 journal evidence, plus asleep, full-title-storage, SSH/devkit-off and missing-key
-faults. The fake's doctor-only `systemctl show` responses assume stable restart
-counters and inactive keep-awake; unsupported queries fail. These tests do not
+faults. The plan/report tests cover exact-evidence advice, blocked plans,
+private exclusive baselines, malformed input, target mismatches and comparisons
+without repair claims. The fake-Frame storage test records a full-disk baseline,
+clears only the fake fault and compares a fresh run. The fake's doctor-only
+`systemctl show` responses assume stable restart counters and inactive keep-awake; unsupported queries fail. These tests do not
 exercise a real SteamOS user manager or touch a headset.
 
 `tests/fakeframe/` builds a container that stands in for the headset, and a

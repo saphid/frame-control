@@ -58,6 +58,44 @@ local SSH setup is unavailable. Panel verification currently means a connected
 run normally exits 1. Automation should read the labelled checks rather than
 treating a warning as proof the headset is unusable.
 
+## Read-only repair plan and before/after reports
+
+```sh
+scripts/frame-doctor.sh --plan --save-report before.json
+# Review the plan with the headset user. Any manual action is separate.
+scripts/frame-doctor.sh --plan --compare-before before.json --save-report after.json
+```
+
+`--plan` prints advice; it never executes repair commands or prompts for approval.
+There is no automatic repair mode. Advice about Wi-Fi, display timeouts, low
+storage, a missing Steam install marker or keep-awake requires the exact
+recognized section, severity and evidence. Other warnings request local review;
+unknown evidence never justifies a repair. A signature or missing marker alone
+does not establish a cause. Restart risk, rising counters or unknown counters
+block all section-specific plans and direct you to the recovery runbook.
+Nothing changes passwords, headset security, pairing, services or power settings.
+
+Reports are optional **local** JSON files containing only fixed diagnostic
+summaries, a format version and an opaque SSH-target configuration fingerprint.
+The fingerprint binds comparisons to the same alias, identity/routing
+configuration and fallback addresses; it does not prove physical headset
+identity or that the headset was not replaced behind that configuration. Keep
+using trusted SSH host keys. Report creation is exclusive (existing files and
+symlinks are refused), with owner-only permissions on POSIX. Protect reports
+using your local account permissions on Windows. Choose a fresh output filename
+for each run. Doctor never writes a report on the headset.
+
+`--compare-before` validates a bounded baseline before connecting and refuses
+changed target configuration. It prints each section's before/after status and
+prints both fixed evidence messages when they differ, even if the status
+stayed the same. Changes are observations, not proof a repair worked or caused them;
+recent journal windows can simply age out. There is no intervening repair by
+doctor, freshness guarantee, or authenticated report signature. If either run
+skipped deeper checks, comparison is blocked and no improvement is claimed.
+Unreachable or invalid probes produce no new baseline or comparison. Malformed
+baseline/target mismatch/report-write errors exit **2**; otherwise normal
+diagnostic exit codes apply. No saved report is needed for ordinary diagnostics.
+
 ## First-time setup and pairing
 
 - **No SSH response:** wake the headset with its power button. Check the cable
@@ -89,15 +127,16 @@ is the source for these section numbers and observed signatures (September
 2026 builds). Its section 4 describes freezing and verifying health-check
 trackers before prolonged recovery during a live loop. That changes headset
 state, so this read-only implementation stops and directs you there instead.
-It does not implement issue #34's automatic fixes, before/after repair runs,
-or full recovery automation. Review build-specific recovery instructions with
-the person using the headset; a repair can remove data.
+The optional plan and baseline comparison are a guarded next step for issue
+#34; automatic fixes and full recovery automation remain unimplemented. Review
+build-specific recovery instructions with the person using the headset; a repair can remove data.
 
 Never reload `ath12k`, suspend remotely, kill gamescope to diagnose a loop,
 reset or force power off during extraction/repair, or write passwords to disk.
 The doctor never restarts services, signals processes, repairs Steam, changes
 WoWLAN/standby settings, takes keep-awake ownership, installs anything or writes
-a report. Nothing needs restoring after its checks. Manual/device tests must
+a remote report. Only `--save-report` creates a local file. Nothing needs
+restoring on the headset after its checks. Manual/device tests must
 follow the [shared-device lock and battery procedure](testing.md#headset-smoke-test).
 
 ## Privacy and verification
@@ -107,7 +146,9 @@ arguments, environment variables, SSH errors, account IDs, network addresses,
 SSIDs, keys and tokens are not printed. No telemetry or HTTP request is sent;
 the only pairing-service probe is a TCP connection. SSH produces normal access
 logs. Review summaries before sharing them; feature availability can still be
-personal information. Redirecting stdout saves a report only if you choose it.
+personal information. Redirecting stdout or using `--save-report` saves a report
+only if you choose it.
+Treat the target fingerprint as private metadata; it is a hash, not encryption.
 
 Unit tests use mocked boundaries. `scripts/e2e.sh test_doctor` covers asleep,
 disk-full, SSH/devkit-off and missing-key faults against the fake Frame. Its
@@ -119,3 +160,18 @@ correctly skipped all eleven deeper sections and exited 1. No raw logs,
 addresses or keys were printed, and no repair or restart was attempted.
 This verifies the safety stop on that device; the deeper checks are not
 claimed as headset-tested.
+
+Follow-up verification on 2026-10-24: `--plan --save-report` and then
+`--plan --compare-before` ran read-only on the same real Frame. Both reported
+nonempty health-check trackers, skipped deeper checks and exited 1. The plan
+was blocked and the comparison reported `risk -> risk` without claiming
+improvement. No install, launch, stop or repair was performed; this validates
+the guarded report path, not the deeper checks or any manual repair.
+
+The follow-up's 17 focused offline tests passed. All five doctor fake-Frame
+tests passed, including a disk-full baseline followed by fault removal and a
+fresh comparison. The final evidence-output change also passed that comparison
+test again. Because zsh is unavailable on this host, the repository's images
+were built and its Compose harness run directly under the isolated project
+`frame-doctor-plan-34`; its containers and volumes were removed afterwards.
+These storage changes were fake fault controls, not doctor repairs.

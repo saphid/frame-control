@@ -7,6 +7,11 @@
   Ctrl+C saves received samples with an explicit incomplete state. Units,
   unknown counts and sources remain visible; no headset controls are added.
 
+- Add a guarded `frame-doctor.sh --plan` with read-only, evidence-specific next
+  steps and explicit local baseline reports for before/after diagnostics (issue
+  #34). Restart risk blocks plans/comparisons; no automatic repairs, password
+  changes or headset security changes are performed.
+
 - Recover a tagged release upload when GitHub temporarily displays its draft
   as `untagged-…` after an edit, without creating a duplicate draft or
   silently retrying unrelated upload failures.

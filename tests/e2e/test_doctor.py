@@ -1,6 +1,8 @@
 """Real doctor/SSH against fake-Frame faults; never a real headset."""
 import subprocess
 import sys
+import tempfile
+from pathlib import Path
 
 import harness
 from harness import ROOT, ctl
@@ -9,9 +11,9 @@ harness.require()
 
 
 class Doctor(harness.FrameTestCase):
-    def doctor(self):
+    def doctor(self, *args):
         return subprocess.run([sys.executable, str(ROOT / 'scripts/frame_doctor.py'),
-                               '--lan', harness.FAKE_HOST, '--usb', harness.FAKE_HOST],
+                               '--lan', harness.FAKE_HOST, '--usb', harness.FAKE_HOST, *args],
                               capture_output=True, text=True, timeout=120)
 
     def test_disk_full(self):
@@ -41,3 +43,17 @@ class Doctor(harness.FrameTestCase):
         self.assertEqual(r.returncode, 2, r.stdout + r.stderr)
         self.assertIn('SSH key rejected', r.stdout)
         self.assertIn('no pairing request was sent', r.stdout)
+
+    def test_plan_and_before_after_storage(self):
+        with tempfile.TemporaryDirectory() as folder:
+            baseline = str(Path(folder) / 'before.json')
+            ctl('disk-full', 'on')
+            before = self.doctor('--plan', '--save-report', baseline)
+            self.assertEqual(before.returncode, 1, before.stdout + before.stderr)
+            self.assertIn('use Steam storage management', before.stdout)
+            ctl('disk-full', 'off')  # fake fault control, not a doctor repair
+            after = self.doctor('--plan', '--compare-before', baseline)
+            self.assertEqual(after.returncode, 1, after.stdout + after.stderr)
+            self.assertIn('Steam and storage: BROKEN ->', after.stdout)
+            self.assertNotIn('Steam and storage: BROKEN -> BROKEN', after.stdout)
+            self.assertIn('no automatic repair is available', after.stdout)

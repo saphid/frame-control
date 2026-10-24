@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import subprocess
+import tempfile
 import unittest
 from unittest.mock import patch, Mock
 
@@ -25,7 +26,7 @@ class FrameDoctor(unittest.TestCase):
                 patch.object(doctor, 'run', side_effect=[config, *responses]) as run, \
                 patch.object(doctor, 'port_open', return_value=kwargs.get('devkit', False)), \
                 patch('sys.stdout', new_callable=io.StringIO) as output:
-            code = doctor.main([])
+            code = doctor.main(kwargs.get('argv', []))
         return code, output.getvalue(), run
 
     def test_unreachable_is_actionable_without_exposing_stderr(self):
@@ -104,6 +105,91 @@ class FrameDoctor(unittest.TestCase):
         self.assertEqual(len(data['checks']), 11)
         with patch('sys.stdout', new_callable=io.StringIO):
             self.assertEqual(doctor.report(data), 1)
+
+    def stable(self, disk=None):
+        checks = [['UNKNOWN', 'Evidence unavailable; consult the runbook locally.'] for _ in doctor.SECTIONS]
+        checks[3] = disk or ['BROKEN', 'Less than 16 MiB free; review storage in Frame Control before installing.']
+        return {'guard': 'stable', 'checks': checks}
+
+    def test_plan_requires_exact_evidence_and_never_adds_remote_commands(self):
+        data = self.stable()
+        code, text, calls = self.main([result(json.dumps(data))], argv=['--plan'])
+        self.assertEqual(code, 1)
+        self.assertIn('READ-ONLY', text)
+        self.assertIn('use Steam storage management', text)
+        self.assertEqual(calls.call_count, 2)  # config read and unchanged read-only probe
+        data['checks'][3] = ['BROKEN', 'Evidence unavailable; consult the runbook locally.']
+        _, text, _ = self.main([result(json.dumps(data))], argv=['--plan'])
+        self.assertNotIn('use Steam storage management', text)
+        self.assertIn('does not establish a safe automatic fix', text)
+
+    def test_plan_guard_blocks_all_section_actions(self):
+        for state in ('loop', 'risk', 'unknown'):
+            _, text, _ = self.main([result(json.dumps({'guard': state, 'checks': []}))], argv=['--plan'])
+            self.assertIn('BLOCKED', text)
+            self.assertNotIn('PLAN 4.', text)
+
+    def test_before_after_and_exclusive_private_baseline(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'before.json'
+            before = self.stable()
+            _, text, _ = self.main([result(json.dumps(before))], argv=['--save-report', str(path)])
+            saved = path.read_text()
+            self.assertNotIn('private-tailnet', saved)
+            self.assertNotIn('pinned-frame', saved)
+            if __import__('os').name != 'nt':
+                self.assertEqual(path.stat().st_mode & 0o777, 0o600)
+            after = self.stable(['OK', 'Home and title storage have at least 256 MiB free.'])
+            _, text, _ = self.main([result(json.dumps(after))], argv=['--compare-before', str(path)])
+            self.assertIn('Steam and storage: BROKEN -> OK', text)
+            self.assertIn('do not prove repair', text)
+            self.assertIn('Before evidence: Less than 16 MiB free', text)
+            self.assertIn('After evidence: Home and title storage', text)
+            code, _, _ = self.main([result(json.dumps(after))], argv=['--save-report', str(path)])
+            self.assertEqual(code, 2)
+            self.assertEqual(path.read_text(), saved)
+            # Same alias with changed routing cannot masquerade as the same baseline.
+            code, text, calls = self.main([], argv=['--compare-before', str(path), '--usb', '192.0.2.9'])
+            self.assertEqual(code, 2)
+            self.assertIn('comparison refused', text)
+            self.assertEqual(calls.call_count, 1)
+
+    def test_report_refuses_symlinks(self):
+        with tempfile.TemporaryDirectory() as folder:
+            target = Path(folder) / 'target'
+            target.write_text('preserve')
+            link = Path(folder) / 'link'
+            try:
+                link.symlink_to(target)
+            except OSError:
+                self.skipTest('symlinks unavailable')
+            code, _, _ = self.main([result(json.dumps(self.stable()))], argv=['--save-report', str(link)])
+            self.assertEqual(code, 2)
+            self.assertEqual(target.read_text(), 'preserve')
+
+    def test_comparison_suppresses_improvement_if_guard_fails(self):
+        with patch('sys.stdout', new_callable=io.StringIO) as output:
+            doctor.compare(self.stable(), {'guard': 'risk', 'checks': []})
+        self.assertIn('Comparison blocked', output.getvalue())
+        self.assertNotIn('BROKEN -> OK', output.getvalue())
+
+    def test_untrusted_baselines_and_probe_are_rejected_without_echo(self):
+        for payload in ('secret', '[]', '{"version":1}', 'x' * 65537, '[' * 2000 + ']' * 2000):
+            with tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / 'baseline.json'
+                path.write_text(payload)
+                code, text, calls = self.main([], argv=['--compare-before', str(path)])
+                self.assertEqual(code, 2)
+                self.assertNotIn('secret', text)
+                calls.assert_not_called()
+        for data in ({'guard': 'secret', 'checks': []},
+                     {'guard': 'risk', 'checks': [['WARN', 'secret']]},
+                     dict(self.stable(), raw='secret'),
+                     self.stable(['WARN', 'Never pairs'])):
+            code, text, _ = self.main([result(json.dumps(data))], argv=['--plan'])
+            self.assertEqual(code, 1)
+            self.assertNotIn('secret', text)
+            self.assertNotIn('Repair plan', text)
 
     def test_help_shell_entry_point_is_offline(self):
         # This Bash wrapper is for macOS/Linux; Windows uses the Python CLI.
