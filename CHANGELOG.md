@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add an opt-in desktop low-battery alert without starting a family session.
+  Existing status reads confirm low charge and drain; recovery hysteresis and a
+  ten-minute cooldown limit repeat alerts. Off on page open/headset switch;
+  pauses with hidden-page status refreshes. No extra polling or headset changes.
+
 - Clarify first-time desktop downloads, installation and opening on the website
   and README, including CPU choices, unsigned-app warnings, pairing fallback
   and the source-only iOS build. Keep section navigation available on mobile.
