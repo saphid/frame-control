@@ -71,6 +71,7 @@ import frame_telemetry  # noqa: E402
 import frame_titles  # noqa: E402
 import frame_touch  # noqa: E402
 import frame_webinstall  # noqa: E402
+import frame_wireless  # noqa: E402
 import frame_vr  # noqa: E402
 import frame_utilities  # noqa: E402
 import frame_compat_db  # noqa: E402
@@ -3479,6 +3480,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"os": "SteamOS", "fileManager": None, "computer": DEVICE, "mobile": True} if LOCAL else
                                {"os": frame_host.NAME, "fileManager": frame_host.FILE_MANAGER,
                                 "computer": "Mac" if frame_host.MAC else "PC"})
+            elif path == "/api/host/wireless":
+                if LOCAL:
+                    raise Failure("Wireless Adapter doctor runs on a Windows PC, not a headset", 400)
+                self.send_json(frame_wireless.diagnose())
             elif path == "/api/connection":
                 self.send_json(connection_state())
             elif path == "/api/connection/events":

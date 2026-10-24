@@ -483,3 +483,19 @@ rule, which the original source-only assertion missed. Check computed wrapping,
 the complete explanation, tooltip punctuation, Refresh bounds and selection
 after **Use this headset** when changing these styles. This fixture does not
 exercise Electron integration or a real SSH identity change.
+
+
+## PC-only Windows wireless diagnosis
+
+```sh
+python3 -m unittest discover -s tests -p 'test_wireless.py' -v
+node --test tests/wireless.cjs
+```
+
+The checks workflow runs this targeted suite on Windows, including the real
+read-only PowerShell query, and the normal server suite includes it on all
+platforms. HTTP tests instantiate only a handler, never the app connector.
+Fixtures cover duplicate instance identity, unknown states, GUID matching,
+localised/denied channel data and 6 GHz ambiguity. No tests contact a real Frame.
+A Windows CI runner/VM cannot prove physical Steam dongle behaviour or audio RF
+interference. See [sources and limits](windows-wireless-doctor.md).

@@ -70,6 +70,21 @@ jobs:
       - name: Server tests
         run: python -m unittest discover -s tests -v
 
+  # Fast, PC-only Windows query validation, without capture libraries or a headset.
+  wireless-windows:
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: Wireless doctor fixtures, UI and live read-only Windows inventory
+        run: python -m unittest discover -s tests -p 'test_wireless.py' -v
+
   # The iPhone app: builds for the Simulator and runs its unit tests.
   ios:
     runs-on: macos-latest
