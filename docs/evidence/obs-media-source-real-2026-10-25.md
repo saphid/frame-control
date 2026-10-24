@@ -32,9 +32,17 @@ Starting the helper before OBS fixed this in the second run. The setup guide
 now recommends starting the source in Frame Control before adding or activating
 the OBS Media Source.
 
+The exact-head AppImage was then launched on an isolated Xvfb display and
+profile with the real `frame` alias. In **Tools → Capture & Live**, clicking
+**Start OBS source** changed the UI to **Stop OBS source** and showed
+`udp://127.0.0.1:15099` after the first stream packet. The packaged Python
+helper was running with `--frame frame`. Clicking **Stop OBS source** returned
+the UI to **Start OBS source**; the helper and its remote `/dev/video99` ffmpeg
+process were gone. The app exited through **File → Quit**. Battery again read
+100% Full, and the owned lock was released.
+
 **Limits:** Nobody listened to OBS audio monitoring or the Frame speakers.
 Audio/video sync was not measured. The headset was unworn and in standby, so
 this test does not answer whether active passthrough pixels appear in the
-mirror. The packaged app's Start/Stop button was not clicked on a real Frame;
-the packaged helper and its OBS transport were tested directly. The OBS MKVs
-were temporary local test artifacts and are not included in the repository.
+mirror. The OBS MKVs were temporary local test artifacts and are not included
+in the repository.
