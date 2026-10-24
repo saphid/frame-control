@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Correct the Return to Game Mode help text: Frame Control selects the switch
+  supported by the headset's SteamOS build, including `steamosctl` on current
+  Frames. The button's behavior is unchanged.
+
 - Distinguish an unreadable gamescope panel list from a confirmed empty list in
   Desktop Capture and Control (issue #73). Failed discovery now asks users to
   check SteamVR and report the exact message and SteamOS version, rather than
