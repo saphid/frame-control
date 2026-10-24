@@ -68,7 +68,7 @@ class Media(unittest.TestCase):
         self.assertIn('-frames:v', cmd)
 
     def play_with(self, name, busy=0, on_pixels=None, sleeps=None, info=None,
-                  fail=None, layout='auto'):
+                  fail=None, layout='auto', on_create=None, on_call=None):
         """Run the player against a fake OpenVR; returns (status, pixels calls).
 
         Handle 0 is the theatre surround and 1 the screen. `fail(handle, n)` makes
@@ -82,11 +82,18 @@ class Media(unittest.TestCase):
             write_status(path, **values)
 
         class FakeOverlay:
+            created = 0
+
             def create(self, *a, **k):
-                return len(calls)
+                # Handles in creation order: surround 0, then screen 1 (theatre).
+                FakeOverlay.created += 1
+                if on_create:
+                    on_create(*a, **k)
+                return FakeOverlay.created - 1
 
             def call(self, *a):
-                pass
+                if on_call:
+                    on_call(*a)
 
             def pixels(self, handle, data, w, h):
                 calls.append((handle, w, h))
@@ -131,6 +138,58 @@ class Media(unittest.TestCase):
         # Two video frames were dropped; the surround (handle 0) waited and was re-sent.
         self.assertEqual(result['dropped'], 2)
         self.assertIn((0, 1, 1), calls[3:])
+
+    def test_theatre_surround_failure_does_not_stop_playback(self):
+        def fail_surround(n):
+            if n == 1:  # the surround's upload is the first pixels call
+                raise RuntimeError('OpenVR SetOverlayRaw failed: 11')
+        result, _ = self.play_with('clip_SBS.mp4', on_pixels=fail_surround)
+        self.assertEqual((result['state'], result['frames']), ('ended', 4))
+
+    def test_theatre_surround_creation_and_setup_failures_are_cosmetic(self):
+        def fail_create(key, *a, **k):
+            if key.endswith('.surround'):
+                raise RuntimeError('OpenVR CreateOverlay failed: 11')
+        def fail_alpha(name, *a):
+            if name == 'SetOverlayAlpha':
+                raise RuntimeError('OpenVR SetOverlayAlpha failed: 11')
+        for hooks in ({'on_create': fail_create}, {'on_call': fail_alpha}):
+            with self.subTest(hooks=hooks), patch('builtins.print') as log:
+                result, calls = self.play_with('clip_SBS.mp4', **hooks)
+            self.assertEqual((result['state'], result['frames']), ('ended', 4))
+            self.assertEqual(sum(h == 1 for h, w, hgt in calls), 4)
+            self.assertIn('Theatre surround unavailable:', log.call_args.args[0])
+
+    def test_theatre_surround_refusal_after_standby_is_not_retried(self):
+        def refuse_retry(n):
+            if n == 3:  # surround busy, screen accepted, surround retry refused
+                raise RuntimeError('OpenVR SetOverlayRaw failed: 11')
+        with patch('builtins.print') as log:
+            result, calls = self.play_with('clip_SBS.mp4', busy=1, on_pixels=refuse_retry)
+        self.assertEqual((result['state'], result['frames'], result['dropped']), ('ended', 4, 0))
+        self.assertEqual(sum(h == 0 for h, w, hgt in calls), 2)
+        self.assertIn('Theatre surround unavailable:', log.call_args.args[0])
+
+    def test_screen_refusal_still_fails_playback(self):
+        def refuse_screen(n):
+            if n == 2:
+                raise RuntimeError('OpenVR SetOverlayRaw failed: 11')
+        with self.assertRaisesRegex(RuntimeError, 'SetOverlayRaw failed: 11'):
+            self.play_with('clip_SBS.mp4', on_pixels=refuse_screen)
+
+    def test_close_attempts_every_overlay_and_shuts_down_after_teardown_errors(self):
+        for error in (RuntimeError('OpenVR error'), ValueError('bad handle'),
+                      InterruptedError('late Stop')):
+            with self.subTest(error=type(error).__name__):
+                overlay = player.Overlay.__new__(player.Overlay)
+                overlay.handles = [10, 20]
+                overlay.vr = unittest.mock.Mock()
+                overlay.call = unittest.mock.Mock(side_effect=[error, None])
+                overlay.close()
+                self.assertEqual(overlay.call.call_args_list, [
+                    unittest.mock.call('DestroyOverlay', 20),
+                    unittest.mock.call('DestroyOverlay', 10)])
+                overlay.vr.VR_ShutdownInternal.assert_called_once_with()
 
     def test_stop_mid_video_reports_stopped(self):
         result, _ = self.play_with('clip_SBS.mp4', on_pixels=lambda n: n == 3 and stop_now())

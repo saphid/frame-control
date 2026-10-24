@@ -19,6 +19,28 @@ import frame_agent as agent
 import frame_android as android
 
 
+class StartupTests(unittest.TestCase):
+    def test_rejected_server_starts_no_background_work(self):
+        # A losing process exits through Python teardown. Background TLS/index
+        # workers there can crash it, and it must not sweep the owner's files.
+        with mock.patch.object(server, 'LOCAL', False), \
+                mock.patch.object(server, 'PRIVATE', False), \
+                mock.patch.object(sys, 'argv', ['server.py', '--port', '0']), \
+                mock.patch.object(server, 'one_server', side_effect=SystemExit('already running')), \
+                mock.patch.object(server, 'LoopbackServer') as listener, \
+                mock.patch.object(server, 'sweep_tmp') as sweep, \
+                mock.patch.object(server.threading, 'Thread') as worker, \
+                mock.patch.object(server.frame_telemetry, 'start') as telemetry, \
+                mock.patch.object(server.frame_contact, 'start') as contact:
+            with self.assertRaisesRegex(SystemExit, 'already running'):
+                server.main()
+            listener.assert_not_called()
+            sweep.assert_not_called()
+            worker.assert_not_called()
+            telemetry.assert_not_called()
+            contact.assert_not_called()
+
+
 class TargetTests(unittest.TestCase):
     def setUp(self):
         self.active = {'id': 'a', 'name': 'Headset A'}

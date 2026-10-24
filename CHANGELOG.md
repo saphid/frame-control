@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Keep media playback running when SteamVR refuses the optional theatre dark
+  surround, including a retry after standby. Log the refusal and play without
+  the surround. Overlay teardown attempts every owned handle and always calls
+  OpenVR shutdown even if a handle fails to close.
+
+- Check the desktop server's single-instance lock before starting background
+  downloads, so a second server exits cleanly with the existing "already
+  running" message.
+
 - Recheck saved spatial layouts on SteamOS 0.5.6 / SteamVR 2.18.2 (issue #31).
   Read-only probes expose some panel geometry, but safe restoration of
   Steam/gamescope docking and positions remains unverified. Record exact API
