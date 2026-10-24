@@ -298,7 +298,7 @@ class BundleTests(unittest.TestCase):
 
     @unittest.skipUnless(shutil.which('node'), 'needs node')
     def test_actual_send_handler_routes_bundle_to_importer_and_pc_zip_to_titles(self):
-        page = (Path(__file__).resolve().parents[1] / 'ui/index.html').read_text()
+        page = (Path(__file__).resolve().parents[1] / 'ui/index.html').read_text(encoding='utf-8')
         function = page[page.index('async function sendFilesOne('):page.index('$("androidBackupChoose").onclick')]
         script = r"""
 const calls = [];
