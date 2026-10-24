@@ -3637,6 +3637,11 @@ def main():
                     help="stop cleanly when stdin closes (the app closes it on quit; "
                          "Windows has no SIGTERM to catch)")
     args = ap.parse_args()
+    global LINK, _ONE_SERVER
+    if not LOCAL and not PRIVATE:
+        # Refuse before starting daemon workers: the losing process exits through
+        # Python teardown, which can race TLS work and crash instead of exit 1.
+        _ONE_SERVER = one_server()
     httpd = LoopbackServer(("127.0.0.1", args.port), Handler)
     sweep_tmp()
     if os.environ.get('FRAME_COMPAT_SEARCH_REPORTS') != '0':
@@ -3645,10 +3650,7 @@ def main():
     threading.Thread(target=apk_search.warm, daemon=True).start()  # big indexes download before the first search
     frame_telemetry.start()
     frame_contact.start()
-    global LINK, _ONE_SERVER
     if not LOCAL:
-        if not PRIVATE:  # a private server only uses the headsets (see one_server)
-            _ONE_SERVER = one_server()
         LINK = frame_link.Link(frame_devices.Registry(), env_alias=FRAME if FRAME_FROM_ENV else None,
                                mux_base=MUX_BASE, control=CONTROL, apply=route, explain=unreachable)
         LINK.work_lock, LINK.work = _work_lock, lambda: _work[0]

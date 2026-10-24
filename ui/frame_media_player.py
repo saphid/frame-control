@@ -185,8 +185,9 @@ def play(args):
             except OverlayBusy:
                 pending.insert(0, item)
                 return
-            except RuntimeError:
-                pass  # the surround is cosmetic; never end playback over it
+            except RuntimeError as e:
+                # Only the cosmetic surround is queued here.
+                print('Theatre surround unavailable: %s' % e, flush=True)
 
     def hold(handle, data, w, h):
         """Keep a still (photo or splat) up until Stop, retrying through standby."""

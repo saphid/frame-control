@@ -296,7 +296,7 @@ class OneServer(unittest.TestCase):
         self.assertIn("Frame Control on", first.stdout.readline())
         second = subprocess.run([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0"], env=env,
                                 capture_output=True, text=True, timeout=60)
-        self.assertEqual(second.returncode, 1)
+        self.assertEqual(second.returncode, 1, second.stderr)
         self.assertIn("already running", second.stderr)
         first.terminate()
         first.wait(10)
