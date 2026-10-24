@@ -14,7 +14,10 @@ count. So a build reaches people only when you publish it, after testing it.
 
    `.github/workflows/release.yml` builds macOS, Windows and Linux, and
    attaches everything to a **draft** release for that tag. Nobody is
-   offered a draft.
+   offered a draft. Editing a draft while installers are uploading can make
+   GitHub temporarily show its tag as `untagged-…`. The workflow finds that
+   draft by its exact version title, restores the tag association and retries
+   the affected upload; it refuses ambiguous matches.
 
 2. Download the draft's installers and test them. An installed copy of the
    previous version won't offer the draft, so install it directly.

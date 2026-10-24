@@ -26,7 +26,9 @@ jobs:
   # "view || create" could race and make duplicate drafts. The draft is tied to
   # the pushed tag (the tag must already exist on GitHub, then tag_name is set
   # explicitly), so scripts/publish-release.sh and `gh release upload` find it
-  # by tag. It is created with the REST API so the id comes straight back: the
+  # by tag. Editing a draft can make GitHub show an untagged-* name again; the
+  # upload step below recovers that exact draft if tag lookup fails. It is
+  # created with the REST API so the id comes straight back: the
   # release list can lag a fresh draft (v0.4.2's first run found nothing and
   # PATCHed releases/ with an empty id). tests/test_release_workflow.py runs
   # this step against tests/fakegh.
@@ -40,8 +42,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           tag="${GITHUB_REF_NAME}"
-          # A rerun finds the draft an earlier attempt made.
-          id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.tag_name == \"$tag\") | .id" | head -n 1)
+          # A rerun finds the draft even if GitHub temporarily shows untagged-*.
+          id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$tag\" or (.draft and (.tag_name | startswith(\"untagged-\")) and .name == \"Frame Control ${tag#v}\")) | .id")
+          if [ -n "$id" ] && ! [[ "$id" =~ ^[0-9]+$ ]]; then
+            echo "expected one release for $tag; found: $id" >&2
+            exit 1
+          fi
           if [ -z "$id" ]; then
             # Given a missing tag, GitHub would create it on the default branch.
             gh api "repos/$GH_REPO/git/ref/tags/$tag" >/dev/null \
@@ -135,8 +142,25 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release upload "${GITHUB_REF_NAME}" ${{ matrix.files }} --clobber
+          # A release-notes edit can make GitHub expose a draft as untagged-*.
+          # Keep the normal upload path; recover only that lookup failure.
+          if result=$(gh release upload "${GITHUB_REF_NAME}" ${{ matrix.files }} --clobber 2>&1); then
+            printf '%s\n' "$result"
+            exit 0
+          fi
+          printf '%s\n' "$result" >&2
+          case "$result" in *"release not found"*) ;; *) exit 1 ;; esac
+          tag="${GITHUB_REF_NAME}"
+          ids=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq ".[] | select(.draft and .name == \"Frame Control ${tag#v}\" and (.tag_name == \"$tag\" or (.tag_name | startswith(\"untagged-\")))) | .id")
+          if ! [[ "$ids" =~ ^[0-9]+$ ]]; then
+            echo "expected one matching draft for $tag; found: ${ids:-none}" >&2
+            exit 1
+          fi
+          gh api -X PATCH "repos/$GH_REPO/releases/$ids" -f tag_name="$tag" >/dev/null
+          gh release upload "$tag" ${{ matrix.files }} --clobber
       # Tagged builds are attached to the release above; only other builds need artifacts.
       - uses: actions/upload-artifact@v4
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}
