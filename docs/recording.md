@@ -1,5 +1,8 @@
 # Recording and Steam clips
 
+For a live OBS Media Source with headset output audio, see
+[Headset view in OBS](obs-headset-source.md).
+
 Frame Control can record SteamVR's mirrored headset view, with its sound, and save it as
 an `.mp4` on your computer. It can also export the clips and background
 recordings from Steam's own game recording, at any length, as one `.mp4` each.
