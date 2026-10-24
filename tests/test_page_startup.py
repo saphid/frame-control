@@ -9,7 +9,7 @@ import subprocess
 import unittest
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
-STUBS = ['$', 'toggleLive', 'scrollToY', 'scroller', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadBackups', 'loadTitles', 'showAndroidTab',
+STUBS = ['$', 'toggleLive', 'scrollToY', 'scroller', 'loadMacView', 'loadPanels', 'loadPanelSwitcher', 'loadBackups', 'loadStorage', 'loadTitles', 'showAndroidTab',
          'loadAndroid', 'loadDisplays', 'setGameSource', 'requestAnimationFrame']
 
 RUN = r'''

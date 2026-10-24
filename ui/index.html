@@ -1018,6 +1018,9 @@
     #appsLinux .row { flex-wrap:wrap!important; }
   }
 
+  #storage .card { padding:16px; border:1px solid rgba(255,255,255,.1); border-radius:8px; margin-top:16px; }
+  #storage .grow, #storage .sub { overflow-wrap:anywhere; }
+  #storage .item > span { flex-shrink:0; }
 </style>
 <link rel="stylesheet" href="/control-center.css">
 </head>
@@ -1423,7 +1426,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's windows and screens</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's windows and screens</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
 <section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
@@ -1668,6 +1671,17 @@
       <div class="row" style="margin-top:12px"><button class="small action" id="panelsOpen">Open in headset</button></div>
       <div class="hint">Choose a panel to show it in SteamVR. The headset switcher stays available from Steam's dashboard.
         Saved spatial layouts are not available yet.</div>
+    </section>
+
+    <section class="panel" id="storage" hidden>
+      <div class="shelf-head"><h2>Game storage</h2><span class="spacer"></span><button class="small" id="storageRefresh">Refresh</button></div>
+      <p class="sub">Read-only snapshot. Steam's recorded install sizes may be stale and exclude saves, shaders, downloads, Android and sideloaded content. No files are scanned recursively or changed.</p>
+      <div id="storageResult" role="status" aria-live="polite">Open this tool to read headset storage.</div>
+      <div class="card" style="margin-top:16px"><h3>Move a game with Steam</h3>
+        <p>On the headset, open Steam → Settings → Storage, choose the source drive, select the game, then choose Move and a destination. If Storage is unavailable in the headset UI, use desktop Steam’s Settings → Storage.</p>
+        <p class="sub">Steam offers destinations it supports. Let Steam finish and handle any errors, then Refresh here. Frame Control cannot verify a supported move API or its recovery behaviour, so it never moves or deletes game files.</p>
+        <a href="https://help.steampowered.com/en/faqs/view/4BD4-4528-6B2E-8327#move" target="_blank" rel="noopener">Steam's storage and moving guide ↗</a>
+      </div>
     </section>
 
     <section class="panel" id="backup" hidden>
@@ -5430,6 +5444,39 @@ $("panelList").onclick = e => {
   act("Show panel", () => api("/api/panels", {action: "focus", key: b.dataset.panel}), b);
 };
 
+// ---- Read-only game storage ----
+let storageSeq = 0;
+const storageState = s => ({'permission-denied':'Permission denied', missing:'Missing or disconnected',
+  unavailable:'Unavailable', 'invalid-metadata':'Invalid Steam metadata', partial:'Partial inventory', ok:'Available'}[s] || 'Unknown');
+const storageBytes = n => typeof n === 'number' && Number.isFinite(n) && n >= 0 ? sizeText(n) : 'Unknown';
+function storageCapacity(c) {
+  if (!c || c.state !== 'ok') return esc(storageState(c?.state));
+  return `${storageBytes(c.free)} free / ${storageBytes(c.total)} total · ${storageBytes(c.used)} used`;
+}
+function renderStorage(r) {
+  return `<div class="card"><h3>Headset user filesystem</h3><p>${storageCapacity(r.home)}</p>
+    <p class="sub">Filesystem space available to your user; excludes separate system partitions. Reserved space can make used + free less than total.</p></div>` +
+    (r.discovery !== 'ok' ? `<p class="sub">Library discovery: ${esc(storageState(r.discovery))}. Additional libraries may be absent from this view.</p>` : '') +
+    r.libraries.map(lib => `<div class="card" style="margin-top:16px"><h3 style="overflow-wrap:anywhere">${esc(lib.path)}</h3>
+      <p>${storageCapacity(lib.capacity)}</p><p class="sub">Filesystem containing this library path; paths on the same filesystem share this space. Capacities must not be added together.</p>
+      <p>${esc(storageState(lib.state))} · Known games/apps: ${storageBytes(lib.gameBytes)} · Known runtimes / tools (by name): ${storageBytes(lib.toolBytes)}</p>
+      <p class="sub">Known recorded content: ${storageBytes(lib.recordedBytes)} · ${lib.unknownSizes} unknown sizes · ${lib.issues.length} unreadable / invalid manifests. Other usage is unmeasured.</p>
+      <div class="list">${lib.apps.map(app => `<div class="item"><div class="grow">${esc(app.name)}<div class="sub">Steam ${esc(app.appid)} · ${app.kind === 'tool' ? 'Runtime / tool' : 'Game / app'}</div></div><span>${storageBytes(app.bytes)}</span></div>`).join('') || '<p class="sub">No readable Steam manifests found; this does not prove the library is empty.</p>'}</div>
+      ${lib.issues.map(i => `<p class="sub">${esc(i.file)}: ${esc(storageState(i.state))}</p>`).join('')}</div>`).join('') +
+      `<p class="sub">Snapshot received ${esc(new Date().toLocaleTimeString())}. Refresh after installs, downloads or moves.</p>`;
+}
+async function loadStorage() {
+  const seq = ++storageSeq, gen = devGen;
+  $('storageResult').textContent = 'Reading headset storage…';
+  try {
+    const result = await api('/api/storage');
+    if (seq === storageSeq && gen === devGen) $('storageResult').innerHTML = renderStorage(result);
+  } catch (error) {
+    if (seq === storageSeq && gen === devGen) $('storageResult').textContent = `Storage unavailable: ${error.message}`;
+  }
+}
+$('storageRefresh').onclick = loadStorage;
+
 // ---- Backup and recovery kit (ui/frame_backup.py) ----
 const BACKUP_KIND = {saves: "Game saves", settings: "Settings", android: "Android app data"};
 function sizeText(n) {
@@ -5704,10 +5751,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", backup:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", backup:"tools"};
 const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", backup:"Backup & recovery"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -5814,6 +5861,7 @@ function showPage(e) {
   if (tool === 'macview') loadMacView();
   if (tool === 'panels') loadPanelSwitcher();
   if (tool === 'backup') loadBackups();
+  if (tool === 'storage') loadStorage();
   if (tool === 'androidSettings') {
     $('repNew').hidden = false; $('androidSettings').prepend($('repNew')); loadDisplays();
   }
@@ -6792,6 +6840,7 @@ function onConnection(s) {
     androidApps = []; androidSeq++; androidPending.clear(); $('installedDetail').close(); resetShots(); resetClips();
     renderHome();
     titlesSeq++; disp.seq++; runningSeq++;  // answers to loads already on their way are ignored
+    $('storageResult').textContent = 'Headset changed. Open Game storage or Refresh to read this headset.';
     runningGames = []; $("nowRunning").hidden = true; $("runningList").innerHTML = "";
     if (cat.apps) filterCatalog();  // "Installed" tags were the other headset's
     // Confirmations still open were checked against the other headset.
