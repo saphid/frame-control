@@ -18,10 +18,16 @@
   #note[hidden] { display: block; opacity: 0; }
   #hud { position: fixed; left: 8px; top: 8px; font: 12px/1.35 ui-monospace, monospace; color: #dfe;
          background: rgba(0,0,0,.72); padding: 6px 9px; border-radius: 6px; pointer-events: none; white-space: pre; }
+  #switchWindow { position: fixed; right: 12px; bottom: 12px; z-index: 2; min-height: 44px;
+          padding: 8px 14px; border: 1px solid #a8c8d9; border-radius: 7px;
+          background: rgba(19,35,48,.9); color: #fff; font: 15px system-ui, sans-serif; cursor: pointer; }
+  #switchWindow:focus-visible { outline: 3px solid #66c0f4; outline-offset: 3px; }
+  #switchWindow:disabled { opacity: .5; cursor: default; }
 </style>
 </head>
 <body>
 <canvas id="c" width="16" height="9"></canvas>
+<button id="switchWindow" type="button" hidden>Switch window</button>
 <div id="note">Connecting to your computer…</div>
 <div id="hud" hidden></div>
 <script>
@@ -29,10 +35,14 @@
 const q = new URLSearchParams(location.search);
 // t: a single-use ticket from Frame Control. After the first connection the
 // Mac sends a reconnect key, kept only in memory.
-const src = q.get("src") || "test", ticket = q.get("t") || "", tag = q.get("tag") || "";
+const src = q.get("src") || "test", ticket = q.get("t") || "", tag = q.get("tag") || "", host = q.get("host") || "";
+document.title = host === "windows" ? "PC" : "Mac";
 let reconnectKey = "";
 const c = document.getElementById("c"), ctx = c.getContext("2d", { alpha: false, desynchronized: true });
 const note = document.getElementById("note");
+const switchButton = document.getElementById("switchWindow");
+switchButton.hidden = !src.startsWith("display:") || !["mac", "windows"].includes(host);
+if (!switchButton.hidden) switchButton.textContent = host === "mac" ? "Switch Mac app (⌘Tab)" : "Switch PC window (Alt+Tab)";
 // Counters for Frame Control's tests (read over DevTools).
 const stats = window.stats = { frames: 0, keyFrames: 0, bytes: 0, dropped: 0, codec: "", errors: [], info: null };
 
@@ -127,6 +137,29 @@ function show(text, ms) {
 }
 
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+function windowSwitchEvents(hostName) {
+  const code = hostName === "mac" ? "MetaLeft" : hostName === "windows" ? "AltLeft" : "";
+  if (!code) return [];
+  const key = hostName === "mac" ? "Meta" : "Alt", mod = hostName === "mac" ? "meta" : "alt";
+  return [
+    { t: "k", e: "down", code, key, mods: [] },
+    { t: "k", e: "down", code: "Tab", key: "Tab", mods: [mod] },
+    { t: "k", e: "up", code: "Tab", key: "Tab", mods: [mod] },
+    { t: "k", e: "up", code, key, mods: [] },
+  ];
+}
+switchButton.addEventListener("click", () => {
+  if (!ws || ws.readyState !== 1) return show("Connect to your computer before switching windows.", 4000);
+  const events = windowSwitchEvents(host);
+  if (!events.length) return;
+  switchButton.disabled = true;
+  send(stamp(events[0]));
+  setTimeout(() => {
+    send(stamp(events[1]));
+    send(events[2]);
+    setTimeout(() => { send(events[3]); switchButton.disabled = false; }, 60);
+  }, 40);
+});
 let lastKeyAsk = 0;
 function askKeyFrame() {
   const now = performance.now();
@@ -321,6 +354,7 @@ function flushMove() {
   pendingMove = null;
 }
 addEventListener("pointermove", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   if (!p.inside && !e.buttons) return;
   pendingMove = { t: "m", e: "move", x: p.x, y: p.y };
@@ -331,6 +365,7 @@ addEventListener("pointermove", e => {
   setTimeout(flushMove, wait);
 });
 addEventListener("pointerdown", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   if (!p.inside) return;
   if (e.pointerId !== undefined) try { c.setPointerCapture(e.pointerId); } catch (err) {}
@@ -339,6 +374,7 @@ addEventListener("pointerdown", e => {
   e.preventDefault();
 });
 addEventListener("pointerup", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   send({ t: "m", e: "up", b: e.button < 0 ? 0 : e.button, x: p.x, y: p.y });
 });
@@ -346,6 +382,7 @@ addEventListener("pointerup", e => {
 addEventListener("pointercancel", () => send({ t: "release" }));
 addEventListener("contextmenu", e => e.preventDefault());
 addEventListener("wheel", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e), unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
   send(stamp({ t: "wheel", dx: e.deltaX * unit, dy: e.deltaY * unit, x: p.x, y: p.y }, e));
   e.preventDefault();
@@ -354,6 +391,7 @@ function mods(e) {
   return ["shift", "ctrl", "alt", "meta"].filter(m => e[m + "Key"]);
 }
 function onKey(e, down) {
+  if (e.target === switchButton) return;  // let Enter/Space activate the button
   // Ctrl+Alt+Shift+S shows the numbers; it isn't sent to the Mac.
   if (e.code === "KeyS" && e.ctrlKey && e.altKey && e.shiftKey) {
     if (down) showHud(hud.hidden);

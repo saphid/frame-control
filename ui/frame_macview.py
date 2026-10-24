@@ -411,7 +411,8 @@ class MacView:
         # A single-use ticket for this source, not Frame Control's key: the URL
         # is visible in the Frame's process list.
         ticket = self.call("/ticket", method="POST", src=src)["ticket"]
-        params = {"src": src, "t": ticket, "tag": tag, "codec": q["codec"], "max": q["max"], "fps": q["fps"],
+        params = {"src": src, "t": ticket, "tag": tag, "host": self.host,
+                  "codec": q["codec"], "max": q["max"], "fps": q["fps"],
                   "bpp": q["bpp"]}
         url = f"http://127.0.0.1:{self.remote_port}/view?{urlencode(params)}"
         w, h = fit(width or 1280, height or 720)
