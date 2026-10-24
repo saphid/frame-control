@@ -107,6 +107,12 @@ The Linux adapter from #38 (desktop portal, PipeWire, VA-API) is in the tree,
 because it shares `capture.c` and the controller, and CI still builds and tests
 it. The app never offers it and the Linux installers don't include it.
 
+The [2026-10-24 lxso2 feasibility check](evidence/linux-pc-host-lxso2-2026-10-24.md)
+found no running or activatable desktop portal, no PipeWire socket and missing
+native build dependencies. Linux support remains disabled. The evidence records
+the build failure and prerequisites for a screen-only, view-only x264 slice;
+Linux capture, input and window modes have not been verified there.
+
 ## Measuring
 
 The Mac benchmark accepts the PC host:
