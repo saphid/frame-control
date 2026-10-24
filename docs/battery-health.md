@@ -49,5 +49,11 @@ writes to power supplies, pauses charging, changes current or sets a limit.
 malformed/missing values, permission failures, source selection and partial
 sensor support. `tests/control_center.cjs` exercises charging states, optional
 metrics and failed/stale/disconnected sample handling. These tests do not
-connect to a headset. This change has not been tested on a real Frame;
-optional fields are not claimed to be available on every firmware build.
+connect to a headset. On 2026-10-24, the PR's uninstalled parser was also
+piped over SSH to a real Frame running SteamOS 0.5.6 (build
+`20261015.6141207`). Its read-only sysfs result selected
+`max1720x_bat_7-36` and reported 99% charge, Not charging, 24.9 °C,
+Good driver health, 14 cycles, 2,920 mAh full and 2,700 mAh design capacity
+(108.1% fuel-gauge estimate). The Control Center UI was not run against this
+headset; Windows and macOS were not tested. Optional fields are not claimed to
+be available on every firmware build.
