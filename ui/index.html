@@ -7233,6 +7233,7 @@ function renderDetail() {
         <span class="sub">Identity: ${d.pinned ? "saved. A different device answering at one of these addresses is refused."
           : d.identity_lost ? "the saved key is missing or can't be read, so nothing is trusted until you check its key."
           : "not saved yet; the next connection saves it."}</span></div>
+      <div class="hint">SteamOS 0.5.6 stopped publishing mDNS names. If a <code>.local</code> name stops working, Frame Control tries its last known IP on the same network. Find on this network checks nearby IPs; you can also enter the headset's IP above or use its SSH alias. A found SSH port is checked against the headset's saved identity before use.</div>
       <div class="hint">An address's kind is worked out from it: <code>.local</code> names are mDNS, <code>100.x</code> and
         <code>.ts.net</code> are Tailscale, and other IPs are this network. Edit an address to set it yourself.</div>
     </details>`;
@@ -7310,8 +7311,9 @@ function renderFound(d) {
     rows = f.data.hosts.map(h => `<div class="item"><span class="dot ${h.state === "answered" ? "on" : ""}"></span>
       <div class="grow"><div class="t">${esc(h.host)} ${h.advertised ? '<span class="tag">SteamOS devkit</span>' : ""}</div>
       <div class="s res-${esc(h.state)}">${esc(h.detail)}${h.ip ? " · " + esc(h.ip) : ""}</div></div>
-      ${add(h.host, "mdns", "mDNS", h.added)}${h.ip && !h.ip.includes(":") && !h.added ? add(h.ip, "lan", "", false) : ""}</div>`);
+      ${add(h.host, h.host.endsWith('.local') ? "mdns" : "lan", h.host.endsWith('.local') ? "mDNS" : "Local network", h.added)}${h.ip && h.ip !== h.host && !h.ip.includes(":") && !h.added ? add(h.ip, "lan", "", false) : ""}</div>`);
     if (!f.data.tool) rows.push(`<div class="sub">Install Bonjour (Windows) or avahi (Linux) to search for SteamOS devkit services.</div>`);
+    rows.push(`<div class="sub">${f.data.scan_requires_pin ? "Enter this headset's IP above to pair it first. The subnet search starts after its SSH identity is saved." : `Checked ${Number(f.data.scanned || 0)} nearby IPs against this headset's saved SSH identity.`} A device may be absent if SSH is off or this computer is on another subnet.</div>`);
   }
   el.innerHTML = `<h3>${f.where === "tailscale" ? "On your tailnet" : "On this network"}</h3>` +
     (rows.length ? `<div class="list">${rows.join("")}</div>` : `<div class="sub">Nothing found.</div>`);

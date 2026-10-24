@@ -102,6 +102,17 @@ class Parsers(unittest.TestCase):
         self.assertEqual(fn.parse_nmcli(NMCLI), "Cafe: upstairs")
         self.assertIsNone(fn.parse_nmcli("no:Neighbour\n"))
 
+    def test_neighbour_scan_stays_on_local_subnet(self):
+        nearby = ("192.168.50.31 dev wlan0 lladdr 00:11:22:33:44:55 REACHABLE\n"
+                  "192.168.51.31 dev wlan0 lladdr 00:11:22:33:44:66 STALE\n"
+                  "192.168.50.1 dev wlan0 lladdr 00:11:22:33:44:77 STALE\n")
+        self.assertEqual(fn.parse_neighbours(nearby, "192.168.50.9", "192.168.50.1"), ["192.168.50.31"])
+        candidates = fn.local_scan_candidates("192.168.50.9", "192.168.50.1", nearby)
+        self.assertEqual(candidates[0], "192.168.50.31")
+        self.assertEqual(len(candidates), 252)
+        self.assertNotIn("192.168.51.31", candidates)
+        self.assertEqual(fn.local_scan_candidates("100.101.1.4", "100.101.1.1"), [])
+
     def test_windows(self):
         self.assertEqual(fn.parse_route_windows(WIN_ROUTE), ("192.168.1.1", "192.168.1.50"))
         self.assertEqual(fn.parse_arp_windows(WIN_ARP, "192.168.1.1"), "b4:fb:e4:b5:67:55")

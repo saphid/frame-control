@@ -46,7 +46,8 @@ class FrameDoctor(unittest.TestCase):
         self.assertFalse(any('/register' in str(c.args[0]) for c in run.call_args_list))
 
     def test_fallback_preserves_identity_and_disables_mutating_ssh_options(self):
-        _, text, run = self.main([result(code=255), result(json.dumps({'guard': 'loop', 'checks': []}))])
+        _, text, run = self.main([result(code=255), result(json.dumps({'guard': 'loop', 'checks': []}))],
+                                 argv=['--lan', 'frame.local'])
         args = run.call_args_list[2].args[0]
         for flag in ('HostKeyAlias=pinned-frame', 'HostName=frame.local', 'BatchMode=yes',
                      'StrictHostKeyChecking=yes', 'UpdateHostKeys=no', 'PermitLocalCommand=no',
@@ -54,6 +55,10 @@ class FrameDoctor(unittest.TestCase):
             self.assertIn(flag, args)
         self.assertIn('OK Connection: LAN', text)
         self.assertIn('Counters are rising', text)
+
+    def test_no_implicit_mdns_fallback(self):
+        _, _, run = self.main([result(code=255), result(code=255)])
+        self.assertFalse(any('HostName=frame.local' in str(c.args[0]) for c in run.call_args_list))
 
     def test_hostkey_failure_does_not_suggest_deleting_identity(self):
         _, text, _ = self.main([result(code=255, err='REMOTE HOST IDENTIFICATION HAS CHANGED')] * 3)

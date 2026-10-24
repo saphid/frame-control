@@ -292,6 +292,13 @@ class Session(unittest.TestCase):
                     patch.object(remote.shutil, 'which', side_effect=lambda n: '/usr/bin/' + n if n in available else None):
                 self.assertEqual(remote.session()['selector'], expected)
 
+    def test_holo_nested_desktop_is_recognized(self):
+        with patch.object(remote, 'SDDM_CONFS', ()), \
+                patch.object(remote, '_session_target', return_value='not-found'), \
+                patch.object(remote, '_running', side_effect=lambda name, full=False: name == 'holo-nested-desktop'), \
+                patch.object(remote.shutil, 'which', return_value=None):
+            self.assertTrue(remote.session()['nested_desktop'])
+
     def test_script_probe_does_not_match_names_in_transmitted_python_source(self):
         with patch.object(remote.subprocess, 'call', return_value=1) as call:
             self.assertFalse(remote._running('steamos-nested-desktop', full=True))

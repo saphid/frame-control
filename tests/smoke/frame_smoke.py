@@ -230,8 +230,9 @@ def cleanup(smoke):
         # It logs a failed sync and exits 0, so read its log; a second run lists
         # what Steam still has registered, which must not include ours.
         try:
-            first = ssh('python3 ~/devkit-utils/steamos-delete 2>&1', timeout=120)
-            second = ssh('python3 ~/devkit-utils/steamos-delete 2>&1', timeout=120)
+            command = frame_titles.devkit_script('delete') + ' 2>&1'
+            first = ssh(command, timeout=120)
+            second = ssh(command, timeout=120)
             for out in (first, second):
                 if 'sync of devkit games failed' in out:
                     raise AssertionError(out.strip().splitlines()[-1])

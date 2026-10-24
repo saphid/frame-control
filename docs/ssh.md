@@ -46,14 +46,14 @@ unless your router's DNS registers DHCP client names.
 
 ```sh
 ssh-keygen -t ed25519 -f ~/.ssh/id_ed25519_frame -N '' -C "mac->steam-frame"
-ssh-copy-id -i ~/.ssh/id_ed25519_frame.pub steamos@frame.local
+ssh-copy-id -i ~/.ssh/id_ed25519_frame.pub steamos@192.168.1.40
 ```
 
 `~/.ssh/config` block (managed between marker lines by the script):
 
 ```
 Host frame
-  HostName frame.local
+  HostName 192.168.1.40
   User steamos
   IdentityFile ~/.ssh/id_ed25519_frame
   IdentityFile ~/.ssh/id_rsa_frame_devkit
@@ -62,6 +62,10 @@ Host frame
 ```
 
 The script only asks for the password if the pairing below doesn't work.
+Replace the example IP with the one in the Frame's Quick Settings. SteamOS
+0.5.6 stopped publishing `.local` names; an existing SSH alias or the headset's
+current IP is more reliable. Frame Control remembers authenticated IPs per
+network and checks the saved SSH identity on reconnect.
 
 ## Password-free pairing (SteamOS devkit service)
 

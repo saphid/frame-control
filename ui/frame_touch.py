@@ -276,7 +276,8 @@ def panels(limit=None):
 
 
 # The headset's Linux desktop, by process name (docs/how-the-frame-works.md).
-DESKTOP = ("plasmashell", "kwin_wayland", "kwin_wayland_wrapper", "steamos-nested-desktop", "startplasma-wayland")
+DESKTOP = ("plasmashell", "kwin_wayland", "kwin_wayland_wrapper", "holo-nested-desktop",
+           "steamos-nested-desktop", "startplasma-wayland")
 
 
 def desktop_running():

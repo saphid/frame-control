@@ -249,7 +249,10 @@ def pick_host(arg):
     if arg and not HOST_RE.fullmatch(arg):
         say(f"  - {arg!r} isn't a host name or IP address")
         return None
-    for cand in [arg] if arg else [f"{FRAME_ALIAS}.local", FRAME_ALIAS]:
+    candidates = [arg] if arg else list(dict.fromkeys([configured_host(), f"{FRAME_ALIAS}.local", FRAME_ALIAS]))
+    for cand in candidates:
+        if not cand:
+            continue
         host, port = split_port(cand)
         if reachable(host, port):
             return host, port
@@ -374,6 +377,20 @@ def configured_user():
     return None
 
 
+def configured_host():
+    """Reuse the last configured route before trying a deprecated .local name."""
+    if not CONFIG.exists():
+        return None
+    inside = False
+    for line in CONFIG.read_text(encoding="utf-8").splitlines():
+        if line in (BEGIN, END):
+            inside = line == BEGIN
+        elif inside and line.startswith("  HostName "):
+            host = line[11:].strip()
+            return host if HOST_RE.fullmatch(host) else None
+    return None
+
+
 def pair_with_devkit(host, port, user):
     """Try devkit pairing and confirm key login. -> (user, None) or (user, reason to fall back)."""
     say("==> Pairing through the headset's SteamOS devkit service (no password)")
@@ -424,6 +441,7 @@ def main(argv):
     found = pick_host(argv[0] if argv else None)
     while not found:
         say("Could not reach the Frame over SSH.")
+        say("SteamOS 0.5.6 stopped publishing .local names; use the IP shown in Quick Settings.")
         say("Check: Developer Mode on and a user password set; same network; no client isolation.")
         try:
             typed = input("Type the Frame's IP address (Quick Settings shows it), or press Enter to quit: ").strip()

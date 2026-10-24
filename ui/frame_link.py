@@ -26,6 +26,7 @@ when the page asks.
 Python stdlib only. Runs on this computer, never on the Frame.
 """
 from bisect import bisect_right
+from concurrent.futures import ThreadPoolExecutor, as_completed
 import copy
 import hashlib
 import ipaddress
@@ -167,6 +168,18 @@ def probe(host, port, timeout=PROBE_TIMEOUT, update=None):
         finally:
             s.close()
     return last or {"state": "timeout", "detail": "No answer"}
+
+
+def probe_address(address, port, network_id, update=None):
+    """Try a saved mDNS address, then its last authenticated IP on this network."""
+    res = probe(address["host"], port, update=update)
+    cached = address.get("last_ip") if address.get("last_ip_network") == network_id else None
+    if (address["kind"] == "mdns" and cached and frame_network.valid_ip(cached) and
+            res["state"] in ("unresolved", "timeout", "unreachable")):
+        fallback = probe(cached, port)
+        if fallback["state"] == "answered":
+            return dict(fallback, detail="Last known IP answered (mDNS unavailable)")
+    return res
 
 
 def _ip_kind(text):
@@ -1049,7 +1062,8 @@ class Link:
         attempt_no = self.state["attempt"]
 
         def run_probe(i, host):
-            res = probe(host, port, update=lambda **f: self.probe_update(i, attempt_no, **f))
+            res = probe_address(ranked[i][0], port, net.get("id"),
+                                update=lambda **f: self.probe_update(i, attempt_no, **f))
             res.setdefault("ip", None)
             res.setdefault("rtt_ms", None)
             self.probe_update(i, attempt_no, **{k: res[k] for k in ("state", "detail", "ip", "rtt_ms")})
@@ -1080,7 +1094,7 @@ class Link:
                        "rtt_ms": results[pick]["rtt_ms"], "why": ranked[pick][1], "network": net.get("id"),
                        "network_name": net["name"]}
                 self.publish(via=via)
-                self.learn(device, a["host"], net, results[pick]["rtt_ms"])
+                self.learn(device, a["host"], net, results[pick]["rtt_ms"], results[pick]["ip"])
                 return True
             with self.cond:
                 why_not = failure_detail(self.state["error"])
@@ -1135,10 +1149,10 @@ class Link:
                 else:
                     done.wait(min(0.5, max(0.01, deadline - time.monotonic())))
 
-    def learn(self, device, host, net, rtt):
+    def learn(self, device, host, net, rtt, ip=None):
         if device.get("transient"):
             return
-        self.reg.record_success(device["id"], host, net.get("id"), rtt)
+        self.reg.record_success(device["id"], host, net.get("id"), rtt, ip=ip)
         self.reg.record_identity(device["id"], [f for _, f in frame_devices.pinned_keys(device["id"])])
         # Set Up Connection may have changed the block while this attempt ran: take that
         # in (and reconnect) rather than writing this attempt's older settings over it.
@@ -1858,8 +1872,32 @@ def tailscale_find(link, device_id=None):
     return {"up": True, "peers": peers, "tailnet": ts.get("tailnet"), "message": None}
 
 
+def matches_pinned_key(host, port, saved):
+    """Only suggest a scanned SSH host when its key matches this headset's pin."""
+    if not saved or not frame_network.valid_ip(host):
+        return False
+    keyscan = frame_host.which("ssh-keyscan")
+    if not keyscan:
+        return False
+    try:
+        reply = frame_host.run_ssh([keyscan, "-T", "2", "-p", str(port), host],
+                                   capture_output=True, text=True, stdin=subprocess.DEVNULL, timeout=4)
+    except (OSError, subprocess.TimeoutExpired):
+        return False
+    pins = set(saved)
+    for line in reply.stdout.splitlines():
+        fields = line.split()
+        if len(fields) >= 3 and (fields[1], frame_devices.fingerprint(fields[2])) in pins:
+            return True
+    return False
+
+
 def mdns_find(link, device_id=None):
-    """Headsets on this network: SteamOS devkit services (mDNS) and <alias>.local."""
+    """Find nearby SSH endpoints using mDNS, a remembered IP and a bounded /24 scan.
+
+    Finding an SSH port does not identify a headset. Adding an address still uses
+    the normal pinned SSH identity check before any command is run on it.
+    """
     device = link.reg.get(device_id) if device_id else link.active_device()
     known = {a["host"].rstrip(".").lower() for a in device.get("addresses") or []}
     try:
@@ -1867,11 +1905,15 @@ def mdns_find(link, device_id=None):
         found = frame_connect.discover_devkit()
     except (ImportError, SystemExit, OSError):
         found = []
-    names = list(dict.fromkeys([h.rstrip(".") for h in found] + [f"{device['alias']}.local", "frame.local"]))
+    cached = [a["last_ip"] for a in device.get("addresses", []) if a.get("kind") == "mdns" and a.get("last_ip") and
+              a.get("last_ip_network") == (link.state.get("network") or {}).get("id")]
+    names = list(dict.fromkeys([h.rstrip(".") for h in found] + cached +
+                               [f"{device['alias']}.local", "frame.local"]))
     rows = [None] * len(names)
+    port = device.get("port") or 22
 
     def check(i, host):
-        res = probe(host, 22, timeout=3)
+        res = probe(host, port, timeout=3)
         rows[i] = {"host": host, "state": res["state"], "ip": res.get("ip"), "rtt_ms": res.get("rtt_ms"),
                    "detail": res["detail"], "advertised": host in [h.rstrip(".") for h in found],
                    "added": host.lower() in known or (res.get("ip") or "").lower() in known}
@@ -1882,4 +1924,31 @@ def mdns_find(link, device_id=None):
     for t in threads:
         t.join(8)
     hosts = [r for r in rows if r and (r["advertised"] or r["state"] in ("answered", "refused"))]
-    return {"hosts": hosts, "tool": bool(frame_host.which("dns-sd") or frame_host.which("avahi-browse"))}
+    network = link.state.get("network") or {}
+    local = network.get("local_ip") or frame_network.local_ip()
+    candidates = frame_network.local_scan_candidates(local, network.get("gateway"), frame_network.neighbour_cache())
+    candidates = [ip for ip in candidates if ip not in names]
+    saved = frame_devices.pinned_keys(device["id"]) if device.get("id") else []
+    # A random SSH service on the subnet is not a Frame. With no existing pin,
+    # use explicit IP entry; do not offer unverified scan results for pairing.
+    if not saved:
+        candidates = []
+    if candidates:
+        def scan(ip):
+            res = probe(ip, port, timeout=0.3)
+            return res if res["state"] == "answered" and matches_pinned_key(ip, port, saved) else None
+
+        with ThreadPoolExecutor(max_workers=24) as pool:
+            futures = {pool.submit(scan, ip): ip for ip in candidates}
+            for future in as_completed(futures):
+                ip = futures[future]
+                try:
+                    res = future.result()
+                except OSError:
+                    continue
+                if res:
+                    hosts.append({"host": ip, "state": "answered", "ip": ip,
+                                  "rtt_ms": res.get("rtt_ms"), "detail": "Matches this headset's saved SSH identity",
+                                  "advertised": False, "added": ip.lower() in known})
+    return {"hosts": hosts, "tool": bool(frame_host.which("dns-sd") or frame_host.which("avahi-browse")),
+            "scanned": len(candidates), "scan_requires_pin": not bool(saved)}
