@@ -44,6 +44,9 @@ Live video of what the lenses show, or of the app panel in use, flat and still h
 **🔋 Battery and status**<br>
 Charge, charging watts and time left, storage, memory, temperature, Wi-Fi, and what's running.
 
+For repeatable read-only battery, power-rail, temperature and fan measurements,
+use the [power and heat sampler](docs/power-and-heat.md).
+
 </td>
 </tr>
 <tr>

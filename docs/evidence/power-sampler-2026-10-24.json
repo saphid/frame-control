@@ -1,0 +1,149 @@
+{
+  "date": "2026-10-24",
+  "osVersion": "0.5.6",
+  "osBuild": "20261015.6141207",
+  "commands": [
+    "scripts/frame-power-sample.sh --count 3 --interval 1",
+    "scripts/frame-power-sample.sh --count 1 --csv"
+  ],
+  "jsonSampleCount": 3,
+  "elapsedSeconds": [
+    0.078011,
+    1.088542,
+    2.107291
+  ],
+  "stopped": null,
+  "unavailableGroups": [
+    [
+      "proximity"
+    ],
+    [
+      "proximity"
+    ],
+    [
+      "proximity"
+    ]
+  ],
+  "selectedSummary": {
+    "battery.percent": {
+      "unit": "%",
+      "sources": [
+        "/sys/class/power_supply/max1720x_bat_7-36"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": 99,
+      "max": 99,
+      "mean": 99.0,
+      "first": 99,
+      "last": 99
+    },
+    "battery.status": {
+      "unit": "state",
+      "sources": [
+        "/sys/class/power_supply/max1720x_bat_7-36"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "states": [
+        "Not charging"
+      ]
+    },
+    "battery.tempC": {
+      "unit": "C",
+      "sources": [
+        "/sys/class/power_supply/max1720x_bat_7-36"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": 26.400000000000002,
+      "max": 26.400000000000002,
+      "mean": 26.4,
+      "first": 26.400000000000002,
+      "last": 26.400000000000002
+    },
+    "battery.watts": {
+      "unit": "W",
+      "sources": [
+        "/sys/class/power_supply/max1720x_bat_7-36"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": -0.12,
+      "max": -0.02,
+      "mean": -0.07,
+      "first": -0.02,
+      "last": -0.07
+    },
+    "cpu.percent": {
+      "unit": "%",
+      "sources": [
+        "/proc/stat"
+      ],
+      "available": 2,
+      "unavailable": 1,
+      "min": 8.7,
+      "max": 11.0,
+      "mean": 9.85,
+      "first": 11.0,
+      "last": 8.7
+    },
+    "fan.pwmRaw": {
+      "unit": "raw",
+      "sources": [
+        "/sys/class/hwmon/hwmon50/pwm1"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": 41,
+      "max": 41,
+      "mean": 41.0,
+      "first": 41,
+      "last": 41
+    },
+    "fan.slg4ax46073v.fan1_input": {
+      "unit": "RPM",
+      "sources": [
+        "/sys/class/hwmon/hwmon50/fan1_input"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": 8624,
+      "max": 8638,
+      "mean": 8628.666667,
+      "first": 8638,
+      "last": 8624
+    },
+    "proximity.raw": {
+      "unit": "raw",
+      "sources": [
+        "/sys/bus/iio/devices/iio:device2/in_proximity_raw"
+      ],
+      "available": 0,
+      "unavailable": 3,
+      "states": []
+    },
+    "rail.max34417_9_10.vph.power1": {
+      "unit": "W",
+      "sources": [
+        "/sys/class/hwmon/hwmon53/power1_input"
+      ],
+      "available": 3,
+      "unavailable": 0,
+      "min": 4.656299,
+      "max": 4.804066,
+      "mean": 4.705555,
+      "first": 4.656299,
+      "last": 4.804066
+    }
+  },
+  "csvRows": 92,
+  "csvSummaryMetrics": 91,
+  "csvHasExplicitUnavailable": true,
+  "limits": [
+    "Read-only short transport/parser check; no controlled baseline or worn/load/battery experiment.",
+    "Proximity unavailable; numeric thermistors are not proof of sensor accuracy.",
+    "No settings, services, device files or application state changed; no remote installation.",
+    "No smoke lock at preflight or sampler checks; advisory checks cannot exclude a concurrent lock appearing during a read."
+  ]
+}
