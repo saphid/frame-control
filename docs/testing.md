@@ -407,7 +407,9 @@ checksums, restore checks after a reset, restore writing only its own files,
 unsafe archives and backup names, and the exact Game Mode command.
 `tests/e2e/test_recovery_kit.py` backs up and restores a Proton save on the fake
 Frame through the server. See [backup-and-recovery.md](backup-and-recovery.md#verification).
-No backup or restore has been run on a real headset yet.
+A full backup and an identical-file Proton save restore were checked on a
+real Frame running build `20261015.6141207`; an after-reset restore and
+Android data restore remain unverified. See the linked device evidence.
 
 ## Game storage
 
