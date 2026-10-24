@@ -6091,7 +6091,7 @@ document.addEventListener("focusout", () => document.body.classList.remove("typi
 const pad = { state: "off", queue: [], sending: false, poll: null, captured: false };
 const PAD_STATES = {
   off: "", starting: "Connecting…", installing: "Setting up (first time only)…",
-  pairing: "Pairing with KDE Connect…", ready: "On",
+  pairing: "Pairing with KDE Connect…", waiting: "Waiting for queued text…", ready: "On",
 };
 // KDE Connect's specialKey numbers (plugins/mousepad in its source).
 const PAD_SPECIAL = { Backspace: 1, Tab: 2, ArrowLeft: 4, ArrowUp: 5, ArrowRight: 6, ArrowDown: 7, PageUp: 8,
@@ -6117,7 +6117,7 @@ function padShow(status) {
     : "Click here to use your mouse and keyboard on the Frame (Esc to stop), or drag like a trackpad.";
   clearTimeout(pad.poll);
   if (ready && pad.queue.length) padFlush();
-  if (busy) {
+  if (busy || status.queued) {
     const gen = devGen;
     pad.poll = setTimeout(async () => {
       const status = await api('/api/input').catch(e => ({state:'error', message:e.message}));
@@ -6140,7 +6140,7 @@ function padSend(event) {
   // While it reconnects, keys and clicks wait in the queue; pointer moves would be stale.
   // A button release is always kept, so a drag never leaves the button held on the Frame.
   const room = pad.queue.length < 200 || event.singlerelease;
-  const reconnecting = ["starting", "pairing", "installing"].includes(pad.state) && room;
+  const reconnecting = ["starting", "pairing", "installing", "waiting"].includes(pad.state) && room;
   // Even after an error: a button pressed on the Frame must be let go once it's back.
   const release = event.singlerelease && pad.state !== "off";
   if (pad.state !== "ready" && !(reconnecting && !isMove(event)) && !release) return;
@@ -6173,7 +6173,7 @@ async function padFlush() {
     const status = await api("/api/input", { events });
     if (gen !== devGen) return;
     if (!status.sent) padKeep(events);
-    if (status.state !== "ready") padShow(status);
+    if (status.state !== "ready" || status.queued) padShow(status);
   } catch (e) {
     if (gen !== devGen) return;
     padKeep(events);

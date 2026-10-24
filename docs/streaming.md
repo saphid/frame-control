@@ -162,8 +162,13 @@ Only characters that aren't on a US keyboard (accents, emoji) go through
 Control, everything went through KDE Connect, which is why the notes below
 describe it in detail.)
 
-The keyboard queue is bounded. A batch with an accent sends its whole keyboard
-part through KDE Connect, and later keys follow it there while typing is pending.
+The server keyboard queue holds at most 200 events, including text being sent.
+A batch with an accent sends its whole keyboard part through KDE Connect, and
+later keys follow it there while typing is pending. If the batch will not fit,
+the server rejects it before sending any clicks or keys; the page keeps it and
+retries after polling. Accepted events are never evicted to make room. A timeout
+or helper failure retains unsent text and shows **Try again**; that button resumes
+the retained queue. The queue lives in memory and is lost if the server exits.
 Switching headsets cancels queued text and stops both input helpers before the
 new route is published. Both controls validate the intended headset before they
 start. Ordering between the two input services uses a typing-time estimate;

@@ -2,6 +2,7 @@
 import sandbox  # noqa: F401
 import contextlib
 import hashlib
+import io
 import json
 import os
 from pathlib import Path
@@ -54,6 +55,7 @@ class TargetTests(unittest.TestCase):
         self.stack.enter_context(mock.patch.object(server, '_backfill', {'running': False, 'last': 0.0}))
         self.stack.enter_context(mock.patch.object(server.macview, 'retarget'))
         self.stack.enter_context(mock.patch.object(server._input, 'stop'))
+        self.real_devices_action = server.frame_link.devices_action
         self.stack.enter_context(mock.patch.object(server.frame_link, 'devices_action', self.switch))
 
     def switch(self, link, body, setup, busy):
@@ -111,6 +113,39 @@ class TargetTests(unittest.TestCase):
                 thread.join(2)
                 server._live_tunnels.discard(proc)
                 server.route(*before)
+
+    def test_input_post_reserves_headset_through_send_and_enqueue(self):
+        body = json.dumps({'events': [{'singleclick': True}, {'key': 'é'}]}).encode()
+        handler = server.Handler.__new__(server.Handler)
+        handler.path = '/api/input'
+        handler.local_request = lambda: True
+        handler.headers = {'Content-Length': str(len(body)), 'X-Frame-Device': 'a'}
+        handler.rfile = io.BytesIO(body)
+        handler.send_json, handler.send_error_json = mock.Mock(), mock.Mock()
+        stages = []
+        def check_switch(stage):
+            self.assertEqual(server._work[0], 1)
+            with self.assertRaises(server.Failure):
+                server.devices_post({'action': 'use', 'id': 'b'})
+            stages.append(stage)
+        def send(events):
+            check_switch('send')
+            return {'state': 'ready', 'sent': True}
+        def enqueue(events):
+            check_switch('enqueue')
+            self.assertEqual(events, [{'key': 'é'}])
+            return True
+        with mock.patch.object(server.frame_link, 'devices_action', self.real_devices_action), \
+                mock.patch.object(server._touch, 'send', side_effect=send), \
+                mock.patch.object(server, '_queue_for_kde', side_effect=enqueue):
+            handler.do_POST()
+        handler.send_error_json.assert_not_called()
+        self.assertTrue(handler.send_json.call_args.args[0]['sent'])
+        self.assertEqual(stages, ['send', 'enqueue'])
+        self.assertEqual(self.active['id'], 'a')
+        self.assertEqual(server._work[0], 0)
+        server.devices_post({'action': 'use', 'id': 'b'})
+        self.assertEqual(self.active['id'], 'b')
 
     def test_backfill_counts_work_until_error_cleanup(self):
         entered, release = threading.Event(), threading.Event()
@@ -435,6 +470,23 @@ class FinalGetStartTests(unittest.TestCase):
             status.send_json.assert_called_once_with(touch.status)
         kde.send.assert_not_called()
         kde.start.assert_not_called()
+
+    def test_input_poll_exposes_retained_text_error_and_start_retries(self):
+        touch = mock.Mock(status={'state': 'ready'})
+        touch.send.return_value = {'state': 'ready', 'sent': False}
+        with mock.patch.object(server, '_touch', touch), \
+                mock.patch.object(server, '_kde_queue', [{'key': 'é'}]), \
+                mock.patch.object(server, '_kde_error', 'Text is retained; try again.'), \
+                mock.patch.object(server, '_kde_worker', [None]), \
+                mock.patch.object(server, '_start_kde_locked') as retry:
+            status = self.handler('/api/input', 'a')
+            status.do_GET()
+            self.assertEqual(status.send_json.call_args.args[0]['state'], 'error')
+            retry.assert_not_called()  # polling never retries typing on its own
+            start = self.handler('/api/input?start=1', 'a')
+            start.do_GET()
+            retry.assert_called_once_with()
+            touch.send.assert_called_once_with([])
 
     def test_get_start_validation_and_thread_registration_are_one_reservation(self):
         attempts = []

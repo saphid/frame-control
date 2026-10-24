@@ -1576,15 +1576,26 @@ def remote_input(body):
     if not isinstance(events, list) or len(events) > INPUT_BATCH_LIMIT:
         raise Failure(f"events must be a list of at most {INPUT_BATCH_LIMIT}", 400)
     events = [input_event(e) for e in events]
-    touch, slow = pad_events(events, typed_in_kde(events))
-    status = _touch.send(touch)
-    if touch and not status.get("sent"):
-        return status
-    if touch:
-        _note_typed(touch)
-    if slow:
-        _queue_for_kde(slow)
-    return {**status, "sent": True}
+    # Serialize admission with other requests and the sender. Keep route -> pad
+    # order: either agent may synchronously capture its route during send().
+    with _route_lock, _pad_send_lock:
+        touch, slow = pad_events(events, typed_in_kde(events))
+        with _kde_lock:
+            blocked = slow and (_kde_error or len(_kde_queue) + len(slow) > KDE_QUEUE_LIMIT)
+        if blocked:
+            # Refuse the WHOLE batch before sending its clicks/moves. The page
+            # retains it and polls, so a retry cannot duplicate pointer events.
+            return pad_status({"state": "waiting", "sent": False})
+        status = _touch.send(touch)
+        if touch and not status.get("sent"):
+            return status
+        if touch:
+            _note_typed(touch)
+        if slow:
+            _queue_for_kde(slow)
+        # Poll at least once after accepting text, even if its worker finished
+        # already, so an asynchronous error is visible without another keypress.
+        return pad_status({**status, "sent": True}, pending=bool(slow))
 
 
 # Typing KDE Connect is to do: it starts the first time it's needed, so this waits for it.
@@ -1594,24 +1605,26 @@ _kde_queue = []
 _kde_lock = threading.Lock()
 _pad_send_lock = threading.Lock()
 _kde_worker = [None]
+_kde_error = None
 _kde_until = 0.0     # keys typed through KDE Connect should have landed by then
 _typed_until = 0.0   # when gamescope's agent will have typed everything it's been given
 _kde_route = object()
 _kde_cancel = threading.Event()
 KDE_QUEUE_LIMIT = 200
-KDE_WAIT = 90  # seconds to wait for KDE Connect before giving up on what's queued
+KDE_WAIT = 90  # seconds to wait before pausing queued text for an explicit retry
 TYPING_SETTLE = 0.6  # seconds past the estimate, once
 
 
 def reset_pad_route():
     """Discard input for the headset being left, including batches waiting for an agent."""
-    global _kde_route, _kde_cancel, _kde_until, _typed_until
+    global _kde_route, _kde_cancel, _kde_until, _typed_until, _kde_error
     with _route_lock, _pad_send_lock, _kde_lock:
         _kde_cancel.set()
         _kde_cancel = threading.Event()
         _kde_route = object()
         _kde_queue.clear()
         _kde_worker[0] = None
+        _kde_error = None
         _kde_until = _typed_until = 0.0
         _input.stop()
         _touch.stop()
@@ -1636,56 +1649,94 @@ def _note_typed(touch):
             _typed_until = max(_typed_until, time.time()) + seconds
 
 
+def pad_status(status, pending=False):
+    with _kde_lock:
+        if _kde_error:
+            return {**status, "state": "error", "message": _kde_error}
+        if (_kde_queue or pending) and status.get("state") != "error":
+            return {**status, "queued": len(_kde_queue) or 1}
+    return status
+
+
+def start_pad():
+    with _route_lock, _pad_send_lock:
+        status = _touch.send([])
+        with _kde_lock:
+            if _kde_queue and _kde_worker[0] is None:
+                _start_kde_locked()  # explicit Try again retries retained text
+        return pad_status(status)
+
+
+def _start_kde_locked():
+    global _kde_error
+    _kde_error = None
+    try:
+        worker = threading.Thread(target=_drain_kde, args=(_kde_route, _kde_cancel), daemon=True)
+        _kde_worker[0] = worker
+        worker.start()
+    except Exception:
+        _kde_worker[0] = None
+        _kde_error = "Couldn't start queued typing. Text is retained; try again."
+
+
 def _queue_for_kde(events):
     with _kde_lock:
+        if len(_kde_queue) + len(events) > KDE_QUEUE_LIMIT:
+            return False
         _kde_queue.extend(events)
-        del _kde_queue[:-KDE_QUEUE_LIMIT]
-        if _kde_worker[0] is None:
-            _kde_worker[0] = threading.Thread(target=_drain_kde, args=(_kde_route, _kde_cancel), daemon=True)
-            _kde_worker[0].start()
+        if _kde_worker[0] is None and not _kde_error:
+            _start_kde_locked()
+        return True
 
 
 def _drain_kde(route, cancel):
-    """The only sender, in order. A batch leaves the queue while it's being sent (the queue
-    can be trimmed meanwhile) and goes back to the front if it didn't go."""
-    global _kde_until
+    """One sender, in order. In-flight text stays in the bounded queue until sent.
+    Errors retain it for an explicit retry; only a headset switch cancels it."""
+    global _kde_until, _kde_error
     deadline = time.time() + KDE_WAIT
-    while True:
-        with _kde_lock:
-            if route is not _kde_route:
-                return
-            batch = _kde_queue[:INPUT_BATCH_LIMIT]
-            del _kde_queue[:len(batch)]
-            if not batch:
-                _kde_worker[0] = None  # retired under the lock, so a new request starts another
-                return
-            wait = _typed_until + TYPING_SETTLE - time.time()
-            _kde_until = time.time() + 3600  # held while in flight
-        if wait > 0 and cancel.wait(wait):
-            return  # a switch cancels the delay and its old-headset batch
-        # Match route()/reset_pad_route()'s lock order. send() may start an
-        # agent and take _route_lock again while capturing its immutable route.
-        with _route_lock, _pad_send_lock:
+    try:
+        while True:
             with _kde_lock:
                 if route is not _kde_route:
                     return
-            status = _input.send(batch)
+                batch = _kde_queue[:INPUT_BATCH_LIMIT]
+                if not batch:
+                    _kde_worker[0] = None
+                    return
+                wait = _typed_until + TYPING_SETTLE - time.time()
+                _kde_until = time.time() + 3600  # held while in flight
+            if wait > 0 and cancel.wait(wait):
+                return
+            # Match route()/reset_pad_route()'s lock order. send() may start an
+            # agent and take _route_lock again to capture its immutable route.
+            with _route_lock, _pad_send_lock:
+                with _kde_lock:
+                    if route is not _kde_route:
+                        return
+                status = _input.send(batch)
+            with _kde_lock:
+                if route is not _kde_route:
+                    return
+                if status.get("sent"):
+                    del _kde_queue[:len(batch)]
+                    _kde_until = time.time() + len(batch) * 0.03 + TYPING_SETTLE
+                    deadline = time.time() + KDE_WAIT
+                    continue
+                _kde_until = 0.0
+                if status.get("state") == "error" or time.time() > deadline:
+                    _kde_error = "Queued typing didn't reach the input service. Text is retained; try again."
+                    _kde_worker[0] = None
+                    return
+            if cancel.wait(0.4):
+                return
+    except Exception:
+        # A stale worker must never retire the new route's worker or alter its
+        # queue/timing. Retain unsent text and let the page report/retry failure.
         with _kde_lock:
-            if route is not _kde_route:
-                return
-            if status.get("sent"):
-                _kde_until = time.time() + len(batch) * 0.03 + TYPING_SETTLE
-                deadline = time.time() + KDE_WAIT
-                continue
-            _kde_until = 0.0
-            if status.get("state") == "error" or time.time() > deadline:
-                _kde_queue.clear()  # not coming; don't hold it forever
+            if route is _kde_route:
+                _kde_until = 0.0
                 _kde_worker[0] = None
-                return
-            _kde_queue[:0] = batch
-            del _kde_queue[:-KDE_QUEUE_LIMIT]  # as when queuing: the oldest go first
-        if cancel.wait(0.4):
-            return
+                _kde_error = "Queued typing failed. Text is retained; try again."
 
 
 # ---- touch: the headset's panels, through gamescope's own input (frame_touch.py) ----
@@ -3491,9 +3542,11 @@ class Handler(BaseHTTPRequestHandler):
                     if LINK and not meant:
                         raise Failure("Control start needs the intended X-Frame-Device headset", 400)
                     with working(meant):
-                        result = agent.send([])
+                        result = start_pad() if path == "/api/input" else agent.send([])
                 else:
                     result = dict(agent.status)
+                    if path == "/api/input":
+                        result = pad_status(result)
                 self.send_json(result)
             elif path == "/api/job":
                 self.send_json(job_status(url.query))

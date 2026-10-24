@@ -31,7 +31,8 @@ function page(api) {
 
 // A request that fails, or reaches a link that had dropped, keeps its keys and releases.
 for (const [label, api] of [["request failed", async () => { throw new Error("offline"); }],
-                            ["not sent", async () => ({ state: "starting", sent: false })]]) {
+                            ["not sent", async () => ({ state: "starting", sent: false })],
+                            ["queue full", async () => ({ state: "waiting", sent: false })]]) {
   const { pad, padSend, shown } = page(api);
   padSend({ dx: 5 });  // sent and lost: a move, fine to drop
   await new Promise(r => setTimeout(r, 0));
@@ -44,5 +45,30 @@ for (const [label, api] of [["request failed", async () => { throw new Error("of
   if (!(q.some(e => e.singlerelease) && q.some(e => e.key === "b") && !q.some(e => "dx" in e)))
     fail(label + ": " + JSON.stringify(q));
   if (!shown.length || shown.at(-1).state === "ready") fail(label + ": state not shown");
+}
+// Acknowledged text is removed locally, but its pending status must reach padShow
+// so failures reported after acceptance are polled without another keypress.
+{
+  const { pad, padSend, shown } = page(async () => ({ state: "ready", sent: true, queued: 1 }));
+  padSend({ key: "é" });
+  await new Promise(r => setTimeout(r, 0));
+  if (pad.queue.length || shown.at(-1)?.queued !== 1) fail("accepted text is not polled");
+}
+
+// Exercise the real status/poll function: queued text leaves pointer controls
+// usable, still polls, shows an eventual error, and does not silently retry it.
+{
+  const pad = { state: "ready", queue: [] }, elements = {};
+  let poll = null;
+  const show = new Function("pad", "$", "PAD_STATES", "TOUCH", "padFlush", "devGen", "api",
+    "setTimeout", "clearTimeout", grab("padShow") + "; return padShow;")(
+    pad, id => elements[id] ||= { classList: { toggle() {} } }, {}, false, () => {}, 0,
+    async () => ({ state: "error", message: "Text is retained; try again." }),
+    fn => { poll = fn; return 1; }, () => { poll = null; });
+  show({ state: "ready", queued: 1 });
+  if (pad.state !== "ready" || !poll) fail("pending text disabled pointer or skipped poll");
+  await poll();
+  if (pad.state !== "error" || poll || !elements.padHint.textContent.includes("retained"))
+    fail("asynchronous error not surfaced");
 }
 console.log("queue rules ok");

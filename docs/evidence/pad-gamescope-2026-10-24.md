@@ -118,3 +118,61 @@ verify Unicode in a real text field, ordering under real typing load and
 precise absolute pointing for small panels. Worn-headset presentation,
 packaged Electron pointer lock and Windows GUI execution remain separate
 checks. Automated Windows/macOS CI does not establish those interactions.
+
+
+## Review round 2: queue saturation and failure recovery
+
+The coordinator identified silent eviction in both `_queue_for_kde()` and the
+worker's retry path. Both sliced the oldest accepted events off at 200 entries,
+even though the page had already received `sent: true` and discarded its copy.
+
+Admission now serializes concurrent requests, checks capacity before any pointer
+or keyboard send, and returns `sent: false, state: waiting` if the whole batch
+will not fit. Text stays in the bounded queue while in flight, and is removed
+only after the helper accepts it. Rejected mixed batches send no clicks; retrying
+them cannot duplicate clicks already sent by this server. The page polls until
+it can retry. Pointer input stays usable while accepted text is pending.
+
+The old worker also left its worker marker and one-hour timing sentinel behind
+if `send()` raised. Failure/timeout handling now retains unsent text, clears the
+worker/timing state and exposes an error through input status. The page polls
+accepted text without requiring another keypress. **Try again** explicitly
+restarts the retained queue. Thread-start failures follow the same retention
+rule. A stale worker's exception cannot change the new route's state.
+
+The proposed send-to-enqueue headset-switch race was not reachable through the
+normal HTTP switch path: `Handler.do_POST()` reserves `working(meant)` across
+both operations; `devices_post()` shares `_work_lock` and refuses a moving
+operation while work is active. Connector configuration/reconnect paths defer
+changed headsets while work runs. A production-handler regression attempts a
+switch at both send and enqueue and passes even on the previous implementation.
+No separate connector change was needed. Atomic queue admission now uses the
+existing route-before-pad lock order as well, because starting either input
+agent can capture its route synchronously.
+
+Three deterministic saturation regressions fail on `215db7b` and pass with the
+fix: capacity during the typing delay, capacity during an unsuccessful-send
+retry, and two concurrent producers competing for the last slots. They check
+exact accepted event sequences, reject a mixed click/text batch before its
+pointer effects, and verify delivery exactly once after retry. Additional tests
+cover explicit recovery after timeout, helper errors, send exceptions and
+thread-start failure, stale-worker isolation, HTTP status/start behavior, and
+the production page's polling/error behavior.
+
+No new active headset test was performed: this change affects host queue
+admission/recovery and status handling, not Frame event translation or injection.
+The earlier real click/ASCII evidence remains scoped to its recorded commit.
+Real Unicode, packaged Electron pointer lock, Windows GUI, wearer-visible
+presentation and precise small-window absolute positioning remain unverified.
+`sent: true` means accepted by this server, not application delivery. The queue
+is in memory; switching headsets cancels it and server exit loses it. A transport
+failure after a partial write can still make delivery ambiguous; this is not an
+end-to-end exactly-once protocol.
+
+Round 2 local verification: **141 focused input/touch/service tests passed**
+(62 input, 43 touch, 36 service; 20.061 seconds), and **1,409 server tests ran, OK, 15 skipped**
+(Linux x86_64, Python 3.12, 153.198 seconds). All three production-page Node
+suites passed; app tests passed (3 files), site tests passed (2 files), Python
+compilation and `git diff --check` passed. The existing skipped tests require
+zsh, macOS/Swift or built native PC libraries. Current-head CI is tracked in
+PR #66; the previous 47-test local fake-Frame run above is historical.

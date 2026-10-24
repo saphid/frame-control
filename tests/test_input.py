@@ -701,6 +701,7 @@ class PadDelivery(unittest.TestCase):
 
     def reset(self):
         self.s._kde_queue.clear()
+        self.s._kde_error = None
         self.s._kde_until = self.s._typed_until = 0.0
         self.s._kde_worker[0] = None
 
@@ -750,19 +751,49 @@ class PadDelivery(unittest.TestCase):
         self.settle()
         self.assertEqual(self.typed(), [{"key": "é"}, {"key": "x"}])
 
-    def test_queue_is_bounded_and_dropped_on_error(self):
-        self.s._input = self.Agent(sent=False, state="error")
-        self.s.remote_input({"events": [{"key": "é"}] * 150})
-        self.s.remote_input({"events": [{"key": "é"}] * 150})
-        self.settle()
-        self.assertEqual(self.s._kde_queue, [])
-        self.s._input = self.Agent(sent=False, state="starting")
-        self.s.KDE_WAIT = 0.3
-        self.s.remote_input({"events": [{"key": "é"}] * 150})
-        self.s.remote_input({"events": [{"key": "é"}] * 150})
-        self.assertLessEqual(len(self.s._kde_queue), self.s.KDE_QUEUE_LIMIT)
-        self.settle()
-        self.assertEqual(self.s._kde_queue, [])
+    def test_errors_and_timeout_retain_accepted_text_for_explicit_retry(self):
+        events = [{"key": "é"}] * 150
+        for state in ("error", "starting"):
+            with self.subTest(state=state):
+                self.reset()
+                self.s._input = self.Agent(sent=False, state=state)
+                self.s.KDE_WAIT = 0
+                self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                self.settle()
+                self.assertEqual(self.s._kde_queue, events)
+                self.assertIsNone(self.s._kde_worker[0])
+                self.assertEqual(self.s._kde_until, 0)
+                status = self.s.pad_status({"state": "ready"})
+                self.assertEqual(status["state"], "error")
+                self.assertIn("retained", status["message"])
+                self.assertFalse(self.s.remote_input({"events": [{"key": "x"}]})["sent"])
+                self.s._input = self.Agent()
+                self.s.start_pad()
+                self.settle()
+                self.assertEqual(self.typed(), events)
+                self.assertEqual(self.s._kde_queue, [])
+                self.assertIsNone(self.s._kde_error)
+
+    def test_worker_exception_and_start_failure_are_visible_and_retryable(self):
+        for start_failure in (False, True):
+            with self.subTest(start_failure=start_failure):
+                self.reset()
+                events = [{"key": "é"}]
+                if start_failure:
+                    with mock.patch.object(threading.Thread, "start", side_effect=RuntimeError("no thread")):
+                        self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                else:
+                    with mock.patch.object(self.s._input, "send", side_effect=OSError("send failed")):
+                        self.assertTrue(self.s.remote_input({"events": events})["sent"])
+                        self.settle()
+                self.assertEqual(self.s._kde_queue, events)
+                self.assertIsNone(self.s._kde_worker[0])
+                self.assertEqual(self.s._kde_until, 0)
+                self.assertEqual(self.s.pad_status({"state": "ready"})["state"], "error")
+                self.s._input = self.Agent()
+                self.s.start_pad()
+                self.settle()
+                self.assertEqual(self.typed(), events)
 
     def test_ascii_just_after_an_accent_stays_behind_it(self):
         self.s.remote_input({"events": [{"key": "é"}]})
@@ -794,24 +825,94 @@ class PadDelivery(unittest.TestCase):
         # ten requests of 4 transitions each: the work queues up, with no margin added per request
         self.assertLess(self.s._typed_until - time.time(), 10 * 4 * 0.008 + 0.05)
 
-    def test_trimming_while_sending_doesnt_drop_unsent_events(self):
-        slow = self.Agent()
-        gate = threading.Event()
-        send = slow.send
+    def hold_worker(self):
+        entered, release = threading.Event(), threading.Event()
+        class Gate:
+            def wait(self, timeout):
+                entered.set()
+                if not release.wait(3):
+                    raise RuntimeError("test did not release worker")
+                return False
+        patch = mock.patch.object(self.s, "_kde_cancel", Gate())
+        patch.start()
+        self.addCleanup(patch.stop)
+        self.addCleanup(release.set)
+        return entered, release
 
-        def held(events):
-            gate.wait(5)
-            return send(events)
-        slow.send = held
-        self.s._input = slow
-        self.s.remote_input({"events": [{"key": "é"}] * 150})
-        time.sleep(0.2)  # the worker has taken its 150 and is mid-send
-        self.s.remote_input({"events": [{"key": "ü"}] * 150})
-        gate.set()
+    def test_saturation_rejects_whole_batch_and_retry_delivers_every_accepted_event_once(self):
+        entered, release = self.hold_worker()
+        self.s._typed_until = time.time() + 60
+        first = [{"key": "é"}] * 150
+        remainder = [{"key": "ü"}] * 50
+        overflow = [{"singleclick": True}, {"key": "ß"}] * 75
+        self.assertTrue(self.s.remote_input({"events": first})["sent"])
+        self.assertTrue(entered.wait(1))  # batch is in flight, waiting for prior ASCII
+        try:
+            self.assertTrue(self.s.remote_input({"events": remainder})["sent"])
+            status = self.s.remote_input({"events": overflow})
+            self.assertFalse(status["sent"])
+            self.assertEqual(status["state"], "waiting")
+            self.assertEqual(self.s._kde_queue, first + remainder)
+            self.assertEqual(len(self.s._kde_queue), self.s.KDE_QUEUE_LIMIT)
+            self.assertEqual(self.s._touch.got, [])  # rejected clicks cannot be duplicated
+        finally:
+            self.s._typed_until = 0
+            release.set()
+            self.settle()
+        self.assertEqual(self.typed(), first + remainder)
+        self.assertTrue(self.s.remote_input({"events": overflow})["sent"])
         self.settle()
-        sent = self.typed()
-        self.assertEqual(sent[:150], [{"key": "é"}] * 150)
-        self.assertEqual(sent[150:], [{"key": "ü"}] * 150)  # none of the new ones went missing
+        self.assertEqual(self.typed(), first + remainder + [{"key": "ß"}] * 75)
+        self.assertEqual(self.s._touch.got, [[e for _ in range(75) for e in (
+            {"button": "left", "down": True}, {"button": "left", "down": False})]])
+
+    def test_retrying_batch_keeps_its_capacity_and_order(self):
+        entered, release = self.hold_worker()
+        self.s._input = self.Agent(sent=False, state="starting")
+        first, second = [{"key": "é"}] * 150, [{"key": "ü"}] * 150
+        self.assertTrue(self.s.remote_input({"events": first})["sent"])
+        self.assertTrue(entered.wait(1))  # first send failed; worker is in retry delay
+        try:
+            self.assertFalse(self.s.remote_input({"events": second})["sent"])
+            self.assertEqual(self.s._kde_queue, first)
+        finally:
+            self.s._input.sent = True
+            release.set()
+            self.settle()
+        self.assertTrue(self.s.remote_input({"events": second})["sent"])
+        self.settle()
+        self.assertEqual(self.typed(), first + second)
+
+    def test_concurrent_requests_cannot_both_claim_the_last_capacity(self):
+        entered, release = self.hold_worker()
+        self.s._typed_until = time.time() + 60
+        first = [{"key": "é"}]
+        self.s.remote_input({"events": first})
+        self.assertTrue(entered.wait(1))
+        barrier, results = threading.Barrier(3), []
+        def request(key):
+            barrier.wait(2)
+            batch = [{"key": key}] * 150
+            results.append((batch, self.s.remote_input({"events": batch})["sent"]))
+        threads = [threading.Thread(target=request, args=(key,)) for key in ("ü", "ß")]
+        try:
+            for thread in threads:
+                thread.start()
+            barrier.wait(2)
+            for thread in threads:
+                thread.join(2)
+                self.assertFalse(thread.is_alive())
+            self.assertEqual(sorted(sent for _, sent in results), [False, True])
+        finally:
+            self.s._typed_until = 0
+            release.set()
+            self.settle()
+        accepted = next(batch for batch, sent in results if sent)
+        rejected = next(batch for batch, sent in results if not sent)
+        self.assertEqual(self.typed(), first + accepted)
+        self.assertTrue(self.s.remote_input({"events": rejected})["sent"])
+        self.settle()
+        self.assertEqual(self.typed(), first + accepted + rejected)
 
     def test_input_queued_as_the_worker_finishes_is_still_sent(self):
         for _ in range(40):
@@ -881,6 +982,37 @@ assert not s._kde_queue
         with mock.patch.multiple(self.s, FRAME="frame-a", HOST_OPTS=[], MUX=[], SSH=[], macview=None), \
              mock.patch.multiple(self.s.frame_android, FRAME="frame-a", SSH_OPTS=[]):
             self.s.route("frame-b", [])
+
+    def test_stale_worker_exception_cannot_damage_new_route(self):
+        entered, release = threading.Event(), threading.Event()
+        class BrokenWait:
+            def wait(self, timeout):
+                entered.set()
+                if not release.wait(2):
+                    raise RuntimeError("test did not release old worker")
+                raise OSError("old route wait failed")
+            def set(self):
+                pass  # hold its exception until the new route has been published
+        self.s._kde_cancel = BrokenWait()
+        self.s._typed_until = time.time() + 60
+        self.s.remote_input({"events": [{"key": "é"}]})
+        worker = self.s._kde_worker[0]
+        try:
+            self.assertTrue(entered.wait(1))
+            self.switch()
+            marker = object()
+            with self.s._kde_lock:
+                self.s._kde_queue.append({"key": "new"})
+                self.s._kde_worker[0] = marker
+                self.s._kde_until = 42
+        finally:
+            release.set()
+            worker.join(2)
+        self.assertFalse(worker.is_alive())
+        self.assertEqual(self.s._kde_queue, [{"key": "new"}])
+        self.assertIs(self.s._kde_worker[0], marker)
+        self.assertEqual(self.s._kde_until, 42)
+        self.assertIsNone(self.s._kde_error)
 
     def test_switch_stops_both_input_agents_and_discards_old_queue(self):
         self.s._kde_queue.append({"key": "old"})
