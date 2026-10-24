@@ -5,7 +5,8 @@
 - Use gamescope's input for the keyboard and trackpad, following the focused
   headset panel without installing an input service. Start KDE Connect only for
   accents and emoji, keeping queued text ordered and cancelling it on headset
-  switches. Retain intended-headset checks before starting either control.
+  switches. Retain intended-headset checks before starting either control and
+  prevent Unicode helper startup from deadlocking with a headset switch.
   [Current verification and device limits](docs/evidence/pad-gamescope-2026-10-24.md).
 
 - Keep media playback running when SteamVR refuses the optional theatre dark

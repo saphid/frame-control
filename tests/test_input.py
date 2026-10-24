@@ -826,6 +826,45 @@ class PadDelivery(unittest.TestCase):
 
 
 class PadRoute(unittest.TestCase):
+    def test_unicode_start_and_headset_switch_do_not_deadlock(self):
+        # Real InputAgent.send/start takes the route lock. Race it with route(),
+        # which cancels the pad worker; mocks of send() hide this lock inversion.
+        # A child keeps a regression's blocked daemon threads out of this suite.
+        code = r'''
+import sandbox
+import server as s
+import threading
+from unittest import mock
+
+entered, release, switching = threading.Event(), threading.Event(), threading.Event()
+s._input = s.InputAgent(packages=[])
+s._input._launch = lambda *args: None  # exercise real start, without any SSH
+s._touch = mock.Mock()
+send = s._input.send
+def held(events):
+    entered.set()
+    assert release.wait(2)
+    return send(events)
+s._input.send = held
+s._power.stop = lambda *args: switching.set()
+s._queue_for_kde([{'key': 'é'}])
+worker = s._kde_worker[0]
+assert entered.wait(2), 'Unicode worker never reached send'
+switch = threading.Thread(target=s.route, args=('frame-pr66-new', []), daemon=True)
+switch.start()
+switching.wait(0.2)
+release.set()
+worker.join(2)
+switch.join(2)
+assert not worker.is_alive(), 'Unicode worker deadlocked starting input during headset switch'
+assert not switch.is_alive(), 'headset switch deadlocked cancelling Unicode input'
+assert not s._kde_queue
+'''
+        env = {**os.environ, "PYTHONPATH": os.pathsep.join([str(ROOT / 'tests'), str(ROOT / 'ui')])}
+        result = subprocess.run([sys.executable, '-c', code], env=env, capture_output=True,
+                                text=True, timeout=8)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
     def setUp(self):
         import server
         self.s = server

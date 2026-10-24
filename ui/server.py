@@ -112,7 +112,9 @@ frame_android.SSH_OPTS = SSH[1:]
 
 
 _power = frame_power.Observation()
-_route_lock = threading.Lock()
+# Pad delivery reserves the route before its own locks; InputAgent.start()
+# captures that same route synchronously, so this lock must be reentrant.
+_route_lock = threading.RLock()
 
 
 def route(alias, host_opts):
@@ -1604,7 +1606,7 @@ TYPING_SETTLE = 0.6  # seconds past the estimate, once
 def reset_pad_route():
     """Discard input for the headset being left, including batches waiting for an agent."""
     global _kde_route, _kde_cancel, _kde_until, _typed_until
-    with _pad_send_lock, _kde_lock:
+    with _route_lock, _pad_send_lock, _kde_lock:
         _kde_cancel.set()
         _kde_cancel = threading.Event()
         _kde_route = object()
@@ -1661,8 +1663,9 @@ def _drain_kde(route, cancel):
             _kde_until = time.time() + 3600  # held while in flight
         if wait > 0 and cancel.wait(wait):
             return  # a switch cancels the delay and its old-headset batch
-        # Serialize sending with route resets without blocking callers from queuing input.
-        with _pad_send_lock:
+        # Match route()/reset_pad_route()'s lock order. send() may start an
+        # agent and take _route_lock again while capturing its immutable route.
+        with _route_lock, _pad_send_lock:
             with _kde_lock:
                 if route is not _kde_route:
                     return

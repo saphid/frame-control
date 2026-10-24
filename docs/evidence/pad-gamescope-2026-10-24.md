@@ -55,24 +55,36 @@ observations documented in `streaming.md` concern other test sessions.
 
 ## Offline checks and remaining limits
 
-- `python3 -m unittest discover -s tests -p test_input.py -v`: **57 passed**.
+- `python3 -m unittest discover -s tests -p test_input.py -v`: **58 passed**.
 - `python3 -m unittest discover -s tests -p test_touch.py -v`: **43 passed**.
 - `python3 -m unittest discover -s tests -p test_service_regressions.py -v`:
   **34 passed**.
-- `python3 -m unittest discover -s tests -v`: **1,402 ran, OK, 15 skipped**
-  (Linux x86_64, Python 3.12; 152.825 seconds).
+- `python3 -m unittest discover -s tests -v`: **1,403 ran, OK, 15 skipped**
+  (Linux x86_64, Python 3.12; 150.825 seconds).
 - Node page suites: `ctrl_gestures.mjs`, `pad_queue.mjs`, `desk_panels.mjs`
   passed, using the production page functions.
 - `node --test app/test/*.test.js`: **3 test files passed**.
 - `node --test site/test/*.test.mjs`: **2 test files passed**.
 - Python compilation, desktop/site JavaScript syntax and `git diff --check`
-  passed. Full-suite and CI results are recorded in the PR after completion.
+  passed. Fake-Frame e2e and exact-head CI results are recorded in the PR after completion.
 
 The first full regression run executed 1,401 tests and found two tests still
 expecting `/api/input` to start the old KDE Connect helper. They were updated
-to the intended gamescope route; the final full run includes the extra lazy-KDE
-regression above. The initial restricted-sandbox input run could not open
+to the intended gamescope route. The final full run includes the lazy-KDE
+regression above and the lock-order regression below. The initial restricted-sandbox input run could not open
 loopback sockets; the focused rerun with managed network access passed.
+
+Review of the merged code then found a lock inversion: the Unicode worker
+held the pad-send lock while `InputAgent.start()` acquired the route lock,
+whereas a headset switch held the route lock before resetting the pad. A
+bounded subprocess regression reproduced the deadlock with the real
+`InputAgent.send/start` methods and an offline launch stub. Unicode delivery
+and resets now take the route lock before the pad lock; the route lock is
+reentrant so an agent can capture its route inside that reservation. The new
+regression passed after the fix, as did all **58 focused input tests** and
+the **1,403-test full suite** (15 skipped). The local fake-Frame suite also
+passed 47 tests before this fix; its final rerun and exact-head CI results are
+recorded in the PR.
 
 Remaining device work requires an idle, available Frame and the shared lock:
 record actual button and key events in an owned focused panel, verify Unicode
