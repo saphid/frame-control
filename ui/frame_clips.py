@@ -98,10 +98,11 @@ def record_command(name, audio, max_seconds=MAX_SECONDS):
 
     ffmpeg runs in the background while the shell watches its stdin, which is the SSH
     channel: when that closes (Stop closed it, or the computer's ssh went away) the
-    shell sends ffmpeg SIGTERM, which makes it finish the file properly (as q or
-    Ctrl-C would; SIGINT itself is ignored by a background job of a script). A recording
-    that ends by itself (the time limit, an error) ends the wait too. The shell prints
-    "started" once ffmpeg is running and "exit N" when it has gone."""
+    shell types q into ffmpeg's stdin, a FIFO, which makes it finish the file properly.
+    Not a signal: SteamOS's ffmpeg (n7.0) catches SIGTERM and SIGINT and records on
+    (seen on a Frame, build 20261015.6141207). If it's still there 10 s later it's
+    killed. A recording that ends by itself (the time limit, an error) ends the wait
+    too. The shell prints "started" once ffmpeg is running and "exit N" when it has gone."""
     if not REC_NAME.fullmatch(name):
         raise ValueError(f"bad recording name {name!r}")
     if not 1 <= max_seconds <= MAX_SECONDS:
@@ -115,12 +116,18 @@ def record_command(name, audio, max_seconds=MAX_SECONDS):
         inputs += f" {clock} -f pulse -i {AUDIO_SOURCE}"
         maps += " -map 1:a:0"
         codecs += f" -af aresample=async=1 -c:a aac -b:a {AUDIO_RATE}k"
+    # ffmpeg's stdin is a FIFO the shell holds open on fd 3 (opening it waits for both
+    # ends, so ffmpeg is started first); it's unlinked once both ends are open.
     script = (f"export XDG_RUNTIME_DIR=${{XDG_RUNTIME_DIR:-/run/user/$(id -u)}}; d=\"$HOME/{WORK}\"; "
-              f"ffmpeg -hide_banner -loglevel error -nostdin -y {inputs} {maps} {codecs} -t {max_seconds} "
-              f"\"$d/{name}.mkv\" </dev/null >/dev/null 2>\"$d/{name}.log\" & p=$!; "
+              f"trap '' PIPE; c=\"$d/{name}.ctl\"; rm -f \"$c\"; mkfifo \"$c\" || exit 1; "
+              f"ffmpeg -hide_banner -loglevel error -y {inputs} {maps} {codecs} -t {max_seconds} "
+              f"\"$d/{name}.mkv\" <\"$c\" >/dev/null 2>\"$d/{name}.log\" & p=$!; "
+              f"exec 3>\"$c\"; rm -f \"$c\"; "
               f"echo started; "
               f"while kill -0 $p 2>/dev/null; do read -r -t 1 _; r=$?; [ $r -eq 0 ] || [ $r -gt 128 ] || break; done; "
-              f"kill $p 2>/dev/null; wait $p; echo \"exit $?\"")
+              f"kill -0 $p 2>/dev/null && printf q >&3 2>/dev/null; exec 3>&-; "
+              f"i=0; while kill -0 $p 2>/dev/null && [ $i -lt 40 ]; do sleep 0.25; i=$((i+1)); done; "
+              f"kill -0 $p 2>/dev/null && kill -KILL $p 2>/dev/null; wait $p; echo \"exit $?\"")
     return "bash -c " + shlex.quote(script)
 
 

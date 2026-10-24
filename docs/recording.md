@@ -8,10 +8,13 @@ Both are on **Tools → Capture & Live**. Everything is saved to
 Nothing needs installing on the computer or on the Frame: the work is done by
 the `ffmpeg` that SteamOS ships.
 
-**Not tested on a headset yet.** This is built from what the code already does
-on the Frame (the live view, the media player) and from how Steam is reported
-to store its recordings. The parts we're least sure of are listed under
-[What hasn't been checked](#what-hasnt-been-checked). Please report what you see.
+**Recording is tested on a headset; Steam clip export isn't yet.** On a Frame
+running SteamOS 0.5.6 (build 20261015.6141207), Record and Stop saved an
+8-second 1080p H.264 recording with AAC sound to the computer, Stop took about a
+second, and nothing was left running or stored on the Frame. That Frame had no
+Steam recordings, so the clip list came back empty and export has only been
+tested with files in Steam's format made by `ffmpeg`. The parts we're least sure
+of are listed under [What hasn't been checked](#what-hasnt-been-checked).
 
 ## Record
 
@@ -36,8 +39,11 @@ the Frame, converted to `.mp4` there (without re-encoding) and copied to
 - **Where it waits on the Frame**: `~/.cache/frame-control/video/`, not `/tmp`,
   which is a RAM disk on SteamOS. It's deleted once copied.
 - **If the connection drops or the app quits** while recording, the Frame
-  stops `ffmpeg` cleanly when the SSH channel closes, as the live view does. A
-  recording that was never copied is deleted when the next one starts.
+  stops `ffmpeg` cleanly when the SSH channel closes: it types `q` into
+  `ffmpeg`'s input, as at its keyboard, and kills it if it's still there 10
+  seconds later. Not a signal: SteamOS's `ffmpeg` 7.0 catches SIGTERM and
+  SIGINT and carries on recording. A recording that was never copied is
+  deleted when the next one starts.
 
 Recording and **Live** can run together; both read the same device.
 
