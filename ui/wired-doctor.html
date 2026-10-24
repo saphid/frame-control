@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wired connection doctor · Frame Control</title>
+<style>
+:root{color-scheme:dark;--bg:#101820;--card:#1b2838;--text:#e4edf5;--sub:#acbccb;--line:#3a5065;--blue:#66c0f4;--warn:#f0c67a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}main{max-width:850px;margin:auto;padding:32px 24px 64px}a{color:var(--blue)}h1{font-size:30px;line-height:1.2;margin:20px 0 12px}h2{font-size:18px;margin:0 0 8px}p{margin:8px 0 16px}.sub{color:var(--sub)}.badge{font-size:12px;letter-spacing:.05em;text-transform:uppercase;color:var(--blue)}section{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:20px;margin:18px 0}.row{display:flex;gap:12px;align-items:end;flex-wrap:wrap}label{display:block}input,button{font:inherit;min-height:44px;border:1px solid var(--line);border-radius:5px;padding:9px 14px;background:#263f54;color:var(--text)}input{display:block;min-width:220px;margin-top:6px}button{cursor:pointer;background:#205b81;border-color:var(--blue)}button:disabled{opacity:.5;cursor:default}.status{font-size:12px;font-weight:700;text-transform:uppercase;margin-right:10px;color:var(--blue)}.warning .status{color:var(--warn)}.unknown .status{color:var(--sub)}#message{min-height:24px}:focus-visible{outline:2px solid var(--blue);outline-offset:4px}@media(max-width:540px){main{padding:20px 16px}h1{font-size:25px}section{padding:16px}}
+</style></head><body><main>
+<a id="back" href="/#devices">← Devices &amp; connection</a>
+<header><h1>Wired connection doctor</h1><span class="badge">This computer · Read-only · On demand</span>
+<p>Check whether this computer has the Frame's previously observed USB-C network route, whether SSH answers on it, and whether a strictly checked SSH identity works. This does not change network or headset settings.</p></header>
+<section><div class="row"><label for="alias">Your configured headset SSH alias<input id="alias" value="frame" maxlength="64" autocomplete="off"></label>
+<button id="check">Check cable connection</button></div><p id="message" role="status" aria-live="polite">No checks have run.</p></section>
+<div id="results" aria-live="polite"></div>
+<p class="sub">The observed USB address is 10.86.200.233 on Frame OS tested in 2026. A different OS build may use another subnet. An unknown result does not prove the cable is broken. The doctor never changes IP settings, accepts a new host key, or bypasses SSH warnings.</p>
+</main><script>
+'use strict';
+const $ = id => document.getElementById(id);
+const key = new URLSearchParams(location.search).get('key') || '1';
+$('back').href = '/?key=' + encodeURIComponent(key) + '#devices';
+const make = (tag, value) => { const node = document.createElement(tag); node.textContent = value; return node; };
+$('check').onclick = async () => {
+  $('check').disabled = true;
+  $('results').replaceChildren();
+  $('message').textContent = 'Checking this computer…';
+  try {
+    const response = await fetch('/api/host/wired?alias=' + encodeURIComponent($('alias').value.trim()),
+      {headers:{'X-Frame-UI':key}});
+    const report = await response.json();
+    if (!response.ok) throw new Error(report.error || 'Wired check failed');
+    for (const item of report.checks) {
+      const section = make('section', ''); section.className = item.status;
+      const title = make('h2', item.title); const status = make('span', item.status + ' · '); status.className = 'status';
+      title.prepend(status); section.append(title, make('p', item.detail)); $('results').append(section);
+    }
+    $('message').textContent = report.state === 'ready' ? 'The known USB path and pinned SSH identity worked.'
+      : 'Review each check and its limits below.';
+  } catch (error) { $('message').textContent = error.message; }
+  finally { $('check').disabled = false; }
+};
+</script></body></html>
