@@ -357,3 +357,11 @@ unsafe archives and backup names, and the exact Game Mode command.
 `tests/e2e/test_recovery_kit.py` backs up and restores a Proton save on the fake
 Frame through the server. See [backup-and-recovery.md](backup-and-recovery.md#verification).
 No backup or restore has been run on a real headset yet.
+
+## Battery monitoring
+
+`tests/test_battery.py` covers real file parsing with temporary sysfs-like
+files, source preference, missing/invalid sensors and permission errors.
+`tests/control_center.cjs` covers charging states and optional health fields,
+alongside existing stale/offline handling. No headset is used. See
+[battery monitoring](battery-health.md) for sources, units and limitations.

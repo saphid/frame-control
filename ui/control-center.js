@@ -16,8 +16,8 @@
       description:'Set the default headset output volume or mute it. Changes apply only when you choose Apply or Mute.',
       keywords:'sound speakers headphones loud quiet', special:'audio'},
     {id:'health', category:'device', icon:'pulse', title:'Battery & thermal health', kind:'read', label:'Read-only metrics',
-      description:'Inspect charge, signed battery power, charger capability, battery temperature and health. Heat warnings use the kernel’s own hot and critical trip points.',
-      keywords:'battery charging charger charge time estimate remaining power watts usb health heat temperature thermal sensor', special:'health', links:[['#comfort','Configure battery & heat alerts']]},
+      description:'Inspect charge, signed battery power, charger readings, battery temperature, health and optional capacity / cycle readings. Heat warnings use the kernel’s own hot and critical trip points.',
+      keywords:'battery charging charger charge time estimate remaining power watts usb health cycles capacity wear heat temperature thermal sensor', special:'health', links:[['#comfort','Configure battery & heat alerts']]},
     {id:'storage', category:'device', icon:'files', title:'Storage & memory', kind:'read', label:'Read-only metrics',
       description:'Check free user and system storage plus available RAM. Manage installed apps in their existing libraries, or use SFTP for files.',
       keywords:'disk space root home free total ram memory capacity cleanup usage storage', special:'storage', links:[['#library','Installed games'],['#linuxApps','Linux apps'],['#power','SFTP & remote tools']]},
@@ -144,9 +144,9 @@
     const capacity = b.percent;
     const idle = !!s.power && Number.isFinite(b.watts) && Math.abs(b.watts) < .5;
     const charging = b.status === 'Charging';
-    const full = b.status === 'Full' || (!!s.power && capacity >= 100);
+    const full = b.status === 'Full';
     const batteryState = !sample ? 'Connect to read charge and power' : !s.battery ? 'Battery sensor unavailable' :
-      full ? 'Fully charged' : charging ? 'Charging' : idle ? 'Plugged in · not charging' : s.power ? 'Plugged in · on battery' : 'On battery';
+      full ? 'Fully charged' : charging ? 'Charging' : b.status === 'Not charging' || idle ? (s.power ? 'Plugged in · not charging' : 'Not charging') : b.status === 'Discharging' ? (s.power ? 'Plugged in · on battery' : 'On battery') : 'Charging state unavailable';
     return {
       battery:number(capacity, '%'), batteryDetail:batteryState,
       storage:h ? gib(h.free) : 'Unavailable', storageDetail:h ? `${gib(h.total)} total · user storage` : 'User storage unavailable',
@@ -155,8 +155,11 @@
       rootFree:gib(s.disk?.root?.free), rootTotal:gib(s.disk?.root?.total), memoryAvailable:gib(m?.available),
       fps:number(p.compositorFps, '', 1), fpsDetail:'Compositor FPS · not game FPS',
       power:number(b.watts, ' W', 1), charger:s.power ? `${s.power.type || 'Connected'} · ${number(s.power.watts, ' W', 1)}` : sample ? 'No charger reported' : 'Unavailable',
-      batteryTemp:number(b.tempC, ' °C', 1), batteryHealth:b.health || 'Unavailable',
-      estimate:charging ? (b.timeToFull > 0 ? `${duration(b.timeToFull)} to full` : 'Unavailable') : !full && !idle && b.timeToEmpty > 0 && b.timeToEmpty < 86400 ? `${duration(b.timeToEmpty)} remaining` : 'Unavailable',
+      batteryTemp:number(b.tempC, ' °C', 1), batteryHealth:b.health && b.health !== 'Unknown' ? b.health : 'Unavailable',
+      batterySource:b.source || 'Unavailable', cycles:number(b.cycleCount),
+      fullCapacity:number(b.fullMah, ' mAh', 1), designCapacity:number(b.designMah, ' mAh', 1),
+      capacityHealth:number(b.capacityHealthPercent, '%', 1),
+      estimate:charging ? (b.timeToFull > 0 ? `${duration(b.timeToFull)} to full` : 'Unavailable') : b.status === 'Discharging' && !idle && b.timeToEmpty > 0 && b.timeToEmpty < 86400 ? `${duration(b.timeToEmpty)} remaining` : 'Unavailable',
       wifi:s.wifi?.ssid || 'Unavailable', signal:number(s.wifi?.signal, '%'), ip:s.ip || 'Unavailable',
       uptime:duration(s.uptime), os:s.os?.version || 'Unavailable', build:s.os?.build || 'Unavailable',
       temperature:number(s.temp, ' °C', 1), cpu:number(p.cpuPercent, '%', 1), gpu:number(p.gpuMHz, ' MHz', 1),
@@ -214,7 +217,8 @@
     const metric = (id, label) => `<div><dt>${label}</dt><dd data-cc-metric="${id}">Unavailable</dd></div>`;
     const perf = `<dl class="cc-readings">${[['appFps','Application FPS'],['frame','Compositor period'],['render','Render GPU time'],['compositorCpu','Compositor CPU'],['cpu','System CPU'],['gpu','GPU clock'],['temperature','Hottest sensor']].map(([id,label])=>metric(id,label)).join('')}</dl><p class="cc-note">GPU time is render time, not utilisation. The hottest sensor is not necessarily CPU temperature.</p><p class="cc-note" data-cc-metric="thermal">Trip data unavailable</p>`;
     const audio = `<div class="cc-audio"><label for="ccVolume">Output volume <output id="ccVolumeValue" for="ccVolume">—</output></label><input id="ccVolume" type="range" min="0" max="100" step="1" value="0" disabled><div class="cc-audio-actions"><button class="action small" id="ccApplyVolume" disabled>Apply volume</button><button class="small" id="ccMute" disabled>Mute</button><span id="ccAudioReadback" class="cc-note">Waiting for an audio reading</span></div><p class="cc-note" id="ccAudioResult" role="status"></p></div>`;
-    const health = `<dl class="cc-readings">${[['battery','Charge'],['power','Battery power · signed'],['charger','Charger'],['estimate','Battery estimate'],['batteryTemp','Battery temperature'],['batteryHealth','Battery health']].map(([id,label])=>metric(id,label)).join('')}</dl>`;
+    const batteryNote = 'Read-only. Unavailable means not reported, unreadable or invalid. Health is the driver’s status; full / design capacity is a fuel-gauge estimate, not a diagnosis. Charge limits are unsupported on Frame.';
+    const health = `<dl class="cc-readings">${[['battery','Charge'],['batteryDetail','Charging state'],['power','Battery power · signed'],['charger','Charger'],['estimate','Battery estimate'],['batteryTemp','Battery temperature'],['batteryHealth','Battery health'],['cycles','Charge cycles'],['fullCapacity','Full charge capacity'],['designCapacity','Design capacity'],['capacityHealth','Full / design capacity'],['batterySource','Battery source']].map(([id,label])=>metric(id,label)).join('')}</dl><p class="cc-note">${batteryNote}</p>`;
     const forcequit = `<div class="cc-quit"><div class="cc-audio-actions"><button class="small" type="button" id="ccRunningCheck">Check what’s running</button></div><ul class="cc-running" id="ccRunningList"></ul><p class="cc-note" id="ccRunningResult" role="status"></p></div>`;
     const storage = `<dl class="cc-readings">${[['storage','User storage free'],['rootFree','System storage free'],['rootTotal','System storage total'],['memoryAvailable','Memory available']].map(([id,label])=>metric(id,label)).join('')}</dl>`;
     get('ccCategories').innerHTML = categories.map(([id,label,symbol])=>`<button type="button" data-cc-category="${id}" aria-pressed="${id === 'all'}">${icon(symbol)}<span>${label}</span><span class="cc-category-count"></span></button>`).join('');
