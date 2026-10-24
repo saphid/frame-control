@@ -165,6 +165,14 @@ Record the build, actual interaction results, cleanup and any unworn-headset
 limits alongside screenshots or logs. These are caller responsibilities; the
 smoke script below does not acquire this shared lock itself.
 
+[Packaged Desktop Capture evidence, 2026-10-24](evidence/desktop-capture-packaged-2026-10-24.md)
+records v0.4.17 GUI button captures of a real mapped nested desktop on SteamOS
+0.5.6, a bounded owned user unit, and cleanup back to the original Game Mode
+state. Check X window mapping/focus and SteamVR overlay visibility separately:
+successful capture of a mapped window does not prove the desktop is visible
+to a wearer. That run's overlay stayed `not_visible`; #73 remains unverified
+for its reported visible-desktop/0.4.5 condition. Only state/log metadata is public.
+
 ```sh
 scripts/frame-smoke.sh           # needs `ssh frame` to work without a password
 scripts/frame-smoke.sh --pair    # also pairs a throwaway key: approve it in the headset

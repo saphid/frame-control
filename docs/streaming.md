@@ -295,6 +295,10 @@ How (**verified 2026-09-29**, SteamOS 0.4.1, build 20260925.6191901):
   if it persists, report the exact message and SteamOS version. The confirmed
   empty-list advice is retained when the property is present but empty.
   [2026-10-24 investigation and verification limits](evidence/panel-discovery-2026-10-24.md).
+  A later [packaged v0.4.17 test on the real Frame](evidence/desktop-capture-packaged-2026-10-24.md)
+  captured a mapped, focused nested KDE compositor on SteamOS 0.5.6. SteamVR
+  still reported its overlay hidden, so that test does not establish the
+  wearer's visible-desktop condition in #73 or justify closing it.
 - Tested from the iPhone app (Simulator): a tap on the Desktop view focused a
   text box in the panel and the text field typed into it; a trackpad move went
   exactly (+40, +25).
