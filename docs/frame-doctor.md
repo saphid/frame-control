@@ -112,4 +112,10 @@ personal information. Redirecting stdout saves a report only if you choose it.
 Unit tests use mocked boundaries. `scripts/e2e.sh test_doctor` covers asleep,
 disk-full, SSH/devkit-off and missing-key faults against the fake Frame. Its
 stable restart counters are explicitly simulated, not proof about SteamOS.
-No real-headset validation is claimed for this implementation.
+On 2026-10-24 the script ran read-only against a real Frame, SteamOS build
+`20261015.6141207`. It verified the configured SSH alias and key login,
+then reported `WARN Restart safety`: nonempty health-check trackers. It
+correctly skipped all eleven deeper sections and exited 1. No raw logs,
+addresses or keys were printed, and no repair or restart was attempted.
+This verifies the safety stop on that device; the deeper checks are not
+claimed as headset-tested.
