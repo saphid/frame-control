@@ -14,6 +14,13 @@ reported Game Mode, so **Return to Game Mode** changed nothing. Not tested on a
 headset: a restore after a real factory reset, a restore that replaces files,
 Android data restore, and the switch out of a real Desktop Mode session. Unit
 tests and the fake Frame cover those (see [Verification](#verification)).
+On 2026-10-24 a read-only session check on the same build again reported Game
+Mode (`gamescope=true`, `plasma=false`, `nested_desktop=false`) and the
+`steamos-session-select` command was present. Opening the nested desktop for a
+clipboard test did not enter full Desktop Mode. A full session switch was not
+attempted because it restarts the headset session and a reliable return path
+was not established; the **Return to Game Mode** branch for a real full
+Desktop Mode session remains unverified.
 
 ## Back up
 

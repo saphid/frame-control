@@ -165,6 +165,50 @@ test('metrics use real fields, preserve zero, and distinguish unavailable values
   assert.equal(cc.metrics({battery:{percent:0,status:'Discharging'}}).battery,'0%');
   assert.match(cc.metrics({thermalAlerts:[{zone:'battery',tempC:45,limitC:44}]}).thermal,/battery 45 °C ≥ 44 °C/);
 });
+test('battery health distinguishes charging states and optional sensors', () => {
+  for (const status of [null, 'Unknown', 'Unexpected']) {
+    const m = cc.metrics({battery:{percent:100,status,timeToEmpty:3600}});
+    assert.equal(m.batteryDetail,'Charging state unavailable');
+    assert.equal(m.estimate,'Unavailable');
+  }
+  assert.equal(cc.metrics({battery:{status:'Not charging'}}).batteryDetail,'Not charging');
+  assert.equal(cc.metrics({battery:{status:'Full'}}).batteryDetail,'Fully charged');
+  assert.equal(cc.metrics({battery:{status:'Charging',timeToFull:3600}}).estimate,'1 h 0 min to full');
+  assert.equal(cc.metrics({battery:{status:'Discharging',timeToEmpty:600}}).estimate,'10 min remaining');
+  const m = cc.metrics({battery:{cycleCount:0,fullMah:4500,designMah:5000,capacityHealthPercent:90,
+    source:'/sys/class/power_supply/max1720x_bat_7-36',health:'Unknown',tempC:0}});
+  assert.equal(m.cycles,'0'); assert.equal(m.capacityHealth,'90%');
+  assert.equal(m.fullCapacity,'4,500 mAh'); assert.equal(m.batteryTemp,'0 °C');
+  assert.equal(m.batteryHealth,'Unavailable'); assert.match(m.batterySource,/max1720x/);
+  for (const key of ['cycles','fullCapacity','designCapacity','capacityHealth','batterySource','batteryHealth','batteryTemp'])
+    assert.equal(cc.metrics(null)[key],'Unavailable');
+});
+test('battery chip preserves unknown status and does not infer Full at 100%', () => {
+  const f=fixture();
+  const start=pageSource.indexOf('function battery(b, power)');
+  const end=pageSource.indexOf('// hidePopover', start);
+  const context={$:f.element,dur:String}; vm.createContext(context);
+  vm.runInContext(pageSource.slice(start,end),context);
+  context.battery({percent:100,status:'Unknown'},{watts:20});
+  assert.equal(f.element('battState').textContent,'Charging state unavailable');
+  context.battery({percent:50,status:'Not charging'},null);
+  assert.equal(f.element('battState').textContent,'Not charging');
+  context.battery({percent:50,status:'Charging',watts:2,tempC:0},null);
+  assert.match(f.element('battState').textContent,/Charging/);
+  assert.match(f.element('battDetail').textContent,/battery 0°C/);
+  context.battery(null,null);
+  assert.equal(f.element('battState').textContent,'Battery unknown');
+});
+test('new health readings clear after a failed status read', () => {
+  const f=mounted();
+  f.ui.status({...sample(),battery:{...sample().battery,cycleCount:42,capacityHealthPercent:92,
+    fullMah:4600,designMah:5000,source:'/sys/class/power_supply/max1720x_bat_7-36'}});
+  assert.equal(f.element('metric-capacityHealth').textContent,'92%');
+  f.ui.unavailable(Error('Read failed'));
+  for (const key of ['cycles','fullCapacity','designCapacity','capacityHealth','batterySource'])
+    assert.equal(f.element('metric-'+key).textContent,'Unavailable');
+  f.ui.destroy();
+});
 test('audio controller validates before any API call and rejects offline or expired readings', async () => {
   let context={online:true,fresh:true,sample:sample(),device:'frame-a',generation:1},calls=[];
   const controller=cc.createController({api:async(...args)=>{calls.push(args);return {};},getContext:()=>context});

@@ -44,6 +44,20 @@ them on macOS, Windows and Linux. They don't pick up `tests/e2e`.
 
 ## The fake Frame
 
+Frame doctor has focused offline tests in `tests/test_frame_doctor.py` and
+fake-Frame fault tests in `tests/e2e/test_doctor.py`:
+
+```sh
+python3 -m unittest discover -s tests -p test_frame_doctor.py -v
+scripts/e2e.sh test_doctor
+```
+
+They cover privacy filtering, host-key preservation, restart safety and missing
+journal evidence, plus asleep, full-title-storage, SSH/devkit-off and missing-key
+faults. The fake's doctor-only `systemctl show` responses assume stable restart
+counters and inactive keep-awake; unsupported queries fail. These tests do not
+exercise a real SteamOS user manager or touch a headset.
+
 `tests/fakeframe/` builds a container that stands in for the headset, and a
 second one for the computer Frame Control runs on. `scripts/e2e.sh` builds
 both, starts them with `docker compose`, runs `tests/e2e` in the host
@@ -163,6 +177,43 @@ does). A cleanup that fails counts as a failed step. Results go to
 `tests/smoke/results/<time>-<BUILD_ID>.json` (not committed) with a summary on
 screen; it exits 0 when every step passed, 1 if one failed, 2 if the headset
 isn't reachable.
+
+Smoke process cleanup runs before and after title removal and during the
+initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
+`fc_smoke_x86_64`, `fc_smoke_exe` IDs and their legacy `fc-smoke-` equivalents.
+On the target, `tests/smoke/stop_processes.py` requires the SSH user's uid and
+an exact title directory in `/proc` cwd/exe or an individual absolute command
+argument; similarly named folders and shell command substrings do not count.
+Deleted cwd/exe paths still count, so a process left after file removal can be
+found. It sends SIGTERM, waits up to three seconds, then uses SIGKILL with
+another three-second bound, rescanning for survivors. PID handles prevent PID
+reuse from signalling another process. Linux Python 3.9+ with pidfd support
+is required; missing support, signal errors and survivors fail the
+cleanup step. Stopped PIDs are recorded in the results JSON.
+If the initial leftover cleanup fails, the run skips installs and pairing and
+records the failure instead of overwriting an active test title.
+
+This deliberately does not stop shared Wine/Proton services by name or prefix,
+Steam, SteamVR, process groups or arbitrary descendants. A process that drops
+all title-path evidence cannot safely be attributed and is outside this
+check. Unreadable `/proc` fields provide no ownership evidence; other readable
+fields are still checked, and a wholly unattributable process is left alone.
+Real Frame verification, 2026-10-24, SteamOS build `20261015.6141207`: the
+fixed Python smoke entry point passed all 13 steps under the shared device lock.
+The `fc_smoke_exe` launch ran under Proton Experimental (ARM64), and its
+remove step stopped five test-owned wrapper/Proton PIDs before removing the
+title; the following process sweep found none. The final cleanup found no
+test titles or processes, the test desktop was closed, and the battery
+remained at 99%. The `scripts/frame-smoke.sh` zsh wrapper could not run
+on lxso2 because zsh is absent; `python3 tests/smoke/frame_smoke.py` ran
+the same entry point instead.
+The local regression suite runs real Linux processes in temporary fake title
+directories (including deleted folders and a TERM-resistant wrapper); it checks
+exit, escalation and survival of unrelated processes without SSH or a headset:
+
+```sh
+python3 -m unittest discover -s tests -p test_smoke_cleanup.py -v
+```
 
 `--pair` asks the devkit service to pair a new RSA key, which needs someone
 in the headset to open **Settings → Developer → Pair new host** and approve
@@ -365,3 +416,11 @@ read-only metadata probe, guarded HTTP endpoint and Node renderer/navigation
 regressions. All headset reads are temporary fixtures or mocked SSH. See
 [game storage](game-storage.md#verification-and-limits) for coverage and device
 verification limits. This suite does not move games or contact a headset.
+
+## Battery monitoring
+
+`tests/test_battery.py` covers real file parsing with temporary sysfs-like
+files, source preference, missing/invalid sensors and permission errors.
+`tests/control_center.cjs` covers charging states and optional health fields,
+alongside existing stale/offline handling. No headset is used. See
+[battery monitoring](battery-health.md) for sources, units and limitations.

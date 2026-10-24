@@ -18,6 +18,9 @@ read-only checks below on a Frame running SteamOS 0.5.6 (build 20261015.6141207)
   `charging_enable` and `charging_pause`, both `root`-only (`-rw-r--r--`).
 - `deckard-charger.service` (Deckard Battery Charger service) is enabled and running.
 
+For safe read-only readings in Control Center, see [battery and health
+monitoring](battery-health.md). It does not provide charging controls.
+
 ## How Steam does it on other devices
 
 - Steam's **Settings → Power → Battery Charge Limit** shipped to the Deck in

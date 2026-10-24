@@ -7,6 +7,10 @@ run on Linux. On Windows, use the app.
 
 ## Minimum typing on the headset
 
+If setup or pairing fails, run `scripts/frame-doctor.sh` from this checkout.
+It checks existing SSH access without requesting passwords, pairing or applying
+repairs. See the [Frame doctor guide](frame-doctor.md) for results and next steps.
+
 Valve's own developer docs say SSH, ADB, and RDP are all turned on through a
 **UI toggle**. You don't need a terminal, `passwd`, or `systemctl`. The only
 thing you type on the headset is a password you choose.
