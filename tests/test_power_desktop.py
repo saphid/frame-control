@@ -46,7 +46,9 @@ class DesktopPower(unittest.TestCase):
         real = STREAM
         def collect(command, payload, count, interval, stop, received, **kw):
             return real([sys.executable, '-u', '-c', program], '', count, interval, stop, received, **kw)
-        self.enterContext(patch.object(frame_power.sampler, 'stream_report', side_effect=collect))
+        mocked_stream = patch.object(frame_power.sampler, 'stream_report', side_effect=collect)
+        mocked_stream.start()
+        self.addCleanup(mocked_stream.stop)
         return self.observation.start(preset, ('ssh', '-o', 'HostName=old', 'frame-old'),
                                       {'alias': 'frame-old', 'deviceId': 'old'})
 
