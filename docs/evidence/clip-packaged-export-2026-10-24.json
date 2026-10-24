@@ -1,0 +1,94 @@
+{
+  "date_utc": "2026-10-24T09:08:35.523Z",
+  "result": "PASS: packaged Electron visible Export click saved the retained real Steam clip beyond 60 seconds",
+  "frame_control_tag": "v0.4.17",
+  "documentation_base_commit": "4e456480aefbe541e334dbd247328537f535bd94",
+  "host": "lxso2",
+  "steamos_version": "0.5.6",
+  "steamos_build": "20261015.6141207",
+  "package": {
+    "asset": "Frame-Control-linux-x86_64.AppImage",
+    "url": "https://github.com/saphid/frame-control/releases/download/v0.4.17/Frame-Control-linux-x86_64.AppImage",
+    "sha256": "b1b8eb82bf73a227b2cd36e8f0ef3a2ebdf7967c5853efb08a9634f38227015d",
+    "launch": "Verified release asset; --appimage-extract, then unmodified squashfs-root/AppRun. Electron used the bundled server and Python, not checkout source.",
+    "display": "Xvfb :137, 1440x1000x24; Electron window 1400x950 including native chrome",
+    "flags": [
+      "--no-sandbox",
+      "--disable-gpu",
+      "--remote-debugging-port=49371",
+      "--remote-debugging-address=127.0.0.1",
+      "--user-data-dir=/tmp/frame-packaged-export-20261024/electron-profile"
+    ],
+    "isolation": "Throwaway XDG_CONFIG_HOME, FRAME_CONTROL_DATA_DIR and Electron profile; telemetry and update checks disabled; existing SSH identity and normal home Videos destination used."
+  },
+  "ui": {
+    "navigation": "Dismissed optional email prompt with No thanks; clicked Tools, then Capture & Live; scrolled Steam clips into view.",
+    "row": "Steam recording \u00b7 Clip; Oct 24, 8:53 AM \u00b7 1:40 \u00b7 2 MB",
+    "action": "Playwright connected to this Electron instance over local CDP; locator.click() clicked its visible button named exactly Export. The test did not directly invoke an export function or API POST.",
+    "button": "button.small[data-clip-export=\"0\"]",
+    "click_is_trusted": true,
+    "button_bounds_css_pixels": {
+      "x": 1300.390625,
+      "y": 701.15625,
+      "width": 61.609375,
+      "height": 28
+    },
+    "post_clips_export_http": 200,
+    "job": "0ab20b1788adce63",
+    "job_poll_http": 200,
+    "saved_message": "Saved clip_15658413054201167872_20261024_085343.mp4 to ~/Videos/SteamFrame",
+    "final_row": "ON PC; Export again",
+    "screenshots": [
+      "clip-packaged-export-2026-10-24-before.png",
+      "clip-packaged-export-2026-10-24-after.png"
+    ],
+    "screenshot_scope": "Cropped to Steam clip rows and saved notification; unrelated screenshot thumbnails and host connection identity excluded."
+  },
+  "source": {
+    "clip_id": "10230640/clips/clip_15658413054201167872_20261024_085343",
+    "duration_seconds": 100.801,
+    "duration_provenance": "Retained real Steam clip from clip-long-2026-10-24.json; current packaged UI displays 1:40."
+  },
+  "output": {
+    "path": "~/Videos/SteamFrame/clip_15658413054201167872_20261024_085343.mp4",
+    "bytes": 1377849,
+    "sha256": "82ef31f65e6933d122bc326d664beb2eb2e3ba6969f26c0032552e80fbe8d823",
+    "matches_prior_production_export_size_and_sha256": true,
+    "duration_seconds_ffprobe": 100.833335,
+    "duration_difference_from_steam_seconds": 0.032335,
+    "video": "H.264, 1920x1080, 6049 decoded frames",
+    "audio": "AAC, 48000 Hz, stereo, 4724 decoded audio frames",
+    "validation": [
+      "ffprobe -v error -count_frames -show_entries format=duration,size:stream=codec_name,codec_type,width,height,sample_rate,channels,nb_read_frames -of json <output>: exit 0",
+      "sha256sum <output>: exact match to prior production export",
+      "ffmpeg -v error -xerror -i <output> -f null -: exit 0, no errors"
+    ]
+  },
+  "cleanup": {
+    "shared_lock": "Acquired with ssh frame mkdir /tmp/frame-test.lock after read-only battery/build/lock checks; released with rmdir after app shutdown; absence read back.",
+    "battery_percent_before": 99,
+    "battery_percent_after": 99,
+    "battery_status": "Not charging; charger Full",
+    "packaged_app_and_server_exited": true,
+    "test_xvfb_stopped": true,
+    "frame_export_cache_directories_remaining": 0,
+    "ffmpeg_processes_after": 0,
+    "game_mode_and_steamvr_running_after": true,
+    "steam_source_clip_retained": true,
+    "user_recordings_deleted": false,
+    "headset_install_or_settings_changes": false,
+    "local_export_retained": true
+  },
+  "limits": [
+    "The unchanged AppImage payload ran after extraction on a virtual X desktop, with Chromium sandbox and GPU disabled. FUSE mounting, desktop integration and hardware rendering were not tested.",
+    "The click was automated trusted pointer input in a visible Electron window on Xvfb, not a human click on a physical monitor. T3 collaborative preview opened successfully but drives separate browser tabs; Electron-native automation was used for this window.",
+    "No new game or Steam recording was started. Visible gameplay quality, audible content and perceptual audio/video sync were not assessed.",
+    "Clips longer than this retained 100-second clip, trims and automatic copying remain unverified.",
+    "No release, tag or application code was changed."
+  ],
+  "validation_local": {
+    "clip_regression_suite": "python3 -m unittest discover -s tests -p test_clips.py -v: 34 tests passed in 20.173s, including real ffmpeg long-recording export",
+    "json": "python3 -m json.tool: passed",
+    "diff": "git diff --check: passed"
+  }
+}
