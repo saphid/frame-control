@@ -285,6 +285,13 @@ How (**verified 2026-09-29**, SteamOS 0.4.1, build 20260925.6191901):
   [#73](https://github.com/saphid/frame-control/issues/73) (SteamOS 0.4.5, desktop
   open but not found). The likely cause there was the page itself: a second
   `loadPanels` (the panel switcher's) replaced the Desktop view's, fixed in #84.
+  If the `GAMESCOPE_FOCUSABLE_WINDOWS` property cannot be read, discovery now
+  reports that the panel list is unreadable and whether a panel is open is
+  unknown. A failed X connection or missing property is not evidence that the
+  desktop is closed. Check that SteamVR is running, retry or use Headset view;
+  if it persists, report the exact message and SteamOS version. The confirmed
+  empty-list advice is retained when the property is present but empty.
+  [2026-10-24 investigation and verification limits](evidence/panel-discovery-2026-10-24.md).
 - Tested from the iPhone app (Simulator): a tap on the Desktop view focused a
   text box in the panel and the text field typed into it; a trackpad move went
   exactly (+40, +25).

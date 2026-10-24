@@ -40,6 +40,15 @@ function page(answer) {
   if (!p.noPanelWhy().startsWith("The headset's desktop is running")) fail("why for capture: " + p.noPanelWhy());
   if (!p.ctrlTarget().why.startsWith("The headset's desktop is running")) fail("why for control: " + p.ctrlTarget().why);
 }
+// An unreadable list is unknown: both Capture and Control retain that distinction.
+{
+  const why = "Frame Control couldn't read gamescope's panel list, so it can't tell whether an app panel is open. " +
+    "Check that SteamVR is running in the headset, then try again or use the Headset view. " +
+    "If this persists, report your SteamOS version and this exact message.";
+  const p = page(() => ({ panels: [], focus: null, why }));
+  await p.loadPanels();
+  if (p.noPanelWhy() !== why || p.ctrlTarget().why !== why) fail("unreadable list reason lost");
+}
 // An older headset script without "why": the generic advice.
 {
   const p = page(() => ({ panels: [], focus: null }));

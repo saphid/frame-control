@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Distinguish an unreadable gamescope panel list from a confirmed empty list in
+  Desktop Capture and Control (issue #73). Failed discovery now asks users to
+  check SteamVR and report the exact message and SteamOS version, rather than
+  claiming no panel is open. This does not establish a new capture fix.
+
 - Add an opt-in desktop low-battery alert without starting a family session.
   Existing status reads confirm low charge and drain; recovery hysteresis and a
   ten-minute cooldown limit repeat alerts. Off on page open/headset switch;
