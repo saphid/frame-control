@@ -214,6 +214,12 @@ class Remote(unittest.TestCase):
             self.assertEqual(state['configured'], 'plasma-steamos-wayland-oneshot.desktop')
             running.update({'gamescope', 'plasmashell'})  # the nested desktop panel
             self.assertEqual(remote.session()['mode'], 'game')
+            running.clear()
+            running.add('gamescope-wl')  # gamescope's process name on the Frame, with no desktop panel open
+            self.assertEqual(remote.session()['mode'], 'game')
+            running.clear()
+            running.add('start-gamescope-session')
+            self.assertEqual(remote.session()['mode'], 'game')
 
 
 def fake_ssh(home, os_release):
@@ -401,6 +407,11 @@ class GameMode(unittest.TestCase):
         with patch.object(backup, 'session_status', return_value={'mode': 'game', 'selector': 'steamos-session-select'}), \
                 patch.object(backup, '_ssh') as ssh:
             self.assertFalse(backup.return_to_game_mode(confirmed=True)['switched'])
+            ssh.assert_not_called()
+        with patch.object(backup, 'session_status', return_value={'mode': 'unknown', 'selector': 'steamos-session-select'}), \
+                patch.object(backup, '_ssh') as ssh:
+            with self.assertRaisesRegex(backup.BackupError, 'nothing was changed'):
+                backup.return_to_game_mode(confirmed=True)
             ssh.assert_not_called()
         with patch.object(backup, 'session_status', return_value={'mode': 'desktop', 'selector': 'steamos-session-select'}), \
                 patch.object(backup, '_ssh') as ssh:

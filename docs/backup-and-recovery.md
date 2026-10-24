@@ -115,11 +115,14 @@ Valve's own devkit tools on the Frame read and run
 [`steamos-delete`](../frame/devkit-utils/steamos-delete)).
 
 **Check** reads that file and whether gamescope and Plasma are running; it
-changes nothing. When the headset isn't in Game Mode, **Return to Game Mode**
-runs exactly `steamos-session-select gamescope` (or `holo-session-select
+changes nothing. On the Frame gamescope's process is `gamescope-wl`, started by
+`start-gamescope-session`, and either counts as Game Mode. Only when Plasma is
+running without gamescope (Desktop Mode) does **Return to Game Mode** run
+exactly `steamos-session-select gamescope` (or `holo-session-select
 gamescope`) over SSH, after asking. It closes the desktop and anything open in
 it. Frame Control never edits the SDDM files itself, and runs nothing when the
-headset is already in Game Mode or the image has neither command.
+headset is in Game Mode, when it can't tell which mode it's in, or when the
+image has neither command.
 
 **Uncertain:** whether the Frame offers a full Desktop Mode session at all
 (only the nested desktop has been seen on BUILD_ID 20260922.6101926 and

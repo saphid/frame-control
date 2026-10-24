@@ -5426,7 +5426,7 @@ $("sessionCheck").onclick = async e => {
   try {
     const s = await api("/api/backup", {action: "session"});
     $("sessionState").textContent = SESSION_TEXT[s.mode] + (s.selector ? "" : " This SteamOS build has no session switch command; use the manual steps.");
-    $("sessionGame").disabled = s.mode === "game" || !s.selector;
+    $("sessionGame").disabled = s.mode !== "desktop" || !s.selector;
   } catch (err) { failed($("sessionState"), err); }
   finally { $("sessionCheck").disabled = false; }
 };

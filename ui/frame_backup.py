@@ -357,6 +357,11 @@ def return_to_game_mode(confirmed=False):
     if state.get('mode') == 'game':
         return {'message': 'The headset is already in Game Mode. The desktop you see is a panel: '
                            'close it from the Steam dashboard.', 'state': state, 'switched': False}
+    if state.get('mode') != 'desktop':
+        # Only a desktop session seen running is switched: the switch restarts the session,
+        # which would close whatever is running in Game Mode.
+        raise BackupError("couldn't tell that the headset is in Desktop Mode, so nothing was changed. "
+                          'Use the manual steps in the guide if it is stuck.')
     command = session_command(state.get('selector'))
     try:
         # The session restarts under it, so the command may not get to answer.

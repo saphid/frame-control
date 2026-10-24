@@ -398,7 +398,11 @@ def session():
         conf, configured = path, (m.group(1) if m else None)
         break
     selector = next((s for s in ('holo-session-select', 'steamos-session-select') if shutil.which(s)), None)
-    gamescope, plasma = _running('gamescope'), _running('plasmashell')
+    # On the Frame gamescope's process is named gamescope-wl (seen on build 20261015.6141207),
+    # under the start-gamescope-session script.
+    gamescope = (_running('gamescope') or _running('gamescope-wl') or
+                 _running('start-gamescope-session', full=True))
+    plasma = _running('plasmashell')
     nested = _running('steamos-nested-desktop', full=True)  # a script: its process name is the shell's
     if gamescope:
         mode = 'game'
