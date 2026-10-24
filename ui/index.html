@@ -1124,7 +1124,10 @@
           <div><dt>Battery power · signed</dt><dd data-cc-metric="power">Unavailable</dd></div><div><dt>Charger</dt><dd data-cc-metric="charger">Unavailable</dd></div>
           <div><dt>Battery temperature</dt><dd data-cc-metric="batteryTemp">Unavailable</dd></div><div><dt>Battery health</dt><dd data-cc-metric="batteryHealth">Unavailable</dd></div>
           <div><dt>Battery estimate</dt><dd data-cc-metric="estimate">Unavailable</dd></div>
-        </dl><p class="cc-note">Positive battery watts mean charging; negative means discharge. Estimates are reported by the battery and may be unavailable.</p>
+          <div><dt>Charge cycles</dt><dd data-cc-metric="cycles">Unavailable</dd></div><div><dt>Full charge capacity</dt><dd data-cc-metric="fullCapacity">Unavailable</dd></div>
+          <div><dt>Design capacity</dt><dd data-cc-metric="designCapacity">Unavailable</dd></div><div><dt>Full / design capacity</dt><dd data-cc-metric="capacityHealth">Unavailable</dd></div>
+          <div><dt>Battery source</dt><dd data-cc-metric="batterySource">Unavailable</dd></div>
+        </dl><p class="cc-note">Positive battery watts mean charging; negative means discharge. Unavailable sensors are not reported, unreadable or invalid. Health is the driver’s status; full / design capacity is a fuel-gauge estimate, not a diagnosis. Charge limits are unsupported on Frame.</p>
         <div class="cc-services" id="ccServices"></div>
       </details>
     </section>
@@ -2422,12 +2425,11 @@ $("castBtn").onclick = () => {
 // ---- battery ----
 function battery(b, power) {
   const pct = b?.percent;
-  const full = b?.status === "Full" || (!!power && pct >= 100);
+  const full = b?.status === "Full";
   const charging = !full && b?.status === "Charging";
   // A weak charger can lose to the load: plugged in but still draining.
   // Topped up on a charger it reports Discharging at ~0 W: that's idle, not draining.
   const idle = !!power && b?.watts != null && Math.abs(b.watts) < 0.5;
-  const draining = !full && !charging && !idle && (!power || b?.status === "Discharging" || b?.watts < 0);
   const low = !charging && !full && pct != null && pct <= 15;
   const color = full || charging ? "#59bf40" : low ? "#d94126" : pct != null && pct <= 30 ? "#d9a23a" : "#dcdedf";
 
@@ -2437,7 +2439,8 @@ function battery(b, power) {
   else if (charging) {
     label = b.watts > 0 ? `Charging · ${b.watts.toFixed(1)} W` : "Charging"; cls = "charging";
     if (b.timeToFull > 0) detail.push(`Full in ${dur(b.timeToFull)}`);
-  } else if (!draining) { label = "Plugged in, not charging"; cls = "draining"; }
+  } else if (b.status === "Not charging" || idle) { label = "Not charging"; cls = "draining"; }
+  else if (b.status !== "Discharging") { label = "Charging state unavailable"; cls = "draining"; }
   else {
     label = low ? "Battery low" : power ? "Plugged in, still draining" : "On battery";
     cls = low ? "low" : "draining";
