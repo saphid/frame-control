@@ -162,6 +162,18 @@ Only characters that aren't on a US keyboard (accents, emoji) go through
 Control, everything went through KDE Connect, which is why the notes below
 describe it in detail.)
 
+The keyboard queue is bounded. A batch with an accent sends its whole keyboard
+part through KDE Connect, and later keys follow it there while typing is pending.
+Switching headsets cancels queued text and stops both input helpers before the
+new route is published. Both controls validate the intended headset before they
+start. Ordering between the two input services uses a typing-time estimate;
+neither service acknowledges when characters reach the application.
+
+[PR #66 verification on 2026-10-24](evidence/pad-gamescope-2026-10-24.md)
+separates the offline tests and earlier device observations from the current
+real-Frame preflight. A focused-panel click/key recheck was deferred while the
+shared headset was in use; no new delivery claim is made for SteamOS 0.5.6.
+
 **Verified 2026-09-28** (SteamOS 0.4.1, build 20260925.6191901):
 
 - KDE Connect isn't installed on the Frame, so **Frame Control ships it**:

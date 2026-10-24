@@ -12,6 +12,16 @@ A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/ste
 
 ## Unit tests
 
+The gamescope keyboard/trackpad route has focused suites in `test_input.py`,
+`test_touch.py` and `test_service_regressions.py`. They cover pad translation,
+ASCII/modifier keys, Unicode queuing/retries, stale panel targets, release
+handling, route cancellation, and intended-headset start/status guards.
+`tests/page/pad_queue.mjs` and `tests/page/ctrl_gestures.mjs` execute the page's
+real queue and gesture functions in Node. These are offline tests; their
+acknowledgements do not prove that a real application received input.
+See [the 2026-10-24 PR #66 evidence](evidence/pad-gamescope-2026-10-24.md)
+for the real-device preflight and remaining focused-panel test.
+
 The read-only power/heat sampler has fixture and transport tests in
 `tests/test_power_sample.py`. Run
 `python3 -m unittest discover -s tests -p test_power_sample.py -v`.

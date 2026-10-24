@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Use gamescope's input for the keyboard and trackpad, following the focused
+  headset panel without installing an input service. Start KDE Connect only for
+  accents and emoji, keeping queued text ordered and cancelling it on headset
+  switches. Retain intended-headset checks before starting either control.
+  [Current verification and device limits](docs/evidence/pad-gamescope-2026-10-24.md).
+
 - Keep media playback running when SteamVR refuses the optional theatre dark
   surround, including a retry after standby. Log the refusal and play without
   the surround. Overlay teardown attempts every owned handle and always calls
