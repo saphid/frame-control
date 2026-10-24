@@ -3,8 +3,8 @@
 tests/test_release_workflow.py. Serves the releases in $FAKEGH_RELEASES (a JSON list,
 drafts included) and the tags in $FAKEGH_TAGS (space-separated); an upload's body is
 written to $FAKEGH_UPLOAD. Every call is appended to $FAKEGH_LOG as a JSON line.
-Anything else fails, so the script under test can't fall back to `gh release ...`
-(GraphQL) unnoticed. POST .../releases (release.yml's draft step) answers as release
+Anything else fails; `gh release upload` works only when a release-workflow test
+explicitly sets FAKEGH_ALLOW_RELEASE_UPLOAD=1. POST .../releases (release.yml's draft step) answers as release
 $FAKEGH_NEW_ID (default 9001) without adding it to the listing, like GitHub's list
 lagging a fresh draft. With jq installed, --jq filters a response the way gh does
 (raw strings, compact JSON)."""
@@ -17,6 +17,13 @@ import sys
 args = sys.argv[1:]
 with open(os.environ["FAKEGH_LOG"], "a") as f:
     f.write(json.dumps(args) + "\n")
+if args[:2] == ["release", "upload"] and os.environ.get("FAKEGH_ALLOW_RELEASE_UPLOAD") == "1":
+    releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
+    if os.environ.get("FAKEGH_UPLOAD_ERROR"):
+        sys.exit(os.environ["FAKEGH_UPLOAD_ERROR"])
+    if not any(r.get("tag_name") == args[2] for r in releases):
+        sys.exit("release not found")
+    sys.exit(0)
 if not args or args[0] != "api":
     sys.exit("fakegh: only `gh api` is supported: %r" % args)
 
@@ -80,6 +87,12 @@ elif method == "PATCH" and endpoint.startswith(repo + "releases/"):
     rid = endpoint[len(repo + "releases/"):]
     if not rid.isdigit():  # what GitHub said to v0.4.2's PATCH of releases/ (an empty id)
         sys.exit("gh: Not Found (HTTP 404)")
+    if os.environ.get("FAKEGH_ALLOW_RELEASE_UPLOAD") == "1":
+        for item in releases:
+            if str(item["id"]) == rid:
+                item.update(fields)
+        with open(os.environ["FAKEGH_RELEASES"], "w") as f:
+            json.dump(releases, f)
     page = "https://github.com/saphid/frame-control/releases/tag/%s" % fields.get("tag_name")
     answer({"id": int(rid), "tag_name": fields.get("tag_name"), "html_url": page},
            "published %s at %s" % (fields.get("tag_name"), page))

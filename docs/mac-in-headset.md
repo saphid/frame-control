@@ -4,7 +4,8 @@ Frame Control can show any Mac window, or a whole Mac screen, as its own panel
 in the Steam Frame. You place each panel anywhere in the room with the SteamVR
 dashboard. The laser clicks and drags, the thumbstick scrolls, and you type on
 the Mac's own keyboard. Find it under **Tools → Mac in the headset** (macOS
-only).
+only). On Windows there's an experimental port,
+[PC in the headset](pc-in-headset.md).
 
 The confidence labels are the same as in [ssh.md](ssh.md).
 

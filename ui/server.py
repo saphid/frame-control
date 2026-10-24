@@ -44,10 +44,14 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
+import frame_android_import  # noqa: E402
+import frame_backup  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
 import frame_apk_versions  # noqa: E402
 import frame_catalog  # noqa: E402
+import frame_clips  # noqa: E402
+import frame_autosync  # noqa: E402
 import frame_devices  # noqa: E402
 import frame_steamgriddb
 import frame_comfort  # noqa: E402
@@ -55,10 +59,12 @@ import frame_contact  # noqa: E402
 import frame_host  # noqa: E402
 import frame_link  # noqa: E402
 import frame_macview  # noqa: E402
+import frame_pcview  # noqa: E402
 import frame_media  # noqa: E402
 import frame_panels  # noqa: E402
 import frame_quest  # noqa: E402
 import frame_meta  # noqa: E402
+import frame_power  # noqa: E402
 import frame_report  # noqa: E402
 import frame_store  # noqa: E402
 import frame_telemetry  # noqa: E402
@@ -105,6 +111,7 @@ HOST_OPTS = []
 frame_android.SSH_OPTS = SSH[1:]
 
 
+_power = frame_power.Observation()
 _route_lock = threading.Lock()
 
 
@@ -116,9 +123,10 @@ def route(alias, host_opts):
     with _route_lock:
         moved = alias != FRAME
         if moved:
+            _power.stop('Headset switched; received samples retained for the previous headset')
             reset_pad = globals().get("reset_pad_route")
             if reset_pad:
-                reset_pad()  # cancel old input before any agent can start on the new route
+                reset_pad()  # cancel queued input and both agents before publishing the new route
             frame_catalog._env.clear()  # the SteamOS and Lepton builds reports record are per headset
         FRAME = frame_android.FRAME = alias
         HOST_OPTS = list(host_opts)
@@ -162,13 +170,42 @@ def busy_thread(fn, *args):
     with _work_lock:
         _work[0] += 1
 
+    released = False
+
+    def release():
+        nonlocal released
+        with _work_lock:
+            if not released:
+                released = True
+                _work[0] -= 1
+
     def run():
         try:
             fn(*args)
         finally:
-            with _work_lock:
-                _work[0] -= 1
-    return threading.Thread(target=run, daemon=True)
+            release()
+    try:
+        worker = threading.Thread(target=run, daemon=True)
+    except Exception:
+        release()
+        raise
+    start = worker.start
+
+    def start_counted():
+        try:
+            start()
+        except Exception:
+            release()
+            raise
+    worker.start = start_counted
+    return worker
+
+
+def agent_target():
+    """Stable identity and reviewable name for a human-approved agent action."""
+    device = LINK.active_device() if LINK else {"id": "local" if LOCAL else FRAME,
+                                               "name": "This headset" if LOCAL else FRAME}
+    return {"id": device["id"], "name": device["name"]}
 
 APPID = re.compile(r"^\d{1,10}$")
 FLATPAK_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_-]*(\.[A-Za-z0-9_-]+){2,}$")
@@ -257,18 +294,13 @@ _backfill = {"running": False, "last": 0.0}
 _backfill_lock = threading.Lock()
 
 
-def backfill_art(apps=(), titles=()):
+def backfill_art(apps=(), titles=(), meant=None):
     """Apply art Frame Control couldn't at install time (Steam wasn't running), once Steam is up.
 
     Only entries marked art_pending at install; it fills empty Steam slots and never replaces art or
     names the user may have customised. Runs in the background, at most once every five minutes."""
     pkgs = [a["package"] for a in apps if a.get("art_pending")]
     gids = [t["id"] for t in titles if t.get("art_pending")]
-    with _backfill_lock:
-        if not (pkgs or gids) or _backfill["running"] or time.time() - _backfill["last"] < 300:
-            return False
-        _backfill.update(running=True, last=time.time())
-
     def run():
         try:
             frame_android.shortcut_tool("list")  # Steam isn't up: try again on a later listing
@@ -283,7 +315,20 @@ def backfill_art(apps=(), titles=()):
         finally:
             with _backfill_lock:
                 _backfill["running"] = False
-    threading.Thread(target=run, daemon=True).start()
+    # Listing callers hold working() until this counted worker is registered.
+    # Other callers may supply the identity captured with their listing.
+    with working(meant):
+        with _backfill_lock:
+            if not (pkgs or gids) or _backfill["running"] or time.time() - _backfill["last"] < 300:
+                return False
+            previous = dict(_backfill)
+            _backfill.update(running=True, last=time.time())
+        try:
+            busy_thread(run).start()
+        except Exception:
+            with _backfill_lock:
+                _backfill.update(previous)
+            raise
     return True
 
 
@@ -416,22 +461,26 @@ def ensure_master():
         LINK.ensure()
 
 
-def ssh(remote, *, stdin=None, timeout=30, text=True):
-    route_gen = LINK.gen if LINK else None  # which headset this command is for
+def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
+    # Long-lived helper delivery/cleanup owns an immutable command prefix. It
+    # must not reconnect through the currently selected headset after a switch.
+    route_gen = LINK.gen if LINK and route is None else None
+    alias = route[-1] if route is not None else FRAME
     try:
-        ensure_master()
+        if route is None:
+            ensure_master()
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = frame_host.run_ssh([*SSH, FRAME, remote], capture_output=True, **feed,
+        r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], capture_output=True, **feed,
                                text=text, errors="replace" if text else None, timeout=timeout)
     except subprocess.TimeoutExpired:
-        raise frame_host.link_failure(Failure(f"Timed out talking to {FRAME}"))
+        raise frame_host.link_failure(Failure(f"Timed out talking to {alias}"))
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
-            return ssh(remote, stdin=stdin, timeout=timeout, text=text)
-        if r.returncode == 255 and LINK and unreachable(err):
+            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route)
+        if r.returncode == 255 and LINK and route is None and unreachable(err):
             LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
         failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
         failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
@@ -702,6 +751,125 @@ def stream_command(query):
             f"exec >&-; cat >/dev/null; kill $p 2>/dev/null; wait $p")
 
 
+# Recordings of the headset view with its sound, and Steam's own clips, saved as .mp4
+# in ~/Videos/SteamFrame (frame_clips.py has the commands and the Frame-side half).
+
+def fetch_file(remote, local):
+    """Copy one file from the Frame (a path relative to its home) to `local`."""
+    ensure_master()
+    try:
+        # Modern scp uses SFTP, so the remote path isn't parsed by a shell. -p keeps its time.
+        r = frame_host.run_ssh(["scp", "-p", *SSH[1:], f"{FRAME}:{remote}", str(local)], capture_output=True,
+                               stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
+    except subprocess.TimeoutExpired:
+        raise Failure(f"Copying {Path(remote).name} timed out")
+    if r.returncode != 0:
+        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"scp exited {r.returncode}")
+
+
+def _record_channel(command, stderr):
+    ensure_master()
+    proc = subprocess.Popen([*SSH, FRAME, command], stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=stderr)
+    _live_tunnels.add(proc)  # killed if the server stops: the Frame then finishes the file
+    return proc
+
+
+recorder = frame_clips.Recorder(_record_channel, lambda cmd, timeout: ssh(cmd, timeout=timeout), fetch_file,
+                                lambda fn: busy_thread(fn).start(), release=lambda proc: _live_tunnels.discard(proc))
+
+
+def _clips_here():
+    if LOCAL:
+        raise Failure("Recordings are saved to a computer: use Frame Control on your computer", 400)
+
+
+def record(body):
+    """{"action": "start"|"stop"}: record what the headset shows, with its sound."""
+    _clips_here()
+    action = body.get("action")
+    if action not in ("start", "stop"):
+        raise Failure("action must be start or stop", 400)
+    try:
+        return recorder.start() if action == "start" else recorder.stop()
+    except frame_clips.ClipError as e:
+        raise Failure(str(e), e.status)
+
+
+def _clips_frame(args, timeout):
+    return steam_frame(*args, timeout=timeout, script="frame_clips.py")
+
+
+def list_clips():
+    _clips_here()
+    try:
+        return frame_clips.list_clips(_clips_frame)
+    except frame_clips.ClipError as e:
+        raise Failure(str(e), e.status)
+
+
+def export_clip(body):
+    """{"id"}: stitch one of Steam's recordings on the Frame and copy the .mp4 here (a job)."""
+    _clips_here()
+    clip_id = body.get("id")
+    name = frame_clips.export_name(clip_id)  # ValueError, so 400, for a bad id
+
+    def work():
+        try:
+            return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                           fetch_file)
+        except frame_clips.ClipError as e:
+            raise Failure(str(e), e.status)
+    return start_job(f"Export {name}", work)
+
+
+# Copying new screenshots and clips here on their own (frame_autosync.py). Each copy
+# counts as work on the headset it was listed on, so a switch can't send it elsewhere.
+
+def _sync_device():
+    if not LINK or LINK.snapshot().get("phase") != "connected":
+        return None
+    return LINK.active_device().get("id")
+
+
+def _sync_shots(device, ids):
+    with working(device):
+        return save_shots({"ids": ids})
+
+
+def _sync_clip(device, clip_id):
+    with working(device):
+        return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                       fetch_file)
+
+
+def _sync_list(listing):
+    def run():
+        with working(_sync_device()):
+            return listing()
+    return run
+
+
+_stop_sync = threading.Event()
+autosync = frame_autosync.AutoSync(_sync_list(list_shots), _sync_shots, _sync_list(list_clips), _sync_clip,
+                                   _sync_device, lambda: _work[0] > 0, offline=lambda e: unreachable(str(e)),
+                                   shots_folder=SHOTS_DIR, clips_folder=frame_clips.VIDEOS_DIR)
+
+
+def auto_sync(body):
+    """{"action": "settings", "screenshots", "clips"} | {"action": "now"} | {"action": "resume"}."""
+    _clips_here()
+    action = body.get("action")
+    if action == "settings":
+        return autosync.update({k: body[k] for k in ("screenshots", "clips") if isinstance(body.get(k), bool)})
+    if action == "now":
+        if not _sync_device():
+            raise Failure("Connect a headset first", 409)
+        return dict(autosync.copy_all(), message="Copying everything that isn't on this computer yet…")
+    if action == "resume":
+        return dict(autosync.resume(), message="Copying again")
+    raise Failure("action must be settings, now or resume", 400)
+
+
 def launch(body):
     appid = str(body.get("appid", ""))
     if not APPID.match(appid):
@@ -710,12 +878,12 @@ def launch(body):
     return {"message": f"Launching {appid}"}
 
 
-def steam_frame(*args, timeout=40, script="frame_steam.py"):
+def steam_frame(*args, timeout=40, script="frame_steam.py", source=None):
     """Run frame_steam.py (it drives the Steam client), or another on-Frame
     helper with the same JSON contract, on the Frame and return its JSON."""
     try:
         out = ssh("python3 - " + " ".join(map(shlex.quote, args)),
-                  stdin=(HERE / script).read_text(), timeout=timeout)
+                  stdin=source or (HERE / script).read_text(), timeout=timeout)
     except Failure as e:
         # The helper prints {"error": ...} on stdout when it fails, but ssh()
         # reports stderr instead if there was any, so look in both.
@@ -726,6 +894,43 @@ def steam_frame(*args, timeout=40, script="frame_steam.py"):
                 continue
         raise
     return json.loads(out)
+
+
+def running_frame(*args, timeout=40):
+    """frame_running.py on the Frame, with frame_steam.py (its DevTools client) as a module."""
+    source = ("import sys, types\nm = types.ModuleType('frame_steam'); sys.modules['frame_steam'] = m\n"
+              f"exec({(HERE / 'frame_steam.py').read_text()!r}, m.__dict__)\n" + (HERE / "frame_running.py").read_text())
+    return steam_frame(*args, timeout=timeout, source=source)
+
+
+def running_games():
+    games = running_frame("list")["running"]
+    return {"running": games, "message": None if games else "Nothing is running on the Frame"}
+
+
+def force_quit(body):
+    """Quit a running game: Steam's own terminate, then its processes (frame_running.py).
+    An Android app's Lepton container is stopped the way the Apps tab's Stop does."""
+    appid = str(body.get("appid", ""))
+    if body.get("action") != "quit":
+        raise Failure("action must be quit", 400)
+    if not APPID.match(appid):
+        raise Failure("bad appid", 400)
+    app = next((a for a in running_frame("list")["running"] if str(a.get("appid")) == appid), None)
+    if not app:
+        raise Failure("That game isn't running any more", 409)
+    stopped = False
+    if app.get("kind") == "android" and app.get("package"):
+        ensure_master()
+        try:
+            frame_android.stop(app["package"])
+            stopped = True
+        except frame_android.FrameError:
+            pass  # the process fallback below still runs
+    res = running_frame("quit", appid, timeout=60)
+    if res.get("method") == "gone":
+        res["message"] = f"{'Stopped' if stopped else 'Quit'} {app['name']}"
+    return dict(res, appid=int(appid), name=app["name"])
 
 
 def steam(body):
@@ -812,20 +1017,22 @@ def set_volume(body):
     return {"message": "Volume updated"}
 
 
-# Runs on the Frame, clipboard text on stdin. Verified 2026-09-25 (SteamOS 0.3.0
-# vr, build 20260922): the headset desktop is a nested Plasma Wayland session
-# inside gamescope with its own D-Bus bus, and wl-copy/xclip are not installed.
-# Klipper (org.kde.klipper, served by plasmashell) is reachable with qdbus6, so
-# borrow plasmashell's bus address. Same as scripts/paste-to-frame.sh.
-PASTE = r"""set -u
-text=$(cat; printf x); text=${text%x}
-pid=$(pgrep -u "$(id -u)" -x plasmashell | head -n 1)
+# The headset desktop's session bus. Verified 2026-09-25 (SteamOS 0.3.0 vr, build
+# 20260922): the headset desktop is a nested Plasma Wayland session inside
+# gamescope with its own D-Bus bus, and wl-copy/xclip are not installed. Klipper
+# (org.kde.klipper, served by plasmashell) is reachable with qdbus6, so borrow
+# plasmashell's bus address. Same as scripts/paste-to-frame.sh.
+DESKTOP_BUS = r"""pid=$(pgrep -u "$(id -u)" -x plasmashell | head -n 1)
 if [ -z "$pid" ]; then
   echo "The headset's desktop isn't open (plasmashell is not running). Open the desktop in the headset, then try again." >&2
   exit 2
 fi
 bus=$(tr '\0' '\n' < "/proc/$pid/environ" | sed -n 's/^DBUS_SESSION_BUS_ADDRESS=//p')
-if DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
+"""
+# Runs on the Frame, clipboard text on stdin.
+PASTE = r"""set -u
+text=$(cat; printf x); text=${text%x}
+""" + DESKTOP_BUS + r"""if DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
      org.kde.klipper.klipper.setClipboardContents "$text" >/dev/null; then
   echo "copied via Klipper (${#text} chars)"
 else
@@ -833,12 +1040,77 @@ else
   exit 2
 fi
 """
-DESKTOP_CLOSED = "plasmashell is not running"  # what PASTE says when the headset's desktop isn't open
+DESKTOP_CLOSED = "plasmashell is not running"  # what PASTE and COPY say when the headset's desktop isn't open
 # base64 keeps the script intact through every local shell's quoting rules.
 PASTE_CMD = 'bash -c "$(echo %s | base64 -d)"' % base64.b64encode(PASTE.encode()).decode()
 
+# The other way: Klipper's getClipboardContents, printed by qdbus6 with a newline
+# after it, sent back as base64 so no shell or console encoding touches it.
+# Not tested on a headset: the method is Klipper's, the same interface PASTE uses.
+CLIPBOARD_LIMIT = 1_000_000  # bytes of UTF-8, about a 500-page book
+CLIPBOARD_TOO_BIG = "too much to copy"
+COPY = r"""set -u
+""" + DESKTOP_BUS + r"""out=$(mktemp) || exit 2
+trap 'rm -f "$out"' EXIT
+if ! DBUS_SESSION_BUS_ADDRESS=$bus qdbus6 org.kde.klipper /klipper \
+     org.kde.klipper.klipper.getClipboardContents >"$out"; then
+  echo "Klipper call failed (bus: ${bus:-none})" >&2
+  exit 2
+fi
+if [ "$(wc -c <"$out")" -gt %d ]; then
+  echo "The headset's clipboard holds %s (over 1 MB). Copy less, or send it as a file." >&2
+  exit 3
+fi
+base64 -w 0 <"$out"
+""" % (CLIPBOARD_LIMIT + 1, CLIPBOARD_TOO_BIG)
+COPY_CMD = 'bash -c "$(echo %s | base64 -d)"' % base64.b64encode(COPY.encode()).decode()
+# Klipper's text for an image it holds, e.g. "▨ 640x480 32bpp" (HistoryImageItem::text in
+# Klipper's source; not seen on a headset).
+KLIPPER_IMAGE = re.compile(r"▨ \d+x\d+ \d+bpp")
+CLIPBOARD_EMPTY = "The headset's clipboard is empty"
+
+
+def desktop_failure(e):
+    """The headset's desktop being closed is the person's to change, not a fault: a 409 isn't reported as one."""
+    if DESKTOP_CLOSED in str(e):
+        return Failure(str(e), 409)
+    if CLIPBOARD_TOO_BIG in str(e):
+        return Failure(str(e), 413)
+    return None
+
+
+def headset_clipboard():
+    """The text on the headset desktop's clipboard. Never logged: it can hold anything."""
+    try:
+        out = ssh(COPY_CMD, timeout=30)
+    except Failure as e:
+        raise desktop_failure(e) or e from None
+    try:
+        text = base64.b64decode(out.strip(), validate=True).decode("utf-8")
+    except (ValueError, UnicodeDecodeError):
+        raise Failure("The headset's clipboard couldn't be read as text", 502) from None
+    text = text[:-1] if text.endswith("\n") else text  # qdbus6's newline, not the clipboard's
+    if KLIPPER_IMAGE.fullmatch(text):
+        raise Failure("The headset's clipboard holds an image. Only text can be copied.", 400)
+    if not text:
+        raise Failure(CLIPBOARD_EMPTY + " (or holds something other than text)", 400)
+    return text
+
 
 def clipboard(body):
+    if body.get("read") is True:
+        # The page puts it on the clipboard where it runs (the app, or the iPhone).
+        text = headset_clipboard()
+        return {"text": text, "message": f"Copied {len(text):,} characters from the headset's clipboard"}
+    if body.get("toComputer") is True:
+        if LOCAL:
+            raise Failure("This server runs on the headset: copy from the Frame Control app instead", 400)
+        text = headset_clipboard()
+        try:
+            frame_host.set_clipboard_text(text)
+        except frame_host.HostError as e:
+            raise Failure(str(e), 500)
+        return {"message": f"Copied {len(text):,} characters from the headset to this computer's clipboard"}
     if body.get("fromMac") or body.get("fromComputer"):
         try:
             text = frame_host.clipboard_text()
@@ -853,10 +1125,7 @@ def clipboard(body):
     try:
         return {"message": ssh(PASTE_CMD, stdin=text, timeout=30).strip()}
     except Failure as e:
-        if DESKTOP_CLOSED in str(e):
-            # The headset's state, for the person to change, not a fault: a 409 isn't reported as one.
-            raise Failure(str(e), 409) from None
-        raise
+        raise desktop_failure(e) or e from None
 
 
 # ---- keyboard and pointer (KDE Connect on the Frame, see frame_input_agent.py) ----
@@ -965,6 +1234,18 @@ class InputAgent:
         self.packages = kdeconnect_packages() if packages is None else packages
         # generation counts stop()s; launching is the generation a launch is under way for.
         self.status, self.launching, self.generation = {"state": "off"}, None, 0
+        # Each launch thread retains its owner through delivery, retry and late
+        # cleanup, even when a new generation starts concurrently.
+        self._launch_local = threading.local()
+
+    def delivery_ssh(self, command, **kwargs):
+        context = getattr(self._launch_local, "context", None)
+        if context:
+            with self.lock:
+                if self.generation != context[0]:
+                    raise Failure("stopped")
+            return ssh(command, route=context[1], **kwargs)
+        return ssh(command, **kwargs)
 
     def command(self, folder=""):
         code = base64.b64encode(self.source.read_bytes()).decode()
@@ -987,14 +1268,14 @@ class InputAgent:
             return ""  # nothing to copy (the agent says so if it needed them)
         if not force:
             # Bytes, so Windows doesn't turn the stamp's line ends into CRLF.
-            have = ssh(f"{{ test -x /usr/lib/kdeconnectd || cmp -s - {KDECONNECT_HOME}/root/.frame-control-packages; }}"
+            have = self.delivery_ssh(f"{{ test -x /usr/lib/kdeconnectd || cmp -s - {KDECONNECT_HOME}/root/.frame-control-packages; }}"
                        " && echo yes || true", stdin=kdeconnect_stamp(self.packages).encode(), text=False, timeout=20)
             if have.strip() == b"yes":
                 return ""
         # A folder of its own: a cancelled start's agent may still be cleaning up another.
         folder = f"{KDECONNECT_HOME}/incoming/{secrets.token_hex(8)}"
-        ssh(f"mkdir -p {folder}", timeout=20)
         try:
+            self.delivery_ssh(f"mkdir -p {folder}", timeout=20)
             for name, sha in self.packages:
                 path = KDECONNECT / "packages" / name
                 if not path.is_file() or file_sha256(path) != sha:
@@ -1002,7 +1283,7 @@ class InputAgent:
                                   " (a build runs app/build/fetch-deps.js to add it)", 500)
                 report(f"Copying KDE Connect to the Frame ({name.rsplit('-', 3)[0]})")
                 quoted = shlex.quote(name)
-                ssh(f"cd {folder} && cat > {quoted}.part && mv {quoted}.part {quoted}",
+                self.delivery_ssh(f"cd {folder} && cat > {quoted}.part && mv {quoted}.part {quoted}",
                     stdin=path.read_bytes(), text=False, timeout=600)
         except (Failure, OSError):
             self.discard(folder)  # a partial copy is no use to anyone
@@ -1014,18 +1295,35 @@ class InputAgent:
         folder = folder.removeprefix("~/")
         if folder.startswith(f"{KDECONNECT_HOME}/incoming/") and not LOCAL:
             try:
-                ssh(f"rm -rf {folder}", timeout=20)
+                context = getattr(self._launch_local, "context", None)
+                ssh(f"rm -rf {folder}", timeout=20, **({"route": context[1]} if context else {}))
             except (Failure, OSError):
                 pass  # never let tidying up get in the way of reporting and retrying
 
     def start(self):
-        with self.lock:
+        with _route_lock, self.lock:
             if self.launching == self.generation or (self.proc and self.proc.poll() is None):
                 return
             # (A launch from before a stop() may still be finishing; it ends itself.)
             self.launching, self.status = self.generation, {"state": "starting"}
             generation = self.generation
-        threading.Thread(target=self._launch, args=(generation,), daemon=True).start()
+            route = tuple([*SSH, FRAME])
+
+        def run():
+            self._launch_local.context = (generation, route)
+            try:
+                self._launch(generation)
+            finally:
+                del self._launch_local.context
+        try:
+            threading.Thread(target=run, daemon=True).start()
+        except Exception:
+            with self.lock:
+                if self.launching == generation:
+                    self.launching = None
+                if self.generation == generation:
+                    self.status = {"state": "error", "message": "Couldn't start the input worker"}
+            raise
 
     def _launch(self, generation, force=False):
         try:
@@ -1038,22 +1336,43 @@ class InputAgent:
                     self.status = {"state": "error", "message": f"Couldn't start the keyboard and trackpad: {e}"}
 
     def _launch_once(self, generation, force):
+        previous = getattr(self._launch_local, "context", None)
+        if previous is None:  # direct synchronous callers, including offline probes
+            with _route_lock, self.lock:
+                self._launch_local.context = (generation, tuple([*SSH, FRAME]))
+        try:
+            self._launch_routed(generation, force, self._launch_local.context[1])
+        finally:
+            if previous is None:
+                del self._launch_local.context
+
+    def _launch_routed(self, generation, force, route):
         def report(message):
             with self.lock:
                 if self.generation == generation:
                     self.status = {"state": "installing", "message": message}
         folder = ""
+        errors = None
         try:
             errors = tempfile.TemporaryFile()
+            with self.lock:
+                if self.generation != generation:
+                    raise Failure("stopped")
             ensure_master()
+            with self.lock:
+                if self.generation != generation:
+                    raise Failure("stopped")
             folder = self.deliver(report, force)
             with self.lock:
                 stopped = self.generation != generation
+                command = [*route, self.command(folder)] if not stopped else None
             if stopped:  # turned off while copying
                 raise Failure("stopped")
-            proc = subprocess.Popen([*SSH, FRAME, self.command(folder)], stdin=subprocess.PIPE,
+            proc = subprocess.Popen(command, stdin=subprocess.PIPE,
                                     stdout=subprocess.PIPE, stderr=errors)
         except (Failure, OSError) as e:
+            if errors is not None:
+                errors.close()
             self.discard(folder)  # no agent will take the copy over
             message = str(e)
             friendly = unreachable(message)
@@ -1072,8 +1391,11 @@ class InputAgent:
             if not stale:
                 self.proc = proc
         if stale:  # turned off meanwhile
-            proc.terminate()
-        wanted, heard = self._watch(proc, errors, retry=not force)
+            self.close(proc)
+        try:
+            wanted, heard = self._watch(proc, errors, retry=not force)
+        finally:
+            errors.close()
         if not heard:
             # The agent never started (or was stopped first), so it can't tidy the copy up.
             self.discard(folder)
@@ -1127,29 +1449,35 @@ class InputAgent:
         Returns the state, with "sent" saying whether the events went; if not,
         the page keeps them and sends them again once the state is "ready".
         """
-        with self.lock:
-            proc, ready = self.proc, self.status.get("state") == "ready"
-        sent = False
-        if not (proc and proc.poll() is None):
-            self.start()
-        elif ready and events:
-            try:
-                # One writer at a time: two devices sending at once mustn't tear a line.
-                with self.write_lock:
+        with self.write_lock:
+            with self.lock:
+                proc, ready = self.proc, self.status.get("state") == "ready"
+            sent = False
+            start = not (proc and proc.poll() is None)
+            if not start and ready and events:
+                try:
                     proc.stdin.write((json.dumps(events) + "\n").encode())
                     proc.stdin.flush()
-                sent = True
-            except (BrokenPipeError, OSError, ValueError):
-                pass  # _watch reports how it ended
+                    sent = True
+                except (BrokenPipeError, OSError, ValueError):
+                    pass  # _watch reports how it ended
+        # start() captures the route under _route_lock. Never acquire that lock
+        # under write_lock: route() takes them in the opposite order to stop us.
+        if start:
+            self.start()
         with self.lock:
             return {**self.status, "sent": sent}
 
     def stop(self):
-        with self.lock:
-            proc, self.proc, self.status = self.proc, None, {"state": "off"}
-            self.generation += 1
-        if proc and proc.poll() is None:
-            proc.terminate()
+        with self.write_lock:
+            with self.lock:
+                proc, self.proc, self.status = self.proc, None, {"state": "off"}
+                self.generation += 1
+            if proc and proc.poll() is None:
+                self.close(proc)
+
+    def close(self, proc):
+        proc.terminate()
 
 
 _input = InputAgent()
@@ -1446,6 +1774,14 @@ class TouchAgent(InputAgent):
     def __init__(self):
         super().__init__(source=HERE / "frame_touch.py", packages=[])
 
+    def close(self, proc):
+        # EOF lets the helper release held keys/buttons in finally, including
+        # when a start was invalidated while Popen was still returning.
+        try:
+            proc.stdin.close()
+        except (BrokenPipeError, OSError, ValueError):
+            proc.terminate()
+
     def deliver(self, report, force=False):
         return ""
 
@@ -1537,6 +1873,10 @@ def open_thing(body):
             SHOTS_DIR.mkdir(parents=True, exist_ok=True)
             frame_host.open_path(SHOTS_DIR)
             return {"message": f"Opened {SHOTS_DIR} in {frame_host.FILE_MANAGER}"}
+        if what == "videos":
+            frame_clips.VIDEOS_DIR.mkdir(parents=True, exist_ok=True)
+            frame_host.open_path(frame_clips.VIDEOS_DIR)
+            return {"message": f"Opened {frame_clips.VIDEOS_DIR} in {frame_host.FILE_MANAGER}"}
         if what == "shot":
             saved = SHOTS_DIR / shot_path(body.get("id")).rsplit("/", 1)[-1]
             if not saved.exists():
@@ -1776,6 +2116,101 @@ def apk_installed(info, meta, error, seconds):
 
 
 frame_android.install_hooks.append(apk_installed)
+
+
+# ---- Local Android backups (one APK and its OBB game data) ---------------
+
+_android_backups = {}
+_android_backups_lock = threading.Lock()
+ANDROID_BACKUP_TMP = 'frame-android-backup-'
+
+
+def _discard_android_backup(entry):
+    for folder in entry['dirs']:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def _android_backup(token=None):
+    now = time.time()
+    with _android_backups_lock:
+        stale = [_android_backups.pop(t) for t, e in list(_android_backups.items())
+                 if now - e['time'] > 3600]
+        entry = _android_backups.get(token)
+    for old in stale:
+        _discard_android_backup(old)
+    if not entry:
+        raise Failure('This import expired. Choose the backup files again.', 400)
+    device = LINK.active_device()['id'] if LINK else None
+    if entry['device'] != device:
+        raise Failure('The headset changed. Choose the backup files again for this Frame.', 409)
+    entry['time'] = now
+    return entry
+
+
+def android_backup(body):
+    action = body.get('action')
+    if action == 'begin' or (action == 'inspect' and 'paths' in body):
+        paths = body.get('paths', [])
+        if not isinstance(paths, list) or len(paths) > 100 or any(
+                not isinstance(p, str) or not os.path.isabs(p) for p in paths):
+            raise Failure('Choose local Android backup files.', 400)
+        # A dropped PC-game folder continues through the existing title importer.
+        if body.get('probe') and len(paths) == 1 and Path(paths[0]).is_dir():
+            if not any(p.suffix.lower() in ('.apk', '.obb') for p in Path(paths[0]).iterdir()):
+                return {'android': False}
+        token = secrets.token_hex(12)
+        entry = {'paths': paths, 'dirs': [], 'plan': None, 'time': time.time(),
+                 'device': LINK.active_device()['id'] if LINK else None}
+        with _android_backups_lock:
+            _android_backups[token] = entry
+        _android_backup(token)  # also expire abandoned imports
+        if action == 'begin':
+            return {'token': token}
+    else:
+        token = str(body.get('token') or '')
+        entry = _android_backup(token)
+    if action == 'inspect':
+        try:
+            paths = entry['paths']
+            bundles = [p for p in paths if Path(p).suffix.lower() in frame_android_import.ARCHIVES]
+            if bundles:
+                if len(paths) != 1:
+                    raise frame_android.FrameError('Choose one complete Android bundle, or loose APK/OBB files together.')
+                folder = tempfile.mkdtemp(prefix=f'{ANDROID_BACKUP_TMP}{os.getpid()}-')
+                entry['dirs'].append(folder)
+                paths = frame_android_import.unpack_bundle(bundles[0], folder)
+            entry['plan'] = frame_android_import.inspect(paths, discover=not entry['dirs'])
+        except (frame_android.FrameError, OSError) as error:
+            with _android_backups_lock:
+                _android_backups.pop(token, None)
+            _discard_android_backup(entry)
+            raise Failure(str(error), 400, getattr(error, 'apk', None))
+        return {'android': True, 'token': token, 'plan': frame_android_import.public(entry['plan'])}
+    if action not in ('install', 'discard'):
+        raise Failure('Unknown Android backup action.', 400)
+    if action == 'install' and not entry['plan']:
+        raise Failure('Read the backup before importing it.', 400)
+    display = body.get('display', 'auto')
+    if display not in ('auto', 'flat', 'vr'):
+        raise Failure('Invalid Android display mode.', 400)
+    with _android_backups_lock:
+        if _android_backups.pop(token, None) is not entry:
+            raise Failure('This import was already started or cancelled. Choose the files again.', 409)
+    if action == 'discard':
+        _discard_android_backup(entry)
+        return {'message': 'Import cancelled'}
+
+    def work(report):
+        try:
+            return frame_android_import.install(entry['plan'], display, report)
+        finally:
+            _discard_android_backup(entry)
+    try:
+        ensure_master()
+        return start_job('Import ' + entry['plan']['checked']['label'], work, progress=True)
+    except BaseException:
+        _discard_android_backup(entry)
+        raise
 
 
 # ---- Sideloaded titles (Linux/Windows builds as Steam Devkit Games) --------
@@ -2393,7 +2828,7 @@ def _pid_alive(pid):
 def _tmp_places():
     """Where each kind of staging folder goes, and its name before the server's PID."""
     tmp = Path(tempfile.gettempdir())
-    return [(tmp, WEB_TMP_PREFIX), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
+    return [(tmp, WEB_TMP_PREFIX), (tmp, ANDROID_BACKUP_TMP), (tmp, frame_titles.TMP_PREFIX), (tmp, frame_android.TMP_PREFIX),
             (tmp, frame_agent.TMP_PREFIX), (frame_host.cache_dir("apk-sources"), apk_fdroid.TMP_PREFIX)]
 
 
@@ -2449,6 +2884,73 @@ def panels_action(body):
     if "error" in result:
         raise Failure(result["error"], 502)
     return result
+
+
+# ---- Backup and recovery kit (frame_backup.py) ------------------------------
+#
+# Backups are folders on this computer, so they run from the computer app only. One backup
+# or restore at a time: both are long jobs the page follows through /api/job.
+
+_backup_lock = threading.Lock()
+
+
+def backup_action(body):
+    action = body.get("action")
+    if LOCAL:
+        raise Failure("Backups are made from Frame Control on your computer", 400)
+    if action in ("plan", "restore") or (action == "open" and body.get("name") is not None):
+        try:
+            frame_backup.backup_path(body.get("name"))  # refused before anything reads or runs
+        except frame_backup.BackupError as e:
+            raise Failure(str(e), 400)
+    if action in ("gamemode", "restore") and body.get("confirm") is not True:
+        raise Failure("Confirm first: this changes the headset", 400)
+    if action == "list":
+        return frame_backup.list_backups()
+    if action == "preview":
+        return frame_backup.preview()
+    if action == "plan":
+        return frame_backup.restore_plan(body.get("name"))
+    if action == "session":
+        return frame_backup.session_status()
+    if action == "gamemode":
+        return frame_backup.return_to_game_mode(confirmed=True)
+    if action == "open":
+        folder = frame_backup.backup_root()
+        if body.get("name") is not None:
+            folder = frame_backup.backup_path(body.get("name"))
+        folder.mkdir(parents=True, exist_ok=True)
+        try:
+            frame_host.open_path(folder)
+        except frame_host.HostError as e:
+            raise Failure(str(e), 500)
+        return {"message": f"Opened {folder} in {frame_host.FILE_MANAGER}"}
+    if action == "backup":
+        kinds = body.get("kinds", list(frame_backup.KINDS))
+        if not isinstance(kinds, list) or not kinds or any(k not in frame_backup.KINDS for k in kinds):
+            raise Failure("Choose what to back up", 400)
+        name = agent_target()["name"]
+        work = lambda report: frame_backup.backup(report, kinds, headset=name)  # noqa: E731
+        label = "Back up the Frame"
+    elif action == "restore":
+        name, ids = body.get("name"), body.get("parts")
+        if not isinstance(ids, list) or not ids or not all(
+                isinstance(i, str) and frame_backup.PART.fullmatch(i) for i in ids):
+            raise Failure("Choose what to restore", 400)
+        work = lambda report: frame_backup.restore(name, ids, True, report)  # noqa: E731
+        label = "Restore from backup"
+    else:
+        raise Failure("Unknown backup action", 400)
+
+    def exclusive(report):
+        if not _backup_lock.acquire(blocking=False):
+            raise Failure("A backup or restore is already running", 409)
+        try:
+            return work(report)
+        finally:
+            _backup_lock.release()
+    ensure_master()
+    return start_job(label, exclusive, progress=True)
 
 
 # ---- Our Frame-side media player -----------------------------------------
@@ -2520,12 +3022,13 @@ def push_media(path):
             "id": token + "/" + name}
 
 
-# ---- Mac in the headset (frame_macview.py) ----------------------------------
+# ---- Mac in the headset (frame_macview.py), PC in the headset (frame_pcview.py) ----
 
 # The tunnel gets its own connection: the shared master's options would win
 # over anything added after them.
-macview = frame_macview.MacView(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
-                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin, timeout=timeout),
+macview = frame_pcview.host_view(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
+                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin.encode("utf-8") if stdin is not None else None,
+                                                                           timeout=timeout, text=False).decode("utf-8", errors="replace"),
                                 FRAME, track=_live_tunnels.add)
 
 
@@ -2542,7 +3045,8 @@ def macview_state(query=None):
 
 
 def macview_action(body):
-    """{action: show|stop|permissions, src, quality, w, h}."""
+    """{action: show|stop|permissions, src, quality, w, h} | {action: enable, on}.
+    enable turns PC in the headset (Experimental, Windows only) on or off."""
     if LOCAL:
         raise Failure("Runs on your computer, not the headset.", 400)
     action = body.get("action")
@@ -2555,6 +3059,10 @@ def macview_action(body):
             return macview.stop(body.get("src") or None)
         if action == "permissions":
             return macview.request_permissions()
+        if action == "enable":
+            if not isinstance(macview, frame_pcview.PCView):
+                raise Failure("PC in the headset is only available on Windows.", 400)
+            return macview.set_enabled(body.get("on") is True)
     except frame_macview.MacViewError as e:
         raise Failure(str(e), 502)
     raise Failure("unknown action", 400)
@@ -2610,11 +3118,14 @@ def source_search(query):
     q = args.get('q', [''])[0]
     vr = args.get('vr', [''])[0]
     installable = args.get('installable', [''])[0]
-    if len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0'):
+    category, phone = args.get('category', [''])[0], args.get('phone', [''])[0]
+    if (len(q) > 500 or vr not in ('', 'true', 'false', '1', '0') or installable not in ('', 'true', 'false', '1', '0')
+            or phone not in ('', 'true', 'false', '1', '0') or len(category) > 40):
         raise Failure('Invalid search filters', 400)
     try:
         return apk_search.search(q, vr=None if not vr else vr in ('true', '1'),
-                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'))
+                                 source=args.get('source', [None])[0], installable=installable in ('true', '1'),
+                                 category=category or None, phone=phone in ('true', '1'))
     except SourceError as e:
         raise Failure(str(e), 400)
 
@@ -2679,14 +3190,37 @@ def source_manage(body):
         raise Failure(str(e), 400)
 
 
+def power_action(body):
+    action = body.get('action')
+    if LOCAL:
+        raise Failure('Power observations are available on the desktop app', 400)
+    if action == 'stop':
+        # ID prevents an old page stopping a replacement observation.
+        with _power.lock:
+            if body.get('id') != _power.id:
+                raise Failure('This observation was replaced; refresh', 409)
+            return _power.stop()
+    if action != 'start':
+        raise Failure('Unknown observation action', 400)
+    with _route_lock:
+        headset = {'alias': FRAME, 'deviceId': LINK.active_device()['id'] if LINK else None}
+        try:
+            return _power.start(body.get('preset'), tuple([*SSH, FRAME]), headset)
+        except ValueError as exc:
+            raise Failure(str(exc), 409) from exc
+
+
 POST = {
+    "/api/power": power_action,
+    "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
     "/api/input": remote_input, "/api/touch": remote_touch,
     "/api/settings/artwork": frame_steamgriddb.save_settings,
-    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
+    "/api/sources": source_manage, "/api/sources/install": source_install, "/api/android/display": android_display, "/api/android": android, "/api/quest": quest, "/api/meta": meta, "/api/queue": queue_action, "/api/titles": titles, "/api/launch": launch, "/api/running": force_quit, "/api/steam": steam, "/api/mods": mods, "/api/volume": set_volume, "/api/clipboard": clipboard,
         "/api/flatpak": flatpak, "/api/open": open_thing, "/api/shots/save": save_shots,
+        "/api/record": record, "/api/clips/export": export_clip, "/api/autosync": auto_sync,
         "/api/webinstall/check": webinstall_check, "/api/webinstall/start": webinstall_start,
         "/api/webinstall/cancel": webinstall_cancel,
         "/api/telemetry": frame_telemetry.update_settings, "/api/telemetry/event": frame_telemetry.page_event,
@@ -2858,6 +3392,21 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self.send_bytes((HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/store":
+                # The Android store as a headset panel (scripts/store-on-frame.sh).
+                self.send_bytes((HERE / "store.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/api/power":
+                self.send_json(_power.status())
+            elif path == "/api/power/report":
+                args = parse_qs(url.query)
+                try:
+                    format = args.get('format', ['html'])[0]
+                    report_id = args.get('id', [''])[0]
+                    data, mime = _power.export(report_id, format)
+                except ValueError as exc:
+                    raise Failure(str(exc), 409) from exc
+                self.send_bytes(data.encode('utf-8'), mime,
+                                headers=[('Content-Disposition', f'attachment; filename="frame-power-{report_id}.{format}"')])
             elif path == "/api/settings/artwork":
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
@@ -2904,18 +3453,25 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/apk-versions":
                 self.send_json(apk_versions(url.query))
             elif path == "/api/android":
-                ensure_master()
-                apps = frame_android.list_apps()
-                backfill_art(apps=apps)
-                self.send_json({"apps": apps})
+                with working():
+                    ensure_master()
+                    apps = frame_android.list_apps()
+                    backfill_art(apps=apps)
+                try:  # store artwork for the library's cards, from saved indexes only
+                    art = apk_search.artwork_for(apps)
+                except Exception:
+                    art = {}
+                self.send_json({"apps": [dict(a, store_art=art[a['package']]) if a.get('package') in art else a
+                                         for a in apps]})
             elif path == "/api/quest":
                 self.send_json(quest_status(url.query))
             elif path == "/api/meta":
                 self.send_json(meta_status(url.query))
             elif path == "/api/titles":
-                ensure_master()
-                titles_list = frame_titles.list_titles()
-                backfill_art(titles=titles_list)
+                with working():
+                    ensure_master()
+                    titles_list = frame_titles.list_titles()
+                    backfill_art(titles=titles_list)
                 self.send_json({"titles": titles_list})
             elif path == "/api/titles/job":
                 self.send_json(title_job(url.query))
@@ -2923,10 +3479,19 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"notices": licenses()})
             elif path == "/api/panels":
                 self.send_json(panels())
-            elif path == "/api/touch":
-                self.send_json(_touch.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_touch.status))
-            elif path == "/api/input":
-                self.send_json(_touch.send([]) if parse_qs(url.query).get("start") == ["1"] else dict(_touch.status))
+            elif path in ("/api/touch", "/api/input"):
+                agent = _touch  # both controls use gamescope; KDE Connect starts only for Unicode
+                if parse_qs(url.query).get("start") == ["1"]:
+                    # Validate and reserve before start() captures its immutable
+                    # route and schedules a worker. Status-only polls stay free.
+                    meant = self.headers.get("X-Frame-Device")
+                    if LINK and not meant:
+                        raise Failure("Control start needs the intended X-Frame-Device headset", 400)
+                    with working(meant):
+                        result = agent.send([])
+                else:
+                    result = dict(agent.status)
+                self.send_json(result)
             elif path == "/api/job":
                 self.send_json(job_status(url.query))
             elif path == "/api/queue":
@@ -2950,6 +3515,11 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_computer.py").read_text(), timeout=20)))
             elif path == "/api/status":
                 self.send_json(status({}))
+            elif path == "/api/storage":
+                with working(self.headers.get("X-Frame-Device")):
+                    self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_storage.py").read_text(), timeout=20)))
+            elif path == "/api/running":
+                self.send_json(running_games())
             elif path == "/api/steam/owned":
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":
@@ -2960,6 +3530,14 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(list_shots())
             elif path == "/api/shots/image":
                 self.send_bytes(*shot_image(url.query))
+            elif path == "/api/record":
+                _clips_here()
+                self.send_json(recorder.status())
+            elif path == "/api/clips":
+                self.send_json(list_clips())
+            elif path == "/api/autosync":
+                _clips_here()
+                self.send_json(autosync.state())
             elif path == "/api/stream":
                 self.stream_video(url.query)
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["panel"]:
@@ -3004,6 +3582,8 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length) or b"{}")
             if not isinstance(body, dict):
                 raise Failure("request body must be a JSON object", 400)
+            if path == '/api/power' and body.get('action') == 'start' and LINK and not meant:
+                raise Failure('Observation start needs the intended X-Frame-Device headset', 400)
             # Not headset work: switching headsets mustn't wait for (or refuse) these.
             with (contextlib.nullcontext() if path in NOT_HEADSET_WORK else working(meant)):
                 result = handler(body)
@@ -3118,7 +3698,14 @@ class Handler(BaseHTTPRequestHandler):
             raise Failure("empty or too-large upload", 400)
         if mode in ("apk", "apkinfo") and not name.lower().endswith(".apk"):
             raise Failure("APK install needs a .apk file", 400)
-        tmp = Path(tempfile.mkdtemp(prefix="frame-ui-"))
+        backup = None
+        if mode == 'android-backup':
+            backup = _android_backup(self.headers.get('X-Android-Backup'))
+            if (not name.lower().endswith(('.apk', '.obb', '.xapk', '.apks', '.apkm')) or '/' in name or '\\' in name
+                    or len(backup['paths']) >= 100 or any(Path(p).name == name for p in backup['paths'])):
+                raise Failure('Choose one APK and its game data, with no duplicate filenames.', 400)
+        prefix = f'{ANDROID_BACKUP_TMP}{os.getpid()}-' if backup is not None else 'frame-ui-'
+        tmp = Path(tempfile.mkdtemp(prefix=prefix))
         keep = False
         try:
             dest = tmp / name
@@ -3130,6 +3717,16 @@ class Handler(BaseHTTPRequestHandler):
                         raise Failure("upload interrupted", 400)
                     f.write(chunk)
                     remaining -= len(chunk)
+            if backup is not None:
+                with _android_backups_lock:
+                    if _android_backups.get(self.headers.get('X-Android-Backup')) is not backup:
+                        raise Failure('This import was cancelled. Choose the backup files again.', 400)
+                    backup['paths'].append(str(dest))
+                    backup['dirs'].append(str(tmp))
+                    backup['plan'] = None
+                    backup['time'] = time.time()
+                keep = True
+                return {'message': f'Read {name}', 'token': self.headers.get('X-Android-Backup')}
             if mode == "media":
                 return push_media(dest)
             if mode == "apkinfo":
@@ -3218,21 +3815,28 @@ def main():
                     help="stop cleanly when stdin closes (the app closes it on quit; "
                          "Windows has no SIGTERM to catch)")
     args = ap.parse_args()
+    global LINK, _ONE_SERVER
+    if not LOCAL and not PRIVATE:
+        # Refuse before starting daemon workers: the losing process exits through
+        # Python teardown, which can race TLS work and crash instead of exit 1.
+        _ONE_SERVER = one_server()
     httpd = LoopbackServer(("127.0.0.1", args.port), Handler)
     sweep_tmp()
+    if os.environ.get('FRAME_COMPAT_SEARCH_REPORTS') != '0':
+        apk_search.compat_reports = apk_search.ReportCache(
+            frame_compat_db.load, frame_catalog.reports.verdict, ttl=frame_compat_db.TTL).read
     threading.Thread(target=apk_search.warm, daemon=True).start()  # big indexes download before the first search
     frame_telemetry.start()
     frame_contact.start()
-    global LINK, _ONE_SERVER
     if not LOCAL:
-        if not PRIVATE:  # a private server only uses the headsets (see one_server)
-            _ONE_SERVER = one_server()
         LINK = frame_link.Link(frame_devices.Registry(), env_alias=FRAME if FRAME_FROM_ENV else None,
                                mux_base=MUX_BASE, control=CONTROL, apply=route, explain=unreachable)
         LINK.work_lock, LINK.work = _work_lock, lambda: _work[0]
         frame_report.link = LINK  # its connection summary goes in every report's diagnostics
         frame_report.start_ssh_check()  # ...with which ssh this is, found once in the background
         LINK.start()
+        if not PRIVATE:  # one worker per user, in the app's server
+            threading.Thread(target=autosync.run, args=(_stop_sync,), daemon=True).start()
     if not frame_host.WINDOWS:
         signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
     if args.exit_on_eof:
@@ -3255,6 +3859,8 @@ def main():
         # mid-cleanup would abort it and leave the SSH master running.
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        _power.shutdown()
+        _stop_sync.set()
         webinstall_shutdown()
         macview.shutdown()  # close the headset's viewers before the agent goes
         # The master was started with -N, so it stays up until told to exit.

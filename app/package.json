@@ -1,7 +1,7 @@
 {
   "name": "frame-control",
   "productName": "Frame Control",
-  "version": "0.4.7",
+  "version": "0.4.18",
   "description": "Desktop app for managing a Valve Steam Frame over SSH",
   "private": true,
   "main": "main.js",
@@ -39,6 +39,7 @@
       "preload.js",
       "install-link.js",
       "updater.js",
+      "preferences.js",
       "meta-signin.js",
       "package.json",
       "build/icon.png"
@@ -67,7 +68,9 @@
         "from": "../scripts",
         "to": "scripts",
         "filter": [
-          "*.sh"
+          "*.sh",
+          "frame_power_sample.py",
+          "frame_power_report.py"
         ]
       },
       {
@@ -197,7 +200,16 @@
         "zip"
       ],
       "icon": "build/icon.png",
-      "artifactName": "Frame-Control-win-${arch}.${ext}"
+      "artifactName": "Frame-Control-win-${arch}.${ext}",
+      "extraResources": [
+        {
+          "from": "build/desktop/${os}-${arch}",
+          "to": "desktop/bundle",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

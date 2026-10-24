@@ -31,14 +31,13 @@ struct WebShell: UIViewRepresentable {
         web.isInspectable = true
         #endif
         context.coordinator.web = web
-        web.load(URLRequest(url: url))
+        context.coordinator.load(url, reloadID: model.webReloadID)
         return web
     }
 
     func updateUIView(_ web: WKWebView, context: Context) {
-        if context.coordinator.loaded != url {
-            context.coordinator.loaded = url
-            web.load(URLRequest(url: url))
+        if context.coordinator.loaded != url || context.coordinator.reloadID != model.webReloadID {
+            context.coordinator.load(url, reloadID: model.webReloadID)
         }
         context.coordinator.deliverInstallLinks()
     }
@@ -47,16 +46,22 @@ struct WebShell: UIViewRepresentable {
     (() => {
       const call = (name, arg) => window.webkit.messageHandlers.frameApp.postMessage({ name, arg: arg ?? null });
       let installCb = null;
+      window.__frameDocumentID = crypto.randomUUID();
       window.frameApp = {
         platform: "ios",
+        preferences: {
+          read: () => call("preferencesRead"),
+          write: (key, value) => call("preferencesWrite", { key, value }),
+        },
         notify: (message, request) => call("notify", { message, request }),
         readClipboard: () => call("readClipboard"),
+        writeClipboard: (text) => call("writeClipboard", text),
         setUpConnection: () => call("setUpConnection"),
         open: (what) => call("open", what),
         saveImages: (images) => call("saveImages", images),
-        onInstallLink: (cb) => { installCb = cb; return call("installLinkReady"); },
+        onInstallLink: (cb) => { installCb = cb; return call("installLinkReady", window.__frameDocumentID); },
       };
-      window.__frameInstallLink = (req) => { if (installCb) installCb(req); };
+      window.__frameInstallLink = (req) => { if (!installCb) return false; installCb(req); return true; };
     })();
     """
 
@@ -64,7 +69,18 @@ struct WebShell: UIViewRepresentable {
         let model: AppModel
         weak var web: WKWebView?
         var loaded: URL?
-        private var installReady = false
+        private(set) var document = WebDocumentState()
+        private(set) var reloadID = 0
+        private var activeNavigation: WKNavigation?
+        private let preferences = FramePreferences()
+
+        @MainActor
+        func load(_ url: URL, reloadID: Int) {
+            loaded = url
+            self.reloadID = reloadID
+            document.resetSession()
+            activeNavigation = web?.load(URLRequest(url: url))
+        }
 
         init(model: AppModel) {
             self.model = model
@@ -118,8 +134,20 @@ struct WebShell: UIViewRepresentable {
                         send(settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional, nil)
                     }
                 }
+            case "preferencesRead":
+                replyHandler(preferences.read(), nil)
+            case "preferencesWrite":
+                guard let args = arg as? [String: Any], let key = args["key"] as? String,
+                      let value = args["value"] as? String, preferences.write(key: key, value: value) else {
+                    return replyHandler(nil, "Invalid preference")
+                }
+                replyHandler(true, nil)
             case "readClipboard":
                 replyHandler(UIPasteboard.general.string ?? "", nil)
+            case "writeClipboard":
+                guard let text = arg as? String else { return replyHandler(nil, "Expected text") }
+                UIPasteboard.general.string = text
+                replyHandler(true, nil)
             case "setUpConnection":
                 model.showSetup()
                 replyHandler(nil, nil)
@@ -135,9 +163,20 @@ struct WebShell: UIViewRepresentable {
                 share(images)
                 replyHandler(["message": "Choose Save Image to keep \(images.count == 1 ? "it" : "them") in Photos"], nil)
             case "installLinkReady":
-                installReady = true
-                deliverInstallLinks()
-                replyHandler(nil, nil)
+                guard let id = arg as? String, let web,
+                      let data = try? JSONSerialization.data(withJSONObject: id, options: .fragmentsAllowed),
+                      let json = String(data: data, encoding: .utf8) else {
+                    return replyHandler(nil, "Invalid document")
+                }
+                let generation = document.generation
+                web.evaluateJavaScript("window.__frameDocumentID === \(json)") { [weak self] result, error in
+                    guard let self else { return replyHandler(nil, "Page closed") }
+                    if error == nil, result as? Bool == true {
+                        self.document.ready(id, generation: generation)
+                        self.deliverInstallLinks()
+                    }
+                    replyHandler(nil, nil)
+                }
             default:
                 replyHandler(nil, "unknown request \(name)")
             }
@@ -145,13 +184,23 @@ struct WebShell: UIViewRepresentable {
 
         @MainActor
         func deliverInstallLinks() {
-            guard installReady, let web, !model.pendingInstallLinks.isEmpty else { return }
-            let links = model.pendingInstallLinks
-            model.pendingInstallLinks = []
-            for link in links {
-                let req = ["kind": link.kind.rawValue, "target": link.target]
-                guard let json = try? JSONSerialization.data(withJSONObject: req), let text = String(data: json, encoding: .utf8) else { continue }
-                web.evaluateJavaScript("window.__frameInstallLink(\(text))")
+            guard let web, let loaded, model.phase == .ready(loaded), reloadID == model.webReloadID,
+                  let link = model.pendingInstallLinks.first, let delivery = document.beginDelivery() else { return }
+            let req = ["kind": link.kind.rawValue, "target": link.target]
+            guard let json = try? JSONSerialization.data(withJSONObject: req),
+                  let text = String(data: json, encoding: .utf8),
+                  let idData = try? JSONSerialization.data(withJSONObject: delivery.documentID, options: .fragmentsAllowed),
+                  let id = String(data: idData, encoding: .utf8) else {
+                _ = document.finishDelivery(delivery, acknowledged: false)
+                return
+            }
+            // Keep the head queued until the live document confirms its callback ran.
+            web.evaluateJavaScript("window.__frameDocumentID === \(id) && window.__frameInstallLink(\(text)) === true") { [weak self] result, error in
+                guard let self, let loaded = self.loaded, self.model.phase == .ready(loaded),
+                      self.reloadID == self.model.webReloadID else { return }
+                guard self.document.finishDelivery(delivery, acknowledged: error == nil && result as? Bool == true) else { return }
+                if self.model.pendingInstallLinks.first == link { self.model.pendingInstallLinks.removeFirst() }
+                self.deliverInstallLinks()
             }
         }
 
@@ -186,13 +235,55 @@ struct WebShell: UIViewRepresentable {
             (root.presentedViewController ?? root).present(sheet, animated: true)
         }
 
-        #if DEBUG
+        // A new document cannot receive links using the previous page's callback.
+        @MainActor
+        func webView(_ webView: WKWebView, didStartProvisionalNavigation navigation: WKNavigation!) {
+            activeNavigation = navigation
+            document.beginDocument()
+        }
+
+        @MainActor
+        func webViewWebContentProcessDidTerminate(_ webView: WKWebView) {
+            recover(webView, message: "The app page stopped responding. Try loading it again, or change headset.")
+        }
+
+        @MainActor
+        func webView(_ webView: WKWebView, didFailProvisionalNavigation navigation: WKNavigation!, withError error: Error) {
+            navigationFailed(webView, navigation: navigation, error: error)
+        }
+
+        @MainActor
+        func webView(_ webView: WKWebView, didFail navigation: WKNavigation!, withError error: Error) {
+            navigationFailed(webView, navigation: navigation, error: error)
+        }
+
+        @MainActor
+        private func navigationFailed(_ webView: WKWebView, navigation: WKNavigation?, error: Error) {
+            guard navigation === activeNavigation, (error as NSError).code != NSURLErrorCancelled else { return }
+            recover(webView, message: "Couldn't load the app page. \(error.localizedDescription)")
+        }
+
+        @MainActor
+        private func recover(_ webView: WKWebView, message: String) {
+            guard let loaded, model.phase == .ready(loaded), reloadID == model.webReloadID,
+                  model.webRecoveryMessage == nil else { return }
+            activeNavigation = nil
+            if document.shouldReloadAfterFailure() {
+                // Reload the original authenticated URL, including its session key.
+                activeNavigation = webView.load(URLRequest(url: loaded))
+            } else {
+                model.webContentFailed(at: loaded, message: message)
+            }
+        }
+
         /// Simulator test hook: FRAME_TEST_JS runs in the page once it has loaded.
+        @MainActor
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            #if DEBUG
             guard let js = ProcessInfo.processInfo.environment["FRAME_TEST_JS"] else { return }
             DispatchQueue.main.asyncAfter(deadline: .now() + 4) { webView.evaluateJavaScript(js) }
+            #endif
         }
-        #endif
 
         // MARK: navigation: the app's page stays here; other sites open in Safari
 

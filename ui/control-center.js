@@ -16,11 +16,11 @@
       description:'Set the default headset output volume or mute it. Changes apply only when you choose Apply or Mute.',
       keywords:'sound speakers headphones loud quiet', special:'audio'},
     {id:'health', category:'device', icon:'pulse', title:'Battery & thermal health', kind:'read', label:'Read-only metrics',
-      description:'Inspect charge, signed battery power, charger capability, battery temperature and health. Heat warnings use the kernel’s own hot and critical trip points.',
-      keywords:'battery charging charger charge time estimate remaining power watts usb health heat temperature thermal sensor', special:'health', links:[['#comfort','Configure battery & heat alerts']]},
+      description:'Inspect charge, signed battery power, charger readings, battery temperature, health and optional capacity / cycle readings. Heat warnings use the kernel’s own hot and critical trip points.',
+      keywords:'battery charging charger charge time estimate remaining power watts usb health cycles capacity wear heat temperature thermal sensor', special:'health', links:[['#comfort','Configure battery & heat alerts']]},
     {id:'storage', category:'device', icon:'files', title:'Storage & memory', kind:'read', label:'Read-only metrics',
       description:'Check free user and system storage plus available RAM. Manage installed apps in their existing libraries, or use SFTP for files.',
-      keywords:'disk space root home free total ram memory capacity cleanup usage storage', special:'storage', links:[['#library','Installed games'],['#apps','Linux apps'],['#power','SFTP & remote tools']]},
+      keywords:'disk space root home free total ram memory capacity cleanup usage storage', special:'storage', links:[['#library','Installed games'],['#linuxApps','Linux apps'],['#power','SFTP & remote tools']]},
     {id:'microphone', category:'device', icon:'audio', title:'Microphone & audio routing', kind:'headset', label:'In the headset',
       description:'Frame Control controls the default output volume only. Microphone mute, input gain, output selection, balance and per-app mixers have no verified API here.',
       keywords:'mic input microphone audio sink output device gain mute eq equalizer spatial audio balance headphones',
@@ -54,6 +54,9 @@
     {id:'steam', category:'apps', icon:'game', title:'Steam library', kind:'flow', label:'Existing controls',
       description:'Browse owned games and Frame ratings, install with progress, or launch an installed game. Purchases and license prompts use Steam.',
       keywords:'games download install store owned compatibility rating verified proton', links:[['#library','Installed games'],['#getgames','Library & store']]},
+    {id:'forcequit', category:'apps', icon:'power', title:'Force quit a game', kind:'control', label:'Available here',
+      description:'See what’s running on the Frame and quit a game or app that has stopped responding. Steam is asked first; if the game stays open, its own processes are stopped. Unsaved progress is lost.',
+      keywords:'hang hung frozen freeze crash stuck kill close stop end task running not responding exit', special:'forcequit'},
     {id:'android', category:'apps', icon:'apps', title:'Android apps', kind:'flow', label:'Existing controls',
       description:'Discover apps, manage Lepton instances, and launch, stop, test or remove installed apps. View compatibility reports before installing.',
       keywords:'apk fdroid lepton application sideload sources repository reports', links:[['#appStore','Discover apps'],['#androidLibrary','Manage installed apps']]},
@@ -68,16 +71,16 @@
     {id:'sideload', category:'apps', icon:'game', title:'Sideloaded games', kind:'flow', label:'Existing controls',
       description:'Send a game folder, ZIP or executable. Frame Control selects Proton or the Linux runtime and adds a Steam library entry.',
       keywords:'windows exe zip linux devkit runtime shortcuts launch remove', links:[['#sideloaded','Manage titles'],['#transfer','Send a game']]},
-    {id:'files', category:'apps', icon:'files', title:'Files & clipboard', kind:'flow', label:'Existing controls',
-      description:'Send files to ~/Downloads, or send text to the Frame’s clipboard. Clipboard transfer needs the desktop panel open.',
-      keywords:'upload transfer downloads paste copy text sftp storage', links:[['#transfer','Send files & text']]},
+    {id:'files', category:'apps', icon:'files', title:'Send files', kind:'flow', label:'Existing controls',
+      description:'Send files to ~/Downloads, or a game to the Steam library. Clipboard text, both ways, is in Type on the headset.',
+      keywords:'upload transfer downloads sftp storage', links:[['#transfer','Send files'],['#pad','Clipboard']]},
     {id:'media', category:'apps', icon:'play', title:'Video & stereo photos', kind:'flow', label:'Preview feature',
       description:'Send and play H.264/H.265 video, SBS/OU photos or small splats with the built-in player. Choose a layout and theatre surround.',
       keywords:'movie photo sbs ou 3d splat gaussian theatre media player', links:[['#media','Open media player']],
       guidance:'Seeking, subtitles, native HEIC/MPO and large splat scenes are not supported yet.'},
     {id:'flatpak', category:'apps', icon:'apps', title:'Linux desktop apps', kind:'flow', label:'Existing controls',
       description:'Install user Flatpaks by Flathub ID, choose quick picks like VLC and Moonlight, and manage installed apps.',
-      keywords:'flatpak firefox vlc remmina moonlight flathub install remove', links:[['#apps','Manage Linux apps']]},
+      keywords:'flatpak firefox vlc remmina moonlight flathub install remove', links:[['#linuxApps','Manage Linux apps']]},
     {id:'connection', category:'network', icon:'network', title:'Headsets & addresses', kind:'flow', label:'Existing controls',
       description:'Manage headsets, LAN, USB-C, mDNS and Tailscale addresses. Inspect connection attempts and choose the device you want to control.',
       keywords:'wifi wi-fi network ip ssh pairing keys discovery alias tailscale usb offline reconnect', links:[['#devices','Manage headsets','desktop'],['#connection','Connection details']],
@@ -85,9 +88,11 @@
     {id:'remote', category:'network', icon:'display', title:'Remote access', kind:'flow', label:'Existing controls',
       description:'Open SSH, SFTP, Steam Link or remote desktop using the host’s existing tools. Developer Mode enables headset SSH and xrdp.',
       keywords:'terminal shell remote desktop rdp xrdp streaming steam link sftp', links:[['#power','Open remote tools']]},
-    {id:'input', category:'network', icon:'keyboard', title:'Keyboard & trackpad', kind:'flow', label:'Existing controls',
-      description:'Type and point in the Frame’s apps with KDE Connect, or use Control on the live panel view. First use sets up the input helper.',
-      keywords:'mouse pointer keyboard trackpad touch click kde input', links:[['#pad','Open keyboard & trackpad'],['#view','Panel control']]},
+    {id:'input', category:'network', icon:'keyboard', title:'Type on the headset', kind:'flow', label:'Existing controls',
+      description:'Type and point in the Frame’s apps with this computer’s keyboard and mouse, and copy text both ways between the clipboards. Press T anywhere to open it.',
+      keywords:'mouse pointer keyboard trackpad touch click kde connect input type typing text clipboard copy paste send',
+      links:[['#pad','Type on the headset'],['#view','Panel control']],
+      guidance:'The keyboard sets up KDE Connect on the Frame the first time. The clipboard needs the desktop panel open in the headset.'},
     {id:'mac', category:'network', icon:'display', title:'Mac in the headset', kind:'flow', label:'macOS only', platform:'mac',
       description:'Stream Mac screens or individual windows into headset panels. Choose quality and give each window its own display.',
       keywords:'macos mac window screen sharing stream quality sharp balanced light permissions', links:[['#macview','Configure Mac streaming']],
@@ -129,6 +134,8 @@
       categories.find(([id])=>id === item.category)?.[1]].join(' ').toLowerCase();
     return (category === 'all' || item.category === category) && query.toLowerCase().trim().split(/\s+/).every(word => text.includes(word));
   }
+  const esc = value => String(value).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
+  const KINDS = {steam:'Steam game', devkit:'Sideloaded game', shortcut:'Non-Steam shortcut', android:'Android app'};
   const number = (value, suffix = '', digits = 0) => Number.isFinite(value) ? value.toLocaleString(undefined, {maximumFractionDigits:digits}) + suffix : 'Unavailable';
   const gib = value => Number.isFinite(value) ? number(value / 1073741824, ' GiB', 1) : 'Unavailable';
   const duration = seconds => Number.isFinite(seconds) && seconds >= 0 ? seconds < 3600 ? `${Math.floor(seconds / 60)} min` : `${Math.floor(seconds / 3600)} h ${Math.floor(seconds % 3600 / 60)} min` : 'Unavailable';
@@ -137,9 +144,9 @@
     const capacity = b.percent;
     const idle = !!s.power && Number.isFinite(b.watts) && Math.abs(b.watts) < .5;
     const charging = b.status === 'Charging';
-    const full = b.status === 'Full' || (!!s.power && capacity >= 100);
+    const full = b.status === 'Full';
     const batteryState = !sample ? 'Connect to read charge and power' : !s.battery ? 'Battery sensor unavailable' :
-      full ? 'Fully charged' : charging ? 'Charging' : idle ? 'Plugged in · not charging' : s.power ? 'Plugged in · on battery' : 'On battery';
+      full ? 'Fully charged' : charging ? 'Charging' : b.status === 'Not charging' || idle ? (s.power ? 'Plugged in · not charging' : 'Not charging') : b.status === 'Discharging' ? (s.power ? 'Plugged in · on battery' : 'On battery') : 'Charging state unavailable';
     return {
       battery:number(capacity, '%'), batteryDetail:batteryState,
       storage:h ? gib(h.free) : 'Unavailable', storageDetail:h ? `${gib(h.total)} total · user storage` : 'User storage unavailable',
@@ -148,8 +155,11 @@
       rootFree:gib(s.disk?.root?.free), rootTotal:gib(s.disk?.root?.total), memoryAvailable:gib(m?.available),
       fps:number(p.compositorFps, '', 1), fpsDetail:'Compositor FPS · not game FPS',
       power:number(b.watts, ' W', 1), charger:s.power ? `${s.power.type || 'Connected'} · ${number(s.power.watts, ' W', 1)}` : sample ? 'No charger reported' : 'Unavailable',
-      batteryTemp:number(b.tempC, ' °C', 1), batteryHealth:b.health || 'Unavailable',
-      estimate:charging ? (b.timeToFull > 0 ? `${duration(b.timeToFull)} to full` : 'Unavailable') : !full && !idle && b.timeToEmpty > 0 && b.timeToEmpty < 86400 ? `${duration(b.timeToEmpty)} remaining` : 'Unavailable',
+      batteryTemp:number(b.tempC, ' °C', 1), batteryHealth:b.health && b.health !== 'Unknown' ? b.health : 'Unavailable',
+      batterySource:b.source || 'Unavailable', cycles:number(b.cycleCount),
+      fullCapacity:number(b.fullMah, ' mAh', 1), designCapacity:number(b.designMah, ' mAh', 1),
+      capacityHealth:number(b.capacityHealthPercent, '%', 1),
+      estimate:charging ? (b.timeToFull > 0 ? `${duration(b.timeToFull)} to full` : 'Unavailable') : b.status === 'Discharging' && !idle && b.timeToEmpty > 0 && b.timeToEmpty < 86400 ? `${duration(b.timeToEmpty)} remaining` : 'Unavailable',
       wifi:s.wifi?.ssid || 'Unavailable', signal:number(s.wifi?.signal, '%'), ip:s.ip || 'Unavailable',
       uptime:duration(s.uptime), os:s.os?.version || 'Unavailable', build:s.os?.build || 'Unavailable',
       temperature:number(s.temp, ' °C', 1), cpu:number(p.cpuPercent, '%', 1), gpu:number(p.gpuMHz, ' MHz', 1),
@@ -160,9 +170,30 @@
   // Strict validation and captured device identity apply even if a stale enabled
   // button is clicked during a disconnect, headset switch, or pending request.
   function createController({api, getContext}) {
-    let busy = false;
+    let busy = false, quitting = false;
+    const connected = message => {
+      const context = getContext();
+      if (context.online !== true) throw new Error(message);
+      return context;
+    };
     return {
       get busy() { return busy; },
+      get quitting() { return quitting; },
+      async running() {
+        const context = connected('Connect to the Frame to see what’s running.');
+        const result = await api('/api/running', undefined, context.device);
+        return getContext().generation === context.generation ? result : null;
+      },
+      async forceQuit(app) {
+        if (quitting) throw new Error('A force quit is still in progress.');
+        if (!/^\d{1,10}$/.test(String(app?.appid))) throw new Error('Choose a running game to quit.');
+        const context = connected('Connect to the Frame before quitting a game.');
+        quitting = true;
+        try {
+          const result = await api('/api/running', {action:'quit', appid:String(app.appid)}, context.device);
+          return getContext().generation === context.generation ? result : null;
+        } finally { quitting = false; }
+      },
       async audio(change) {
         if (busy) throw new Error('An audio change is still in progress.');
         const context = getContext();
@@ -180,16 +211,18 @@
       },
     };
   }
-  function mount({document, api, refresh, refreshAudio = refresh, getContext, openConnection, platform}) {
+  function mount({document, api, refresh, refreshAudio = refresh, getContext, openConnection, platform, confirm = text => globalThis.confirm(text)}) {
     const get = id => document.getElementById(id), page = get('controlCenter');
     let category = 'all', sample = null, receivedAt = null, available = false, error = '', dirty = false, sampleGeneration = null, audioPending = false;
     const metric = (id, label) => `<div><dt>${label}</dt><dd data-cc-metric="${id}">Unavailable</dd></div>`;
     const perf = `<dl class="cc-readings">${[['appFps','Application FPS'],['frame','Compositor period'],['render','Render GPU time'],['compositorCpu','Compositor CPU'],['cpu','System CPU'],['gpu','GPU clock'],['temperature','Hottest sensor']].map(([id,label])=>metric(id,label)).join('')}</dl><p class="cc-note">GPU time is render time, not utilisation. The hottest sensor is not necessarily CPU temperature.</p><p class="cc-note" data-cc-metric="thermal">Trip data unavailable</p>`;
     const audio = `<div class="cc-audio"><label for="ccVolume">Output volume <output id="ccVolumeValue" for="ccVolume">—</output></label><input id="ccVolume" type="range" min="0" max="100" step="1" value="0" disabled><div class="cc-audio-actions"><button class="action small" id="ccApplyVolume" disabled>Apply volume</button><button class="small" id="ccMute" disabled>Mute</button><span id="ccAudioReadback" class="cc-note">Waiting for an audio reading</span></div><p class="cc-note" id="ccAudioResult" role="status"></p></div>`;
-    const health = `<dl class="cc-readings">${[['battery','Charge'],['power','Battery power · signed'],['charger','Charger'],['estimate','Battery estimate'],['batteryTemp','Battery temperature'],['batteryHealth','Battery health']].map(([id,label])=>metric(id,label)).join('')}</dl>`;
+    const batteryNote = 'Read-only. Unavailable means not reported, unreadable or invalid. Health is the driver’s status; full / design capacity is a fuel-gauge estimate, not a diagnosis. Charge limits are unsupported on Frame.';
+    const health = `<dl class="cc-readings">${[['battery','Charge'],['batteryDetail','Charging state'],['power','Battery power · signed'],['charger','Charger'],['estimate','Battery estimate'],['batteryTemp','Battery temperature'],['batteryHealth','Battery health'],['cycles','Charge cycles'],['fullCapacity','Full charge capacity'],['designCapacity','Design capacity'],['capacityHealth','Full / design capacity'],['batterySource','Battery source']].map(([id,label])=>metric(id,label)).join('')}</dl><p class="cc-note">${batteryNote}</p>`;
+    const forcequit = `<div class="cc-quit"><div class="cc-audio-actions"><button class="small" type="button" id="ccRunningCheck">Check what’s running</button></div><ul class="cc-running" id="ccRunningList"></ul><p class="cc-note" id="ccRunningResult" role="status"></p></div>`;
     const storage = `<dl class="cc-readings">${[['storage','User storage free'],['rootFree','System storage free'],['rootTotal','System storage total'],['memoryAvailable','Memory available']].map(([id,label])=>metric(id,label)).join('')}</dl>`;
     get('ccCategories').innerHTML = categories.map(([id,label,symbol])=>`<button type="button" data-cc-category="${id}" aria-pressed="${id === 'all'}">${icon(symbol)}<span>${label}</span><span class="cc-category-count"></span></button>`).join('');
-    const specials = {audio, performance:perf, health, storage};
+    const specials = {audio, performance:perf, health, storage, forcequit};
     get('ccCards').innerHTML = catalog.map(item=>`<section class="cc-card" data-cc-card="${item.id}"><div class="cc-card-head"><span class="cc-icon">${icon(item.icon)}</span><span class="cc-kind cc-kind-${item.kind}">${item.label}</span></div><h2>${item.title}</h2><p>${item.description}</p>${specials[item.special] || ''}${item.guidance ? `<div class="cc-guidance">${item.guidance}</div>` : ''}${item.links ? `<div class="cc-links">${item.links.map(([href,label,desktop])=>`<a href="${href}"${desktop ? ' class="desk-only"' : ''}${item.platform === 'mac' ? ' data-cc-mac-link' : ''}>${label}<span aria-hidden="true">↗</span></a>`).join('')}</div>` : ''}</section>`).join('');
     // Host-only features stay searchable with a reason; only their unsupported
     // action disappears. The host API, rather than viewport/UA, decides availability.
@@ -285,6 +318,48 @@
         get('ccAudioResult').textContent = `Couldn’t apply audio: ${e.message}`;
       } finally { audioPending = false; renderSample(); }
     }
+    // Force quit: an explicit check, then a confirmation for each game. A headset
+    // switch drops the list, so a stale entry can't quit the other Frame's game.
+    let runningApps = [];
+    function renderRunning(message) {
+      get('ccRunningList').innerHTML = runningApps.map(app=>`<li><span>${esc(app.name)}<small>${KINDS[app.kind] || 'Running'}</small></span><button class="small danger" type="button" data-cc-quit="${esc(app.appid)}"${controller.quitting ? ' disabled' : ''}>Force quit…</button></li>`).join('');
+      if (message !== undefined) get('ccRunningResult').textContent = message;
+    }
+    async function checkRunning() {
+      const generation = getContext().generation;
+      get('ccRunningCheck').disabled = true;
+      get('ccRunningResult').textContent = 'Checking…';
+      try {
+        const result = await controller.running();
+        if (!result || generation !== getContext().generation) return;
+        runningApps = Array.isArray(result.running) ? result.running : [];
+        renderRunning(runningApps.length ? `${runningApps.length} running. Force quit only a game that has stopped responding.` : 'Nothing is running on the Frame.');
+      } catch (e) {
+        if (generation !== getContext().generation) return;
+        runningApps = []; renderRunning(`Couldn’t check what’s running: ${e.message}`);
+      } finally { get('ccRunningCheck').disabled = false; }
+    }
+    async function forceQuit(appid) {
+      const app = runningApps.find(item=>String(item.appid) === String(appid));
+      if (!app || controller.quitting) return;
+      if (!confirm(`Force quit ${app.name}? Unsaved progress will be lost.`)) return;
+      const generation = getContext().generation, pending = controller.forceQuit(app);
+      renderRunning(`Quitting ${app.name}…`);
+      try {
+        const result = await pending;
+        if (!result || generation !== getContext().generation) return;
+        runningApps = runningApps.filter(item=>item !== app);
+        renderRunning(result.message || `Quit ${app.name}`);
+      } catch (e) {
+        if (generation !== getContext().generation) return;
+        renderRunning(`Couldn’t force quit ${app.name}: ${e.message}`);
+      } finally { if (generation === getContext().generation) renderRunning(); }
+    }
+    get('ccRunningCheck').onclick = checkRunning;
+    get('ccRunningList').onclick = event => {
+      const button = event.target.closest('[data-cc-quit]');
+      if (button) forceQuit(button.dataset.ccQuit);
+    };
     get('ccVolume').oninput = () => { dirty = true; get('ccVolumeValue').textContent = `${get('ccVolume').value}%`; };
     get('ccApplyVolume').onclick = () => changeAudio({level:Number(get('ccVolume').value) / 100});
     get('ccMute').onclick = () => changeAudio({muted:!sample?.volume?.muted});
@@ -310,7 +385,7 @@
       },
       unavailable(reason) { if (reason?.stale) return; available = false; error = `No live sample${reason?.message ? ' · ' + reason.message : ''}`; renderSample(); },
       connection(ok) { if (!ok) { available = false; renderSample(); } else audioAvailability(); },
-      reset() { sample = null; receivedAt = null; available = false; error = ''; dirty = false; get('ccVolume').value = 0; get('ccAudioResult').textContent = ''; renderSample(); },
+      reset() { sample = null; receivedAt = null; available = false; error = ''; dirty = false; get('ccVolume').value = 0; get('ccAudioResult').textContent = ''; runningApps = []; renderRunning(''); renderSample(); },
       destroy() { clearInterval(timer); },
     };
   }

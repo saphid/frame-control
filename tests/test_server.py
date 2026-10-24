@@ -88,6 +88,12 @@ class ServerGuards(unittest.TestCase):
                 self.assertIn(mime, headers['Content-Type'])
                 self.assertIn(marker, payload)
 
+    def test_store_page_served_with_anti_framing_headers(self):
+        status, headers, payload = self.request("GET", "/store")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Frame-Options"], "DENY")
+        self.assertIn(b"<title>APK Store</title>", payload)
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
@@ -103,6 +109,10 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.request("GET", "/api/stream")[0], 403)
         self.assertEqual(self.request("GET", "/api/shots/image?id=1/250820/20260925225208_1.jpg")[0], 403)
         self.assertEqual(self.request("POST", "/api/launch", {"appid": "620"})[0], 403)
+        self.assertEqual(self.request("GET", "/api/record")[0], 403)
+        self.assertEqual(self.request("GET", "/api/clips")[0], 403)
+        self.assertEqual(self.request("POST", "/api/record", {"action": "start"})[0], 403)
+        self.assertEqual(self.request("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})[0], 403)
 
     def test_captures_are_not_cacheable(self):
         # Headset captures show everything on screen; nothing may cache them.
@@ -128,10 +138,23 @@ class ServerGuards(unittest.TestCase):
             ("/api/shots/save", {"ids": [1]}),
             ("/api/shots/save", {"ids": ["1/250820/../../.ssh/id_ed25519"]}),
             ("/api/shots/save", {"ids": ["1/250820/20260925225208_1.jpg; rm -rf ~"]}),
+            ("/api/record", {}),
+            ("/api/record", {"action": "explode"}),
+            ("/api/clips/export", {}),
+            ("/api/clips/export", {"id": 5}),
+            ("/api/clips/export", {"id": "1/video/../../../../.ssh"}),
+            ("/api/clips/export", {"id": "1/video/bg;rm -rf ~"}),
+            ("/api/clips/export", {"id": "../1/video/bg"}),
         ]
         for path, body in cases:
             status, payload = self.post(path, body)
             self.assertEqual(status, 400, f"{path} {body} -> {payload}")
+
+    def test_recorder_idle_until_started(self):
+        status, _, payload = self.request("GET", "/api/record", headers={"X-Frame-UI": "1"})
+        self.assertEqual((status, json.loads(payload)), (200, {"state": "idle"}))
+        status, payload = self.post("/api/record", {"action": "stop"})
+        self.assertEqual(status, 409, payload)
 
     def test_showing_a_shot_needs_it_saved_here(self):
         status, payload = self.post("/api/open", {"what": "shot", "id": "1/250820/19990101000000_1.jpg"})
@@ -273,7 +296,7 @@ class OneServer(unittest.TestCase):
         self.assertIn("Frame Control on", first.stdout.readline())
         second = subprocess.run([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0"], env=env,
                                 capture_output=True, text=True, timeout=60)
-        self.assertEqual(second.returncode, 1)
+        self.assertEqual(second.returncode, 1, second.stderr)
         self.assertIn("already running", second.stderr)
         first.terminate()
         first.wait(10)
@@ -523,6 +546,14 @@ class LocalMode(unittest.TestCase):
         status, body = self.request("GET", "/api/titles")
         self.assertEqual(status, 200, body)
         self.assertIsInstance(body["titles"], list)
+
+    def test_recordings_are_for_a_computer(self):
+        for method, path, body in (("GET", "/api/record", None), ("GET", "/api/clips", None),
+                                   ("POST", "/api/record", {"action": "start"}),
+                                   ("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})):
+            status, payload = self.request(method, path, body)
+            self.assertEqual(status, 400, (path, payload))
+            self.assertIn("computer", payload["error"])
 
     def test_open_is_for_the_app_and_power_needs_a_password(self):
         self.assertEqual(self.request("POST", "/api/open", {"what": "terminal"})[0], 400)

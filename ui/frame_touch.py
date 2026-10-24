@@ -271,7 +271,7 @@ def panels(limit=None):
         out["why"] = ("The headset took too long to list its panels (its X tools didn't answer in time). "
                       + ("Some may be missing. " if found else "") + "Try again, or use the Headset view.")
     elif not found:
-        out["why"] = why_none(unfound)
+        out["why"] = why_none(unfound, props)
     return out
 
 
@@ -295,13 +295,18 @@ def desktop_running():
     return False
 
 
-def why_none(listed):
+def why_none(listed, props):
     """Why panels() found nothing, in words the person at the computer can act on.
-    listed: how many of the windows gamescope lists aren't X11 windows on any display."""
+    listed: how many of the windows gamescope lists aren't X11 windows on any display.
+    props: the root properties actually read; an absent list is not an empty list."""
     missing = [tool for tool in ("xprop", "xwininfo") if not shutil.which(tool)]
     if missing:
         return (f"This SteamOS build has no {' or '.join(missing)}, which Frame Control uses to find the "
                 "headset's panels. Use the Headset view instead, and please report your SteamOS version.")
+    if "GAMESCOPE_FOCUSABLE_WINDOWS" not in props:
+        return ("Frame Control couldn't read gamescope's panel list, so it can't tell whether an app panel is open. "
+                "Check that SteamVR is running in the headset, then try again or use the Headset view. "
+                "If this persists, report your SteamOS version and this exact message.")
     if listed:
         # gamescope lists windows, but none is an X11 window on any display: a Wayland
         # window (a desktop drawn straight to gamescope, say) can't be found or captured this way.

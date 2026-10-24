@@ -3,14 +3,14 @@ name: release
 # Pushing a v* tag builds Frame Control for macOS, Windows and Linux and attaches
 # the installers to that tag's GitHub release (created as a draft if missing).
 # Pull requests that change how the installers are built (the Electron app, the
-# macOS helper it compiles, or this workflow) build the same installers as
+# Windows PC helper libraries, the macOS helper, or this workflow) build the same installers as
 # artifacts. ui/, scripts/, frame/ and apk-catalog/ are copied in as they are and
 # are tested by the checks workflow; run this one by hand to package them early.
 on:
   push:
     tags: ["v*"]
   pull_request:
-    paths: ["app/**", "mac/frame-mac-view/**", ".github/workflows/release.yml"]
+    paths: ["app/**", "desktop/**", "mac/frame-mac-view/**", ".github/workflows/release.yml"]
   workflow_dispatch:
 
 # A newer push to the same pull request supersedes a build still in progress.
@@ -26,7 +26,9 @@ jobs:
   # "view || create" could race and make duplicate drafts. The draft is tied to
   # the pushed tag (the tag must already exist on GitHub, then tag_name is set
   # explicitly), so scripts/publish-release.sh and `gh release upload` find it
-  # by tag. It is created with the REST API so the id comes straight back: the
+  # by tag. Editing a draft can make GitHub show an untagged-* name again; the
+  # upload step below recovers that exact draft if tag lookup fails. It is
+  # created with the REST API so the id comes straight back: the
   # release list can lag a fresh draft (v0.4.2's first run found nothing and
   # PATCHed releases/ with an empty id). tests/test_release_workflow.py runs
   # this step against tests/fakegh.
@@ -40,8 +42,13 @@ jobs:
           GH_REPO: ${{ github.repository }}
         run: |
           tag="${GITHUB_REF_NAME}"
-          # A rerun finds the draft an earlier attempt made.
-          id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq ".[] | select(.tag_name == \"$tag\") | .id" | head -n 1)
+          # A rerun finds the draft even if GitHub temporarily shows untagged-*.
+          id=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq ".[] | select(.tag_name == \"$tag\" or (.draft and (.tag_name | startswith(\"untagged-\")) and .name == \"Frame Control ${tag#v}\")) | .id")
+          if [ -n "$id" ] && ! [[ "$id" =~ ^[0-9]+$ ]]; then
+            echo "expected one release for $tag; found: $id" >&2
+            exit 1
+          fi
           if [ -z "$id" ]; then
             # Given a missing tag, GitHub would create it on the default branch.
             gh api "repos/$GH_REPO/git/ref/tags/$tag" >/dev/null \
@@ -75,6 +82,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      # PC in the headset (Experimental, Windows only): our capture adapter and
+      # the GStreamer libraries it uses, bundled into resources/desktop/bundle.
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          update: true
+      # A mirror's HTTP 429 once failed this install (2026-10-24): retry, so a
+      # flaky mirror can't break a release build.
+      - name: MSYS2 packages for the PC host
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          for attempt in 1 2 3; do
+            pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-gstreamer mingw-w64-ucrt-x86_64-gst-plugins-base mingw-w64-ucrt-x86_64-gst-plugins-good mingw-w64-ucrt-x86_64-gst-plugins-bad mingw-w64-ucrt-x86_64-gst-plugins-ugly && exit 0
+            sleep $((attempt * 30))
+          done
+          exit 1
+      - name: Windows PC streaming libraries
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: python desktop/build.py --out app/build/desktop/win-x64
       - name: Build
         working-directory: app
         shell: bash
@@ -95,13 +124,43 @@ jobs:
           for ($i = 0; $i -lt 60 -and -not (Test-Path (Join-Path $installed 'Uninstall Frame Control.exe')); $i++) { Start-Sleep 2 }
           node app/build/check-resources.js (Join-Path $installed 'resources') app/dist/win-unpacked/resources
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # From the installed app, so this also proves the installer carries the
+      # libraries. After the check above, and without writing __pycache__,
+      # so it can't change what that check compares.
+      - name: Test the installed app's Python with the Windows PC libraries
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          resources="$(cygpath -u "$LOCALAPPDATA")/Programs/Frame Control/resources"
+          python="$resources/python/python.exe"
+          native="$(cygpath -w "$resources/desktop/bundle")"
+          FRAME_PC_NATIVE="$native" FRAME_PC_REQUIRE_NATIVE=1 FRAME_PC_INSTALLER_BUNDLE=1 "$python" -B -m unittest discover -s tests -p 'test_pc*.py' -v
       - name: Upload to the release
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
         run: |
-          gh release upload "${GITHUB_REF_NAME}" ${{ matrix.files }} --clobber
+          # A release-notes edit can make GitHub expose a draft as untagged-*.
+          # Keep the normal upload path; recover only that lookup failure.
+          if result=$(gh release upload "${GITHUB_REF_NAME}" ${{ matrix.files }} --clobber 2>&1); then
+            printf '%s\n' "$result"
+            exit 0
+          fi
+          printf '%s\n' "$result" >&2
+          case "$result" in *"release not found"*) ;; *) exit 1 ;; esac
+          tag="${GITHUB_REF_NAME}"
+          ids=$(gh api --paginate "repos/$GH_REPO/releases?per_page=100" \
+            --jq ".[] | select(.draft and .name == \"Frame Control ${tag#v}\" and (.tag_name == \"$tag\" or (.tag_name | startswith(\"untagged-\")))) | .id")
+          if ! [[ "$ids" =~ ^[0-9]+$ ]]; then
+            echo "expected one matching draft for $tag; found: ${ids:-none}" >&2
+            exit 1
+          fi
+          gh api -X PATCH "repos/$GH_REPO/releases/$ids" -f tag_name="$tag" >/dev/null
+          gh release upload "$tag" ${{ matrix.files }} --clobber
       # Tagged builds are attached to the release above; only other builds need artifacts.
       - uses: actions/upload-artifact@v4
         if: ${{ !startsWith(github.ref, 'refs/tags/') }}

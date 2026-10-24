@@ -22,6 +22,7 @@ os.environ["FRAME_CONTROL_DATA_DIR"] = _dir
 os.environ["FRAME_CONTROL_TELEMETRY"] = "0"
 # A maintainer's machine holds the database key; send anything that slips through nowhere.
 os.environ["FRAME_COMPAT_DB_URL"] = "http://127.0.0.1:9"
+os.environ["FRAME_COMPAT_SEARCH_REPORTS"] = "0"  # server subprocesses never start real report readers
 
 # A throwaway home, so Path.home() / "~" land here: ~/.ssh (config, host-key pins,
 # its lock file) and the other per-user folders some modules use. A server started

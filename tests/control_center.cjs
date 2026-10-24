@@ -14,7 +14,7 @@ function fixture() {
   const elements = new Map();
   function element(id) {
     if (!elements.has(id)) elements.set(id, {id,hidden:false,disabled:false,textContent:'',innerHTML:'',value:'',dataset:{},
-      classList:{toggle(){}},querySelectorAll(){return [];},setAttribute(key,value){this[key]=value;},addEventListener(key,callback){this[key]=callback;},focus(){this.focused=true;}});
+      classList:{toggle(){}},querySelectorAll(){return [];},close(){this.open=false;},setAttribute(key,value){this[key]=value;},addEventListener(key,callback){this[key]=callback;},focus(){this.focused=true;}});
     return elements.get(id);
   }
   const cards = cc.catalog.map(item=>{const e=element(item.id);e.dataset.ccCard=item.id;return e;});
@@ -23,7 +23,8 @@ function fixture() {
   const page = element('controlCenter');
   page.querySelectorAll = selector => selector === '[data-cc-category]' ? buttons : selector === '[data-cc-metric]' ? metrics : selector === '[data-cc-mac-link]' ? [element('macLink')] : [];
   page.querySelector = selector => selector === '[href="#connection"]' ? element('connectionLink') : cards.find(e=>selector === `[data-cc-card="${e.dataset.ccCard}"]`);
-  return {document:{getElementById:element},element,cards,buttons};
+  const listeners = {};
+  return {document:{hidden:false,getElementById:element,addEventListener(name,callback){listeners[name]=callback;}},listeners,element,cards,buttons};
 }
 function mounted(options = {}) {
   const f = fixture(), calls = [];
@@ -39,10 +40,12 @@ const flush = async () => { for(let i=0;i<12;i++)await Promise.resolve(); };
 // bootstrap, including the real Home-to-Control status handoff. Only unrelated
 // rendering helpers, timers and transport are stubbed.
 function sharedPage({productionApi=false} = {}) {
-  const f=fixture(), requests=[], writes=[], host=deferred(), job=deferred();
-  const context={document:f.document,FrameControlCenter:cc,window:{frameApp:{setUpConnection(){}}},
+  const f=fixture(), requests=[], writes=[], notifications=[], host=deferred(), job=deferred();
+  let now=0;
+  const context={document:f.document,FrameControlCenter:cc,performance:{now:()=>now},
+    window:{frameApp:{setUpConnection(){},notify:async(message,request)=>{notifications.push({message,request});}}},
     Date,setInterval,clearInterval,setTimeout:()=>1,clearTimeout(){},$:f.element,QUICK:[],installing:new Set(),
-    battery(){},setVolume(){},gb:String,dur:String,esc:String,meter(){},toast(){},
+    battery(){},setVolume(){},renderHome(){},gb:String,dur:String,esc:String,meter(){},toast(){},
     runJob(title,id){context.installing.add(id);return job.promise;},
     api:(path,body,device)=>{
       if(path==='/api/host')return host.promise;
@@ -52,7 +55,11 @@ function sharedPage({productionApi=false} = {}) {
     watchConnection(){context.watched=true;}};
   vm.createContext(context);
   const stateDeclaration=pageSource.match(/let state = null[^\n]*/)[0];
-  vm.runInContext(stateDeclaration+'\nlet online = true, devGen = 1; const HOST = {computer:"computer"}; window.connDevice="frame-a";',context);
+  vm.runInContext(stateDeclaration+'\nlet online = true, devGen = 1, comfortActive = false; const HOST = {computer:"computer"}; window.connDevice="frame-a";',context);
+  // Load the real alert state machine and DOM wiring used by render, refresh,
+  // setOnline and onConnection; do not stub away their lifecycle behavior.
+  const batteryStart=pageSource.indexOf('class DesktopBatteryAlert'),batteryEnd=pageSource.indexOf('// ---- battery ----',batteryStart);
+  vm.runInContext(pageSource.slice(batteryStart,batteryEnd),context);
   const refreshStart=pageSource.indexOf('let refreshing = null'),refreshEnd=pageSource.indexOf('// ---- our VR HUD',refreshStart);
   const renderStart=pageSource.indexOf('function render(s) {'),renderEnd=pageSource.indexOf('// ---- view ----',renderStart);
   vm.runInContext(pageSource.slice(renderStart,renderEnd)+pageSource.slice(refreshStart,refreshEnd),context);
@@ -64,11 +71,12 @@ function sharedPage({productionApi=false} = {}) {
       const request=deferred();request.path=path;request.opts=opts;requests.push(request);return request.promise;
     };
     Object.assign(context,{renderPill(){},renderConnDlg(){},renderBanner(){},viaText(){},netLabel(){},
-      resetShots(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
+      padReset(){},ctrlReset(){},resetShots(){},resetClips(){},closeDevPop(){},loadDevices(){},renderDevices(){},renderTests(){},reloadAll(){},checkContactPrompt(){}});
     vm.runInContext(`const UI_KEY = 'test-only';
       const link = {s:null,device:'frame-a',phase:'connected',rev:0,net:null};
-      const disp = {}, gm = {seq:0}, cat = {}, wi = {};
-      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], titlesSeq = 0, page = 'control';`,context);
+      const disp = {}, gm = {seq:0}, cat = {}, wi = {}, sourceState = {jobs:new Map(),detail:null,detailRequest:0};
+      let viewGen = 0, lastImg = null, lastShot = null, androidApps = [], androidSeq = 0, titlesSeq = 0, runningGames = [], runningSeq = 0, page = 'control';
+      const androidPending = new Set();`,context);
     const apiStart=pageSource.indexOf('const HEADSET_FREE ='),apiEnd=pageSource.indexOf('// What a panel shows',apiStart);
     const onlineStart=pageSource.indexOf('function setOnline('),onlineEnd=pageSource.indexOf('function reloadAll()',onlineStart);
     const connectionStart=pageSource.indexOf('function onConnection('),connectionEnd=pageSource.indexOf('// Read the event stream',connectionStart);
@@ -79,12 +87,48 @@ function sharedPage({productionApi=false} = {}) {
   const hostStart=pageSource.lastIndexOf('api("/api/host").then(h =>'),hostEnd=pageSource.indexOf('</script>',hostStart);
   vm.runInContext(pageSource.slice(hostStart,hostEnd),context);
   const bootstrapStart=pageSource.indexOf('window.frameControlCenter = FrameControlCenter.mount('),bootstrapEnd=pageSource.indexOf('</script>',bootstrapStart);
-  return {...f,context,requests,writes,host,refresh:()=>vm.runInContext('refresh()',context),
+  return {...f,context,requests,writes,notifications,host,setNow(value){now=value;},refresh:()=>vm.runInContext('refresh()',context),
     switchHeadset:()=>vm.runInContext('onConnection({now:Date.now()/1000,phase:"connected",devices_rev:0,device:{id:"frame-b",name:"Second Frame"}})',context),
     installFlatpak:()=>vm.runInContext('installFlatpak("test.app")',context),
     mount(){vm.runInContext(pageSource.slice(bootstrapStart,bootstrapEnd),context);return context.window.frameControlCenter;}};
 }
 const response = data => ({ok:true,status:200,json:async()=>data});
+test('production refresh confirms desktop alerts and failures interrupt confirmation', async () => {
+  const f=sharedPage({productionApi:true});
+  const low=sample();low.battery={percent:15,status:'Discharging',watts:-4};
+  const read=async(now,data=low)=>{
+    f.setNow(now);const pending=f.refresh();
+    f.requests.at(-1).resolve(response(data));await pending;
+  };
+  await read(0);await read(30000);
+  assert.equal(f.notifications.length,0,'desktop alert starts off');
+  f.element('desktopBatteryAlert').checked=true;
+  f.element('desktopBatteryAlert').onchange();
+  await read(60000);
+  const failed=f.refresh();f.requests.at(-1).reject(Error('Status transport failed'));await failed;
+  await read(90000);
+  assert.equal(f.notifications.length,0,'failed status interrupts low-battery confirmation');
+  await read(120000);
+  assert.equal(f.notifications.length,1);
+  assert.match(f.notifications[0].message,/15%.*draining/);
+  assert.equal(f.notifications[0].request,false,'refresh never requests notification permission');
+  await read(150000);
+  assert.equal(f.notifications.length,1,'same episode stays latched');
+  assert.equal(f.requests.length,7,'only explicit existing status reads are used');
+});
+test('production headset switch clears desktop opt-in and pending confirmation', async () => {
+  const f=sharedPage({productionApi:true});
+  f.element('desktopBatteryAlert').checked=true;
+  const low=sample();low.battery={percent:10,status:'Discharging',watts:-3};
+  const pending=f.refresh();f.requests[0].resolve(response(low));await pending;
+  assert.equal(vm.runInContext('desktopBattery.pending.condition',f.context),'low');
+  f.setNow(30000);f.switchHeadset();
+  assert.equal(f.element('desktopBatteryAlert').checked,false);
+  assert.equal(vm.runInContext('desktopBattery.pending',f.context),null);
+  assert.match(f.element('desktopBatteryStatus').textContent,/Headset changed/);
+  f.requests[1].resolve(response(low));await flush();
+  assert.equal(f.notifications.length,0,'new headset cannot inherit the prior opt-in');
+});
 for(const rejection of ['transport','body'])for(const delayedMount of [false,true]) {
   test(`production ${rejection} rejection from A preserves B ${delayedMount ? 'before delayed mount' : 'after mount'}`, async t => {
     const f=sharedPage({productionApi:true});
@@ -163,6 +207,50 @@ test('metrics use real fields, preserve zero, and distinguish unavailable values
   assert.equal(cc.metrics({performance:{cpuPercent:0}}).cpu,'0%');
   assert.equal(cc.metrics({battery:{percent:0,status:'Discharging'}}).battery,'0%');
   assert.match(cc.metrics({thermalAlerts:[{zone:'battery',tempC:45,limitC:44}]}).thermal,/battery 45 °C ≥ 44 °C/);
+});
+test('battery health distinguishes charging states and optional sensors', () => {
+  for (const status of [null, 'Unknown', 'Unexpected']) {
+    const m = cc.metrics({battery:{percent:100,status,timeToEmpty:3600}});
+    assert.equal(m.batteryDetail,'Charging state unavailable');
+    assert.equal(m.estimate,'Unavailable');
+  }
+  assert.equal(cc.metrics({battery:{status:'Not charging'}}).batteryDetail,'Not charging');
+  assert.equal(cc.metrics({battery:{status:'Full'}}).batteryDetail,'Fully charged');
+  assert.equal(cc.metrics({battery:{status:'Charging',timeToFull:3600}}).estimate,'1 h 0 min to full');
+  assert.equal(cc.metrics({battery:{status:'Discharging',timeToEmpty:600}}).estimate,'10 min remaining');
+  const m = cc.metrics({battery:{cycleCount:0,fullMah:4500,designMah:5000,capacityHealthPercent:90,
+    source:'/sys/class/power_supply/max1720x_bat_7-36',health:'Unknown',tempC:0}});
+  assert.equal(m.cycles,'0'); assert.equal(m.capacityHealth,'90%');
+  assert.equal(m.fullCapacity,'4,500 mAh'); assert.equal(m.batteryTemp,'0 °C');
+  assert.equal(m.batteryHealth,'Unavailable'); assert.match(m.batterySource,/max1720x/);
+  for (const key of ['cycles','fullCapacity','designCapacity','capacityHealth','batterySource','batteryHealth','batteryTemp'])
+    assert.equal(cc.metrics(null)[key],'Unavailable');
+});
+test('battery chip preserves unknown status and does not infer Full at 100%', () => {
+  const f=fixture();
+  const start=pageSource.indexOf('function battery(b, power)');
+  const end=pageSource.indexOf('// hidePopover', start);
+  const context={$:f.element,dur:String}; vm.createContext(context);
+  vm.runInContext(pageSource.slice(start,end),context);
+  context.battery({percent:100,status:'Unknown'},{watts:20});
+  assert.equal(f.element('battState').textContent,'Charging state unavailable');
+  context.battery({percent:50,status:'Not charging'},null);
+  assert.equal(f.element('battState').textContent,'Not charging');
+  context.battery({percent:50,status:'Charging',watts:2,tempC:0},null);
+  assert.match(f.element('battState').textContent,/Charging/);
+  assert.match(f.element('battDetail').textContent,/battery 0°C/);
+  context.battery(null,null);
+  assert.equal(f.element('battState').textContent,'Battery unknown');
+});
+test('new health readings clear after a failed status read', () => {
+  const f=mounted();
+  f.ui.status({...sample(),battery:{...sample().battery,cycleCount:42,capacityHealthPercent:92,
+    fullMah:4600,designMah:5000,source:'/sys/class/power_supply/max1720x_bat_7-36'}});
+  assert.equal(f.element('metric-capacityHealth').textContent,'92%');
+  f.ui.unavailable(Error('Read failed'));
+  for (const key of ['cycles','fullCapacity','designCapacity','capacityHealth','batterySource'])
+    assert.equal(f.element('metric-'+key).textContent,'Unavailable');
+  f.ui.destroy();
 });
 test('audio controller validates before any API call and rejects offline or expired readings', async () => {
   let context={online:true,fresh:true,sample:sample(),device:'frame-a',generation:1},calls=[];
@@ -438,35 +526,77 @@ test('mounted filters show empty state, counts, reset and host-dependent feature
   f.ui.host({os:'SteamOS',mobile:true});assert.equal(f.element('macLink').hidden,true);
   f.element('connectionLink').onclick({preventDefault(){}});assert.equal(f.opened,1);
 });
-test('every linked workflow selects its real page and section, preserving shortcuts', () => {
-  const html=fs.readFileSync(require.resolve('../ui/index.html'),'utf8');
-  const start=html.indexOf('const PAGES ='),end=html.indexOf('window.addEventListener("hashchange", showPage);',start);
-  const ids=new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(m=>m[1]));
-  let activePage,scrolled;
-  const nodes=['home','games','android','tools','devices','control','settings'].map(page=>({dataset:{page},classList:{toggle(key,on){if(on)activePage=page;}}}));
-  const sections=new Map();
-  const context={location:{hash:'#control'},document:{querySelectorAll:s=>s==='.page'?nodes:[],title:''},
-    window:{scrollTo(){}},$:id=>{
-      if(!ids.has(id))return null;
-      if(!sections.has(id))sections.set(id,{hidden:false,classList:{toggle(){}},scrollIntoView(){scrolled=id;}});
-      return sections.get(id);
-    },live:false,toggleLive(){},scrollToY(){},loadMacView(){},loadPanelSwitcher(){}};
-  const androidStart=html.indexOf('function showAndroidTab(');
-  const androidEnd=html.indexOf("document.querySelectorAll('[data-store-tab]').forEach(button => button.onclick",androidStart);
-  vm.createContext(context);vm.runInContext(html.slice(androidStart,androidEnd)+html.slice(start,end)+'\n'+html.match(/^PAGES\.push\([^\n]+/m)[0],context);
-  vm.runInContext('showPage()',context);assert.equal(activePage,'control');
-  const expected={view:'home',shots:'home',vrTools:'home',comfort:'home',pad:'home',library:'games',getgames:'games',sideloaded:'games',android:'android',display:'android',androidLibrary:'android',appStore:'android',
-    power:'tools',transfer:'tools',media:'tools',apps:'tools',artworkSettings:'settings',privacy:'settings',panels:'tools',macview:'tools',devices:'devices'};
+test('every Control Center workflow reaches its intentional workspace', () => {
+  const {workspaceFixture}=require('./workspace_fixture.cjs');
+  const f=workspaceFixture();
+  const expected={view:'capture',shots:'capture',vrTools:'tools',comfort:'tools',pad:'tools',library:'games',getgames:'games',sideloaded:'games',android:'apps',display:'settings',androidLibrary:'apps',appStore:'apps',power:'settings',transfer:'tools',media:'tools',linuxApps:'apps',artworkSettings:'settings',privacy:'settings',panels:'tools',macview:'tools',devices:'devices'};
   for(const item of cc.catalog) for(const [href] of item.links||[]) {
     if(!href.startsWith('#')||href==='#connection')continue;
-    const id=href.slice(1);assert.ok(ids.has(id)||['android','devices'].includes(id),href);
-    context.location.hash=href;scrolled=null;vm.runInContext('showPage()',context);
-    assert.equal(activePage,expected[id],href);
-    if(!['android','devices'].includes(id))assert.equal(scrolled,id,href);
-    if(id==='display'||id==='androidLibrary') { assert.equal(sections.get('androidLibrary').hidden,false);assert.equal(sections.get('appStore').hidden,true); }
-    if(id==='appStore') { assert.equal(sections.get('appStore').hidden,false);assert.equal(sections.get('androidLibrary').hidden,true); }
+    f.navigate(href);assert.equal(f.activePage,expected[href.slice(1)],href);
   }
-  assert.equal(vm.runInContext('PAGES[4]',context),'devices');
-  assert.equal(vm.runInContext('PAGES[5]',context),'control');
-  assert.equal(vm.runInContext('PAGES[6]',context),'settings');
+  assert.equal(f.run('PAGES.length'),4);
+});
+// Force quit: an explicit check, a confirmation naming the game, and the captured headset.
+function quitPage({confirmAnswer=true, running=[{appid:620,name:'Portal <2>',kind:'steam'}], quit} = {}) {
+  const asked=[], calls=[];
+  const f=mounted({confirm:text=>{asked.push(text);return confirmAnswer;},
+    api:async(path,body,device)=>{calls.push({path,body,device});
+      if(body===undefined)return {running};
+      return quit ? quit(body) : {message:'Quit Portal 2',method:'steam'};}});
+  return Object.assign(f,{asked,apiCalls:calls,click:appid=>f.element('ccRunningList').onclick({target:{closest:()=>({dataset:{ccQuit:String(appid)}})}})});
+}
+test('force quit lists what is running and says so when nothing is', async t => {
+  const f=quitPage({running:[]});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  assert.deepEqual(f.apiCalls,[{path:'/api/running',body:undefined,device:'frame-a'}]);
+  assert.equal(f.element('ccRunningResult').textContent,'Nothing is running on the Frame.');
+  assert.equal(f.element('ccRunningList').innerHTML,'');
+  const g=quitPage();t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();
+  assert.match(g.element('ccRunningList').innerHTML,/Portal &lt;2&gt;<small>Steam game<\/small>.*data-cc-quit="620"/);
+  assert.match(g.element('ccRunningResult').textContent,/^1 running/);
+});
+test('force quit confirms with the unsaved-progress warning before any request', async t => {
+  const f=quitPage({confirmAnswer:false});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  f.click(620);await flush();
+  assert.deepEqual(f.asked,['Force quit Portal <2>? Unsaved progress will be lost.']);
+  assert.equal(f.apiCalls.length,1,'declining sends nothing');
+  const g=quitPage();t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();
+  g.click(620);await flush();
+  assert.deepEqual(g.apiCalls[1],{path:'/api/running',body:{action:'quit',appid:'620'},device:'frame-a'});
+  assert.equal(g.element('ccRunningResult').textContent,'Quit Portal 2');
+  assert.equal(g.element('ccRunningList').innerHTML,'');
+  g.click(999);await flush();
+  assert.equal(g.apiCalls.length,2,'an id that was not listed is ignored');
+});
+test('force quit shows errors, refuses duplicates and offline use, and ignores a switched headset', async t => {
+  const pending=deferred();
+  const f=quitPage({quit:()=>pending.promise});t.after(()=>f.ui.destroy());
+  await f.element('ccRunningCheck').onclick();
+  f.click(620);f.click(620);await flush();
+  assert.equal(f.asked.length,1);
+  assert.match(f.element('ccRunningList').innerHTML,/disabled/);
+  pending.reject(Error("That game isn't running any more"));await flush();
+  assert.equal(f.element('ccRunningResult').textContent,"Couldn’t force quit Portal <2>: That game isn't running any more");
+  assert.doesNotMatch(f.element('ccRunningList').innerHTML,/disabled/);
+  // A switch while quitting: the old answer is dropped and the list cleared.
+  const late=deferred(),g=quitPage({quit:()=>late.promise});t.after(()=>g.ui.destroy());
+  await g.element('ccRunningCheck').onclick();g.click(620);await flush();
+  g.context={online:true,generation:2,device:'frame-b'};g.ui.reset();
+  late.resolve({message:'Quit Portal 2'});await flush();
+  assert.equal(g.element('ccRunningResult').textContent,'');
+  assert.equal(g.element('ccRunningList').innerHTML,'');
+  const h=quitPage();t.after(()=>h.ui.destroy());h.context={online:false,generation:1,device:'frame-a'};
+  await h.element('ccRunningCheck').onclick();
+  assert.equal(h.apiCalls.length,0);
+  assert.match(h.element('ccRunningResult').textContent,/Connect to the Frame/);
+  const controller=cc.createController({api:async()=>assert.fail('no request'),getContext:()=>({online:true,generation:1})});
+  await assert.rejects(controller.forceQuit({appid:'620; reboot'}),/Choose a running game/);
+});
+test('the Control Center finds force quit by what a stuck game looks like', () => {
+  const item=cc.catalog.find(i=>i.id==='forcequit');
+  for(const q of ['frozen game','hung','not responding','kill','stuck app'])assert.ok(cc.matches(item,q,'all'),q);
+  assert.ok(cc.matches(item,'','apps'));
 });

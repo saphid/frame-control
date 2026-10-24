@@ -25,6 +25,7 @@ when the page asks.
 
 Python stdlib only. Runs on this computer, never on the Frame.
 """
+from bisect import bisect_right
 import copy
 import hashlib
 import ipaddress
@@ -203,16 +204,33 @@ def probes_summary(probes):
 PLACEHOLDER = re.compile(r"(<(?:host|user|email|ip|mac|steamid|hex|token|ssh-key|pem|url|redacted)>)")
 
 
-def hide_hosts(text, hosts, keep=()):
-    """text with each of `hosts` (the headset's own addresses and names) replaced by <host>,
-    longest first and whatever the case, so a bare name like "steamdeck" that the scrubber
-    can't recognise goes too."""
-    keep = {k.lower() for k in keep if k} | KEYWORDS  # a headset called "host" mustn't eat ssh's wording
-    names = sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
-    parts = PLACEHOLDER.split(text)  # never inside a scrubber's own <token> already there
-    for i in range(0, len(parts), 2):
-        for h in names:
-            parts[i] = re.sub(r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(h), "<host>", parts[i], flags=re.I)
+def _host_names(hosts, keep=()):
+    keep = {k.lower() for k in keep if k} | KEYWORDS
+    return sorted({h for h in hosts if h and h.lower() not in keep}, key=len, reverse=True)
+
+
+def _host_pattern(name):
+    return r"(?<![\w.:-])%s(?![\w-]|[:.%%]\w)" % re.escape(name)
+
+
+def hide_hosts(text, hosts, keep=(), *, _trace=None):
+    """Hide whole known names, longest first, preserving existing scrubber tokens."""
+    names = _host_names(hosts, keep)
+    parts = PLACEHOLDER.split(text)
+    ranges, offset = [], 0
+    for i, part in enumerate(parts):
+        trace = _ScrubTrace(part) if _trace is not None else None
+        if trace is not None:
+            trace.ranges = _trace.ranges[offset:offset + len(part)]
+        offset += len(part)
+        if i % 2 == 0:
+            sub = trace.sub if trace is not None else re.sub
+            for name in names:
+                parts[i] = sub(_host_pattern(name), "<host>", parts[i], flags=re.I)
+        if trace is not None:
+            ranges.extend(trace.ranges)
+    if _trace is not None:
+        _trace.ranges = ranges
     return "".join(parts)
 
 
@@ -223,19 +241,128 @@ PLAIN_WORDS = {"answer", "the", "a", "an", "this", "it", "its", "be", "connect",
 KEYWORDS = {"host", "hostname", "to", "port"} | PLAIN_WORDS
 
 
-def hide_operands(text):
+def hide_operands(text, *, _sub=re.sub):
     def one(m):
         word = m.group(2).rstrip(".")
         dots = m.group(2)[len(word):]
         return m.group(0) if word.lower() in PLAIN_WORDS else f"{m.group(1)} <host>{dots}"
-    return OPERAND.sub(one, text)
+    return _sub(OPERAND, one, text)
+
+
+class _ScrubTrace:
+    """Map every output character to its source interval through sequential redactions.
+
+    Unchanged prefixes/suffixes retain their origins. The changed middle inherits
+    its source interval and is marked as replaced; extra spans can widen to cover
+    that whole interval without restoring anything the old pipeline removed.
+    """
+    def __init__(self, text):
+        self.ranges = [(i, i + 1, False) for i in range(len(text))]
+        self.redactions = []
+
+    def sub(self, pattern, replacement, text, flags=0):
+        pattern = re.compile(pattern, flags)
+        pieces, ranges, end = [], [], 0
+        for match in pattern.finditer(text):
+            start, stop = match.span()
+            value = replacement(match) if callable(replacement) else match.expand(replacement)
+            pieces.extend((text[end:start], value))
+            ranges.extend(self.ranges[end:start])
+            if value == match.group(0):
+                ranges.extend(self.ranges[start:stop])
+            else:
+                original = match.group(0)
+                prefix = 0
+                while prefix < min(len(original), len(value)) and original[prefix] == value[prefix]:
+                    prefix += 1
+                suffix = 0
+                while (suffix < min(len(original), len(value)) - prefix
+                       and original[-suffix - 1] == value[-suffix - 1]):
+                    suffix += 1
+                ranges.extend(self.ranges[start:start + prefix])
+                source = self.ranges[start + prefix:stop - suffix]
+                # A known name can itself be a prefix of "<host>". Attribute
+                # inserted characters to its last character in that case.
+                if not source:
+                    source = self.ranges[max(start, start + prefix - 1):start + prefix]
+                interval = (source[0][0], source[-1][1])
+                self.redactions.append(interval)
+                ranges.extend([(*interval, True)] * (len(value) - prefix - suffix))
+                if suffix:
+                    ranges.extend(self.ranges[stop - suffix:stop])
+            end = stop
+        pieces.append(text[end:])
+        ranges.extend(self.ranges[end:])
+        self.ranges = ranges
+        return "".join(pieces)
+
+
+def _failure_spans(text, hosts):
+    """Extra redactions discovered before any replacement can destroy context."""
+    spans = []
+    tokens = [m.span() for m in PLACEHOLDER.finditer(text)]
+    token_starts = [start for start, end in tokens]
+    for name in _host_names(hosts):
+        for match in re.finditer(_host_pattern(name), text, re.I):
+            # Standalone scrubber tokens survive; a whole display name may cross one.
+            token = bisect_right(token_starts, match.start()) - 1
+            if token < 0 or match.end() > tokens[token][1]:
+                spans.append(match.span())
+    start = 0
+    while True:
+        match = OPERAND.search(text, start)
+        if not match:
+            break
+        word = match.group(2).rstrip(".")
+        if word.lower() not in PLAIN_WORDS:
+            spans.append((match.start(2), match.start(2) + len(word)))
+        # An operand can itself be another marker ("to hostname bastion").
+        start = match.start(2)
+    merged = []
+    for start, end in sorted(spans):
+        if merged and start <= merged[-1][1]:
+            merged[-1] = (merged[-1][0], max(end, merged[-1][1]))
+        else:
+            merged.append((start, end))
+    return merged
 
 
 def scrub_failure(text, hosts=()):
-    """Free text about a failed attempt, for the log: the attempt's own names, whole and
-    longest first (case-insensitively, never ssh's own words), then anything ssh names as a
-    host, then the shared scrubber (addresses, paths, user names)."""
-    return frame_telemetry.scrub(hide_operands(hide_hosts(str(text or ""), hosts)), 600)
+    """Keep the existing scrubbed log, then hide additional original name/ssh spans.
+
+    Source ranges carry those spans through the existing substitutions. Applying
+    them only to that pipeline's output cannot reveal text it previously removed.
+    Keep the old output boundary, then truncate again after extra redaction so
+    shortening a name cannot pull previously omitted text into the log.
+    """
+    text = str(text or "")
+    hosts = tuple(hosts)
+    spans = _failure_spans(text, hosts)
+    # Also preserve rules whose context the old name/operand pass could destroy,
+    # such as a URL, home folder, or PEM footer containing a display name.
+    original = _ScrubTrace(text)
+    frame_telemetry.scrub(text, limit=None, _sub=original.sub)
+    privacy_spans = sorted(original.redactions)
+    trace = _ScrubTrace(text)
+    clean = frame_telemetry.scrub(
+        hide_operands(hide_hosts(text, hosts, _trace=trace), _sub=trace.sub),
+        limit=600, _sub=trace.sub)
+    out, hidden, index, privacy_index = [], False, 0, 0
+    for char, (start, end, replaced) in zip(clean, trace.ranges):
+        while index < len(spans) and spans[index][1] <= start:
+            index += 1
+        redact = index < len(spans) and spans[index][0] < end
+        while privacy_index < len(privacy_spans) and privacy_spans[privacy_index][1] <= start:
+            privacy_index += 1
+        if not replaced and privacy_index < len(privacy_spans):
+            redact |= privacy_spans[privacy_index][0] < end
+        if redact:
+            if not hidden:
+                out.append("<host>")
+        else:
+            out.append(char)
+        hidden = redact
+    return "".join(out)[:600]
 
 
 def failure_detail(error):

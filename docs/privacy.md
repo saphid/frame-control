@@ -203,9 +203,11 @@ and display name of the headset being tried (whole, whatever their case), and
 then any name ssh gives after "hostname", "host" or "to", become `<host>`; a Windows home folder's
 whole name (spaces and apostrophes included) becomes `<user>`, and ssh's
 whole `user@host:` field (spaces, `DOMAIN\user` and full domain names
-included) becomes `<user>@<host>:`; then the scrubbing below. A host name ssh mentions
-in some other wording can still get through, so check the log lines in **Show
-exactly what's included** before sending. A failure that repeats on every
+included) becomes `<user>@<host>:`; then the scrubbing below. Whole display names
+are hidden even when they contain a scrubber token such as `<host>` or overlap
+ssh's wording. Those overlaps also preserve redaction of URLs, home folders,
+and keys. A host name ssh mentions in some other wording can still get through,
+so check the log lines in **Show exactly what's included** before sending. A failure that repeats on every
 retry is written at most once every 5 minutes.
 
 Everything is scrubbed like error details and limited to what fits in the
@@ -287,3 +289,12 @@ then every 6 hours: the latest release's `update.json` on GitHub, or
 `api.github.com/repos/saphid/frame-control/releases/latest` if that fails.
 Those requests carry no id. To stop it, set
 `FRAME_CONTROL_NO_UPDATE_CHECK=1`. See [releasing.md](releasing.md).
+
+## Screenshots and clips
+
+Copying screenshots and Steam clips to your computer, by hand or with
+**Settings → Copy to this computer**, goes straight from the headset to your
+computer over the same SSH connection as everything else. Nothing is uploaded
+anywhere. What automatic copying has copied is listed, by file id, in
+`auto-sync.json` in Frame Control's data folder; see
+[recording.md](recording.md#copying-new-ones-automatically).

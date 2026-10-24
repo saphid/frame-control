@@ -7,6 +7,9 @@ This covers three directions, plus input:
 - **C. iPhone → Frame**: mirror the phone inside the headset.
 - **PC VR from Linux**: [feasibility and options](linux-vr-streaming.md),
   including Valve's streaming and USB support. No Linux host tested yet.
+- **Linux desktop → Frame panels**: [PC-host feasibility on lxso2](evidence/linux-pc-host-lxso2-2026-10-24.md).
+  Blocked on missing desktop portal/PipeWire and native build dependencies;
+  Linux desktop capture remains disabled and unverified.
 - **Input**: type and point in the Frame from the Mac or iPhone.
 - **Live view and Control**: watch a panel flat and tap on it to use it.
 
@@ -144,7 +147,7 @@ capture it.
 
 ## Input: type and point in the Frame from the Mac or iPhone
 
-**Built: Home → Keyboard and trackpad**, in every version of Frame Control
+**Built: Home → Type on the headset** (or press `T`), in every version of Frame Control
 (Mac, Windows, Linux, iPhone and iPad), with nothing to install on the device
 you're holding. On a phone the panel is a trackpad (drag to move, tap to click,
 two fingers to scroll, two-finger tap to right-click) plus a text field that
@@ -288,6 +291,17 @@ How (**verified 2026-09-29**, SteamOS 0.4.1, build 20260925.6191901):
   [#73](https://github.com/saphid/frame-control/issues/73) (SteamOS 0.4.5, desktop
   open but not found). The likely cause there was the page itself: a second
   `loadPanels` (the panel switcher's) replaced the Desktop view's, fixed in #84.
+  If the `GAMESCOPE_FOCUSABLE_WINDOWS` property cannot be read, discovery now
+  reports that the panel list is unreadable and whether a panel is open is
+  unknown. A failed X connection or missing property is not evidence that the
+  desktop is closed. Check that SteamVR is running, retry or use Headset view;
+  if it persists, report the exact message and SteamOS version. The confirmed
+  empty-list advice is retained when the property is present but empty.
+  [2026-10-24 investigation and verification limits](evidence/panel-discovery-2026-10-24.md).
+  A later [packaged v0.4.17 test on the real Frame](evidence/desktop-capture-packaged-2026-10-24.md)
+  captured a mapped, focused nested KDE compositor on SteamOS 0.5.6. SteamVR
+  still reported its overlay hidden, so that test does not establish the
+  wearer's visible-desktop condition in #73 or justify closing it.
 - Tested from the iPhone app (Simulator): a tap on the Desktop view focused a
   text box in the panel and the text field typed into it; a trackpad move went
   exactly (+40, +25).

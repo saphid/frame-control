@@ -27,6 +27,9 @@ def fake(source_id='one', fn=None):
 
 class SettingsTest(unittest.TestCase):
     def setUp(self):
+        p = patch.object(search, 'compat_reports', None)
+        p.start()
+        self.addCleanup(p.stop)
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
         p = patch.object(search, 'settings_path', return_value=Path(self.tmp.name) / 'enabled.json')
@@ -122,7 +125,7 @@ class SearchTests(SettingsTest):
                     break
                 time.sleep(.01)
             self.assertTrue(arrived[1]['event'].wait(2))
-        self.assertEqual(arrived[1]['query'], ('second', 50))
+        self.assertEqual(arrived[1]['query'][:2], ('second', 50))
 
     def test_set_enabled_does_not_hold_search_lock_in_source(self):
         free = []

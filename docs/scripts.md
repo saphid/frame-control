@@ -7,6 +7,10 @@ run on Linux. On Windows, use the app.
 
 ## Minimum typing on the headset
 
+If setup or pairing fails, run `scripts/frame-doctor.sh` from this checkout.
+It checks existing SSH access without requesting passwords, pairing or applying
+repairs. See the [Frame doctor guide](frame-doctor.md) for results and next steps.
+
 Valve's own developer docs say SSH, ADB, and RDP are all turned on through a
 **UI toggle**. You don't need a terminal, `passwd`, or `systemctl`. The only
 thing you type on the headset is a password you choose.
@@ -89,6 +93,7 @@ controls to place each panel. See [docs/panels.md](panels.md).
 | Script | Runs on | Purpose |
 |---|---|---|
 | `scripts/tailscale-on-frame.sh` | Mac → Frame | Install Tailscale in `~` as a userspace user service so `frame` works from anywhere; `--uninstall` (**verified** on the LAN) |
+| `scripts/store-on-frame.sh` | Mac → Frame | Open the APK Store (Frame Control's Android store) as a panel in the headset; installs run on the Frame (**inferred**; see [docs/apks.md](apks.md)) |
 | `scripts/connect.sh` | Mac | Discover, set up key and `~/.ssh/config`, copy key, optional `--harden` (**verified**; `--harden` untested) |
 | `scripts/install-apps.sh` | Mac → Frame | Install Flatpaks (Remmina, Moonlight, …) on the Frame over SSH as `--user` (**verified** with Remmina) |
 | `scripts/paste-to-frame.sh` | Mac → Frame | Send the Mac clipboard (or stdin) to the Frame clipboard (**verified**) |

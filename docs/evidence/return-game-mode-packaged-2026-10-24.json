@@ -1,0 +1,226 @@
+{
+  "date_utc": "2026-10-24T09:27:25.354Z",
+  "result": "PASS: literal packaged desktop Return to Game Mode button switched the real Frame from full Plasma; a repeat visible click made no second switch",
+  "documentation_base_commit": "71288d8980040c14f777f0e417f41f7105eaaac4",
+  "host": "lxso2",
+  "steamos_version": "0.5.6",
+  "steamos_build": "20261015.6141207",
+  "prior_evidence": [
+    "https://github.com/saphid/frame-control/issues/142",
+    "https://github.com/saphid/frame-control/pull/143",
+    "https://github.com/saphid/frame-control/pull/156"
+  ],
+  "package": {
+    "tag": "v0.4.17",
+    "asset": "Frame-Control-linux-x86_64.AppImage",
+    "url": "https://github.com/saphid/frame-control/releases/download/v0.4.17/Frame-Control-linux-x86_64.AppImage",
+    "sha256": "b1b8eb82bf73a227b2cd36e8f0ef3a2ebdf7967c5853efb08a9634f38227015d",
+    "verification": "sha256sum matched the live release asset digest. Independently extracted the retained asset into a new private test directory. cmp confirmed bundled frame_backup.py and frame_backup_remote.py equal the checkout versions. No source or payload was changed.",
+    "launch": "--appimage-extract, then squashfs-root/AppRun --no-sandbox --disable-gpu --remote-debugging-port=49372 --remote-debugging-address=127.0.0.1 --user-data-dir=/tmp/frame-return-button-20261024/electron-profile --window-size=1400,950",
+    "display": "Xvfb :138 -screen 0 1440x1000x24 -nolisten tcp; Electron content screenshot 1400x923",
+    "isolation": "Private XDG_CONFIG_HOME, XDG_CACHE_HOME, FRAME_CONTROL_DATA_DIR and Electron profile; FRAME_CONTROL_TELEMETRY=0 and FRAME_CONTROL_NO_UPDATE_CHECK=1. Existing authorized ssh frame identity retained; bundled server and Python used."
+  },
+  "preflight": {
+    "read_only_first": true,
+    "initial_mode": "gamescope-session.target=active; plasma-workspace-wayland.target=inactive",
+    "initial_battery_percent": 99,
+    "initial_battery_status": "Not charging; charger Full",
+    "steam_and_steamvr_running": true,
+    "running_steam_apps": [],
+    "default_login_mode": "game",
+    "lock": "mkdir /tmp/frame-test.lock succeeded atomically; no foreign lock was removed. Initial harmless probe attempt released its own lock, then a fresh atomic acquisition covered both full-session attempts."
+  },
+  "rollback": {
+    "unit": "fc-return-button-rollback-20261024",
+    "probe": "systemd-run --user --unit=fc-return-button-probe-20261024 --on-active=2s --timer-property=AccuracySec=1s --property=Type=oneshot --property=RemainAfterExit=yes /usr/bin/true",
+    "probe_execution": "Result=success\nExecMainStartTimestamp=Sat 2026-10-24 20:27:07 AEDT\nExecMainExitTimestamp=Sat 2026-10-24 20:27:07 AEDT\nExecMainCode=1\nExecMainStatus=0\n",
+    "arm": "systemd-run --user --unit=fc-return-button-rollback-20261024 --on-active=180s --timer-property=AccuracySec=1s /bin/sh -c <guarded command>",
+    "guarded_command": "if [ \"$(systemctl --user is-active gamescope-session.target)\" != active ]; then exec /usr/bin/steamosctl switch-to-game-mode; fi",
+    "verified_before_desktop": "TimersMonotonic={ OnActiveUSec=3min ; next_elapse=1d 21h 53min 49.130174s }\nNextElapseUSecMonotonic=1d 21h 53min 49.130174s\nBindsTo=\nPartOf=\nActiveState=active\nExecStart={ path=/bin/sh ; argv[]=/bin/sh -c if [ \"$(systemctl --user is-active gamescope-session.target)\" != active ]; then exec /usr/bin/steamosctl switch-to-game-mode; fi ; ignore_errors=no ; start_time=[n/a] ; stop_time=[n/a] ; pid=0 ; code=(null) ; status=0/0 }\nBindsTo=\nPartOf=\n",
+    "user_manager_linger": "yes",
+    "desktop_entry": "ssh frame steamosctl switch-to-desktop-mode",
+    "first_click_utc": "2026-10-24T09:27:27.037Z",
+    "cancelled_before_deadline": true,
+    "fired": false,
+    "limit": "The benign transient timer was observed executing. The actual rollback timer configuration was read back, then cancelled after the UI restored Game Mode; its recovery action was not deliberately allowed to fire."
+  },
+  "ui": {
+    "navigation": "Clicked nav Tools, Backup & recovery, and Check in the actual packaged Electron window. Initial Game Mode disabled Return. After full Plasma entry, Check enabled it.",
+    "automation": "Playwright connected to the packaged Electron instance over local CDP and used locator.click() on the visible button; accepted the native JavaScript confirm dialog. No Return API/CLI or production handler was directly invoked by the test. T3 preview was inspected separately and closed; it cannot control this Electron window.",
+    "clicks": [
+      {
+        "isTrusted": true,
+        "utc": "2026-10-24T09:27:27.037Z"
+      },
+      {
+        "isTrusted": true,
+        "utc": "2026-10-24T09:27:32.942Z"
+      }
+    ],
+    "button_bounds_css_pixels": {
+      "x": 47,
+      "y": 709.59375,
+      "width": 156.203125,
+      "height": 44
+    },
+    "confirmation_dialogs": [
+      {
+        "type": "confirm",
+        "message": "Return the headset to Game Mode?\n\nThis closes the desktop and any apps open in it, then starts Steam's Game Mode.",
+        "utc": "2026-10-24T09:27:27.042Z"
+      },
+      {
+        "type": "confirm",
+        "message": "Return the headset to Game Mode?\n\nThis closes the desktop and any apps open in it, then starts Steam's Game Mode.",
+        "utc": "2026-10-24T09:27:32.943Z"
+      }
+    ],
+    "desktop_check": {
+      "http": 200,
+      "body": {
+        "mode": "desktop",
+        "gamescope": true,
+        "plasma": true,
+        "nested_desktop": false,
+        "configured": "gamescope-wayland.desktop",
+        "config_file": "/etc/sddm.conf.d/steamos.conf",
+        "selector": "steamosctl",
+        "session_targets": {
+          "gamescope-session.target": "inactive",
+          "plasma-workspace-wayland.target": "active"
+        },
+        "mode_source": "session-targets"
+      }
+    },
+    "return_responses": [
+      {
+        "http": 200,
+        "body": {
+          "message": "Asked the headset to return to Game Mode; it restarts its session in a few seconds",
+          "state": {
+            "mode": "desktop",
+            "gamescope": true,
+            "plasma": true,
+            "nested_desktop": false,
+            "configured": "gamescope-wayland.desktop",
+            "config_file": "/etc/sddm.conf.d/steamos.conf",
+            "selector": "steamosctl",
+            "session_targets": {
+              "gamescope-session.target": "inactive",
+              "plasma-workspace-wayland.target": "active"
+            },
+            "mode_source": "session-targets"
+          },
+          "switched": true,
+          "command": "steamosctl switch-to-game-mode"
+        },
+        "utc": "2026-10-24T09:27:27.316Z"
+      },
+      {
+        "http": 200,
+        "body": {
+          "message": "The headset is already in Game Mode. The desktop you see is a panel: close it from the Steam dashboard.",
+          "state": {
+            "mode": "game",
+            "gamescope": true,
+            "plasma": false,
+            "nested_desktop": false,
+            "configured": "gamescope-wayland.desktop",
+            "config_file": "/etc/sddm.conf.d/steamos.conf",
+            "selector": "steamosctl",
+            "session_targets": {
+              "gamescope-session.target": "active",
+              "plasma-workspace-wayland.target": "inactive"
+            },
+            "mode_source": "session-targets"
+          },
+          "switched": false
+        },
+        "utc": "2026-10-24T09:27:33.126Z"
+      }
+    ],
+    "final_check": {
+      "http": 200,
+      "body": {
+        "mode": "game",
+        "gamescope": true,
+        "plasma": false,
+        "nested_desktop": false,
+        "configured": "gamescope-wayland.desktop",
+        "config_file": "/etc/sddm.conf.d/steamos.conf",
+        "selector": "steamosctl",
+        "session_targets": {
+          "gamescope-session.target": "active",
+          "plasma-workspace-wayland.target": "inactive"
+        },
+        "mode_source": "session-targets"
+      }
+    },
+    "final_return_disabled": true,
+    "final_text": "Game Mode: the headset is running normally. A desktop you see is a panel; close it from the Steam dashboard.",
+    "screenshots": [
+      "return-game-mode-packaged-2026-10-24-before.png",
+      "return-game-mode-packaged-2026-10-24-after.png"
+    ],
+    "screenshot_scope": "Cropped to the session controls and repeat-action notification; host identity, connection address and backup folder excluded."
+  },
+  "systemd_verification": {
+    "command": "ssh frame systemctl --user show gamescope-session.target plasma-workspace-wayland.target -p Id -p ActiveState -p SubState; ssh frame systemctl --user show gamescope-session.service -p InvocationID",
+    "before": "Id=gamescope-session.target\nActiveState=inactive\nSubState=dead\n\nId=plasma-workspace-wayland.target\nActiveState=active\nSubState=active\nInvocationID=892b843dbe1a4d2ba91b93057bd38463\n295589 /home/steamos/.local/share/Steam/steamrtarm64/steam -silent -vrdisable -deckard\n295066 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-294978\n",
+    "after_first_click": "Id=gamescope-session.target\nActiveState=active\nSubState=active\n\nId=plasma-workspace-wayland.target\nActiveState=inactive\nSubState=dead\nInvocationID=e8c1085b3bbd4e79a323b3e4a9bc6355\n297506 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-297420\n",
+    "after_repeat_click": "Id=gamescope-session.target\nActiveState=active\nSubState=active\n\nId=plasma-workspace-wayland.target\nActiveState=inactive\nSubState=dead\nInvocationID=e8c1085b3bbd4e79a323b3e4a9bc6355\n297826 /home/steamos/.local/share/Steam/steamrtarm64/steam -cef-enable-debugging -deckard -gamepadui -steamdeck -steamos3 -vrgamepadui\n297942 /home/steamos/.local/share/Steam/steamrtarm64/steam -child-update-ui -child-update-ui-socket 8 -cef-enable-debugging -deckard -gamepadui -steamdeck -steamos3 -vrgamepadui\n297506 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-297420\n",
+    "repeat_did_not_restart_game_mode": true,
+    "unchanged_game_service_invocation": "e8c1085b3bbd4e79a323b3e4a9bc6355",
+    "unchanged_steamvr_pid": 297506,
+    "delayed_final_readback_utc": "2026-10-24T09:28:05Z"
+  },
+  "cleanup": {
+    "complete": true,
+    "final_readback": "2026-10-24T09:28:05Z\nId=gamescope-session.target\nActiveState=active\n\nId=plasma-workspace-wayland.target\nActiveState=inactive\nInvocationID=e8c1085b3bbd4e79a323b3e4a9bc6355\nNEXT LEFT LAST PASSED UNIT ACTIVATES\n\n0 timers listed.\nId=fc-return-button-rollback-20261024.timer\nLoadState=not-found\nActiveState=inactive\n\nId=fc-return-button-rollback-20261024.service\nLoadState=not-found\nActiveState=inactive\n\nId=fc-return-button-probe-20261024.timer\nLoadState=not-found\nActiveState=inactive\n\nId=fc-return-button-probe-20261024.service\nLoadState=not-found\nActiveState=inactive\n297826 /home/steamos/.local/share/Steam/steamrtarm64/steam -cef-enable-debugging -deckard -gamepadui -steamdeck -steamos3 -vrgamepadui\n297506 /opt/steamvr/bin/linuxarm64/vrserver -waitformonitor -ipccontrolfilepath /tmp/SteamVR-IPCControlFile-297420\n99\nCharging\ngame\n",
+    "owned_lock_release_exit": 0,
+    "owned_lock_absent": true,
+    "host_processes": {
+      "xvfb": {
+        "pid": 1562020,
+        "exists": false,
+        "cmd": null,
+        "state": null
+      },
+      "electron": {
+        "pid": 1562023,
+        "exists": false,
+        "cmd": null,
+        "state": null
+      },
+      "x_socket_absent": true
+    },
+    "remaining_test_servers": [],
+    "battery_final_percent": 99,
+    "battery_final_status": "Charging",
+    "battery_range_observed_percent": [
+      99,
+      100
+    ],
+    "game_mode_steam_steamvr_running": true,
+    "default_login_mode_after": "game",
+    "headset_installs_or_global_settings_changed": false,
+    "rebooted": false,
+    "notes": "Stopping the timer succeeded. systemctl stop also named its never-started, unloaded service and returned 5; explicit readback confirms both rollback and probe timer/service units are not-found/inactive. No further switch was sent."
+  },
+  "attempts_and_harness_limits": [
+    "Initial harmless timer probe was garbage-collected before its exit metadata could be read. No Desktop Mode switch was attempted. Repeated with RemainAfterExit=yes and verified successful execution.",
+    "First full Plasma attempt clicked the visible packaged Return button and got HTTP 200 / switched=true. The harness then treated absent pgrep matches during the expected session restart as a fatal error. Independent readback confirmed Game Mode and SteamVR had returned. Rollback remained armed until that readback, then was cancelled. This incomplete attempt was not counted as the final pass.",
+    "Final full Plasma attempt tolerated transiently absent Steam/SteamVR while polling systemd targets, passed both trusted visible clicks, and completed the final Check. Stopping the unused rollback service returned unit-not-loaded; explicit subsequent readback verified all four owned probe/rollback units not-found/inactive and zero timers. Cleanup was completed before releasing our lock."
+  ],
+  "limits": [
+    "Unchanged AppImage payload ran after extraction on a virtual X desktop with Chromium sandbox and GPU disabled. FUSE mounting, desktop integration and hardware rendering were not tested.",
+    "Automated trusted pointer clicks in a visible Electron window; no physical-monitor human click or worn-headset visual/interaction assessment.",
+    "Verified only SteamOS 0.5.6 build 20261015.6141207 and the Linux x86_64 v0.4.17 package; older selectors/builds and other desktop platforms remain covered only by their existing tests.",
+    "No release, tag, application code, passwords or security/global settings changed."
+  ],
+  "validation": {
+    "focused_suite": "python3 -m unittest discover -s tests -p test_backup.py -v: 28 tests passed in 2.479s",
+    "json": "python3 -m json.tool: passed",
+    "diff": "git diff --check: passed"
+  }
+}

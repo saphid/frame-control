@@ -141,6 +141,9 @@ def wait_for_idle_resolvers(timeout=10):
 class ArtworkTests(unittest.TestCase):
     def setUp(self):
         wait_for_idle_resolvers()
+        from apk_sources import _images
+        _images._dns.clear()  # each test answers lookups its own way
+        self.addCleanup(_images._dns.clear)
 
     def test_source_inputs_and_url(self):
         from apk_sources import _images
