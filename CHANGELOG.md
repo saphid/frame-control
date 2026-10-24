@@ -7,6 +7,10 @@
   ten-minute cooldown limit repeat alerts. Off on page open/headset switch;
   pauses with hidden-page status refreshes. No extra polling or headset changes.
 
+- Clarify first-time desktop downloads, installation and opening on the website
+  and README, including CPU choices, unsigned-app warnings, pairing fallback
+  and the source-only iOS build. Keep section navigation available on mobile.
+
 - Treat headset aliases and other CSV metadata as plain text in power and heat
   exports, so spreadsheet formula prefixes cannot run when a report is opened.
 
