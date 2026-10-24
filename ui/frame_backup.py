@@ -30,9 +30,8 @@ ARCHIVE = re.compile(r'^(saves|settings|android)/[A-Za-z0-9._-]{1,200}\.tar\.gz$
 PART = re.compile(r'^(saves:(\d{1,10}|linux)|settings:(steam|system)|android:[A-Za-z][\w]*(\.[A-Za-z_][\w]*)+)$')
 KINDS = ('saves', 'settings', 'android')
 FORMAT = 1
-# The switch Valve's own devkit tools use (frame/devkit-utils/steamos-delete). Nothing else
-# is ever run as a session command.
-SELECTORS = ('holo-session-select', 'steamos-session-select')
+# Fixed SteamOS switches only; never execute a command supplied by remote status.
+SELECTORS = ('steamosctl', 'holo-session-select', 'steamos-session-select')
 REASONS = {
     'not_installed': 'Install the game first, then restore its saves',
     'no_prefix': 'Start the game once so Proton sets up its folders, then restore',
@@ -344,10 +343,10 @@ def session_status():
 
 
 def session_command(selector):
-    """The switch to Game Mode, exactly as Valve's devkit tools run it."""
+    """Allow only fixed Game Mode commands, including older devkit selectors."""
     if selector not in SELECTORS:
         raise BackupError('this SteamOS build has no session switch command; use the steps in the guide')
-    return shlex.join([selector, 'gamescope'])
+    return shlex.join([selector, 'switch-to-game-mode' if selector == 'steamosctl' else 'gamescope'])
 
 
 def return_to_game_mode(confirmed=False):

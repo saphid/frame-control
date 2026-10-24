@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -203,23 +204,106 @@ class Remote(unittest.TestCase):
         self.assertEqual(result['written'], 0)
         self.assertEqual(result['held'], {'refused': 1, 'reference': 1})
 
-    def test_session_reads_the_mode(self):
-        conf = write(self.home, 'zz-steamos-autologin.conf', '[Autologin]\nSession=plasma-steamos-wayland-oneshot.desktop\n')
-        running = set()
-        with patch.object(remote, 'SDDM_CONFS', (str(conf),)), \
-                patch.object(remote, '_running', side_effect=lambda n, full=False: n in running), \
-                patch.object(remote.shutil, 'which', side_effect=lambda n: '/usr/bin/' + n if n == 'steamos-session-select' else None):
-            state = remote.session()
-            self.assertEqual((state['mode'], state['selector']), ('desktop', 'steamos-session-select'))
-            self.assertEqual(state['configured'], 'plasma-steamos-wayland-oneshot.desktop')
-            running.update({'gamescope', 'plasmashell'})  # the nested desktop panel
-            self.assertEqual(remote.session()['mode'], 'game')
-            running.clear()
-            running.add('gamescope-wl')  # gamescope's process name on the Frame, with no desktop panel open
-            self.assertEqual(remote.session()['mode'], 'game')
-            running.clear()
-            running.add('start-gamescope-session')
-            self.assertEqual(remote.session()['mode'], 'game')
+
+class Session(unittest.TestCase):
+    def state(self, targets, running=(), configured=None):
+        with tempfile.TemporaryDirectory() as folder:
+            conf = write(folder, 'sddm.conf', 'Session=%s\n' % (configured or 'gamescope.desktop'))
+            with patch.object(remote, 'SDDM_CONFS', (str(conf),)), \
+                    patch.object(remote, '_session_target', side_effect=targets), \
+                    patch.object(remote, '_running', side_effect=lambda n, full=False: n in running), \
+                    patch.object(remote.shutil, 'which', return_value='/usr/bin/steamosctl'):
+                return remote.session()
+
+    def test_full_plasma_with_vr_gamescope_is_desktop(self):
+        # Issue #142, SteamOS 0.5.6: steamvr-plasma also starts nested scripts.
+        state = self.state(['inactive', 'active'],
+                           {'gamescope-wl', 'plasmashell', 'steamos-nested-desktop'},
+                           configured='gamescope.desktop')
+        self.assertEqual(state['mode'], 'desktop')
+        self.assertTrue(state['gamescope'])
+        self.assertTrue(state['nested_desktop'])
+        self.assertEqual(state['selector'], 'steamosctl')
+        self.assertEqual(state['session_targets']['plasma-workspace-wayland.target'], 'active')
+        with patch.object(backup, 'session_status', return_value=state), patch.object(backup, '_ssh') as ssh:
+            self.assertTrue(backup.return_to_game_mode(confirmed=True)['switched'])
+            ssh.assert_called_once_with('steamosctl switch-to-game-mode', timeout=60)
+
+    def test_game_target_wins_with_or_without_nested_desktop(self):
+        for running in ((), {'gamescope-wl'}, {'gamescope', 'plasmashell', 'steamos-nested-desktop'}):
+            state = self.state(['active', 'inactive'], running, configured='plasma.desktop')
+            self.assertEqual(state['mode'], 'game')
+            with patch.object(backup, 'session_status', return_value=state), patch.object(backup, '_ssh') as ssh:
+                self.assertFalse(backup.return_to_game_mode(confirmed=True)['switched'])
+                ssh.assert_not_called()
+
+    def test_conflicting_incomplete_and_transitional_targets_block_return(self):
+        for targets in (['active', 'active'], ['inactive', 'inactive'], ['active', 'unknown'],
+                        ['not-found', 'active'], ['unknown', 'unknown'], ['inactive', 'activating'],
+                        ['deactivating', 'active'], ['failed', 'active']):
+            with self.subTest(targets=targets):
+                state = self.state(targets, {'gamescope', 'plasmashell'}, 'plasma.desktop')
+                self.assertEqual(state['mode'], 'unknown')
+                with patch.object(backup, 'session_status', return_value=state), patch.object(backup, '_ssh') as ssh:
+                    with self.assertRaisesRegex(backup.BackupError, 'nothing was changed'):
+                        backup.return_to_game_mode(confirmed=True)
+                    ssh.assert_not_called()
+
+    def test_older_builds_use_only_unambiguous_running_processes(self):
+        cases = [((), 'unknown'), ({'plasmashell'}, 'desktop'),
+                 ({'gamescope'}, 'game'), ({'gamescope-wl'}, 'game'),
+                 ({'start-gamescope-session'}, 'game'),
+                 ({'gamescope', 'plasmashell'}, 'unknown'),
+                 ({'gamescope', 'steamos-nested-desktop'}, 'unknown')]
+        for running, expected in cases:
+            with self.subTest(running=running):
+                state = self.state(['not-found', 'not-found'], running, 'plasma.desktop')
+                self.assertEqual(state['mode'], expected)
+                self.assertEqual(state['mode_source'], 'legacy-processes')
+
+    def test_target_probe_parses_systemd_and_uses_main_user_bus(self):
+        cases = [('LoadState=loaded\nActiveState=active\n', 0, 'active'),
+                 ('ActiveState=inactive\nLoadState=loaded\n', 0, 'inactive'),
+                 ('LoadState=not-found\nActiveState=inactive\n', 0, 'not-found'),
+                 ('LoadState=error\nActiveState=active\n', 0, 'unknown'),
+                 ('garbage', 0, 'unknown'), ('LoadState=loaded\nActiveState=active', 1, 'unknown')]
+        for stdout, code, expected in cases:
+            with self.subTest(stdout=stdout, code=code), \
+                    patch.object(remote.os, 'getuid', return_value=1000, create=True), \
+                    patch.object(remote.subprocess, 'run', return_value=subprocess.CompletedProcess([], code, stdout)) as run:
+                self.assertEqual(remote._session_target('gamescope-session.target'), expected)
+                self.assertEqual(run.call_args.args[0], ['systemctl', '--user', 'show',
+                                 'gamescope-session.target', '--property=LoadState', '--property=ActiveState'])
+                self.assertEqual(run.call_args.kwargs['timeout'], 5)
+                self.assertEqual(run.call_args.kwargs['env']['DBUS_SESSION_BUS_ADDRESS'], 'unix:path=/run/user/1000/bus')
+                self.assertEqual(run.call_args.kwargs['env']['XDG_RUNTIME_DIR'], '/run/user/1000')
+        for error in (OSError('no systemctl'), subprocess.TimeoutExpired('systemctl', 5)):
+            with patch.object(remote.os, 'getuid', return_value=1000, create=True), \
+                    patch.object(remote.subprocess, 'run', side_effect=error):
+                self.assertEqual(remote._session_target('gamescope-session.target'), 'unknown')
+
+    def test_selector_preference_and_older_builds(self):
+        for available, expected in [({'steamosctl', 'steamos-session-select'}, 'steamosctl'),
+                                    ({'holo-session-select', 'steamos-session-select'}, 'holo-session-select'),
+                                    ({'steamos-session-select'}, 'steamos-session-select'), (set(), None)]:
+            with patch.object(remote, 'SDDM_CONFS', ()), \
+                    patch.object(remote, '_session_target', return_value='unknown'), \
+                    patch.object(remote, '_running', return_value=False), \
+                    patch.object(remote.shutil, 'which', side_effect=lambda n: '/usr/bin/' + n if n in available else None):
+                self.assertEqual(remote.session()['selector'], expected)
+
+    def test_script_probe_does_not_match_names_in_transmitted_python_source(self):
+        with patch.object(remote.subprocess, 'call', return_value=1) as call:
+            self.assertFalse(remote._running('steamos-nested-desktop', full=True))
+            pattern = call.call_args.args[0][-1]
+        for command in ('/usr/bin/steamos-nested-desktop',
+                        '/bin/sh /usr/bin/steamos-nested-desktop',
+                        'bash steamos-nested-desktop --flag'):
+            self.assertIsNotNone(re.search(pattern, command), command)
+        for command in ('python3 -c ' + backup.REMOTE.read_text(),
+                        '/bin/sh -c pgrep -f steamos-nested-desktop',
+                        '/usr/bin/steamos-nested-desktop-other'):
+            self.assertIsNone(re.search(pattern, command), command)
 
 
 def fake_ssh(home, os_release):
@@ -393,9 +477,11 @@ class Ssh(unittest.TestCase):
 
 class GameMode(unittest.TestCase):
     def test_command_is_only_ever_the_session_switch(self):
+        self.assertEqual(backup.session_command('steamosctl'), 'steamosctl switch-to-game-mode')
         self.assertEqual(backup.session_command('steamos-session-select'), 'steamos-session-select gamescope')
         self.assertEqual(backup.session_command('holo-session-select'), 'holo-session-select gamescope')
-        for bad in (None, '', 'rm -rf ~', '/tmp/steamos-session-select', 'steamos-session-select; reboot'):
+        for bad in (None, '', 'rm -rf ~', '/tmp/steamos-session-select', 'steamos-session-select; reboot',
+                    'steamosctl switch-to-desktop-mode', 'steamosctl; reboot'):
             with self.assertRaises(backup.BackupError):
                 backup.session_command(bad)
 
