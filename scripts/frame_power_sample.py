@@ -144,6 +144,12 @@ def csv_samples(report):
     output = io.StringIO(newline='')
     writer = csv.writer(output)
     writer.writerow(('time', 'elapsedSeconds', 'metric', 'value', 'unit', 'source', 'state'))
+    if 'headset' in report:
+        for key, value in (('collection.state', report['stopped'] or 'Completed'),
+                           ('collection.requestedSamples', report['requestedSamples']),
+                           ('collection.receivedSamples', len(report['samples']))):
+            writer.writerow(('', '', key, value, '', report['headset']['alias'],
+                             'incomplete' if report['stopped'] else 'completed'))
     for sample in report['samples']:
         for key, row in sample['readings'].items():
             # csv quoting does not prevent spreadsheet formulas in labels.
@@ -178,31 +184,61 @@ def remote_payload():
             'sys.modules["frame_status"] = status\n' + Path(__file__).read_text())
 
 
-def stream_report(command, payload, count, interval):
+def stream_report(command, payload, count, interval, stop_event=None, on_sample=None, discard_errors=False):
     """Receive each sample before the next wait; stop only our local SSH child.
 
     The remote bounded reader exits on its next write to the closed connection.
     No remote process-control command is sent. Keep already received samples on
     interrupt, transport failure or deadline, clearly marked as incomplete.
     """
+    if stop_event is not None and stop_event.is_set():
+        return {'schemaVersion': 1, 'requestedSamples': count, 'intervalSeconds': interval,
+                'stopped': 'Stopped before collection; no SSH started', 'samples': [], 'summary': {}}
     samples, final, stopped = [], None, None
-    events = queue.Queue()
+    events = queue.Queue(maxsize=count + 2)
+    reader_stop = threading.Event()
     deadline = time.monotonic() + count * interval + 30
     with tempfile.TemporaryFile(mode='w+') as errors:
         proc = subprocess.Popen(command + ['--stream'], stdin=subprocess.PIPE,
-                                stdout=subprocess.PIPE, stderr=errors, text=True)
+                                stdout=subprocess.PIPE, stderr=subprocess.DEVNULL if discard_errors else errors, text=True)
         def receive():
             try:
-                for line in proc.stdout:
-                    events.put(line)
+                for _ in range(count + 2):
+                    line = proc.stdout.readline(262145)
+                    if not line:
+                        break
+                    if len(line) > 262144 or not line.endswith('\n'):
+                        line = 'invalid or oversized sample'
+                    while not reader_stop.is_set():
+                        try:
+                            events.put(line, timeout=0.2)
+                            break
+                        except queue.Full:
+                            continue
+                    if reader_stop.is_set():
+                        return
             finally:
-                events.put(None)
+                while not reader_stop.is_set():
+                    try:
+                        events.put(None, timeout=0.2)
+                        break
+                    except queue.Full:
+                        continue
         reader = threading.Thread(target=receive, daemon=True)
         reader.start()
+        def feed():
+            try:
+                proc.stdin.write(payload)
+                proc.stdin.close()
+            except OSError:
+                pass  # transport exit/EOF below marks the observation incomplete
+        writer = threading.Thread(target=feed, daemon=True)
+        writer.start()
         try:
-            proc.stdin.write(payload)
-            proc.stdin.close()
             while True:
+                if stop_event is not None and stop_event.is_set() and events.empty():
+                    stopped = 'Stopped; received samples retained'
+                    break
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     stopped = 'Timed out; received samples retained'
@@ -218,6 +254,8 @@ def stream_report(command, payload, count, interval):
                     if len(samples) >= count:
                         raise ValueError('Too many samples received')
                     samples.append(event['sample'])
+                    if on_sample:
+                        on_sample(event['sample'])
                     print(f'Received {len(samples)}/{count} samples; Ctrl+C to stop and save.', file=sys.stderr)
                 elif 'finished' in event:
                     final = event['finished']
@@ -228,6 +266,7 @@ def stream_report(command, payload, count, interval):
         except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
             stopped = f'Collection interrupted: {exc}'
         finally:
+            reader_stop.set()
             if proc.poll() is None:
                 proc.terminate()
                 try:
@@ -235,6 +274,7 @@ def stream_report(command, payload, count, interval):
                 except subprocess.TimeoutExpired:
                     proc.kill()
                     proc.wait(timeout=3)
+            writer.join(timeout=3)
             if not proc.stdin.closed:
                 try:
                     proc.stdin.close()
@@ -263,6 +303,8 @@ def main(argv=None):
         ap.error('--html output already exists; choose a new file')
     # Also honor a coordinator lock on the computer before opening SSH.
     if LOCK.exists():
+        if args.probe and args.stream:
+            print(json.dumps({'finished': {'stopped': 'Smoke session active (/tmp/frame-test.lock); no sensors read'}}), flush=True)
         print('Smoke session active (/tmp/frame-test.lock); no SSH or sensors accessed.', file=sys.stderr)
         return 75
     if args.probe:

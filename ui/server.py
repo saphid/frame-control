@@ -64,6 +64,7 @@ import frame_media  # noqa: E402
 import frame_panels  # noqa: E402
 import frame_quest  # noqa: E402
 import frame_meta  # noqa: E402
+import frame_power  # noqa: E402
 import frame_report  # noqa: E402
 import frame_store  # noqa: E402
 import frame_telemetry  # noqa: E402
@@ -109,6 +110,7 @@ HOST_OPTS = []
 frame_android.SSH_OPTS = SSH[1:]
 
 
+_power = frame_power.Observation()
 _route_lock = threading.Lock()
 
 
@@ -120,6 +122,7 @@ def route(alias, host_opts):
     with _route_lock:
         moved = alias != FRAME
         if moved:
+            _power.stop('Headset switched; received samples retained for the previous headset')
             frame_catalog._env.clear()  # the SteamOS and Lepton builds reports record are per headset
             # Invalidate launches before publishing the new route. send/stop share
             # a writer lock, so an old process cannot receive events after this.
@@ -3009,7 +3012,28 @@ def source_manage(body):
         raise Failure(str(e), 400)
 
 
+def power_action(body):
+    action = body.get('action')
+    if LOCAL:
+        raise Failure('Power observations are available on the desktop app', 400)
+    if action == 'stop':
+        # ID prevents an old page stopping a replacement observation.
+        with _power.lock:
+            if body.get('id') != _power.id:
+                raise Failure('This observation was replaced; refresh', 409)
+            return _power.stop()
+    if action != 'start':
+        raise Failure('Unknown observation action', 400)
+    with _route_lock:
+        headset = {'alias': FRAME, 'deviceId': LINK.active_device()['id'] if LINK else None}
+        try:
+            return _power.start(body.get('preset'), tuple([*SSH, FRAME]), headset)
+        except ValueError as exc:
+            raise Failure(str(exc), 409) from exc
+
+
 POST = {
+    "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
@@ -3193,6 +3217,18 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/store":
                 # The Android store as a headset panel (scripts/store-on-frame.sh).
                 self.send_bytes((HERE / "store.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/api/power":
+                self.send_json(_power.status())
+            elif path == "/api/power/report":
+                args = parse_qs(url.query)
+                try:
+                    format = args.get('format', ['html'])[0]
+                    report_id = args.get('id', [''])[0]
+                    data, mime = _power.export(report_id, format)
+                except ValueError as exc:
+                    raise Failure(str(exc), 409) from exc
+                self.send_bytes(data.encode('utf-8'), mime,
+                                headers=[('Content-Disposition', f'attachment; filename="frame-power-{report_id}.{format}"')])
             elif path == "/api/settings/artwork":
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
@@ -3368,6 +3404,8 @@ class Handler(BaseHTTPRequestHandler):
             body = json.loads(self.rfile.read(length) or b"{}")
             if not isinstance(body, dict):
                 raise Failure("request body must be a JSON object", 400)
+            if path == '/api/power' and body.get('action') == 'start' and LINK and not meant:
+                raise Failure('Observation start needs the intended X-Frame-Device headset', 400)
             # Not headset work: switching headsets mustn't wait for (or refuse) these.
             with (contextlib.nullcontext() if path in NOT_HEADSET_WORK else working(meant)):
                 result = handler(body)
@@ -3641,6 +3679,7 @@ def main():
         # mid-cleanup would abort it and leave the SSH master running.
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
+        _power.shutdown()
         _stop_sync.set()
         webinstall_shutdown()
         macview.shutdown()  # close the headset's viewers before the agent goes

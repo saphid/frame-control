@@ -46,11 +46,10 @@ raw measurements. The HTML also embeds those measurements; review it before
 sharing. No automatic browser launch occurs.
 
 HTML sessions are limited to `count × interval <= 600` seconds, with a 30-second
-transport allowance and at most nine seconds of local child/reader cleanup. The default
+transport allowance and at most twelve seconds of local child/pipe cleanup. The default
 12 samples at five-second intervals take about 55 seconds. Existing output files
 are never overwritten; choose a new filename for each run. `--html` cannot be
-combined with `--csv`. This source-checkout flow is not a desktop Tools panel
-and is not added to the packaged app.
+combined with `--csv`. The desktop flow below uses the same sampler and renderer.
 
 Stop, timeout, SSH failure or a smoke-test lock marks the report incomplete;
 earlier received samples remain downloadable. Exit status is 75 for incomplete
@@ -66,6 +65,45 @@ later); it can still read sensors before discovering the disconnect. Stop is
 not an immediate headset-side cancellation guarantee. The reader still checks
 the smoke-test lock before every sample. No lock is acquired or removed by this
 flow, and no power, thermal, service, password or security controls are exposed.
+
+## Desktop Tools → Power & heat report
+
+In the packaged desktop app, connect to an already paired Frame, open **Tools →
+Power & heat report**, choose **1 minute** (12 samples) or **5 minutes** (60 samples),
+and select **Start observation**. Samples arrive every five seconds, starting at
+zero (about 55 or 295 seconds total). Progress shows received samples and the
+original headset alias. There is at most one observation per local app server;
+viewing progress never starts another SSH connection. No terminal, checkout,
+extra dependency or password is needed.
+
+Use **Stop and keep samples** to end local collection. Disconnect, timeout,
+app shutdown or switching to another headset also ends collection. Switching
+network addresses for the same headset does not retarget an existing observation:
+it keeps its captured SSH route and may finish incomplete if that route fails.
+As with the CLI, only the owned local SSH child is terminated. The remote reader
+is bounded and discovers a closed connection on its next write. Desktop sessions
+have a 30-second transport allowance and bounded child cleanup. Stream lines are
+limited to 262,144 characters, sample events to the requested count, and the receive queue
+to count + 2 events; desktop SSH stderr is discarded rather than stored unbounded.
+The existing smoke lock is checked locally before start and remotely before each
+sample; this feature never creates, bypasses or removes that lock.
+
+**Download HTML report**, **Download JSON** and **Download CSV** save local
+snapshots through the browser/app download mechanism. Open the downloaded HTML
+in your browser to view the offline table and its embedded JSON/CSV downloads.
+Snapshots taken before completion explicitly say incomplete. Desktop CSV includes
+`collection.state`, `collection.requestedSamples` and `collection.receivedSamples`
+metadata rows with the original headset alias in the source column, even when no
+sensor sample arrived. JSON records the alias and device ID; HTML names the alias.
+
+Only the latest observation is retained in server memory, including partial
+samples after stop or disconnect. **Download before starting another observation,
+restarting the server or quitting the app**: those discard the previous report.
+Page reloads retain server state. Download requests include an observation ID, so
+an old page cannot silently download or stop a replacement observation. Reports
+are not uploaded or automatically opened, and may contain device identifiers,
+OS builds and sensor paths. Review before sharing. The phone-hosted UI does not
+support starting observations.
 
 ## What it reads
 
@@ -175,3 +213,10 @@ summary counts, CSV quoting, strict SSH transport and smoke-lock interruption.
 Export fixtures also cover HTML escaping, download round trips, zero versus unknown,
 stream completion/failure, smoke-lock stop, timeout, Ctrl+C retention, local child
 cleanup, duration bounds and refusing to overwrite reports.
+
+Desktop validation on **2026-10-24** covered API start/stop, a synthetic browser
+observation with partial exports, shared-module resource staging under isolated
+Python and missing-resource build guards. A real Frame probe under this task's
+owned smoke lock correctly returned zero samples with an explicit incomplete
+reason; no successful live sensor baseline or native installer run was performed.
+See [desktop evidence and limitations](evidence/power-desktop-2026-10-24.json).

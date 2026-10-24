@@ -13,6 +13,10 @@ const path = require("path");
 
 const REQUIRED = [
   "ui/server.py",
+  "ui/frame_power.py",
+  "ui/frame_status.py",
+  "scripts/frame_power_sample.py",
+  "scripts/frame_power_report.py",
   "ui/frame_android.py",
   "frame/android/lepton-app.sh",
   "frame/openxr-compat/XrApiLayer_FRAME_compat.json",

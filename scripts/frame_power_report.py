@@ -36,6 +36,7 @@ thead th,td{{white-space:nowrap}}th[scope=row]{{min-width:240px;max-width:300px;
 td:last-child{{min-width:220px;max-width:300px;white-space:normal;overflow-wrap:anywhere}}
 thead{{background:#edf1f5}}.scroll{{overflow:auto}}h1{{line-height:1.2}}</style>
 <main><h1>Frame power and heat report</h1>
+<p>Headset: {esc(report.get("headset", {}).get("alias", "frame"))}</p>
 <p>{len(report['samples'])} of {report['requestedSamples']} requested samples received; target interval {esc(report['intervalSeconds'])} seconds.</p>
 <p>Collection: {esc(report['stopped'] or 'Completed')}. Results describe only the samples received.</p>
 <p>{links}</p>

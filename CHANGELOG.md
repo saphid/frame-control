@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add desktop Tools → Power & heat report: bounded read-only one/five-minute
+  observations with progress, stop and HTML/JSON/CSV downloads. Received samples
+  survive stop, disconnect and headset switch, labeled incomplete and tied to the
+  original headset. Shared sampler/report modules ship with the app; no power or
+  thermal controls are added. Download before replacing a report or quitting.
+
 - Export read-only power and heat observations to an offline accessible HTML
   report with JSON/CSV downloads. `--html FILE` limits sessions to ten minutes;
   Ctrl+C saves received samples with an explicit incomplete state. Units,
