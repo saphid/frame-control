@@ -174,7 +174,7 @@ Deleted cwd/exe paths still count, so a process left after file removal can be
 found. It sends SIGTERM, waits up to three seconds, then uses SIGKILL with
 another three-second bound, rescanning for survivors. PID handles prevent PID
 reuse from signalling another process. Linux Python 3.9+ with pidfd support
-is required; missing support, inspection/signal errors and survivors fail the
+is required; missing support, signal errors and survivors fail the
 cleanup step. Stopped PIDs are recorded in the results JSON.
 If the initial leftover cleanup fails, the run skips installs and pairing and
 records the failure instead of overwriting an active test title.
@@ -182,7 +182,9 @@ records the failure instead of overwriting an active test title.
 This deliberately does not stop shared Wine/Proton services by name or prefix,
 Steam, SteamVR, process groups or arbitrary descendants. A process that drops
 all title-path evidence cannot safely be attributed and is outside this
-check. A real Proton launch still needs coordinated headset verification.
+check. Unreadable `/proc` fields provide no ownership evidence; other readable
+fields are still checked, and a wholly unattributable process is left alone.
+A real Proton launch still needs coordinated headset verification.
 The local regression suite runs real Linux processes in temporary fake title
 directories (including deleted folders and a TERM-resistant wrapper); it checks
 exit, escalation and survival of unrelated processes without SSH or a headset:

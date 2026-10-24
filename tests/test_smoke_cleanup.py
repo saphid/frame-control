@@ -81,6 +81,17 @@ class RealProcesses(unittest.TestCase):
         self.assertIsNone(quoted.poll())
         self.assertEqual(stop_processes.stop(['fc_smoke_exe']), {'stopped_pids': []})
 
+    def test_unreadable_cwd_does_not_abort_scan_or_hide_readable_argv(self):
+        owned = self.start(self.home, str(self.title / 'fc-smoke-exe.exe'))
+        other = self.start(self.home, 'wineserver')
+        with mock.patch.object(stop_processes.os, 'readlink', side_effect=PermissionError):
+            self.assertTrue(stop_processes.owned(owned.pid, [str(self.title)]))
+            self.assertFalse(stop_processes.owned(other.pid, [str(self.title)]))
+            result = stop_processes.stop(['fc_smoke_exe'], grace=0.2)
+        self.assertIn(owned.pid, result['stopped_pids'])
+        self.assertEqual(owned.wait(timeout=5), -signal.SIGTERM)
+        self.assertIsNone(other.poll())
+
 
 class Safety(unittest.TestCase):
     def test_non_test_ids_rejected_before_scanning(self):

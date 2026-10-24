@@ -31,12 +31,15 @@ def owned(pid, roots):
         for key in ('cwd', 'exe'):
             try:
                 paths.append(os.readlink(proc / key).removesuffix(' (deleted)'))
-            except FileNotFoundError:
+            except (FileNotFoundError, PermissionError):
                 pass
-        paths += os.fsdecode((proc / 'cmdline').read_bytes()).split('\0')
+        try:
+            paths += os.fsdecode((proc / 'cmdline').read_bytes()).split('\0')
+        except PermissionError:
+            pass
         return any(path == root or path.startswith(root + '/')
                    for path in paths for root in roots)
-    except (FileNotFoundError, ProcessLookupError):
+    except (FileNotFoundError, ProcessLookupError, PermissionError):
         return False
 
 
