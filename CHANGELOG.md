@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Recover a tagged release upload when GitHub temporarily displays its draft
+  as `untagged-…` after an edit, without creating a duplicate draft or
+  silently retrying unrelated upload failures.
+
 - Import standalone APK/OBB backups from XAPK/APKS/APKM archives through the
   existing preview and game-data setup flow. Unsafe archives, split sets and
   Android/data restores are refused with guidance. This does not establish RE4
