@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add a read-only wired connection doctor for a PC using the Frame's observed
+  USB-C network: show the local route, SSH port and pinned-key login result
+  without changing IP, host keys or headset settings.
+  [Usage and limits](docs/wired-connection.md).
+
 - Start the Android app catalogue without waiting for the headset's installed-app
   list. Browsing remains available if that status request is slow or fails;
   installation still waits for a confirmed list to avoid duplicate installs.
