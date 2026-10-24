@@ -58,6 +58,11 @@ counts them while they run.
   restore chosen parts after a factory reset, and **Return to Game Mode** when
   the headset is stuck in Desktop Mode. Sign-in files and keys are never copied.
   Not tested on a headset yet. See [backup-and-recovery.md](backup-and-recovery.md).
+- **Wireless Adapter doctor** (Windows, Tools → This PC): explicitly read local
+  PnP instances, presence/link states and available channel/band readings;
+  explain possible Wi-Fi Direct duplicates and 2.4 GHz audio overlap. No headset
+  access, automatic changes or disable button. See
+  [Windows wireless diagnosis](windows-wireless-doctor.md).
 - **Battery** with charging state: charge rate in watts, time to full or empty,
   charger type and wattage (for example USB-C PD 20 W), and battery temperature.
 - **Status**: storage, memory, temperature, Wi-Fi, uptime, and whether SteamVR,

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add Windows Tools → Wireless Adapter doctor: an explicit read-only PC snapshot
+  of distinct Wi-Fi Direct PnP instances, presence/link state, PC Wi-Fi and
+  reported channels/bands, with possible 2.4 GHz overlap guidance. Unknowns stay
+  visible; no adapter disable action is offered because an unused instance
+  cannot be identified reliably. No headset access or settings changes.
+  [Sources, verification and limits](docs/windows-wireless-doctor.md).
+
 - Add a Linux PC Wireless Adapter doctor in Settings and Devices, with a source
   CLI and local JSON report. Select observed hardware without assuming Valve
   IDs; inspect USB/interface presence, driver/module binding, udev/permissions,

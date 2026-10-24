@@ -1431,8 +1431,24 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
+<section class="panel" id="wireless" hidden>
+  <h2>Wireless Adapter doctor</h2>
+  <p class="sub">Read-only snapshot of this Windows PC. Works without a headset connection. Nothing on the Frame is read or changed.</p>
+  <button class="action" id="wirelessRead">Read PC adapters</button>
+  <p id="wirelessStatus" role="status" aria-live="polite">Choose Read PC adapters to start. No automatic polling.</p>
+  <div id="wirelessResult"></div>
+  <div class="card" style="margin-top:16px"><h3>Before changing an adapter</h3>
+    <p>Multiple Microsoft Wi-Fi Direct Virtual Adapter instances can be normal. A number such as #2, a disconnected link or a non-present device does not establish which instance is extra or safe to disable. This tool cannot reliably identify the Steam dongle's primary or active instance, so it offers no disable action.</p>
+    <p>Disabling the wrong instance can interrupt Steam streaming, PC Wi-Fi, Mobile Hotspot or wireless displays. Keep the exact PnP instance IDs and compare snapshots before and after a drop with Steam Support. Do not disable an instance based on this list alone.</p>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>Check possible 2.4 GHz interference</h3>
+    <p>A Razer or other 2.4 GHz audio dongle can share spectrum with Wi-Fi. This inventory cannot measure interference, detect the audio dongle's channel or prove what caused a dropout or PC shutdown.</p>
+    <p>Try wired headphones briefly and compare. Space USB radio dongles apart with an extension lead; if your PC uses 2.4 GHz Wi-Fi, compare Ethernet or an existing 5/6 GHz network. Change one thing at a time and keep notes. No network or security settings are changed here.</p>
+  </div>
+</section>
+
 <section class="panel" id="powerReport">
   <h2>Power &amp; heat report</h2>
   <p class="sub">Observe battery, CPU, temperatures and available sensors without changing settings. One observation at a time, every five seconds, for at most five minutes.</p>
@@ -5611,6 +5627,45 @@ document.querySelectorAll('[data-power-format]').forEach(b => b.onclick = async 
   finally { b.disabled = !powerState?.id; }
 });
 
+// ---- Read-only PC wireless doctor ----
+let wirelessSeq = 0;
+const wirelessKnown = value => value === true ? 'Yes' : value === false ? 'No' : 'Unknown';
+function renderWireless(r) {
+  const unknown = value => value == null ? 'Unknown' : esc(value);
+  const states = (value, known) => known[value] || (value == null ? 'Unknown' : `Other (${esc(value)})`);
+  return `<p class="hint">${r.multipleWifiDirect ? `${r.wifiDirectInstances.length} distinct Wi-Fi Direct PnP instances found. Multiple instances do not prove a fault or identify a safe disable target.` : 'No duplicate Wi-Fi Direct instances identified in the available inventory. Missing data does not prove there are none.'}</p>
+    <p>${r.overlap === 'possible' ? '2.4 GHz use reported: spectrum overlap with a 2.4 GHz headset is possible; interference is unconfirmed.' : '2.4 GHz overlap is unknown. Other radios, the Steam dongle and audio channels may be unreported, even when PC Wi-Fi uses 5/6 GHz.'}</p>
+    <p class="sub">Sources: ${Object.entries(r.sources).map(([key,value]) => `${esc(key)}: ${esc(value)}`).join(' · ')}. Unavailable can mean access denied, missing commands or unsupported Windows features. Channel/band parsing needs English netsh labels and an exact interface GUID. Leave location and security permissions unchanged.</p>
+    ${r.devices.map(d => `<div class="card" style="margin-top:12px;overflow-wrap:anywhere"><h3>${esc(d.name)}</h3>
+      <p class="sub">${esc(d.interface)}${d.wifiDirect ? ` · Wi-Fi Direct (${esc(d.identityEvidence)})` : d.wifi === true ? ' · PC Wi-Fi' : d.wifi === false ? ' · Other network device' : ' · Network device (type unknown)'} · Hardware interface: ${wirelessKnown(d.hardware)}</p>
+      <p><strong>PnP instance:</strong> <code style="user-select:text">${esc(d.id)}</code></p>
+      <p>Present: ${wirelessKnown(d.present)} · PnP status: ${unknown(d.pnpStatus)} · Problem code: ${unknown(d.problemCode)}${d.problemCode === 22 ? ' (disabled)' : ''}</p>
+      <p>Operational: ${states(d.operational,{1:'Up',2:'Down',3:'Testing',4:'Unknown',5:'Dormant',6:'Not present',7:'Lower layer down'})} · Media: ${states(d.media,{1:'Connected',2:'Disconnected'})} · Default route configured: ${wirelessKnown(d.defaultRoute)}</p>
+      <p>Reported channel: ${unknown(d.channel)} · Band: ${d.band ? `${esc(d.band)} GHz` : 'Unknown'}</p>
+    </div>`).join('') || '<p>No readable network devices. This does not prove no adapters are installed.</p>'}
+    <p class="sub">Snapshot: ${esc(r.observedAt)}. Queries run sequentially; state can change during or after a read. Up/connected and configured routes do not establish which adapter Steam uses. A PC Wi-Fi channel is not the Steam dongle channel; virtual and proprietary radio channels often remain unknown. SSIDs and MAC addresses are omitted. PnP IDs may identify this PC: review before sharing.</p>`;
+}
+$('wirelessRead').onclick = async () => {
+  const seq = ++wirelessSeq;
+  $('wirelessRead').disabled = true;
+  $('wirelessResult').textContent = '';
+  $('wirelessStatus').textContent = 'Reading this PC’s adapters…';
+  try {
+    const r = await api('/api/host/wireless');
+    if (seq !== wirelessSeq) return;
+    if (!['ok','partial'].includes(r.state)) {
+      $('wirelessStatus').textContent = r.message || 'PC wireless inventory unavailable.';
+      return;
+    }
+    $('wirelessResult').innerHTML = renderWireless(r);
+    $('wirelessStatus').textContent = r.state === 'partial' ? 'Partial PC snapshot. Some sources are unavailable. No settings changed.' : 'PC snapshot received. Unknown channel/band fields may remain. No settings changed.';
+  } catch (e) {
+    if (seq === wirelessSeq) $('wirelessStatus').textContent = `PC wireless inventory unavailable: ${e.message}`;
+  } finally {
+    if (seq === wirelessSeq) $('wirelessRead').disabled = false;
+  }
+};
+
 // ---- Read-only game storage ----
 let storageSeq = 0;
 const storageState = s => ({'permission-denied':'Permission denied', missing:'Missing or disconnected',
@@ -5952,10 +6007,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   steamPipewire:"tools", vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", powerReport:"tools", backup:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools"};
 const TOOL_TITLES = {steamPipewire:"Steam desktop sharing", transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", powerReport:"Power & heat report", backup:"Backup & recovery"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -7466,6 +7521,7 @@ api("/api/host").then(h => {
   window.frameControlCenter?.host(h);
   $("macToolLink").hidden = h.mobile || h.os !== "macOS";
   $("pcToolLink").hidden = h.mobile || h.os !== "Windows";
+  $("wirelessToolGroup").hidden = h.mobile || h.os !== "Windows";
   $("steamPipewireLink").hidden = h.mobile || h.os !== "Linux";
   if (!h.mobile && h.os === "Windows") TOOL_TITLES.macview = "PC in the headset";
   $("backupToolLink").hidden = !!h.mobile;  // backups are folders on a computer
