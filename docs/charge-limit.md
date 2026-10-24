@@ -9,6 +9,11 @@ only control the Frame has is a vendor charger attribute that Valve's own
 charging daemon also manages. Research as of 2026-10-23, confirmed with the
 read-only checks below on a Frame running SteamOS 0.5.6 (build 20261015.6141207):
 
+Rechecked read-only on build `20261022.6153909` on 2026-10-25: the
+`BatteryChargeLimit1` interface still returned `UnknownInterface`, no
+`charge_control_*` sysfs attribute existed, and the vendor charging switches
+were root-owned mode `644`. See [Round 3 headset evidence](evidence/round3-headset-2026-10-25.md).
+
 - `steamosctl get-max-charge-level` fails with `UnknownInterface: ...BatteryChargeLimit1`.
 - `/usr/share/steamos-manager/devices/` has `[battery_charge_limit]` only for
   the Steam Deck, ROG Ally, ROG Xbox Ally and MSI Claw, not the Frame.
