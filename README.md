@@ -275,3 +275,5 @@ into a draft release, which reaches users once published. See
 licence, notably KDE Connect (GPL) for the keyboard and trackpad; see
 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Steam, Steam Frame and SteamVR are trademarks of Valve
 Corporation. This project isn't affiliated with or endorsed by Valve.
+
+See [Game storage](docs/game-storage.md) for read-only headset space and Steam install sizes, and [the changelog](CHANGELOG.md) for unreleased changes.

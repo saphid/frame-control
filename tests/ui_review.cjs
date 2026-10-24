@@ -40,7 +40,9 @@ test('a device switch discards completed install results and the open detail',()
   const f=connectionFixture(),c=f.context;
   Object.assign(c,{pad:{state:'off',queue:[]},padReset(){},sourceState:{jobs:new Map([['test:one',{done:true,result:{package:'app.on.a',game_data:true}}]]),detail:{app:{}},detailRequest:0}});
   f.el('appDetail').open=true;
+  f.el('storageResult').textContent='Old headset storage';
   f.run('onConnection({phase:"connected",device:{id:"b",name:"B"},devices_rev:1,now:0})');
+  assert.match(f.el('storageResult').textContent,/Headset changed/);
   assert.equal(c.sourceState.jobs.size,0);assert.equal(c.sourceState.detail,null);assert.equal(f.el('appDetail').open,false);
 });
 test('only a preview matching current diagnostics consent can be sent or copied',async()=>{

@@ -3293,6 +3293,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_computer.py").read_text(), timeout=20)))
             elif path == "/api/status":
                 self.send_json(status({}))
+            elif path == "/api/storage":
+                with working(self.headers.get("X-Frame-Device")):
+                    self.send_json(json.loads(ssh("python3 -", stdin=(HERE / "frame_storage.py").read_text(), timeout=20)))
             elif path == "/api/running":
                 self.send_json(running_games())
             elif path == "/api/steam/owned":
