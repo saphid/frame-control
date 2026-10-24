@@ -1465,6 +1465,12 @@
     </details>
   </section><section class="panel" id="comfort" style="margin:20px 0;padding:16px">
     <div class="shelf-head"><h2>Family and comfort</h2><span class="count">Session timer and reminders</span></div>
+    <div id="desktopBatteryComfort" hidden>
+      <h3>Desktop low-battery alert</h3>
+      <label><input id="desktopBatteryAlert" type="checkbox"> Alert on this computer at 15% or less</label>
+      <p class="hint">No session timer needed. Off when this page opens or you switch headsets. Uses normal status refreshes while the page is visible; no extra polling or headset changes. Two readings must confirm low charge and battery drain. One alert until charge recovers to 20%, with at least ten minutes between alerts.</p>
+      <p id="desktopBatteryStatus" class="hint" role="status">Off.</p>
+    </div>
     <form id="comfortForm">
       <div class="row" style="flex-wrap:wrap;gap:12px">
         <label>Session limit (minutes) <input id="sessionMinutes" type="number" min="1" max="240" value="30" required style="width:75px"></label>
@@ -2130,6 +2136,7 @@ const HOST = { computer: "computer" };
 function applyHostWording(h) {
   Object.assign(HOST, h);
   window.frameControlCenter?.host(h);
+  $("desktopBatteryComfort").hidden = !!h.mobile || !window.frameApp?.notify;
   // The iPhone app: the server runs on the Frame, and saving goes to the phone's Photos.
   document.body.classList.toggle("mobile", !!h.mobile);
   $("shotsFolder").hidden = !!h.mobile;
@@ -2240,6 +2247,7 @@ function setOnline(ok, why) {
   if (HOST.mobile) $('mobileConnectionStatus').textContent = ok ? 'Connected to the Frame serving this session.' : 'The Frame is disconnected. Retry or check its address in connection setup.';
   $('offline').hidden = ok;
   if (!ok) {
+    desktopBattery.invalidate();
     $("offMsg").textContent = why || "Can't reach the Frame";
     setConn(false, "Offline");
     $("battChip").hidden = true; closeDevPop();
@@ -2276,6 +2284,7 @@ function refresh() {
       setConn(true, state.hostname);
       setOnline(true);
     } catch (e) {
+      desktopBattery.invalidate();
       renderPerformance(null);
       if (!e.stale) stateRead = {valid: false, error: e};
       renderHome();
@@ -2456,6 +2465,60 @@ $("castBtn").onclick = () => {
   $("viewer").requestFullscreen?.().catch(() => {});
 };
 
+// ---- Desktop-only low-battery comfort: consumes existing status, never polls ----
+class DesktopBatteryAlert {
+  constructor() {
+    this.pending = null;
+    this.latched = false;
+    this.lastAlert = -Infinity;
+  }
+  invalidate() { this.pending = null; }
+  sample(b, now) {
+    // Require actual drain as well as driver state: plugged-in idle can report Discharging.
+    const valid = Number.isFinite(b?.percent) && b.percent >= 0 && b.percent <= 100 &&
+      ["Charging", "Discharging", "Full", "Not charging"].includes(b.status);
+    const low = valid && b.percent <= 15 && b.status === "Discharging" &&
+      Number.isFinite(b.watts) && b.watts < -0.5;
+    const recovered = valid && b.percent >= 20;
+    const condition = low ? "low" : recovered ? "recovered" : null;
+    if (!condition) { this.invalidate(); return false; }
+    if (!this.pending || this.pending.condition !== condition || now - this.pending.at > 90000 || now < this.pending.at) {
+      this.pending = {condition, at: now};
+      return false;
+    }
+    if (now - this.pending.at < 20000) return false;
+    if (recovered) this.latched = false;
+    if (!low || this.latched || now - this.lastAlert < 600000) return false;
+    this.latched = true;
+    this.lastAlert = now;  // latch even when system delivery fails; never retry on each refresh
+    return true;
+  }
+}
+const desktopBattery = new DesktopBatteryAlert();
+$("desktopBatteryAlert").onchange = () => {
+  desktopBattery.invalidate();
+  $("desktopBatteryStatus").textContent = $("desktopBatteryAlert").checked
+    ? "On. Waiting for two fresh status readings confirming low charge and battery drain."
+    : "Off.";
+};
+function desktopBatterySample(b) {
+  if (!$("desktopBatteryAlert").checked || HOST.mobile || !window.frameApp?.notify || document.hidden ||
+      (comfortActive && $("batteryAlert").checked)) {
+    desktopBattery.invalidate();
+    return;
+  }
+  if (!desktopBattery.sample(b, performance.now())) return;
+  const message = `Frame battery is low (${b.percent}%) and draining. Consider charging or taking a break.`;
+  $("desktopBatteryStatus").textContent = message;
+  toast(message);
+  // Desktop bridge only: never prompt or send a phone/browser push from a status refresh.
+  const generation = devGen;
+  window.frameApp.notify(message, false).catch(() => {
+    if (generation !== devGen || !$("desktopBatteryAlert").checked) return;
+    $("desktopBatteryStatus").textContent = message + " System notification delivery was not confirmed. Check system settings or use Enable / test notifications below.";
+  });
+}
+document.addEventListener("visibilitychange", () => desktopBattery.invalidate());
 // ---- battery ----
 function battery(b, power) {
   const pct = b?.percent;
@@ -2511,6 +2574,7 @@ function render(s) {
   renderHome(s);
   window.frameControlCenter?.status(s, stateReceivedAt, stateRead);
   battery(s.battery, s.power);
+  desktopBatterySample(s.battery);
   $("devPopTitle").textContent = $("devPopTitle").title = window.connName || "Headset";
   $("devName").textContent = `${s.hostname} · ${s.ip ?? "no IP"}`;
   $("updated").textContent = new Date(s.time * 1000).toLocaleTimeString();
@@ -6898,6 +6962,11 @@ function onConnection(s) {
     stateReceivedAt = null;
     stateRead = {valid: false, error: null};
     online = null;
+    $("desktopBatteryAlert").checked = false;
+    desktopBattery.invalidate();
+    // Keep the cooldown across switches, but a new headset can start its own charge episode.
+    desktopBattery.latched = false;
+    $("desktopBatteryStatus").textContent = "Off. Headset changed; enable for this headset if wanted.";
     devGen++;               // answers still on their way are about the other headset
     padReset(); ctrlReset();
     sourceState.jobs.clear(); sourceState.detail = null; sourceState.detailRequest++;

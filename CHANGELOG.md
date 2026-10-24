@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Add an opt-in desktop low-battery alert without starting a family session.
+  Existing status reads confirm low charge and drain; recovery hysteresis and a
+  ten-minute cooldown limit repeat alerts. Off on page open/headset switch;
+  pauses with hidden-page status refreshes. No extra polling or headset changes.
+
 - Treat headset aliases and other CSV metadata as plain text in power and heat
   exports, so spreadsheet formula prefixes cannot run when a report is opened.
 

@@ -10,6 +10,8 @@ function connectionFixture() {
     sourceState:{jobs:new Map(),detail:null,detailRequest:0},touches:new Map(),gesture:null,padType:{blur(){},value:''},
     log(){},renderPill(){},renderConnDlg(){},renderHome(){},resetShots(){},resetClips(){},renderBanner(){},loadDevices(){},renderDevices(){},renderTests(){},viaText(){return 'test';},netLabel(){return 'test';},refresh:()=>Promise.resolve(),reloadAll(){},checkContactPrompt(){},ctrlReset(){},padShow:s=>{c.pad.state=s.state;}});
   c.window.connDevice='a';
+  c.document.addEventListener=()=>{};
+  f.run(pick(html,'class DesktopBatteryAlert {','// ---- battery ----'));
   f.run('const UI_KEY="test";'+pick(html,'const HEADSET_FREE =','// What a panel shows'));
   f.run(pick(html,'function onConnection(s) {','// Read the event stream'));
   return f;
@@ -41,8 +43,15 @@ test('a device switch discards completed install results and the open detail',()
   Object.assign(c,{pad:{state:'off',queue:[]},padReset(){},sourceState:{jobs:new Map([['test:one',{done:true,result:{package:'app.on.a',game_data:true}}]]),detail:{app:{}},detailRequest:0}});
   f.el('appDetail').open=true;
   f.el('storageResult').textContent='Old headset storage';
+  f.el('desktopBatteryAlert').checked=true;
+  f.run('desktopBattery.pending={condition:"low",at:0};desktopBattery.latched=true;desktopBattery.lastAlert=42;');
   f.run('onConnection({phase:"connected",device:{id:"b",name:"B"},devices_rev:1,now:0})');
   assert.match(f.el('storageResult').textContent,/Headset changed/);
+  assert.equal(f.el('desktopBatteryAlert').checked,false);
+  assert.equal(f.run('desktopBattery.pending'),null);
+  assert.equal(f.run('desktopBattery.latched'),false);
+  assert.equal(f.run('desktopBattery.lastAlert'),42);
+  assert.match(f.el('desktopBatteryStatus').textContent,/Off.*Headset changed/);
   assert.equal(c.sourceState.jobs.size,0);assert.equal(c.sourceState.detail,null);assert.equal(f.el('appDetail').open,false);
 });
 test('only a preview matching current diagnostics consent can be sent or copied',async()=>{
