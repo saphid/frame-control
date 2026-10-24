@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Distinguish an unreadable gamescope panel list from a confirmed empty list in
+  Desktop Capture and Control (issue #73). Failed discovery now asks users to
+  check SteamVR and report the exact message and SteamOS version, rather than
+  claiming no panel is open. This does not establish a new capture fix.
+
 - Treat headset aliases and other CSV metadata as plain text in power and heat
   exports, so spreadsheet formula prefixes cannot run when a report is opened.
 

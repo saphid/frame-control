@@ -355,6 +355,8 @@ class FindingPanels(unittest.TestCase):
         t.subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 0, out, "")
         self.assertEqual(self.real_read_props(":0"), {"GAMESCOPE_FOCUSABLE_WINDOWS": [1, 0, 2, 3, 769, 4],
                                                       "GAMESCOPE_FOCUSED_WINDOW": [0]})
+        t.subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 0, "GAMESCOPE_FOCUSABLE_WINDOWS(CARDINAL) = \n", "")
+        self.assertEqual(self.real_read_props(":0"), {"GAMESCOPE_FOCUSABLE_WINDOWS": []})
         t.subprocess.run = lambda *a, **k: subprocess.CompletedProcess(a, 0, "GAMESCOPE_FOCUSED_WINDOW:  not found.\n", "")
         self.assertEqual(self.real_read_props(":0"), {})
 
@@ -392,16 +394,51 @@ class FindingPanels(unittest.TestCase):
         self.assertIn("Headset view", out["why"])
 
     def test_desktop_running_but_not_listed(self):
+        self.props[(":0", "GAMESCOPE_FOCUSABLE_WINDOWS")] = []
         self.t.desktop_running = lambda: True
         out = self.t.panels()
         self.assertEqual(out["panels"], [])
         self.assertIn("desktop is running", out["why"])
 
     def test_nothing_open(self):
+        self.props[(":0", "GAMESCOPE_FOCUSABLE_WINDOWS")] = []
         out = self.t.panels()
         self.assertEqual(out, {"focus": None, "focus_display": None, "panels": [],
                                "why": "No app panel is open in the headset. Open the desktop or an app in "
                                       "the headset, then try again."})
+
+    def test_absent_list_is_unknown_even_when_desktop_is_running(self):
+        for desktop in (False, True):
+            with self.subTest(desktop=desktop):
+                self.t.desktop_running = lambda: desktop
+                self.t._ROOT.clear()
+                out = self.t.panels()
+                self.assertEqual(out["panels"], [])
+                self.assertIn("couldn't read gamescope's panel list", out["why"])
+                self.assertIn("can't tell whether", out["why"])
+                self.assertIn("Headset view", out["why"])
+                self.assertNotIn("No app panel is open", out["why"])
+
+    def test_focus_property_without_panel_list_is_unknown(self):
+        self.props[(":0", "GAMESCOPE_FOCUSED_WINDOW")] = [0]
+        self.assertIn("couldn't read gamescope's panel list", self.t.panels()["why"])
+
+    def test_failed_xprop_does_not_claim_no_panels_are_open(self):
+        t = self.t
+        t.read_props = self.real_read_props
+        saved = t.subprocess.run
+        self.addCleanup(setattr, t.subprocess, "run", saved)
+        for failure in ("refused", "timeout"):
+            with self.subTest(failure=failure):
+                def run(*args, **kwargs):
+                    if failure == "timeout":
+                        raise subprocess.TimeoutExpired(args[0], kwargs["timeout"])
+                    return subprocess.CompletedProcess(args[0], 1, "", "Can't open display")
+                t.subprocess.run = run
+                t._ROOT.clear()
+                out = t.panels()
+                self.assertIn("couldn't read gamescope's panel list", out["why"])
+                self.assertNotIn("No app panel is open", out["why"])
 
     def test_missing_x_tools_are_named(self):
         self.plasma_on(":0")
