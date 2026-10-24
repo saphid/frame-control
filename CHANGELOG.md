@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Fix two cases where optional diagnostic logs could retain part of a headset
+  display name or an SSH host name, while preserving existing privacy redaction
+  (issue #81).
+
 - Fix experimental PC screen capture on Windows builds whose streaming libraries
   lack Windows Graphics Capture. Whole screens use Desktop Duplication; individual
   windows are hidden with an explanation instead of failing when shown. A Windows

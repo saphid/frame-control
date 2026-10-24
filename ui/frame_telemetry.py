@@ -240,27 +240,29 @@ def _scrub_url(u):
     return f'{parts.scheme}://{host}/…' if host else '<url>'
 
 
-def scrub(text, limit=2000):
+def scrub(text, limit=2000, *, _sub=re.sub):
     """Text with URLs, home folders, user names, addresses, hosts, ids and keys replaced."""
+    # The internal substitution hook lets the connection log retain source ranges through
+    # this exact pipeline. Ordinary callers keep the same substitutions and output limit.
     if text is None:
         return None
-    t = URL_RE.sub(lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
+    t = _sub(URL_RE, lambda m: _scrub_url(m.group(0)), str(text))  # first, before anything splits a URL
     home = str(Path.home())
     if len(home) > 3:
-        t = t.replace(home, '~')
+        t = _sub(re.escape(home), '~', t)
     # A home folder's whole name ("C:\Users\Jane Doe", "/Users/O'Brien"), up to the next separator.
-    t = re.sub(r'''(?i)(/Users/|/home/|[A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n"]+''', r'\1<user>', t)
+    t = _sub(r'''(?i)(/Users/|/home/|[A-Za-z]:[\\/]+Users[\\/]+)[^\\/\n"]+''', r'\1<user>', t)
     # ssh's "user@host: ..." and "user@host's password:", the whole field: the user even with
     # spaces or a DOMAIN\ prefix, the host even a full domain name. Before the email rule, which
     # would otherwise take only the last word of the user.
-    t = re.sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|"<]{1,64}@[\w.\[\]%:<>-]+?(?=:(?:\s|$)|'s\s)''',
+    t = _sub(r'''(?m)(?:^|(?<=: )|(?<=\| ))[^@\n:|"<]{1,64}@[\w.\[\]%:<>-]+?(?=:(?:\s|$)|'s\s)''',
                '<user>@<host>', t)
     for pattern, repl in SCRUBS:
-        t = pattern.sub(repl, t)
-    t = re.sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)  # any other word@host
-    t = IPV6_RE.sub(_ipv6, t)
+        t = _sub(pattern, repl, t)
+    t = _sub(r'(?<![\w.+\\<-])[\w.+\\-]+@(?=[A-Za-z\[<])', '<user>@', t)  # any other word@host
+    t = _sub(IPV6_RE, _ipv6, t)
     for name in _user_names():
-        t = re.sub(r'\b%s\b' % re.escape(name), '<user>', t)
+        t = _sub(r'\b%s\b' % re.escape(name), '<user>', t)
     return t[:limit]
 
 
