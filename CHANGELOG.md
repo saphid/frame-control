@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Verify the packaged OBS Start and Stop control with a real Frame, and record
+  37.600 seconds of headset mirror video and non-silent output audio in OBS.
+  Listening, sync and active passthrough remain unverified.
+  [Test record](docs/evidence/obs-media-source-real-2026-10-25.md).
+
 - Bundle the OBS source helper in Linux and macOS installers and add a
   **Capture & Live** Start/Stop control. The app selects the active Frame and
   closes its SSH stream on a headset switch or app exit. A real Frame stream
