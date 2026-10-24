@@ -7,13 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		C1234567890ABCDEF0123456 /* NativeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = D1234567890ABCDEF0123456 /* NativeSessionTests.swift */; };
-		A1234567890ABCDEF0123456 /* NativeSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = B1234567890ABCDEF0123456 /* NativeSessionState.swift */; };
+		0CF0B365CE5974753E8C3C2B /* ScreenshotJournal.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D48FCBB02F0F2212C7DE3C1 /* ScreenshotJournal.swift */; };
 		0DEE50BD563B1D8C328C4C0A /* HeadsetServer.swift in Sources */ = {isa = PBXBuildFile; fileRef = EDC7BA8014DBC302D08FD397 /* HeadsetServer.swift */; };
 		12B21D3319BAF5AE79948560 /* FrameLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 16644E7FDA7ADD5B232EB700 /* FrameLink.swift */; };
 		1A07EC692B0FF723907EA77B /* WebShell.swift in Sources */ = {isa = PBXBuildFile; fileRef = D6C4E6C28315CA8729FCAAEA /* WebShell.swift */; };
 		41A697B9924018DA48F24A1F /* Keys.swift in Sources */ = {isa = PBXBuildFile; fileRef = 237D9AF04EEA257AB382F60E /* Keys.swift */; };
 		4622FE0F0D6499CD642C29A2 /* InstallLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = BF0FCA7117DA3ABA449B4EE0 /* InstallLink.swift */; };
+		46EF7595BE5B36664A11AEB5 /* NativeSessionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F1CAE943C2556A960890079 /* NativeSessionTests.swift */; };
 		476D8858DC2C9E6616B084BC /* PortForwarder.swift in Sources */ = {isa = PBXBuildFile; fileRef = A7F6ED116569D0ABABF6ED65 /* PortForwarder.swift */; };
 		765661DBC0E6798A27CC60DB /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B24E1BCD4F69A24C7DEF02F /* RootView.swift */; };
 		78427FC66780623F31E7501E /* FrameControlApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 93C8E0D7C3F4F628941B3D5A /* FrameControlApp.swift */; };
@@ -21,8 +21,12 @@
 		9657F7BC23E3352E5AB30777 /* SetupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = DB544223FC60A59CC3E8EF5F /* SetupView.swift */; };
 		A0C5B00E257230A38DBD9E54 /* ComfortNotificationTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = E81218B75FEEE47B8D8BAE20 /* ComfortNotificationTests.swift */; };
 		A8C7AED25A6280682FCE45DC /* Citadel in Frameworks */ = {isa = PBXBuildFile; productRef = 6BA549B6CC0A0CB847126456 /* Citadel */; };
+		C046F310BA857BCEC98BE00E /* ScreenshotDownloadsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5EBD10B73DF1E95F67A3B074 /* ScreenshotDownloadsView.swift */; };
 		DC043FB74BE2D23F3A5826BF /* FrameControlTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1740B691F9C25E5FB6F9EFC3 /* FrameControlTests.swift */; };
+		DFD89170E502260F005EEC73 /* ScreenshotDownloads.swift in Sources */ = {isa = PBXBuildFile; fileRef = 07617FD9B214626526FB1F03 /* ScreenshotDownloads.swift */; };
+		E2FD56BB5BC1D9AF5CDBF210 /* ScreenshotSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB8610920C7D797E5963CF88 /* ScreenshotSyncTests.swift */; };
 		E6898C714A92D3979F73B6E1 /* FrameFinder.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F288DF6636A417F0CA3A6CD /* FrameFinder.swift */; };
+		F0ECE06D5DD29F19CC41FDFB /* NativeSessionState.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E8BE9A8C421AD40A0F4105B /* NativeSessionState.swift */; };
 		F94D0252F8CC5854314B84B2 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8A11F3431826A26B247C0695 /* AppModel.swift */; };
 /* End PBXBuildFile section */
 
@@ -37,19 +41,23 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		D1234567890ABCDEF0123456 /* NativeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionTests.swift; sourceTree = "<group>"; };
-		B1234567890ABCDEF0123456 /* NativeSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionState.swift; sourceTree = "<group>"; };
+		07617FD9B214626526FB1F03 /* ScreenshotDownloads.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotDownloads.swift; sourceTree = "<group>"; };
+		0D48FCBB02F0F2212C7DE3C1 /* ScreenshotJournal.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotJournal.swift; sourceTree = "<group>"; };
 		16644E7FDA7ADD5B232EB700 /* FrameLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameLink.swift; sourceTree = "<group>"; };
 		1740B691F9C25E5FB6F9EFC3 /* FrameControlTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameControlTests.swift; sourceTree = "<group>"; };
 		237D9AF04EEA257AB382F60E /* Keys.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Keys.swift; sourceTree = "<group>"; };
 		2F288DF6636A417F0CA3A6CD /* FrameFinder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameFinder.swift; sourceTree = "<group>"; };
+		5EBD10B73DF1E95F67A3B074 /* ScreenshotDownloadsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotDownloadsView.swift; sourceTree = "<group>"; };
 		6B5B6718C5EA77FA67F6B14C /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		6FBC8D0B5ED7BF1C06F99892 /* FrameControlTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = FrameControlTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8A11F3431826A26B247C0695 /* AppModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModel.swift; sourceTree = "<group>"; };
+		8F1CAE943C2556A960890079 /* NativeSessionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionTests.swift; sourceTree = "<group>"; };
 		8F2CB550FC81C01E6BDD5A71 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		93C8E0D7C3F4F628941B3D5A /* FrameControlApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrameControlApp.swift; sourceTree = "<group>"; };
 		9B24E1BCD4F69A24C7DEF02F /* RootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootView.swift; sourceTree = "<group>"; };
+		9E8BE9A8C421AD40A0F4105B /* NativeSessionState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NativeSessionState.swift; sourceTree = "<group>"; };
 		A7F6ED116569D0ABABF6ED65 /* PortForwarder.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PortForwarder.swift; sourceTree = "<group>"; };
+		AB8610920C7D797E5963CF88 /* ScreenshotSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenshotSyncTests.swift; sourceTree = "<group>"; };
 		BF0FCA7117DA3ABA449B4EE0 /* InstallLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = InstallLink.swift; sourceTree = "<group>"; };
 		D6C4E6C28315CA8729FCAAEA /* WebShell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebShell.swift; sourceTree = "<group>"; };
 		DB544223FC60A59CC3E8EF5F /* SetupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SetupView.swift; sourceTree = "<group>"; };
@@ -104,9 +112,11 @@
 			isa = PBXGroup;
 			children = (
 				8A11F3431826A26B247C0695 /* AppModel.swift */,
-				B1234567890ABCDEF0123456 /* NativeSessionState.swift */,
 				93C8E0D7C3F4F628941B3D5A /* FrameControlApp.swift */,
 				BF0FCA7117DA3ABA449B4EE0 /* InstallLink.swift */,
+				9E8BE9A8C421AD40A0F4105B /* NativeSessionState.swift */,
+				07617FD9B214626526FB1F03 /* ScreenshotDownloads.swift */,
+				0D48FCBB02F0F2212C7DE3C1 /* ScreenshotJournal.swift */,
 			);
 			path = App;
 			sourceTree = "<group>";
@@ -116,7 +126,8 @@
 			children = (
 				E81218B75FEEE47B8D8BAE20 /* ComfortNotificationTests.swift */,
 				1740B691F9C25E5FB6F9EFC3 /* FrameControlTests.swift */,
-				D1234567890ABCDEF0123456 /* NativeSessionTests.swift */,
+				8F1CAE943C2556A960890079 /* NativeSessionTests.swift */,
+				AB8610920C7D797E5963CF88 /* ScreenshotSyncTests.swift */,
 			);
 			path = FrameControlTests;
 			sourceTree = "<group>";
@@ -125,6 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				9B24E1BCD4F69A24C7DEF02F /* RootView.swift */,
+				5EBD10B73DF1E95F67A3B074 /* ScreenshotDownloadsView.swift */,
 				DB544223FC60A59CC3E8EF5F /* SetupView.swift */,
 			);
 			path = Views;
@@ -266,15 +278,18 @@
 			buildActionMask = 2147483647;
 			files = (
 				F94D0252F8CC5854314B84B2 /* AppModel.swift in Sources */,
-				A1234567890ABCDEF0123456 /* NativeSessionState.swift in Sources */,
 				78427FC66780623F31E7501E /* FrameControlApp.swift in Sources */,
 				E6898C714A92D3979F73B6E1 /* FrameFinder.swift in Sources */,
 				12B21D3319BAF5AE79948560 /* FrameLink.swift in Sources */,
 				0DEE50BD563B1D8C328C4C0A /* HeadsetServer.swift in Sources */,
 				4622FE0F0D6499CD642C29A2 /* InstallLink.swift in Sources */,
 				41A697B9924018DA48F24A1F /* Keys.swift in Sources */,
+				F0ECE06D5DD29F19CC41FDFB /* NativeSessionState.swift in Sources */,
 				476D8858DC2C9E6616B084BC /* PortForwarder.swift in Sources */,
 				765661DBC0E6798A27CC60DB /* RootView.swift in Sources */,
+				DFD89170E502260F005EEC73 /* ScreenshotDownloads.swift in Sources */,
+				C046F310BA857BCEC98BE00E /* ScreenshotDownloadsView.swift in Sources */,
+				0CF0B365CE5974753E8C3C2B /* ScreenshotJournal.swift in Sources */,
 				9657F7BC23E3352E5AB30777 /* SetupView.swift in Sources */,
 				1A07EC692B0FF723907EA77B /* WebShell.swift in Sources */,
 			);
@@ -286,7 +301,8 @@
 			files = (
 				A0C5B00E257230A38DBD9E54 /* ComfortNotificationTests.swift in Sources */,
 				DC043FB74BE2D23F3A5826BF /* FrameControlTests.swift in Sources */,
-				C1234567890ABCDEF0123456 /* NativeSessionTests.swift in Sources */,
+				46EF7595BE5B36664A11AEB5 /* NativeSessionTests.swift in Sources */,
+				E2FD56BB5BC1D9AF5CDBF210 /* ScreenshotSyncTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

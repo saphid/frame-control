@@ -57,6 +57,25 @@ makes.
 | Sleep, restart, shut down ask in a terminal | The page asks for the Developer Mode password |
 | Compatibility reports kept on the computer | Kept on the Frame (`~/.local/share/Frame Control`) |
 
+## Automatic screenshot downloads (in development)
+
+The screenshot-download implementation on this branch copies new Steam screenshots
+while Frame Control is open and connected. It starts with the first successful
+screenshot listing as its baseline; older captures still use the existing Save
+action. Originals remain inside the app, and **Save screenshots to Photos** is
+enabled by default, subject to add-only Photos permission.
+
+Open **Downloads & Photos** on the Screenshots page, or **Screenshot downloads**
+on the native connection screen. Turn the Photos setting off to keep new downloads
+only in Frame Control. Re-enabling it does not export those app-only captures.
+The local list and its Share buttons work without a headset connection. Failed
+Photos exports retain the original and retry while the app is open; an interrupted
+Photos transaction needs a manual check before saving again to avoid duplicates.
+
+Background notification delivery and Android support are not implemented by this
+change, and it has not been released. See the [verification record](evidence/phone-screenshot-sync-2026-10-24.md)
+and [remaining work](https://github.com/saphid/frame-control/issues/108).
+
 ## Building
 
 ```sh

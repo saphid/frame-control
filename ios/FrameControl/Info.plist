@@ -52,7 +52,7 @@
 	<key>NSLocalNetworkUsageDescription</key>
 	<string>Frame Control finds your Steam Frame on your network and connects to it.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
-	<string>Frame Control saves headset captures and screenshots to your photo library when you ask it to.</string>
+	<string>Frame Control automatically saves new headset screenshots to Photos when Save screenshots to Photos is enabled.</string>
 	<key>UILaunchScreen</key>
 	<dict>
 		<key>UIColorName</key>

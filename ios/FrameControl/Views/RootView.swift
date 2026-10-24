@@ -39,6 +39,15 @@ struct RootView: View {
         }
         .preferredColorScheme(.dark)
         .tint(.frameBlue)
+        .safeAreaInset(edge: .bottom) {
+            if case .ready = model.phase {} else {
+                Button("Screenshot downloads") { model.showScreenshotDownloads = true }
+                    .padding().frame(maxWidth: .infinity).background(Color.frameBackground)
+            }
+        }
+        .sheet(isPresented: $model.showScreenshotDownloads) {
+            ScreenshotDownloadsView(downloads: model.screenshots)
+        }
     }
 }
 

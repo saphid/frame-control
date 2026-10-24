@@ -1256,6 +1256,7 @@
   <section id="shots">
     <div class="shelf-head"><h2>Screenshots</h2><span class="count" id="shotCount"></span><span class="spacer"></span>
       <button class="small" id="shotsRefresh">Refresh</button>
+      <button class="small" id="phoneShotDownloads" hidden>Downloads &amp; Photos</button>
       <button class="small" id="shotsFolder" title="Open the SteamFrame folder in your Pictures">Show folder</button>
       <button class="action small" id="shotsSaveNew" disabled>Save new to this computer</button>
     </div>
@@ -5078,6 +5079,10 @@ api("/api/host").then(applyHostWording).catch(() => {});
 // thumbs: id -> promise of an object URL, kept across reloads so a refresh
 // that finds a new shot fetches only that one's thumbnail.
 const shots = { list: [], sig: null, thumbs: new Map(), loading: null, gen: 0, fill: 0 };
+if (window.frameApp?.screenshotDownloads) {
+  $("phoneShotDownloads").hidden = false;
+  $("phoneShotDownloads").onclick = () => window.frameApp.screenshotDownloads();
+}
 const STEAMVR_APPID = "250820";
 const SHOTS_POLL_MS = 8000;
 function shotApp(appid) {

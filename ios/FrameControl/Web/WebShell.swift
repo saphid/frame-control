@@ -59,6 +59,7 @@ struct WebShell: UIViewRepresentable {
         setUpConnection: () => call("setUpConnection"),
         open: (what) => call("open", what),
         saveImages: (images) => call("saveImages", images),
+        screenshotDownloads: () => call("screenshotDownloads"),
         onInstallLink: (cb) => { installCb = cb; return call("installLinkReady", window.__frameDocumentID); },
       };
       window.__frameInstallLink = (req) => { if (!installCb) return false; installCb(req); return true; };
@@ -162,6 +163,9 @@ struct WebShell: UIViewRepresentable {
                 guard !images.isEmpty else { return replyHandler(nil, "No images to save") }
                 share(images)
                 replyHandler(["message": "Choose Save Image to keep \(images.count == 1 ? "it" : "them") in Photos"], nil)
+            case "screenshotDownloads":
+                model.showScreenshotDownloads = true
+                replyHandler(true, nil)
             case "installLinkReady":
                 guard let id = arg as? String, let web,
                       let data = try? JSONSerialization.data(withJSONObject: id, options: .fragmentsAllowed),

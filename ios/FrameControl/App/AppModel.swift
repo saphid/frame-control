@@ -22,6 +22,8 @@ final class AppModel: ObservableObject {
     /// Native recovery remains reachable even when WebKit cannot draw a page.
     @Published private(set) var webRecoveryMessage: String?
     @Published private(set) var webReloadID = 0
+    let screenshots = ScreenshotDownloads()
+    @Published var showScreenshotDownloads = false
 
     func webContentFailed(at url: URL, message: String) {
         guard phase == .ready(url) else { return }
@@ -45,6 +47,7 @@ final class AppModel: ObservableObject {
         let saved = UserDefaults.standard.data(forKey: Self.settingsKey).flatMap { try? JSONDecoder().decode(FrameSettings.self, from: $0) }
         settings = saved
         phase = saved == nil ? .setup : .connecting("Connecting")
+        if let identity = UserDefaults.standard.string(forKey: Self.hostKeyKey) { screenshots.load(identity: identity) }
     }
 
     var deviceName: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }
@@ -146,6 +149,7 @@ final class AppModel: ObservableObject {
     /// Every connection attempt has a number; anything that finishes after a newer
     /// attempt started (or the user went back to setup) closes what it made and stops.
     private func invalidate() {
+        screenshots.stop()
         attempt += 1
         retrying = false
         webRecoveryMessage = nil
@@ -200,6 +204,7 @@ final class AppModel: ObservableObject {
             }
             #endif
             phase = .ready(URL(string: page)!)
+            startScreenshots()
             // Runs at once if it stopped in the moment since the check above.
             server.whenExited { [weak self] tail in
                 Task { @MainActor in self?.lost(mine, "Frame Control on the headset stopped. \(tail.suffix(200))") }
@@ -254,6 +259,7 @@ final class AppModel: ObservableObject {
     /// Called when the app comes back to the foreground: iOS may have dropped the
     /// connection, or left it looking open, while it was in the background.
     func resume() {
+        startScreenshots()
         switch phase {
         case .ready:
             let mine = attempt
@@ -284,6 +290,7 @@ final class AppModel: ObservableObject {
     }
 
     private func teardown() async {
+        screenshots.stop()
         forwarder?.stop()
         forwarder = nil
         server = nil
@@ -297,5 +304,12 @@ final class AppModel: ObservableObject {
         var bytes = [UInt8](repeating: 0, count: 24)
         _ = SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes)
         return bytes.map { String(format: "%02x", $0) }.joined()
+    }
+
+    func suspend() { screenshots.stop() }
+
+    private func startScreenshots() {
+        guard case .ready(let url) = phase, let hostKey else { return }
+        screenshots.start(url: url, identity: hostKey)
     }
 }
