@@ -14,6 +14,15 @@ import frame_titles  # noqa: E402
 from frame_titles import FrameError  # noqa: E402
 
 
+class DevkitNames(unittest.TestCase):
+    def test_holo_script_is_preferred_with_vendored_steamos_fallback(self):
+        command = frame_titles.devkit_script('prepare-upload', '--gameid MyGame')
+        self.assertLess(command.index('holo-prepare-upload'), command.index('steamos-prepare-upload'))
+        self.assertIn('[ -f ~/devkit-utils/holo-prepare-upload ]', command)
+        with self.assertRaises(ValueError):
+            frame_titles.devkit_script('unknown')
+
+
 def elf(machine, e_type=3, interp=True, pad=0):
     """A 64-bit little-endian ELF header plus one program header (PT_INTERP or PT_LOAD)."""
     ident = b'\x7fELF' + bytes([2, 1, 1]) + b'\0' * 9

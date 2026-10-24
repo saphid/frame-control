@@ -293,7 +293,7 @@ def load_baseline(path):
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Read-only Frame setup diagnostics. Never pairs, repairs or asks for a password.')
     parser.add_argument('--alias', default='frame', help='Existing trusted SSH alias (default: frame)')
-    parser.add_argument('--lan', default='frame.local', help='LAN fallback host/IP')
+    parser.add_argument('--lan', help='Optional LAN IP or host name; SteamOS 0.5.6 no longer publishes .local names')
     parser.add_argument('--usb', default='10.86.200.233', help='USB fallback IP; use only with the intended headset connected')
     parser.add_argument('--plan', action='store_true', help='Print a read-only repair plan from recognized evidence')
     parser.add_argument('--save-report', metavar='FILE', help='Create a local JSON baseline (never overwrite an existing file)')
@@ -307,6 +307,8 @@ def main(argv=None):
             print('UNKNOWN Baseline: Cannot read a valid doctor report; no comparison performed.')
             return 2
     for value in (args.alias, args.lan, args.usb):
+        if value is None:
+            continue
         if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9._:-]{0,252}', value):
             parser.error('Use a plain alias, hostname or IP address.')
     print('Frame doctor: read-only; no passwords, pairing, repairs or raw logs. Reports are saved only with --save-report.')
@@ -327,7 +329,11 @@ def main(argv=None):
         print('UNKNOWN Baseline: SSH target configuration differs; comparison refused.')
         return 2
     source = Path(__file__).read_text()
-    for label, host in (('configured alias (Tailscale if configured)', None), ('LAN', args.lan), ('USB-C', args.usb)):
+    routes = [('configured alias (Tailscale if configured)', None)]
+    if args.lan:
+        routes.append(('LAN', args.lan))
+    routes.append(('USB-C', args.usb))
+    for label, host in routes:
         result = run(ssh_args(args.alias, host, identity) + ['python3 -B - --probe'], timeout=90, input=source)
         if result is not None and result.returncode == 0:
             try:

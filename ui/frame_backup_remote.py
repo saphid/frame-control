@@ -428,7 +428,8 @@ def session():
     gamescope = (_running('gamescope') or _running('gamescope-wl') or
                  _running('start-gamescope-session', full=True))
     plasma = _running('plasmashell')
-    nested = _running('steamos-nested-desktop', full=True)  # a script: its process name is the shell's
+    nested = (_running('holo-nested-desktop', full=True) or
+              _running('steamos-nested-desktop', full=True))  # scripts: process name is the shell's
     targets = {unit: _session_target(unit) for unit in SESSION_TARGETS}
     game, desktop = (targets[unit] for unit in SESSION_TARGETS)
     mode = 'unknown'

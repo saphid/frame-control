@@ -44,6 +44,9 @@ Live video of what the lenses show, or of the app panel in use, flat and still h
 **🔋 Battery and status**<br>
 Charge, charging watts and time left, storage, memory, temperature, Wi-Fi, and what's running.
 
+For PC-side USB, driver, radio and network manager evidence, use the
+[Linux Wireless Adapter doctor](docs/linux-wireless-adapter-doctor.md).
+
 For repeatable read-only battery, power-rail, temperature and fan measurements,
 use the [power and heat sampler](docs/power-and-heat.md).
 
@@ -254,6 +257,7 @@ Frame's software fits together, all checked against a real headset and labelled
 | [Frame Control in detail](docs/frame-control.md) | Every feature, how it works, per-platform notes, building |
 | [Scripts and headset setup](docs/scripts.md) | The command-line helpers, minimum typing, streaming options, floating panels |
 | [How the Frame works](docs/how-the-frame-works.md) | SteamVR → gamescope → Plasma, verified facts, debugging |
+| [SteamOS October 2026 compatibility](docs/steamos-2026-10-compat.md) | Frame OS 0.5.6 connection changes and SteamOS 3.9.5 PC host notes |
 | [Android apps (Lepton)](docs/apks.md) | Sideloading, the rated F-Droid catalogue, per-app instances |
 | [Import from my Quest](docs/quest-import.md) | Copy games you own off your Quest by USB; what runs, and why licence-checked games may not |
 | [My Meta library](docs/meta-library.md) | Experimental: install and test Quest games your Meta account owns, with your own token |
