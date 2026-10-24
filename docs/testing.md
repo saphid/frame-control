@@ -184,7 +184,15 @@ Steam, SteamVR, process groups or arbitrary descendants. A process that drops
 all title-path evidence cannot safely be attributed and is outside this
 check. Unreadable `/proc` fields provide no ownership evidence; other readable
 fields are still checked, and a wholly unattributable process is left alone.
-A real Proton launch still needs coordinated headset verification.
+Real Frame verification, 2026-10-24, SteamOS build `20261015.6141207`: the
+fixed Python smoke entry point passed all 13 steps under the shared device lock.
+The `fc_smoke_exe` launch ran under Proton Experimental (ARM64), and its
+remove step stopped five test-owned wrapper/Proton PIDs before removing the
+title; the following process sweep found none. The final cleanup found no
+test titles or processes, the test desktop was closed, and the battery
+remained at 99%. The `scripts/frame-smoke.sh` zsh wrapper could not run
+on lxso2 because zsh is absent; `python3 tests/smoke/frame_smoke.py` ran
+the same entry point instead.
 The local regression suite runs real Linux processes in temporary fake title
 directories (including deleted folders and a TERM-resistant wrapper); it checks
 exit, escalation and survival of unrelated processes without SSH or a headset:

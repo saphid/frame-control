@@ -7,4 +7,5 @@
   rechecks processes tied to exact reserved test-title paths, uses PID handles
   for safe TERM/KILL escalation, and records stopped PIDs. Unrelated titles and
   shared Wine services are left alone. Verified with local Linux process
-  regressions; real Proton/headset validation remains outstanding.
+  regressions and a 13/13 real Frame smoke run that stopped five test-owned
+  Proton process PIDs before removing the Windows test title.
