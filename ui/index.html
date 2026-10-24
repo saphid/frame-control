@@ -1826,7 +1826,7 @@
   </div>
   <div class="page" data-page="settings">
     <div class="workspace-heading"><div><a href="#settings" id="settingsBack" class="workspace-link" hidden>← All settings</a><h1 id="settingsTitle">Settings</h1><p id="settingsSubtitle">Connection, headset controls and Frame Control preferences.</p></div></div>
-    <div id="settingsDirectory" class="quick-routes"><a href="#devices"><span>Devices &amp; connection</span><small>Connect a Frame or switch headsets</small></a><a href="#control"><span>Control Center</span><small>Live metrics and searchable controls</small></a><a href="#home"><span>Frame activity</span><small>Readiness, running apps and downloads</small></a><a href="#display"><span>App display &amp; reports</span><small>Resolution, scale and compatibility</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Images and artwork sources</small></a><a href="#autoSync" id="syncLink"><span>Copy to this computer</span><small>New screenshots and clips, automatically</small></a><a href="#privacy"><span>Privacy &amp; updates</span><small>Sharing preferences and app updates</small></a><a href="#power"><span>Remote &amp; power</span><small>Remote access, sleep and restart</small></a></div>
+    <div id="settingsDirectory" class="quick-routes"><a id="wirelessDoctorSettings" href="/wireless-doctor" hidden><span>Linux Wireless Adapter doctor</span><small>Read-only checks on this PC</small></a><a href="#devices"><span>Devices &amp; connection</span><small>Connect a Frame or switch headsets</small></a><a href="#control"><span>Control Center</span><small>Live metrics and searchable controls</small></a><a href="#home"><span>Frame activity</span><small>Readiness, running apps and downloads</small></a><a href="#display"><span>App display &amp; reports</span><small>Resolution, scale and compatibility</small></a><a href="#artworkSettings"><span>Library artwork</span><small>Images and artwork sources</small></a><a href="#autoSync" id="syncLink"><span>Copy to this computer</span><small>New screenshots and clips, automatically</small></a><a href="#privacy"><span>Privacy &amp; updates</span><small>Sharing preferences and app updates</small></a><a href="#power"><span>Remote &amp; power</span><small>Remote access, sleep and restart</small></a></div>
     <div id="settingsWorkspace" hidden></div>
   </div>
 
@@ -1843,6 +1843,7 @@
       <div class="list" id="devList"><div class="sub">Loading…</div></div>
       <div class="hint">Frame Control talks to one headset at a time. Each can be reached at several addresses;
         it tries them all at once and uses the best one that answers on the network you're on.</div>
+      <p id="wirelessDoctorLink" hidden><a href="/wireless-doctor">Linux Wireless Adapter doctor ↗</a><br><span class="sub">Read-only PC checks; works without a connected Frame.</span></p>
       <h3 style="margin-top:22px">This computer's network</h3>
       <div id="netNow" class="sub">Checking…</div>
       <div class="row" style="margin-top:8px; flex-wrap:nowrap">
@@ -2151,6 +2152,11 @@ $("bottombar").onclick = () => {
 const HOST = { computer: "computer" };
 function applyHostWording(h) {
   Object.assign(HOST, h);
+  for (const id of ["wirelessDoctorSettings", "wirelessDoctorLink"]) {
+    $(id).hidden = !!h.mobile || h.os !== "Linux";
+    const link = $(id).tagName === "A" ? $(id) : $(id).querySelector("a");
+    link.href = "/wireless-doctor?key=" + encodeURIComponent(UI_KEY);
+  }
   window.frameControlCenter?.host(h);
   $("desktopBatteryComfort").hidden = !!h.mobile || !window.frameApp?.notify;
   // The iPhone app: the server runs on the Frame, and saving goes to the phone's Photos.

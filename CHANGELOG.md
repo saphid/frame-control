@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add a Linux PC Wireless Adapter doctor in Settings and Devices, with a source
+  CLI and local JSON report. Select observed hardware without assuming Valve
+  IDs; inspect USB/interface presence, driver/module binding, udev/permissions,
+  rfkill, channel/band and network manager evidence. Missing evidence stays
+  unknown; all checks are read-only and never contact the Frame.
+  [Usage and verification limits](docs/linux-wireless-adapter-doctor.md).
+
 - Add Linux Tools → Steam desktop sharing: request `steam -pipewire` only after
   checking Steam is not running, or open KDE Application Permissions with
   instructions to revoke a verified Steam screen-sharing session manually. No

@@ -44,6 +44,9 @@ Live video of what the lenses show, or of the app panel in use, flat and still h
 **🔋 Battery and status**<br>
 Charge, charging watts and time left, storage, memory, temperature, Wi-Fi, and what's running.
 
+For PC-side USB, driver, radio and network manager evidence, use the
+[Linux Wireless Adapter doctor](docs/linux-wireless-adapter-doctor.md).
+
 For repeatable read-only battery, power-rail, temperature and fan measurements,
 use the [power and heat sampler](docs/power-and-heat.md).
 
