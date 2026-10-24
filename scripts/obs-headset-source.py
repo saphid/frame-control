@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+"""Send the Frame's SteamVR mirror and output audio to a local OBS Media Source.
+
+OBS opens udp://127.0.0.1:15099 with input format mpegts. Nothing is bound to
+the network: this process sends MPEG-TS packets to the computer's loopback.
+"""
+import argparse
+import shlex
+import signal
+import socket
+import subprocess
+import sys
+
+
+PACKET = 188
+DATAGRAM = PACKET * 7
+
+
+def remote_command(height=720, fps=30, audio=True):
+    if height not in (720, 1080) or fps not in (30, 60):
+        raise ValueError('height must be 720 or 1080; fps must be 30 or 60')
+    rate = 3 if height == 720 else 6
+    clock = '-thread_queue_size 1024 -use_wallclock_as_timestamps 1'
+    video = f'{clock} -f v4l2 -video_size 1920x1080 -i /dev/video99'
+    sound = f' {clock} -f pulse -i @DEFAULT_MONITOR@' if audio else ''
+    maps = '-map 0:v:0 -map 1:a:0' if audio else '-map 0:v:0'
+    encode = (f'-vf fps={fps},scale=-2:{height},format=yuv420p '
+              f'-c:v libx264 -preset ultrafast -tune zerolatency -g {fps * 2} -bf 0 '
+              f'-b:v {rate}M -maxrate {rate}M -bufsize {rate}M '
+              '-x264-params repeat-headers=1')
+    if audio:
+        encode += ' -af aresample=async=1 -c:a aac -b:a 160k'
+    return ("export XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR:-/run/user/$(id -u)}; "
+            "test -e /dev/video99 || { echo 'SteamVR mirror /dev/video99 is missing' >&2; exit 3; }; "
+            f'ffmpeg -hide_banner -loglevel warning -nostdin {video}{sound} '
+            f'{maps} {encode} -f mpegts -flush_packets 1 -')
+
+
+def relay(source, destination):
+    """Preserve 188-byte MPEG-TS packet boundaries in loopback datagrams."""
+    pending = bytearray()
+    total = 0
+    while data := source.read(DATAGRAM):
+        pending.extend(data)
+        size = min(len(pending) // PACKET * PACKET, DATAGRAM)
+        if size:
+            destination.send(bytes(pending[:size]))
+            del pending[:size]
+            total += size
+    if pending:
+        raise RuntimeError('Frame stream ended with an incomplete MPEG-TS packet')
+    return total
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--frame', default='frame', help='SSH host or alias (default: frame)')
+    parser.add_argument('--port', type=int, default=15099, help='local OBS UDP port (default: 15099)')
+    parser.add_argument('--height', type=int, choices=(720, 1080), default=720)
+    parser.add_argument('--fps', type=int, choices=(30, 60), default=30)
+    parser.add_argument('--no-audio', action='store_true', help='video only when the Frame audio monitor is unavailable')
+    args = parser.parse_args(argv)
+    if not 1024 <= args.port <= 65535:
+        parser.error('port must be between 1024 and 65535')
+    if not args.frame or args.frame.startswith('-') or any(c.isspace() for c in args.frame):
+        parser.error('frame must be one SSH host or alias')
+    command = remote_command(args.height, args.fps, not args.no_audio)
+    ssh = ['ssh', '-T', '-o', 'BatchMode=yes', args.frame, 'bash', '-lc', shlex.quote(command)]
+    target = ('127.0.0.1', args.port)
+    print(f'Sending Frame view to udp://127.0.0.1:{args.port} for OBS; press Ctrl+C to stop.', file=sys.stderr)
+    signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
+        proc = subprocess.Popen(ssh, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+        try:
+            amount = relay(proc.stdout, _Sender(udp, target))
+            code = proc.wait(timeout=10)
+            if code or not amount:
+                raise RuntimeError(f'Frame stream stopped (SSH exit {code}; {amount} bytes). '
+                                   'Check SteamVR and the audio monitor; try --no-audio if needed.')
+            return 0
+        except KeyboardInterrupt:
+            return 0
+        finally:
+            proc.stdout.close()
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait()
+
+
+class _Sender:
+    def __init__(self, sock, target):
+        self.sock, self.target = sock, target
+
+    def send(self, data):
+        self.sock.sendto(data, self.target)
+
+
+if __name__ == '__main__':
+    try:
+        sys.exit(main())
+    except (OSError, RuntimeError) as error:
+        print(error, file=sys.stderr)
+        sys.exit(1)
