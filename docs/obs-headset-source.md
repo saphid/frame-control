@@ -5,19 +5,27 @@ OBS on a Linux or macOS computer. The helper uses the same `/dev/video99` video
 source and default-output monitor as **Capture & Live → Record**. It sends a
 local MPEG-TS stream; no port is opened to the LAN or internet.
 
-1. Connect to the Frame with `ssh frame` and start SteamVR. Install `python3`
-   on the computer; the Frame already has `ffmpeg`. OBS runs on the computer.
-2. From this repository, run:
+1. Connect to the Frame and start SteamVR. OBS runs on the computer; the Frame
+   already has `ffmpeg`.
+2. In the **Linux or macOS Frame Control app**, open **Capture & Live** and click
+   **Start OBS source**. Keep Frame Control open; **Stop OBS source**, switching
+   headsets, or quitting the app closes its SSH stream. It uses the selected
+   headset and the app's bundled helper.
+3. In OBS, add a **Media Source**, clear **Local File**, set **Input** to
+   `udp://127.0.0.1:15099`, and set **Input Format** to `mpegts`. The source
+   carries video and AAC audio. Use OBS's audio mixer to choose monitoring and
+   recording levels.
+
+From a source checkout, you can instead install `python3` on the computer and
+run:
 
    ```sh
    python3 scripts/obs-headset-source.py
    ```
 
-3. In OBS, add a **Media Source**, clear **Local File**, set **Input** to
-   `udp://127.0.0.1:15099`, and set **Input Format** to `mpegts`. The source
-   carries video and AAC audio. Use OBS's audio mixer to choose monitoring and
-   recording levels. Leave the helper running while the source is in use;
-   Ctrl+C stops it.
+Ctrl+C stops the checkout helper. The app's Start/Stop control currently supports
+Linux and macOS; Windows users can run the checkout helper with Python 3 and
+OpenSSH from a terminal, but this path has not been verified on a Windows PC.
 
 `--height 1080 --fps 60` increases quality and Frame CPU use. The default is
 720p30. `--port 15100` selects another loopback port; use the same port in

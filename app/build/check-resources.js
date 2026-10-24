@@ -17,6 +17,7 @@ const REQUIRED = [
   "ui/frame_status.py",
   "scripts/frame_power_sample.py",
   "scripts/frame_power_report.py",
+  "scripts/obs-headset-source.py",
   "ui/frame_android.py",
   "frame/android/lepton-app.sh",
   "frame/openxr-compat/XrApiLayer_FRAME_compat.json",

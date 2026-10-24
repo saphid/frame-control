@@ -21,6 +21,15 @@ contextBridge.exposeInMainWorld("frameApp", {
   writeImage: (bytes) => ipcRenderer.invoke("clipboard:writeImage", bytes),
   setUpConnection: () => ipcRenderer.invoke("connection:setup"),
   restartServer: () => ipcRenderer.invoke("server:restart"),  // the "couldn't start" page's Try Again
+  obs: {
+    status: () => ipcRenderer.invoke("obs:status"),
+    start: () => ipcRenderer.invoke("obs:start"),
+    stop: () => ipcRenderer.invoke("obs:stop"),
+    onState: (cb) => {
+      ipcRenderer.removeAllListeners("obs:state");
+      ipcRenderer.on("obs:state", (_e, state) => cb(state));
+    },
+  },
   // The Frame menu's headset switcher: the page tells it the headsets, and hears picks.
   devicesChanged: (list) => ipcRenderer.send("devices:changed", list),
   onUseDevice: (cb) => {

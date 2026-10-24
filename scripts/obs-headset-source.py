@@ -94,9 +94,13 @@ def main(argv=None):
 class _Sender:
     def __init__(self, sock, target):
         self.sock, self.target = sock, target
+        self.ready = False
 
     def send(self, data):
         self.sock.sendto(data, self.target)
+        if not self.ready:
+            self.ready = True
+            print('Frame Control OBS stream is ready', file=sys.stderr, flush=True)
 
 
 if __name__ == '__main__':
