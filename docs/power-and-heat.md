@@ -24,6 +24,49 @@ The first sample has no CPU utilization: two valid `/proc/stat` observations
 are required. CPU utilization then covers the interval between observations,
 averaged across the machine, rather than the utilization of one process.
 
+## Start, stop and open an accessible report
+
+From a source checkout with Python 3 and your already trusted `ssh frame`
+connection, start a local observation:
+
+```sh
+scripts/frame-power-sample.sh --count 12 --interval 5 --html power-report.html
+```
+
+Progress is printed on your computer as each sample arrives. Wait for completion,
+or press **Ctrl+C once** to stop local collection and save the samples already
+received. Open `power-report.html` in your browser using its Open File command.
+The file is self-contained and works offline: no server, scripts, external
+resources, account or upload. It includes a table with named metrics, source
+paths, units, minimum/mean/maximum/last values, and available/unknown counts.
+Keyboard users can focus the table region to scroll through its columns.
+Charging states and entirely unavailable sensor families remain explicit.
+Use **Download JSON samples and summary** or **Download CSV samples** to save
+raw measurements. The HTML also embeds those measurements; review it before
+sharing. No automatic browser launch occurs.
+
+HTML sessions are limited to `count × interval <= 600` seconds, with a 30-second
+transport allowance and at most nine seconds of local child/reader cleanup. The default
+12 samples at five-second intervals take about 55 seconds. Existing output files
+are never overwritten; choose a new filename for each run. `--html` cannot be
+combined with `--csv`. This source-checkout flow is not a desktop Tools panel
+and is not added to the packaged app.
+
+Stop, timeout, SSH failure or a smoke-test lock marks the report incomplete;
+earlier received samples remain downloadable. Exit status is 75 for incomplete
+reports, 0 for completion. A connection that cannot start may instead return 1
+without an HTML file. Empty reports clearly show zero samples, not a successful
+measurement. If saving the file fails, received JSON is printed on stdout as a
+recovery path. Do not treat a partial report as a full baseline.
+
+Stopping terminates only this command's local SSH child. It sends no remote
+process-control command. The bounded remote Python reader exits when it next
+writes to the closed connection (normally at the next sample, up to one interval
+later); it can still read sensors before discovering the disconnect. Stop is
+not an immediate headset-side cancellation guarantee. The reader still checks
+the smoke-test lock before every sample. No lock is acquired or removed by this
+flow, and no power, thermal, service, password or security controls are exposed.
+
 ## What it reads
 
 - Battery percentage, driver charging state, signed battery watts and battery
@@ -109,14 +152,26 @@ Quiet mode, compositor changes, CPU/fan/charging changes and remote-wake tests
 are separate work. No controls are offered here. Follow the shared-device
 procedure in [testing.md](testing.md#headset-smoke-test) for future experiments.
 
+The accessible HTML export was checked on the same build on **2026-10-24**:
+three streamed samples, 91 metric summaries and 276 CSV data rows. Chromium
+preview checks at 1280 px and 390 px confirmed the table stays in its scroll
+region; both browser downloads matched the original samples. See
+[export evidence](evidence/power-export-2026-10-24.json). Ctrl+C retention and
+local process cleanup were tested with local subprocess fixtures, not on the
+real headset. Screen-reader, Windows and macOS checks were not performed.
+
 Offline validation:
 
 ```sh
-python3 -m unittest discover -s tests -p test_power_sample.py -v
+python3 -m unittest discover -s tests -p 'test_power*.py' -v
 bash -n scripts/frame-power-sample.sh
-python3 -m py_compile scripts/frame_power_sample.py
+python3 -m py_compile scripts/frame_power_sample.py scripts/frame_power_report.py
 ```
 
 Fixtures cover units, signed and zero values, missing/malformed/permission-denied
 readings, named/discovered channels, unknown charging state, CPU warmup,
 summary counts, CSV quoting, strict SSH transport and smoke-lock interruption.
+
+Export fixtures also cover HTML escaping, download round trips, zero versus unknown,
+stream completion/failure, smoke-lock stop, timeout, Ctrl+C retention, local child
+cleanup, duration bounds and refusing to overwrite reports.

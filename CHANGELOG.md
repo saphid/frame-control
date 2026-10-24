@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Export read-only power and heat observations to an offline accessible HTML
+  report with JSON/CSV downloads. `--html FILE` limits sessions to ten minutes;
+  Ctrl+C saves received samples with an explicit incomplete state. Units,
+  unknown counts and sources remain visible; no headset controls are added.
+
 - Add a guarded `frame-doctor.sh --plan` with read-only, evidence-specific next
   steps and explicit local baseline reports for before/after diagnostics (issue
   #34). Restart risk blocks plans/comparisons; no automatic repairs, password
