@@ -44,6 +44,20 @@ them on macOS, Windows and Linux. They don't pick up `tests/e2e`.
 
 ## The fake Frame
 
+Frame doctor has focused offline tests in `tests/test_frame_doctor.py` and
+fake-Frame fault tests in `tests/e2e/test_doctor.py`:
+
+```sh
+python3 -m unittest discover -s tests -p test_frame_doctor.py -v
+scripts/e2e.sh test_doctor
+```
+
+They cover privacy filtering, host-key preservation, restart safety and missing
+journal evidence, plus asleep, full-title-storage, SSH/devkit-off and missing-key
+faults. The fake's doctor-only `systemctl show` responses assume stable restart
+counters and inactive keep-awake; unsupported queries fail. These tests do not
+exercise a real SteamOS user manager or touch a headset.
+
 `tests/fakeframe/` builds a container that stands in for the headset, and a
 second one for the computer Frame Control runs on. `scripts/e2e.sh` builds
 both, starts them with `docker compose`, runs `tests/e2e` in the host
