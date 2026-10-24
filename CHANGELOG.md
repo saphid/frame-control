@@ -2,6 +2,21 @@
 
 ## Unreleased
 
+- Add a source-checkout helper that sends the Frame's SteamVR mirror and
+  default-output audio to a local OBS Media Source. A real Frame supplied a
+  4.021-second H.264/AAC stream to a Linux receiver; OBS playback and sync
+  remain unverified. [Setup and limits](docs/obs-headset-source.md).
+
+- Link emulator setup guidance from Store → Emulators. Existing Steam library
+  shortcuts and artwork cover Android apps and sideloaded titles; Android ROM
+  transfer still needs a verified per-instance workflow.
+  [Guide](docs/emulators.md).
+
+- Record the current Frame OS mirror and charge-limit checks. Active
+  passthrough in the mirror is still unknown; this build has no supported
+  user-writable 80% charge-limit control.
+  [Headset evidence](docs/evidence/round3-headset-2026-10-25.md).
+
 - Add Windows Tools → Wireless Adapter doctor: an explicit read-only PC snapshot
   of distinct Wi-Fi Direct PnP instances, presence/link state, PC Wi-Fi and
   reported channels/bands, with possible 2.4 GHz overlap guidance. Unknowns stay
