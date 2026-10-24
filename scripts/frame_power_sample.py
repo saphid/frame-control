@@ -10,8 +10,11 @@ import io
 import json
 import math
 from pathlib import Path
+import queue
 import subprocess
 import sys
+import tempfile
+import threading
 import time
 
 LOCK = Path('/tmp/frame-test.lock')
@@ -117,7 +120,7 @@ def summarize(samples):
     return result
 
 
-def collect(status, count, interval):
+def collect(status, count, interval, emit=None):
     samples, before = [], None
     started = time.monotonic()
     stopped = None
@@ -131,6 +134,8 @@ def collect(status, count, interval):
             break
         sample['elapsedSeconds'] = round(time.monotonic() - started, 6)
         samples.append(sample)
+        if emit:
+            emit({'sample': sample})
     return {'schemaVersion': 1, 'requestedSamples': count, 'intervalSeconds': interval,
             'stopped': stopped, 'samples': samples, 'summary': summarize(samples)}
 
@@ -156,7 +161,9 @@ def parser():
     ap.add_argument('--count', type=int, default=12, help='samples, 1..720 (default 12)')
     ap.add_argument('--interval', type=float, default=5, help='seconds, 1..60 (default 5)')
     ap.add_argument('--csv', action='store_true', help='CSV samples on stdout; JSON summary on stderr')
+    ap.add_argument('--html', type=Path, metavar='FILE', help='save an offline accessible report with JSON/CSV downloads; Ctrl+C retains received samples (max 10 minutes); never overwrites')
     ap.add_argument('--probe', action='store_true', help=argparse.SUPPRESS)
+    ap.add_argument('--stream', action='store_true', help=argparse.SUPPRESS)
     return ap
 
 
@@ -171,35 +178,130 @@ def remote_payload():
             'sys.modules["frame_status"] = status\n' + Path(__file__).read_text())
 
 
+def stream_report(command, payload, count, interval):
+    """Receive each sample before the next wait; stop only our local SSH child.
+
+    The remote bounded reader exits on its next write to the closed connection.
+    No remote process-control command is sent. Keep already received samples on
+    interrupt, transport failure or deadline, clearly marked as incomplete.
+    """
+    samples, final, stopped = [], None, None
+    events = queue.Queue()
+    deadline = time.monotonic() + count * interval + 30
+    with tempfile.TemporaryFile(mode='w+') as errors:
+        proc = subprocess.Popen(command + ['--stream'], stdin=subprocess.PIPE,
+                                stdout=subprocess.PIPE, stderr=errors, text=True)
+        def receive():
+            try:
+                for line in proc.stdout:
+                    events.put(line)
+            finally:
+                events.put(None)
+        reader = threading.Thread(target=receive, daemon=True)
+        reader.start()
+        try:
+            proc.stdin.write(payload)
+            proc.stdin.close()
+            while True:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    stopped = 'Timed out; received samples retained'
+                    break
+                try:
+                    line = events.get(timeout=min(remaining, 0.2))
+                except queue.Empty:
+                    continue
+                if line is None:
+                    break
+                event = json.loads(line)
+                if 'sample' in event:
+                    if len(samples) >= count:
+                        raise ValueError('Too many samples received')
+                    samples.append(event['sample'])
+                    print(f'Received {len(samples)}/{count} samples; Ctrl+C to stop and save.', file=sys.stderr)
+                elif 'finished' in event:
+                    final = event['finished']
+            if not stopped:
+                proc.wait(timeout=max(0.1, deadline - time.monotonic()))
+        except KeyboardInterrupt:
+            stopped = 'Stopped by user; received samples retained'
+        except (OSError, ValueError, subprocess.TimeoutExpired) as exc:
+            stopped = f'Collection interrupted: {exc}'
+        finally:
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=3)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=3)
+            if not proc.stdin.closed:
+                try:
+                    proc.stdin.close()
+                except OSError:
+                    pass
+            reader.join(timeout=3)
+            proc.stdout.close()
+        if not stopped:
+            errors.seek(0)
+            if final and final.get('stopped') and proc.returncode in (0, 75):
+                stopped = final['stopped']
+            elif proc.returncode or final is None or len(samples) != count:
+                stopped = f'Incomplete collection (SSH exit {proc.returncode}): ' + errors.read(2000).strip()
+    return {'schemaVersion': 1, 'requestedSamples': count, 'intervalSeconds': interval,
+            'stopped': stopped, 'samples': samples, 'summary': summarize(samples)}
+
+
 def main(argv=None):
     ap = parser()
     args = ap.parse_args(argv)
     if not 1 <= args.count <= 720 or not math.isfinite(args.interval) or not 1 <= args.interval <= 60:
         ap.error('count must be 1..720 and interval must be finite, 1..60 seconds')
+    if args.html and (args.csv or args.probe or args.count * args.interval > 600):
+        ap.error('--html requires a host session, no --csv, and count × interval <= 600 seconds')
+    if args.html and args.html.exists():
+        ap.error('--html output already exists; choose a new file')
     # Also honor a coordinator lock on the computer before opening SSH.
     if LOCK.exists():
         print('Smoke session active (/tmp/frame-test.lock); no SSH or sensors accessed.', file=sys.stderr)
         return 75
     if args.probe:
         import frame_status
-        report = collect(frame_status, args.count, args.interval)
+        emit = (lambda event: print(json.dumps(event, allow_nan=False), flush=True)) if args.stream else None
+        report = collect(frame_status, args.count, args.interval, emit)
+        if args.stream:
+            emit({'finished': {'stopped': report['stopped']}})
+            return 75 if report['stopped'] else 0
     else:
         command = ['ssh', '-T', '-o', 'BatchMode=yes', '-o', 'StrictHostKeyChecking=yes',
                    '-o', 'ConnectTimeout=5', '-o', 'ServerAliveInterval=5',
                    '-o', 'ServerAliveCountMax=2', 'frame',
                    'python3', '-', '--probe', '--count', str(args.count), '--interval', str(args.interval)]
         try:
-            run = subprocess.run(command, input=remote_payload(), text=True, capture_output=True,
-                                 timeout=args.count * args.interval + 30)
-            if run.returncode:
-                print('Read-only sample failed: ' + (run.stderr.strip() or f'SSH exit {run.returncode}'),
-                      file=sys.stderr)
-                return run.returncode
-            report = json.loads(run.stdout)
+            if args.html:
+                report = stream_report(command, remote_payload(), args.count, args.interval)
+            else:
+                run = subprocess.run(command, input=remote_payload(), text=True, capture_output=True,
+                                     timeout=args.count * args.interval + 30)
+                if run.returncode:
+                    print('Read-only sample failed: ' + (run.stderr.strip() or f'SSH exit {run.returncode}'),
+                          file=sys.stderr)
+                    return run.returncode
+                report = json.loads(run.stdout)
         except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
             print(f'Read-only sample unavailable: {exc}', file=sys.stderr)
             return 1
-    if args.csv:
+    if args.html:
+        from frame_power_report import render
+        try:
+            with args.html.open('x', encoding='utf-8') as output:
+                output.write(render(report, csv_samples(report)))
+        except OSError as exc:
+            print(f'Could not save report: {exc}; received JSON report follows on stdout.', file=sys.stderr)
+            print(json.dumps(report, allow_nan=False))
+            return 1
+        print(f'Saved {len(report["samples"])} samples to {args.html}. Open it in your browser.', file=sys.stderr)
+    elif args.csv:
         sys.stdout.write(csv_samples(report))
         print(json.dumps({k: v for k, v in report.items() if k != 'samples'}, allow_nan=False), file=sys.stderr)
     else:

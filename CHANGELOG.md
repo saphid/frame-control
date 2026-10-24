@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Export read-only power and heat observations to an offline accessible HTML
+  report with JSON/CSV downloads. `--html FILE` limits sessions to ten minutes;
+  Ctrl+C saves received samples with an explicit incomplete state. Units,
+  unknown counts and sources remain visible; no headset controls are added.
+
 - Recover a tagged release upload when GitHub temporarily displays its draft
   as `untagged-…` after an edit, without creating a duplicate draft or
   silently retrying unrelated upload failures.
