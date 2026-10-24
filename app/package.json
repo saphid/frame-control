@@ -198,7 +198,16 @@
         "zip"
       ],
       "icon": "build/icon.png",
-      "artifactName": "Frame-Control-win-${arch}.${ext}"
+      "artifactName": "Frame-Control-win-${arch}.${ext}",
+      "extraResources": [
+        {
+          "from": "build/desktop/${os}-${arch}",
+          "to": "desktop/bundle",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

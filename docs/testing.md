@@ -187,6 +187,27 @@ refuses ids with a hyphen (`missing/invalid arguments`), which the fake had
 accepted. The fake now refuses them the same way, and Frame Control makes ids
 Steam accepts.
 
+## PC panel host tests
+
+PC in the headset (Experimental, Windows only). `tests/test_pcview.py` checks
+that only Windows gets the PC host and that it starts nothing until turned on,
+the Tools link and card wording, source-bound tickets, reconnect/Stop
+revocation, input release, source-coordinate mapping and use of the existing
+panel launcher. `tests/test_pc_controller.py` checks the C rate controller
+against a frozen trace of the Mac's Swift one.
+
+The `PC host libraries` workflow builds the native adapter on Windows (and
+the unshipped Linux adapter on Ubuntu x64 and ARM64), then runs a real x264
+synthetic stream through the HTTP/WebSocket agent. x264 is GPL, so only these
+CI builds include it (`desktop/build.py --with-x264`); the release workflow
+tests the installer's own bundle with its bundled Python and checks x264 isn't
+in it. `FRAME_PC_REQUIRE_NATIVE=1` and `FRAME_PC_REQUIRE_X264=1` make a missing
+bundle or encoder fail CI instead of skipping.
+
+None of this captures a desktop, exercises Media Foundation or a GPU, or
+checks laser alignment. The [Windows test VM](#windows-test-vm) is the next
+step for that. See [what's verified](pc-in-headset.md#whats-verified).
+
 ## Windows test VM
 
 The unit tests run on Windows in CI, but the app itself doesn't. Anything that

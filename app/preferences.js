@@ -1,7 +1,7 @@
 // Client choices live outside the local server's changing URL/origin.
 const fs = require("node:fs");
 const path = require("node:path");
-const KEYS = ["mvSeparate", "padUsed"];
+const KEYS = ["mvSeparate", "padUsed", "pcView"];
 const valid = value => value === "0" || value === "1";
 
 function preferenceStore(file) {

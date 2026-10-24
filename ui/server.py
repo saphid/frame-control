@@ -59,6 +59,7 @@ import frame_contact  # noqa: E402
 import frame_host  # noqa: E402
 import frame_link  # noqa: E402
 import frame_macview  # noqa: E402
+import frame_pcview  # noqa: E402
 import frame_media  # noqa: E402
 import frame_panels  # noqa: E402
 import frame_quest  # noqa: E402
@@ -2832,12 +2833,13 @@ def push_media(path):
             "id": token + "/" + name}
 
 
-# ---- Mac in the headset (frame_macview.py) ----------------------------------
+# ---- Mac in the headset (frame_macview.py), PC in the headset (frame_pcview.py) ----
 
 # The tunnel gets its own connection: the shared master's options would win
 # over anything added after them.
-macview = frame_macview.MacView(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
-                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin, timeout=timeout),
+macview = frame_pcview.host_view(["ssh", "-o", "BatchMode=yes", "-o", "ConnectTimeout=8"],
+                                lambda remote, stdin=None, timeout=30: ssh(remote, stdin=stdin.encode("utf-8") if stdin is not None else None,
+                                                                           timeout=timeout, text=False).decode("utf-8", errors="replace"),
                                 FRAME, track=_live_tunnels.add)
 
 
@@ -2854,7 +2856,8 @@ def macview_state(query=None):
 
 
 def macview_action(body):
-    """{action: show|stop|permissions, src, quality, w, h}."""
+    """{action: show|stop|permissions, src, quality, w, h} | {action: enable, on}.
+    enable turns PC in the headset (Experimental, Windows only) on or off."""
     if LOCAL:
         raise Failure("Runs on your computer, not the headset.", 400)
     action = body.get("action")
@@ -2867,6 +2870,10 @@ def macview_action(body):
             return macview.stop(body.get("src") or None)
         if action == "permissions":
             return macview.request_permissions()
+        if action == "enable":
+            if not isinstance(macview, frame_pcview.PCView):
+                raise Failure("PC in the headset is only available on Windows.", 400)
+            return macview.set_enabled(body.get("on") is True)
     except frame_macview.MacViewError as e:
         raise Failure(str(e), 502)
     raise Failure("unknown action", 400)

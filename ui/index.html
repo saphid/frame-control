@@ -1420,7 +1420,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's windows and screens</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
 <section class="panel" id="vrTools">
     <div class="shelf-head"><h2>VR comfort and performance</h2><span class="spacer"></span><span class="sub" id="vrUpdated">Waiting for the Frame</span></div>
@@ -1703,8 +1703,19 @@
     </section>
 
     <section class="panel" id="macview" hidden>
-      <div class="shelf-head"><h2>Mac in the headset</h2><span class="count" id="mvCount"></span><span class="spacer"></span>
+      <div class="shelf-head"><h2 id="mvTitle">Mac in the headset</h2><span class="tag" id="mvTag" hidden>Experimental</span><span class="count" id="mvCount"></span><span class="spacer"></span>
         <button class="small" id="mvRefresh">Refresh</button></div>
+      <div id="mvPc" hidden>
+        <p class="hint" style="color:var(--warn)">Experimental. Shows this PC's windows and screens as panels in the
+          headset, with laser and keyboard input. It builds and passes its tests on Windows in CI, but hasn't been tried on a real
+          Windows desktop or with a headset yet: capture, hardware encoding and laser clicks may not work. Clicks and keys
+          can't reach administrator apps or the sign-in screen.
+          <a href="https://github.com/saphid/frame-control/blob/main/docs/pc-in-headset.md" target="_blank" rel="noopener noreferrer">What's verified</a></p>
+        <label class="mv-opt"><input type="checkbox" id="mvPcOn"> Turn on PC in the headset
+          <span class="sub">off by default; nothing runs and no windows are listed until it's on</span></label>
+        <div class="sub" id="mvPcState" role="status" aria-live="polite" hidden></div>
+      </div>
+      <div id="mvMain">
       <label class="mv-opt"><input type="checkbox" id="mvSeparate" checked> Give each window its own display
         <span class="sub">its menus and sheets come along, nothing covers it, and it goes back when you stop</span></label>
       <div class="row" style="margin:0 0 12px"><label for="mvQuality">Picture quality</label>
@@ -1721,7 +1732,8 @@
         <button class="small danger" data-mv="stopall">Stop all</button>
       </div>
       <div class="hint">Each window or screen becomes its own panel in the headset. Place it with the SteamVR dashboard
-        (Float in World, Move, Size). Point and click with the laser, scroll with the thumbstick, and type on the Mac's keyboard.</div>
+        (Float in World, Move, Size). Point and click with the laser, scroll with the thumbstick, and type on your computer's keyboard.</div>
+      </div>
     </section>
 
     <section class="panel" id="privacy">
@@ -5546,7 +5558,7 @@ $("sessionGame").onclick = e => {
 };
 
 // ---- Mac in the headset: windows and displays as panels (ui/frame_macview.py) ----
-let mvSeq = 0, mvTimer = 0;
+let mvSeq = 0, mvTimer = 0, mvPcAsked = false;
 // streaming: the src it's shown as (a window may be "separate:<id>"), or "".
 // How a live stream is doing: frames shown, Mac-to-headset delay, bitrate, and
 // whether the network made it step down (fewer frames, then fewer pixels).
@@ -5572,9 +5584,27 @@ async function loadMacView(restart) {
   try { s = await api("/api/macview" + (restart ? "?restart=1" : "")); } catch (e) { err = e; }
   if (seq !== mvSeq || location.hash !== "#macview") return;
   const box = $("macview");
-  if (err) { box.hidden = false; return failed($("mvWindows"), err); }
-  if (!s.available) { box.hidden = true; return; }
+  if (err) { box.hidden = $("mvMain").hidden = false; return failed($("mvWindows"), err); }
+  // PC in the headset (Windows, Experimental) is off until turned on here.
+  const pc = !!s.host && s.host !== "mac";
+  $("mvTitle").textContent = pc ? "PC in the headset" : "Mac in the headset";
+  $("mvTag").hidden = $("mvPc").hidden = !pc;
+  $("mvPcOn").checked = !!s.enabled;
+  if (pc && !s.enabled && clientPreferences.get("pcView") === "1" && !restart && !mvPcAsked) {
+    mvPcAsked = true;  // once per page: a failure to start shouldn't loop
+    return mvPcEnable(true, true);
+  }
+  if (!s.available) {
+    box.hidden = !pc;
+    $("mvMain").hidden = true;
+    $("mvCount").textContent = "";
+    if (pc) { $("mvPcState").textContent = s.reason || ""; $("mvPcState").hidden = !s.reason; }
+    return;
+  }
   box.hidden = false;
+  $("mvMain").hidden = false;
+  $("mvPcState").hidden = true;
+  $("mvSeparate").closest("label").hidden = pc;  // separate virtual displays are a Mac feature
   const live = new Set((s.streams || []).map(x => x.src));
   const byStream = src => (s.streams || []).find(x => x.src === src);
   $("mvCount").textContent = live.size ? `${live.size} showing${s.route === "usb" ? " · over USB-C" : ""}` : "";
@@ -5584,6 +5614,7 @@ async function loadMacView(restart) {
   $("mvPerm").hidden = !perm.length;
   $("mvPerm").innerHTML = perm.join(" ") + `<div class="row"><button class="small action" data-mv="perm">Allow…</button>
     <span class="sub">Then press Refresh. macOS may ask you to reopen Frame Control.</span></div>`;
+  if (pc) $("mvPerm").hidden = true;  // Windows asks for no permission; elevated apps just refuse input
   const liveAs = src => live.has(src) ? src : src.startsWith("window:") && live.has("separate:" + src.slice(7)) ? "separate:" + src.slice(7) : "";
   $("mvDisplays").innerHTML = (s.displays || []).map(d =>
     mvRow(d.src, `Whole screen: ${d.name}`, `${d.w}×${d.h}${d.main ? " · main display" : ""}`, d.w, d.h, liveAs(d.src), byStream(liveAs(d.src)))).join("");
@@ -5591,16 +5622,26 @@ async function loadMacView(restart) {
   $("mvWinCount").textContent = wins.length ? `${wins.length}` : "";
   $("mvWindows").innerHTML = !s.screen ? `<div class="sub">Windows appear here once Screen Recording is allowed.</div>`
     : wins.length ? wins.map(w => mvRow(w.src, w.title || w.app, `${w.title ? w.app + " · " : ""}${w.w}×${w.h}`, w.w, w.h, liveAs(w.src), byStream(liveAs(w.src)))).join("")
-    : `<div class="sub">No windows open on this Mac's current desktop.</div>`;
+    : `<div class="sub">No windows open on this ${pc ? "PC" : "Mac's current desktop"}.</div>`;
   // Keep the numbers fresh while something is in the headset and the card is on screen.
   clearTimeout(mvTimer);
   const tick = () => { mvTimer = document.hidden || !box.offsetParent ? setTimeout(tick, 3000) : (loadMacView(), 0); };
   if (live.size) mvTimer = setTimeout(tick, 3000);
 }
 $("mvRefresh").onclick = () => loadMacView(true);
+// The choice is remembered on this computer; the server starts with it off.
+async function mvPcEnable(on, quiet) {
+  if (!quiet) clientPreferences.set("pcView", on ? "1" : "0");
+  const turn = () => api("/api/macview", { action: "enable", on });
+  if (quiet) { try { await turn(); } catch {} }
+  else await act(on ? "Turn on PC in the headset" : "Turn off PC in the headset", async () =>
+    ({ ...await turn(), message: on ? "PC in the headset is on." : "PC in the headset is off. Nothing is shared." }), $("mvPcOn"));
+  loadMacView();
+}
+$("mvPcOn").onchange = e => mvPcEnable(e.target.checked);
 // ---- client preferences: native storage survives changing localhost origins ----
 const clientPreferences = (() => {
-  const keys = ['mvSeparate', 'padUsed'], values = {}, changed = new Set();
+  const keys = ['mvSeparate', 'padUsed', 'pcView'], values = {}, changed = new Set();
   const valid = value => value === '0' || value === '1';
   const remember = (key, value) => {
     values[key] = value;
@@ -5637,7 +5678,7 @@ $("macview").onclick = async e => {
   const b = e.target.closest("[data-mv]"); if (!b) return;
   const src = b.dataset.src;
   if (b.dataset.mv === "show") {
-    const as = $("mvSeparate").checked && src.startsWith("window:") ? "separate:" + src.slice(7) : src;
+    const as = !$("mvSeparate").closest("label").hidden && $("mvSeparate").checked && src.startsWith("window:") ? "separate:" + src.slice(7) : src;
     await act(`Show ${b.dataset.title} in the headset`, async () => {
       const r = await api("/api/macview", { action: "show", src: as, quality: $("mvQuality").value,
                                             w: +b.dataset.w || undefined, h: +b.dataset.h || undefined });
@@ -7160,6 +7201,8 @@ api("/api/host").then(h => {
   Object.assign(HOST, h);
   window.frameControlCenter?.host(h);
   $("macToolLink").hidden = h.mobile || h.os !== "macOS";
+  $("pcToolLink").hidden = h.mobile || h.os !== "Windows";
+  if (!h.mobile && h.os === "Windows") TOOL_TITLES.macview = "PC in the headset";
   $("backupToolLink").hidden = !!h.mobile;  // backups are folders on a computer
   if (h.mobile) return;
   $("offSetup").hidden = false; $("offSetup").onclick = setUpActive;  // the server opens it in a terminal

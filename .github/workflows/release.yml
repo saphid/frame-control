@@ -3,14 +3,14 @@ name: release
 # Pushing a v* tag builds Frame Control for macOS, Windows and Linux and attaches
 # the installers to that tag's GitHub release (created as a draft if missing).
 # Pull requests that change how the installers are built (the Electron app, the
-# macOS helper it compiles, or this workflow) build the same installers as
+# Windows PC helper libraries, the macOS helper, or this workflow) build the same installers as
 # artifacts. ui/, scripts/, frame/ and apk-catalog/ are copied in as they are and
 # are tested by the checks workflow; run this one by hand to package them early.
 on:
   push:
     tags: ["v*"]
   pull_request:
-    paths: ["app/**", "mac/frame-mac-view/**", ".github/workflows/release.yml"]
+    paths: ["app/**", "desktop/**", "mac/frame-mac-view/**", ".github/workflows/release.yml"]
   workflow_dispatch:
 
 # A newer push to the same pull request supersedes a build still in progress.
@@ -75,6 +75,28 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: "24"
+      # PC in the headset (Experimental, Windows only): our capture adapter and
+      # the GStreamer libraries it uses, bundled into resources/desktop/bundle.
+      - uses: msys2/setup-msys2@v2
+        if: runner.os == 'Windows'
+        with:
+          msystem: UCRT64
+          update: true
+      # A mirror's HTTP 429 once failed this install (2026-10-24): retry, so a
+      # flaky mirror can't break a release build.
+      - name: MSYS2 packages for the PC host
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: |
+          for attempt in 1 2 3; do
+            pacman -S --needed --noconfirm mingw-w64-ucrt-x86_64-gcc mingw-w64-ucrt-x86_64-pkgconf mingw-w64-ucrt-x86_64-python mingw-w64-ucrt-x86_64-gstreamer mingw-w64-ucrt-x86_64-gst-plugins-base mingw-w64-ucrt-x86_64-gst-plugins-good mingw-w64-ucrt-x86_64-gst-plugins-bad mingw-w64-ucrt-x86_64-gst-plugins-ugly && exit 0
+            sleep $((attempt * 30))
+          done
+          exit 1
+      - name: Windows PC streaming libraries
+        if: runner.os == 'Windows'
+        shell: msys2 {0}
+        run: python desktop/build.py --out app/build/desktop/win-x64
       - name: Build
         working-directory: app
         shell: bash
@@ -95,6 +117,19 @@ jobs:
           for ($i = 0; $i -lt 60 -and -not (Test-Path (Join-Path $installed 'Uninstall Frame Control.exe')); $i++) { Start-Sleep 2 }
           node app/build/check-resources.js (Join-Path $installed 'resources') app/dist/win-unpacked/resources
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      # From the installed app, so this also proves the installer carries the
+      # libraries. After the check above, and without writing __pycache__,
+      # so it can't change what that check compares.
+      - name: Test the installed app's Python with the Windows PC libraries
+        if: runner.os == 'Windows'
+        shell: bash
+        env:
+          PYTHONDONTWRITEBYTECODE: "1"
+        run: |
+          resources="$(cygpath -u "$LOCALAPPDATA")/Programs/Frame Control/resources"
+          python="$resources/python/python.exe"
+          native="$(cygpath -w "$resources/desktop/bundle")"
+          FRAME_PC_NATIVE="$native" FRAME_PC_REQUIRE_NATIVE=1 FRAME_PC_INSTALLER_BUNDLE=1 "$python" -B -m unittest discover -s tests -p 'test_pc*.py' -v
       - name: Upload to the release
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
