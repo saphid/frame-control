@@ -149,11 +149,12 @@ recording with Steam's file names and export it with the real `ffmpeg`.
 
 ## What hasn't been checked
 
-None of this has run on a Steam Frame yet. In particular:
+The 2026-10-24 read-only clip list on build `20261015.6141207` again returned
+zero clips: its `gamerecordings` directory held only `gamerecording.pb`. No
+Steam recording was created during that check, so a real Steam clip export is
+still unverified. The recording and Stop path were verified earlier on that
+build, as described above. Remaining checks:
 
-- That SteamOS's `ffmpeg` can read `@DEFAULT_MONITOR@`. It has the PulseAudio
-  output device (the media player plays through it), so the input is expected,
-  but if it fails the recording is video only, as above.
 - Audio and video sync. Both inputs are stamped with the wall clock, because
   the camera device and the audio server otherwise count from different clocks.
 - The exact layout of `gamerecordings` on the Frame's SteamOS build, and

@@ -62,6 +62,12 @@ refused with a message, so send big things as a file. An empty clipboard, or
 one holding an image, says so. Neither the server nor its log ever records what
 was on the clipboard.
 
-**Not tested on a headset yet.** Reading uses the same Klipper interface as
-sending, which was verified on 2026-09-25, but `getClipboardContents` itself
-hasn't been tried on a Frame. The fake Frame (`tests/fakeframe`) answers it.
+**Verified on a Frame, 2026-10-24:** SteamOS 0.5.6, build
+`20261015.6141207`. With a temporary nested desktop open, Frame Control sent
+a 47-character test marker to Klipper, then **Copy the headset's clipboard**
+read it through `getClipboardContents` and set a Linux PC's X11 clipboard.
+Reading that PC clipboard returned the exact marker. The prior headset
+clipboard was restored and the test desktop was closed. The PC side used a
+temporary X display on lxso2; macOS and Windows clipboard backends, a user's
+copy action in a headset app, and image/size error cases remain untested on a
+real headset. The fake Frame (`tests/fakeframe`) covers the protocol cases.
