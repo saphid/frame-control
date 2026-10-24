@@ -76,7 +76,7 @@ Drag files onto the window to send them. Drop a game's .zip, folder or .exe to a
 <td valign="top">
 
 **📸 Screenshots and recordings**<br>
-Browse the shots you take in the headset and save them to your Pictures folder, or have new ones and your Steam clips copied over automatically. Record what the headset shows, with its sound, or export Steam's clips at any length, as .mp4 files in your Videos folder ([not tested on a headset yet](docs/recording.md)).
+Browse the shots you take in the headset and save them to your Pictures folder, or have new ones and your Steam clips copied over automatically. Record SteamVR's mirrored headset view, with its sound, or export Steam's clips at any length, as .mp4 files in your Videos folder. [Recording details and passthrough limits](docs/recording.md#does-record-include-passthrough).
 
 **⌨️ Keyboard and trackpad**<br>
 Type and point in the headset from your computer or phone, through Valve's own input path, with nothing to install. Accents and emoji use KDE Connect, which Frame Control brings along and sets up the first time you type one. Copy text to the headset's clipboard and back again. Press T to open it.
