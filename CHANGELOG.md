@@ -7,6 +7,15 @@
   check SteamVR and report the exact message and SteamOS version, rather than
   claiming no panel is open. This does not establish a new capture fix.
 
+- Add an opt-in desktop low-battery alert without starting a family session.
+  Existing status reads confirm low charge and drain; recovery hysteresis and a
+  ten-minute cooldown limit repeat alerts. Off on page open/headset switch;
+  pauses with hidden-page status refreshes. No extra polling or headset changes.
+
+- Clarify first-time desktop downloads, installation and opening on the website
+  and README, including CPU choices, unsigned-app warnings, pairing fallback
+  and the source-only iOS build. Keep section navigation available on mobile.
+
 - Treat headset aliases and other CSV metadata as plain text in power and heat
   exports, so spreadsheet formula prefixes cannot run when a report is opened.
 

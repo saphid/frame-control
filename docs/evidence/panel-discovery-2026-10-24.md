@@ -35,10 +35,25 @@ The guarded command exited with status 3 before the session, X-property or
 panel-helper probes ran. The other task's lock was left alone. No application
 was installed, started, stopped or focused; no headset settings changed.
 
-Blocker: the shared device was occupied, and its current build differs from
-the reported 0.4.5 build. There is no safe reproduction establishing a further
-capture/discovery fix for the original report. This PR improves a demonstrated
-diagnostic error; it must not close #73 as a verified new capture fix.
+That implementation probe was blocked by the occupied shared device. The
+coordinator later supplied a separate narrow read-only observation on SteamOS
+0.5.6, BUILD_ID `20261015.6141207`, at battery 99%, with the shared lock absent
+and both `xprop` and `xwininfo` installed:
+
+- In **Game Mode**, `DISPLAY=:0 xprop -root GAMESCOPE_FOCUSABLE_WINDOWS
+  GAMESCOPE_FOCUSED_WINDOW` returned both properties **present but empty**.
+- On `DISPLAY=:1`, both properties were reported **not found**.
+
+This observation distinguishes a confirmed empty list on `:0` from absent
+properties on `:1`. It does **not** reproduce #73's Desktop Mode report on
+SteamOS 0.4.5, and it does **not** test this PR's code on the headset. It is a
+coordinator-supplied observation, separate from the blocked implementation probe
+above; no new headset probe was run for this follow-up.
+
+Remaining limit: there is no reproduction establishing a further
+capture/discovery fix for the reported Desktop Mode/build combination. This PR
+improves a demonstrated diagnostic error; it must not close #73 as a verified
+new capture fix.
 
 ## Offline verification
 

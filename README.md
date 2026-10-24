@@ -7,9 +7,9 @@
 **Manage your Valve Steam Frame from your computer.**<br>
 See what the headset sees, install games and Android apps, move files and text across, and check battery and status, all over SSH.
 
-[![Latest release](https://img.shields.io/github/v/release/saphid/steam-frame?label=release&color=1a9fff)](https://github.com/saphid/steam-frame/releases/latest)
+[![Latest release](https://img.shields.io/github/v/release/saphid/frame-control?label=release&color=1a9fff)](https://github.com/saphid/frame-control/releases/latest)
 [![Platforms](https://img.shields.io/badge/macOS%20%7C%20Windows%20%7C%20Linux-2a475e?label=runs%20on)](#install)
-[![Checks](https://img.shields.io/github/actions/workflow/status/saphid/steam-frame/checks.yml?branch=main&label=checks)](https://github.com/saphid/steam-frame/actions/workflows/checks.yml)
+[![Checks](https://img.shields.io/github/actions/workflow/status/saphid/frame-control/checks.yml?branch=main&label=checks)](https://github.com/saphid/frame-control/actions/workflows/checks.yml)
 [![License: MIT](https://img.shields.io/badge/license-MIT-66c0f4)](LICENSE)
 
 [**Website**](https://frame-control.pages.dev) · [**Download**](#install) · [Trailer](#trailer) · [Features](#features) · [Set up the headset](#set-up-the-headset) · [Feedback](#feedback) · [Docs](#going-further)
@@ -19,7 +19,7 @@ See what the headset sees, install games and Android apps, move files and text a
 <img src="docs/img/frame-control.png" alt="Frame Control's Games tab: installed games, sideloaded titles, and your Steam library with Frame ratings" width="900">
 
 <a id="trailer"></a>
-<a href="https://github.com/saphid/steam-frame/releases/download/trailer/frame-control-trailer.mp4"><img src="docs/img/trailer.jpg" alt="Watch the Frame Control trailer" width="900"></a>
+<a href="https://github.com/saphid/frame-control/releases/download/trailer/frame-control-trailer.mp4"><img src="docs/img/trailer.jpg" alt="Watch the Frame Control trailer" width="900"></a>
 
 <sub>The trailer: 66 seconds, with sound. Downloads the MP4 from the trailer release.</sub>
 
@@ -116,17 +116,30 @@ already ships (sideloading a game copies Valve's own devkit scripts to
 
 ## Install
 
+**Install Frame Control on your computer, not on the headset.** The website is
+for downloads and instructions; it does not connect to your Frame in a browser.
+Choose the operating system and processor of the computer you will use.
+
 | | Download | Needs |
 |---|---|---|
-| **macOS** (Apple Silicon) | [Frame-Control-mac-arm64.dmg](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-mac-arm64.dmg) | Nothing extra |
-| **Windows** 10 / 11 (x64) | [Frame-Control-Setup-x64.exe](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-Setup-x64.exe) · [portable .zip](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-win-x64.zip) | Nothing extra |
-| **Linux** (x64) | [AppImage](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-linux-x86_64.AppImage) · [.deb](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-linux-amd64.deb) | `ssh` (most desktops have it) |
-| **Linux** (arm64) | [AppImage](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-linux-arm64.AppImage) · [.deb](https://github.com/saphid/steam-frame/releases/latest/download/Frame-Control-linux-arm64.deb) | `ssh`, and `adb` for Android apps (`sudo apt install adb`) |
+| **macOS** (Apple Silicon) | [Frame-Control-mac-arm64.dmg](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-mac-arm64.dmg) | Nothing extra |
+| **Windows** 10 / 11 (x64) | [Frame-Control-Setup-x64.exe](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-Setup-x64.exe) · [portable .zip](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-win-x64.zip) | OpenSSH Client (normally installed) |
+| **Linux** (x64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-x86_64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-amd64.deb) | `ssh` (most desktops have it) |
+| **Linux** (arm64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.deb) | `ssh`, and `adb` for Android apps (`sudo apt install adb`) |
 
-**iPhone and iPad:** the same features from your phone, with nothing to install on
-a computer. Build it from [`ios/`](ios) in Xcode; see [docs/iphone.md](docs/iphone.md).
+**Which build?** On a Mac, check Apple menu → About This Mac: the download is
+for Apple Silicon (M-series); no Intel Mac build is published. On Windows,
+check Settings → System → About → System type: the release is x64, not a native
+Windows ARM build. On Linux, `uname -m` reports `x86_64` (x64) or `aarch64`
+(arm64). Use `.deb` on Debian/Ubuntu, or AppImage on other distributions.
 
-The app brings its own Python and `adb`; SSH is built into macOS and Windows.
+**iPhone and iPad:** no App Store, TestFlight or `.ipa` download is provided in
+the current release. It runs from your phone without a computer after setup.
+Build it from [`ios/`](ios) in Xcode on a Mac with your own signing team; see
+[docs/iphone.md](docs/iphone.md).
+
+The app brings its own Python and `adb`. macOS includes SSH; Windows needs the
+OpenSSH Client optional feature (normally installed).
 From 0.4 it updates itself: when a new version is published, a banner offers
 **Update and restart**. It sends anonymous usage statistics, which you can turn
 off. Sharing compatibility results and error details is opt-in. See
@@ -139,7 +152,7 @@ distribution's. If you already have `adb`, the app uses yours.
 
 There's no paid Apple developer account behind it, so macOS says the app is
 damaged or can't be checked. Drag it to Applications, then clear the download
-quarantine once:
+quarantine once, only for a download you trust from the releases linked above:
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/Frame Control.app"
@@ -168,26 +181,44 @@ If it complains about FUSE, install `libfuse2` (Ubuntu 24.04+: `libfuse2t64`),
 or run it with `--appimage-extract-and-run`.
 </details>
 
+## Open the app
+
+- **macOS:** open the `.dmg`, drag **Frame Control** to **Applications**, then
+  open it from Applications. For the unsigned-app warning, use the macOS steps
+  above. Allow local network access and control of Terminal when prompted.
+- **Windows:** run the installer, then open **Frame Control** from Start. For
+  the portable download, extract the entire `.zip` first and run
+  `Frame Control.exe` inside it. See the SmartScreen note above.
+- **Linux:** install the `.deb` with your package installer and launch
+  **Frame Control** from your applications menu; or make the AppImage executable
+  and run it as described above. Install the OpenSSH client if `ssh` is missing.
+
 ## Set up the headset
 
-You type one password on the headset, once. Everything else happens on your
-computer.
+Keep the Frame awake and connect it and your computer to the same trusted local
+network. Guest Wi-Fi/client isolation can prevent discovery and connections.
 
 1. **On the Frame:** Steam Settings → System → **Enable Developer Mode**, then
-   in the Developer section, **Set User Password**. Pick something short:
-   you'll type it once more on your computer and then never again.
-2. **On your computer:** open Frame Control. It offers to **Set Up
-   Connection**, which finds the headset, creates an SSH key, and asks for that
-   password once in a terminal window. If it can't find the Frame, type the
-   IP address from the Frame's Quick Settings.
-
-   Before asking for the password it tries Valve's SteamOS devkit pairing: in
-   the headset, open Steam Settings → Developer → **Pair new host** and approve
-   the request, and no password is needed. (The service and the pairing-mode
-   step are verified on a Frame; the approval itself isn't yet. See
-   [SSH](docs/ssh.md#password-free-pairing-steamos-devkit-service).)
-3. That's it. The app now reaches the headset whenever it's awake and on the
-   same network. For anywhere else, see [Tailscale](docs/tailscale.md).
+   Developer → **Set User Password**. Choose a password that isn't easy to guess:
+   it also protects `sudo` and remote desktop, even after SSH keys are set up.
+2. **On your computer:** open Frame Control and choose **Set Up Connection…**.
+   If you dismissed the first-run prompt, use **Frame → Set Up Connection…**.
+   Setup opens a terminal and tries to find the headset. If it can't, use its IP
+   address from Quick Settings or Steam Settings → Internet. Windows/Linux setup
+   prompts for it; macOS exits instead. On macOS, return to the app →
+   **Devices & connection → + Add a headset…**, set SSH alias to `frame` for
+   the default headset, fill in **Address**, then choose **Set Up…**.
+3. **Pair or enter the password:** setup first tries Valve's devkit pairing.
+   Open Steam Settings → Developer → **Pair new host** in the headset and approve
+   only the request you just started. The service and pairing-mode step are
+   verified on a Frame; approval and key installation through that flow remain
+   unverified. If pairing fails or times out, setup falls back to asking for the
+   Developer Mode password in the computer's terminal. Password typing may show
+   no characters; press Enter when done. See [SSH details](docs/ssh.md#password-free-pairing-steamos-devkit-service).
+4. After setup succeeds, return to Frame Control. It uses SSH keys for later
+   connections whenever the Frame is awake and reachable. If it stays offline,
+   check Developer Mode, the address and network isolation, then run setup again.
+   For connections away from home, see [Tailscale](docs/tailscale.md).
 
 **What it changes:** only what you click. Installs go to your user account on
 the Frame (`--user` Flatpaks, Lepton instances, Steam downloads, sideloaded
@@ -252,8 +283,8 @@ Frame's software fits together, all checked against a real headset and labelled
   loopback `127.0.0.1:8080`) only through SSH tunnels. The compatibility
   database key (maintainer-only) is never written to the repo.
 - `steamos` has `sudo`, protected by the same Developer Mode password. Once
-  you've switched to key auth, a short password still protects `sudo` and
-  RDP, so pick one that isn't trivially guessable.
+  you've switched to key auth, that password still protects `sudo` and RDP,
+  so pick one that isn't trivially guessable.
 - Don't port-forward 22, 3389, or 5555–5599 from your router. For remote access,
   use Tailscale: `scripts/tailscale-on-frame.sh` (no sudo). In its userspace mode
   **every** Frame port is reachable from your tailnet, including Steam's DevTools
