@@ -162,16 +162,22 @@ was released, and the battery remained at 99%. The Steam source clip was kept.
 
 The inspected frame is nearly black in both Steam's source and the export, so
 this establishes file creation and faithful export, **not visible gameplay
-capture**. The literal desktop **Export** button was not clicked. Remaining
-checks include:
+capture**. On v0.4.16, the literal desktop **Export** button was also clicked
+against that retained real Steam clip in the source UI on lxso2. The job
+completed and saved `~/Videos/SteamFrame/clip_13009719723623972864_20261024_072115.mp4`;
+its 159,829 bytes and SHA-256 matched the previously decoded export exactly.
+The temporary server stopped, the shared device lock was released, and the
+headset remained in Game Mode at 99% battery. See
+[`docs/evidence/clip-gui-export-2026-10-24.json`](evidence/clip-gui-export-2026-10-24.json)
+for the narrow proof. This did not exercise the packaged desktop installer.
+Remaining checks include:
 
 - Perceptual audio/video sync and audible content. Frame Control's separate
   **Record** path stamps camera and audio inputs with the wall clock because
   they otherwise count from different clocks.
 - Long saved clips, trims starting partway through a Steam recording, and the
-  desktop **Export** button. One real saved clip's
-  directory layout was checked; the parser remains deliberately loose for
-  other layouts.
+  packaged desktop app's **Export** button. One real saved clip's directory
+  layout was checked; the parser remains deliberately loose for other layouts.
 - How much x264 at 1080p30 costs the Frame while a game is running.
 - Automatic copying: that 30 seconds without a write is a safe sign Steam has
   finished saving a clip, and how a once-a-minute listing feels on the Frame.
