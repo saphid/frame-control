@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Recheck saved spatial layouts on SteamOS 0.5.6 / SteamVR 2.18.2 (issue #31).
+  Read-only probes expose some panel geometry, but safe restoration of
+  Steam/gamescope docking and positions remains unverified. Record exact API
+  results and a reproducible probe; saved layouts remain unavailable.
+
 - Record packaged v0.4.17 Desktop Capture succeeding on a mapped nested KDE
   compositor on a real Frame with SteamOS 0.5.6. Headset overlay visibility was
   not established; this is evidence, not a new fix or resolution of issue #73.
