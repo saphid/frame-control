@@ -437,3 +437,18 @@ files, source preference, missing/invalid sensors and permission errors.
 `tests/control_center.cjs` covers charging states and optional health fields,
 alongside existing stale/offline handling. No headset is used. See
 [battery monitoring](battery-health.md) for sources, units and limitations.
+
+## Host-key recovery presentation
+
+`python3 -m unittest discover -s tests -p test_link_ui.py -v` runs the page's
+connection/banner/selection functions in Node and checks the recovery CSS guard.
+`test_link.py` covers connection failures and short probe reasons with fake SSH
+and local sockets. Neither suite uses a real headset.
+
+Browser verification on 2026-10-24 used the current page's markup, styles and
+recovery renderers with synthetic changed-key state and two headsets at
+1280×800. It caught a later `.item .s` rule overriding the earlier wrapping
+rule, which the original source-only assertion missed. Check computed wrapping,
+the complete explanation, tooltip punctuation, Refresh bounds and selection
+after **Use this headset** when changing these styles. This fixture does not
+exercise Electron integration or a real SSH identity change.
