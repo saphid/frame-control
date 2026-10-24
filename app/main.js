@@ -304,6 +304,63 @@ ipcMain.handle("update:get", (e) => fromUi(e) ? publicUpdate() : null);
 ipcMain.handle("update:check", (e) => fromUi(e) ? checkForUpdate({ manual: true }).then(publicUpdate) : null);
 ipcMain.handle("update:install", (e) => { if (fromUi(e)) installUpdate(); });
 
+// The OBS source is local to this computer. The Python relay owns its SSH/ffmpeg
+// process and cleans it up on SIGTERM. Keep one relay per app, and stop it when
+// the selected headset changes or the app quits.
+const OBS_SCRIPT = path.join(SCRIPTS, "obs-headset-source.py");
+let obsChild = null;
+let obsState = { state: "idle", alias: "", error: "" };
+function publicObs() { return { ...obsState, supported: !IS_WIN }; }
+function setObs(state, alias = "", error = "") {
+  obsState = { state, alias, error };
+  if (win && !win.isDestroyed()) win.webContents.send("obs:state", publicObs());
+  return publicObs();
+}
+function stopObs() {
+  if (!obsChild) return publicObs();
+  setObs("stopping", obsState.alias);
+  obsChild.kill("SIGTERM");
+  return publicObs();
+}
+ipcMain.handle("obs:status", (e) => fromUi(e) ? publicObs() : null);
+ipcMain.handle("obs:start", async (e) => {
+  if (!fromUi(e)) return null;
+  if (IS_WIN) throw new Error("The OBS source currently supports Linux and macOS computers.");
+  if (obsChild) return publicObs();
+  const alias = activeAlias();
+  if (!ALIAS_RE.test(alias)) throw new Error("Select a valid headset first.");
+  if (!fs.existsSync(OBS_SCRIPT)) throw new Error("The OBS helper is missing; reinstall Frame Control.");
+  const env = { ...process.env, PATH: await loginPath() };
+  const executable = python || await findPython(env);
+  if (!executable) throw new Error(PYTHON_HELP);
+  // A concurrent click or a headset switch may have happened while finding Python.
+  if (obsChild) return publicObs();
+  if (alias !== activeAlias()) throw new Error("The selected headset changed; try again.");
+  const child = spawn(executable, [...PY_FLAGS, OBS_SCRIPT, "--frame", alias],
+                      { env, stdio: ["ignore", "ignore", "pipe"], windowsHide: true });
+  obsChild = child;
+  setObs("starting", alias);
+  let output = "";
+  child.stderr.on("data", (chunk) => {
+    output = (output + chunk.toString("utf8")).slice(-2048);
+    if (obsChild === child && output.includes("Frame Control OBS stream is ready")) setObs("running", alias);
+  });
+  child.once("error", (err) => {
+    if (obsChild !== child) return;
+    obsChild = null;
+    setObs("failed", alias, `Could not start OBS source: ${err.message}`);
+  });
+  child.once("exit", (code, signal) => {
+    if (obsChild !== child) return;
+    const stopping = obsState.state === "stopping" || quitting;
+    obsChild = null;
+    setObs(stopping ? "idle" : "failed", alias,
+           stopping ? "" : `OBS source stopped (${signal || code}). ${output.trim().split("\n").pop() || "Check SteamVR and SSH."}`);
+  });
+  return publicObs();
+});
+ipcMain.handle("obs:stop", (e) => fromUi(e) ? stopObs() : null);
+
 // The page reports the headsets it knows (the server's Devices tab), so the Frame
 // menu can switch between them. Only plain names and ids go into the menu.
 const ALIAS_RE = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -314,6 +371,7 @@ ipcMain.on("devices:changed", (e, list) => {
     .map(d => ({ id: d.id.slice(0, 80), name: String(d.name || d.alias).slice(0, 60), alias: d.alias, active: !!d.active }));
   if (JSON.stringify(next) === JSON.stringify(devices)) return;
   devices = next;
+  if (obsChild && obsState.alias !== activeAlias()) stopObs();
   buildMenu();
 });
 const activeAlias = () => (devices.find(d => d.active) || {}).alias || FRAME;
@@ -641,6 +699,6 @@ if (!app.requestSingleInstanceLock()) {
   });
   app.on("activate", () => { if (!win) createWindow(); });
   app.on("window-all-closed", () => app.quit());
-  app.on("before-quit", () => { quitting = true; stopServer(); });
-  process.on("exit", stopServer);
+  app.on("before-quit", () => { quitting = true; stopObs(); stopServer(); });
+  process.on("exit", () => { stopObs(); stopServer(); });
 }

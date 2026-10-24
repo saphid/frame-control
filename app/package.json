@@ -69,6 +69,7 @@
         "to": "scripts",
         "filter": [
           "*.sh",
+          "obs-headset-source.py",
           "frame_power_sample.py",
           "frame_power_report.py"
         ]

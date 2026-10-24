@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Bundle the OBS source helper in Linux and macOS installers and add a
+  **Capture & Live** Start/Stop control. The app selects the active Frame and
+  closes its SSH stream on a headset switch or app exit. OBS playback and audio
+  sync remain unverified. [Setup and limits](docs/obs-headset-source.md).
+
 - Add a source-checkout helper that sends the Frame's SteamVR mirror and
   default-output audio to a local OBS Media Source. A real Frame supplied a
   4.021-second H.264/AAC stream to a Linux receiver; OBS playback and sync

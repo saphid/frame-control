@@ -1240,7 +1240,11 @@
       </div>
       <div class="hint" id="recStatus" role="status" hidden></div>
       <div class="hint" id="viewHint"></div>
-      <p class="sub"><a href="https://github.com/saphid/frame-control/blob/main/docs/obs-headset-source.md" target="_blank" rel="noopener noreferrer">Use the headset view and sound in OBS →</a></p>
+      <div id="obsControl" class="hint" hidden>
+        <button class="small" id="obsBtn">Start OBS source</button>
+        <span id="obsStatus" role="status"></span>
+      </div>
+      <p class="sub"><a href="https://github.com/saphid/frame-control/blob/main/docs/obs-headset-source.md" target="_blank" rel="noopener noreferrer">Set up the headset view and sound in OBS →</a></p>
     </section>
 
 
@@ -5489,6 +5493,33 @@ $("recBtn").onclick = async e => {
                         () => api("/api/record", { action: start ? "start" : "stop" }), e.currentTarget);
   if (res) showRec(res); else pollRec();
 };
+
+// The desktop app owns the local OBS relay, so it can close SSH when the app
+// exits. The browser and mobile views keep the command-line guide instead.
+if (window.frameApp?.obs) {
+  const obs = window.frameApp.obs;
+  const wrap = $("obsControl"), button = $("obsBtn"), status = $("obsStatus");
+  let state = { state: "idle" };
+  function showObs(next) {
+    if (!next) return;
+    state = next;
+    wrap.hidden = !next.supported;
+    button.textContent = next.state === "running" ? "Stop OBS source" : "Start OBS source";
+    button.disabled = next.state === "starting" || next.state === "stopping";
+    status.textContent = next.state === "starting" ? "Connecting to the Frame and waiting for video…"
+      : next.state === "running" ? `Sending ${next.alias} view and sound to udp://127.0.0.1:15099`
+      : next.state === "stopping" ? "Stopping the OBS source…"
+      : next.state === "failed" ? next.error : "";
+  }
+  obs.onState(showObs);
+  obs.status().then(showObs).catch(() => {});
+  button.onclick = async e => {
+    const stopping = state.state === "running";
+    const result = await act(stopping ? "Stop OBS source" : "Start OBS source",
+                             () => stopping ? obs.stop() : obs.start(), e.currentTarget);
+    if (result) showObs(result);
+  };
+}
 
 const clipsState = { list: [], gen: 0, exporting: new Set() };
 async function loadClips() {
