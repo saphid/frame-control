@@ -38,9 +38,10 @@ This is the composited, undistorted one-eye **SteamVR mirror**, not a raw
 passthrough camera feed. The mirror may be blank when the headset is idle or
 unworn. Whether active passthrough pixels appear in it is still unverified.
 The helper does not send a microphone. It is designed for one local OBS
-receiver. **Verified 2026-10-24:** against a real Frame running SteamOS 0.5.6,
-build 20261022.6153909, the receiver saved a 4.021-second MPEG-TS sample on
-the Linux PC; `ffprobe` found H.264 video and AAC audio. The temporary sample
-was removed. The headset was unworn, so visible content and audible sound were
-not checked. OBS itself was not installed on that PC; its Media Source setup,
-monitoring and sync are still unverified.
+receiver. **Verified 2026-10-25:** the helper bundled in the Linux AppImage
+sent a real Frame stream to OBS 30's Media Source. OBS recorded 37.6 seconds
+with H.264 video and AAC audio; a brief 440 Hz tone played to the Frame's
+default output was present in the saved audio. The headset was in standby, so
+the video showed the standby mirror. Nobody listened to OBS's monitoring output,
+and audio/video sync and active passthrough remain unverified. See the
+[test evidence](evidence/obs-media-source-real-2026-10-25.md).
