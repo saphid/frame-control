@@ -270,12 +270,40 @@ this computer and is sent when PostHog can be reached. The earlier event
 stays in PostHog until its data retention removes it; to have it deleted
 sooner, ask the maintainer (for example in a problem report).
 
-Nothing sends email yet: this only records who agreed to what. The
-maintainer lists the addresses with
-`python3 ui/frame_report.py contacts [updates|followup]`, which uses the same
-personal API key as `inbox`; `contacts updates` is the mailing list. If those
-addresses are ever moved to an email service to send the newsletter, this
-page will name it first.
+**The Cloudflare mailing list.** When you explicitly join or change an existing
+mailing-list choice, the app also sends that choice to
+`https://framecontrol.fun/api/mailing-list`, on the website's Cloudflare Pages
+project. This request contains only the email address, an explicit `updates`
+boolean, a random capability used to change this copy's subscription, and a
+revision number used to order retries. It contains no analytics id or machine
+details. Follow-up-only choices and skipping the offer send nothing to this
+endpoint. Existing saved choices aren't automatically copied to a new backend.
+
+Cloudflare D1 privately stores the current address and revision under a hash of
+the random capability, with a change timestamp. Changing the address replaces
+the previous one. Unsubscribing sets the address to null; only the capability
+hash, revision and timestamp remain, so a delayed older signup can't restore
+it. Duplicate addresses from separate app copies are deduplicated when exported;
+unsubscribing in the app withdraws this copy's subscription. The website reuses
+its short-lived salted IP hashes to limit requests, without storing raw IPs in
+the list. Cloudflare necessarily processes the connection's IP address.
+
+The mailing request has its own durable local queue in `contact/contact.json`.
+It retries in the background independently of PostHog, including after restarting.
+Saving, skipping and continuing to use the app never wait for either service.
+An offline removal clears the queued address immediately and leaves a withdrawal
+to send when the endpoint is available. Until it arrives, the server still has
+the previous choice. If Cloudflare storage hasn't been provisioned, the endpoint
+returns 503 and the same queue retains the choice safely.
+
+No newsletter sending service is configured and no confirmation or newsletter
+emails are sent by this feature. Cloudflare is the private signup backend;
+[site/README.md](../site/README.md#mailing-list) describes provisioning and a
+maintainer-only export of current opt-ins. The existing
+`python3 ui/frame_report.py contacts [updates|followup]` command still lists
+PostHog consent records; use the Cloudflare export for the mailing list. A future
+sending service must honor current withdrawals, provide an unsubscribe option
+in every email, and be named here before addresses are transferred to it.
 
 ## Turning it all off
 

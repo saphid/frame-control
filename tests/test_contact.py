@@ -17,6 +17,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import frame_compat_db as db  # noqa: E402
 import frame_contact as fc  # noqa: E402
+import frame_mailing as fm  # noqa: E402
 import frame_report as fr  # noqa: E402
 import frame_telemetry as tm  # noqa: E402
 from test_telemetry import Base, ReportProblem  # noqa: E402
@@ -36,6 +37,16 @@ class Contact(Base):
             p.start()
             self.addCleanup(p.stop)
         self.got = self.serve()
+        mailing = mock.patch.object(fm, 'submit')
+        self.mailing = mailing.start()
+        self.addCleanup(mailing.stop)
+        # Most consent tests drain the background queue synchronously, so their
+        # assertions cover delivered events without sleeps or real services.
+        self.production_deliver = fc._deliver
+        deliver = mock.patch.object(fc, '_deliver', side_effect=lambda changed:
+                                    fc._send_pending(block=False) if changed else None)
+        deliver.start()
+        self.addCleanup(deliver.stop)
 
     def events(self):
         return [body["batch"][0] for _, body in self.got]
@@ -92,6 +103,52 @@ class Contact(Base):
         fc.save({"email": "me@example.com", "updates": True})
         fc.save({"email": "me@example.com", "updates": True})
         self.assertEqual(len(self.got), 1)
+
+    def test_mailing_only_receives_explicit_updates_and_no_machine_details(self):
+        fc.prompt({'prompt': 'dismissed'})
+        fc.save({'email': 'reply@example.com', 'followup': True})
+        self.mailing.assert_not_called()
+        fc.save({'email': 'news@example.com', 'updates': True})
+        token, rev, email = self.mailing.call_args.args
+        self.assertEqual((len(token), rev, email), (64, 2, 'news@example.com'))
+        self.assertNotEqual(token, fc.load()['id'])
+        fc.save({'email': 'reply@example.com', 'followup': True})
+        self.assertEqual(self.mailing.call_args.args, (token, 3, ''))
+
+    def test_mailing_failure_waits_independently_of_posthog(self):
+        with mock.patch.object(fm, 'submit', side_effect=fm.SendError('offline')):
+            s = fc.save({'email': 'news@example.com', 'updates': True})
+        self.assertTrue(s['waiting'])
+        self.assertIsNone(fc.load()['pending'])
+        self.assertEqual(fc.load()['mailingPending']['email'], 'news@example.com')
+        with self.offline():
+            self.assertTrue(fc._send_pending())  # PostHog need not be available
+        self.assertFalse(fc.state()['waiting'])
+
+    def test_posthog_failure_does_not_hold_up_mailing_delivery(self):
+        with self.offline():
+            fc.save({'email': 'news@example.com', 'updates': True})
+        self.mailing.assert_called_once()
+        self.assertIsNone(fc.load()['mailingPending'])
+        self.assertIsNotNone(fc.load()['pending'])
+
+    def test_offline_removal_erases_the_queued_address_and_survives_reload(self):
+        with mock.patch.object(fm, 'submit', side_effect=fm.SendError('offline')):
+            fc.save({'email': 'news@example.com', 'updates': True})
+            fc.save({'email': ''})
+        s = fc.load()
+        self.assertEqual(s['mailingPending'], {'rev': 2, 'email': ''})
+        self.assertNotIn('news@example.com', fc.FILE.read_text())
+        self.assertTrue(fc._send_pending())
+        self.assertEqual(self.mailing.call_args.args, (s['mailingToken'], 2, ''))
+
+    def test_production_save_only_wakes_worker_without_network_io(self):
+        # Restore the production notifier while leaving the network mocked.
+        with mock.patch.object(fc, '_deliver', self.production_deliver):
+            s = fc.save({'email': 'news@example.com', 'updates': True})
+        self.assertTrue(s['waiting'])
+        self.mailing.assert_not_called()
+        self.assertEqual(self.got, [])
 
     # ---- withdrawal
 

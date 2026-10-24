@@ -10,3 +10,7 @@ GITHUB_REPO = "saphid/frame-control"
 [[kv_namespaces]]
 binding = "FEEDBACK_RL"
 id = "4852de5aae9e4d9f989f6dc2bc3b2b6b"
+
+# Mailing-list D1 binding: provision once with the command in site/README.md.
+# Wrangler adds [[d1_databases]] with binding = "MAILING_LIST" and the real ID.
+# Until then /api/mailing-list returns 503 and the app safely queues choices.

@@ -4589,7 +4589,7 @@ function renderContact(s) {
   Object.assign(contact, s);
   $("cEmail").value = s.email; $("cUpdates").checked = s.updates; $("cFollowup").checked = s.followup;
   $("cRemove").hidden = !s.email;
-  $("cStatus").textContent = s.waiting ? "Saved here; it's sent to the maintainer when Frame Control can reach PostHog."
+  $("cStatus").textContent = s.waiting ? "Saved on this computer. Your choice will be sent when the service is available."
     : s.email ? `Saved. ${s.email} may get ${[s.updates && "mailing list emails", s.followup && "follow-up questions"].filter(Boolean).join(" and ")}. Remove it any time.`
     : "Sent privately to the Frame Control maintainer, never shared or published. The mailing list is occasional news about new features and updates; follow-up questions are mainly about problem reports you send.";
 }
@@ -4620,9 +4620,10 @@ $("contactNotice").onsubmit = async e => {
   $("cpSave").disabled = true;
   try {
     // Joining is the mailing list only; follow-up questions keep whatever was agreed before.
-    await saveContact({ email: $("cpEmail").value, updates: true, followup: contact.followup && contact.email.toLowerCase() === $("cpEmail").value.trim().toLowerCase(), fromPrompt: true });
+    const saved = await saveContact({ email: $("cpEmail").value, updates: true, followup: contact.followup && contact.email.toLowerCase() === $("cpEmail").value.trim().toLowerCase(), fromPrompt: true });
     $("contactNotice").hidden = true;
-    toast("Thanks for joining! Unsubscribe any time in Privacy & updates.");
+    toast(saved.waiting ? "Thanks! Your signup is saved here and will be sent in the background. Unsubscribe any time in Privacy & updates."
+      : "Thanks for joining! Unsubscribe any time in Privacy & updates.");
   } catch (err) { $("cpMsg").textContent = `Couldn't save: ${err.message}`; }
   finally { $("cpSave").disabled = false; }
 };

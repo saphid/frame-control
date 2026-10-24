@@ -12,20 +12,26 @@ sends a new event under this copy's own random contact id (not the analytics id)
 by `rev`, and the highest rev for an id is the one that counts, whatever the clocks say:
 removing the address sends a withdrawal with no address in it, and wipes the address from
 the local log of what was sent. The maintainer lists who agreed to what with
-`python3 ui/frame_report.py contacts`. Nothing here sends email.
+`python3 ui/frame_report.py contacts`. Mailing-list changes also go to the site's
+private Cloudflare D1 list through frame_mailing.submit, independently of PostHog.
+Neither endpoint sends email. No mailing request is made for a skip or for a
+follow-up-only address.
 
 A change that can't be sent (offline) waits in the state file and is retried in the
-background, so a withdrawal is never lost. The page's one-time prompt is remembered here
+background, so a withdrawal is never lost. Saving never waits for a network request.
+The page's one-time prompt is remembered here
 too: once it has been shown or dismissed it never comes back.
 """
 import json
 import os
 import re
+import secrets
 import threading
 import time
 import uuid
 
 import frame_host
+import frame_mailing
 import frame_telemetry
 
 STATE = frame_host.data_dir('contact')
@@ -44,7 +50,8 @@ _retrier = None
 
 def _defaults():
     return {'id': str(uuid.uuid4()), 'email': '', 'updates': False, 'followup': False,
-            'prompt': 'new', 'pending': None, 'rev': 0}
+            'prompt': 'new', 'pending': None, 'rev': 0,
+            'mailingToken': secrets.token_hex(32), 'mailingPending': None}
 
 
 def load():
@@ -61,9 +68,10 @@ def load():
 
 
 def _save(s):
-    STATE.mkdir(parents=True, exist_ok=True)
+    STATE.mkdir(parents=True, exist_ok=True, mode=0o700)
     tmp = FILE.with_suffix('.tmp')
-    tmp.write_text(json.dumps(s, indent=1))
+    with os.fdopen(os.open(tmp, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600), 'w') as f:
+        json.dump(s, f, indent=1)
     os.replace(tmp, FILE)
 
 
@@ -102,7 +110,8 @@ def state():
     notice is closed, never both at once), and works whether or not the Frame is set up."""
     s = load()
     return {'email': s['email'], 'updates': s['updates'], 'followup': s['followup'],
-            'waiting': s['pending'] is not None, 'showPrompt': s['prompt'] == 'new'}
+            'waiting': s['pending'] is not None or s['mailingPending'] is not None,
+            'showPrompt': s['prompt'] == 'new'}
 
 
 def _event(s):
@@ -122,19 +131,35 @@ def _send_pending(block=True):
     try:
         while True:
             with _lock:
-                event = load()['pending']
-            if event is None:
+                s = load()
+                event, mailing = s['pending'], s['mailingPending']
+            if event is None and mailing is None:
                 break
-            try:
-                frame_telemetry.post([event], timeout=30)
-            except frame_telemetry.SendError:
+            failed = False
+            if event is not None:
+                try:
+                    frame_telemetry.post([event], timeout=30)
+                    _sent(event)
+                except frame_telemetry.SendError:
+                    failed = True
+            if mailing is not None:
+                try:
+                    frame_mailing.submit(s['mailingToken'], mailing['rev'], mailing['email'])
+                    with _lock:
+                        latest = load()
+                        if latest['mailingPending'] == mailing:
+                            latest['mailingPending'] = None
+                            _save(latest)
+                except frame_mailing.SendError:
+                    failed = True
+            if failed:
                 return False
-            _sent(event)
     finally:
         _send_lock.release()
     # A change saved just as this finished found the lock still held and left it to us.
     with _lock:
-        left = load()['pending'] is not None
+        s = load()
+        left = s['pending'] is not None or s['mailingPending'] is not None
     return _send_pending(block=False) if left else True
 
 
@@ -197,6 +222,7 @@ def _apply(body):
     with _lock:
         s = load()
         old = s['email']
+        old_updates = s['updates']
         changed = (email, updates, followup) != (s['email'], s['updates'], s['followup'])
         s.update(email=email, updates=updates, followup=followup)
         if body.get('fromPrompt') or email:
@@ -206,6 +232,10 @@ def _apply(body):
             # is sent even for an address still waiting here: its send may already be under way.
             s['rev'] += 1
             s['pending'] = _event(s)
+            # No mailing request for a skip or a follow-up-only address. A
+            # withdrawal keeps no address in the queue, even while offline.
+            if old_updates or updates:
+                s['mailingPending'] = {'rev': s['rev'], 'email': email if updates else ''}
         _save(s)
         if old and old.lower() != email.lower():
             try:
@@ -216,8 +246,8 @@ def _apply(body):
 
 
 def _deliver(changed):
-    if changed and not _send_pending(block=False):
-        _wake.set()  # offline, or a send under way that will take this change with it
+    if changed:
+        _wake.set()  # all network I/O stays in start()'s background worker
 
 
 def prompt(body):
