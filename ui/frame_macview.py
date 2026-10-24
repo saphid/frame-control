@@ -56,12 +56,12 @@ BROWSER_FLAGS = []
 PANEL_BOX = (1920, 1080)
 
 # Opens one viewer on gamescope's X display and gives its window its own panel
-# id. Args: appid url width height tag [browser flags...]. The page puts "[tag]" in its title at
+# id. Args: appid url width height tag profile [browser flags...]. The page puts "[tag]" in its title at
 # once, which is how its X window is found (Chromium may hand the URL to an
 # instance that's already running, so there's no process to follow).
 LAUNCH = r"""set -u
-appid=$1 url=$2 w=$3 h=$4 tag=$5
-shift 5
+appid=$1 url=$2 w=$3 h=$4 tag=$5 profile=$6
+shift 6
 export DISPLAY=:0 LC_ALL=C.UTF-8
 unset WAYLAND_DISPLAY
 if ! xprop -root GAMESCOPE_FOCUSABLE_WINDOWS >/dev/null 2>&1; then
@@ -73,15 +73,15 @@ common=(--ozone-platform=x11 --force-device-scale-factor=1 --no-first-run --no-d
   --disable-features=Translate,MediaRouter --autoplay-policy=no-user-gesture-required
   "--window-size=$w,$h" "$@" "--app=$url")
 if [ -x "$HOME/chromium-xr/chrome" ]; then
-  cmd=("$HOME/chromium-xr/chrome" "--user-data-dir=$HOME/.local/share/frame-control/mac-view" "${common[@]}")
+  cmd=("$HOME/chromium-xr/chrome" "--user-data-dir=$HOME/.local/share/frame-control/$profile" "${common[@]}")
 elif flatpak info org.chromium.Chromium >/dev/null 2>&1; then
   cmd=(flatpak run org.chromium.Chromium
-    "--user-data-dir=$HOME/.var/app/org.chromium.Chromium/data/frame-mac-view" "${common[@]}")
+    "--user-data-dir=$HOME/.var/app/org.chromium.Chromium/data/frame-$profile" "${common[@]}")
 else
   echo "NO_BROWSER"
   exit 3
 fi
-log=/tmp/frame-mac-view.log
+log=/tmp/frame-$profile.log
 setsid nohup "${cmd[@]}" >>"$log" 2>&1 </dev/null &
 for _ in $(seq 1 60); do
   sleep 0.5
@@ -105,9 +105,9 @@ class MacViewError(Exception):
     pass
 
 
-def panel_id(src):
+def panel_id(src, host="mac"):
     """A stable panel id per source, in the range panel-on-frame.sh uses."""
-    return 2_001_000_000 + zlib.crc32(f"mac:{src}".encode()) % 1_000_000
+    return 2_001_000_000 + zlib.crc32(f"{host}:{src}".encode()) % 1_000_000
 
 
 def fit(w, h, box=PANEL_BOX):
@@ -116,10 +116,17 @@ def fit(w, h, box=PANEL_BOX):
 
 
 class MacView:
+    host = "mac"
+    viewer_profile = "mac-view"
+
     def __init__(self, tunnel_ssh, run, frame, track=None):
         self.tunnel_ssh = list(tunnel_ssh)
         self.run = run
         self.frame = frame
+        self.host_opts = []  # the headset in use and how to reach it (see retarget)
+        # Short, never held across ssh: retarget() and publishing a new tunnel check and
+        # change the headset together (self.lock is held while a tunnel is being opened).
+        self.route_lock = threading.Lock()
         self.track = track or (lambda proc: None)  # the server ends these on exit
         self.lock = threading.Lock()
         self.token = secrets.token_urlsafe(24)
@@ -170,6 +177,12 @@ class MacView:
         except OSError:
             return False
 
+    def agent_command(self):
+        return [str(AGENT)]
+
+    def agent_environment(self):
+        return {**os.environ, "FRAME_MAC_VIEW_TOKEN": self.token}
+
     def ensure_agent(self):
         with self.lock:
             if self.agent and self.agent.poll() is None:
@@ -178,11 +191,11 @@ class MacView:
             if reason:
                 raise MacViewError(reason)
             self.build()
-            env = {**os.environ, "FRAME_MAC_VIEW_TOKEN": self.token}
+            env = self.agent_environment()
             # The same port as before when restarting, so a running tunnel still
             # fits; otherwise (or if it's gone) whatever the system gives.
             for port in dict.fromkeys([self.port or 0, 0]):
-                self.agent = subprocess.Popen([str(AGENT), "serve", "--port", str(port), "--page", str(PAGE),
+                self.agent = subprocess.Popen([*self.agent_command(), "serve", "--port", str(port), "--page", str(PAGE),
                                                "--exit-on-eof"], env=env, stdin=subprocess.PIPE,
                                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
                 line = self.agent.stdout.readline()
@@ -191,7 +204,7 @@ class MacView:
                     break
                 self.agent.kill()
             else:
-                raise MacViewError(f"The Mac streaming helper didn't start: {line.strip() or 'no output'}")
+                raise MacViewError(f"The streaming helper didn't start: {line.strip() or 'no output'}")
             if self.port != int(m.group(1)):
                 self._drop_tunnel()
             self.port = int(m.group(1))
@@ -207,7 +220,7 @@ class MacView:
             with urllib.request.urlopen(req, timeout=10) as r:
                 return json.load(r)
         except (urllib.error.URLError, OSError, ValueError) as e:
-            raise MacViewError(f"The Mac streaming helper didn't answer: {e}")
+            raise MacViewError(f"The streaming helper didn't answer: {e}")
 
     # ---- the tunnel from the Frame ----
 
@@ -239,13 +252,37 @@ class MacView:
                 last = self._last_tunnel_error
             raise MacViewError(f"Couldn't open a tunnel from {self.frame} to this Mac: {last or 'no answer through it'}")
 
+    def retarget(self, alias, host_opts):
+        """The server now reaches the headset as `alias` with `host_opts` (another address,
+        or another headset). Only the short route_lock, never self.lock: this runs while
+        the server routes, which a tunnel being opened may be waiting on."""
+        # host_opts is "-o", "Name=value" pairs; the tunnel keeps its own connection,
+        # not the shared master.
+        opts = [x for flag, value in zip(host_opts[::2], host_opts[1::2])
+                if not value.startswith("ControlPath=") for x in (flag, value)]
+        with self.route_lock:
+            moved = alias != self.frame
+            self.frame, self.host_opts = alias, opts
+            tunnel = self.tunnel
+            if moved and tunnel is not None:
+                # Another headset: its viewers can't be the old one's. The supervisor
+                # reopens a tunnel to the new one if anything is being shown.
+                self.tunnel, self.remote_port = None, None
+        if moved and tunnel is not None and tunnel.poll() is None:
+            tunnel.terminate()
+
     def _open_tunnel(self, via, ports):
         """Tries the ports on one route; True once the tunnel answers. With self.lock held."""
         last = ""
         for port in ports:
-            proc = subprocess.Popen([*self.tunnel_ssh, *via, "-o", "ExitOnForwardFailure=yes",
+            with self.route_lock:
+                target = (self.frame, self.host_opts)  # retarget() may change these meanwhile
+            # `via` first: ssh keeps the first value of an option, so USB-C's HostName wins
+            # while the headset's pinned identity (in host_opts) still checks it.
+            proc = subprocess.Popen([*self.tunnel_ssh, "-o", "ControlPath=none", *via, *target[1],
+                                     "-o", "ExitOnForwardFailure=yes",
                                      "-o", "ServerAliveInterval=5", "-o", "ServerAliveCountMax=3", "-N",
-                                     "-R", f"127.0.0.1:{port}:127.0.0.1:{self.port}", self.frame],
+                                     "-R", f"127.0.0.1:{port}:127.0.0.1:{self.port}", target[0]],
                                     stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL,
                                     stderr=subprocess.PIPE, text=True)
             # A taken port makes ssh exit once it's connected; a working
@@ -259,7 +296,11 @@ class MacView:
                     ok = True
                     break
             if ok:
-                self.tunnel, self.remote_port = proc, port
+                with self.route_lock:  # checked and published together, so a switch can't slip between
+                    ok = target[0] == self.frame  # else the app switched headset while this connected
+                    if ok:
+                        self.tunnel, self.remote_port = proc, port
+            if ok:
                 self.track(proc)
                 self._supervise()
                 return True
@@ -294,6 +335,8 @@ class MacView:
             socket.create_connection((ip, 22), timeout=1).close()
         except OSError:
             return []  # not plugged into this Mac
+        if any(o.startswith("HostKeyAlias=") for o in self.host_opts):
+            return ["-o", f"HostName={ip}"]  # checked against the headset's own pinned key
         alias = self.frame
         try:
             cfg = subprocess.run(["ssh", "-G", self.frame], capture_output=True, text=True, timeout=5).stdout
@@ -362,7 +405,7 @@ class MacView:
         # the agent no longer counts them, so only move when none are out there.
         others = self.shown - {src}
         self.ensure_tunnel(allow_new_port=not others)
-        appid = panel_id(src)
+        appid = panel_id(src, self.host)
         # Unique per launch, so a new window is never confused with an old one.
         tag = "fc" + secrets.token_hex(4)
         # A single-use ticket for this source, not Frame Control's key: the URL
@@ -380,7 +423,7 @@ class MacView:
         # WebXR needs Chromium XR's OpenXR feature, and its XR process needs
         # the seccomp filter off on arm64 (docs/webxr-chromium.md).
         xr = ["--enable-features=OpenXR", "--disable-seccomp-filter-sandbox"] if src == "space" else []
-        args = " ".join(_quote(str(a)) for a in (appid, url, w, h, tag, *self.browser_flags, *xr))
+        args = " ".join(_quote(str(a)) for a in (appid, url, w, h, tag, self.viewer_profile, *self.browser_flags, *xr))
         try:
             out = self.run("bash -s -- " + args, stdin=LAUNCH, timeout=60)
         except Exception as e:  # noqa: BLE001 - the server's Failure carries the Frame's words
@@ -412,7 +455,8 @@ class MacView:
             if self.shown or self.shows != shows or self.launching:
                 return
             try:
-                self.run("pkill -f '[f]rame-control/mac-view|[d]ata/frame-mac-view' || true", timeout=10)
+                pattern = "[f]rame-control/" + self.viewer_profile + "|[d]ata/frame-" + self.viewer_profile
+                self.run("pkill -f " + _quote(pattern) + " || true", timeout=10)
             except Exception:
                 pass
 
@@ -423,7 +467,9 @@ class MacView:
         status = self.call("/status")
         windows = self.call("/windows").get("windows", []) if status.get("screen") else []
         displays = self.call("/displays").get("displays", [])
-        return {"available": True, "screen": status.get("screen", False),
+        return {"available": True, "host": self.host, "selecting": status.get("selecting", False),
+                **({"windowCaptureReason": status["windowCaptureReason"]} if status.get("windowCaptureReason") else {}),
+                "selectionError": status.get("selectionError", ""), "screen": status.get("screen", False),
                 "accessibility": status.get("accessibility", False), "streams": status.get("streams", []),
                 "windows": windows, "displays": displays, "tunnel": self.tunnel_up(),
                 "route": self.route}

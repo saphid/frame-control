@@ -7,6 +7,10 @@ run on Linux. On Windows, use the app.
 
 ## Minimum typing on the headset
 
+If setup or pairing fails, run `scripts/frame-doctor.sh` from this checkout.
+It checks existing SSH access without requesting passwords, pairing or applying
+repairs. See the [Frame doctor guide](frame-doctor.md) for results and next steps.
+
 Valve's own developer docs say SSH, ADB, and RDP are all turned on through a
 **UI toggle**. You don't need a terminal, `passwd`, or `systemctl`. The only
 thing you type on the headset is a password you choose.
@@ -89,6 +93,7 @@ controls to place each panel. See [docs/panels.md](panels.md).
 | Script | Runs on | Purpose |
 |---|---|---|
 | `scripts/tailscale-on-frame.sh` | Mac → Frame | Install Tailscale in `~` as a userspace user service so `frame` works from anywhere; `--uninstall` (**verified** on the LAN) |
+| `scripts/store-on-frame.sh` | Mac → Frame | Open the APK Store (Frame Control's Android store) as a panel in the headset; installs run on the Frame (**inferred**; see [docs/apks.md](apks.md)) |
 | `scripts/connect.sh` | Mac | Discover, set up key and `~/.ssh/config`, copy key, optional `--harden` (**verified**; `--harden` untested) |
 | `scripts/install-apps.sh` | Mac → Frame | Install Flatpaks (Remmina, Moonlight, …) on the Frame over SSH as `--user` (**verified** with Remmina) |
 | `scripts/paste-to-frame.sh` | Mac → Frame | Send the Mac clipboard (or stdin) to the Frame clipboard (**verified**) |
@@ -99,7 +104,7 @@ controls to place each panel. See [docs/panels.md](panels.md).
 | `scripts/frame-ui.sh` | Mac | Start the Frame Control web UI (`ui/server.py`) and open it (**verified**) |
 | `scripts/apk-catalog.sh` | Mac | Refresh the rated F-Droid catalogue that Frame Control's Android section shows (**verified**) |
 | `scripts/compat-db-backup.sh` | Mac | Maintainer-only: back up the shared compatibility database locally and to Google Drive (**verified**) |
-| `scripts/push-vr-video.sh` | Mac → Frame | Upload VR180/360 videos to `~/Videos/VR`, linked into DeoVR's Proton prefix; `--launch` starts DeoVR (**verified**: upload and link; in-headset playback of local files not yet checked). See [docs/vr-video.md](vr-video.md) |
+| `scripts/push-vr-video.sh` | Computer → Frame | Upload movies, stereo PNG/JPEG or small `.splat` files to `~/Videos/FrameControl`; `--launch` starts our OpenVR player, `--theatre` adds a larger screen and dark surround. No separate viewer. **Verified remotely**: decode, stereo output and cleanup; worn-headset checks remain. See [docs/vr-video.md](vr-video.md) |
 | `scripts/push.sh` | Mac → Frame | `rsync` files to `~/Downloads` (or a given path) on the Frame (**verified**) |
 | `scripts/serve-bootstrap.sh` | Mac | Fallback: serve `bootstrap-on-frame.sh` with your public key embedded |
 | `scripts/bootstrap-on-frame.sh` | Frame | Fallback: install the key and enable `sshd` |

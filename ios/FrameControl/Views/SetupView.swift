@@ -14,10 +14,9 @@ struct SetupView: View {
     @State private var showHelp = false
     @FocusState private var passwordFocused: Bool
 
-    /// Where Connect goes: what the finder saw, else what was typed, else frame.local.
+    /// An explicit target always wins over discovery.
     private var host: String {
-        let typed = manualHost.trimmingCharacters(in: .whitespaces)
-        return finder.found?.host ?? (typed.isEmpty ? "frame.local" : typed)
+        FrameSearchState.address(manual: manualHost, discovered: finder.found?.host)
     }
 
     var body: some View {
@@ -35,19 +34,19 @@ struct SetupView: View {
         .scrollDismissesKeyboard(.interactively)
         .background(Color.frameBackground)
         .onAppear {
-            manualHost = model.settings?.host ?? ""
+            manualHost = model.settings?.address ?? ""
             user = model.settings?.user ?? "steamos"
-            var fallback = model.settings?.host
+            var fallback = model.settings?.address
             #if DEBUG
             fallback = ProcessInfo.processInfo.environment["FRAME_TEST_FALLBACK"] ?? fallback  // Simulator test hook
             #endif
-            finder.start(fallback: fallback)
+            finder.start(fallback: fallback, manual: !manualHost.isEmpty)
         }
         .onDisappear { finder.stop() }
         // After a few seconds of not finding it, say exactly what to check.
         .task(id: finder.since) {
             try? await Task.sleep(nanoseconds: 8_000_000_000)
-            showHelp = true
+            if !Task.isCancelled { showHelp = true }
         }
     }
 
@@ -143,7 +142,7 @@ struct SetupView: View {
                     Text("Address").font(.footnote).foregroundStyle(Color.frameMuted)
                     TextField("frame.local, an IP, or a Tailscale name", text: $manualHost)
                         .keyboardType(.URL).textInputAutocapitalization(.never).autocorrectionDisabled()
-                        .onSubmit { finder.start(fallback: manualHost) }
+                        .onSubmit { finder.start(fallback: manualHost, manual: true) }
                         .padding(10).background(Color.black.opacity(0.28), in: RoundedRectangle(cornerRadius: 8))
                     TextField("User", text: $user)
                         .textInputAutocapitalization(.never).autocorrectionDisabled()
@@ -172,7 +171,9 @@ struct SetupView: View {
         }
         .onChange(of: manualHost) { _, value in
             // A typed address replaces the search.
-            if !value.trimmingCharacters(in: .whitespaces).isEmpty, finder.found?.host != value { finder.start(fallback: value) }
+            showHelp = false
+            let typed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+            finder.start(fallback: typed, manual: !typed.isEmpty)
         }
     }
 

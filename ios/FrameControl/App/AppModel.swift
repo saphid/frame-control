@@ -1,4 +1,5 @@
 import Citadel
+import CryptoKit
 import Foundation
 import SwiftUI
 import UIKit
@@ -18,6 +19,20 @@ final class AppModel: ObservableObject {
     /// Install links that arrived before the page was ready for them.
     @Published var pendingInstallLinks: [InstallLink] = []
 
+    /// Native recovery remains reachable even when WebKit cannot draw a page.
+    @Published private(set) var webRecoveryMessage: String?
+    @Published private(set) var webReloadID = 0
+
+    func webContentFailed(at url: URL, message: String) {
+        guard phase == .ready(url) else { return }
+        webRecoveryMessage = message
+    }
+
+    func retryWebContent() {
+        webRecoveryMessage = nil
+        webReloadID += 1
+    }
+
     private var link: FrameLink?
     private var server: HeadsetServer?
     private var forwarder: PortForwarder?
@@ -33,6 +48,11 @@ final class AppModel: ObservableObject {
     }
 
     var deviceName: String { UIDevice.current.userInterfaceIdiom == .pad ? "iPad" : "iPhone" }
+    /// Stable per install: a hash of this device's SSH key, which is made once and kept in the Keychain.
+    var clientID: String {
+        let digest = SHA256.hash(data: Data(authorizedKeysLine.utf8))
+        return deviceName.lowercased() + "-" + digest.prefix(6).map { String(format: "%02x", $0) }.joined()
+    }
     private var hostKey: String? { UserDefaults.standard.string(forKey: Self.hostKeyKey) }
 
     // MARK: pairing
@@ -93,18 +113,7 @@ final class AppModel: ObservableObject {
 
     /// "host", "host:port" or "[v6]:port", plus a user name.
     nonisolated static func parse(host: String, user: String) -> FrameSettings? {
-        var target = FrameSettings(host: host.trimmingCharacters(in: .whitespaces), user: user.trimmingCharacters(in: .whitespaces))
-        if target.host.hasPrefix("["), let close = target.host.firstIndex(of: "]") {
-            let rest = target.host[target.host.index(after: close)...]
-            if rest.hasPrefix(":"), let port = Int(rest.dropFirst()) { target.port = port }
-            target.host = String(target.host[target.host.index(after: target.host.startIndex)..<close])
-        } else if target.host.filter({ $0 == ":" }).count == 1, let colon = target.host.lastIndex(of: ":"),
-                  let port = Int(target.host[target.host.index(after: colon)...]) {
-            target.port = port
-            target.host = String(target.host[..<colon])
-        }
-        guard !target.host.isEmpty, !target.user.isEmpty, (1...65535).contains(target.port) else { return nil }
-        return target
+        FrameSettings.parse(host: host, user: user)
     }
 
     /// This phone's line for ~/.ssh/authorized_keys on the Frame.
@@ -139,6 +148,7 @@ final class AppModel: ObservableObject {
     private func invalidate() {
         attempt += 1
         retrying = false
+        webRecoveryMessage = nil
     }
 
     /// quiet: a background retry, which leaves the failure screen up until it works.
@@ -167,7 +177,7 @@ final class AppModel: ObservableObject {
             guard current() else { throw CancellationError() }
             step("Starting Frame Control on the headset")
             let key = Self.randomKey()
-            let server = try await HeadsetServer.start(in: dir, over: l, key: key, device: deviceName)
+            let server = try await HeadsetServer.start(in: dir, over: l, key: key, device: deviceName, client: clientID)
             guard current() else { throw CancellationError() }
             let f = try await PortForwarder.start(over: l, to: server.port)
             forwarder = f

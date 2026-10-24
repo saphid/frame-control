@@ -1,0 +1,96 @@
+{
+  "python": "3.12.14 (main, Sep 24 2026, 17:57:31) [MSC v.1944 64 bit (AMD64)]",
+  "resources": "C:\\Users\\frame\\AppData\\Local\\Programs\\Frame Control\\resources",
+  "elements": {
+    "d3d11screencapturesrc": true,
+    "mfh264enc": true,
+    "jpegenc": true,
+    "x264enc": false
+  },
+  "windows": [
+    {
+      "src": "window:131836",
+      "id": 131836,
+      "title": "Administrator: C:\\WINDOWS\\system32\\cmd.exe - powershell  -noprofile -executionpolicy bypass -file \\\\host.lan\\data\\bootstrap.ps1",
+      "app": "Windows",
+      "w": 1115,
+      "h": 628,
+      "x": 51,
+      "y": 52
+    },
+    {
+      "src": "window:327926",
+      "id": 327926,
+      "title": "Administrator: Install",
+      "app": "Windows",
+      "w": 979,
+      "h": 512,
+      "x": 85,
+      "y": 78
+    },
+    {
+      "src": "window:65856",
+      "id": 65856,
+      "title": "Program Manager",
+      "app": "Windows",
+      "w": 1280,
+      "h": 800,
+      "x": 0,
+      "y": 0
+    }
+  ],
+  "displays": [
+    {
+      "src": "display:65537",
+      "name": "Display 1",
+      "x": 0,
+      "y": 0,
+      "w": 1280,
+      "h": 800
+    }
+  ],
+  "runs": [
+    {
+      "source": "test",
+      "codec": "h264",
+      "frames": 5,
+      "pipeline": "videotestsrc name=source is-live=true pattern=ball ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360,format=NV12 ! mfh264enc name=enc low-latency=true bframes=0 gop-size=60 bitrate=1000 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,alignment=au ! appsink name=out sync=false max-buffers=2 drop=false",
+      "last_bytes": 154
+    },
+    {
+      "source": "test",
+      "codec": "jpeg",
+      "frames": 5,
+      "pipeline": "videotestsrc name=source is-live=true pattern=ball ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360 ! jpegenc name=enc quality=80 ! appsink name=out sync=false max-buffers=2 drop=false",
+      "last_bytes": 7336
+    },
+    {
+      "source": "display:65537",
+      "codec": "h264",
+      "frames": 0,
+      "pipeline": "d3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true monitor-handle=65537 ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360,format=NV12 ! mfh264enc name=enc low-latency=true bframes=0 gop-size=60 bitrate=1000 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,alignment=au ! appsink name=out sync=false max-buffers=2 drop=false",
+      "error": "no property \"capture-api\" in element \"d3d11screencapturesrc\""
+    },
+    {
+      "source": "display:65537",
+      "codec": "jpeg",
+      "frames": 0,
+      "pipeline": "d3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true monitor-handle=65537 ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360 ! jpegenc name=enc quality=80 ! appsink name=out sync=false max-buffers=2 drop=false",
+      "error": "no property \"capture-api\" in element \"d3d11screencapturesrc\""
+    },
+    {
+      "source": "window:131836",
+      "codec": "h264",
+      "frames": 0,
+      "pipeline": "d3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true window-handle=131836 ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360,format=NV12 ! mfh264enc name=enc low-latency=true bframes=0 gop-size=60 bitrate=1000 ! h264parse config-interval=-1 ! video/x-h264,stream-format=byte-stream,alignment=au ! appsink name=out sync=false max-buffers=2 drop=false",
+      "error": "no property \"capture-api\" in element \"d3d11screencapturesrc\""
+    },
+    {
+      "source": "window:131836",
+      "codec": "jpeg",
+      "frames": 0,
+      "pipeline": "d3d11screencapturesrc capture-api=wgc show-cursor=true show-border=true window-handle=131836 ! video/x-raw,framerate=30/1 ! queue name=raw_queue leaky=downstream max-size-buffers=1 max-size-bytes=0 max-size-time=0 ! identity name=gate ! videoconvert ! videoscale add-borders=false ! video/x-raw,width=640,height=360 ! jpegenc name=enc quality=80 ! appsink name=out sync=false max-buffers=2 drop=false",
+      "error": "no property \"capture-api\" in element \"d3d11screencapturesrc\""
+    }
+  ]
+}

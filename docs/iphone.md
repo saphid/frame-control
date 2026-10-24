@@ -12,7 +12,8 @@ An iPhone can't run Python or `ssh`, but the Frame can. So the app:
 1. connects to the Frame over SSH itself (the [Citadel](https://github.com/orlandos-nl/Citadel)
    Swift SSH library), with its own ed25519 key from the Keychain;
 2. copies Frame Control's server and helpers (`ios/scripts/make_frame_bundle.py`,
-   under 1 MB) to `~/.cache/frame-control/<version>` on the Frame, once per version;
+   4.6 MB, 3.6 MB of it the KDE Connect the keyboard and trackpad use) to
+   `~/.cache/frame-control/<version>` on the Frame, once per version;
 3. starts `ui/server.py` there with `FRAME_LOCAL=1`. It listens only on the
    Frame's own 127.0.0.1, and it stops when the phone disconnects (`--exit-on-eof`);
 4. tunnels to it through the SSH session and shows the same page as the desktop
@@ -25,7 +26,10 @@ as its transport too), so the desktop and phone share one code path. Android
 display settings use `podman exec` into each Lepton container instead of adb,
 which the Frame doesn't have.
 
-Nothing is left running on the Frame after the phone disconnects; the copied
+The app server stops after the phone disconnects. An explicitly started
+[comfort session](family-comfort.md) keeps its timer and headset reminders running
+until the session ends or is cancelled; phone notifications require the app to
+remain connected and running. The copied
 files stay in `~/.cache/frame-control` (delete it any time).
 
 ## Pairing
@@ -180,8 +184,9 @@ app installed opens its App Store page.
 Things iOS asks the first time: **Local Network** (tap Allow, or the app can't
 see the Frame), and **Paste** when you send the iPhone's clipboard (tap Allow
 Paste, or set Settings → Apps → Frame Control → Paste from Other Apps → Allow).
-Sending text to the Frame's clipboard needs the desktop panel open in the
-headset, as on the desktop app.
+Sending text to the Frame's clipboard, or copying the Frame's to the phone
+(**Type on the headset → Copy the headset's clipboard**), needs the desktop
+panel open in the headset, as on the desktop app.
 
 On a physical iPhone, 2026-10-14: Alex reported build 202610140516 was working
 after pairing and trying the password visibility button. A server process
@@ -257,3 +262,11 @@ by the Simulator checks above.
 Debug builds have Simulator test hooks (`FRAME_TEST_HOST`, `FRAME_TEST_PAGE`,
 `FRAME_TEST_JS`, and the tunnel URL in the app's Caches folder); release builds
 don't.
+
+## Family and comfort
+
+The shared Home card sets session limits, breaks and check-ins; **Cast to this
+screen** is in Home's **Right now** card. **Enable / test notifications** requests iOS notification
+permission and sends a local test. These are local notifications, not APNs push;
+iOS background suspension can interrupt phone alerts. The headset timer still
+runs. See [the behavior and verification limits](family-comfort.md).

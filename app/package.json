@@ -1,7 +1,7 @@
 {
   "name": "frame-control",
   "productName": "Frame Control",
-  "version": "0.3.1",
+  "version": "0.4.13",
   "description": "Desktop app for managing a Valve Steam Frame over SSH",
   "private": true,
   "main": "main.js",
@@ -29,6 +29,7 @@
         ]
       }
     ],
+    "afterPack": "build/check-resources.js",
     "directories": {
       "output": "dist",
       "buildResources": "build"
@@ -37,6 +38,9 @@
       "main.js",
       "preload.js",
       "install-link.js",
+      "updater.js",
+      "preferences.js",
+      "meta-signin.js",
       "package.json",
       "build/icon.png"
     ],
@@ -46,7 +50,18 @@
         "to": "ui",
         "filter": [
           "*.py",
-          "*.html"
+          "*.html",
+          "*.js",
+          "*.css",
+          "telemetry.json"
+        ]
+      },
+      {
+        "from": "../ui/apk_sources",
+        "to": "ui/apk_sources",
+        "filter": [
+          "*.py",
+          "*.json"
         ]
       },
       {
@@ -61,7 +76,16 @@
         "to": "frame/android",
         "filter": [
           "*.sh",
-          "*.py"
+          "*.py",
+          "*.js"
+        ]
+      },
+      {
+        "from": "../frame/openxr-compat",
+        "to": "frame/openxr-compat",
+        "filter": [
+          "XrApiLayer_FRAME_compat.json",
+          "prebuilt/**/*.so.gz"
         ]
       },
       {
@@ -70,6 +94,16 @@
         "filter": [
           "**/*",
           "!**/__pycache__/**"
+        ]
+      },
+      {
+        "from": "../frame/kdeconnect",
+        "to": "frame/kdeconnect",
+        "filter": [
+          "packages.json",
+          "NOTICE.md",
+          "LICENSES/**/*",
+          "packages/*.pkg.tar.zst"
         ]
       },
       {
@@ -94,6 +128,14 @@
         "filter": [
           "**/*"
         ]
+      },
+      {
+        "from": "../THIRD_PARTY_NOTICES.md",
+        "to": "THIRD_PARTY_NOTICES.md"
+      },
+      {
+        "from": "../LICENSE",
+        "to": "LICENSE"
       }
     ],
     "mac": {
@@ -156,7 +198,16 @@
         "zip"
       ],
       "icon": "build/icon.png",
-      "artifactName": "Frame-Control-win-${arch}.${ext}"
+      "artifactName": "Frame-Control-win-${arch}.${ext}",
+      "extraResources": [
+        {
+          "from": "build/desktop/${os}-${arch}",
+          "to": "desktop/bundle",
+          "filter": [
+            "**/*"
+          ]
+        }
+      ]
     },
     "nsis": {
       "oneClick": false,

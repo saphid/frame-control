@@ -5,10 +5,12 @@ request guards and input validation, which all run before any SSH call.
 
 Run: python3 -m unittest discover -s tests
 """
+import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import http.client
 import io
 import json
 import os
+import shutil
 import socket
 import struct
 import subprocess
@@ -33,7 +35,9 @@ class ServerGuards(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.port = free_port()
-        env = {**os.environ, "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONDONTWRITEBYTECODE": "1"}
+        cls.ssh_dir = tempfile.mkdtemp(prefix="frame-control-ssh-")  # an empty ~/.ssh: no headsets set up
+        env = {**os.environ, "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONDONTWRITEBYTECODE": "1",
+               "FRAME_CONTROL_SSH_DIR": cls.ssh_dir}
         cls.log = tempfile.TemporaryFile()
         cls.proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", str(cls.port)],
                                     env=env, stdout=cls.log, stderr=subprocess.STDOUT)
@@ -75,6 +79,21 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(headers["X-Frame-Options"], "DENY")
         self.assertIn(b"<html", payload.lower())
 
+    def test_control_center_assets_served_with_correct_types(self):
+        for path, mime, marker in (('/control-center.js', 'text/javascript', b'createController'),
+                                   ('/control-center.css', 'text/css', b'.cc-workspace')):
+            with self.subTest(path=path):
+                status, headers, payload = self.request('GET', path)
+                self.assertEqual(status, 200)
+                self.assertIn(mime, headers['Content-Type'])
+                self.assertIn(marker, payload)
+
+    def test_store_page_served_with_anti_framing_headers(self):
+        status, headers, payload = self.request("GET", "/store")
+        self.assertEqual(status, 200)
+        self.assertEqual(headers["X-Frame-Options"], "DENY")
+        self.assertIn(b"<title>APK Store</title>", payload)
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
@@ -83,12 +102,17 @@ class ServerGuards(unittest.TestCase):
 
     def test_api_needs_custom_header(self):
         # <img src> and plain form posts from other sites can't set it.
+        self.assertEqual(self.request("POST", "/api/comfort", {"action": "start"})[0], 403)
         self.assertEqual(self.request("GET", "/api/status")[0], 403)
         self.assertEqual(self.request("GET", "/api/screenshot?view=headset")[0], 403)
         self.assertEqual(self.request("GET", "/api/shots")[0], 403)
         self.assertEqual(self.request("GET", "/api/stream")[0], 403)
         self.assertEqual(self.request("GET", "/api/shots/image?id=1/250820/20260925225208_1.jpg")[0], 403)
         self.assertEqual(self.request("POST", "/api/launch", {"appid": "620"})[0], 403)
+        self.assertEqual(self.request("GET", "/api/record")[0], 403)
+        self.assertEqual(self.request("GET", "/api/clips")[0], 403)
+        self.assertEqual(self.request("POST", "/api/record", {"action": "start"})[0], 403)
+        self.assertEqual(self.request("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})[0], 403)
 
     def test_captures_are_not_cacheable(self):
         # Headset captures show everything on screen; nothing may cache them.
@@ -98,6 +122,8 @@ class ServerGuards(unittest.TestCase):
 
     def test_input_validation(self):
         cases = [
+            ("/api/comfort", {"action": "poweroff"}),
+            ("/api/comfort", {"action": "start", "minutes": 0}),
             ("/api/launch", {"appid": "620; rm -rf ~"}),
             ("/api/launch", {"appid": ""}),
             ("/api/flatpak", {"id": "org.example.App;id", "action": "install"}),
@@ -105,15 +131,34 @@ class ServerGuards(unittest.TestCase):
             ("/api/volume", {"level": 1.5}),
             ("/api/clipboard", {"text": ""}),
             ("/api/open", {"what": "anything-else"}),
+            ("/api/open", {"what": "shot", "id": "1/250820/../../.ssh/id_ed25519"}),
+            ("/api/open", {"what": "shot"}),
             ("/api/shots/save", {"ids": []}),
             ("/api/shots/save", {"ids": "1/250820/20260925225208_1.jpg"}),
             ("/api/shots/save", {"ids": [1]}),
             ("/api/shots/save", {"ids": ["1/250820/../../.ssh/id_ed25519"]}),
             ("/api/shots/save", {"ids": ["1/250820/20260925225208_1.jpg; rm -rf ~"]}),
+            ("/api/record", {}),
+            ("/api/record", {"action": "explode"}),
+            ("/api/clips/export", {}),
+            ("/api/clips/export", {"id": 5}),
+            ("/api/clips/export", {"id": "1/video/../../../../.ssh"}),
+            ("/api/clips/export", {"id": "1/video/bg;rm -rf ~"}),
+            ("/api/clips/export", {"id": "../1/video/bg"}),
         ]
         for path, body in cases:
             status, payload = self.post(path, body)
             self.assertEqual(status, 400, f"{path} {body} -> {payload}")
+
+    def test_recorder_idle_until_started(self):
+        status, _, payload = self.request("GET", "/api/record", headers={"X-Frame-UI": "1"})
+        self.assertEqual((status, json.loads(payload)), (200, {"state": "idle"}))
+        status, payload = self.post("/api/record", {"action": "stop"})
+        self.assertEqual(status, 409, payload)
+
+    def test_showing_a_shot_needs_it_saved_here(self):
+        status, payload = self.post("/api/open", {"what": "shot", "id": "1/250820/19990101000000_1.jpg"})
+        self.assertEqual(status, 404, payload)
 
     def test_screenshot_ids_checked_before_ssh(self):
         for shot in ("../../etc/passwd", "1/250820/x.jpg", "1/2/20260925225208_1.jpg;id", "1/250820/20260925225208_1.gif"):
@@ -234,6 +279,228 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.post("/api/nope", {})[0], 404)
 
 
+class OneServer(unittest.TestCase):
+    """Two servers for one user would each connect and edit headsets on their own."""
+
+    def start(self, env):
+        proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0"], env=env,
+                                stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        self.addCleanup(lambda: (proc.terminate(), proc.wait(10), proc.stdout.close()))
+        return proc
+
+    def test_a_second_server_is_refused_until_the_first_exits(self):
+        data = tempfile.mkdtemp(prefix="frame-one-server-")
+        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": data, "FRAME_ALIAS": "frame-control-test.invalid",
+               "FRAME_CONTROL_SERVER_WAIT": "1"}
+        first = self.start(env)
+        self.assertIn("Frame Control on", first.stdout.readline())
+        second = subprocess.run([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0"], env=env,
+                                capture_output=True, text=True, timeout=60)
+        self.assertEqual(second.returncode, 1)
+        self.assertIn("already running", second.stderr)
+        first.terminate()
+        first.wait(10)
+        self.assertIn("Frame Control on", self.start(env).stdout.readline())
+
+    def test_a_private_server_runs_alongside_but_cant_change_headsets(self):
+        """The MCP adapter starts its own server (FRAME_PRIVATE_SSH=1) while the app runs."""
+        data = tempfile.mkdtemp(prefix="frame-one-server-")
+        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": data, "FRAME_ALIAS": "frame-control-test.invalid",
+               "FRAME_CONTROL_SERVER_WAIT": "1"}
+        self.assertIn("Frame Control on", self.start(env).stdout.readline())
+        private = self.start({**env, "FRAME_PRIVATE_SSH": "1"})
+        line = private.stdout.readline()
+        self.assertIn("Frame Control on", line)
+        port = int(line.split("http://127.0.0.1:")[1].split()[0])
+        conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+        conn.request("POST", "/api/devices", body=json.dumps({"action": "use", "id": "x"}),
+                     headers={"Content-Type": "application/json", "X-Frame-UI": "1", "Host": f"127.0.0.1:{port}"})
+        r = conn.getresponse()
+        self.assertEqual(r.status, 403, r.read())
+
+    @unittest.skipIf(os.name == "nt", "no SIGTERM on Windows")
+    def test_sigterm_while_the_app_holds_stdin_exits_cleanly(self):
+        """The app keeps stdin open; a stop signal used to abort Python (SIGABRT) at exit,
+        and later, now and then, crash it (SIGSEGV) while background threads were still
+        loading TLS certificates. Run a few times: that crash came about 1 run in 100."""
+        for attempt in range(5):
+            with self.subTest(attempt=attempt):
+                env = {**os.environ, "FRAME_CONTROL_DATA_DIR": tempfile.mkdtemp(prefix="frame-one-server-"),
+                       "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONFAULTHANDLER": "1"}
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
+                    shutil.rmtree(env["FRAME_CONTROL_DATA_DIR"], ignore_errors=True)
+
+    def test_staging_folders_cleared_when_stopped_mid_transfer(self):
+        """The server leaves without interpreter teardown, so TemporaryDirectory cleanup
+        doesn't run for work still in progress: its own staging folders go on the way out,
+        and a dead server's at the next start."""
+        dead = subprocess.Popen([sys.executable, "-c", "pass"])
+        dead.wait()
+        home = tempfile.mkdtemp(prefix="frame-stop-home-")
+        self.addCleanup(shutil.rmtree, home, ignore_errors=True)
+        env = {**os.environ, "FRAME_CONTROL_DATA_DIR": os.path.join(home, "data"),
+               "FRAME_ALIAS": "frame-control-test.invalid", "HOME": home, "XDG_CACHE_HOME": os.path.join(home, ".cache"),
+               "LOCALAPPDATA": home, "APPDATA": home}
+        index_dir = Path(subprocess.run(
+            [sys.executable, "-c", "import sys; sys.path.insert(0, sys.argv[1]); import frame_host; "
+                                   "print(frame_host.cache_dir('apk-sources'))", str(ROOT / "ui")],
+            env=env, capture_output=True, text=True, check=True).stdout.strip())
+        index_dir.mkdir(parents=True)
+        tmp = Path(tempfile.gettempdir())
+
+        def staged(folder, prefix, pid):
+            d = Path(tempfile.mkdtemp(prefix=f"{prefix}{pid}-", dir=folder))
+            self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+            (d / "app.apk").write_bytes(b"\0" * 4096)
+            return d
+
+        # Stopped as the app stops it: by closing stdin (the only way on Windows,
+        # where terminate() is a hard kill) and, elsewhere, by SIGTERM too.
+        for stop in ["stdin"] + (["sigterm"] if os.name != "nt" else []):
+            with self.subTest(stop=stop):
+                left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
+                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                                        env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                        stderr=subprocess.STDOUT, text=True)
+                try:
+                    self.assertIn("Frame Control on", proc.stdout.readline())
+                    self.assertEqual([d for d in left_by_dead if d.exists()], [])
+                    in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
+                                 staged(index_dir, ".download-", proc.pid)]
+                    if stop == "stdin":
+                        proc.stdin.close()
+                    else:
+                        proc.terminate()
+                    self.assertEqual(proc.wait(30), 0, proc.stdout.read())
+                    self.assertEqual([d for d in in_flight if d.exists()], [])
+                finally:
+                    if proc.poll() is None:
+                        proc.kill()
+                        proc.wait()
+                    proc.stdin.close()
+                    proc.stdout.close()
+
+
+class ArtworkSettings(unittest.TestCase):
+    """The settings panel's endpoints, with and without the page's X-Frame-UI key."""
+
+    def test_settings_need_and_accept_the_ui_key(self):
+        with tempfile.TemporaryDirectory() as home:
+            port = free_port()
+            env = {**os.environ, "FRAME_ALIAS": "frame-control-test.invalid", "PYTHONDONTWRITEBYTECODE": "1",
+                   "HOME": home, "APPDATA": home, "XDG_DATA_HOME": home}
+            for name in ("STEAMGRIDDB_API_KEY", "FRAME_STEAMGRIDDB_API_KEY", "FRAME_UI_KEY"):
+                env.pop(name, None)
+            proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", str(port)],
+                                    env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            try:
+                def request(method, path, body=None, headers=None):
+                    conn = http.client.HTTPConnection("127.0.0.1", port, timeout=10)
+                    conn.request(method, path, body=json.dumps(body).encode() if body is not None else None,
+                                 headers=headers or {})
+                    r = conn.getresponse()
+                    payload = r.read()
+                    conn.close()
+                    return r.status, payload
+                for _ in range(100):
+                    try:
+                        if request("GET", "/")[0] == 200:
+                            break
+                    except OSError:
+                        time.sleep(0.05)
+                key = {"X-Frame-UI": "1", "Content-Type": "application/json"}
+                self.assertEqual(request("GET", "/api/settings/artwork")[0], 403)
+                self.assertEqual(request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc"})[0], 403)
+                status, payload = request("GET", "/api/settings/artwork", headers=key)
+                self.assertEqual((status, json.loads(payload)["steamgriddb_configured"]), (200, False))
+                status, payload = request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc_1"}, key)
+                self.assertEqual((status, json.loads(payload)["steamgriddb_configured"]), (200, True))
+                self.assertNotIn(b"abc_1", payload)
+                status, payload = request("GET", "/api/settings/artwork", headers=key)
+                self.assertTrue(json.loads(payload)["steamgriddb_configured"])
+                self.assertEqual(request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "a b"}, key)[0], 400)
+            finally:
+                proc.terminate()
+                proc.wait(timeout=10)
+
+    def test_panel_script_uses_the_keyed_api_helper(self):
+        script = (ROOT / "ui" / "artwork-settings.js").read_text(encoding="utf-8")
+        self.assertNotIn("fetch(", script)
+        self.assertIn("api('/api/settings/artwork'", script)
+        page = (ROOT / "ui" / "index.html").read_text(encoding="utf-8")
+        self.assertLess(page.index("async function api("), page.index('<script src="/artwork-settings.js">'))
+
+
+@unittest.skipUnless(shutil.which("node"), "needs node")
+class PageScripts(unittest.TestCase):
+    """A page's scripts share one global scope, where a later function declaration
+    silently replaces an earlier one of the same name. Issue #68: the Devices page's
+    renderDetail replaced the Android store's, so every app opened as an empty
+    dialog (a bare horizontal line). Compiled together as one module, any top-level
+    name declared twice is a SyntaxError; node's parser handles nested scopes,
+    comments and strings."""
+
+    PAGES = ("index.html", "assistant.html", "mac-view.html")
+
+    @staticmethod
+    def page_scripts(html):
+        """A page's inline scripts, then its /*.js scripts, in one source."""
+        import re
+        parts = re.findall(r"<script>([\s\S]*?)</script>", html)
+        parts += [(ROOT / "ui" / src).read_text(encoding="utf-8") for src in re.findall(r'<script src="/([\w.-]+\.js)">', html)]
+        return "\n;\n".join(parts)
+
+    @staticmethod
+    def module_check(source):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "page.mjs"
+            path.write_text(source, encoding="utf-8")
+            r = subprocess.run(["node", "--check", str(path)], capture_output=True, text=True)
+        return r.returncode, r.stderr
+
+    def test_the_check_catches_top_level_duplicates_only(self):
+        dup = "<script>function a() {}\nfunction a() {}</script>"
+        across = "<script>function a() {}</script><p>x</p><script>  async function a() {}</script>"
+        same_line = "<script>function a() {} function a() {}</script>"
+        const_and_function = "<script>const a = 1, b = 2;\nfunction b() {}</script>"
+        for html in (dup, across, same_line, const_and_function):
+            rc, err = self.module_check(self.page_scripts(html))
+            self.assertNotEqual(rc, 0, html)
+            self.assertIn("has already been declared", err, html)
+        nested = ("<script>function a() {}\nfunction f() { function a() {} if (1) { const a = 2; } }\n"
+                  "// function a() {}\nconst s = `function a() {}`;</script>")
+        self.assertEqual(self.module_check(self.page_scripts(nested)), (0, ""))
+
+    def test_no_top_level_name_is_declared_twice(self):
+        for name in self.PAGES:
+            source = self.page_scripts((ROOT / "ui" / name).read_text(encoding="utf-8"))
+            self.assertIn("function", source, name)
+            rc, err = self.module_check(source)
+            self.assertEqual(rc, 0, f"{name}: {err}")
+
+    def test_store_app_page_renders(self):
+        """tests/page/store_detail.mjs runs the real store functions from index.html."""
+        r = subprocess.run(["node", str(ROOT / "tests" / "page" / "store_detail.mjs")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_meta_library_rows_render(self):
+        """tests/page/meta_rows.mjs runs the real Meta library row rendering from index.html."""
+        r = subprocess.run(["node", str(ROOT / "tests" / "page" / "meta_rows.mjs")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+
 @unittest.skipIf(os.name == "nt", "runs on the Frame (Linux); local-bin/ssh is a POSIX shell script")
 class LocalMode(unittest.TestCase):
     """FRAME_LOCAL=1, as the iPhone app starts the server on the Frame: its own key
@@ -280,6 +547,14 @@ class LocalMode(unittest.TestCase):
         self.assertEqual(status, 200, body)
         self.assertIsInstance(body["titles"], list)
 
+    def test_recordings_are_for_a_computer(self):
+        for method, path, body in (("GET", "/api/record", None), ("GET", "/api/clips", None),
+                                   ("POST", "/api/record", {"action": "start"}),
+                                   ("POST", "/api/clips/export", {"id": "1/video/bg_620_20261020_201950"})):
+            status, payload = self.request(method, path, body)
+            self.assertEqual(status, 400, (path, payload))
+            self.assertIn("computer", payload["error"])
+
     def test_open_is_for_the_app_and_power_needs_a_password(self):
         self.assertEqual(self.request("POST", "/api/open", {"what": "terminal"})[0], 400)
         status, body = self.request("POST", "/api/open", {"what": "reboot"})
@@ -305,7 +580,11 @@ class UnreachableMessages(unittest.TestCase):
             "ssh: connect to host 192.168.1.9 port 22: No route to host": "isn't answering",
             "ssh: connect to host 192.168.1.9 port 22: Connection refused": "refused",
             "steamos@192.168.1.9: Permission denied (publickey,password).": "SSH key",
-            "Host key verification failed.": "identity changed",
+            "Host key verification failed.": "identity has changed",
+            "@@@@\n@    WARNING: REMOTE HOST IDENTIFICATION HAS CHANGED!     @\nHost key verification failed.":
+                "Check the new key on the Devices tab",
+            "No ED25519 host key is known for frame-control-f7b4e9ac and you have requested strict checking.\n"
+            "Host key verification failed.": "isn't saved yet",
             "kex_exchange_identification: read: Connection reset by peer": "dropped",
             "Timed out talking to frame": "too long",
         }
@@ -319,6 +598,47 @@ class UnreachableMessages(unittest.TestCase):
         for raw in ("bad Flatpak app ID", "error: No remote refs found for 'org.example.App'",
                     "cp: cannot open 'x': Permission denied", "timed out waiting for Steam"):
             self.assertEqual(self.server.error_body(raw), ({"error": raw}, None), raw)
+
+
+class ClipboardDesktopClosed(unittest.TestCase):
+    """The headset's desktop being closed is the person's to fix: a 409, not a 5xx fault for telemetry."""
+
+    @classmethod
+    def setUpClass(cls):
+        sys.path.insert(0, str(ROOT / "ui"))
+        import server
+        cls.server = server
+
+    def paste_failing_with(self, message):
+        s = self.server
+        saved = s.ssh
+
+        def fake_ssh(remote, **kw):
+            raise s.Failure(message)
+        s.ssh = fake_ssh
+        try:
+            s.clipboard({"text": "hello"})
+        finally:
+            s.ssh = saved
+
+    def test_desktop_closed_is_a_409(self):
+        with self.assertRaises(self.server.Failure) as cm:
+            self.paste_failing_with("The headset's desktop isn't open (plasmashell is not running). "
+                                    "Open the desktop in the headset, then try again.")
+        self.assertEqual(cm.exception.status, 409)
+        self.assertIn("Open the desktop", str(cm.exception))
+        # Older wording (scripts/paste-to-frame.sh) is recognised too.
+        with self.assertRaises(self.server.Failure) as cm:
+            self.paste_failing_with("plasmashell is not running: open the desktop in the headset first.")
+        self.assertEqual(cm.exception.status, 409)
+
+    def test_other_failures_stay_faults(self):
+        with self.assertRaises(self.server.Failure) as cm:
+            self.paste_failing_with("Klipper call failed (bus: none)")
+        self.assertEqual(cm.exception.status, 502)
+
+    def test_paste_script_says_it(self):
+        self.assertIn(self.server.DESKTOP_CLOSED, self.server.PASTE)
 
 
 class StatusProbe(unittest.TestCase):

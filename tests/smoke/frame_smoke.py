@@ -13,11 +13,12 @@ BUILD_ID in tests/smoke/results/<time>-<BUILD_ID>.json (git-ignored):
   (someone has to open Settings > Developer > Pair new host and approve it in
   the headset), checked, and taken out of authorized_keys again.
 
-Everything it installs is removed again, also when a step fails: the titles
-(named fc_smoke_*, and leftovers of an interrupted run first), their Steam
+Everything it installs is removed again, also when a step fails: the reserved
+fc_smoke_{arm64,x86_64,exe} titles (and legacy leftovers first), their Steam
 shortcuts, the paired key, and ~/devkit-utils if it wasn't there before (if it
 was, it stays, synced to this checkout as Frame Control always does). A
-cleanup that fails is a failed step.
+cleanup that fails is a failed step. Test-owned processes are stopped and
+rechecked around deletion; shared Proton services are never stopped by name.
 
 Usage: python3 tests/smoke/frame_smoke.py [--pair]     (or scripts/frame-smoke.sh)
 Env:   FRAME_ALIAS (default frame), FRAME_SMOKE_RESULTS (default tests/smoke/results)
@@ -45,11 +46,17 @@ import frame_android  # noqa: E402
 import frame_connect  # noqa: E402
 import frame_titles  # noqa: E402
 import tiny_programs  # noqa: E402
+import stop_processes  # noqa: E402
 
 RESULTS = Path(os.environ.get('FRAME_SMOKE_RESULTS') or HERE / 'results')
 PREFIX = 'fc_smoke_'
-# Earlier runs named titles fc-smoke*, which Steam refused to register but left on disk.
-OLD_PREFIX = 'fc-smoke'
+
+
+def stop_titles(ids):
+    """Run the same bounded, PID-safe helper used by the local process tests."""
+    return json.loads(frame_android.ssh(
+        'python3 - ' + ' '.join(shlex.quote(gid) for gid in sorted(ids)),
+        input=(HERE / 'stop_processes.py').read_text(), timeout=20))
 
 
 class Smoke:
@@ -172,14 +179,17 @@ def title_cycle(smoke, kind, folder):
         return detail
 
     def remove():
+        stopped = stop_titles({gid})
         frame_titles.remove(gid)
+        # A wrapper could have launched a child just as deletion completed.
+        after = stop_titles({gid})
         left = ssh(f'ls -d ~/devkit-game/{gid} ~/devkit-game/{gid}-*.json 2>/dev/null || true').strip()
         if left:
             raise AssertionError(f'left behind: {left}')
         if gid in {t['id'] for t in frame_titles.list_titles()}:
             raise AssertionError(f'{gid} is still listed')
         smoke.installed.discard(gid)
-        return {'removed': gid}
+        return {'removed': gid, 'process_cleanup': [stopped, after]}
 
     if smoke.step(f'{kind}: install', install)['ok']:
         smoke.step(f'{kind}: launch', launch)
@@ -187,15 +197,21 @@ def title_cycle(smoke, kind, folder):
 
 
 def cleanup(smoke):
-    """Remove this run's titles and any fc_smoke_* an interrupted run left: the folder,
-    its json files, and (through steamos-delete) Steam's shortcut. Raises if anything stays."""
+    """Stop reserved smoke processes and remove their titles and shortcuts.
+
+    Legacy fc-smoke-* IDs are included; arbitrary similarly named titles are
+    never removed. Raises if any owned process, file or shortcut stays.
+    """
     problems = []
     try:
-        ids = {t['id'] for t in frame_titles.list_titles() if t['id'].startswith((PREFIX, OLD_PREFIX))}
+        ids = {t['id'] for t in frame_titles.list_titles() if t['id'] in stop_processes.IDS}
     except frame_android.FrameError as e:
         ids = set()
         problems.append(f'could not list titles: {e}')
     ids |= smoke.installed
+    # Scan every reserved ID, even when a prior run removed its folder and
+    # shortcut but left Proton running. Stop before removing any more files.
+    stopped = stop_titles(stop_processes.IDS)
     gone = set()
     for gid in sorted(ids):
         try:
@@ -226,9 +242,10 @@ def cleanup(smoke):
                     smoke.installed.discard(gid)
         except (frame_android.FrameError, AssertionError) as e:
             problems.append(f"syncing Steam's shortcuts: {e}")
+    after = stop_titles(stop_processes.IDS)
     if problems:
         raise AssertionError('; '.join(problems))
-    return {'removed': sorted(ids)}
+    return {'removed': sorted(ids), 'process_cleanup': [stopped, after]}
 
 
 # Runs on the Frame: drop the lines holding one key from authorized_keys, writing a
@@ -307,15 +324,17 @@ def main():
     # Frame Control copies Valve's devkit tools to ~/devkit-utils on the first install
     # (as Valve's client does). If they weren't there before, they go again at the end.
     had_utils = ssh('test -d ~/devkit-utils && echo yes || true').strip() == 'yes'
-    smoke.step('cleanup: leftovers from earlier runs', cleanup, smoke)
+    ready = smoke.step('cleanup: leftovers from earlier runs', cleanup, smoke)['ok']
     folder = tempfile.mkdtemp(prefix='frame-smoke-')
     try:
-        smoke.step('devkit service: properties.json', properties)
-        smoke.step('status', status, build)
-        for kind in ('arm64', 'x86_64', 'exe'):
-            title_cycle(smoke, kind, folder)
-        if args.pair:
-            smoke.step('devkit pairing (throwaway key)', pair, folder)
+        # Do not overwrite a leftover title when safe process cleanup failed.
+        if ready:
+            smoke.step('devkit service: properties.json', properties)
+            smoke.step('status', status, build)
+            for kind in ('arm64', 'x86_64', 'exe'):
+                title_cycle(smoke, kind, folder)
+            if args.pair:
+                smoke.step('devkit pairing (throwaway key)', pair, folder)
     finally:
         smoke.step('cleanup: everything this run installed', cleanup, smoke)
         if not had_utils:

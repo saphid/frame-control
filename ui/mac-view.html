@@ -22,7 +22,7 @@
 </head>
 <body>
 <canvas id="c" width="16" height="9"></canvas>
-<div id="note">Connecting to the Mac…</div>
+<div id="note">Connecting to your computer…</div>
 <div id="hud" hidden></div>
 <script src="/mac-stream.js"></script>
 <script>
@@ -71,7 +71,7 @@ const stream = new MacStream({
     document.title = tag ? `${name} [${tag}]` : name;
     if (!m.input) {
       hideNoteOnFrame = false;  // a warning, not a connection notice: let it stay its 8 s
-      show("Clicks and keys need Accessibility permission on the Mac (Frame Control asks for it).", 8000);
+      show(m.inputMessage || "Clicks and keys need Accessibility permission on the Mac (Frame Control asks for it).", 8000);
     }
   },
   onError(message) { show(message); },
@@ -173,7 +173,7 @@ addEventListener("keydown", e => onKey(e, true));
 addEventListener("keyup", e => onKey(e, false));
 addEventListener("blur", () => stream.release());
 
-show("Connecting to the Mac…");
+show("Connecting to your computer…");
 stream.start();
 </script>
 </body>
