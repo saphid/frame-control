@@ -141,6 +141,13 @@ def collect(status, count, interval, emit=None):
 
 
 def csv_samples(report):
+    # CSV quoting alone does not prevent spreadsheet formulas in text fields.
+    def cell(value):
+        if isinstance(value, str) and (value.startswith(('\t', '\r', '\n')) or
+                                       value.lstrip(' \t\r\n').startswith(('=', '+', '-', '@'))):
+            return "'" + value
+        return value
+
     output = io.StringIO(newline='')
     writer = csv.writer(output)
     writer.writerow(('time', 'elapsedSeconds', 'metric', 'value', 'unit', 'source', 'state'))
@@ -148,17 +155,14 @@ def csv_samples(report):
         for key, value in (('collection.state', report['stopped'] or 'Completed'),
                            ('collection.requestedSamples', report['requestedSamples']),
                            ('collection.receivedSamples', len(report['samples']))):
-            writer.writerow(('', '', key, value, '', report['headset']['alias'],
-                             'incomplete' if report['stopped'] else 'completed'))
+            writer.writerow([cell(v) for v in ('', '', key, value, '', report['headset']['alias'],
+                                              'incomplete' if report['stopped'] else 'completed')])
     for sample in report['samples']:
         for key, row in sample['readings'].items():
-            # csv quoting does not prevent spreadsheet formulas in labels.
-            def cell(value):
-                return "'" + value if isinstance(value, str) and value.startswith(('=', '+', '-', '@')) else value
             writer.writerow([cell(v) for v in (sample['time'], sample['elapsedSeconds'], key,
                                                row['value'], row['unit'], row['source'], row['state'])])
         for group in sample['unavailableGroups']:
-            writer.writerow((sample['time'], sample['elapsedSeconds'], group, '', '', '', UNAVAILABLE))
+            writer.writerow([cell(v) for v in (sample['time'], sample['elapsedSeconds'], group, '', '', '', UNAVAILABLE)])
     return output.getvalue()
 
 

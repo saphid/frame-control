@@ -2,6 +2,7 @@
 import sandbox  # noqa: F401
 import base64
 import contextlib
+import csv
 from html.parser import HTMLParser
 import io
 import json
@@ -42,6 +43,19 @@ class Report(unittest.TestCase):
     def collect(self, program, count=1):
         with contextlib.redirect_stderr(io.StringIO()):
             return power.stream_report([sys.executable, '-c', program], '', count, 1)
+
+    def test_csv_metadata_headset_alias_is_plain_text_in_spreadsheets(self):
+        for prefix in ('=', '+', '-', '@', ' =', '\t='):
+            with self.subTest(prefix=prefix):
+                alias = prefix + 'HYPERLINK("https://example.invalid")'
+                report = {'headset': {'alias': alias}, 'requestedSamples': 12,
+                          'stopped': 'Stopped', 'samples': []}
+                rows = list(csv.reader(io.StringIO(power.csv_samples(report))))
+                self.assertEqual(len(rows), 4)
+                self.assertEqual([row[5] for row in rows[1:]], ["'" + alias] * 3)
+        report['headset']['alias'] = 'living-room-frame'
+        rows = list(csv.reader(io.StringIO(power.csv_samples(report))))
+        self.assertEqual([row[5] for row in rows[1:]], ['living-room-frame'] * 3)
 
     def test_completed_stream_preserves_zero_unknown_units_and_downloads(self):
         event = json.dumps({'sample': SAMPLE})
