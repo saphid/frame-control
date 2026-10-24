@@ -60,8 +60,12 @@ registry field still says Windows 10 Pro; the actual desktop/setup is Windows
 
 Official `Frame-Control-Setup-x64.exe` v0.4.10 SHA-256:
 `30165bc5aa39f941cacc697d195dc5c30b01ad0b9ffb472da8a18a5220549202`.
-Its installer exited 0. The fix replaced only the installed Python/UI files;
-the released DLL bundle and bundled Python 3.12.14 stayed in use.
+Its installer exited 0. The VM stream used an intermediate Python/UI-only
+fix with the released DLL bundle and bundled Python 3.12.14. A later CI failure
+showed that probing GStreamer through a separately loaded DLL could see a
+different, uninitialized instance. The final fix probes optional properties
+through the capture DLL itself. Windows CI checks that native change; the VM
+stream was not repeated with the final DLL.
 
 OEM setup added OpenSSH Server, PowerShell and a dedicated public login key;
 password authentication is disabled. Its config needed an explicit
@@ -84,9 +88,11 @@ for reuse; the VM is not running.
 - After fix: full Linux unittest suite **1260 tests, OK, 15 skipped**, 144.366 s;
   focused final PC suite **27 tests, OK, one native class skipped**. The C
   controller's frozen 600-state trace ran on Linux.
-- Actual Windows installer bundle with the fix: **33 tests, OK, four skipped**
-  (no C compiler, Linux PipeWire test, two CI-only x264 tests). The new real
-  GObject property probe, host/encoder check and x264-absence check all ran.
+- Actual Windows installer bundle with the intermediate Python/UI fix:
+  **33 tests, OK, four skipped** (no C compiler, Linux PipeWire test, two
+  CI-only x264 tests). Its GObject property probe, host/encoder check and
+  x264-absence check ran. The final native probe is checked in the PR's
+  Windows CI build, not by this VM run.
 - Browser check with the real production HTML/JavaScript and mocked Windows API
   responses: DXGI whole-screen Show remains available, the limitation appears
   once, WGC window sources retain Show, off hides controls, and the limitation

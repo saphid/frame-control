@@ -22,6 +22,15 @@ FC_API int fc_has_element(const char *name) {
     GstElementFactory *f=gst_element_factory_find(name);
     if(!f)return 0;gst_object_unref(f);return 1;
 }
+FC_API int fc_has_property(const char *element, const char *property) {
+    /* Probe the same initialized GStreamer instance that capture uses. The
+     * bundled MSYS2 plugin can omit optional WGC properties entirely. */
+    GstElement *source=gst_element_factory_make(element,NULL);
+    if(!source)return 0;
+    int found=g_object_class_find_property(G_OBJECT_GET_CLASS(source),property)!=NULL;
+    gst_object_unref(source);
+    return found;
+}
 static GstPadProbeReturn probe(GstPad *pad,GstPadProbeInfo *info,gpointer data) {
     Capture *c=data; GstBuffer *b=GST_PAD_PROBE_INFO_BUFFER(info);
     if(!b)return GST_PAD_PROBE_OK;
