@@ -1431,7 +1431,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
 <section class="panel" id="wireless" hidden>
   <h2>Wireless Adapter doctor</h2>
@@ -1461,6 +1461,23 @@
   <p id="powerSaveStatus" role="status" aria-live="polite"></p>
   <p class="hint">Download before starting again or quitting: only the latest observation is kept in memory. Downloads during collection are incomplete snapshots. Stop, disconnect or switching headsets keeps received samples, labeled with the original headset. A smoke session blocks sensor reads.</p>
   <p class="hint">Open the saved HTML in your browser; it works offline and includes JSON/CSV downloads. Unknown readings are never treated as zero. Rails overlap; do not add them. Sensor accuracy is unverified. Reports include sensor paths and OS builds: review before sharing.</p>
+</section>
+
+<section class="panel" id="steamPipewire" hidden>
+  <h2>Steam desktop sharing <span class="tag">Linux PC only</span></h2>
+  <p>Help for Steam's own <code>steam -pipewire</code> desktop-in-headset flow on Wayland.
+    Frame Control's Linux “PC in the headset” feature remains disabled. This helper needs no headset connection.</p>
+  <p>Save your games and exit Steam using <b>Steam → Exit</b> before launching.
+    This launch does not save a setting or restart an existing Steam session.</p>
+  <div class="row"><button id="steamPipewireLaunch" disabled>Launch Steam with PipeWire</button>
+    <button id="steamPipewireReset" disabled>Reset screen-share choice…</button></div>
+  <p class="sub">Reset opens KDE's Application Permissions so you can revoke a verified Steam screen-sharing
+    session yourself. Frame Control does not reset permissions automatically. Other desktops get guidance only.</p>
+  <p id="steamPipewireGuidance">KDE System Settings → Applications → Application Permissions → Steam Linux Runtime 3.0
+    → Screen sharing → Manage 1 Session → Revoke. Verify the session belongs to Steam. Never use Revoke All.
+    If the entry is missing or ambiguous, stop.</p>
+  <p id="steamPipewireStatus" role="status" aria-live="polite"></p>
+  <p class="sub"><a href="https://github.com/saphid/frame-control/blob/main/docs/steam-pipewire.md" target="_blank" rel="noopener">Setup, missing KDE module and limitations →</a></p>
 </section>
 
 <section class="panel" id="vrTools">
@@ -5945,13 +5962,47 @@ $("macview").onclick = async e => {
   setTimeout(loadMacView, 800);
 };
 
+// Local Steam helper: never start an action on navigation or a status read.
+let steamPipewireBusy = false, steamPipewireRead = 0;
+async function loadSteamPipewire() {
+  if (steamPipewireBusy) return;
+  const read = ++steamPipewireRead;
+  try {
+    const s = await api('/api/steam-pipewire');
+    if (read !== steamPipewireRead) return;
+    $('steamPipewireLaunch').disabled = $('steamPipewireReset').disabled = !s.available;
+    $('steamPipewireStatus').textContent = s.reason || '';
+    if (s.guidance) $('steamPipewireGuidance').textContent = s.guidance;
+  } catch (e) {
+    if (read !== steamPipewireRead) return;
+    $('steamPipewireLaunch').disabled = $('steamPipewireReset').disabled = true;
+    $('steamPipewireStatus').textContent = e.message;
+  }
+}
+async function steamPipewireAction(action) {
+  if (steamPipewireBusy) return;
+  steamPipewireBusy = true;
+  steamPipewireRead++;
+  $('steamPipewireLaunch').disabled = $('steamPipewireReset').disabled = true;
+  try {
+    const r = await api('/api/steam-pipewire', {action, confirmed: true});
+    $('steamPipewireStatus').textContent = r.message;
+  } catch (e) { $('steamPipewireStatus').textContent = e.message; }
+  finally {
+    steamPipewireBusy = false;
+    $('steamPipewireLaunch').disabled = $('steamPipewireReset').disabled = false;
+  }
+}
+$('steamPipewireLaunch').onclick = () => steamPipewireAction('launch');
+$('steamPipewireReset').onclick = () => steamPipewireAction('permissions');
+
 // ---- shared destinations and intentional secondary workspaces ----
 const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
-  vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
+  steamPipewire:"tools", vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
   display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools"};
-const TOOL_TITLES = {transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
+const TOOL_TITLES = {steamPipewire:"Steam desktop sharing", transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
   power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
@@ -6057,6 +6108,7 @@ function showPage(e) {
     const host = $(kind === 'tools' ? 'toolWorkspace' : 'settingsWorkspace');
     if (activeTool && $(activeTool).parentNode !== host) host.append($(activeTool));
   }
+  if (tool === 'steamPipewire') loadSteamPipewire();
   if (tool === 'macview') loadMacView();
   if (tool === 'panels') loadPanelSwitcher();
   if (tool === 'backup') loadBackups();
@@ -7462,6 +7514,7 @@ api("/api/host").then(h => {
   $("macToolLink").hidden = h.mobile || h.os !== "macOS";
   $("pcToolLink").hidden = h.mobile || h.os !== "Windows";
   $("wirelessToolGroup").hidden = h.mobile || h.os !== "Windows";
+  $("steamPipewireLink").hidden = h.mobile || h.os !== "Linux";
   if (!h.mobile && h.os === "Windows") TOOL_TITLES.macview = "PC in the headset";
   $("backupToolLink").hidden = !!h.mobile;  // backups are folders on a computer
   if (h.mobile) return;

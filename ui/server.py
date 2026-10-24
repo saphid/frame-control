@@ -60,6 +60,7 @@ import frame_host  # noqa: E402
 import frame_link  # noqa: E402
 import frame_macview  # noqa: E402
 import frame_pcview  # noqa: E402
+import frame_steam_pipewire  # noqa: E402
 import frame_media  # noqa: E402
 import frame_panels  # noqa: E402
 import frame_quest  # noqa: E402
@@ -149,7 +150,7 @@ LINK = None  # the connector (frame_link.Link); None on the Frame itself
 # install's clean-up) to the other headset.
 _work_lock = threading.Lock()
 _work = [0]
-NOT_HEADSET_WORK = {"/api/devices", "/api/contact", "/api/contact/prompt", "/api/queue"}
+NOT_HEADSET_WORK = {"/api/steam-pipewire", "/api/devices", "/api/contact", "/api/contact/prompt", "/api/queue"}
 
 
 @contextlib.contextmanager
@@ -3077,6 +3078,22 @@ def push_media(path):
             "id": token + "/" + name}
 
 
+# Local Steam helper: no headset route, SSH, or PC capture helper.
+def steam_pipewire_state():
+    if LOCAL or PRIVATE:
+        return {"available": False, "reason": "Open this helper in Frame Control on your Linux PC."}
+    return frame_steam_pipewire.status()
+
+
+def steam_pipewire_action(body):
+    if LOCAL or PRIVATE:
+        raise Failure("Open this helper in Frame Control on your Linux PC.", 403)
+    try:
+        return frame_steam_pipewire.action(body)
+    except frame_steam_pipewire.HelperError as exc:
+        raise Failure(str(exc), 400) from exc
+
+
 # ---- Mac in the headset (frame_macview.py), PC in the headset (frame_pcview.py) ----
 
 # The tunnel gets its own connection: the shared master's options would win
@@ -3266,6 +3283,7 @@ def power_action(body):
 
 
 POST = {
+    "/api/steam-pipewire": steam_pipewire_action,
     "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/vr": vr,
@@ -3476,6 +3494,8 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/agent/approval":
                 token = (parse_qs(url.query).get("confirmation") or [""])[0]
                 self.send_json(frame_agent.approvals.inspect(token))
+            elif path == "/api/steam-pipewire":
+                self.send_json(steam_pipewire_state())
             elif path == "/api/host":
                 self.send_json({"os": "SteamOS", "fileManager": None, "computer": DEVICE, "mobile": True} if LOCAL else
                                {"os": frame_host.NAME, "fileManager": frame_host.FILE_MANAGER,

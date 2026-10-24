@@ -9,6 +9,13 @@
   cannot be identified reliably. No headset access or settings changes.
   [Sources, verification and limits](docs/windows-wireless-doctor.md).
 
+- Add Linux Tools → Steam desktop sharing: request `steam -pipewire` only after
+  checking Steam is not running, or open KDE Application Permissions with
+  instructions to revoke a verified Steam screen-sharing session manually. No
+  automatic permission reset, Steam restart, or headset access. Frame Control
+  Linux capture remains disabled; live portal behavior is unverified.
+  [Usage and limits](docs/steam-pipewire.md).
+
 - Use gamescope's input for the keyboard and trackpad, following the focused
   headset panel without installing an input service. Start KDE Connect only for
   accents and emoji, keeping queued text ordered and cancelling it on headset
