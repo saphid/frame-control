@@ -56,6 +56,9 @@
       entries:Object.fromEntries(cache)}, '*');
   }
   Object.defineProperty(window, 'localStorage', {configurable:true, value:storage});
+  // localForage otherwise chooses the browser's exposed-but-denied IndexedDB
+  // driver in an opaque iframe. Let it detect the bounded localStorage driver.
+  Object.defineProperty(window, 'indexedDB', {configurable:true, value:undefined});
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
   setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
@@ -132,6 +135,25 @@
     showValue && R.createElement('span', null, String(value) + valueSuffix));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
+  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Tabs = ({tabs=[], activeTab, onShowTab}) => {
+    const [selected, setSelected] = R.useState(tabs[0]?.id);
+    const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
+    return R.createElement('div', null,
+      R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
+        type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
+        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}}, tab.title))),
+      R.createElement('div', {role:'tabpanel'}, current?.content));
+  };
+  const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
+    title && R.createElement('h2', null, title), R.createElement(Tabs, {
+      tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
+        id:page.route || String(index), title:page.title, content:page.content}))}));
+  const ProgressBar = ({nProgress=0, value, max=100}) => R.createElement('progress', {
+    value:Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
+    R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
+      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
   const ConfirmModal = ({strTitle, strOKButtonText, onOK, children}) => R.createElement('section', null,
     R.createElement('h2', null, strTitle), children,
     R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
@@ -155,23 +177,73 @@
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
+  const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
+  const showModal = element => {
+    modalRoot.render(R.createElement('section', null,
+      R.createElement('button', {type:'button',onClick:closeModal}, 'Close'), element));
+    return {Close:closeModal};
+  };
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
+    DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
+    Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
+    DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
+    Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
+    ProgressBar, ProgressBarWithInfo:ProgressBar,
+    gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
+    gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
+    quickAccessControlsClasses:{}, mainMenuAppRunningClasses:{}, libraryAssetImageClasses:{},
+    joinClassNames:(...names)=>names.filter(Boolean).join(' '),
+    sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null), CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
-    showModal: element => modalRoot.render(R.createElement('section', null,
-      R.createElement('button', {onClick:closeModal}, 'Close'), element)),
+    showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
-    afterPatch: () => () => {}, createReactTreePatcher: () => () => {},
+    afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     findInReactTree: () => null, findModuleExport: () => null, findModuleChild: () => null,
+    findModule:()=>null, findModuleByExport:()=>null, findClassModule:()=>null,
+    findClass:()=>null, findSP:()=>null, fakeRenderComponent:()=>null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
     useParams: () => ({}),
   };
+  // No Steam game is attached to an isolated panel. Subscriptions have a
+  // disposable handle but emit no fabricated game, power, or input events.
+  const subscription = () => {const dispose=()=>{};dispose.unregister=dispose;return dispose;};
+  const register = names => Object.fromEntries(names.map(name=>[name,subscription]));
+  const steamLanguage = () => {
+    const locale = (navigator.language || 'en').toLowerCase();
+    if (/^zh-(tw|hk|mo|hant)/.test(locale)) return 'tchinese';
+    if (locale.startsWith('pt-br')) return 'brazilian';
+    if (locale.startsWith('es-419')) return 'latam';
+    return ({en:'english',de:'german',fr:'french',es:'spanish',it:'italian',ja:'japanese',
+      ko:'koreana',zh:'schinese',ru:'russian',pl:'polish',pt:'portuguese',nl:'dutch',
+      da:'danish',fi:'finnish',sv:'swedish',no:'norwegian',cs:'czech',hu:'hungarian',
+      ro:'romanian',th:'thai',tr:'turkish',vi:'vietnamese',uk:'ukrainian',id:'indonesian'
+    })[locale.split('-')[0]] || 'english';
+  };
+  window.SteamClient = {
+    Settings:{GetCurrentLanguage:async()=>steamLanguage(),
+      ...register(['RegisterForSettingsChanges'])},
+    Apps:register(['RegisterForAppDetails','RegisterForGameActionTaskChange',
+      'RegisterForGameActionStart','RegisterForGameActionEnd']),
+    GameSessions:register(['RegisterForAppLifetimeNotifications','RegisterForScreenshotNotification']),
+    System:{...register(['RegisterForOnResumeFromSuspend','RegisterForOnSuspendRequest']),
+      UI:register(['RegisterForFocusChangeEvents'])},
+    Input:register(['RegisterForControllerInputMessages','RegisterForControllerStateChanges']),
+    User:register(['RegisterForLoginStateChange','RegisterForPrepareForSystemSuspendProgress',
+      'RegisterForResumeSuspendedGamesProgress','RegisterForCurrentUserChanges']),
+    Overlay:register(['RegisterForOverlayActivated']),
+    UI:register(['RegisterForUIModeChanged']),
+  };
+  DFL.Router = {...DFL.Navigation, MainRunningApp:undefined};
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, duration, showToast=true, onClick}={}) => {
     const data = {title, body};

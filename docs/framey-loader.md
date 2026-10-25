@@ -83,6 +83,15 @@ work in VR. Storage Cleaner rendered an
 [empty-data panel in local Chromium](evidence/framey-api-v1-browser-2026-10-25.md).
 Its cleanup actions were not tested; they may remove local game saves.
 
+Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
+and progress bars. Its explicit SteamClient subscription fallbacks return
+disposable handles without emitting fabricated events. There is no attached
+running game in `DFL.Router`, and power, app launch and hardware mutation methods
+are not supplied. Plugins that need live Steam stores still require integration
+work. IndexedDB is hidden because the browser exposes it but denies access in
+an opaque iframe; localForage can then select Framey's bounded localStorage.
+Direct IndexedDB users remain unsupported.
+
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,
 then checks it again. It also confirms removal blocks method calls and a

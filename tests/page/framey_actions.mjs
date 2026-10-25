@@ -125,3 +125,39 @@ const failedLegacy=window.__legacy.callPluginMethod('get_setting',{});
 const failedCall=messages.filter(message=>message.type==='framey:call').at(-1);
 listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:failedCall.id,error:'Unavailable'}});
 assert.equal((await failedLegacy).success,false);
+
+// Local UI controls work without Steam components or fabricated hardware data.
+const tabChanges=[];
+const tabs=window.DFL.Tabs({tabs:[{id:'one',title:'One',content:'First'},
+  {id:'two',title:'Two',content:'Second'},{id:'locked',title:'Locked',disabled:true}],
+  activeTab:'two',onShowTab:id=>tabChanges.push(id)});
+assert.equal(nodes(tabs,'button')[1].props['aria-selected'],true);
+assert.deepEqual(nodes(tabs,'div').at(-1).children,['Second']);
+nodes(tabs,'button')[0].props.onClick();
+nodes(tabs,'button')[2].props.onClick();
+assert.deepEqual(tabChanges,['one']);
+assert.equal(window.DFL.Spinner({}).props.role,'status');
+assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
+assert.equal(window.DFL.joinClassNames('one',null,'two'),'one two');
+let eventCount=0;
+const unsubscribe=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(()=>eventCount++);
+assert.equal(typeof unsubscribe,'function');
+assert.equal(unsubscribe.unregister,unsubscribe);
+unsubscribe.unregister();unsubscribe();assert.equal(eventCount,0);
+assert.equal(window.SteamClient.System.ShutdownPC,undefined);
+assert.equal(window.DFL.Router.MainRunningApp,undefined);
+assert.equal(window.indexedDB,undefined); // localForage must use bounded plugin storage.
+const unpatch=window.DFL.beforePatch({},'method',()=>{});
+assert.equal(unpatch.unpatch,unpatch);unpatch.unpatch();
+assert.equal(typeof window.DFL.showModal({type:'p'}).Close,'function');
+let selectedMenuItem=0;
+window.DFL.MenuItem({onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({disabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({bDisabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({onClick:()=>selectedMenuItem++,onSelected:()=>selectedMenuItem++}).props.onClick({});
+assert.equal(selectedMenuItem,2);
+for (const [locale,expected] of [['de-DE','german'],['zh-CN','schinese'],['zh-TW','tchinese'],
+  ['pt-BR','brazilian'],['en-US','english'],['xx-ZZ','english']]) {
+  context.navigator.language=locale;
+  assert.equal(await window.SteamClient.Settings.GetCurrentLanguage(),expected);
+}
