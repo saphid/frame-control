@@ -11,6 +11,8 @@
 <section><div class="row"><label for="alias">Your configured headset SSH alias<input id="alias" value="frame" maxlength="64" autocomplete="off"></label>
 <button id="check">Check cable connection</button></div><p id="message" role="status" aria-live="polite">No checks have run.</p></section>
 <div id="results" aria-live="polite"></div>
+<section><h2>SSH works, but the PC stream still fails?</h2>
+<p>The doctor checks Frame Control's SSH route only. If the SteamVR stream stops on USB, Wi-Fi and the Wireless Adapter, the problem may be on the PC. On a Windows or Linux PC, first save your work and close the VR game. Exit SteamVR from Steam on the PC, then start SteamVR again. Frame Control reconnecting to <code>frame.local</code> will not restart PC SteamVR. This is a manual test, not a fix for the cause of repeated drops. Frame Control does not restart PC SteamVR automatically because it cannot safely know which game and session it would stop.</p></section>
 <p class="sub">The observed USB address is 10.86.200.233 on Frame OS tested in 2026. A different OS build may use another subnet. An unknown result does not prove the cable is broken. The doctor never changes IP settings, accepts a new host key, or bypasses SSH warnings.</p>
 </main><script>
 'use strict';

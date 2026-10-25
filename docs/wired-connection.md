@@ -25,3 +25,19 @@ uses the cable. The Wireless Adapter and Steam streaming can follow a different
 path. No cable is attached to the Linux test host, so this exact UI has only
 synthetic route/SSH tests. Windows and Linux physical USB-C behavior, and a
 fresh wired readback on the current Frame OS, remain unverified.
+
+## If SSH works but the game stream stops
+
+If the stream fails on USB, Wi-Fi and the Wireless Adapter, but this doctor
+reports a working SSH route, check SteamVR on the **PC**. Frame Control's
+`frame.local` reconnect only restores its headset management connection. It
+does not restart PC SteamVR or repair the game stream. On a Windows or Linux
+PC, save your work and close the VR game. Exit SteamVR from Steam on that PC,
+then start it again. This can show whether a PC SteamVR session is stuck; it
+does not fix the cause of repeated drops. SteamVR on macOS is not a supported
+PC streaming host.
+
+Frame Control has no verified cross-platform command that safely stops only
+the intended PC SteamVR session. A forced restart could close a running game
+and lose unsaved progress. For that reason the app gives manual steps and does
+not add a one-click restart button.
