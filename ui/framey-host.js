@@ -26,6 +26,7 @@
   const routes = new Map();
   const routeListeners = new Set();
   let currentRoute = null;
+  let currentParams = {};
   let nextId = 0;
   let plugin;
   // A sandboxed iframe has an opaque origin, so its native localStorage getter
@@ -159,21 +160,54 @@
     R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
   const closeModal = () => modalRoot.render(null);
+  const localPath = path => typeof path === 'string' && path.length <= 120 &&
+    /^\/[A-Za-z0-9/_-]+$/.test(path) && !path.includes('//');
+  const routePattern = path => typeof path === 'string' && path.length <= 120 &&
+    /^\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_]*\??)(?:\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_]*\??))*$/.test(path) &&
+    !/\?\//.test(path) &&
+    new Set([...path.matchAll(/:([A-Za-z][A-Za-z0-9_]*)\??/g)].map(match => match[1])).size ===
+      [...path.matchAll(/:([A-Za-z][A-Za-z0-9_]*)\??/g)].length;
+  function matchRoute(pattern, path) {
+    const expected = pattern.slice(1).split('/');
+    const actual = path.slice(1).split('/');
+    if (actual.length > expected.length) return null;
+    const params = {};
+    for (let index = 0; index < expected.length; index++) {
+      const segment = expected[index], value = actual[index];
+      if (segment[0] === ':') {
+        const optional = segment.endsWith('?'), name = segment.slice(1, optional ? -1 : undefined);
+        if (value === undefined) { if (!optional) return null; }
+        else params[name] = value;
+      } else if (segment !== value) return null;
+    }
+    return params;
+  }
+  function activeRoute(path) {
+    if (routes.has(path)) return {component:routes.get(path), params:{}};
+    for (const [pattern, component] of routes) {
+      const params = matchRoute(pattern, path);
+      if (params) return {component, params};
+    }
+    return null;
+  }
   function navigate(path) {
-    if (path !== null && (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) || !routes.has(path))) return false;
+    if (path !== null && !localPath(path)) return false;
+    const match = path === null ? null : activeRoute(path);
+    if (path !== null && !match) return false;
     currentRoute = path;
+    currentParams = match?.params || {};
     for (const listener of routeListeners) listener(path);
     return true;
   }
   const routerHook = {
     addRoute(path, component) {
-      if (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) ||
+      if (!routePattern(path) ||
           (typeof component !== 'function' && !R.isValidElement(component)))
         throw Error('Framey route needs a local path and React component');
       routes.set(path, component);
-      return () => {routes.delete(path); if(currentRoute === path) navigate(null);};
+      return () => routerHook.removeRoute(path);
     },
-    removeRoute(path) {routes.delete(path); if(currentRoute === path) navigate(null);},
+    removeRoute(path) {routes.delete(path); if(currentRoute && !activeRoute(currentRoute)) navigate(null);},
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
@@ -212,7 +246,7 @@
     findModule:()=>null, findModuleByExport:()=>null, findClassModule:()=>null,
     findClass:()=>null, findSP:()=>null, fakeRenderComponent:()=>null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
-    useParams: () => ({}),
+    useParams: () => currentParams,
   };
   // No Steam game is attached to an isolated panel. Subscriptions have a
   // disposable handle but emit no fabricated game, power, or input events.
@@ -300,8 +334,8 @@
         ...actions.map((action, index) => R.createElement('button', {key:index, type:'button',
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
-      R.createElement('div', null, route ? (typeof routes.get(route) === 'function' ?
-        R.createElement(routes.get(route)) : routes.get(route)) :
+      R.createElement('div', null, route ? (typeof activeRoute(route)?.component === 'function' ?
+        R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
         (view === 'settings' ? plugin.settings : plugin.content)));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {

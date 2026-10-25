@@ -161,3 +161,19 @@ for (const [locale,expected] of [['de-DE','german'],['zh-CN','schinese'],['zh-TW
   context.navigator.language=locale;
   assert.equal(await window.SteamClient.Settings.GetCurrentLanguage(),expected);
 }
+function GameRoute(){return React.createElement('p',null,window.DFL.useParams().appid);}
+const removeGame=api.routerHook.addRoute('/plugin/game/:appid/:view?',GameRoute);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.useParams().appid,'123');
+assert.equal(window.DFL.useParams().view,undefined);
+assert.equal(nodes(window.__surface({plugin}),GameRoute).length,1);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art'),true);
+assert.equal(window.DFL.useParams().view,'art');
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art/extra'),false);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123?admin=1'),false);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game//art'),false);
+assert.throws(()=>api.routerHook.addRoute('/plugin/:id/:id',GameRoute));
+assert.throws(()=>api.routerHook.addRoute('/plugin/:id?/art',GameRoute));
+removeGame();
+assert.equal(window.DFL.useParams().appid,undefined);
+assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);

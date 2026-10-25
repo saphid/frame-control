@@ -71,7 +71,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `toaster.toast` | Visible toast inside the plugin panel; `dismiss` and optional `onClick` | Host unit test; no Steam system notification |
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
-| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack` | Local routes inside this plugin panel only | Host unit test |
+| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModuleChild`, `Navigation.CloseSideMenus` | Steam module lookup returns `null`; close returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 entry point and shallow settings view in local host test. Steam library patch and live HLTB search remain unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
@@ -80,6 +80,9 @@ none of these frontend controls has passed a worn-headset check yet.
 Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
+Optional route segments must be at the end. Framey accepts local path segments
+only; query strings, external URLs, Steam library routes and duplicate parameter
+names are rejected. Removing an active route returns to the plugin panel.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 An API v1 manifest does not guarantee a working Framey panel. Test the exact
 store archive and do not assume SteamClient app details, library patches, or
