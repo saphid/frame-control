@@ -42,8 +42,10 @@ checks were done until it released the lock. This coordinator then acquired it
 atomically and labeled it `frame-round2-vdw4yh1xv8-20261025`.
 
 The merged `scripts/frame-smoke.sh` ran directly without zsh at 06:38:37 UTC.
-All 13 steps passed on SteamOS 0.5.6, BUILD_ID `20261022.6153909`. Native title
-and Proton installs/launches/removals succeeded; the Windows title's remove
+All 13 steps passed on SteamOS 0.5.6, BUILD_ID `20261022.6153909`. The ARM64
+and Proton titles ran. The x86-64 Linux title reported its runtime missing,
+an explicitly accepted smoke outcome rather than a successful execution.
+Installs/removals succeeded; the Windows title's remove
 step stopped five test-owned PIDs. Both final process sweeps were empty.
 Independent readback found no reserved title folders or metadata, SteamVR's
 PID was unchanged, and the three observed gamescope focus properties matched
