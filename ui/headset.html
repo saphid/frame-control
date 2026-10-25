@@ -27,6 +27,10 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <p id="actionStatus" role="status" aria-live="polite"></p>
 <h2>Running games</h2><div class="row"><button id="gamesRefresh" class="secondary">Refresh games</button></div>
 <div id="games" class="stack" style="margin-top:12px">Loading…</div>
+<h2>Decky plugins</h2><p>Manage official store plugins here. Their backend can run on Frame, but Decky's Steam Deck Quick Access Menu is absent from this VR shell. Plugin pages, settings, routes, and toasts are not yet available in this panel.</p>
+<div class="row"><button id="deckyRefresh" class="secondary">Refresh plugins</button><button id="deckyStoreLoad" class="secondary">Open official store</button></div>
+<p id="deckyState" role="status"></p><div id="deckyInstalled" class="stack"></div>
+<div id="deckyStorePanel" hidden><label>Find a plugin <input id="deckySearch" type="search" placeholder="Search Decky store"></label><div id="deckyStoreList" class="stack"></div></div>
 <h2>Extensions</h2><p>Local additions run only when opened in the isolated panel below. They can read status but cannot change headset settings through the extension API.</p>
 <div class="row"><button id="extensionsRefresh" class="secondary">Refresh extensions</button><span id="extensionsFolder"><small></small></span></div>
 <div id="extensions" class="stack" style="margin-top:12px">Loading…</div>
@@ -61,6 +65,34 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
+let deckyState=null, deckyStore=[];
+async function refreshDecky(){try{deckyState=await api('/api/decky');
+  byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':'Decky is not running. Install it from Frame Control on your computer.';
+  const list=byId('deckyInstalled');list.replaceChildren();
+  for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
+    const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);
+    if(plugin.storeId){const button=document.createElement('button');button.className='danger';button.textContent='Remove';
+      button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
+    list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
+  showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
+async function loadDeckyStore(){try{const data=await api('/api/decky/store');deckyStore=data.plugins;
+  byId('deckyStorePanel').hidden=false;showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
+function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren();
+  const q=byId('deckySearch').value.trim().toLowerCase();
+  for(const plugin of deckyStore.filter(p=>!q||`${p.name} ${p.description}`.toLowerCase().includes(q)).slice(0,30)){
+    const row=document.createElement('div');row.className='block game';
+    const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version} · ${plugin.description}`;
+    const button=document.createElement('button');button.textContent='Install';
+    const installed=(deckyState?.plugins||[]).find(p=>p.storeId===plugin.id);
+    if(installed)button.textContent=installed.version===plugin.version?'Reinstall':'Update';
+    button.disabled=!deckyState?.running||plugin.root;
+    if(plugin.root)label.textContent+=' · Needs root; not supported on Frame';
+    button.onclick=()=>deckyChange(installed?'update':'install',plugin);row.append(label,button);list.append(row);}}
+async function deckyChange(action,plugin){if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
+  byId('deckyState').textContent=`${action} ${plugin.name}…`;
+  try{const job=await api('/api/decky/plugin',{action,id:plugin.id,acknowledged:true});
+    byId('deckyState').textContent=job.message||'Request queued. Refresh after it finishes.';
+    setTimeout(refreshDecky,5000);}catch(error){byId('deckyState').textContent=error.message;}}
 async function refreshRecord(){try{const data=await api('/api/record');
   byId('record').textContent=['recording','starting'].includes(data.state)?'Stop recording':'Start recording';
   byId('record').disabled=recordBusy||['stopping','saving'].includes(data.state);
@@ -84,6 +116,7 @@ async function refreshExtensions(){const list=byId('extensions');try{const data=
   }catch(error){list.textContent=error.message;}}
 byId('refresh').onclick=refresh;byId('gameMode').onclick=()=>act('game-mode');byId('screenshot').onclick=()=>act('screenshot');
 byId('gamesRefresh').onclick=refreshGames;byId('record').onclick=toggleRecord;byId('extensionsRefresh').onclick=refreshExtensions;
+byId('deckyRefresh').onclick=refreshDecky;byId('deckyStoreLoad').onclick=loadDeckyStore;byId('deckySearch').oninput=showDeckyStore;
 byId('extensionClose').onclick=()=>{activeExtension=null;byId('extensionFrame').removeAttribute('src');byId('extensionPanel').hidden=true;};
 window.addEventListener('message',event=>{if(!activeExtension||event.source!==byId('extensionFrame').contentWindow)return;
   const request=event.data;if(!request||request.type!=='frame-control:request'||!Number.isSafeInteger(request.id))return;
@@ -92,6 +125,6 @@ window.addEventListener('message',event=>{if(!activeExtension||event.source!==by
     os:{version:latestStatus?.os?.version||null,build:latestStatus?.os?.build||null},
     battery:{percent:latestStatus?.battery?.percent??null},steamvr:!!latestStatus?.services?.steamvr};
   else return;event.source.postMessage({type:'frame-control:response',id:request.id,value},'*');});
-refresh();refreshGames();refreshRecord();refreshExtensions();
+refresh();refreshGames();refreshRecord();refreshExtensions();refreshDecky();
 setInterval(()=>{if(!document.hidden){refresh();refreshRecord();}},15000);
 </script></body></html>

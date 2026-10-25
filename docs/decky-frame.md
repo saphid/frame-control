@@ -7,6 +7,57 @@ verified. Frame Control therefore labels its user-service manager experimental.
 ProtonDB Badges loaded in the backend and Gamepad UI plugin registry, but its
 VR user interface has not been seen or used.
 
+## Official store plugin audit, 2026-10-25
+
+On a real Frame with Frame OS 0.5.6 build `20261022.6153909`, SteamVR 2.18.2
+reported `activity_level` 3 (standby). The battery was 99% before and after.
+The test downloaded the official store's current archives, checked each SHA-256
+against store metadata, and inspected their manifests and binaries. For seven
+non-root candidates, the removable user-service loader started each plugin in
+turn. It stopped between plugins. Logs showed `Loaded <name>` for all seven.
+The service and test folders were removed after the run; the owned shared lock
+was released. **A load message is not proof that a plugin's page, settings, or
+action works in VR.** No plugin was tried by a wearer.
+
+| Official store plugin (tested version) | Result | Evidence and limit |
+| --- | --- | --- |
+| ProtonDB Badges 1.3.4 | Partial | ARM64 backend loaded. Earlier 1.1.0 also registered in the shared Gamepad UI; badges in the VR shell were not seen. |
+| CSS Loader 2.1.3 | Partial | Backend loaded; one `SyntaxWarning`. Theme controls and CSS application in VR were not checked. |
+| SteamGridDB 1.8.1 | Partial | Backend loaded. Artwork selection and its UI were not checked. |
+| Animation Changer 1.3.2 | Partial | Backend loaded. Boot animation replacement was not attempted. |
+| Storage Cleaner 1.4.0 | Partial | Backend loaded. No files were cleaned; no UI check. |
+| HLTB for Deck 2.0.12 | Partial | Passive plugin loaded. Game page content in VR was not checked. |
+| Bluetooth 3.1.1 | Partial | Backend logged `Bluetooth plugin loaded`. Pairing and VR controls were not checked. |
+| PowerTools 2.0.3 | Not applicable | Manifest asks for root; archive includes x86_64 Ryzen binaries and targets Steam Deck hardware. The Frame user service blocks it. |
+| Audio Loader 1.6.1 | Not applicable | Manifest asks for `_root`; the Frame user service blocks it. |
+| Wine Cellar 0.2.1 | Broken on ARM64 | Archive includes an x86_64 backend binary. The store installer blocks it before execution. |
+| MagicPods 2.0.21 | Broken on ARM64 | Archive includes an x86_64 `magicpodscore` binary. The store installer blocks it before execution. |
+| Decky Recorder | Not in current official store | No matching plugin appeared in the official store list on this date; no archive was installed. Frame Control's own headset panel has a separate recorder. |
+
+The table reflects the tested versions only. Other releases can change their
+files or behavior. The official store's digest checks the archive in transit;
+it does not certify plugin code. Plugins run with the headset user's access.
+For a new plugin, follow the [Frame plugin and extension guide](frame-plugin-author.md).
+
+The new store transaction was also exercised on the same real Frame:
+**managed loader install → ProtonDB Badges 1.3.4 store install → status →
+store update → store remove → managed loader remove**. Status reported the
+managed store ID and version while the plugin was installed. The service
+remained active after each store change. The battery was 99% before and after.
+The test removed its plugin folder, loader, and owned lock. This validates the
+store file and service path over SSH, not a visible VR plugin page.
+
+Frame Control's desktop app and opt-in headset panel now show official store
+entries. Install, update, and remove need an explicit confirmation. They only
+change Frame Control owned plugin folders under
+`~/.local/share/frame-control/decky/plugins`. The installer checks the store
+hash and archive paths, blocks root plugins and non-ARM64 binaries, and rolls
+back an update if the service restart fails. The current VR shell does not
+provide Decky's Steam Deck Quick Access Menu. Frame Control's headset panel
+shows installed plugins and store actions, but plugin pages, settings, routes,
+and Decky toasts are **not** available there yet. The panel itself still needs
+a worn-headset visual and controller check.
+
 ## What was checked on the real headset
 
 The headset was SteamOS `0.5.6`, `VARIANT_ID=vr`, build `20261022.6153909`,
@@ -86,8 +137,8 @@ its published SHA-256 digest, and checks the ELF architecture. It installs a
 officially supported. Plugins that require root, assume `~/homebrew`, or rely
 on Steam Deck hardware may fail even if the loader runs. Frame Control lists
 plugins already present in its managed folder and the upstream `~/homebrew`
-folder; it does not install plugins while their Frame UI and compatibility
-are unverified.
+folder. The opt-in store manager installs compatible archives only into its
+own folder. It cannot make Steam Deck QAM plugin pages visible in Frame VR.
 
 The latest tested release was
 [Decky 3.3.0](https://github.com/SteamDeckHomebrew/decky-loader/releases/tag/v3.3.0),
@@ -103,6 +154,9 @@ notice, check the acknowledgement box, and choose **Install**. **Update**
 downloads and verifies the latest ARM64 release again. **Remove managed
 Decky** disables and removes only Frame Control's user service and binary.
 It preserves plugin files and settings so unrelated user data is not deleted.
+Open **Official plugin store** to review a plugin, then confirm each install,
+update, or remove. Root and x86-only plugins are blocked. The manager only
+removes plugin folders that it installed; it leaves other Decky folders alone.
 Restart Steam or the headset to clear the frontend already injected into its
 current web helper process. No action wipes the headset.
 
