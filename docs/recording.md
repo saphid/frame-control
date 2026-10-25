@@ -69,10 +69,30 @@ yes-or-no answer about passthrough pixels. See the
 
 **Steam clips** lists what Steam's game recording has kept on the Frame: saved
 clips and background recordings, newest first, with the game, length and size.
-**Export** joins one into a single `.mp4` in `~/Videos/SteamFrame`, named after
-its folder (for example `clip_620_20261020_202134.mp4`), however long it is.
+**Export** joins one into a single `.mp4` under `~/Videos/SteamFrame`, named after
+its clip folder (for example `clip_620_20261020_202134.mp4`), however long it is.
 Steam's own export is reported to stop at about 60 seconds. Exports run in the
 background; ones already on your computer are marked.
+
+Each export keeps its headset, Steam account and complete recording session ID:
+
+```
+~/Videos/SteamFrame/headset-<id>/<account>/clips/<clip>/video/<session>/<clip>.mp4
+~/Videos/SteamFrame/headset-<id>/<account>/video/<session>/<session>.mp4
+```
+
+The headset folder uses the same short device-identity hash as screenshots.
+All folders in the Steam clip ID are kept, including nested sessions, so equal
+clip names across accounts, headsets or sessions keep separate files. Manual
+**Export** and automatic copying use the same path and saved marker. Exporting
+the same identified session again replaces only that session's export.
+
+Existing exports in the old flat `~/Videos/SteamFrame/<clip>.mp4` layout stay
+untouched. Their source identity cannot be proved, so they do not mark a clip
+as saved. Export again or use **Copy everything now** to make an identified
+copy. Automatic copying still remembers IDs copied before the upgrade; use
+**Copy everything now** to copy those again. This destination change has local
+fixture coverage; it has not been tested on a real headset.
 
 How it works: Steam keeps each recording as MPEG-DASH segments, one folder per
 recording session.
@@ -156,8 +176,10 @@ see the [test record](evidence/autosync-reliability-2026-10-25.md).
 `ui/frame_clips.py` holds the logic, so other features can reuse it (automatic
 copying, in `ui/frame_autosync.py`, does):
 
-- `list_clips(run_frame)` and `export_clip(id, run_frame, run, fetch)` are the
-  computer's side; the server passes how to reach the Frame.
+- `list_clips(run_frame, device_id=...)` and
+  `export_clip(id, run_frame, run, fetch, device_id=...)` are the computer's
+  side; the server passes how to reach the Frame and its pinned device identity.
+  Both use `clip_local_path(id, device_id, folder=None)` for the destination.
 - `list_recordings(userdata)` and `export(userdata, id)` are the Frame's side,
   run as `python3 - list` / `python3 - export ID` with the file on stdin.
 - `Recorder` runs one recording from Start to the copy.
@@ -180,7 +202,8 @@ The API, with the same guards as every other request:
 They aren't available when the server runs on the Frame itself (the iPhone
 app), since they save to a computer.
 
-Tests: `tests/test_clips.py`, and `tests/test_autosync.py` for automatic
+Tests: `tests/test_clips.py`, `tests/test_clip_copy.py` for server destinations
+and collision coverage, and `tests/test_autosync.py` for automatic
 copying (with a fake headset). They run the recording's shell under bash with a
 stand-in `ffmpeg`, so Stop, the time limit and the clean-up are tested as they
 run on the Frame. Where `ffmpeg` is installed, they also make a 65-second DASH

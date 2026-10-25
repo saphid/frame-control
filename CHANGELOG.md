@@ -24,6 +24,11 @@
   existing files in the old flat folder are left in place.
   [Copying guide](docs/recording.md).
 
+- Keep Steam clip exports separate for each headset, Steam account and nested
+  recording session. Manual export and automatic copying use the same folders;
+  existing flat exports stay untouched and do not mark unrelated clips saved.
+  [Recording guide](docs/recording.md#steam-clips).
+
 - Compare two explicit Windows Wireless Adapter doctor reads in local memory.
   Highlight exact PnP instances and known state changes after a dropout;
   incomplete inventories stay unknown. A Forget button clears the comparison.

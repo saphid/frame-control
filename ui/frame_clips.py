@@ -26,6 +26,7 @@ that stream. The folder names are as users and Steam's own files describe them; 
 listing doesn't depend on them: any folder under clips/ or video/ (up to four levels)
 holding init-stream*.m4s counts as a session.
 """
+import hashlib
 import json
 import os
 import re
@@ -363,8 +364,18 @@ def parse_id(clip_id):
 
 
 def export_name(clip_id):
-    """The .mp4's name on the computer: the clip's (or background session's) own folder name."""
+    """The .mp4's basename; it alone does not identify a saved export."""
     return parse_id(clip_id)[2] + ".mp4"
+
+
+def clip_local_path(clip_id, device_id, folder=None):
+    """Keep the headset, account and full Steam session identity in the destination."""
+    parts = parse_id(clip_id)
+    if not isinstance(device_id, str) or not device_id:
+        raise ValueError("missing clip headset identity")
+    headset = hashlib.sha256(device_id.encode("utf-8")).hexdigest()[:12]
+    folder = Path(folder) if folder else VIDEOS_DIR
+    return folder / f"headset-{headset}" / Path(*parts) / export_name(clip_id)
 
 
 def read_session(folder):
@@ -552,19 +563,20 @@ def remove_command(path):
 # run_frame(args, timeout) runs this file on the Frame with `args` and returns its JSON;
 # run(command, timeout) and fetch(remote, local) as for Recorder.
 
-def list_clips(run_frame, folder=None):
+def list_clips(run_frame, folder=None, *, device_id):
     """Steam's recordings on the Frame, each marked saved if its .mp4 is already here."""
     folder = Path(folder) if folder else VIDEOS_DIR
     clips = run_frame(["list"], 60)["clips"]
     for c in clips:
-        c["saved"] = (folder / export_name(c["id"])).exists()
+        c["saved"] = clip_local_path(c["id"], device_id, folder).is_file()
     return {"clips": clips, "folder": str(folder)}
 
 
-def export_clip(clip_id, run_frame, run, fetch, folder=None):
+def export_clip(clip_id, run_frame, run, fetch, folder=None, *, device_id):
     """Stitch a Steam recording on the Frame and copy the .mp4 here. -> {"message", "file"}."""
     folder = Path(folder) if folder else VIDEOS_DIR
-    name = export_name(clip_id)  # checks the id before anything reaches the Frame
+    target = clip_local_path(clip_id, device_id, folder)  # validate before reaching the Frame
+    name = target.name
     made = run_frame(["export", clip_id], 1900)
     path = made.get("path")
     remove = remove_command(path)  # refuses a path that isn't one of our exports
@@ -573,7 +585,8 @@ def export_clip(clip_id, run_frame, run, fetch, folder=None):
         incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=folder))
         try:
             fetch(path, incoming / name)
-            os.replace(incoming / name, folder / name)
+            target.parent.mkdir(parents=True, exist_ok=True)
+            os.replace(incoming / name, target)
         finally:
             shutil.rmtree(incoming, ignore_errors=True)
     finally:
@@ -581,7 +594,7 @@ def export_clip(clip_id, run_frame, run, fetch, folder=None):
             run(remove, 30)
         except Exception:
             pass  # the next export sweeps it
-    return {"message": f"Saved {name} to ~/Videos/SteamFrame", "file": str(folder / name)}
+    return {"message": f"Saved {name} to ~/Videos/SteamFrame", "file": str(target)}
 
 
 # ---- on the Frame -----------------------------------------------------------------
