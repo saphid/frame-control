@@ -46,13 +46,16 @@
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
   const Field = ({label, description, children}) => R.createElement('label', null,
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
-  const ToggleField = ({label, description, checked, onChange}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:'checkbox', checked:!!checked, onChange:e=>onChange?.(e.target.checked)}));
-  const DropdownItem = ({label, description, rgOptions=[], selectedOption, onChange}) => R.createElement(Field, {label, description},
-    R.createElement('select', {value:String(selectedOption ?? ''), onChange:e=>onChange?.(rgOptions.find(x=>String(x.data)===e.target.value))},
+  const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
+    R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
+      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
+  const DropdownItem = ({label, description, rgOptions=[], selectedOption, disabled, onChange}) => R.createElement(Field, {label, description},
+    R.createElement('select', {value:String(selectedOption ?? ''), disabled:!!disabled,
+      onChange:e=>{if(!disabled)onChange?.(rgOptions.find(x=>String(x.data)===e.target.value));}},
       rgOptions.map(x=>R.createElement('option', {key:String(x.data), value:String(x.data)}, x.label))));
-  const ButtonItem = ({label, children, onClick}) => R.createElement(Field, {label},
-    R.createElement('button', {type:'button', onClick}, children || label));
+  const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
+    R.createElement('button', {type:'button', disabled:!!disabled,
+      onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const ConfirmModal = ({strTitle, strOKButtonText, onOK, children}) => R.createElement('section', null,
