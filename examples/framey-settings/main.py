@@ -3,11 +3,12 @@ import json
 import os
 from pathlib import Path
 import tempfile
+import decky
 
 
 def settings_file():
-    # Decky creates this per-plugin user directory before starting the backend.
-    return Path(os.environ['DECKY_PLUGIN_SETTINGS_DIR']) / 'settings.json'
+    # Decky provides this per-plugin path through its official Python module.
+    return Path(decky.decky_SETTINGS_DIR) / 'settings.json'
 
 
 class Plugin:

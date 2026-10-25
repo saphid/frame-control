@@ -2,7 +2,7 @@
 
 This is a small Decky API v2 plugin for authors. Its panel uses the official
 `@decky/api`, `@decky/ui`, and `@decky/rollup` packages. A toggle calls a Python
-backend method, stores one boolean under Decky's per-plugin settings directory,
+backend method, stores one boolean under `decky.decky_SETTINGS_DIR`,
 and reads it back when the panel opens. The backend rejects other keys and
 values. The frontend also shows a local toast after a successful save.
 
