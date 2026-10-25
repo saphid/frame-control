@@ -1,31 +1,6 @@
 /* Framey panel compatibility layer. The iframe has an opaque origin and no UI key. */
 (() => {
   'use strict';
-  // Opaque-origin iframes throw on localStorage access. Give plugins a small
-  // panel-lifetime cache without granting their code the parent page's origin.
-  const cache = new Map();
-  const cacheLimit = 262144; // UTF-16 code units: at most 512 KiB of keys and values.
-  const cacheQuotaError = () => {
-    const error = new Error('Framey panel cache is full');
-    error.name = 'QuotaExceededError';
-    return error;
-  };
-  const panelStorage = Object.freeze({
-    get length() { return cache.size; },
-    key(index) { return Number.isInteger(Number(index)) ? [...cache.keys()][Number(index)] ?? null : null; },
-    getItem(key) { return cache.get(String(key)) ?? null; },
-    setItem(key, value) {
-      key = String(key); value = String(value);
-      const previous = cache.get(key);
-      const size = [...cache].reduce((total, [name, data]) => total + name.length + data.length, 0)
-        - (previous === undefined ? 0 : key.length + previous.length) + key.length + value.length;
-      if ((previous === undefined && cache.size >= 256) || size > cacheLimit) throw cacheQuotaError();
-      cache.set(key, value);
-    },
-    removeItem(key) { cache.delete(String(key)); },
-    clear() { cache.clear(); },
-  });
-  Object.defineProperty(window, 'localStorage', {value:panelStorage, enumerable:true});
   const R = window.SP_REACT = window.React;
   window.SP_REACTDOM = window.ReactDOM;
   const jsx = (type, props, key) => {
@@ -46,6 +21,36 @@
   let currentRoute = null;
   let nextId = 0;
   let plugin;
+  // A sandboxed iframe has an opaque origin, so its native localStorage getter
+  // throws SecurityError. Keep the familiar synchronous API inside the iframe;
+  // the parent stores only this plugin's bounded snapshot under its own origin.
+  const cache = new Map();
+  const cacheLimit = 128 * 1024;
+  const cacheSession = window.location?.hash.slice(1) || '';
+  let acceptSeed;
+  const seeded = new Promise(resolve => {acceptSeed = resolve;});
+  const storage = {
+    get length() {return cache.size;},
+    key(index) {return [...cache.keys()][index] ?? null;},
+    getItem(key) {return cache.get(String(key)) ?? null;},
+    setItem(key, value) {
+      const name = String(key), data = String(value);
+      const next = new Map(cache); next.set(name, data);
+      if (next.size > 64 || name.length > 256 || data.length > 65536 ||
+          JSON.stringify(Object.fromEntries(next)).length > cacheLimit)
+        throw new DOMException('Framey plugin cache is full', 'QuotaExceededError');
+      cache.set(name, data); persistCache();
+    },
+    removeItem(key) {cache.delete(String(key)); persistCache();},
+    clear() {cache.clear(); persistCache();},
+  };
+  function persistCache() {
+    parent.postMessage({type:'framey:cache:save', session:cacheSession,
+      entries:Object.fromEntries(cache)}, '*');
+  }
+  Object.defineProperty(window, 'localStorage', {configurable:true, value:storage});
+  parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
+  setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
   function ask(method, args) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
@@ -57,6 +62,17 @@
     });
   }
   addEventListener('message', event => {
+    if (event.source === parent && event.data?.type === 'framey:cache:seed' &&
+        event.data.session === cacheSession && acceptSeed) {
+      const entries = event.data.entries;
+      if (entries && typeof entries === 'object' && !Array.isArray(entries)) {
+        for (const [key, value] of Object.entries(entries))
+          if (key.length <= 256 && typeof value === 'string' && value.length <= 65536)
+            cache.set(key, value);
+      }
+      acceptSeed(); acceptSeed = null;
+      return;
+    }
     if (event.source !== parent || !event.data || event.data.type !== 'framey:reply') return;
     const item = pending.get(event.data.id);
     if (!item) return;
@@ -222,6 +238,7 @@
   };
   async function start() {
     try {
+      await seeded;
       const bytes = Uint8Array.from(atob(document.getElementById('framey-bundle').textContent), c=>c.charCodeAt(0));
       const url = URL.createObjectURL(new Blob([bytes], {type:'text/javascript'}));
       let module;

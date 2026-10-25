@@ -61,10 +61,21 @@ function Content() {
     }
     return SP_JSX.jsxs(DFL.PanelSection, { title: "Framey settings sample", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Example setting", description: "Stored by the Decky Python backend", checked: enabled, disabled: busy, onChange: (value) => { void change(value); } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: () => { void refresh(); }, children: "Reload saved setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { role: "status", children: message }) })] });
 }
-var index = definePlugin(() => ({
+var index = definePlugin(() => Object.assign({
     name: 'Framey Settings Sample',
     icon: SP_JSX.jsx("span", { "aria-hidden": "true", children: "\u2699" }),
     content: SP_JSX.jsx(Content, {}),
+}, {
+    // Framey additions are ignored by Decky's own menu. Keep the main content
+    // usable there too, while showing authors the extra VR settings view.
+    settings: SP_JSX.jsx(Content, {}),
+    frameyQuickActions: [{
+            label: 'Read saved setting',
+            onClick: async () => {
+                const enabled = await getSetting('enabled', false);
+                return `Saved setting is ${enabled ? 'on' : 'off'}`;
+            },
+        }],
 }));
 
 export { index as default };
