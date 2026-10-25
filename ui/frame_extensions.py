@@ -7,6 +7,7 @@ import frame_host
 
 
 ID = re.compile(r"[a-z][a-z0-9-]{0,39}\Z")
+API_VERSION = 1
 ASSET = re.compile(r"[A-Za-z0-9][A-Za-z0-9._-]*\Z")
 TYPES = {".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8",
          ".css": "text/css; charset=utf-8", ".json": "application/json",
@@ -27,6 +28,11 @@ def _manifest(folder):
     data = json.loads(manifest.read_text(encoding="utf-8"))
     if not isinstance(data, dict) or data.get("id") != folder.name:
         raise ValueError("manifest id must match its folder")
+    # Older manifests predate this field and use bridge v1. Check again when
+    # serving assets, so an incompatible panel cannot bypass discovery.
+    api_version = data.get("apiVersion", 1)
+    if type(api_version) is not int or api_version != API_VERSION:
+        raise ValueError(f"unsupported apiVersion; this app supports {API_VERSION}")
     for key, limit in (("name", 80), ("version", 40), ("description", 240)):
         value = data.get(key)
         if not isinstance(value, str) or not value.strip() or len(value) > limit:
@@ -34,7 +40,8 @@ def _manifest(folder):
     entry = data.get("entry", "index.html")
     if entry != "index.html" or (folder / entry).is_symlink() or not (folder / entry).is_file():
         raise ValueError("entry must be a regular index.html")
-    return {key: data[key] for key in ("id", "name", "version", "description")}
+    return {**{key: data[key] for key in ("id", "name", "version", "description")},
+            "apiVersion": api_version}
 
 
 def list_extensions():
