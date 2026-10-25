@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Keep Steam clip exports separate for each headset, Steam account and nested
+  recording session. Manual export and automatic copying use the same folders;
+  existing flat exports stay untouched and do not mark unrelated clips saved.
+  [Recording guide](docs/recording.md#steam-clips).
+
 - Import a base APK with supported native-library or asset splits from a local
   Android backup or XAPK/APKS/APKM bundle. Check package and version before
   install; refuse resource, code and feature splits and device-variant sets.
