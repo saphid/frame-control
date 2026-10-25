@@ -491,7 +491,7 @@ class Server(unittest.TestCase):
 @unittest.skipUnless(shutil.which("node"), "Node exercises the Settings renderer")
 class Settings(unittest.TestCase):
     def test_resume_is_available_after_a_copy_error(self):
-        page = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text()
+        page = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text(encoding="utf-8")
         script = page.split("const autoSync =", 1)[1].split("async function loadAutoSync", 1)[0]
         harness = r'''
 const assert = require('node:assert/strict');
