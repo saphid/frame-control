@@ -79,6 +79,7 @@ import frame_wireless_doctor  # noqa: E402
 import frame_wired_doctor  # noqa: E402
 import frame_compat_db  # noqa: E402
 import frame_extensions  # noqa: E402
+import frame_decky  # noqa: E402
 
 frame_host.trust_bundled_cas()
 
@@ -548,6 +549,14 @@ def status(_body):
         frame_report.frame.update(build=osr.get("build"), version=osr.get("version"))
     return s
 
+
+def decky(body):
+    action = body.get("action")
+    if action not in ("install", "update", "remove"):
+        raise Failure("Choose install, update, or remove", 400)
+    if body.get("acknowledged") is not True:
+        raise Failure("Confirm that Decky support on the Frame is experimental", 400)
+    return start_job("Decky Loader " + action, lambda: frame_decky.change(ssh, action))
 
 
 COMFORT_FILES = ("frame_comfort.py", "frame_status.py", "frame_steam.py")
@@ -3290,6 +3299,7 @@ POST = {
     "/api/steam-pipewire": steam_pipewire_action,
     "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
+    "/api/decky": decky,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
@@ -3490,6 +3500,8 @@ class Handler(BaseHTTPRequestHandler):
                                 headers=[('Content-Disposition', f'attachment; filename="frame-power-{report_id}.{format}"')])
             elif path == "/api/extensions":
                 self.send_json(frame_extensions.list_extensions())
+            elif path == "/api/decky":
+                self.send_json(frame_decky.status(ssh))
             elif path.startswith("/extension/"):
                 parts = path.split("/")
                 if len(parts) != 4:

@@ -121,6 +121,11 @@ class ServerGuards(unittest.TestCase):
         finally:
             shutil.rmtree(folder)
 
+    def test_decky_write_requires_experimental_acknowledgement(self):
+        code, body = self.post('/api/decky', {'action': 'install'})
+        self.assertEqual(code, 400)
+        self.assertIn('experimental', body['error'])
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
