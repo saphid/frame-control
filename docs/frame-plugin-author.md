@@ -68,6 +68,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
 | `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack` | Local routes inside this plugin panel only | Host unit test |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
+| `findModuleChild`, `Navigation.CloseSideMenus` | Steam module lookup returns `null`; close returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 entry point and shallow settings view in local host test. Steam library patch and live HLTB search remain unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, Decky event listeners, file picker, root calls | Unavailable | Not supported by Framey |
 
@@ -85,3 +86,9 @@ The Framey `localStorage` bridge is for disposable frontend caches, including
 the cache read attempted by Steam Status 1.2.3. It does not expose another
 plugin's cache or the Frame Control UI key. A real Steam Status panel reopen
 and a worn-headset settings check are still needed.
+
+HLTB for Deck 2.0.12 demonstrates the limit of the panel shim: its official
+bundle can start and produce a settings view with Framey's Steam module lookup
+stub, but its game page and context menu patches have no Steam target in the
+isolated panel. The tests do not call its HLTB network search or Python backend.
+Do not claim game length badges work in VR from this result.

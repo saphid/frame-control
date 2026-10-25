@@ -12,6 +12,8 @@ PLUGINS = (
      'folder': 'decky-storage-cleaner', 'sha256': '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'},
     {'id': 18, 'name': 'Bluetooth', 'version': '3.1.1', 'api_version': 1,
      'folder': 'Bluetooth', 'sha256': 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'},
+    {'id': 26, 'name': 'HLTB for Deck', 'version': '2.0.12', 'api_version': 1,
+     'folder': 'hltb-for-deck', 'sha256': 'bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558'},
 )
 
 
