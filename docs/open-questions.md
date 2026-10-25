@@ -1,10 +1,29 @@
 # Open questions and on-device checks
 
-Research as of 2026-09-25, eight days after the Frame's retail release
-(2026-09-18). Most first-party detail comes from Valve's Steamworks developer
-pages. Searches of Reddit and the Steam forums turned up **almost no
-end-user reports** about SSH, desktop streaming, or macOS. Treat that as
-"not documented yet", not "doesn't work".
+The September sections below record early checks after the Frame's retail
+release (2026-09-18). They are a historical test log, not a current setup
+guide. For current connection steps, see [SteamOS October 2026
+compatibility](steamos-2026-10-compat.md). For the charge-limit result, see
+[charge-limit.md](charge-limit.md).
+
+## Current Frame OS 0.5.6 status (2026-10-25)
+
+- `frame.local` no longer resolves on the checked 0.5.6 beta build
+  (`20261022.6153909`). Avahi was active but did not publish addresses. The
+  configured Tailscale SSH alias worked. Frame Control can use a saved IP on
+  the same network after verifying the pinned SSH key, or a manual IP/SSH
+  alias. Same-LAN fallback scanning was **not** tested on this Tailscale route.
+  See the [live compatibility check](evidence/steamos-compat-live-2026-10-25.md).
+- Read-only checks on that build found no SteamOS Manager
+  `BatteryChargeLimit1` interface or `charge_control_*` attribute. The vendor
+  charging switches are root-owned and managed by Valve's charger service.
+  No charging control was written. An 80% limit is **not supported** by Frame
+  Control; see [charge-limit.md](charge-limit.md) and the
+  [headset check](evidence/round3-headset-2026-10-25.md).
+- Active passthrough in the recording mirror remains **unknown**: the only
+  captured mirror frame was uniform while the headset was unworn in standby.
+  A worn, active passthrough check is still needed; see the
+  [headset check](evidence/round3-headset-2026-10-25.md).
 
 ## Verified on device (2026-09-25)
 
@@ -14,7 +33,9 @@ build 20260922.6101926, kernel 6.18, aarch64):
 - **1–2.** Developer Mode + Set User Password gave working SSH with no terminal
   steps. `sshd` is enabled and active. The user is `steamos` (in `wheel`) and
   the hostname is `frame`.
-- **3.** `frame.local` resolves from the Mac; `avahi-daemon` is active.
+- **3.** `frame.local` resolved from the Mac on the September build;
+  `avahi-daemon` was active. This result does not apply to the checked 0.5.6
+  beta build; see the current status above.
 - **5.** `/etc/ssh/sshd_config` has `Include /etc/ssh/sshd_config.d/*.conf`.
   The existing drop-ins are `20-systemd-userdb.conf` and `99-archlinux.conf`, so
   `01-frame-keys-only.conf` would sort first as intended. (`--harden` itself
@@ -148,9 +169,9 @@ check in the headset:
 Can an 80% charge limit be set over SSH or adb? **Not safely yet.** SteamOS
 Manager's `BatteryChargeLimit1` (the interface Steam's own setting uses) has
 no backend in the Frame's device config, and the battery node is a
-`max1720x` fuel gauge with no `charge_control_end_threshold`. Research and
-read-only headset checks are in [charge-limit.md](charge-limit.md). Not tested
-on a headset.
+`max1720x` fuel gauge with no `charge_control_end_threshold`. Read-only checks
+on the real Frame confirmed this on 0.5.6 beta; no charge setting was written.
+See [charge-limit.md](charge-limit.md).
 
 ## Unconfirmed claims made in these docs
 
