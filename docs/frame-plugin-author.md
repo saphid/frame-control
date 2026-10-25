@@ -29,7 +29,8 @@ before describing it as working in VR. Until a QAM bridge is verified, a Frame
 Control extension is the simplest route for a self-contained read-only VR panel.
 
 Frame Control now has an experimental [Framey panel host](framey-loader.md)
-for API v2 Decky frontend bundles. It renders common settings controls in the
+for API v2 Decky frontend bundles and API v1 bundles that use Decky's modern
+frontend API initializer. It renders common settings controls in the
 separate SteamVR dashboard panel, but Steam library and store page patches
 remain unavailable. Wearer-visible use is not yet verified.
 The [settings sample](../examples/framey-settings/README.md) shows an official
@@ -47,7 +48,7 @@ ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
 plugin folder when you finish. See the current [compatibility table](decky-frame.md).
 
-## Framey API v2 compatibility
+## Framey Decky API compatibility
 
 Framey hosts a plugin's frontend in an isolated iframe in the Frame Control
 SteamVR panel. The table describes the current implementation and its tests;
@@ -56,9 +57,11 @@ none of these frontend controls has passed a worn-headset check yet.
 | Decky API or UI feature | Framey behavior | Verified in |
 | --- | --- | --- |
 | `definePlugin` with `content`, `titleView` | Renders a React panel and optional title | Local browser with ProtonDB Badges; host unit test |
+| API v1 manifest with the modern Decky API initializer | Attempts to render the plugin's panel; older API v1 bundles still show an incompatibility message | Pinned Storage Cleaner 1.4.0 archive, fake Frame install/pack test, local Chromium with stub backend. Cleanup actions were not tested. |
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `DialogCheckbox`, `DialogButtonPrimary` | Native checkbox and button controls in the panel | Host unit test; Storage Cleaner empty-data browser check |
 | Optional `settings`, `frameyQuickActions` | Separate settings tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e for setting read/write across CEF calls, update, and reinstall; host unit test. Real Decky persistence remains unverified. |
 | `toaster.toast` | Visible toast inside the plugin panel; `dismiss` and optional `onClick` | Host unit test; no Steam system notification |
@@ -71,3 +74,8 @@ Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
+An API v1 manifest does not guarantee a working Framey panel. Test the exact
+store archive and do not assume SteamClient app details, library patches, or
+destructive actions work in VR. The
+[Storage Cleaner browser check](evidence/framey-api-v1-browser-2026-10-25.md)
+used empty stub data and did not invoke its cleanup actions.

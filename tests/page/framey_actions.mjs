@@ -43,7 +43,9 @@ const input=nodes(window.DFL.TextField({label:'Alias',value:'Old',placeholder:'N
   onChange:()=>changed++}),'input')[0];
 const slider=nodes(window.DFL.SliderField({label:'Speed',value:2,min:0,max:10,step:2,disabled:true,
   onChange:()=>changed++}),'input')[0];
-for(const control of [toggle,dropdown,button,input,slider])assert.equal(control.props.disabled,true);
+const checkbox=nodes(window.DFL.DialogCheckbox({label:'Game',disabled:true,
+  onChange:()=>changed++}),'input')[0];
+for(const control of [toggle,dropdown,button,input,slider,checkbox])assert.equal(control.props.disabled,true);
 assert.equal(input.props.value,'Old');
 assert.equal(slider.props.type,'range');
 assert.equal(dropdown.props.value,'1');
@@ -53,6 +55,7 @@ dropdown.props.onChange({target:{value:'0'}});
 button.props.onClick({});
 input.props.onChange({target:{value:'New'}});
 slider.props.onChange({target:{value:'4'}});
+checkbox.props.onChange({target:{checked:true}});
 assert.equal(changed,0);
 let entered='';
 const readyInput=nodes(window.DFL.TextField({label:'Alias',value:'Old',onChange:e=>{entered=e.target.value;}}),'input')[0];

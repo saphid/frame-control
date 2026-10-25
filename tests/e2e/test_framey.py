@@ -143,7 +143,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual(ok('POST', '/api/framey/method',
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
 
-    def test_two_pinned_official_api_v2_plugins_install_and_remove(self):
+    def test_pinned_official_api_v1_and_v2_plugins_install_and_remove(self):
         self.backend()
         catalog = {plugin['id']:plugin for plugin in ok('GET', '/api/decky/store')['plugins']}
         for plugin in OFFICIAL_PLUGINS:
@@ -160,7 +160,10 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
-                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['api_version'], 2)
+                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['api_version'], plugin['api_version'])
+                panel_status, panel, _ = api('GET', f"/framey/panel/{plugin['id']}")
+                self.assertEqual(panel_status, 200)
+                self.assertIn(b'framey-bundle', panel)
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)

@@ -23,8 +23,10 @@ rejects unsafe ZIP members, path collisions, special files and root plugins,
 and swaps one managed plugin
 folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
 The Decky user service restarts after a file change. Framey's panel host accepts
-only API v2 bundles with `dist/index.js`; other installed plugins remain
-manageable but have no Framey panel. The store manager does not currently
+API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
+with `dist/index.js`; other installed plugins remain manageable but have no
+Framey panel. API v1 admission is a compatibility attempt, not a guarantee
+that the plugin's controls work in VR. The store manager does not currently
 screen a plugin's runtime network downloads.
 
 ## What the compatibility host supplies
@@ -60,10 +62,14 @@ The pinned official Steam Status 1.2.3 frontend also
 with a stubbed settings reply. Its public status request worked, but its cache
 logged `localStorage` errors in Framey's opaque iframe. No real Decky backend
 or worn headset test was part of that check.
-Fake Frame CI also installs and removes pinned official ProtonDB Badges 1.3.4
-and Steam Status 1.2.3 archives, checks their API v2 manifests and frontend
-bytes, and verifies they can be packed as Framey panels. It does not execute
-their actual backend code or prove their frontend controls work in VR.
+Fake Frame CI also installs and removes pinned official ProtonDB Badges 1.3.4,
+Steam Status 1.2.3, and Storage Cleaner 1.4.0 archives, checks their API v1/v2
+manifests and frontend bytes, and verifies they can be packed as Framey panels.
+It does not execute their actual backend code or prove their frontend controls
+work in VR.
+Storage Cleaner rendered an
+[empty-data panel in local Chromium](evidence/framey-api-v1-browser-2026-10-25.md).
+Its cleanup actions were not tested; they may remove local game saves.
 
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,

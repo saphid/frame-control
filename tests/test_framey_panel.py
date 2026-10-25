@@ -53,10 +53,16 @@ class Panel(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             framey_panel.panel(15)
 
-    def test_legacy_root_symlink_and_unmanaged_are_refused(self):
+    def test_unsupported_root_symlink_and_unmanaged_are_refused(self):
         manifest = self.folder/'plugin.json'
+        manifest.write_text(json.dumps({'name':'ProtonDB Badges','api_version':0}))
+        with self.assertRaises(FileNotFoundError): framey_panel.panel(14)
         manifest.write_text(json.dumps({'name':'ProtonDB Badges','api_version':1}))
         with self.assertRaises(FileNotFoundError): framey_panel.panel(14)
+        (self.folder/'dist/index.js').write_text(
+            '// __DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit\n'
+            "export default () => ({content: SP_REACT.createElement('p', null, 'OK')});")
+        self.assertIn('framey-bundle', framey_panel.panel(14).decode())
         manifest.write_text(json.dumps({'name':'ProtonDB Badges','api_version':2,'flags':['root']}))
         with self.assertRaises(FileNotFoundError): framey_panel.panel(14)
         manifest.write_text(json.dumps({'name':'ProtonDB Badges','api_version':2,'flags':[]}))
