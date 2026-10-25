@@ -48,6 +48,36 @@ this report. A future disable feature needs a verified Steam adapter/session
 mapping, fresh protection for primary/active instances, explicit confirmation
 for one exact instance, and a tested recovery path that re-enables that same ID.
 
+## When a stream drops immediately or the adapter will not reconnect
+
+Read PC adapters **before** starting a stream, then refresh immediately after a
+drop. Compare the *exact* PnP instance IDs, presence and problem codes. Note
+whether the PC's own Wi-Fi drops too. A new `#2` name is not proof that this
+instance caused the failure. Keep the time of the drop and the two snapshots
+for Steam Support; the doctor does not save or upload them.
+
+To narrow a drop at stream start, try one condition at a time: wired PC
+networking instead of PC Wi-Fi, wired headphones instead of 2.4 GHz audio, and
+spacing the USB radio dongles apart. Recheck the stream after each change. The
+PC Wi-Fi channel in this report is not the Steam dongle's channel, so a matching
+or different number does not establish interference.
+
+If the adapter will not reconnect, stop the failed stream and close Steam's
+streaming session before touching its USB connection. Refresh the inventory. If
+the dongle is absent, reconnect it once at the PC, understanding that this
+interrupts any connection using it, then refresh again. If the **same exact**
+PnP instance now reports problem code 22 (disabled), review that instance in
+Windows Device Manager and its normal enable action. Do not enable or disable a
+different numbered instance by guesswork. For a missing device or another
+problem code, record the before/after ID and code for Steam Support; do not
+guess a driver or change security settings.
+
+These are user-controlled checks, not an automatic repair. We have no physical
+Steam Wireless Adapter dropout to reproduce and no verified mapping from a
+Wi-Fi Direct virtual instance to Steam's active session. An in-app disable and
+re-enable control remains deferred until that mapping and a recovery path are
+tested on real hardware.
+
 ## Checking a 2.4 GHz audio conflict
 
 [Deko's report](https://x.com/DekoDrak/status/2113412044644897023)
