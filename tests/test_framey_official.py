@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -19,6 +21,12 @@ from framey_official import PLUGINS, archive
 
 
 class OfficialBundles(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_hltb_frontend_starts_with_framey_module_stub(self):
+        script = Path(__file__).parent / 'page/framey_hltb.mjs'
+        result = subprocess.run(['node', str(script)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_pinned_store_archives_install_and_pack_into_framey_panel(self):
         with tempfile.TemporaryDirectory() as root:
             plugins = Path(root)

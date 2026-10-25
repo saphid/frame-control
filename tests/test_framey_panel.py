@@ -1,4 +1,4 @@
-"""Framey hosts only store-owned API v2 frontends and scopes backend calls."""
+"""Framey hosts store-owned modern Decky frontends and scopes backend calls."""
 import sandbox  # noqa: F401
 import gzip
 import http.client

@@ -107,4 +107,7 @@ const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/details'),true);
 assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,1);
 assert.equal(window.DFL.Navigation.Navigate('/decky/store'),false);
+assert.equal(window.DFL.findModuleChild(()=>true),null);
+window.DFL.Navigation.CloseSideMenus();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0);
 undo();assert.equal(window.DFL.Navigation.Navigate('/plugin/details'),false);
