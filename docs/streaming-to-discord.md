@@ -17,4 +17,4 @@ Frame Control sends the Frame's **output audio**, not its microphone. Discord
 audio routing differs by computer and requires a separate virtual audio device
 if you want game sound in the call. This guide has not been verified in a real
 Discord call. The SteamVR mirror can be blank while the headset is idle, and
-active passthrough in that mirror remains unverified.
+the mirror can include real room passthrough behind panels. Check the scene before sharing.

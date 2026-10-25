@@ -963,7 +963,9 @@ def _clips_frame(args, timeout):
 def list_clips():
     _clips_here()
     try:
-        return frame_clips.list_clips(_clips_frame)
+        device = agent_target()["id"]
+        with working(device):
+            return frame_clips.list_clips(_clips_frame, device_id=device)
     except frame_clips.ClipError as e:
         raise Failure(str(e), e.status)
 
@@ -973,11 +975,13 @@ def export_clip(body):
     _clips_here()
     clip_id = body.get("id")
     name = frame_clips.export_name(clip_id)  # ValueError, so 400, for a bad id
+    device = agent_target()["id"]
 
     def work():
         try:
-            return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
-                                           fetch_file)
+            with working(device):
+                return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
+                                               fetch_file, device_id=device)
         except frame_clips.ClipError as e:
             raise Failure(str(e), e.status)
     return start_job(f"Export {name}", work)
@@ -1000,7 +1004,7 @@ def _sync_shots(device, ids):
 def _sync_clip(device, clip_id):
     with working(device):
         return frame_clips.export_clip(clip_id, _clips_frame, lambda cmd, timeout: ssh(cmd, timeout=timeout),
-                                       fetch_file)
+                                       fetch_file, device_id=device)
 
 
 def _sync_list(listing):

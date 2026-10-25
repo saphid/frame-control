@@ -1,0 +1,123 @@
+{
+  "source_commit": "1255ef2bbf2e2e5fd86f8b984b592bed56f20780",
+  "started": "2026-10-25T06:38:37Z",
+  "os_release": {
+    "VERSION_ID": "0.5.6",
+    "VARIANT_ID": "vr",
+    "BUILD_ID": "20261022.6153909"
+  },
+  "passed": 13,
+  "failed": 0,
+  "paired": false,
+  "devkit_utils_there_before": true,
+  "battery_before": {
+    "capacity": 99,
+    "statuses": [
+      "Charging",
+      "Charging"
+    ]
+  },
+  "battery_after": {
+    "capacity": 100,
+    "statuses": [
+      "Full",
+      "Full"
+    ]
+  },
+  "steamvr_pid_before": 124586,
+  "steamvr_pid_after": 124586,
+  "observed_focus_properties_unchanged": true,
+  "reserved_files_and_processes_absent_after": true,
+  "own_shared_lock_released": true,
+  "headset_worn": false,
+  "steps": [
+    {
+      "step": "cleanup: leftovers from earlier runs",
+      "ok": true,
+      "seconds": 7.8,
+      "stopped_process_counts": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "devkit service: properties.json",
+      "ok": true,
+      "seconds": 0.0
+    },
+    {
+      "step": "status",
+      "ok": true,
+      "seconds": 0.6
+    },
+    {
+      "step": "arm64: install",
+      "ok": true,
+      "seconds": 7.7
+    },
+    {
+      "step": "arm64: launch",
+      "ok": true,
+      "seconds": 3.3,
+      "outcome": "running"
+    },
+    {
+      "step": "arm64: remove",
+      "ok": true,
+      "seconds": 6.4,
+      "stopped_process_counts": [
+        2,
+        0
+      ]
+    },
+    {
+      "step": "x86_64: install",
+      "ok": true,
+      "seconds": 7.6
+    },
+    {
+      "step": "x86_64: launch",
+      "ok": true,
+      "seconds": 3.2,
+      "outcome": "runtime missing"
+    },
+    {
+      "step": "x86_64: remove",
+      "ok": true,
+      "seconds": 6.2,
+      "stopped_process_counts": [
+        0,
+        0
+      ]
+    },
+    {
+      "step": "exe: install",
+      "ok": true,
+      "seconds": 7.5
+    },
+    {
+      "step": "exe: launch",
+      "ok": true,
+      "seconds": 3.3,
+      "outcome": "running"
+    },
+    {
+      "step": "exe: remove",
+      "ok": true,
+      "seconds": 6.5,
+      "stopped_process_counts": [
+        5,
+        0
+      ]
+    },
+    {
+      "step": "cleanup: everything this run installed",
+      "ok": true,
+      "seconds": 7.4,
+      "stopped_process_counts": [
+        0,
+        0
+      ]
+    }
+  ]
+}

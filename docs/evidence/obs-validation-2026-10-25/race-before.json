@@ -1,0 +1,15 @@
+{
+  "baseline": "d79efb4",
+  "after_stop": {
+    "state": "stopping",
+    "alias": "frame",
+    "error": "",
+    "supported": true
+  },
+  "after_late_stderr": {
+    "state": "running",
+    "alias": "frame",
+    "error": "",
+    "supported": true
+  }
+}

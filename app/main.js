@@ -311,57 +311,28 @@ ipcMain.handle("update:install", (e) => { if (fromUi(e)) installUpdate(); });
 // pipe lets it stop SSH on every platform, including Windows where SIGTERM
 // terminates Python without running its cleanup block.
 const OBS_SCRIPT = path.join(SCRIPTS, "obs-headset-source.py");
-let obsChild = null;
-let obsState = { state: "idle", alias: "", error: "" };
-function publicObs() { return { ...obsState, supported: true }; }
-function setObs(state, alias = "", error = "") {
-  obsState = { state, alias, error };
-  if (win && !win.isDestroyed()) win.webContents.send("obs:state", publicObs());
-  return publicObs();
-}
-function stopObs() {
-  if (!obsChild) return publicObs();
-  setObs("stopping", obsState.alias);
-  if (obsChild.stdin && !obsChild.stdin.writableEnded) obsChild.stdin.end();
-  return publicObs();
-}
-ipcMain.handle("obs:status", (e) => fromUi(e) ? publicObs() : null);
-ipcMain.handle("obs:start", async (e) => {
-  if (!fromUi(e)) return null;
-  if (obsChild) return publicObs();
-  const alias = activeAlias();
-  if (!ALIAS_RE.test(alias)) throw new Error("Select a valid headset first.");
-  if (!fs.existsSync(OBS_SCRIPT)) throw new Error("The OBS helper is missing; reinstall Frame Control.");
-  const env = { ...process.env, PATH: await loginPath() };
-  const executable = python || await findPython(env);
-  if (!executable) throw new Error(PYTHON_HELP);
-  // A concurrent click or a headset switch may have happened while finding Python.
-  if (obsChild) return publicObs();
-  if (alias !== activeAlias()) throw new Error("The selected headset changed; try again.");
-  const child = spawn(executable, [...PY_FLAGS, OBS_SCRIPT, "--frame", alias, "--control-stdin"],
-                      { env, stdio: ["pipe", "ignore", "pipe"], windowsHide: true });
-  obsChild = child;
-  setObs("starting", alias);
-  let output = "";
-  child.stderr.on("data", (chunk) => {
-    output = (output + chunk.toString("utf8")).slice(-2048);
-    if (obsChild === child && output.includes("Frame Control OBS stream is ready")) setObs("running", alias);
-  });
-  child.once("error", (err) => {
-    if (obsChild !== child) return;
-    obsChild = null;
-    setObs("failed", alias, `Could not start OBS source: ${err.message}`);
-  });
-  child.once("exit", (code, signal) => {
-    if (obsChild !== child) return;
-    const stopping = obsState.state === "stopping" || quitting;
-    obsChild = null;
-    setObs(stopping ? "idle" : "failed", alias,
-           stopping ? "" : `OBS source stopped (${signal || code}). ${output.trim().split("\n").pop() || "Check SteamVR and SSH."}`);
-  });
-  return publicObs();
+const { createObsSource } = require("./obs-source");
+const obsSource = createObsSource({
+  spawn,
+  // Keep the button hidden until native Windows/Frame streaming is verified.
+  supported: !IS_WIN,
+  prepare: async alias => {
+    if (!fs.existsSync(OBS_SCRIPT)) throw new Error("The OBS helper is missing; reinstall Frame Control.");
+    const env = { ...process.env, PATH: await loginPath() };
+    const executable = python || await findPython(env);
+    if (!executable) throw new Error(PYTHON_HELP);
+    if (quitting || alias !== activeAlias()) throw new Error("The selected headset changed; try again.");
+    return { executable, args: [...PY_FLAGS, OBS_SCRIPT], env };
+  },
+  onState: state => {
+    if (win && !win.isDestroyed()) win.webContents.send("obs:state", state);
+  },
 });
-ipcMain.handle("obs:stop", (e) => fromUi(e) ? stopObs() : null);
+const publicObs = () => obsSource.status();
+const stopObs = () => obsSource.stop();
+ipcMain.handle("obs:status", e => fromUi(e) ? publicObs() : null);
+ipcMain.handle("obs:start", (e, port) => fromUi(e) ? obsSource.start(activeAlias(), port) : null);
+ipcMain.handle("obs:stop", e => fromUi(e) ? stopObs() : null);
 
 // The page reports the headsets it knows (the server's Devices tab), so the Frame
 // menu can switch between them. Only plain names and ids go into the menu.
@@ -373,7 +344,7 @@ ipcMain.on("devices:changed", (e, list) => {
     .map(d => ({ id: d.id.slice(0, 80), name: String(d.name || d.alias).slice(0, 60), alias: d.alias, active: !!d.active }));
   if (JSON.stringify(next) === JSON.stringify(devices)) return;
   devices = next;
-  if (obsChild && obsState.alias !== activeAlias()) stopObs();
+  if (obsSource.status().alias && obsSource.status().alias !== activeAlias()) stopObs();
   buildMenu();
 });
 const activeAlias = () => (devices.find(d => d.active) || {}).alias || FRAME;
@@ -765,11 +736,11 @@ if (!app.requestSingleInstanceLock()) {
   app.on("before-quit", (event) => {
     quitting = true;
     stopServer();
-    if (!obsChild || obsQuitReady) return;
+    if (!obsSource.child || obsQuitReady) { stopObs(); return; }
     event.preventDefault();
     if (obsQuitWaiting) return;
     obsQuitWaiting = true;
-    const child = obsChild;
+    const child = obsSource.child;
     let timer;
     child.once("close", () => {
       clearTimeout(timer);

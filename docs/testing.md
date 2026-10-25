@@ -261,7 +261,14 @@ title; the following process sweep found none. The final cleanup found no
 test titles or processes, the test desktop was closed, and the battery
 remained at 99%. That historical run used the Python entry point directly;
 the current POSIX wrapper has local offline coverage on a PATH without zsh.
-The orphan-metadata and shortcut follow-up has not been rerun on a headset.
+The current runner and all-six-ID cleanup sweeps passed another 13-step real
+Frame run on 25 October, build `20261022.6153909`, at source commit `1255ef2`.
+The Windows title's remove step stopped five test-owned Proton/wrapper PIDs;
+the final sweep and independent readback found no reserved files or processes.
+SteamVR stayed running, observed focus properties matched before/after, and
+this task's shared lock was released. The headset was unworn. This run did
+not seed synthetic orphan metadata or shortcuts; those cases use local
+fixtures. [Sanitized results](evidence/round2-smoke-2026-10-25.json).
 The local regression suite runs real Linux processes in temporary fake title
 directories (including deleted folders and a TERM-resistant wrapper); it checks
 exit, escalation and survival of unrelated processes. Local filesystem commands

@@ -1,0 +1,26 @@
+[
+  {
+    "name": "2026-10-25 06-08-22.mkv",
+    "bytes": 15784412,
+    "sha256": "f2760ed28bf48274cc8c936428edbc389cd3a9f4b9cd2a61e699a04bf4487b50",
+    "published": false
+  },
+  {
+    "name": "rec-20261025-062251.mp4",
+    "bytes": 3932019,
+    "sha256": "c71de1a49b75159c587fddd012361b9e6626a4d5cc41b79696343a17b73c151a",
+    "published": false
+  },
+  {
+    "name": "mirror-wake.png",
+    "bytes": 1741004,
+    "sha256": "0754466948d5b9e8448f9ed67c8582e19802367df6ed4002afc64f42e1763f53",
+    "published": false
+  },
+  {
+    "name": "private-mp4-frame4.png",
+    "bytes": 1002068,
+    "sha256": "08d87bc9ab0e62115b42cca7dfcf7e4db11848a0ede273034a92a69297c6775b",
+    "published": false
+  }
+]

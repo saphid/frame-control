@@ -46,7 +46,7 @@ jobs:
           python ui/frame_wireless_doctor.py --json > "$RUNNER_TEMP/linux-wireless-doctor.json"
           python -c 'import json, os; from pathlib import Path; d=json.loads((Path(os.environ["RUNNER_TEMP"]) / "linux-wireless-doctor.json").read_text()); assert d["supported"] and d["selected"] is None and d["schema"] == 1'
       - name: App syntax
-        run: node --check app/main.js && node --check app/build/make-icon.js && node --check app/build/fetch-deps.js && node --check app/preload.js && node --check app/install-link.js && node --check app/updater.js
+        run: node --check app/main.js && node --check app/obs-source.js && node --check app/build/make-icon.js && node --check app/build/fetch-deps.js && node --check app/preload.js && node --check app/install-link.js && node --check app/updater.js
       - name: App tests
         run: node --test app/test/*.test.js
       - name: Website
@@ -71,6 +71,11 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - name: OBS lifecycle tests
+        run: node app/test/obs-source.test.js
       - name: Server tests
         run: python -m unittest discover -s tests -v
 

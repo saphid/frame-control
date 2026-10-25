@@ -23,7 +23,7 @@ contextBridge.exposeInMainWorld("frameApp", {
   restartServer: () => ipcRenderer.invoke("server:restart"),  // the "couldn't start" page's Try Again
   obs: {
     status: () => ipcRenderer.invoke("obs:status"),
-    start: () => ipcRenderer.invoke("obs:start"),
+    start: (port) => ipcRenderer.invoke("obs:start", port),
     stop: () => ipcRenderer.invoke("obs:stop"),
     onState: (cb) => {
       ipcRenderer.removeAllListeners("obs:state");

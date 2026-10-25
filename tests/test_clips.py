@@ -71,6 +71,17 @@ class Ids(unittest.TestCase):
             with self.subTest(bad=bad), self.assertRaises(ValueError):
                 clips.remove_command(bad)
 
+    def test_local_path_keeps_validated_identity_and_hashes_device_names(self):
+        folder = Path("exports")
+        target = clips.clip_local_path("123/clips/clip/video/session", "../../device:name", folder)
+        self.assertRegex(target.parts[1], r"^headset-[0-9a-f]{12}$")
+        self.assertEqual(target.parts[2:], ("123", "clips", "clip", "video", "session", "clip.mp4"))
+        for bad in (None, "", 42):
+            with self.subTest(device=bad), self.assertRaises(ValueError):
+                clips.clip_local_path("123/video/bg", bad, folder)
+        with self.assertRaises(ValueError):
+            clips.clip_local_path("../clips/clip", "frame-a", folder)
+
     def test_recording_names_checked(self):
         for fn in (clips.finish_command, clips.cleanup_command, lambda n: clips.record_command(n, True)):
             for bad in ("rec-1", "rec-20261020-201950; rm -rf ~", "../rec-20261020-201950", "*"):
@@ -156,10 +167,10 @@ class Sessions(unittest.TestCase):
 
     def test_listing_marks_what_is_already_here(self):
         here = self.dir / "here"
-        write(here / "clip_620_20261020_202134.mp4")
+        write(clips.clip_local_path("1/clips/clip_620_20261020_202134/video/bg", "frame-a", here))
         frame = lambda args, timeout: {"clips": [{"id": "1/clips/clip_620_20261020_202134/video/bg"},
                                                  {"id": "1/video/bg_620_20261020_201950"}]}
-        got = clips.list_clips(frame, folder=here)
+        got = clips.list_clips(frame, folder=here, device_id="frame-a")
         self.assertEqual([c["saved"] for c in got["clips"]], [True, False])
         self.assertEqual(got["folder"], str(here))
 
@@ -261,12 +272,16 @@ class ComputerSide(unittest.TestCase):
         frame = lambda args, timeout: calls.append(("frame", args)) or {"path": path, "size": 3}
         run = lambda cmd, timeout: calls.append(("run", cmd))
         fetch = lambda remote, local: calls.append(("fetch", remote)) or Path(local).write_bytes(b"mp4")
-        got = clips.export_clip("1/clips/clip_620/video/bg", frame, run, fetch, folder=self.dir)
+        got = clips.export_clip("1/clips/clip_620/video/bg", frame, run, fetch, folder=self.dir, device_id="frame-a")
         self.assertEqual(got["message"], "Saved clip_620.mp4 to ~/Videos/SteamFrame")
-        self.assertEqual((self.dir / "clip_620.mp4").read_bytes(), b"mp4")
+        target = clips.clip_local_path("1/clips/clip_620/video/bg", "frame-a", self.dir)
+        self.assertEqual(got["file"], str(target))
+        self.assertEqual(set(got), {"message", "file"})
+        self.assertEqual(target.read_bytes(), b"mp4")
         self.assertEqual([c[0] for c in calls], ["frame", "fetch", "run"])
         self.assertEqual(calls[2][1], clips.remove_command(path))
-        self.assertEqual([p.name for p in self.dir.iterdir()], ["clip_620.mp4"])
+        self.assertEqual(list(self.dir.rglob("*.mp4")), [target])
+        self.assertFalse(list(self.dir.glob(".incoming-*")))
 
     def test_failed_copy_leaves_no_partial_file_and_still_cleans_up(self):
         path = f"{clips.WORK}/export-0123456789abcdef/clip_620.mp4"
@@ -277,20 +292,62 @@ class ComputerSide(unittest.TestCase):
             raise RuntimeError("connection lost")
         with self.assertRaisesRegex(RuntimeError, "connection lost"):
             clips.export_clip("1/clips/clip_620/video/bg", lambda a, t: {"path": path, "size": 4},
-                              lambda cmd, timeout: ran.append(cmd), fetch, folder=self.dir)
+                              lambda cmd, timeout: ran.append(cmd), fetch, folder=self.dir, device_id="frame-a")
         self.assertEqual(list(self.dir.iterdir()), [])
         self.assertEqual(ran, [clips.remove_command(path)])
+
+    def test_same_names_keep_each_account_headset_kind_and_nested_session(self):
+        first = "1/clips/clip_620/video/bg"
+        ids = [first, "2/clips/clip_620/video/bg", "1/clips/clip_620/video/other",
+               "1/clips/clip_620/other/bg", "1/video/clip_620"]
+        legacy = write(self.dir / "clip_620.mp4", b"legacy export")
+        remote = f"{clips.WORK}/export-0123456789abcdef/clip_620.mp4"
+        frame = lambda args, timeout: {"clips": [{"id": cid} for cid in ids]}
+        stored = {}
+        for device in ("frame-a", "frame-b"):
+            self.assertFalse(any(c["saved"] for c in clips.list_clips(
+                frame, folder=self.dir, device_id=device)["clips"]))
+            for index, cid in enumerate(ids):
+                payload = f"{device} session {index}".encode()
+                result = clips.export_clip(cid, lambda a, t: {"path": remote, "size": len(payload)},
+                                           lambda c, t: None, lambda r, p: p.write_bytes(payload),
+                                           folder=self.dir, device_id=device)
+                stored[Path(result["file"])] = payload
+                listing = clips.list_clips(frame, folder=self.dir, device_id=device)
+                self.assertEqual([c["saved"] for c in listing["clips"]],
+                                 [n <= index for n in range(len(ids))])
+                self.assertEqual(listing["folder"], str(self.dir))
+        self.assertEqual(len(stored), len(ids) * 2)
+        for path, payload in stored.items():
+            self.assertEqual(path.read_bytes(), payload)
+        self.assertEqual(legacy.read_bytes(), b"legacy export")
+        self.assertFalse(list(self.dir.glob(".incoming-*")))
+
+    def test_failed_reexport_preserves_completed_export(self):
+        cid = "1/clips/clip_620/video/bg"
+        target = write(clips.clip_local_path(cid, "frame-a", self.dir), b"completed")
+        remote = f"{clips.WORK}/export-0123456789abcdef/clip_620.mp4"
+
+        def fetch(remote, local):
+            local.write_bytes(b"partial")
+            raise RuntimeError("connection lost")
+
+        with self.assertRaisesRegex(RuntimeError, "connection lost"):
+            clips.export_clip(cid, lambda a, t: {"path": remote}, lambda c, t: None, fetch,
+                              folder=self.dir, device_id="frame-a")
+        self.assertEqual(target.read_bytes(), b"completed")
+        self.assertFalse(list(self.dir.glob(".incoming-*")))
 
     def test_bad_id_never_reaches_the_frame(self):
         never = mock.Mock(side_effect=AssertionError("reached the Frame"))
         with self.assertRaises(ValueError):
-            clips.export_clip("1/video/../../.ssh", never, never, never, folder=self.dir)
+            clips.export_clip("1/video/../../.ssh", never, never, never, folder=self.dir, device_id="frame-a")
 
     def test_unexpected_path_from_the_frame_refused(self):
         never = mock.Mock(side_effect=AssertionError("deleted or copied"))
         with self.assertRaises(ValueError):
             clips.export_clip("1/video/bg", lambda a, t: {"path": ".ssh/id_ed25519", "size": 1}, never, never,
-                              folder=self.dir)
+                              folder=self.dir, device_id="frame-a")
 
 
 class Commands(unittest.TestCase):
