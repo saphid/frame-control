@@ -46,13 +46,36 @@
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
   const Field = ({label, description, children}) => R.createElement('label', null,
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
-  const ToggleField = ({label, description, checked, onChange}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:'checkbox', checked:!!checked, onChange:e=>onChange?.(e.target.checked)}));
-  const DropdownItem = ({label, description, rgOptions=[], selectedOption, onChange}) => R.createElement(Field, {label, description},
-    R.createElement('select', {value:String(selectedOption ?? ''), onChange:e=>onChange?.(rgOptions.find(x=>String(x.data)===e.target.value))},
-      rgOptions.map(x=>R.createElement('option', {key:String(x.data), value:String(x.data)}, x.label))));
-  const ButtonItem = ({label, children, onClick}) => R.createElement(Field, {label},
-    R.createElement('button', {type:'button', onClick}, children || label));
+  const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
+    R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
+      onChange:e=>onChange?.(e.target.checked)}));
+  const DropdownItem = ({label, description, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
+    const choices=[];
+    const option = entry => {
+      const index=choices.push(entry)-1;
+      return R.createElement('option', {key:index, value:String(index)}, entry.label);
+    };
+    const entries=(Array.isArray(rgOptions) ? rgOptions : []).map(entry =>
+      Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
+        entry.options.map(option)) : option(entry));
+    const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
+    return R.createElement(Field, {label, description}, R.createElement('select', {
+      value:selected < 0 ? '' : String(selected), disabled:!!disabled,
+      onChange:e=>{const entry=choices[Number(e.target.value)];if(entry)onChange?.(entry);}},
+      selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
+      entries));
+  };
+  const ButtonItem = ({label, children, disabled, onClick}) => R.createElement(Field, {label},
+    R.createElement('button', {type:'button', disabled:!!disabled, onClick}, children || label));
+  const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
+    mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
+    R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
+      value, placeholder, disabled:!!disabled, onChange}));
+  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue,
+    valueSuffix='', onChange}) => R.createElement(Field, {label, description},
+    R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
+      'aria-label':typeof label==='string'?label:undefined, onChange:e=>onChange?.(Number(e.target.value))}),
+    showValue && R.createElement('span', null, String(value) + valueSuffix));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const ConfirmModal = ({strTitle, strOKButtonText, onOK, children}) => R.createElement('section', null,
@@ -80,7 +103,8 @@
   };
   const DFL = window.DFL = {
     definePlugin: init => init,
-    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ButtonItem,
+    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
+    Dropdown: DropdownItem, ButtonItem, TextField, SliderField,
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), ConfirmModal,
     staticClasses: {Title:'framey-title'},

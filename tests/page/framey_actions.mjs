@@ -28,7 +28,33 @@ assert.deepEqual(jsx.children,['Saved']);
 const fragments=window.SP_JSX.jsxs(window.SP_JSX.Fragment,{children:['one','two']});
 assert.equal(fragments.type,React.Fragment);
 assert.deepEqual(fragments.children,[['one','two']]);
-const nodes=(tree,type)=>[...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
+const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,type)):
+  [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
+// Common Decky controls must honor disabled and provide numeric/text inputs.
+const toggle=nodes(window.DFL.ToggleField({label:'Enabled',checked:true,disabled:true}),'input')[0];
+assert.equal(toggle.props.disabled,true);
+const button=nodes(window.DFL.ButtonItem({children:'Refresh',disabled:true}),'button')[0];
+assert.equal(button.props.disabled,true);
+let entered='';
+const input=nodes(window.DFL.TextField({label:'Alias',value:'Old',placeholder:'New',disabled:true,
+  onChange:event=>{entered=event.target.value;}}),'input')[0];
+assert.equal(input.props.value,'Old');
+assert.equal(input.props.disabled,true);
+input.props.onChange({target:{value:'New'}});assert.equal(entered,'New');
+let speed=0;
+const slider=nodes(window.DFL.SliderField({label:'Speed',value:2,min:0,max:10,step:2,disabled:true,
+  onChange:value=>{speed=value;}}),'input')[0];
+assert.equal(slider.props.type,'range');
+assert.equal(slider.props.disabled,true);
+slider.props.onChange({target:{value:'4'}});assert.equal(speed,4);
+let selected;
+const options=[{label:'Modes',options:[{label:'Slow',data:'slow'},{label:'Fast',data:'fast'}]}];
+const dropdown=nodes(window.DFL.Dropdown({rgOptions:options,selectedOption:'fast',disabled:true,
+  onChange:option=>{selected=option;}}),'select')[0];
+assert.equal(dropdown.props.disabled,true);
+assert.equal(dropdown.props.value,'1');
+assert.equal(nodes(dropdown,'optgroup').length,1);
+dropdown.props.onChange({target:{value:'0'}});assert.equal(selected.data,'slow');
 let called=0;
 const plugin={content:{type:'content'},settings:{type:'settings'},titleView:{type:'title'},
   frameyQuickActions:[{label:'Refresh data',onClick:async()=>{called++;return 'Fresh';}},
