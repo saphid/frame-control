@@ -70,3 +70,17 @@ vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2"})',ctx);
 assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
 assert.equal(session.has('frameyPluginJob'),false);
+
+// A saved job does not survive a server restart. Clear it instead of offering
+// Check result forever for an ID that the new server cannot know.
+session.set('frameyPluginJob',JSON.stringify({job:'old-job',action:'install',name:'Plugin 2'}));
+ctx.mockApi=async path => {
+  if(path.startsWith('/api/job'))throw Error('no such job (the app may have restarted)');
+  if(path==='/api/decky')return {running:true,plugins:[]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('checkDeckyJob()',ctx);
+assert.match(el('deckyJobStatus').textContent,/app restarted and lost this job result/);
+assert.equal(el('deckyJobCheck').hidden,true);
+assert.equal(session.has('frameyPluginJob'),false);

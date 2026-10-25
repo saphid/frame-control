@@ -72,7 +72,9 @@ The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel remembers the current job ID for this
 browser session, so **Check result** can resume polling after a navigation or
 temporary connection error. Refresh the installed list before starting another
-operation after an error.
+operation after an error. If Frame Control restarts, it cannot recover the old
+job result. The panel clears that job ID and asks you to refresh the installed
+list before making another change.
 
 ## For plugin authors
 
