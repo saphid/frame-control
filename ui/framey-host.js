@@ -6,7 +6,11 @@
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en']};
   const root = document.getElementById('framey-root');
   const error = document.getElementById('framey-error');
+  const toastRoot = document.getElementById('framey-toasts');
   const pending = new Map();
+  const routes = new Map();
+  const routeListeners = new Set();
+  let currentRoute = null;
   let nextId = 0;
   let plugin;
 
@@ -48,13 +52,32 @@
     R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
   const closeModal = () => modalRoot.render(null);
+  function navigate(path) {
+    if (path !== null && (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) || !routes.has(path))) return false;
+    currentRoute = path;
+    for (const listener of routeListeners) listener(path);
+    return true;
+  }
+  const routerHook = {
+    addRoute(path, component) {
+      if (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) ||
+          (typeof component !== 'function' && !R.isValidElement(component)))
+        throw Error('Framey route needs a local path and React component');
+      routes.set(path, component);
+      return () => {routes.delete(path); if(currentRoute === path) navigate(null);};
+    },
+    removeRoute(path) {routes.delete(path); if(currentRoute === path) navigate(null);},
+    // Steam routes and global components have no equivalent in the isolated panel.
+    addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
+  };
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ButtonItem,
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), ConfirmModal,
     staticClasses: {Title:'framey-title'},
-    Navigation: {NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
+    Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null),
+      NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal: element => modalRoot.render(R.createElement('section', null,
       R.createElement('button', {onClick:closeModal}, 'Close'), element)),
     // Steam app, library, and store patches have no target inside this panel.
@@ -64,8 +87,24 @@
     useParams: () => ({}),
   };
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
-  const noRoute = {addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{}};
-  const toaster = {toast: ({title, body}) => { error.textContent = [title, body].filter(Boolean).join(': '); }};
+  const toaster = {toast: ({title, body, duration, showToast=true, onClick}={}) => {
+    const data = {title, body};
+    if (!showToast) return {data, dismiss(){}};
+    const item = document.createElement('section');
+    item.setAttribute('role','status');
+    const heading = document.createElement('strong'); heading.textContent = String(title || 'Plugin notice');
+    const detail = document.createElement('p'); detail.textContent = String(body || '');
+    const close = document.createElement('button'); close.type='button'; close.textContent='Dismiss';
+    const dismiss = () => {item.remove(); clearTimeout(timer);};
+    close.onclick=dismiss; item.append(heading, detail, close);
+    if (typeof onClick === 'function') {
+      const open = document.createElement('button'); open.type='button'; open.textContent='Open';
+      open.onclick=()=>{onClick(); dismiss();}; item.append(open);
+    }
+    toastRoot.append(item);
+    const timer = setTimeout(dismiss, Math.min(30000,Math.max(3000,Number(duration)||5000)));
+    return {data,dismiss};
+  }};
   class PanelBoundary extends R.Component {
     constructor(props) { super(props); this.state = {failure:null}; }
     static getDerivedStateFromError(failure) { return {failure}; }
@@ -74,6 +113,8 @@
   }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
+    const [route, setRoute] = R.useState(currentRoute);
+    R.useEffect(() => {routeListeners.add(setRoute); return () => routeListeners.delete(setRoute);}, []);
     const [running, setRunning] = R.useState(null);
     const [message, setMessage] = R.useState('');
     const actions = Array.isArray(plugin.frameyQuickActions) ? plugin.frameyQuickActions.slice(0, 8)
@@ -90,6 +131,7 @@
     }
     return R.createElement(R.Fragment, null,
       plugin.titleView && R.createElement('header', null, plugin.titleView),
+      route && R.createElement('button', {type:'button', onClick:()=>navigate(null)}, 'Back to plugin'),
       plugin.settings && R.createElement('nav', {'aria-label':'Plugin views'},
         R.createElement('button', {type:'button', 'aria-current':view === 'panel' ? 'page' : undefined,
           onClick:()=>setView('panel')}, 'Panel'),
@@ -100,7 +142,9 @@
         ...actions.map((action, index) => R.createElement('button', {key:index, type:'button',
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
-      R.createElement('div', null, view === 'settings' ? plugin.settings : plugin.content));
+      R.createElement('div', null, route ? (typeof routes.get(route) === 'function' ?
+        R.createElement(routes.get(route)) : routes.get(route)) :
+        (view === 'settings' ? plugin.settings : plugin.content)));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {
     connect: (version, name) => ({
@@ -108,7 +152,7 @@
       call: (method, ...args) => ask(method, args),
       callable: method => (...args) => ask(method, args),
       addEventListener: () => {}, removeEventListener: () => {},
-      routerHook:noRoute, toaster,
+      routerHook, toaster,
       fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
       executeInTab: () => Promise.reject(Error('Steam tab injection is unavailable in Framey')),
       injectCssIntoTab: () => Promise.reject(Error('Steam tab injection is unavailable in Framey')),

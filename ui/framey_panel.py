@@ -61,7 +61,7 @@ def panel(plugin_id):
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:4px solid #f8d370}button{margin:4px 8px 4px 0}button:disabled{opacity:.55}section{padding:12px;margin:12px 0;background:#1b3042;border-radius:10px}
 label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}</style>
-<p id="framey-error" role="status"></p><div id="framey-root"></div><div id="framey-modal"></div>
+<p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
 <script id="framey-bundle" type="application/json">''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
 <script src="/framey-runtime/host.js"></script></html>''').encode()

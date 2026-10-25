@@ -57,9 +57,11 @@ change Frame Control owned plugin folders under
 hash and archive paths, blocks root plugins and non-ARM64 binaries, and rolls
 back an update if the service restart fails. The current VR shell does not
 provide Decky's Steam Deck Quick Access Menu. Frame Control's headset panel
-shows installed plugins and store actions, but plugin pages, settings, routes,
-and Decky toasts are **not** available there yet. The panel itself still needs
-a worn-headset visual and controller check.
+shows installed plugins and store actions. Its separate Framey iframe now hosts
+compatible API v2 plugin pages, settings, local routes, and panel toasts.
+Steam route patches and system notifications remain unavailable. The panel
+still needs a worn-headset visual and controller check. See the
+[current compatibility table](frame-plugin-author.md#framey-api-v2-compatibility).
 
 ## What was checked on the real headset
 
