@@ -25,6 +25,8 @@ See what the headset sees, install games and Android apps, move files and text a
 
 <sub>Unofficial hobby project, not affiliated with Valve. Free and open source.</sub>
 
+[See what was tested on a real Frame, in a VM, or only in automated checks](docs/current-support-matrix.md).
+
 </div>
 
 ---
