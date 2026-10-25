@@ -27,7 +27,7 @@ The fresh [read-only probe](evidence/plugins-2026-10-25.json) records SteamOS
 mounts, user-service availability, and absence of a running managed or upstream
 Decky installation. This retry did not install anything or restart Steam.
 
-The replacement job's [detailed test record](decky-frame.md) reports:
+The replacement job's initial [test record](decky-frame.md) reports:
 
 - Decky 3.3.0 started as the normal `steamos` user and injected into
   `SharedJSContext`.
@@ -40,6 +40,11 @@ The replacement job's [detailed test record](decky-frame.md) reports:
   not repeat it.
 
 These are prior documented results, separate from the fresh read-only probe.
+The coordinator then ran a separate, locked
+[official-store compatibility audit](decky-frame.md#official-store-plugin-audit-2026-10-25)
+on the same Frame OS build. Seven plugins logged backend loads. A managed
+ProtonDB Badges 1.3.4 store install, update and remove also succeeded. The
+headset stayed unworn, so these results still do not establish VR UI use.
 
 ## Installer and update choice
 
@@ -59,10 +64,12 @@ an update fails. Existing tests exercise that rollback with a failed service
 start. These checks do not prove every possible OS or Steam update is safe.
 
 The binary is downloaded on demand, not bundled. Plugin discovery lists the
-managed directory and upstream `~/homebrew/plugins`; a public plugin browser
-and installer remain deferred until visible Frame compatibility is established.
-Decky plugins can execute backend code and are not isolated by Frame Control's
-HTML extension sandbox. Root plugins are outside the per-user manager's scope.
+managed directory and upstream `~/homebrew/plugins`. The later
+[store manager](../ui/frame_decky_store.py) exposes official entries in the PC
+app and opt-in headset panel. It verifies archive digests, blocks root and
+non-ARM64 binaries, and changes only its own plugin folders. That is file and
+backend support, not a working VR plugin page. Decky plugins can execute
+backend code and are not isolated by Frame Control's HTML extension sandbox.
 
 Home-directory state is expected to survive SteamOS image updates, based on
 SteamOS's layout; **an actual OS update and reboot persistence test has not been
@@ -76,8 +83,8 @@ on each supported OS build before expanding support claims.
 
 | Path | What it enables | Current limits and choice |
 | --- | --- | --- |
-| Decky plugins | Steam frontend hooks, optional Python backends | Backend and one passive plugin tested. VR UI, root-dependent plugins and native plugin binaries remain unverified. Keep experimental. |
-| [CSS Loader](https://github.com/suchmememanyskill/SDH-CssLoader) / [DeckThemes](https://docs.deckthemes.com/) | Stylesheets applied to Steam UI | Relies on loader integration and matching Steam DOM/classes. Deck themes do not establish compatibility with Frame's separate VR shell. No theme was installed or visually tested. |
+| Decky plugins | Steam frontend hooks, optional Python backends | Seven official-store plugins logged backend loads on ARM64. Store install/update/remove worked for ProtonDB Badges. VR pages and controller input remain unverified. Keep experimental. |
+| [CSS Loader](https://github.com/suchmememanyskill/SDH-CssLoader) / [DeckThemes](https://docs.deckthemes.com/) | Stylesheets applied to Steam UI | CSS Loader 2.1.3 backend loaded on Frame. No theme was applied or visually tested. Deck themes do not establish compatibility with Frame's separate VR shell. |
 | User home / SteamOS homebrew | User services, user Flatpaks, files and helpers | Use owned folders and explicit uninstall. A folder named `homebrew` supplies no discovery or security boundary by itself. No rootfs changes needed for the chosen path. |
 | Android / Lepton | Sideloaded apps, game-specific content and per-app settings | Frame Control already manages APKs and ADB. Lepton runs Android containers, not Steam's CEF UI; an Android mod does not add a Steam dashboard tab. No new Android mod was tested here. See [APKs](apks.md), [VR APKs](vr-apks.md), and [game mods](mods.md). |
 | Frame Control extensions | Third-party HTML/CSS/JS panels with a small read-only bridge | Shipped in [#194](https://github.com/saphid/frame-control/pull/194), with a manifest, local folder, sandbox, example and [author guide](extensions.md). No Python imports, arbitrary SSH commands or write actions are exposed. |
@@ -120,9 +127,9 @@ distributed with Frame Control.
 
 ## Next checks
 
-1. On a worn Frame, establish an accessible Decky menu or explicitly implement
-   an adapter for the VR shell. Verify a passive plugin's visible result and
-   controller navigation before enabling public plugin installation.
+1. On a worn Frame, establish an accessible Decky menu or implement an adapter
+   for the VR shell. Verify a plugin's visible result and controller navigation
+   before describing store-installed plugins as usable inside VR.
 2. Verify the Frame Control panel and example extension visually, including
    opening, refreshing and closing with the controllers.
 3. Test a normal Steam restart, reboot and SteamOS update with a disposable
