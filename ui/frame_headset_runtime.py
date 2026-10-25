@@ -68,11 +68,11 @@ def wait_for_server(proc):
     raise RuntimeError_('The headset loopback server did not start')
 
 
-def terminate_owned(proc):
+def terminate_owned(proc, timeout=5):
     if proc and proc.poll() is None:
         os.killpg(proc.pid, signal.SIGTERM)
         try:
-            proc.wait(timeout=5)
+            proc.wait(timeout=timeout)
         except subprocess.TimeoutExpired:
             os.killpg(proc.pid, signal.SIGKILL)
             proc.wait()
@@ -138,7 +138,7 @@ def serve():
     finally:
         state_file.unlink(missing_ok=True)
         terminate_owned(browser)
-        terminate_owned(server)
+        terminate_owned(server, timeout=35)  # allow the local recorder to finalize its MP4
 
 
 if __name__ == '__main__':

@@ -77,7 +77,7 @@ def recording_name(now=None):
     return time.strftime("rec-%Y%m%d-%H%M%S", time.localtime(now))
 
 
-def probe_command():
+def probe_command(work=WORK):
     """Checks before a recording, run on the Frame: prints audio=1 or audio=0.
 
     One recording runs at a time, so anything left in the folder is from one that was
@@ -85,7 +85,7 @@ def probe_command():
     return (f"set -u; export XDG_RUNTIME_DIR=${{XDG_RUNTIME_DIR:-/run/user/$(id -u)}}; "
             f"[ -e {STREAM_DEVICE} ] || {{ echo 'No headset view device ({STREAM_DEVICE}). Is SteamVR running?' >&2; exit 3; }}; "
             f"command -v ffmpeg >/dev/null || {{ echo 'ffmpeg is missing on the Frame' >&2; exit 3; }}; "
-            f"d=\"$HOME/{WORK}\"; mkdir -p \"$d\" && rm -f \"$d\"/rec-*; "
+            f"d=\"$HOME/{work}\"; mkdir -p \"$d\" && rm -f \"$d\"/rec-*; "
             f"free=$(df -Pk \"$d\" | awk 'NR==2 {{print $4}}'); "
             f"[ \"${{free:-0}}\" -ge {NEED_KB} ] || {{ echo 'Not enough free space on the Frame to record: "
             f"it needs {NEED_KB // 1024 // 1024 + 1} GB' >&2; exit 4; }}; "
@@ -93,7 +93,7 @@ def probe_command():
             f">/dev/null 2>&1; then echo audio=1; else echo audio=0; fi")
 
 
-def record_command(name, audio, max_seconds=MAX_SECONDS):
+def record_command(name, audio, max_seconds=MAX_SECONDS, work=WORK):
     """The recording, run on the Frame through `bash -c`.
 
     ffmpeg runs in the background while the shell watches its stdin, which is the SSH
@@ -118,7 +118,7 @@ def record_command(name, audio, max_seconds=MAX_SECONDS):
         codecs += f" -af aresample=async=1 -c:a aac -b:a {AUDIO_RATE}k"
     # ffmpeg's stdin is a FIFO the shell holds open on fd 3 (opening it waits for both
     # ends, so ffmpeg is started first); it's unlinked once both ends are open.
-    script = (f"export XDG_RUNTIME_DIR=${{XDG_RUNTIME_DIR:-/run/user/$(id -u)}}; d=\"$HOME/{WORK}\"; "
+    script = (f"export XDG_RUNTIME_DIR=${{XDG_RUNTIME_DIR:-/run/user/$(id -u)}}; d=\"$HOME/{work}\"; "
               f"trap '' PIPE; c=\"$d/{name}.ctl\"; rm -f \"$c\"; mkfifo \"$c\" || exit 1; "
               f"ffmpeg -hide_banner -loglevel error -y {inputs} {maps} {codecs} -t {max_seconds} "
               f"\"$d/{name}.mkv\" <\"$c\" >/dev/null 2>\"$d/{name}.log\" & p=$!; "
@@ -131,20 +131,20 @@ def record_command(name, audio, max_seconds=MAX_SECONDS):
     return "bash -c " + shlex.quote(script)
 
 
-def finish_command(name):
+def finish_command(name, work=WORK):
     """After the recording: make the .mp4 the computer gets (no re-encode), on the Frame."""
     if not REC_NAME.fullmatch(name):
         raise ValueError(f"bad recording name {name!r}")
-    return (f"cd \"$HOME/{WORK}\" || exit 1; "
+    return (f"cd \"$HOME/{work}\" || exit 1; "
             f"[ -s {name}.mkv ] || {{ tail -c 2000 {name}.log >&2 2>/dev/null; echo 'The recording is empty' >&2; exit 1; }}; "
             f"ffmpeg -hide_banner -loglevel error -nostdin -y -i {name}.mkv -map 0 -c copy -movflags +faststart {name}.mp4 "
             f"&& rm -f {name}.mkv && wc -c < {name}.mp4")
 
 
-def cleanup_command(name):
+def cleanup_command(name, work=WORK):
     if not REC_NAME.fullmatch(name):
         raise ValueError(f"bad recording name {name!r}")
-    return f"rm -f \"$HOME/{WORK}/{name}\".*"
+    return f"rm -f \"$HOME/{work}/{name}\".*"
 
 
 class Recorder:
@@ -158,10 +158,12 @@ class Recorder:
       release(proc) forgets a channel once it has closed
     """
 
-    def __init__(self, open_channel, run, fetch, start_thread, release=lambda proc: None, folder=None):
+    def __init__(self, open_channel, run, fetch, start_thread, release=lambda proc: None, folder=None,
+                 work=WORK, destination_label='~/Videos/SteamFrame'):
         self.open_channel, self.run, self.fetch = open_channel, run, fetch
         self.start_thread, self.release = start_thread, release
         self.folder = Path(folder) if folder else VIDEOS_DIR
+        self.work, self.destination_label = work, destination_label
         self._lock = threading.Lock()
         self._state = {"state": "idle"}
         self._proc = None
@@ -179,11 +181,12 @@ class Recorder:
                 raise ClipError("Already recording, or still saving the last recording", 409)
             self._state = {"state": "starting"}
         try:
-            out = self.run(probe_command(), 30)
+            out = self.run(probe_command() if self.work == WORK else probe_command(self.work), 30)
             audio = "audio=1" in out
             name = recording_name()
             errors = tempfile.TemporaryFile()
-            proc = self.open_channel(record_command(name, audio), errors)
+            proc = self.open_channel(record_command(name, audio) if self.work == WORK else
+                                     record_command(name, audio, work=self.work), errors)
             lines = _line_reader(proc.stdout)
             first = _next_line(lines, 20)
             if first != "started":
@@ -222,6 +225,18 @@ class Recorder:
         _close(proc.stdin)  # the shell on the Frame sees EOF and stops ffmpeg
         return {"state": "stopping", "message": "Stopping the recording…"}
 
+    def shutdown(self, timeout=30):
+        """Finish an owned recording before a headset user service exits."""
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            state = self.status()['state']
+            if state == 'recording':
+                self.stop()
+            elif state not in ('starting', 'stopping', 'saving'):
+                break
+            time.sleep(.2)
+        return self.status()
+
     def _watch(self, proc, name, audio, lines, errors):
         # Waits for ffmpeg to finish: after Stop, or at the time limit (a margin
         # past it, so a stuck channel can't hold the recording open forever).
@@ -242,14 +257,14 @@ class Recorder:
             self._state = dict(self._state, state="saving")
         try:
             self.save(name)
-            msg = f"Saved {name}.mp4 to ~/Videos/SteamFrame" + ("" if audio else " (no sound)")
+            msg = f"Saved {name}.mp4 to {self.destination_label}" + ("" if audio else " (no sound)")
             state = {"state": "saved", "file": str(self.folder / f"{name}.mp4"), "audio": audio,
                      "seconds": seconds, "message": msg}
         except Exception as e:
             state = {"state": "failed", "error": f"Couldn't save the recording: {e}"}
         finally:
             try:
-                self.run(cleanup_command(name), 20)
+                self.run(cleanup_command(name) if self.work == WORK else cleanup_command(name, self.work), 20)
             except Exception:
                 pass  # the next recording's checks remove it
         with self._lock:
@@ -257,12 +272,12 @@ class Recorder:
 
     def save(self, name):
         """Make the .mp4 on the Frame and copy it here, never leaving a partial file in the folder."""
-        out = self.run(finish_command(name), 600)
+        out = self.run(finish_command(name) if self.work == WORK else finish_command(name, self.work), 600)
         size = int(out.strip().splitlines()[-1]) if out.strip() else 0
         _make_room(self.folder, size)
         incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=self.folder))
         try:
-            self.fetch(f"{WORK}/{name}.mp4", incoming / f"{name}.mp4")
+            self.fetch(f"{self.work}/{name}.mp4", incoming / f"{name}.mp4")
             os.replace(incoming / f"{name}.mp4", self.folder / f"{name}.mp4")
         finally:
             shutil.rmtree(incoming, ignore_errors=True)

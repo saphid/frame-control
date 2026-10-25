@@ -89,6 +89,7 @@ HERE = Path(__file__).resolve().parent
 # goes to local-bin/ssh, which runs COMMAND here instead, so one code path serves
 # both. Nothing listens beyond 127.0.0.1; the phone reaches it through SSH.
 LOCAL = os.environ.get("FRAME_LOCAL") == "1"
+HEADSET_RUNTIME = LOCAL and os.environ.get("FRAME_HEADSET_RUNTIME") == "1"
 if LOCAL:
     os.environ["PATH"] = f"{HERE / 'local-bin'}{os.pathsep}{os.environ.get('PATH', '')}"
 UI_KEY = os.environ.get("FRAME_UI_KEY") or "1"
@@ -839,6 +840,32 @@ recorder = frame_clips.Recorder(_record_channel, lambda cmd, timeout: ssh(cmd, t
                                 lambda fn: busy_thread(fn).start(), release=lambda proc: _live_tunnels.discard(proc))
 
 
+def _headset_record_run(command, timeout):
+    result = subprocess.run(['bash', '-c', command], capture_output=True, text=True,
+                            stdin=subprocess.DEVNULL, timeout=timeout)
+    if result.returncode:
+        raise frame_clips.ClipError((result.stderr or result.stdout).strip()[-600:] or 'Recording command failed')
+    return result.stdout
+
+
+def _headset_record_channel(command, stderr):
+    return subprocess.Popen(['bash', '-c', command], stdin=subprocess.PIPE,
+                            stdout=subprocess.PIPE, stderr=stderr, start_new_session=True)
+
+
+def _headset_record_fetch(relative, target):
+    source = Path.home() / relative
+    if source.parent != Path.home() / '.cache/frame-control/headset-video' or not source.is_file() or source.is_symlink():
+        raise frame_clips.ClipError('The headset recording file is missing')
+    shutil.copyfile(source, target)
+
+
+headset_recorder = frame_clips.Recorder(
+    _headset_record_channel, _headset_record_run, _headset_record_fetch,
+    lambda fn: busy_thread(fn).start(), folder=Path.home() / 'Videos/FrameControl',
+    work='.cache/frame-control/headset-video', destination_label='~/Videos/FrameControl') if HEADSET_RUNTIME else None
+
+
 def _clips_here():
     if LOCAL:
         raise Failure("Recordings are saved to a computer: use Frame Control on your computer", 400)
@@ -846,14 +873,40 @@ def _clips_here():
 
 def record(body):
     """{"action": "start"|"stop"}: record what the headset shows, with its sound."""
-    _clips_here()
+    if not HEADSET_RUNTIME:
+        _clips_here()
     action = body.get("action")
     if action not in ("start", "stop"):
         raise Failure("action must be start or stop", 400)
     try:
-        return recorder.start() if action == "start" else recorder.stop()
+        owned_recorder = headset_recorder if HEADSET_RUNTIME else recorder
+        return owned_recorder.start() if action == "start" else owned_recorder.stop()
     except frame_clips.ClipError as e:
         raise Failure(str(e), e.status)
+
+
+def headset_quick(body):
+    """Narrow actions for the local SteamVR panel, never exposed to the phone server."""
+    if not HEADSET_RUNTIME:
+        raise Failure('Headset quick actions require the local VR panel', 400)
+    action = body.get('action')
+    if action == 'game-mode':
+        try:
+            frame_panels.focus('valve.steam.gamepadui.main')
+        except frame_panels.PanelError as error:
+            raise Failure(str(error), 502) from error
+        return {'message':'Asked SteamVR to show the Game Mode dashboard.'}
+    if action == 'screenshot':
+        data = headset_view()
+        folder = Path.home() / 'Pictures/FrameControl'
+        folder.mkdir(parents=True, exist_ok=True, mode=0o700)
+        name = time.strftime('frame-%Y%m%d-%H%M%S-') + secrets.token_hex(3) + '.png'
+        path = folder / name
+        with os.fdopen(os.open(path, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'wb') as file:
+            file.write(data)
+        return {'message': f'Saved ~/Pictures/FrameControl/{name}. A sleeping headset may capture a dark frame.',
+                'file': str(path)}
+    raise Failure('Choose Game Mode or screenshot', 400)
 
 
 def _clips_frame(args, timeout):
@@ -3345,6 +3398,7 @@ POST = {
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/decky": decky,
     "/api/headset": headset_action,
+    "/api/headset/quick": headset_quick,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
@@ -3715,8 +3769,9 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/shots/image":
                 self.send_bytes(*shot_image(url.query))
             elif path == "/api/record":
-                _clips_here()
-                self.send_json(recorder.status())
+                if not HEADSET_RUNTIME:
+                    _clips_here()
+                self.send_json((headset_recorder if HEADSET_RUNTIME else recorder).status())
             elif path == "/api/clips":
                 self.send_json(list_clips())
             elif path == "/api/autosync":
@@ -4044,6 +4099,8 @@ def main():
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
         _power.shutdown()
+        if HEADSET_RUNTIME:
+            headset_recorder.shutdown(timeout=30)
         _stop_sync.set()
         webinstall_shutdown()
         macview.shutdown()  # close the headset's viewers before the agent goes

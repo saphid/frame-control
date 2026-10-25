@@ -16,8 +16,12 @@ and **Open Headset Glance**. The folder is normally:
 - Windows: `%APPDATA%\Frame Control\extensions`
 
 To remove it, close the panel and delete only its `headset-glance` folder. The
-extension is local to this computer; the iPhone app reads the folder on the
-Frame, where its server runs.
+desktop app reads the folder on its computer. The iPhone app and the opt-in
+[SteamVR headset panel](headset-app.md) read the folder on the Frame. To use an
+extension in VR, copy its folder to
+`steamos@frame:~/.local/share/frame-control/extensions/`, then select
+**Extensions → Refresh extensions → Open** in the headset panel. The iframe,
+read-only bridge and asset rules are the same there.
 
 ## Make an extension
 

@@ -124,7 +124,7 @@ try:
             stage.rename(bundle)
             unit.write_text('[Unit]\nDescription=Frame Control headset panel\nAfter=gamescope-session.target steamvr.service\n'
               '[Service]\nType=simple\nExecStart=/usr/bin/python3 -I -u '+str(bundle/'ui/frame_headset_runtime.py')+'\n'
-              'Restart=no\nKillMode=control-group\nTimeoutStopSec=12\n')
+              'Restart=no\nKillMode=control-group\nTimeoutStopSec=45\n')
             receipt.write_text(json.dumps({'managedBy':'Frame Control','version':digest[:16]})+'\n')
             systemd('daemon-reload')
             systemd('start','frame-control-headset.service')
