@@ -56,6 +56,42 @@ The [follow-up Linux/Frame transport check](evidence/obs-followup-2026-10-25.md)
 measured packet continuity and a short MP4 recording on the current SteamOS
 build. The headset was still in standby.
 
+## SteamOS / Steam Machine PC host
+
+Use **Desktop Mode** on the SteamOS PC. Download the Linux x86_64 AppImage to
+your home folder. Make it executable and open it there; SteamOS has a
+read-only system root, so these steps do not use `apt` or change `/usr`:
+
+```sh
+chmod +x ~/Downloads/Frame-Control-linux-x86_64.AppImage
+~/Downloads/Frame-Control-linux-x86_64.AppImage
+```
+
+If AppImage mounting reports a FUSE error, try
+`APPIMAGE_EXTRACT_AND_RUN=1 ~/Downloads/Frame-Control-linux-x86_64.AppImage`.
+This extracts to writable temporary space and needs enough free disk space.
+Set up the Frame's SSH connection in Frame Control, then use **Start OBS
+source** before you add or activate OBS's Media Source. Install OBS as the
+`com.obsproject.Studio` Flatpak through Discover or your normal user Flatpak
+setup. In that OBS Media Source, clear **Local File**, set **Input** to
+`udp://127.0.0.1:15099`, and set **Input Format** to `mpegts`. Make a short
+recording and check both picture and sound before a stream. Use **Stop OBS
+source** in Frame Control when done.
+
+The OBS Flatpak's published manifest includes `--share=network`, which is
+needed for its local UDP receiver. Check your installed permissions with
+`flatpak info --show-permissions com.obsproject.Studio` if OBS receives no
+packets. Frame Control's helper sends to loopback on this PC; it does not
+require an open LAN port or an OBS plugin. The PC does not need a system
+`ffmpeg` package for the helper; encoding runs on the Frame.
+
+**Test limit:** The v0.4.27 AppImage launched on an Ubuntu 24.04 x86_64 host
+under Xvfb. Its helper sent H.264 and AAC from a real Frame to a local UDP
+receiver on that host. No SteamOS 3.9.5 PC, Steam Machine, Flatpak OBS runtime,
+read-only-root host, or physical display was available for this check. The
+SteamOS steps and Flatpak receiver therefore remain **untested on SteamOS**.
+See the [test record](evidence/obs-steamos-host-2026-10-25.md).
+
 ## Known issue: game audio in OBS
 
 A Frame owner [reported](https://x.com/AzizahStellazio/status/2114147449468293171)
