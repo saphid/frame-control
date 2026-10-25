@@ -1,4 +1,4 @@
-"""The pinned store bundles remain valid API v2 Framey panel inputs."""
+"""Pinned official Decky bundles remain valid Framey panel inputs."""
 import sandbox  # noqa: F401
 import base64
 import hashlib
@@ -30,7 +30,7 @@ class OfficialBundles(unittest.TestCase):
                                      plugin['folder'])
                     with zipfile.ZipFile(io.BytesIO(data)) as z:
                         manifest = json.loads(z.read(plugin['folder'] + '/plugin.json'))
-                        self.assertEqual(manifest['api_version'], 2)
+                        self.assertEqual(manifest['api_version'], plugin['api_version'])
                         z.extractall(plugins)
                     folder = plugins / plugin['folder']
                     (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
