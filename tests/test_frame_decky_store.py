@@ -101,6 +101,15 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove')
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(self.folder.exists())
+        external = Path(self.tmp.name) / 'other-plugin'
+        external.mkdir()
+        (external / '.frame-control-store.json').write_text('{"storeId":42}')
+        for item in self.folder.iterdir(): item.unlink()
+        self.folder.rmdir()
+        self.folder.symlink_to(external, target_is_directory=True)
+        result = self.apply('remove')
+        self.assertNotEqual(result.returncode, 0)
+        self.assertTrue(external.exists())
 
 
 class StoreHost(unittest.TestCase):

@@ -85,6 +85,8 @@ def archive_info(data, expected_hash, expected_name):
         if manifest.get('name') != expected_name:
             raise ValueError('Plugin name differs from the official store')
         flags = manifest.get('flags', [])
+        if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
+            raise ValueError('Invalid plugin flags')
         if 'root' in flags or '_root' in flags:
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         return folder
@@ -101,6 +103,7 @@ stage=base/('.frame-control-stage-'+token)
 backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
 def owned():
+    if target.is_symlink() or not target.is_dir(): return False
     try: return json.loads((target/marker).read_text()).get('storeId') == int(plugin_id)
     except (OSError,ValueError): return False
 def service(*args):
