@@ -75,7 +75,10 @@ The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
 The root label is a compatibility warning; other APIs are checked only when a
-plugin is opened. The store still needs the managed Decky user service running
+plugin is opened. Both `root` and `_root`
+store tags mark a plugin as needing root, and duplicate store IDs are omitted
+because an ID alone could select a different archive than the visible row.
+The store still needs the managed Decky user service running
 before its Install or Update buttons are enabled. If a plugin prevents Decky
 from starting, Remove remains available for Frame Control-owned plugins while
 the managed service is stopped; it does not restart the service.

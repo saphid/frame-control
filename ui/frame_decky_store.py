@@ -59,8 +59,13 @@ def catalog():
                        'description': str(item.get('description') or '')[:300],
                        'author': author[:100],
                        'version': latest['name'][:40], 'sha256': latest['hash'],
-                       'root': 'root' in tags})
-    return result
+                       'root': 'root' in tags or '_root' in tags})
+    # A repeated store ID makes a clicked row ambiguous: change() resolves by ID
+    # and could install a different archive than the one the user reviewed.
+    counts = {}
+    for item in result:
+        counts[item['id']] = counts.get(item['id'], 0) + 1
+    return [item for item in result if counts[item['id']] == 1]
 
 
 def archive_info(data, expected_hash, expected_name):
