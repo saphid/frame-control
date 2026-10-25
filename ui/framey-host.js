@@ -155,13 +155,13 @@
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     staticClasses: {Title:'framey-title'},
-    Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null),
+    Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null), CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal: element => modalRoot.render(R.createElement('section', null,
       R.createElement('button', {onClick:closeModal}, 'Close'), element)),
     // Steam app, library, and store patches have no target inside this panel.
     afterPatch: () => () => {}, createReactTreePatcher: () => () => {},
-    findInReactTree: () => null, findModuleExport: () => null,
+    findInReactTree: () => null, findModuleExport: () => null, findModuleChild: () => null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
     useParams: () => ({}),
   };
