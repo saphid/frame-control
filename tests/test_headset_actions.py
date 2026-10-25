@@ -1,6 +1,5 @@
 """Local headset actions keep writes scoped to the opt-in VR server."""
 import sandbox  # noqa: F401
-import os
 from pathlib import Path
 import sys
 import tempfile
@@ -25,7 +24,7 @@ class HeadsetActions(unittest.TestCase):
         self.assertIn('Game Mode', response['message'])
 
     def test_screenshot_is_saved_only_in_user_pictures(self):
-        with tempfile.TemporaryDirectory() as home, patch.dict(os.environ, {'HOME':home}), \
+        with tempfile.TemporaryDirectory() as home, patch.object(server.Path, 'home', return_value=Path(home)), \
                 patch.object(server, 'HEADSET_RUNTIME', True), patch.object(server, 'headset_view', return_value=b'PNG data'):
             result = server.headset_quick({'action':'screenshot'})
             file = Path(result['file'])
