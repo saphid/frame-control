@@ -26,6 +26,7 @@
   const routes = new Map();
   const routeListeners = new Set();
   let currentRoute = null;
+  let currentParams = {};
   let nextId = 0;
   let plugin;
   // A sandboxed iframe has an opaque origin, so its native localStorage getter
@@ -59,13 +60,13 @@
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
   setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
-  function ask(method, args) {
+  function ask(method, args, legacy=false) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
     const id = ++nextId;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, 30000);
       pending.set(id, {resolve, reject, timer});
-      parent.postMessage({type:'framey:call', id, method, args}, '*');
+      parent.postMessage({type:'framey:call', id, method, args, legacy}, '*');
     });
   }
   addEventListener('message', event => {
@@ -137,21 +138,54 @@
     R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
   const closeModal = () => modalRoot.render(null);
+  const localPath = path => typeof path === 'string' && path.length <= 120 &&
+    /^\/[A-Za-z0-9/_-]+$/.test(path) && !path.includes('//');
+  const routePattern = path => typeof path === 'string' && path.length <= 120 &&
+    /^\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_]*\??)(?:\/(?:[A-Za-z0-9_-]+|:[A-Za-z][A-Za-z0-9_]*\??))*$/.test(path) &&
+    !/\?\//.test(path) &&
+    new Set([...path.matchAll(/:([A-Za-z][A-Za-z0-9_]*)\??/g)].map(match => match[1])).size ===
+      [...path.matchAll(/:([A-Za-z][A-Za-z0-9_]*)\??/g)].length;
+  function matchRoute(pattern, path) {
+    const expected = pattern.slice(1).split('/');
+    const actual = path.slice(1).split('/');
+    if (actual.length > expected.length) return null;
+    const params = {};
+    for (let index = 0; index < expected.length; index++) {
+      const segment = expected[index], value = actual[index];
+      if (segment[0] === ':') {
+        const optional = segment.endsWith('?'), name = segment.slice(1, optional ? -1 : undefined);
+        if (value === undefined) { if (!optional) return null; }
+        else params[name] = value;
+      } else if (segment !== value) return null;
+    }
+    return params;
+  }
+  function activeRoute(path) {
+    if (routes.has(path)) return {component:routes.get(path), params:{}};
+    for (const [pattern, component] of routes) {
+      const params = matchRoute(pattern, path);
+      if (params) return {component, params};
+    }
+    return null;
+  }
   function navigate(path) {
-    if (path !== null && (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) || !routes.has(path))) return false;
+    if (path !== null && !localPath(path)) return false;
+    const match = path === null ? null : activeRoute(path);
+    if (path !== null && !match) return false;
     currentRoute = path;
+    currentParams = match?.params || {};
     for (const listener of routeListeners) listener(path);
     return true;
   }
   const routerHook = {
     addRoute(path, component) {
-      if (!/^\/[A-Za-z0-9/_-]{1,120}$/.test(path) ||
+      if (!routePattern(path) ||
           (typeof component !== 'function' && !R.isValidElement(component)))
         throw Error('Framey route needs a local path and React component');
       routes.set(path, component);
-      return () => {routes.delete(path); if(currentRoute === path) navigate(null);};
+      return () => routerHook.removeRoute(path);
     },
-    removeRoute(path) {routes.delete(path); if(currentRoute === path) navigate(null);},
+    removeRoute(path) {routes.delete(path); if(currentRoute && !activeRoute(currentRoute)) navigate(null);},
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
@@ -170,7 +204,7 @@
     afterPatch: () => () => {}, createReactTreePatcher: () => () => {},
     findInReactTree: () => null, findModuleExport: () => null, findModuleChild: () => null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
-    useParams: () => ({}),
+    useParams: () => currentParams,
   };
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, duration, showToast=true, onClick}={}) => {
@@ -228,8 +262,8 @@
         ...actions.map((action, index) => R.createElement('button', {key:index, type:'button',
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
-      R.createElement('div', null, route ? (typeof routes.get(route) === 'function' ?
-        R.createElement(routes.get(route)) : routes.get(route)) :
+      R.createElement('div', null, route ? (typeof activeRoute(route)?.component === 'function' ?
+        R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
         (view === 'settings' ? plugin.settings : plugin.content)));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {
@@ -247,15 +281,30 @@
       useQuickAccessVisible: () => true,
     }),
   };
+  const legacyServerAPI = {
+    routerHook, toaster,
+    callPluginMethod: (method, kwargs={}) => {
+      if (!kwargs || typeof kwargs !== 'object' || Array.isArray(kwargs))
+        return Promise.resolve({success:false, result:'Legacy plugin arguments must be an object'});
+      // Decky's legacy route takes keyword arguments and returns this envelope.
+      return ask(method, [kwargs], true).catch(failure=>({success:false, result:String(failure.message || failure)}));
+    },
+    fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
+  };
   async function start() {
     try {
       await seeded;
       const bytes = Uint8Array.from(atob(document.getElementById('framey-bundle').textContent), c=>c.charCodeAt(0));
-      const url = URL.createObjectURL(new Blob([bytes], {type:'text/javascript'}));
+      // Old Decky builds are expressions returning the initializer, rather than
+      // ES modules. A module wrapper preserves the sandbox and avoids eval.
+      const legacy = /^\s*\(function\s*\(/.test(new TextDecoder().decode(bytes));
+      const url = URL.createObjectURL(new Blob(legacy ?
+        ['const __frameyLegacy =\n', bytes, '\nexport default __frameyLegacy;'] : [bytes], {type:'text/javascript'}));
       let module;
       try { module = await import(url); } finally { URL.revokeObjectURL(url); }
       if (typeof module.default !== 'function') throw Error('The Decky frontend has no plugin entry point');
-      plugin = await module.default();
+      plugin = await module.default(legacyServerAPI);
+      if (legacy && plugin?.title && !plugin.titleView) plugin.titleView = plugin.title;
       if (!plugin?.content && !plugin?.settings) throw Error('The Decky plugin has no panel to display');
       window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null,
         R.createElement(PluginSurface, {plugin})));

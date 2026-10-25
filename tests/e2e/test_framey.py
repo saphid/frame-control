@@ -124,6 +124,15 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual(ok('POST', '/api/framey/method',
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
 
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':999,'method':'get_setting','args':[{'key':'theme','default':'dark'}],
+                             'legacy':True})['result'], {'success':True,'result':'light'})
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':999,'method':'set_setting','args':[{'key':'legacy','value':'saved'}],
+                             'legacy':True})['result'], {'success':True,'result':True})
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':999,'method':'get_setting','args':['legacy','default']})['result'], 'saved')
+
         StoreFixture.release = 1
         job = finished(ok('POST', '/api/decky/plugin',
                           {'action':'update','id':999,'acknowledged':True}))
@@ -167,7 +176,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
-                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version'), plugin['api_version'])
+                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)

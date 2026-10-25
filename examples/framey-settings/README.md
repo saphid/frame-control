@@ -13,6 +13,14 @@ browser cache. A missing, damaged, or old non-boolean value reads as the
 caller's default;
 the next save atomically replaces the sample's settings file.
 
+The **About this setting** button opens a local detail page at
+`/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,
+`Navigation.Navigate`, `useParams`, `NavigateBack`, and removal of the route in
+`onDismount`. The `:topic?` segment is optional. Framey keeps this navigation
+inside the plugin panel; it does not open a Steam library page. Put optional
+segments at the end of the path and do not use query strings. This detail page
+has not been checked with headset controllers.
+
 ## Build
 
 From this directory, run:
@@ -35,7 +43,7 @@ plugin directory does not enable its VR panel.
 Run `python3 -m unittest discover -s tests -p test_framey_sample.py` from the
 repository root. It checks backend persistence and evaluates the built bundle
 against Framey's actual host script, including the quick action's scoped
-backend call. The fake Frame store flow is exercised by
+backend call and local route registration/navigation. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 

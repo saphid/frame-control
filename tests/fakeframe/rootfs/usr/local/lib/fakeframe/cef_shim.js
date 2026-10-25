@@ -28,10 +28,20 @@ function build(steam) {
   // Synthetic Decky API for Framey's CDP bridge test. This does not model the
   // real loader or prove frontend visibility on a headset.
   const deckyBackend = {async call(route, plugin, method, ...args) {
-    if (route !== 'loader/call_plugin_method' || plugin !== 'Sample Panel')
+    if (!['loader/call_plugin_method','loader/call_legacy_plugin_method'].includes(route) || plugin !== 'Sample Panel')
       throw Error('unexpected Decky plugin route');
     const settings = (steam.decky_settings ||= {});
     const owned = (settings[plugin] ||= {});
+    if (route === 'loader/call_legacy_plugin_method') {
+      const kwargs = args[0];
+      if (method === 'get_setting')
+        return {success:true, result:Object.hasOwn(owned, kwargs.key) ? owned[kwargs.key] : kwargs.default};
+      if (method === 'set_setting') {
+        owned[kwargs.key] = kwargs.value;
+        return {success:true, result:true};
+      }
+      return {success:false, result:'method unavailable in fake Decky backend'};
+    }
     if (method === 'get_setting')
       return Object.hasOwn(owned, args[0]) ? owned[args[0]] : args[1];
     if (method === 'set_setting') {

@@ -57,7 +57,9 @@ none of these frontend controls has passed a worn-headset check yet.
 | Decky API or UI feature | Framey behavior | Verified in |
 | --- | --- | --- |
 | `definePlugin` with `content`, `titleView` | Renders a React panel and optional title | Local browser with ProtonDB Badges; host unit test |
-| API v1 manifest with the modern Decky API initializer | Attempts to render the plugin's panel; older API v1 bundles still show an incompatibility message | Pinned Storage Cleaner 1.4.0 archive, fake Frame install/pack test, local Chromium with stub backend. Cleanup actions were not tested. |
+| API v1 manifest with the modern Decky API initializer | Attempts to render the plugin's panel; recognized legacy IIFE bundles also use the legacy bridge | Pinned Storage Cleaner 1.4.0 archive, fake Frame install/pack test, local Chromium with stub backend. Cleanup actions were not tested. |
+| Legacy Decky IIFE frontend, with no API manifest field | Wraps the returned initializer as an ES module inside the same opaque iframe; passes `serverAPI` and preserves the legacy title | MusicControl 1.1.6 exact official archive, local Chromium startup with backend methods blocked; fake Frame installation/pack/removal |
+| Legacy `serverAPI.callPluginMethod(method, kwargs)` | Uses Decky's `loader/call_legacy_plugin_method` RPC, preserving keyword arguments and `{success, result}` replies | Fake Frame HTTP/CDP read/write with a synthetic backend; no official plugin backend action or worn VR result |
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
@@ -66,7 +68,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e for setting read/write across CEF calls, update, and reinstall; host unit test. Real Decky persistence remains unverified. |
 | `toaster.toast` | Visible toast inside the plugin panel; `dismiss` and optional `onClick` | Host unit test; no Steam system notification |
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
-| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack` | Local routes inside this plugin panel only | Host unit test |
+| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModuleChild`, `Navigation.CloseSideMenus` | Steam module lookup returns `null`; close returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 entry point and shallow settings view in local host test. Steam library patch and live HLTB search remain unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
@@ -75,6 +77,9 @@ none of these frontend controls has passed a worn-headset check yet.
 Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
+Optional route segments must be at the end. Framey accepts local path segments
+only; query strings, external URLs, Steam library routes and duplicate parameter
+names are rejected. Removing an active route returns to the plugin panel.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 An API v1 manifest does not guarantee a working Framey panel. Test the exact
 store archive and do not assume SteamClient app details, library patches, or
