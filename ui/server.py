@@ -80,6 +80,7 @@ import frame_wired_doctor  # noqa: E402
 import frame_compat_db  # noqa: E402
 import frame_extensions  # noqa: E402
 import frame_decky  # noqa: E402
+import frame_decky_store  # noqa: E402
 import frame_headset  # noqa: E402
 
 frame_host.trust_bundled_cas()
@@ -559,6 +560,17 @@ def decky(body):
     if body.get("acknowledged") is not True:
         raise Failure("Confirm that Decky support on the Frame is experimental", 400)
     return start_job("Decky Loader " + action, lambda: frame_decky.change(ssh, action))
+
+
+def decky_plugin(body):
+    action = body.get('action')
+    plugin_id = body.get('id')
+    if action not in ('install', 'update', 'remove') or type(plugin_id) is not int:
+        raise Failure('Choose an official store plugin and action', 400)
+    if body.get('acknowledged') is not True:
+        raise Failure('Confirm that store plugins run code as your Frame user', 400)
+    return start_job('Decky plugin ' + action,
+                     lambda: frame_decky_store.change(ssh, action, plugin_id))
 
 
 def headset_action(body):
@@ -3397,6 +3409,7 @@ POST = {
     "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/decky": decky,
+    "/api/decky/plugin": decky_plugin,
     "/api/headset": headset_action,
     "/api/headset/quick": headset_quick,
     "/api/vr": vr,
@@ -3604,6 +3617,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_extensions.list_extensions())
             elif path == "/api/decky":
                 self.send_json(frame_decky.status(ssh))
+            elif path == "/api/decky/store":
+                self.send_json({'plugins': frame_decky_store.catalog()})
             elif path == "/api/headset":
                 if LOCAL:
                     raise Failure("Manage this panel from Frame Control on your computer", 400)
