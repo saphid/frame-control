@@ -126,6 +126,24 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(code, 400)
         self.assertIn('experimental', body['error'])
 
+    def test_incompatible_extension_is_reported_and_assets_are_unavailable(self):
+        folder = Path(os.environ['FRAME_CONTROL_DATA_DIR']) / 'extensions' / 'future-panel'
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / 'manifest.json').write_text(json.dumps({'id': 'future-panel', 'name': 'Future',
+            'version': '1.0', 'description': 'Requires a newer API', 'apiVersion': 2}))
+        (folder / 'index.html').write_text('<p>Incompatible panel</p>')
+        try:
+            self.assertEqual(self.request('GET', '/api/extensions')[0], 403)
+            code, _, body = self.request('GET', '/api/extensions', headers={'X-Frame-UI': '1'})
+            self.assertEqual(code, 200)
+            data = json.loads(body)
+            self.assertNotIn('future-panel', [x['id'] for x in data['extensions']])
+            self.assertTrue(any(x['folder'] == 'future-panel' and 'apiVersion' in x['error']
+                                for x in data['errors']))
+            self.assertEqual(self.request('GET', '/extension/future-panel/index.html')[0], 404)
+        finally:
+            shutil.rmtree(folder)
+
     def test_headset_page_and_install_acknowledgement(self):
         code, _, body = self.request('GET', '/headset')
         self.assertEqual(code, 200)

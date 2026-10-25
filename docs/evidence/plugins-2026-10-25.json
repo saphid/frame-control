@@ -1,0 +1,43 @@
+{
+  "checkedAt": "2026-10-25T06:03:45.387452+00:00",
+  "method": "Read-only Python probe over the existing frame SSH alias; no device changes",
+  "baselineCommit": "d79efb4730becc781f9a641cc36cb27f6481667c",
+  "deckyStatus": {
+    "arch": "aarch64",
+    "frameOS": "0.5.6",
+    "variant": "vr",
+    "build": "20261022.6153909",
+    "cef": true,
+    "managed": false,
+    "running": false,
+    "version": null,
+    "upstreamInstall": false,
+    "plugins": [],
+    "upstreamPlugins": []
+  },
+  "platform": {
+    "userServiceManager": true,
+    "rootMountOptions": "rw,relatime,ssd,discard=async,space_cache=v2,subvolid=5,subvol=/",
+    "homeMountOptions": "rw,relatime",
+    "homebrewExists": false,
+    "cefMarkerExists": false,
+    "cefTargetTitles": [
+      "SteamVR - valve.steam.gamepadui.frame.menu.53930005 (53930005)",
+      "SteamVR - valve.steam.gamepadui.bar (53930000)",
+      "SteamVR",
+      "SteamVR - Notifications",
+      "SteamVR - valve.steam.gamepadui.floatingfooter (53930004)",
+      "SteamVR - valve.steam.gamepadui.volumelevel (53930003)",
+      "SteamVR - valve.steam.gamepadui.tooltip.53930002 (53930002)",
+      "SteamVR - valve.steam.gamepadui.barpopup.53930001 (53930001)",
+      "SteamVR - Keyboard",
+      "data:text/html,&lt;body&gt;&lt;%2Fbody&gt;",
+      "SharedJSContext"
+    ]
+  },
+  "limits": [
+    "No Decky install/update/uninstall repeated in this retry",
+    "No OS update or reboot performed",
+    "No wearer-visible menu or controller input verified"
+  ]
+}

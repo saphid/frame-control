@@ -1462,9 +1462,15 @@
     <p class="sub">Experimental. Decky's ARM64 backend can start on Frame OS, but its plugin menu has not been verified in the VR shell. Some Decky plugins need root and will not work with this user service.</p>
     <div id="deckyState" class="sub">Checking…</div>
     <div id="deckyPlugins" class="hint"></div>
+    <div id="deckyManagedList" class="stack"></div>
     <label class="popt"><input type="checkbox" id="deckyAck"> I understand that the VR menu and individual plugins may not work. Install only if I want to test Decky.</label>
     <div class="row" style="margin-top:10px"><button class="small action" id="deckyInstall" disabled>Install</button><button class="small" id="deckyUpdate" disabled>Update</button><button class="small danger" id="deckyRemove" disabled>Remove managed Decky</button></div>
     <div class="hint">Install and update download Decky's official ARM64 release and verify its published SHA-256. Frame Control uses a removable user service and does not change the root filesystem. Remove keeps plugin files.</div>
+    <h3>Official plugin store</h3>
+    <p class="sub">Plugins run code as your Frame user. Store installs are opt-in and only work with the managed loader. Root plugins and x86-only archives are blocked. A loaded backend does not prove its VR page works.</p>
+    <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search store"></label>
+    <div class="row"><button class="small" id="deckyStoreRefresh">Load store</button></div>
+    <div id="deckyStoreState" class="hint"></div><div id="deckyStoreList" class="stack"></div>
   </section>
   <section class="panel" id="headsetPanel">
     <div class="shelf-head"><h2>Frame Control in VR</h2><span class="spacer"></span><button class="small" id="headsetRefresh">Refresh</button></div>
@@ -2184,14 +2190,62 @@ $('extensionClose').onclick = () => {
   $('extensionPanel').hidden = true;
 };
 let deckyInfo = null;
+let deckyCatalog = [];
 async function loadDecky() {
   try {
     const d = deckyInfo = await api('/api/decky');
     $('deckyState').textContent = `${d.frameOS || 'Unknown'} ${d.variant || ''} · ${d.arch} · CEF ${d.cef ? 'ready' : 'unavailable'} · ${d.managed ? `managed Decky ${d.version || ''} ${d.running ? 'running' : 'stopped'}` : d.upstreamInstall ? 'upstream Decky installation found' : 'Decky not installed'}`;
     const plugins = [...d.plugins.map(x => `${x.name} (managed)`), ...d.upstreamPlugins.map(x => `${x.name} (upstream)`)];
     $('deckyPlugins').textContent = plugins.length ? `Installed plugins: ${plugins.join(', ')}` : 'No Decky plugins found.';
+    const managedList=$('deckyManagedList');managedList.replaceChildren();
+    for(const plugin of d.plugins||[]){if(!plugin.storeId)continue;
+      const row=document.createElement('div');row.className='hint';
+      const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''}`;
+      const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove plugin';
+      remove.disabled=!d.running||!$('deckyAck').checked;
+      remove.onclick=()=>changeDeckyPlugin('remove',{id:plugin.storeId,name:plugin.name});
+      row.append(label,remove);managedList.append(row);}
     deckyButtons();
-  } catch (error) { deckyInfo = null; $('deckyState').textContent = error.message; deckyButtons(); }
+    showDeckyStore();
+  } catch (error) { deckyInfo = null; $('deckyState').textContent = error.message; deckyButtons(); showDeckyStore(); }
+}
+async function loadDeckyStore() {
+  $('deckyStoreState').textContent = 'Loading the official store…';
+  try { deckyCatalog = (await api('/api/decky/store')).plugins;
+    $('deckyStoreState').textContent = `${deckyCatalog.length} plugins in the official store. Select a plugin to install it.`;
+    showDeckyStore();
+  } catch(error) { $('deckyStoreState').textContent = error.message; }
+}
+function showDeckyStore() {
+  const list = $('deckyStoreList'); list.replaceChildren();
+  const query = $('deckyStoreSearch').value.trim().toLowerCase();
+  const installed = [...(deckyInfo?.plugins||[]), ...(deckyInfo?.upstreamPlugins||[])];
+  for (const plugin of deckyCatalog.filter(p => !query || `${p.name} ${p.description}`.toLowerCase().includes(query)).slice(0, 40)) {
+    const row = document.createElement('div'); row.className = 'hint';
+    const title = document.createElement('strong'); title.textContent = `${plugin.name} · ${plugin.version}`;
+    const description = document.createElement('span'); description.textContent = ` ${plugin.description}`;
+    const entry = installed.find(p => p.storeId === plugin.id);
+    const unmanaged = installed.some(p => p.name === plugin.name && p.storeId !== plugin.id);
+    const reason = plugin.root ? 'Needs root; not supported by the Frame user service.' : unmanaged ? 'Existing plugin is not managed by Frame Control.' : '';
+    row.append(title, description);
+    if (reason) { const note=document.createElement('small'); note.textContent=` ${reason}`; row.append(note); }
+    else {
+      const button=document.createElement('button'); button.className='small';
+      button.textContent=entry ? (entry.version===plugin.version?'Reinstall':'Update') : 'Install';
+      button.disabled=!deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
+      button.onclick=()=>changeDeckyPlugin(entry?'update':'install',plugin);
+      row.append(button);
+      if(entry){const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove';
+        remove.disabled=!deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
+        remove.onclick=()=>changeDeckyPlugin('remove',plugin);row.append(remove);}
+    }
+    list.append(row);
+  }
+}
+async function changeDeckyPlugin(action, plugin) {
+  if (!$('deckyAck').checked || !confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
+  try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin', {action,id:plugin.id,acknowledged:true}));
+    await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
 }
 function deckyButtons() {
   const ready = !!deckyInfo && deckyInfo.arch === 'aarch64' && deckyInfo.variant === 'vr' && deckyInfo.cef && !deckyInfo.upstreamInstall;
@@ -2200,8 +2254,11 @@ function deckyButtons() {
   $('deckyUpdate').disabled = !ack || !ready || !deckyInfo.managed;
   $('deckyRemove').disabled = !ack || !deckyInfo?.managed;
 }
-$('deckyAck').onchange = deckyButtons;
+$('deckyAck').onchange = () => { deckyButtons(); showDeckyStore();
+  for(const button of $('deckyManagedList').querySelectorAll('button'))button.disabled=!$('deckyAck').checked||!deckyInfo?.running; };
 $('deckyRefresh').onclick = loadDecky;
+$('deckyStoreRefresh').onclick = loadDeckyStore;
+$('deckyStoreSearch').oninput = showDeckyStore;
 for (const action of ['Install', 'Update', 'Remove']) {
   $(`decky${action}`).onclick = async () => {
     if (!$('deckyAck').checked || !deckyInfo) return;

@@ -188,6 +188,11 @@ scripts/frame-smoke.sh           # needs `ssh frame` to work without a password
 scripts/frame-smoke.sh --pair    # also pairs a throwaway key: approve it in the headset
 ```
 
+The wrapper uses POSIX `sh` and Python 3 on macOS or Linux; zsh is not required.
+It resolves the checkout path independently of the current working directory.
+`/path/to/checkout/scripts/frame-smoke.sh --help` is safe to run offline and
+does not contact the headset.
+
 It checks `properties.json` and the status, then installs, launches and
 removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`
 (an ARM64 and an x86-64 static Linux program that sleep for ten seconds, and
@@ -208,6 +213,14 @@ isn't reachable.
 Smoke process cleanup runs before and after title removal and during the
 initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
 `fc_smoke_x86_64`, `fc_smoke_exe` IDs and their legacy `fc-smoke-` equivalents.
+Each leftover sweep checks all six IDs, even if no title directory or install
+record remains. It removes their exact `-argv.json`, `-env.json`,
+`-settings.json` and `-framecontrol.json` files, syncs Steam's shortcuts, then
+syncs again to verify that none of those IDs is still registered. Missing
+devkit utilities are copied before syncing and removed at the end if they
+were absent before the run. Metadata or shortcuts that remain, or a reported
+sync failure, fail cleanup. Similarly named titles and their metadata are
+outside the deletion boundary.
 On the target, `tests/smoke/stop_processes.py` requires the SSH user's uid and
 an exact title directory in `/proc` cwd/exe or an individual absolute command
 argument; similarly named folders and shell command substrings do not count.
@@ -231,12 +244,16 @@ The `fc_smoke_exe` launch ran under Proton Experimental (ARM64), and its
 remove step stopped five test-owned wrapper/Proton PIDs before removing the
 title; the following process sweep found none. The final cleanup found no
 test titles or processes, the test desktop was closed, and the battery
-remained at 99%. The `scripts/frame-smoke.sh` zsh wrapper could not run
-on lxso2 because zsh is absent; `python3 tests/smoke/frame_smoke.py` ran
-the same entry point instead.
+remained at 99%. That historical run used the Python entry point directly;
+the current POSIX wrapper has local offline coverage on a PATH without zsh.
+The orphan-metadata and shortcut follow-up has not been rerun on a headset.
 The local regression suite runs real Linux processes in temporary fake title
 directories (including deleted folders and a TERM-resistant wrapper); it checks
-exit, escalation and survival of unrelated processes without SSH or a headset:
+exit, escalation and survival of unrelated processes. Local filesystem commands
+with mocked SSH/Steam also cover orphan metadata, shortcut-only leftovers,
+sync failures and exact ID boundaries. Wrapper tests check offline help,
+argument forwarding and exit status from another working directory. None of
+these local tests contacts a headset:
 
 ```sh
 python3 -m unittest discover -s tests -p test_smoke_cleanup.py -v

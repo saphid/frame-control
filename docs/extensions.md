@@ -34,10 +34,18 @@ The manifest ID must match the folder name:
   "id": "your-id",
   "name": "Your feature",
   "version": "1.0.0",
+  "apiVersion": 1,
   "description": "What the panel does.",
   "entry": "index.html"
 }
 ```
+
+`apiVersion` selects the Frame Control bridge contract, independently of your
+extension's own `version`. This app supports integer `1`; a missing field means
+`1` for existing extensions. Unsupported versions appear as errors on Refresh,
+and their assets are not served. Declare it in new extensions so a future API
+change can fail clearly instead of running incompatible code. The runtime
+`capabilities` reply below reports the bridge version too.
 
 Put JavaScript in a separate `.js` file. Supported assets are HTML, JS, CSS,
 JSON, PNG, JPEG, GIF, WebP and SVG, all in the extension's top-level folder.

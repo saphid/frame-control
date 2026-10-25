@@ -203,23 +203,23 @@ def cleanup(smoke):
     never removed. Raises if any owned process, file or shortcut stays.
     """
     problems = []
-    try:
-        ids = {t['id'] for t in frame_titles.list_titles() if t['id'] in stop_processes.IDS}
-    except frame_android.FrameError as e:
-        ids = set()
-        problems.append(f'could not list titles: {e}')
-    ids |= smoke.installed
+    # Directory listings and this run's install tracker cannot reveal orphan
+    # metadata or shortcuts. Always sweep the exact, reserved IDs; never let
+    # arbitrary entries in smoke.installed expand the deletion boundary.
+    ids = stop_processes.IDS
     # Scan every reserved ID, even when a prior run removed its folder and
     # shortcut but left Proton running. Stop before removing any more files.
     stopped = stop_titles(stop_processes.IDS)
     gone = set()
     for gid in sorted(ids):
         try:
+            metadata = ' '.join(f'~/devkit-game/{gid}-{k}.json'
+                                for k in ('argv', 'env', 'settings', 'framecontrol'))
             if ssh(f'test -d ~/devkit-game/{gid} && echo yes || true').strip() == 'yes':
                 frame_titles.remove(gid)
             # Also when remove() stopped part-way, or only the json files are left.
-            ssh(f"rm -f {' '.join(f'~/devkit-game/{gid}-{k}.json' for k in ('argv', 'env', 'settings', 'framecontrol'))}")
-            if ssh(f'ls -d ~/devkit-game/{gid} ~/devkit-game/{gid}-*.json 2>/dev/null || true').strip():
+            ssh(f'rm -f {metadata}')
+            if ssh(f'ls -d ~/devkit-game/{gid} {metadata} 2>/dev/null || true').strip():
                 problems.append(f'{gid} is still on the Frame')
             else:
                 gone.add(gid)
@@ -230,6 +230,8 @@ def cleanup(smoke):
         # It logs a failed sync and exits 0, so read its log; a second run lists
         # what Steam still has registered, which must not include ours.
         try:
+            # A shortcut-only leftover (or a first run) may have no utilities.
+            frame_titles.ensure_utils()
             command = frame_titles.devkit_script('delete') + ' 2>&1'
             first = ssh(command, timeout=120)
             second = ssh(command, timeout=120)

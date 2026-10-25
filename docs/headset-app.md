@@ -28,6 +28,14 @@ It offers the version 1 read-only `capabilities` and `status` bridge from
 [the extension guide](extensions.md). Installing an extension still means
 copying its folder to the Frame; the panel does not download third-party code.
 
+The panel also lists Decky plugins and can install, update, or remove compatible
+plugins from the official store when the opt-in managed loader is running.
+Each change asks for confirmation. The Frame VR shell does not show Decky's
+Steam Deck Quick Access Menu, so Decky plugin pages, settings, routes, and
+toasts are not available in this panel yet. The [compatibility table](decky-frame.md)
+separates backend loading from VR use. Authors can use the
+[Frame plugin and extension guide](frame-plugin-author.md).
+
 The per-run UI key is passed in the URL fragment, removed from the address bar after load,
 and sent in the `X-Frame-UI` header. The key is absent from the HTTP request
 line and server log. The usual host/origin and anti-framing checks still apply.
