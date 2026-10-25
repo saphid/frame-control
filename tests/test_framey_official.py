@@ -22,6 +22,17 @@ from framey_official import PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_bluetooth_initial_panel_uses_safe_token_fallback(self):
+        with zipfile.ZipFile(io.BytesIO(archive(next(p for p in PLUGINS if p['id'] == 18)))) as bundle:
+            with tempfile.TemporaryDirectory() as folder:
+                frontend = Path(folder) / 'index.js'
+                frontend.write_bytes(bundle.read('Bluetooth/dist/index.js'))
+                script = Path(__file__).parent / 'page/framey_bluetooth.mjs'
+                result = subprocess.run(['node', str(script), str(frontend)],
+                                        capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_hltb_frontend_starts_with_framey_module_stub(self):
         script = Path(__file__).parent / 'page/framey_hltb.mjs'
         result = subprocess.run(['node', str(script)], capture_output=True, text=True, timeout=10)
