@@ -53,6 +53,10 @@ live Decky settings persistence, or badges on Steam game pages. The last item
 has no supported injection target in the Frame Control panel.
 The [browser and fake Frame evidence](evidence/framey-browser-2026-10-25.md)
 records exactly what was exercised.
+Fake Frame CI also installs and removes pinned official ProtonDB Badges 1.3.4
+and Steam Status 1.2.3 archives, checks their API v2 manifests and frontend
+bytes, and verifies they can be packed as Framey panels. It does not execute
+their actual backend code or prove their frontend controls work in VR.
 
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,
