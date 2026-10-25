@@ -39,8 +39,11 @@ Put JavaScript in a separate `.js` file. Supported assets are HTML, JS, CSS,
 JSON, PNG, JPEG, GIF, WebP and SVG, all in the extension's top-level folder.
 Nested paths and symlinks are not served. No file may exceed 5 MiB. The panel
 uses an iframe with `sandbox="allow-scripts"`; its code has an opaque origin,
-cannot call Frame Control's HTTP API directly, and cannot navigate the app.
-External network requests are blocked by Content Security Policy.
+cannot call Frame Control's HTTP API directly, and cannot navigate the app's
+top-level window. Content Security Policy restricts scripts, images, and
+`fetch` requests, but an extension can still navigate its own iframe to an
+external site. Treat third-party extensions as untrusted code and review them
+before installation.
 
 The version 1 bridge uses `postMessage`. Send a request to `parent` and match
 the numeric `id` in the reply. The [example JavaScript](../examples/extensions/headset-glance/main.js)
