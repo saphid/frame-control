@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Keep failed automatic screenshot and clip copies visible after three attempts.
+  **Resume** and **Copy everything now** allow another try without restarting;
+  headset switches cannot use another headset's list or saved-file history.
+  [Copying guide](docs/recording.md).
+
 - Import a base APK with supported native-library or asset splits from a local
   Android backup or XAPK/APKS/APKM bundle. Check package and version before
   install; refuse resource, code and feature splits and device-variant sets.

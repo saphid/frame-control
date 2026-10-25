@@ -957,8 +957,8 @@ def _sync_clip(device, clip_id):
 
 
 def _sync_list(listing):
-    def run():
-        with working(_sync_device()):
+    def run(device):
+        with working(device):
             return listing()
     return run
 

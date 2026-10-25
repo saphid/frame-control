@@ -137,10 +137,19 @@ case was tested with separate fake sources, not two real same-name screenshots.
 - **When this computer is full** (under 512 MB free, or a copy runs out of
   space) it pauses and says so in Settings and above the lists. Free some space
   and press **Resume**.
-- **With several headsets** it copies from the one you're connected to.
+- **When one file keeps failing** it tries at most three times, then leaves
+  the problem visible in Settings. Fix the source problem and press **Resume**
+  to allow another three attempts without restarting Frame Control. **Copy
+  everything now** also resets failed attempts and includes older files.
+  Resume keeps the history of successful copies, so it does not recopy them.
+- **With several headsets** each check and copy belongs to the headset selected
+  when the check began. Switching between lists or copies stops that pass;
+  another headset's saved files cannot become part of its copy history.
 
 Settings shows when it last checked, how many files it last copied and when,
 and the last problem it had. The screenshot and clip lists say when it's on.
+Retry and switch handling have offline regression coverage with fake sources;
+see the [test record](evidence/autosync-reliability-2026-10-25.md).
 
 ## For developers
 

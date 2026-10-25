@@ -16,9 +16,9 @@ saved Steam clips to ~/Videos/SteamFrame.
 - When the headset can't be reached it waits longer each time, up to MAX_BACKOFF.
 
 The server supplies how to reach the headset, so this can be tested without one:
-  list_shots() -> {"shots": [{"id", "time", "saved"}...]}
+  list_shots(device) -> {"shots": [{"id", "time", "saved"}...]}
   save_shots(device, ids) copies those screenshots here
-  list_clips() -> {"clips": [{"id", "kind", "time", "idle", "saved"}...]}
+  list_clips(device) -> {"clips": [{"id", "kind", "time", "idle", "saved"}...]}
   export_clip(device, id) exports one clip here
   device() -> the connected headset's id, or None
   busy() -> True while other work runs on the headset (installs, jobs, a recording)
@@ -41,7 +41,7 @@ SETTLE = 30  # a clip written to within this many seconds is still being recorde
 MIN_FREE = 512 * 1024**2  # pause below this much free space on this computer
 KEEP = 5000  # copied ids remembered per headset and kind
 BATCH = 100  # screenshots per copy
-TRIES = 3  # an item that fails this often is left until the app restarts
+TRIES = 3  # failed attempts per item until Resume, Copy everything now, or restart
 KINDS = ("shots", "clips")
 
 
@@ -86,6 +86,7 @@ class AutoSync:
         self._running = False
         self._backoff = 0
         self._tries = {}  # (device, id) -> failed attempts this run
+        self._failures = {}  # last error for each failed item, including exhausted retries
         self._errors = []  # this pass's, for the page
         self._s = self._load()
 
@@ -143,13 +144,19 @@ class AutoSync:
         """Copy everything on the headset that isn't on this computer, once (also resumes)."""
         with self._lock:
             self._all, self._s["paused"] = True, None
+            self._tries.clear()
+            self._failures.clear()
+            self._s["error"] = None
             self._save()
+        self._backoff = 0
         self._wake.set()
         return self.state()
 
     def resume(self):
         with self._lock:
             self._s["paused"], self._s["error"] = None, None
+            self._tries.clear()
+            self._failures.clear()
             self._save()
         self._backoff = 0
         self._wake.set()
@@ -215,6 +222,9 @@ class AutoSync:
 
     def _mark(self, device, kind, ids):
         with self._lock:
+            for item in ids:
+                self._tries.pop((device, item), None)
+                self._failures.pop((device, item), None)
             per = self._s["synced"].setdefault(device, {})
             have = per.get(kind, [])
             new = [i for i in ids if i not in set(have)]
@@ -233,24 +243,46 @@ class AutoSync:
                            "then press Resume.")
         if self.offline(error):
             raise error
-        key = (device, item)
-        self._tries[key] = self._tries.get(key, 0) + 1
-        self._errors.append(f"Couldn't copy {item.rsplit('/', 1)[-1]}: {error}")
+        with self._lock:
+            key = (device, item)
+            self._tries[key] = self._tries.get(key, 0) + 1
+            message = f"Couldn't copy {item.rsplit('/', 1)[-1]}: {error}"
+            if self._tries[key] >= TRIES:
+                message += ". Automatic retries stopped. Press Resume to try again."
+            self._failures[key] = message
+            self._errors.append(message)
+
+    def _retry_allowed(self, device, item):
+        with self._lock:
+            key = (device, item)
+            if self._tries.get(key, 0) < TRIES:
+                return True
+            self._errors.append(self._failures[key])
+            return False
+
+    def _interrupted(self, device):
+        return self.busy() or self.device() != device
 
     def _pass(self, device, shots, clips, since):
         """-> (copied, clips still being written, finished without stopping for other work)."""
         copied = waiting = 0
         if shots:
-            listing = self.list_shots()["shots"]
+            if self._interrupted(device):
+                return copied, waiting, False
+            listing = self.list_shots(device)["shots"]
+            if self._interrupted(device):
+                return copied, waiting, False
             done = self._synced(device, "shots")
             self._mark(device, "shots", [s["id"] for s in listing if s.get("saved")])
             todo = [s["id"] for s in sorted(listing, key=lambda s: s["time"])
                     if not s.get("saved") and (since is None or (s["time"] >= since and s["id"] not in done))
-                    and self._tries.get((device, s["id"]), 0) < TRIES]
+                    and self._retry_allowed(device, s["id"])]
             for i in range(0, len(todo), BATCH):
-                if self.busy():
+                if self._interrupted(device):
                     return copied, waiting, False
                 self._room(self.shots_folder)
+                if self._interrupted(device):
+                    return copied, waiting, False
                 batch = todo[i:i + BATCH]
                 try:
                     self.save_shots(device, batch)
@@ -258,28 +290,40 @@ class AutoSync:
                     for item in batch:
                         self._failed(device, item, e)
                     continue
+                if self.device() != device:
+                    return copied, waiting, False
                 self._mark(device, "shots", batch)
                 copied += len(batch)
         if clips:
-            listing = [c for c in self.list_clips()["clips"] if c.get("kind") == "clip"]
+            if self._interrupted(device):
+                return copied, waiting, False
+            listing = [c for c in self.list_clips(device)["clips"] if c.get("kind") == "clip"]
+            if self._interrupted(device):
+                return copied, waiting, False
             done = self._synced(device, "clips")
             self._mark(device, "clips", [c["id"] for c in listing if c.get("saved")])
             for c in sorted(listing, key=lambda c: c["time"]):
-                if c.get("saved") or self._tries.get((device, c["id"]), 0) >= TRIES:
+                if c.get("saved"):
                     continue
                 if since is not None and (c["time"] < since or c["id"] in done):
+                    continue
+                if not self._retry_allowed(device, c["id"]):
                     continue
                 if c.get("idle") is None or c["idle"] < SETTLE:
                     waiting += 1  # still being written: copied on a later look
                     continue
-                if self.busy():
+                if self._interrupted(device):
                     return copied, waiting, False
                 self._room(self.clips_folder)
+                if self._interrupted(device):
+                    return copied, waiting, False
                 try:
                     self.export_clip(device, c["id"])
                 except Exception as e:
                     self._failed(device, c["id"], e)
                     continue
+                if self.device() != device:
+                    return copied, waiting, False
                 self._mark(device, "clips", [c["id"]])
                 copied += 1
         return copied, waiting, True
