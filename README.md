@@ -132,6 +132,24 @@ Choose the operating system and processor of the computer you will use.
 | **Linux** (x64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-x86_64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-amd64.deb) | `ssh` (most desktops have it) |
 | **Linux** (arm64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.deb) | `ssh`, and `adb` for Android apps (`sudo apt install adb`) |
 
+### Is it safe? Check your download
+
+Starting with **v0.4.26**, get the installer and [SHA256SUMS](https://github.com/saphid/frame-control/releases/latest/download/SHA256SUMS) from the **same release**. Earlier releases do not have this file. A matching SHA-256 means your file matches that release asset. It does not prove the app is free of malware. Use the command for your downloaded file, then compare all 64 characters with its line in `SHA256SUMS`:
+
+```powershell
+# Windows PowerShell
+Get-FileHash .\Frame-Control-Setup-x64.exe -Algorithm SHA256
+```
+
+```sh
+# macOS: shasum -a 256 Frame-Control-mac-arm64.dmg
+# Linux: sha256sum Frame-Control-linux-x86_64.AppImage
+```
+
+The [source](https://github.com/saphid/frame-control) and [release build workflow](.github/workflows/release.yml) are public. The Windows installer is **not code-signed**, so SmartScreen may warn. The macOS app has only an **ad hoc signature**, not an Apple Developer ID signature; the DMG is **unsigned and not notarized**, so Gatekeeper may warn or block it. Only follow the opening steps below if you trust the download.
+
+日本語: v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。
+
 **Which build?** On a Mac, check Apple menu → About This Mac: the download is
 for Apple Silicon (M-series); no Intel Mac build is published. On Windows,
 check Settings → System → About → System type: the release is x64, not a native
@@ -191,7 +209,7 @@ or run it with `--appimage-extract-and-run`.
 **Optional: open at login.** In the installed desktop app, choose **Frame → Open at Login**. It is off by default. When on, a login launch starts in the tray or menu bar if that control is available; click its icon to open the window, or use its **Quit Frame Control** menu item. Closing the window keeps the app in the tray while this option is on. Turn the same menu option off to remove its OS login item. On Linux this creates or removes only Frame Control's own file in `~/.config/autostart/` (or `$XDG_CONFIG_HOME/autostart/`). If the desktop has no working tray, the window opens at login instead. A source checkout does not offer this setting.
 
 - **macOS:** open the `.dmg`, drag **Frame Control** to **Applications**, then
-  open it from Applications. For the unsigned-app warning, use the macOS steps
+  open it from Applications. For the Gatekeeper warning, use the macOS steps
   above. Allow local network access and control of Terminal when prompted.
 - **Windows:** run the installer, then open **Frame Control** from Start. For
   the portable download, extract the entire `.zip` first and run

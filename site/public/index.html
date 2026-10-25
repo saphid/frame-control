@@ -257,6 +257,13 @@
       <h2>Good questions</h2>
     </div>
     <div class="faq">
+      <details id="verify-download">
+        <summary>Is it safe? How do I check my download?</summary>
+        <div><p>Starting with <b>v0.4.26</b>, download Frame Control and <a href="https://github.com/saphid/frame-control/releases/latest/download/SHA256SUMS">SHA256SUMS</a> from the same GitHub release. Earlier releases do not have this file. A matching SHA-256 means your file matches that release asset. It does not prove the app is free of malware. Compare all 64 characters with the line for your filename.</p>
+        <p>Windows PowerShell: <code>Get-FileHash .\Frame-Control-Setup-x64.exe -Algorithm SHA256</code><br>macOS Terminal: <code>shasum -a 256 Frame-Control-mac-arm64.dmg</code><br>Linux terminal: <code>sha256sum Frame-Control-linux-x86_64.AppImage</code></p>
+        <p>The <a href="https://github.com/saphid/frame-control">source</a> and <a href="https://github.com/saphid/frame-control/blob/main/.github/workflows/release.yml">build workflow</a> are public. The Windows installer is not code-signed, so SmartScreen may warn. The macOS app has only an ad hoc signature, not an Apple Developer ID signature; the DMG is unsigned and not notarized, so Gatekeeper may warn or block it. Only follow the opening steps below if you trust the download.</p>
+        <p lang="ja">日本語: v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。</p></div>
+      </details>
       <details id="mac-opening">
         <summary>macOS says the app is damaged or can't be checked</summary>
         <div><p>The app isn't notarized, because there's no paid Apple developer account behind it. Only for a download you trust from the releases linked above: drag it to Applications, then clear the download quarantine once in Terminal:</p>

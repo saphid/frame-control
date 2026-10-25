@@ -173,3 +173,24 @@ jobs:
             app/dist/*.AppImage
             app/dist/*.deb
           if-no-files-found: ignore
+
+  checksums:
+    needs: build
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Attach SHA256SUMS after all installers upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh api --paginate "repos/$GH_REPO/releases?per_page=100" --jq '.[]' > releases.jsonl
+          python3 scripts/release-checksums.py --tag "$GITHUB_REF_NAME" < releases.jsonl > SHA256SUMS
+          # Find the same draft using its exact tag, or its version title if a
+          # draft edit made GitHub temporarily show an untagged-* tag name.
+          id=$(python3 scripts/release-checksums.py --tag "$GITHUB_REF_NAME" --id < releases.jsonl)
+          old=$(gh api "repos/$GH_REPO/releases/$id" --jq '.assets[] | select(.name == "SHA256SUMS") | .id')
+          for asset in $old; do gh api -X DELETE "repos/$GH_REPO/releases/assets/$asset" >/dev/null; done
+          gh api -X POST "https://uploads.github.com/repos/$GH_REPO/releases/$id/assets?name=SHA256SUMS" \
+            -H "Content-Type: text/plain" --input SHA256SUMS >/dev/null
