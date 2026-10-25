@@ -126,6 +126,14 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(code, 400)
         self.assertIn('experimental', body['error'])
 
+    def test_headset_page_and_install_acknowledgement(self):
+        code, _, body = self.request('GET', '/headset')
+        self.assertEqual(code, 200)
+        self.assertIn(b'Frame Control VR [fc-headset]', body)
+        code, body = self.post('/api/headset', {'action': 'install'})
+        self.assertEqual(code, 400)
+        self.assertIn('opt-in', body['error'])
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):
