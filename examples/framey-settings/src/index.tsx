@@ -49,8 +49,19 @@ function Content() {
   </PanelSection>;
 }
 
-export default definePlugin(() => ({
+export default definePlugin(() => Object.assign({
   name: 'Framey Settings Sample',
   icon: <span aria-hidden="true">⚙</span>,
   content: <Content />,
+}, {
+  // Framey additions are ignored by Decky's own menu. Keep the main content
+  // usable there too, while showing authors the extra VR settings view.
+  settings: <Content />,
+  frameyQuickActions: [{
+    label: 'Read saved setting',
+    onClick: async () => {
+      const enabled = await getSetting('enabled', false);
+      return `Saved setting is ${enabled ? 'on' : 'off'}`;
+    },
+  }],
 }));
