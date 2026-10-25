@@ -148,7 +148,7 @@ Get-FileHash .\Frame-Control-Setup-x64.exe -Algorithm SHA256
 
 The [source](https://github.com/saphid/frame-control) and [release build workflow](.github/workflows/release.yml) are public. The Windows installer is **not code-signed**, so SmartScreen may warn. The macOS app has only an **ad hoc signature**, not an Apple Developer ID signature; the DMG is **unsigned and not notarized**, so Gatekeeper may warn or block it. Only follow the opening steps below if you trust the download.
 
-日本語: v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。
+日本語: [5 ステップの接続ガイド](docs/connection-faq.md#日本語-5-ステップで接続)を参照してください。v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。
 
 **Which build?** On a Mac, check Apple menu → About This Mac: the download is
 for Apple Silicon (M-series); no Intel Mac build is published. On Windows,
@@ -244,6 +244,14 @@ network. Guest Wi-Fi/client isolation can prevent discovery and connections.
    connections whenever the Frame is awake and reachable. If it stays offline,
    check Developer Mode, the address and network isolation, then run setup again.
    For connections away from home, see [Tailscale](docs/tailscale.md).
+
+**Does Frame Control lower streaming lag?** No. Frame Control manages the Frame
+over SSH. SteamVR or Steam Link carries the game stream. Frame Control does not
+carry that stream, lower ping, or need the Wireless Adapter. It can connect over
+Wi-Fi, the Wireless Adapter, or USB when your computer has an SSH route to the
+Frame. The wired doctor checks only that SSH route. A data-capable USB-A-to-C
+cable has not been tested for the Frame's USB network. See the
+[connection FAQ and Japanese quick start](docs/connection-faq.md).
 
 **What it changes:** only what you click. Installs go to your user account on
 the Frame (`--user` Flatpaks, Lepton instances, Steam downloads, sideloaded
