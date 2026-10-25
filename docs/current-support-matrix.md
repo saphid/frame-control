@@ -1,6 +1,6 @@
 # What we have tested
 
-Current for Frame Control **v0.4.27**, 25 October 2026. “Real Frame + physical PC” means an actual headset and a non-virtual computer. “VM only” means a Windows virtual machine, sometimes connected to the real Frame. A CI test or a simulated device is **not** a physical hardware test. The date/version column is the last relevant check, not a promise that every new release was retested on that platform. See each link for the exact procedure and limits.
+Current for Frame Control **v0.4.28**, 25 October 2026. “Real Frame + physical PC” means an actual headset and a non-virtual computer. “VM only” means a Windows virtual machine, sometimes connected to the real Frame. A CI test or a simulated device is **not** a physical hardware test. The date/version column is the last relevant check, not a promise that every new release was retested on that platform. See each link for the exact procedure and limits.
 
 | Feature | Real Frame + physical PC tested | VM only | Untested or limited | Last check and proof |
 |---|---|---|---|---|
