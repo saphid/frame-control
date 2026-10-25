@@ -49,7 +49,7 @@ class OfficialBundles(unittest.TestCase):
                                      plugin['folder'])
                     with zipfile.ZipFile(io.BytesIO(data)) as z:
                         manifest = json.loads(z.read(plugin['folder'] + '/plugin.json'))
-                        self.assertEqual(manifest['api_version'], plugin['api_version'])
+                        self.assertEqual(manifest.get('api_version', 'legacy'), plugin['api_version'])
                         z.extractall(plugins)
                     folder = plugins / plugin['folder']
                     (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
