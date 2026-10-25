@@ -10,6 +10,7 @@ import threading
 import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
+from framey_official import PLUGINS as OFFICIAL_PLUGINS, archive as official_archive
 
 require()  # Skip the module outside the disposable fake Frame, like its peers.
 
@@ -26,6 +27,10 @@ def archive(version):
 
 ARTIFACTS = {hashlib.sha256(a).hexdigest(): a for a in (archive('1.0.0'), archive('1.1.0'))}
 HASHES = list(ARTIFACTS)
+for plugin in OFFICIAL_PLUGINS:
+    data = official_archive(plugin)
+    assert hashlib.sha256(data).hexdigest() == plugin['sha256']
+    ARTIFACTS[plugin['sha256']] = data
 
 
 class StoreFixture(BaseHTTPRequestHandler):
@@ -35,10 +40,15 @@ class StoreFixture(BaseHTTPRequestHandler):
 
     def do_GET(self):
         if self.path == '/plugins':
-            body = json.dumps([{'id':123,'name':'Sample Panel','author':'Fixture',
+            records = [{'id':999,'name':'Sample Panel','author':'Fixture',
                                 'description':'A harmless panel','tags':[],
                                 'versions':[{'name':['1.0.0','1.1.0'][self.release],
-                                             'hash':HASHES[self.release]}]}]).encode()
+                                             'hash':HASHES[self.release]}]}]
+            records.extend({'id':plugin['id'], 'name':plugin['name'], 'author':'Official Decky store',
+                            'description':'Pinned official archive', 'tags':[],
+                            'versions':[{'name':plugin['version'], 'hash':plugin['sha256']}]}
+                           for plugin in OFFICIAL_PLUGINS)
+            body = json.dumps(records).encode()
             content_type = 'application/json'
         elif self.path.startswith('/versions/') and self.path.endswith('.zip'):
             body = ARTIFACTS.get(self.path.split('/')[-1][:-4])
@@ -93,41 +103,66 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual(status, 403)
         catalogue = ok('GET', '/api/decky/store')['plugins']
         self.assertEqual((catalogue[0]['version'], catalogue[0]['sha256']), ('1.0.0', HASHES[0]))
-        status, _, _ = api('POST', '/api/decky/plugin', {'action':'install','id':123})
+        status, _, _ = api('POST', '/api/decky/plugin', {'action':'install','id':999})
         self.assertEqual(status, 400)  # Third-party code needs explicit acknowledgement.
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'install','id':123,'acknowledged':True}))
+                          {'action':'install','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.0.0')
         self.assertIn('Sample 1.0.0', ssh('cat ~/.local/share/frame-control/decky/plugins/sample-panel/dist/index.js'))
-        status, _, _ = api('POST', '/api/framey/method', {'id':123,'method':'get_setting','args':[]},
+        status, _, _ = api('POST', '/api/framey/method', {'id':999,'method':'get_setting','args':[]},
                            headers={'X-Frame-UI':''})
         self.assertEqual(status, 403)
-        status, _, _ = api('POST', '/api/framey/method', {'id':123,'method':'x;alert(1)','args':[]})
+        status, _, _ = api('POST', '/api/framey/method', {'id':999,'method':'x;alert(1)','args':[]})
         self.assertEqual(status, 400)
         self.assertEqual(ok('POST', '/api/framey/method',
-                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'dark')
+                            {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'dark')
         self.assertTrue(ok('POST', '/api/framey/method',
-                           {'id':123,'method':'set_setting','args':['theme','light']})['result'])
+                           {'id':999,'method':'set_setting','args':['theme','light']})['result'])
         self.assertEqual(ok('POST', '/api/framey/method',
-                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+                            {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+
         StoreFixture.release = 1
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'update','id':123,'acknowledged':True}))
+                          {'action':'update','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
         self.assertEqual(ok('POST', '/api/framey/method',
-                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+                            {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'remove','id':123,'acknowledged':True}))
+                          {'action':'remove','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'], [])
         self.assertEqual(ssh('test -e ~/.local/share/frame-control/decky/plugins/sample-panel && echo yes || echo no').strip(), 'no')
         status, _, _ = api('POST', '/api/framey/method',
-                           {'id':123,'method':'get_setting','args':['theme','dark']})
+                           {'id':999,'method':'get_setting','args':['theme','dark']})
         self.assertEqual(status, 400)  # No method calls while the plugin is removed.
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'install','id':123,'acknowledged':True}))
+                          {'action':'install','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('POST', '/api/framey/method',
-                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+                            {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+
+    def test_two_pinned_official_api_v2_plugins_install_and_remove(self):
+        self.backend()
+        catalog = {plugin['id']:plugin for plugin in ok('GET', '/api/decky/store')['plugins']}
+        for plugin in OFFICIAL_PLUGINS:
+            with self.subTest(plugin=plugin['name']):
+                self.assertEqual(catalog[plugin['id']]['sha256'], plugin['sha256'])
+                job = finished(ok('POST', '/api/decky/plugin',
+                                  {'action':'install','id':plugin['id'],'acknowledged':True}))
+                self.assertFalse(job.get('error'), job)
+                found = [item for item in ok('GET', '/api/decky')['plugins']
+                         if item['storeId'] == plugin['id']]
+                self.assertEqual(len(found), 1)
+                self.assertEqual(found[0]['version'], plugin['version'])
+                installed = f"~/.local/share/frame-control/decky/plugins/{plugin['folder']}"
+                with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                    expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
+                self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
+                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['api_version'], 2)
+                job = finished(ok('POST', '/api/decky/plugin',
+                                  {'action':'remove','id':plugin['id'],'acknowledged':True}))
+                self.assertFalse(job.get('error'), job)
+                self.assertFalse(any(item['storeId'] == plugin['id']
+                                     for item in ok('GET', '/api/decky')['plugins']))
