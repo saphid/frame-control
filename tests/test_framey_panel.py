@@ -47,6 +47,7 @@ class Panel(unittest.TestCase):
         page = framey_panel.panel(14).decode()
         self.assertIn('framey-bundle', page)
         self.assertIn('/framey-runtime/host.js', page)
+        self.assertIn('framey-toasts', page)
         self.assertNotIn('X-Frame-UI', page)
         self.assertNotIn('SP_REACT.createElement', page)  # bundled code is base64, not executable HTML.
         with self.assertRaises(FileNotFoundError):

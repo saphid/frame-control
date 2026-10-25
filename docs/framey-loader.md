@@ -38,11 +38,11 @@ does not receive Frame Control's UI key. React and ReactDOM are bundled for
 offline use under their MIT licenses in `ui/vendor`.
 
 The host currently supplies sections, rows, buttons, toggles, dropdowns,
-scroll containers, a modal, locale information, and backend calls for the
-plugin that owns the panel. Steam library/store page patches, global Steam UI
-components, Decky route hooks, file pickers, and privileged root methods have
-no VR target. A plugin that depends on them can render only part of its UI or
-show an incompatibility message. A Decky plugin's Python backend still runs as
+scroll containers, a modal, locale information, local panel routes and toasts,
+and backend calls for the plugin that owns the panel. Steam library/store page
+patches, global Steam UI components, file pickers, and privileged root methods
+have no VR target. A plugin that depends on them can render only part of its UI
+or show an incompatibility message. A Decky plugin's Python backend still runs as
 the headset user when Decky loads it, so review third-party code before opting
 in. The panel iframe can make HTTPS requests subject to ordinary browser CORS.
 
@@ -91,6 +91,8 @@ plugin initializer. Framey displays up to eight actions and reports a pending,
 success, or failure state. These descriptor fields are Framey additions; Decky
 ignores them. Use a plugin backend method through `@decky/api` for work needing
 persistent state, and keep a quick action safe to repeat.
+See the [API v2 compatibility table](frame-plugin-author.md#framey-api-v2-compatibility)
+for tested behavior and remaining limits.
 
 The [Frame Control extension API](extensions.md) is an alternative for a
 Frame-specific panel. It needs only a local manifest, HTML, and the read-only
