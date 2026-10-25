@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Compare two explicit Windows Wireless Adapter doctor reads in local memory.
+  Highlight exact PnP instances and known state changes after a dropout;
+  incomplete inventories stay unknown. A Forget button clears the comparison.
+  No adapter setting changes or report uploads are made.
+
 - Add recovery steps to the Windows Wireless Adapter doctor for streams that
   drop as they start and dongles that will not reconnect. Compare exact PnP IDs
   and test one connection condition at a time. In-app disable/re-enable remains

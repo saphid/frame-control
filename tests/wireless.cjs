@@ -37,6 +37,33 @@ test('click reads once, disables repeated clicks and renders partial inventory',
   assert.match(f.el('wirelessResult').innerHTML,/distinct Wi-Fi Direct/);
   assert.match(f.el('wirelessStatus').textContent,/Partial PC snapshot/);
 });
+test('two explicit reads compare exact identities and known state changes without claiming a repair',async()=>{
+  const f=fixture();
+  const first={...sample,sources:{pnp:'ok'},devices:[{...sample.devices[0],id:'SWD\\WIFIDIRECT\\one',
+    name:'Adapter <one>',present:true,problemCode:0}]};
+  const second={...first,observedAt:'2026-10-24T12:01:00Z',devices:[
+    {...first.devices[0],present:false,problemCode:22},
+    {...first.devices[0],id:'SWD\\WIFIDIRECT\\two',name:'Adapter <two>'}]};
+  let calls=0; f.context.api=async()=> ++calls===1 ? first : second;
+  await f.el('wirelessRead').onclick();
+  assert.match(f.el('wirelessComparison').innerHTML,/Read PC adapters again/);
+  assert.equal(f.el('wirelessForget').disabled,false);
+  await f.el('wirelessRead').onclick();
+  const change=f.el('wirelessComparison').innerHTML;
+  for(const phrase of ['Changes since previous read','Newly listed','presence Yes → No',
+    'problem code 0 → 22','not a safe disable target','&lt;one&gt;','&lt;two&gt;']) assert.ok(change.includes(phrase),phrase);
+  assert.doesNotMatch(change,/<one>|<two>/);
+  f.el('wirelessForget').onclick();
+  assert.equal(f.el('wirelessComparison').textContent,'');
+  assert.equal(f.el('wirelessForget').disabled,true);
+});
+test('incomplete PnP reads cannot imply a device appeared or vanished',()=>{
+  const f=fixture(); f.context.before={...sample,sources:{pnp:'unavailable'}};
+  f.context.after={...sample,sources:{pnp:'ok'},devices:[]};
+  const out=f.run('compareWireless(before,after)');
+  assert.match(out,/comparison unavailable/);
+  assert.doesNotMatch(out,/No longer listed|Newly listed/);
+});
 test('unsupported, busy and failed probes leave no stale inventory and allow retry',async()=>{
   for(const result of [{state:'unsupported',message:'Windows only'},{state:'busy',message:'Try again'},new Error('Denied')]) {
     const f=fixture();f.el('wirelessResult').textContent='stale inventory';
