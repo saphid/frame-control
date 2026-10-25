@@ -26,7 +26,12 @@ The current Frame SteamVR shell does not expose Decky's Steam Deck Quick Access
 Menu. A backend `Loaded` log only proves backend startup. Test any frontend
 page, setting, notification, route, and controller input while wearing a Frame
 before describing it as working in VR. Until a QAM bridge is verified, a Frame
-Control extension is the practical route for a visible read-only VR panel.
+Control extension is the simplest route for a self-contained read-only VR panel.
+
+Frame Control now has an experimental [Framey panel host](framey-loader.md)
+for API v2 Decky frontend bundles. It renders common settings controls in the
+separate SteamVR dashboard panel, but Steam library and store page patches
+remain unavailable. Wearer-visible use is not yet verified.
 
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect

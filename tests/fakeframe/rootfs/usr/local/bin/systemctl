@@ -3,9 +3,11 @@
 
 Stable NRestarts=0 and inactive keep-awake are harness assumptions, not observed
 device behavior. Real Frame query forms come from the historical doctor runbook
-(2026-09-28, BUILD_ID 20260925.6191901). No service control is emulated here.
+(2026-09-28, BUILD_ID 20260925.6191901). The Framey e2e fixture emulates only
+the Decky test unit's active/start/stop answers; no real service is launched.
 """
 import sys
+from pathlib import Path
 
 args = sys.argv[1:]
 if args in (['--user', 'show', 'steam.service', '-p', 'NRestarts', '--value'],
@@ -13,5 +15,12 @@ if args in (['--user', 'show', 'steam.service', '-p', 'NRestarts', '--value'],
     print('0')
 elif args == ['--user', 'show', 'fc-keep-awake.service', '-p', 'ActiveState', '--value']:
     print('inactive')
+elif args in (['--user', 'is-active', 'frame-control-decky.service'],
+              ['--user', 'is-active', '--quiet', 'frame-control-decky.service'],
+              ['--user', 'stop', 'frame-control-decky.service'],
+              ['--user', 'start', 'frame-control-decky.service']) and \
+        (Path.home()/'.config/systemd/user/frame-control-decky.service').is_file():
+    if args[1] == 'is-active' and '--quiet' not in args:
+        print('active')
 else:
     sys.exit(1)

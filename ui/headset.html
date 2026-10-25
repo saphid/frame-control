@@ -27,10 +27,13 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <p id="actionStatus" role="status" aria-live="polite"></p>
 <h2>Running games</h2><div class="row"><button id="gamesRefresh" class="secondary">Refresh games</button></div>
 <div id="games" class="stack" style="margin-top:12px">Loading…</div>
-<h2>Decky plugins</h2><p>Manage official store plugins here. Their backend can run on Frame, but Decky's Steam Deck Quick Access Menu is absent from this VR shell. Plugin pages, settings, routes, and toasts are not yet available in this panel.</p>
+<h2>Decky plugins</h2><p>Manage official store plugins here. Decky's Quick Access Menu is absent from this VR shell. Framey can show compatible plugin panels and settings below; Steam library and store page patches are unavailable.</p>
 <div class="row"><button id="deckyRefresh" class="secondary">Refresh plugins</button><button id="deckyStoreLoad" class="secondary">Open official store</button></div>
 <p id="deckyState" role="status"></p><div id="deckyInstalled" class="stack"></div>
 <div id="deckyStorePanel" hidden><label>Find a plugin <input id="deckySearch" type="search" placeholder="Search Decky store"></label><div id="deckyStoreList" class="stack"></div></div>
+<div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button></div>
+  <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
+  <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
 <h2>Extensions</h2><p>Local additions run only when opened in the isolated panel below. They can read status but cannot change headset settings through the extension API.</p>
 <div class="row"><button id="extensionsRefresh" class="secondary">Refresh extensions</button><span id="extensionsFolder"><small></small></span></div>
 <div id="extensions" class="stack" style="margin-top:12px">Loading…</div>
@@ -65,13 +68,15 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
-let deckyState=null, deckyStore=[];
+let deckyState=null, deckyStore=[],activeFrameyId=null;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':'Decky is not running. Install it from Frame Control on your computer.';
   const list=byId('deckyInstalled');list.replaceChildren();
   for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
     const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);
-    if(plugin.storeId){const button=document.createElement('button');button.className='danger';button.textContent='Remove';
+    if(plugin.storeId){const open=document.createElement('button');open.className='secondary';open.textContent='Open panel';
+      open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
+      const button=document.createElement('button');button.className='danger';button.textContent='Remove';
       button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
@@ -91,8 +96,37 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
 async function deckyChange(action,plugin){if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
   byId('deckyState').textContent=`${action} ${plugin.name}…`;
   try{const job=await api('/api/decky/plugin',{action,id:plugin.id,acknowledged:true});
-    byId('deckyState').textContent=job.message||'Request queued. Refresh after it finishes.';
-    setTimeout(refreshDecky,5000);}catch(error){byId('deckyState').textContent=error.message;}}
+    if(job.job){let completed=false;for(let n=0;n<180;n++){await new Promise(resolve=>setTimeout(resolve,1000));
+      const progress=await api(`/api/job?id=${encodeURIComponent(job.job)}`);
+      byId('deckyState').textContent=progress.stage||progress.message||`${action} ${plugin.name}…`;
+      if(progress.done){if(progress.error)throw Error(progress.error);completed=true;break;}}
+      if(!completed)throw Error('The operation is still running. Refresh plugins to check its result.');}
+    await refreshDecky();}catch(error){byId('deckyState').textContent=error.message;}}
+function openFrameyPanel(id,name){
+  if(!(deckyState?.plugins||[]).some(p=>p.storeId===id))return;
+  activeFrameyId=id;byId('frameyTitle').textContent=name;
+  byId('frameyPanelStatus').textContent='Loading plugin panel…';
+  byId('frameyFrame').src=`/framey/panel/${id}`;
+  byId('frameyPanel').hidden=false;byId('frameyPanel').scrollIntoView();
+  setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
+    byId('frameyPanelStatus').textContent='No compatible API v2 panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
+}
+byId('frameyClose').onclick=()=>{activeFrameyId=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
+window.addEventListener('message',async event=>{
+  if(activeFrameyId===null||event.source!==byId('frameyFrame').contentWindow)return;
+  const req=event.data;if(!req||typeof req!=='object')return;
+  if(req.type==='framey:ready'){byId('frameyPanelStatus').textContent='Plugin panel ready';
+    api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
+  if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
+  if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
+  if(req.type!=='framey:call'||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
+  const pluginId=activeFrameyId,reply={type:'framey:reply',id:req.id};
+  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args});reply.result=data.result;}
+  catch(error){reply.error=error.message;}
+  if(pluginId===activeFrameyId&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
+});
+window.addEventListener('pointerup',event=>{if(event.isTrusted)
+  api('/api/framey/check',{kind:'input'}).catch(()=>{});},{passive:true});
 async function refreshRecord(){try{const data=await api('/api/record');
   byId('record').textContent=['recording','starting'].includes(data.state)?'Stop recording':'Start recording';
   byId('record').disabled=recordBusy||['stopping','saving'].includes(data.state);

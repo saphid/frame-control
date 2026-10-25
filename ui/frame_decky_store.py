@@ -6,6 +6,7 @@ digest validates transport, not plugin trust; store plugins run as the user.
 import hashlib
 import io
 import json
+import os
 import re
 import secrets
 import urllib.request
@@ -24,8 +25,16 @@ SHA = re.compile(r'[0-9a-f]{64}\Z')
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
 
+def _urls():
+    # Deterministic fixture URLs exist only inside the disposable fake Frame host.
+    if os.environ.get('FRAME_E2E_CONTAINER') == '1':
+        return (os.environ.get('FRAMEY_STORE_URL', STORE_URL),
+                os.environ.get('FRAMEY_CDN_URL', CDN))
+    return STORE_URL, CDN
+
+
 def catalog():
-    request = urllib.request.Request(STORE_URL, headers={'User-Agent': 'Frame-Control'})
+    request = urllib.request.Request(_urls()[0], headers={'User-Agent': 'Frame-Control'})
     with urllib.request.urlopen(request, timeout=15) as response:
         raw = response.read(MAX_STORE + 1)
     if len(raw) > MAX_STORE:
@@ -176,7 +185,7 @@ def change(ssh, action, plugin_id):
             raise ValueError('Only an installed Frame Control store plugin can be updated')
     data = None
     if action != 'remove':
-        url = CDN + plugin['sha256'] + '.zip'
+        url = _urls()[1] + plugin['sha256'] + '.zip'
         with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Frame-Control'}), timeout=35) as response:
             data = response.read(MAX_ZIP + 1)
         folder = archive_info(data, plugin['sha256'], plugin['name'])

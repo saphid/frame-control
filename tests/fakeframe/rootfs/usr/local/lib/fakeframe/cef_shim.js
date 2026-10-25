@@ -25,6 +25,15 @@ function newShortcutId(steam) {
 }
 
 function build(steam) {
+  // Synthetic Decky API for Framey's CDP bridge test. This does not model the
+  // real loader or prove frontend visibility on a headset.
+  const deckyBackend = {async call(route, plugin, method, ...args) {
+    if (route !== 'loader/call_plugin_method' || plugin !== 'Sample Panel')
+      throw Error('unexpected Decky plugin route');
+    if (method === 'get_setting') return args[1];
+    if (method === 'set_setting') return true;
+    throw Error('method unavailable in fake Decky backend');
+  }};
   const findShortcut = id => steam.shortcuts.find(s => s.appid === Number(id));
   const gameOverview = a => ({
     appid: a.appid, display_name: a.display_name, sort_as: a.display_name, app_type: a.app_type ?? 1,
@@ -66,6 +75,7 @@ function build(steam) {
     value,
   });
   return {
+    window: {DeckyBackend: deckyBackend}, DeckyBackend: deckyBackend,
     ...require('./canvas_stub').surface(),
     collectionStore: {
       GetUserCollectionsByName(name) { return steam.collections.filter(c => c.name === name).map(collection); },
