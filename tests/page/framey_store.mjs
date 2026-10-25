@@ -9,13 +9,16 @@ class Element {
   append(...nodes) {this.children.push(...nodes);}
   replaceChildren(...nodes) {this.children=nodes; this.textContent='';}
   scrollIntoView() {}
+  removeAttribute(name) {delete this[name];}
 }
 const elements = new Map();
 elements.set('deckyStoreFilter',Object.assign(new Element('deckyStoreFilter'),{value:'all'}));
 const document = {getElementById(id) {if(!elements.has(id)) elements.set(id,new Element(id)); return elements.get(id);},
   createElement() {return new Element();}, hidden:false};
+const session = new Map();
 const ctx = vm.createContext({document, location:{hash:'',pathname:'/'},
-  sessionStorage:{getItem:()=>'',setItem(){}}, history:{replaceState(){}},
+  sessionStorage:{getItem:key=>session.get(key)||'',setItem:(key,value)=>session.set(key,value),removeItem:key=>session.delete(key)},
+  history:{replaceState(){}}, confirm:()=>true,
   window:{addEventListener(){}}, setInterval(){}, setTimeout(){},
   fetch(){throw Error('No network expected');}, console});
 vm.runInContext(script,ctx);
@@ -43,3 +46,27 @@ el('deckyStoreFilter').value='compatible'; el('deckyStoreFilter').onchange();
 assert.equal(el('deckyStoreSummary').textContent,'42 plugins found');
 el('deckySearch').value='no matching plugin'; el('deckySearch').oninput();
 assert.equal(el('deckyStoreList').textContent,'No plugins match this search.');
+
+// The page polls the actual job endpoint and keeps a separate visible result.
+ctx.mockApi=async path => {
+  if(path==='/api/decky/plugin')return {job:'job-1'};
+  if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
+  if(path==='/api/decky')return {running:true,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2"})',ctx);
+assert.equal(el('deckyJobStatus').textContent,'Installed Plugin 2');
+assert.equal(el('deckyJobProgress').value,100);
+assert.equal(el('deckyJobCheck').hidden,true);
+assert.equal(session.has('frameyPluginJob'),false);
+ctx.mockApi=async path => {
+  if(path==='/api/decky/plugin')return {job:'job-2'};
+  if(path.startsWith('/api/job'))return {done:true,error:'archive digest mismatch'};
+  if(path==='/api/decky')return {running:true,plugins:[]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2"})',ctx);
+assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
+assert.equal(session.has('frameyPluginJob'),false);

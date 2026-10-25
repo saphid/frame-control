@@ -46,6 +46,9 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <h2>Decky plugins</h2><p>Manage official store plugins here. Decky's Quick Access Menu is absent from this VR shell. Framey can show compatible plugin panels and settings below; Steam library and store page patches are unavailable.</p>
 <div class="row"><button id="deckyRefresh" class="secondary">Refresh plugins</button><button id="deckyStoreLoad" class="secondary">Open official store</button></div>
 <p id="deckyState" role="status"></p><div id="deckyInstalled" class="stack"></div>
+<div id="deckyJobPanel" class="block" hidden style="margin:14px 0"><strong id="deckyJobTitle"></strong>
+  <p id="deckyJobStatus" role="status" aria-live="polite"></p><progress id="deckyJobProgress" max="100"></progress>
+  <div class="row"><button id="deckyJobCheck" class="secondary" hidden>Check result</button></div></div>
 <div id="deckyStorePanel" hidden><div class="row" style="margin:16px 0"><label>Find a plugin <input id="deckySearch" type="search" placeholder="Name, author or description"></label>
   <label>Show <select id="deckyStoreFilter"><option value="all">All plugins</option><option value="compatible">Without root requirement</option><option value="installed">Installed plugins</option></select></label></div>
   <p id="deckyStoreSummary" role="status" aria-live="polite"></p><div id="deckyStoreList" class="stack"></div>
@@ -100,7 +103,7 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
-let deckyState=null, deckyStore=[], deckyStoreIndex=0, activeFrameyId=null;
+let deckyState=null, deckyStore=[], deckyStoreIndex=0, activeFrameyId=null, deckyBusy=false;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':'Decky is not running. Install it from Frame Control on your computer.';
   const list=byId('deckyInstalled');list.replaceChildren();
@@ -109,7 +112,7 @@ async function refreshDecky(){try{deckyState=await api('/api/decky');
     if(plugin.storeId){const open=document.createElement('button');open.className='secondary';open.textContent='Open panel';
       open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
-      button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
+      button.disabled=deckyBusy;button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
 async function loadDeckyStore(){byId('deckyStorePanel').hidden=false;
@@ -134,18 +137,43 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
     const button=document.createElement('button');button.textContent='Install';
     const installed=(deckyState?.plugins||[]).find(p=>p.storeId===plugin.id);
     if(installed)button.textContent=installed.version===plugin.version?'Reinstall':'Update';
-    button.disabled=!deckyState?.running||plugin.root;
+    button.disabled=deckyBusy||!deckyState?.running||plugin.root;
     if(plugin.root)label.textContent+=' · Needs root; not supported on Frame';
     button.onclick=()=>deckyChange(installed?'update':'install',plugin);row.append(label,button);list.append(row);}}
-async function deckyChange(action,plugin){if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
-  byId('deckyState').textContent=`${action} ${plugin.name}…`;
-  try{const job=await api('/api/decky/plugin',{action,id:plugin.id,acknowledged:true});
-    if(job.job){let completed=false;for(let n=0;n<180;n++){await new Promise(resolve=>setTimeout(resolve,1000));
-      const progress=await api(`/api/job?id=${encodeURIComponent(job.job)}`);
-      byId('deckyState').textContent=progress.stage||progress.message||`${action} ${plugin.name}…`;
-      if(progress.done){if(progress.error)throw Error(progress.error);completed=true;break;}}
-      if(!completed)throw Error('The operation is still running. Refresh plugins to check its result.');}
-    await refreshDecky();}catch(error){byId('deckyState').textContent=error.message;}}
+function deckyJobView(title,message,percent,failed=false){
+  byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
+  byId('deckyJobStatus').textContent=message;
+  const bar=byId('deckyJobProgress');if(Number.isFinite(percent))bar.value=percent;else bar.removeAttribute('value');
+  byId('deckyJobCheck').hidden=!failed||!sessionStorage.getItem('frameyPluginJob');
+}
+async function followDeckyJob(job,action,name){
+  for(let n=0;n<180;n++){
+    const progress=await api(`/api/job?id=${encodeURIComponent(job)}`);
+    if(progress.done){if(progress.error){sessionStorage.removeItem('frameyPluginJob');throw Error(progress.error);}
+      deckyJobView(`${action} ${name}`,progress.message||`${action} complete`,100);return;}
+    deckyJobView(`${action} ${name}`,progress.stage||'Waiting for Frame…',progress.percent);
+    await new Promise(resolve=>setTimeout(resolve,1000));
+  }
+  throw Error('Still working. Use Check result to reconnect to this job.');
+}
+async function deckyChange(action,plugin){if(deckyBusy||!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
+  deckyBusy=true;showDeckyStore();
+  deckyJobView(`${action} ${plugin.name}`,'Starting…',0);
+  try{const started=await api('/api/decky/plugin',{action,id:plugin.id,acknowledged:true});
+    if(!started.job)throw Error('The server did not return a job ID');
+    sessionStorage.setItem('frameyPluginJob',JSON.stringify({job:started.job,action,name:plugin.name}));
+    await followDeckyJob(started.job,action,plugin.name);
+    sessionStorage.removeItem('frameyPluginJob');
+  }catch(error){deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}`,null,true);}
+  finally{deckyBusy=false;await refreshDecky();}
+}
+async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
+  if(!saved||typeof saved.job!=='string')return;
+  deckyBusy=true;byId('deckyJobCheck').hidden=true;
+  try{await followDeckyJob(saved.job,saved.action,saved.name);sessionStorage.removeItem('frameyPluginJob');}
+  catch(error){deckyJobView(`${saved.action} ${saved.name}`,`Error: ${error.message}`,null,true);}
+  finally{deckyBusy=false;await refreshDecky();}}
+byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
   if(!(deckyState?.plugins||[]).some(p=>p.storeId===id))return;
   activeFrameyId=id;byId('frameyTitle').textContent=name;
@@ -212,5 +240,6 @@ window.addEventListener('message',event=>{if(!activeExtension||event.source!==by
     battery:{percent:latestStatus?.battery?.percent??null},steamvr:!!latestStatus?.services?.steamvr};
   else return;event.source.postMessage({type:'frame-control:response',id:request.id,value},'*');});
 refresh();refreshGames();refreshRecord();refreshExtensions();refreshDecky();
+checkDeckyJob();
 setInterval(()=>{if(!document.hidden){refresh();refreshRecord();}},15000);
 </script></body></html>

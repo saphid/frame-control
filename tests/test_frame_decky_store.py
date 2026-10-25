@@ -118,10 +118,12 @@ class StoreHost(unittest.TestCase):
                  [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
         def ssh(command, **kwargs):
             return '{}'
+        progress = []
         with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
              patch.object(frame_decky_store, 'catalog') as network:
-            frame_decky_store.change(ssh, 'remove', 42)
+            frame_decky_store.change(ssh, 'remove', 42, lambda stage, percent: progress.append((stage, percent)))
             network.assert_not_called()
+        self.assertEqual(progress, [('Checking installed plugins', 5), ('Removing plugin on Frame', 80)])
 
 
 if __name__ == '__main__':
