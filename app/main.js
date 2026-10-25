@@ -589,11 +589,20 @@ function ensureTray() {
     const icon = nativeImage.createFromPath(path.join(__dirname, "build", "icon.png"));
     if (icon.isEmpty()) return false;
     tray = new Tray(icon);
+    // Some Linux desktops accept the Tray object but expose no status icon.
+    // Keep a visible login window rather than hiding the only way back in.
+    if (process.platform === "linux") {
+      const bounds = tray.getBounds();
+      if (!bounds.width || !bounds.height) { tray.destroy(); tray = null; return false; }
+    }
     tray.setToolTip("Frame Control");
     tray.on("click", showWindow);
     updateTrayMenu();
     return true;
-  } catch { return false; }
+  } catch {
+    if (tray) { try { tray.destroy(); } catch {} tray = null; }
+    return false;
+  }
 }
 
 function updateTrayMenu() {
