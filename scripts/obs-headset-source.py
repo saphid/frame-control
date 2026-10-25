@@ -11,10 +11,13 @@ import socket
 import subprocess
 import sys
 import threading
+import time
 
 
 PACKET = 188
 DATAGRAM = PACKET * 7
+STARTUP_TIMEOUT = 20
+STREAM_STALL = 10
 
 
 def remote_command(height=720, fps=30, audio=True):
@@ -37,7 +40,7 @@ def remote_command(height=720, fps=30, audio=True):
             f'{maps} {encode} -f mpegts -flush_packets 1 -')
 
 
-def relay(source, destination):
+def relay(source, destination, on_packet=None):
     """Preserve 188-byte MPEG-TS packet boundaries in loopback datagrams."""
     pending = bytearray()
     total = 0
@@ -46,6 +49,8 @@ def relay(source, destination):
         size = min(len(pending) // PACKET * PACKET, DATAGRAM)
         if size:
             destination.send(bytes(pending[:size]))
+            if on_packet:
+                on_packet()
             del pending[:size]
             total += size
     if pending:
@@ -53,7 +58,7 @@ def relay(source, destination):
     return total
 
 
-def watch_control(stream, proc):
+def watch_control(stream, proc, stopped):
     """A desktop app closes its pipe to stop SSH, including on Windows.
 
     Windows TerminateProcess does not run Python's finally block. The pipe also
@@ -63,8 +68,51 @@ def watch_control(stream, proc):
         stream.read(1)
     except OSError:
         pass
+    stopped.set()
     if proc.poll() is None:
         proc.terminate()
+
+
+class StreamWatchdog:
+    """Close SSH if the first packet or a later packet takes too long."""
+
+    def __init__(self, proc, startup=None, stall=None):
+        self.proc = proc
+        self.startup = STARTUP_TIMEOUT if startup is None else startup
+        self.stall = STREAM_STALL if stall is None else stall
+        self.condition = threading.Condition()
+        self.last_packet = time.monotonic()
+        self.ready = False
+        self.closed = False
+        self.reason = ''
+        self.thread = threading.Thread(target=self._watch, daemon=True)
+        self.thread.start()
+
+    def packet(self):
+        with self.condition:
+            self.ready = True
+            self.last_packet = time.monotonic()
+            self.condition.notify()
+
+    def close(self):
+        with self.condition:
+            self.closed = True
+            self.condition.notify()
+        self.thread.join(timeout=1)
+
+    def _watch(self):
+        with self.condition:
+            while not self.closed:
+                left = self.last_packet + (self.stall if self.ready else self.startup) - time.monotonic()
+                if left <= 0:
+                    self.reason = (f'The Frame sent no OBS video for {self.startup:g} seconds' if not self.ready
+                                   else f'The Frame OBS video stopped for {self.stall:g} seconds')
+                    break
+                self.condition.wait(left)
+            else:
+                return
+        if self.proc.poll() is None:
+            self.proc.terminate()
 
 
 def main(argv=None):
@@ -87,11 +135,17 @@ def main(argv=None):
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
         proc = subprocess.Popen(ssh, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+        stopped = threading.Event()
+        watchdog = StreamWatchdog(proc)
         if args.control_stdin:
-            threading.Thread(target=watch_control, args=(sys.stdin.buffer, proc), daemon=True).start()
+            threading.Thread(target=watch_control, args=(sys.stdin.buffer, proc, stopped), daemon=True).start()
         try:
-            amount = relay(proc.stdout, _Sender(udp, target))
+            amount = relay(proc.stdout, _Sender(udp, target), watchdog.packet)
             code = proc.wait(timeout=10)
+            if stopped.is_set():
+                return 0
+            if watchdog.reason:
+                raise RuntimeError(watchdog.reason)
             if code or not amount:
                 raise RuntimeError(f'Frame stream stopped (SSH exit {code}; {amount} bytes). '
                                    'Check SteamVR and the audio monitor; try --no-audio if needed.')
@@ -99,6 +153,7 @@ def main(argv=None):
         except KeyboardInterrupt:
             return 0
         finally:
+            watchdog.close()
             proc.stdout.close()
             if proc.poll() is None:
                 proc.terminate()
