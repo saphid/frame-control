@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Import a base APK with supported native-library or asset splits from a local
+  Android backup or XAPK/APKS/APKM bundle. Check package and version before
+  install; refuse resource, code and feature splits and device-variant sets.
+  This route has local fixture coverage, not a real split-game headset test.
+
 - Save Steam screenshots under a separate folder for each headset, Steam
   account and game. Equal screenshot filenames no longer overwrite one another;
   existing files in the old flat folder are left in place.

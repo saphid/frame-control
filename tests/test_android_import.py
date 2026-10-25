@@ -16,6 +16,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
 import frame_android_import as backup
 import server
 from apk_fixtures import apk, manifest
+from test_quest import apk_bytes
 
 PKG = 'com.Armature.VR4'
 META = {'package': PKG, 'label': PKG, 'version': '', 'version_code': 210,
@@ -65,6 +66,41 @@ class BackupTests(unittest.TestCase):
         duplicate.write_bytes(b'data')
         with self.assertRaisesRegex(backup.android.FrameError, 'unique names'):
             backup.inspect([str(self.apk), str(self.obb[0]), str(duplicate)])
+
+    def test_supported_split_set_uses_manifest_base_and_existing_merge_path(self):
+        base = self.root / 'not-named-base.apk'
+        base.write_bytes(apk_bytes(PKG, split_required=True, version_code=210))
+        split = self.root / 'arm64.apk'
+        split.write_bytes(apk_bytes(PKG, split='config.arm64_v8a', version_code=210,
+                                    files={'lib/arm64-v8a/libgame.so': b'game'}))
+        plan = backup.inspect([str(split), str(base)])
+        self.assertEqual(plan['apk'], base)
+        self.assertEqual(plan['splits'], [split])
+        self.assertEqual(backup.public(plan)['splits'], ['arm64.apk'])
+        with patch.object(backup.quest, '_running', return_value=False), \
+                patch.object(backup.android, 'read_meta', return_value=None), \
+                patch.object(backup.android, 'install', return_value=META) as install:
+            backup.install(plan)
+        self.assertEqual(install.call_args.kwargs['splits'], [str(split)])
+
+    def test_split_mismatch_and_unsupported_resource_fail_before_frame_access(self):
+        base = self.root / 'base.apk'
+        base.write_bytes(apk_bytes(PKG, split_required=True, version_code=210))
+        split = self.root / 'split.apk'
+        with patch.object(backup.android, 'ssh') as ssh:
+            split.write_bytes(apk_bytes(PKG, split='config.arm64_v8a', version_code=211,
+                                        files={'lib/arm64-v8a/libgame.so': b'game'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'version cannot be verified'):
+                backup.inspect([str(base), str(split)])
+            split.write_bytes(apk_bytes(PKG, split='config.xxhdpi', version_code=210,
+                                        files={'res/drawable/icon.png': b'png'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'screen-density or language resources'):
+                backup.inspect([str(base), str(split)])
+            split.write_bytes(apk_bytes(PKG, split='config.x86_64', version_code=210,
+                                        files={'lib/x86_64/libgame.so': b'game'}))
+            with self.assertRaisesRegex(backup.android.FrameError, 'another device'):
+                backup.inspect([str(base), str(split)])
+        ssh.assert_not_called()
 
     def test_obb_only_repairs_existing_game_and_requests_apk_when_not_installed(self):
         with patch.object(backup.android, 'read_meta', return_value=None):
@@ -204,6 +240,21 @@ class BundleTests(unittest.TestCase):
                 self.assertTrue(all(not Path(p).exists() for p in folders))
                 self.assertTrue(source.exists())
 
+    def test_bundle_with_supported_split_uses_same_preview_and_cleanup(self):
+        source = self.bundle({
+            'base.apk': apk_bytes(PKG, split_required=True, version_code=210),
+            'config.arm64.apk': apk_bytes(PKG, split='config.arm64_v8a', version_code=210,
+                                          files={'lib/arm64-v8a/libgame.so': b'game'}),
+        }, suffix='.apks')
+        with patch.object(backup.android, 'ssh') as ssh:
+            read = server.android_backup({'action': 'inspect', 'paths': [str(source)]})
+        ssh.assert_not_called()
+        self.assertEqual(read['plan']['apk'], 'base.apk')
+        self.assertEqual(read['plan']['splits'], ['config.arm64.apk'])
+        folders = list(server._android_backups[read['token']]['dirs'])
+        server.android_backup({'action': 'discard', 'token': read['token']})
+        self.assertTrue(all(not Path(p).exists() for p in folders))
+
     def test_browser_upload_bundle_is_staged_and_removed_with_extraction(self):
         source = self.bundle()
         token = server.android_backup({'action': 'begin'})['token']
@@ -221,7 +272,7 @@ class BundleTests(unittest.TestCase):
 
     def test_reject_layouts_before_any_headset_access_and_cleanup_failed_stage(self):
         cases = [
-            ({'base.apk': self.apk.read_bytes(), 'split.apk': self.apk.read_bytes()}, 'Split APK'),
+            ({'base.apk': self.apk.read_bytes(), 'split.apk': self.apk.read_bytes()}, 'exactly one base'),
             ({'base.apk': self.apk.read_bytes(), f'Android/data/{PKG}/save': b'private'}, 'restore'),
             ({'base.apk': self.apk.read_bytes(), 'main.1.org.other.game.obb': b'wrong'}, 'does not belong'),
             ({'base.apk': self.apk.read_bytes(), '../outside.obb': b'bad'}, 'unsafe'),
@@ -229,7 +280,7 @@ class BundleTests(unittest.TestCase):
             ({'base.apk': self.apk.read_bytes(), 'CON.apk': b'bad'}, 'unsafe'),
             ({'base.apk': self.apk.read_bytes(), 'other.exe': b'bad'}, 'Unsupported'),
             ({'base.apk': self.apk.read_bytes(), 'BASE.apk': b'bad'}, 'duplicate'),
-            ({'manifest.json': b'{}'}, 'standalone APK'),
+            ({'manifest.json': b'{}'}, 'base APK'),
         ]
         for entries, message in cases:
             with self.subTest(message=message), patch.object(backup.android, 'ssh') as ssh:
@@ -277,7 +328,8 @@ class BundleTests(unittest.TestCase):
                                     ('x' * len('isSplitRequired')).encode('utf-16-le'))
             self.apk.write_bytes(apk({'AndroidManifest.xml': data}))
             with self.subTest(attrs=attrs):
-                with self.assertRaisesRegex(backup.android.FrameError, 'needs split APKs'):
+                message = 'exactly one base' if attrs.get('split') else 'needs split APKs'
+                with self.assertRaisesRegex(backup.android.FrameError, message):
                     backup.inspect([str(self.apk)])
 
     def test_bundle_install_uses_existing_queue_and_cleans_after_failure(self):
