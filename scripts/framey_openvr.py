@@ -21,8 +21,12 @@ class Mouse(C.Structure):
     _fields_ = [('x', C.c_float), ('y', C.c_float), ('button', C.c_uint32)]
 
 
+class Scroll(C.Structure):
+    _fields_ = [('xdelta',C.c_float),('ydelta',C.c_float),('unused',C.c_uint32),('viewportscale',C.c_float)]
+
+
 class Data(C.Union):
-    _fields_ = [('mouse', Mouse), ('reserved', C.c_uint64 * 6)]
+    _fields_ = [('mouse', Mouse), ('scroll', Scroll), ('reserved', C.c_uint64 * 6)]
 
 
 class Event(C.Structure):
@@ -87,6 +91,11 @@ class Overlay:
         # not a tracked controller and its void return does not prove delivery.
         view = self.interface(b'FnTable:IVROverlayView_003')
         event = Event(kind, 0xFFFFFFFF, 0, Data(mouse=Mouse(x, y, button)))
+        C.CFUNCTYPE(None, C.c_uint64, C.POINTER(Event))(view[2])(self.handle, C.byref(event))
+
+    def post_scroll(self, xdelta, ydelta):
+        view = self.interface(b'FnTable:IVROverlayView_003')
+        event = Event(309, 0xFFFFFFFF, 0, Data(scroll=Scroll(xdelta, ydelta, 0, 1)))
         C.CFUNCTYPE(None, C.c_uint64, C.POINTER(Event))(view[2])(self.handle, C.byref(event))
 
     def image_hash(self):

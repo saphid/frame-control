@@ -238,7 +238,7 @@ print('{}')
             finally:
                 remote('rm -f ' + shlex.quote(shot))
             # Same SteamVR mirror used by OBS; FFmpeg is already on the Frame.
-            mirror = remote('ffmpeg -hide_banner -loglevel error -f v4l2 -i /dev/video99 -frames:v 1 -f image2pipe -vcodec png -', text=False, timeout=20)
+            mirror = remote("ffmpeg -hide_banner -loglevel error -f v4l2 -i /dev/video99 -vf 'select=gte(n\\,60)' -frames:v 1 -f image2pipe -vcodec png -", text=False, timeout=20)
             (args.output/'mirror-private.png').write_bytes(mirror)
             report['mirrorSha256'] = hashlib.sha256(mirror).hexdigest()
         report['passed'] = bool(report['overlay']['state']['visible'])

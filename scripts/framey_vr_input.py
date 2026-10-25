@@ -113,6 +113,12 @@ def exercise(profile, plugin_id, folder):
         # CDP only types text; OpenVR supplies pointer focus into the field.
         command(parent, 'Input.insertText', {'text':'framey-ci'})
         result['textValue'] = wait(lambda:panel.eval('document.querySelector("#vr-controls input[type=text]").value'), lambda v:v == 'framey-ci')
+        panel.eval('window.scrollTo(0,0)')
+        result['scrollBefore'] = panel.eval('scrollY')
+        vr.post_scroll(0,-3)
+        time.sleep(.5)
+        result['scrollAfter'] = panel.eval('scrollY')
+        result['nativeScrollMoved'] = result['scrollAfter'] != result['scrollBefore']
         panel.eval('document.getElementById("vr-controls").remove()')
         # Scroll saved status into the visible iframe for compositor evidence.
         panel.eval('document.querySelector("[role=status]").scrollIntoView({block:"center"})')

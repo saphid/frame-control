@@ -26,7 +26,8 @@ installs anything; it returns nonzero when the panel is absent/hidden.
 `vrcmd --handlewakeup` and requests the Frame Control dashboard panel. It reads
 OpenVR state, captures a stereo compositor screenshot through the production
 `ui/frame_vrshot.py` API, and captures `/dev/video99`, the same SteamVR mirror
-used by OBS. It restores the saved power values and reads them back. It hides
+used by OBS. The mirror reader drains 60 frames before selecting its image,
+because the first loopback buffer can contain a previous session. It restores the saved power values and reads them back. It hides
 the test dashboard if the dashboard was originally closed. It does not change
 the proximity sensor, tracking driver, display hardware, root filesystem,
 room setup, or spatial panel placement. An unreachable suspended Frame still
@@ -50,7 +51,8 @@ iframe through its own debugging target, and reads control geometry. OpenVR's
 actual gamescope overlay. The check verifies delivery to the intended element
 and a trusted pointer event, toggles the sample, reads its real Decky settings
 file, reopens a fresh iframe, and checks the saved value. It also clicks the
-Settings/Panel tabs and quick action. Temporary controls exercise the shipped
+Settings/Panel tabs and quick action. A smooth-scroll event is attempted and its measured scroll offset is reported.
+Temporary controls exercise the shipped
 `DFL.SliderField` and `DFL.TextField`; their values remain UI-only. Text uses
 CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,
 not proof of a physical controller or the SteamVR virtual keyboard.
