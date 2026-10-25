@@ -4,7 +4,7 @@ A SideQuest backup can contain a small APK and much larger `main.…obb` and
 `patch.…obb` files. All of them belong to the same game. Installing only the APK
 can leave the game unable to start because its assets are missing.
 
-In **Add / Install → Import Android game** (or **Apps → Browse → Import Android game**), choose the APK and its OBB files together.
+In **Add / Install → Import Android game** (or **Apps → Browse → Import Android game**), choose the base APK, any supported splits, and its OBB files together.
 You can also drop them anywhere in the window. In the desktop app, dropping the
 APK alone finds matching OBB files beside it; dropping a folder containing the
 APK and OBBs also works. Browsers can read only the files you explicitly choose.
@@ -37,9 +37,13 @@ are discarded after use or cancellation; abandoned imports expire after an hour
 when the importer is next used, and dead-server staging folders are swept at
 startup.
 
-This flow handles one ordinary APK and standard OBB files for one game at a time.
-Split APKs, XAPK/APKS archives, nested Android/data folders and private save
-archives need their own import handling. PC ZIP/folder/EXE imports keep their
+This flow handles one base APK, supported native-library or asset splits, and
+standard OBB files for one game at a time. It checks the package and version in
+each split manifest before touching the headset. The existing Quest merger
+rejects resource, code and feature splits and sets with multiple device
+variants. A merged APK is re-signed; that can affect a game's licence or login.
+XAPK/APKS/APKM archives use the same checks. Nested Android/data folders and
+private save archives remain unsupported. PC ZIP/folder/EXE imports keep their
 existing route. Quest USB and Meta library imports keep their existing workflow.
 
 Validation covers actual APK parsing, the three-file backup layout, package
@@ -55,3 +59,5 @@ released, and the battery remained at 99%. See [device evidence](evidence/androi
 The headset was unworn; this checks transfer and persistence, not rendering,
 Resident Evil 4 gameplay, or a game that exits before data can be copied. This
 flow does not change APK compatibility or remove licence checks.
+The supported-split backup route was checked with generated local fixtures and
+existing merger tests, not a real split game on the Frame.
