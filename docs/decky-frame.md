@@ -142,6 +142,9 @@ on Steam Deck hardware may fail even if the loader runs. Frame Control lists
 plugins already present in its managed folder and the upstream `~/homebrew`
 folder. The opt-in store manager installs compatible archives only into its
 own folder. It cannot make Steam Deck QAM plugin pages visible in Frame VR.
+The experimental [Framey panel host](framey-loader.md) can render compatible
+plugin settings inside Frame Control's separate SteamVR dashboard panel.
+The real headset still needs a worn-user visibility and controller check.
 
 The latest tested release was
 [Decky 3.3.0](https://github.com/SteamDeckHomebrew/decky-loader/releases/tag/v3.3.0),

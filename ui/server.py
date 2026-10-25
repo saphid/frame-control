@@ -81,6 +81,7 @@ import frame_compat_db  # noqa: E402
 import frame_extensions  # noqa: E402
 import frame_decky  # noqa: E402
 import frame_decky_store  # noqa: E402
+import framey_panel  # noqa: E402
 import frame_headset  # noqa: E402
 
 frame_host.trust_bundled_cas()
@@ -94,6 +95,7 @@ HEADSET_RUNTIME = LOCAL and os.environ.get("FRAME_HEADSET_RUNTIME") == "1"
 if LOCAL:
     os.environ["PATH"] = f"{HERE / 'local-bin'}{os.pathsep}{os.environ.get('PATH', '')}"
 UI_KEY = os.environ.get("FRAME_UI_KEY") or "1"
+FRAMEY_CHECK_LOCK = threading.Lock()
 DEVICE = os.environ.get("FRAME_DEVICE") or "phone"
 # What the Frame's KDE Connect calls this device (keyboard and trackpad).
 INPUT_NAME = DEVICE if LOCAL else socket.gethostname().split(".")[0]
@@ -571,6 +573,39 @@ def decky_plugin(body):
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     return start_job('Decky plugin ' + action,
                      lambda: frame_decky_store.change(ssh, action, plugin_id))
+
+
+def framey_method_action(body):
+    if not HEADSET_RUNTIME and os.environ.get('FRAME_E2E_CONTAINER') != '1':
+        raise Failure('Decky plugin panels run in the headset service', 400)
+    try:
+        return framey_panel.call_method(ssh, body.get('id'), body.get('method'), body.get('args'))
+    except framey_panel.PanelError as exc:
+        raise Failure(str(exc), 400) from exc
+
+
+def framey_check_action(body):
+    """Record only a live, explicitly started worn-headset check."""
+    if not HEADSET_RUNTIME or body.get('kind') not in ('input', 'panel'):
+        raise Failure('No headset interaction check is active', 400)
+    path = Path.home()/'.local/share/frame-control/headset/worn-check.json'
+    with FRAMEY_CHECK_LOCK:
+        try:
+            state = json.loads(path.read_text())
+        except (OSError, ValueError):
+            raise Failure('No headset interaction check is active', 409)
+        started = state.get('started')
+        if (not isinstance(state.get('nonce'), str) or not isinstance(started, (int, float)) or
+                not 0 <= time.time() - started <= 90):
+            raise Failure('The headset interaction check expired', 409)
+        state[body['kind']] = {'at':time.time(), 'pluginId':body.get('pluginId') if body['kind']=='panel' else None}
+        next_path = path.with_name('worn-check-' + secrets.token_hex(4) + '.next')
+        try:
+            next_path.write_text(json.dumps(state)+'\n')
+            next_path.replace(path)
+        finally:
+            next_path.unlink(missing_ok=True)
+    return {'recorded':True}
 
 
 def headset_action(body):
@@ -3414,6 +3449,8 @@ POST = {
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/decky": decky,
     "/api/decky/plugin": decky_plugin,
+    "/api/framey/method": framey_method_action,
+    "/api/framey/check": framey_check_action,
     "/api/headset": headset_action,
     "/api/headset/quick": headset_quick,
     "/api/vr": vr,
@@ -3562,7 +3599,7 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return True
 
-    def send_bytes(self, data, ctype, status=200, headers=(), extension=False):
+    def send_bytes(self, data, ctype, status=200, headers=(), extension=False, framey=False):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         for name, value in headers:
@@ -3571,7 +3608,9 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Cache-Control", "no-store")
         # Nobody may frame the UI (clickjacking).
         self.send_header("X-Content-Type-Options", "nosniff")
-        if extension:
+        if framey:
+            self.send_header("Content-Security-Policy", "default-src 'none'; script-src http://127.0.0.1:* http://localhost:* blob:; style-src 'unsafe-inline'; img-src https: data:; connect-src https:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")
+        elif extension:
             self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")
         else:
             self.send_header("X-Frame-Options", "DENY")
@@ -3623,6 +3662,21 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_decky.status(ssh))
             elif path == "/api/decky/store":
                 self.send_json({'plugins': frame_decky_store.catalog()})
+            elif path.startswith('/framey/panel/'):
+                try:
+                    plugin_id = int(path.rsplit('/', 1)[1])
+                    self.send_bytes(framey_panel.panel(plugin_id), 'text/html; charset=utf-8', framey=True)
+                except (ValueError, FileNotFoundError, OSError):
+                    self.send_json({'error':'Framey panel unavailable'}, 404)
+            elif path.startswith('/framey-runtime/'):
+                files = {'react.js':'vendor/react-18.3.1.min.js',
+                         'react-dom.js':'vendor/react-dom-18.3.1.min.js',
+                         'host.js':'framey-host.js'}
+                name = files.get(path.rsplit('/',1)[-1])
+                if not name:
+                    self.send_json({'error':'not found'}, 404)
+                else:
+                    self.send_bytes((HERE/name).read_bytes(), 'text/javascript; charset=utf-8', framey=True)
             elif path == "/api/headset":
                 if LOCAL:
                     raise Failure("Manage this panel from Frame Control on your computer", 400)

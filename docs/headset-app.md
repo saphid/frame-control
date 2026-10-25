@@ -33,6 +33,11 @@ It offers the version 1 read-only `capabilities` and `status` bridge from
 [the extension guide](extensions.md). Installing an extension still means
 copying its folder to the Frame; the panel does not download third-party code.
 
+The opt-in [Framey loader](framey-loader.md) hosts compatible Decky plugin
+panels and settings in a separate sandboxed iframe on this SteamVR page. The
+existing official Decky store manager installs and removes their code. The
+frontend host is browser-tested, but wearer-visible VR use remains unverified.
+
 The panel also lists Decky plugins and can install, update, or remove compatible
 plugins from the official store when the opt-in managed loader is running.
 Each change asks for confirmation. The Frame VR shell does not show Decky's
