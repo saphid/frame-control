@@ -58,6 +58,31 @@ class Panel(unittest.TestCase):
         with self.assertRaises(FileNotFoundError):
             framey_panel.panel(15)
 
+    def test_legacy_iife_is_admitted_without_api_manifest(self):
+        (self.folder/'plugin.json').write_text(json.dumps({'name':'Legacy', 'flags':[]}))
+        (self.folder/'dist/index.js').write_text(
+            '(function(DFL, React){return DFL.definePlugin(serverAPI=>({content:React.createElement("p",null,"Legacy")}));})(DFL, SP_REACT);')
+        self.assertIn('framey-bundle', framey_panel.panel(14).decode())
+        (self.folder/'dist/index.js').write_text('window.unrecognized = true;')
+        with self.assertRaises(FileNotFoundError):
+            framey_panel.panel(14)
+
+    def test_legacy_keyword_rpc_is_scoped_and_validated(self):
+        import shlex
+        def fake_ssh(command, stdin=None, **_):
+            payload = json.loads(shlex.split(command)[2])
+            self.assertEqual(payload, {'name':'Legacy', 'method':'read_setting',
+                                      'args':[{'key':'mode'}], 'legacy':True})
+            self.assertIn('loader/call_legacy_plugin_method', stdin)
+            return json.dumps({'result':{'success':True, 'result':'dark'}})
+        with patch.object(framey_panel.frame_decky, 'status', return_value={
+            'plugins':[{'storeId':14,'name':'Legacy'}]}):
+            self.assertEqual(framey_panel.call_method(fake_ssh, 14, 'read_setting', [{'key':'mode'}], True),
+                             {'result':{'success':True, 'result':'dark'}})
+            for args, legacy in [([],True), ([[]],True), ([{},{}],True), ([{}],'true')]:
+                with self.assertRaises(framey_panel.PanelError):
+                    framey_panel.call_method(fake_ssh, 14, 'read_setting', args, legacy)
+
     def test_unsupported_root_symlink_and_unmanaged_are_refused(self):
         manifest = self.folder/'plugin.json'
         manifest.write_text(json.dumps({'name':'ProtonDB Badges','api_version':0}))

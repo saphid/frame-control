@@ -4,6 +4,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
+    {'id': 12, 'name': 'MusicControl', 'version': '1.1.6', 'api_version': 'legacy', 'folder': 'MusicControl', 'sha256': '246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62'},
     {'id': 14, 'name': 'ProtonDB Badges', 'version': '1.3.4', 'api_version': 2,
      'folder': 'protondb-decky', 'sha256': '90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358'},
     {'id': 123, 'name': 'Steam Status', 'version': '1.2.3', 'api_version': 2,
@@ -20,7 +21,7 @@ PLUGINS = (
 
 # This archive has a legacy IIFE frontend with no manifest API version.
 LEGACY_PLUGINS = (
-    {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': None,
+    {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': 'legacy',
      'folder': 'SDH-CssLoader', 'sha256': '99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231'},
 )
 

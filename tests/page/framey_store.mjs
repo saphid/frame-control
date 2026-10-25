@@ -60,6 +60,7 @@ assert.equal(el('deckyJobStatus').textContent,'Installed Plugin 2');
 assert.equal(el('deckyJobProgress').value,100);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+
 // A stopped Decky service must still offer recovery by removing its owned plugin.
 ctx.mockApi=async path => path==='/api/decky' ?
   {managed:true,running:false,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]} :
@@ -80,6 +81,28 @@ vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"b".repeat(64)})',ctx);
 assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
 assert.equal(session.has('frameyPluginJob'),false);
+
+// A failed refresh must remove old install buttons. A late older response
+// must not replace the newer catalog the wearer just requested.
+ctx.mockApi=async path => {assert.equal(path,'/api/decky/store');throw Error('offline');};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('loadDeckyStore()',ctx);
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+assert.equal(el('deckyStoreList').children.length,0);
+let finishOld, finishNew;
+ctx.mockApi=path => {assert.equal(path,'/api/decky/store');
+  return new Promise(resolve=>{if(!finishOld)finishOld=resolve;else finishNew=resolve;});};
+vm.runInContext('api=mockApi',ctx);
+const old=vm.runInContext('loadDeckyStore()',ctx);
+const current=vm.runInContext('loadDeckyStore()',ctx);
+assert.equal(el('deckyStoreList').children.length,0);
+assert.equal(el('deckyStoreSummary').textContent,'Loading official Decky store…');
+finishNew({plugins:[{id:98,name:'Current',version:'2.0',description:'Latest'}]});
+await current;
+finishOld({plugins:[{id:97,name:'Stale',version:'1.0',description:'Older'}]});
+await old;
+assert.match(el('deckyStoreList').children[0].children[0].textContent,/Current/);
+assert.doesNotMatch(el('deckyStoreList').children[0].children[0].textContent,/Stale/);
 
 // A saved job does not survive a server restart. Clear it instead of offering
 // Check result forever for an ID that the new server cannot know.

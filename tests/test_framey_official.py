@@ -26,11 +26,19 @@ class OfficialBundles(unittest.TestCase):
         data = archive(plugin)
         self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
         self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
-        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+        with tempfile.TemporaryDirectory() as root, zipfile.ZipFile(io.BytesIO(data)) as bundle:
             manifest = json.loads(bundle.read(plugin['folder'] + '/plugin.json'))
             self.assertNotIn('api_version', manifest)
             frontend = bundle.read(plugin['folder'] + '/dist/index.js')
             self.assertIn(b'deckyFrontendLib.definePlugin', frontend)
+            bundle.extractall(root)
+            folder = Path(root) / plugin['folder']
+            (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
+            with patch.object(framey_panel, 'PLUGINS', Path(root)):
+                page = framey_panel.panel(plugin['id']).decode()
+            encoded = re.search(r'<script id="framey-bundle" type="application/json">([^<]+)</script>', page)
+            self.assertIsNotNone(encoded)
+            self.assertEqual(base64.b64decode(encoded.group(1)), frontend)
 
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_bluetooth_initial_panel_uses_safe_token_fallback(self):
@@ -60,7 +68,7 @@ class OfficialBundles(unittest.TestCase):
                                      plugin['folder'])
                     with zipfile.ZipFile(io.BytesIO(data)) as z:
                         manifest = json.loads(z.read(plugin['folder'] + '/plugin.json'))
-                        self.assertEqual(manifest['api_version'], plugin['api_version'])
+                        self.assertEqual(manifest.get('api_version', 'legacy'), plugin['api_version'])
                         z.extractall(plugins)
                     folder = plugins / plugin['folder']
                     (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
