@@ -48,7 +48,7 @@
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
-      onChange:e=>onChange?.(e.target.checked)}));
+      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
   const DropdownItem = ({label, description, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
     const choices=[];
     const option = entry => {
@@ -61,20 +61,22 @@
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement(Field, {label, description}, R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
-      onChange:e=>{const entry=choices[Number(e.target.value)];if(entry)onChange?.(entry);}},
+      onChange:e=>{const entry=choices[Number(e.target.value)];if(!disabled && entry)onChange?.(entry);}},
       selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
       entries));
   };
-  const ButtonItem = ({label, children, disabled, onClick}) => R.createElement(Field, {label},
-    R.createElement('button', {type:'button', disabled:!!disabled, onClick}, children || label));
+  const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
+    R.createElement('button', {type:'button', disabled:!!disabled,
+      onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
   const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, placeholder, disabled:!!disabled, onChange}));
+      value, placeholder, disabled:!!disabled, onChange:e=>{if(!disabled)onChange?.(e);}}));
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue,
     valueSuffix='', onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
-      'aria-label':typeof label==='string'?label:undefined, onChange:e=>onChange?.(Number(e.target.value))}),
+      'aria-label':typeof label==='string'?label:undefined,
+      onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
     showValue && R.createElement('span', null, String(value) + valueSuffix));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
