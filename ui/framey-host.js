@@ -14,7 +14,11 @@
   // Steam normally fills these token maps. Official plugins can safely use
   // their own fallback strings when the isolated panel has no Steam tokens.
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en'],
-    m_mapTokens:new Map(), m_mapFallbackTokens:new Map()};
+    m_mapTokens:new Map(), m_mapFallbackTokens:new Map([
+      ['Settings_Bluetooth_Connected','Connected'],
+      ['Settings_Bluetooth_NotConnected','Not connected'],
+      ['Settings_Bluetooth_Devices','Devices'],
+    ])};
   const root = document.getElementById('framey-root');
   const error = document.getElementById('framey-error');
   const toastRoot = document.getElementById('framey-toasts');

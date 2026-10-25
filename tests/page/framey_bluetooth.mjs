@@ -30,6 +30,7 @@ context.SP_REACT=window.SP_REACT;
 context.SP_JSX=window.SP_JSX;
 context.LocalizationManager=window.LocalizationManager;
 assert.equal(window.LocalizationManager.m_mapTokens.size,0);
+assert.equal(window.LocalizationManager.m_mapFallbackTokens.get('Settings_Bluetooth_Devices'),'Devices');
 vm.runInContext(official,context,{timeout:2000});
 const plugin=window.__official();
 assert.equal(plugin.content?.type?.name,'Content');
@@ -37,5 +38,6 @@ const panel=plugin.content.type();
 assert.equal(panel.type,'div');
 const text=JSON.stringify(panel);
 assert.match(text,/Bluetooth/);
-assert.match(text,/Settings_Bluetooth_Devices/); // Token fallback when Steam tokens are absent.
+assert.match(text,/Devices/); // Readable fallback when Steam tokens are absent.
+assert.doesNotMatch(text,/Settings_Bluetooth_Devices/);
 assert.equal(messages.filter(message=>message.type==='framey:call').length,0);

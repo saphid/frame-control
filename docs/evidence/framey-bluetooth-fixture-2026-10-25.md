@@ -8,8 +8,9 @@ removed it. An earlier real Frame check recorded the backend's `Bluetooth
 plugin loaded` line while SteamVR was in standby.
 
 In a local Node host test, its official frontend starts and builds an initial
-panel tree. Framey supplies empty Steam localization token maps, so the plugin
-can use its own fallback labels. The test leaves React effects and click
+panel tree. Framey supplies empty Steam token maps and readable English
+fallbacks for the three Bluetooth labels that lack plugin-owned fallbacks.
+The test leaves React effects and click
 handlers inert and sends no backend calls. It does not inspect paired devices,
 change Bluetooth state, exercise a controller, or prove the panel is visible in
 VR. No worn-headset check has passed for this plugin.
