@@ -1,5 +1,6 @@
 """Local headset actions keep writes scoped to the opt-in VR server."""
 import sandbox  # noqa: F401
+import os
 from pathlib import Path
 import sys
 import tempfile
@@ -30,7 +31,8 @@ class HeadsetActions(unittest.TestCase):
             file = Path(result['file'])
             self.assertEqual(file.parent, Path(home) / 'Pictures/FrameControl')
             self.assertEqual(file.read_bytes(), b'PNG data')
-            self.assertEqual(file.stat().st_mode & 0o777, 0o600)
+            if os.name != 'nt':  # Windows reports emulated mode bits for user files.
+                self.assertEqual(file.stat().st_mode & 0o777, 0o600)
 
     def test_local_recording_uses_separate_work_folder(self):
         recorder = frame_clips.Recorder(Mock(), Mock(), Mock(), Mock(),
