@@ -40,6 +40,7 @@
       "install-link.js",
       "updater.js",
       "preferences.js",
+      "login-item.js",
       "meta-signin.js",
       "package.json",
       "build/icon.png"

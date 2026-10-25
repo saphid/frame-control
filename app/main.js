@@ -1,7 +1,7 @@
 // Frame Control as a desktop app (macOS, Windows, Linux): starts ui/server.py on
 // a free loopback port and shows it in a native window. The server does all the
 // work over the `frame` SSH alias; this file only hosts it.
-const { app, BrowserWindow, Menu, Notification, clipboard, dialog, ipcMain, nativeImage, session, shell } = require("electron");
+const { app, BrowserWindow, Menu, Notification, Tray, clipboard, dialog, ipcMain, nativeImage, session, shell } = require("electron");
 const { execFile, spawn } = require("child_process");
 const { promisify } = require("util");
 const fs = require("fs");
@@ -12,6 +12,7 @@ const path = require("path");
 const { SCHEME, parseInstallLink, linkFromArgv } = require("./install-link");
 const updater = require("./updater");
 const { preferenceStore } = require("./preferences");
+const { createLoginItem } = require("./login-item");
 const { createMetaSignIn } = require("./meta-signin");
 
 const run = promisify(execFile);
@@ -30,10 +31,12 @@ const LOG = path.join(LOG_DIR, "server.log");
 const BG = "#0d1117";
 const FRAME = process.env.FRAME_ALIAS || "frame";
 const preferences = preferenceStore(path.join(app.getPath("userData"), "client-preferences.json"));
+const loginItem = createLoginItem({ electronApp: app });
 
 let server = null;
 let url = null;
 let win = null;
+let tray = null;
 let quitting = false;
 let python = null;
 
@@ -573,7 +576,51 @@ function registerScheme() {
   }
 }
 
-function createWindow() {
+function showWindow() {
+  if (!win) return createWindow(true);
+  if (win.isMinimized()) win.restore();
+  win.show();
+  win.focus();
+}
+
+function ensureTray() {
+  if (tray) return true;
+  try {
+    const icon = nativeImage.createFromPath(path.join(__dirname, "build", "icon.png"));
+    if (icon.isEmpty()) return false;
+    tray = new Tray(icon);
+    tray.setToolTip("Frame Control");
+    tray.on("click", showWindow);
+    updateTrayMenu();
+    return true;
+  } catch { return false; }
+}
+
+function updateTrayMenu() {
+  if (!tray) return;
+  tray.setContextMenu(Menu.buildFromTemplate([
+    { label: "Open Frame Control", click: showWindow },
+    { label: "Open at Login", type: "checkbox", checked: loginItem.enabled(), click: toggleLoginItem },
+    { type: "separator" },
+    { label: "Quit Frame Control", click: () => app.quit() },
+  ]));
+}
+
+function toggleLoginItem() {
+  try {
+    const on = loginItem.set(!loginItem.enabled());
+    if (on) ensureTray();
+    else if (tray) { tray.destroy(); tray = null; }
+    buildMenu();
+    updateTrayMenu();
+  } catch (err) {
+    dialog.showErrorBox("Open at Login", String(err.message || err));
+    buildMenu();
+    updateTrayMenu();
+  }
+}
+
+function createWindow(showOnReady = !process.argv.includes("--hidden") || !tray) {
   win = new BrowserWindow({
     width: 1400, height: 950, minWidth: 760, minHeight: 560,
     title: "Frame Control", backgroundColor: BG, show: false,
@@ -582,7 +629,10 @@ function createWindow() {
     webPreferences: { contextIsolation: true, nodeIntegration: false, sandbox: true, backgroundThrottling: false,
                       preload: path.join(__dirname, "preload.js") },
   });
-  win.once("ready-to-show", () => win.show());
+  win.once("ready-to-show", () => { if (showOnReady) win.show(); });
+  win.on("close", (event) => {
+    if (!quitting && tray && loginItem.enabled()) { event.preventDefault(); win.hide(); }
+  });
   if (CHROME_CSS) win.webContents.on("did-finish-load", () => win.webContents.insertCSS(CHROME_CSS));
   // External links open in the default browser; the app never navigates away.
   win.webContents.setWindowOpenHandler(({ url: target }) => {
@@ -636,6 +686,8 @@ function buildMenu() {
       label: "Frame",
       submenu: [
         { label: "Set Up Connection…", click: () => setUpConnection() },
+        { label: "Open at Login", type: "checkbox", checked: loginItem.enabled(),
+          enabled: app.isPackaged, click: toggleLoginItem },
         { label: IS_MAC ? "Open SSH in Terminal" : "Open SSH in a Terminal", click: openSsh },
         { type: "separator" },
         ...(devices.length > 1 ? [{
@@ -684,7 +736,7 @@ if (!app.requestSingleInstanceLock()) {
   app.on("open-url", (e, link) => { e.preventDefault(); openInstallLink(link); });
   // Windows and Linux start a second instance with the link as an argument.
   app.on("second-instance", (_e, argv) => {
-    if (win) { if (win.isMinimized()) win.restore(); win.focus(); }
+    if (!argv.includes("--hidden")) showWindow();
     const link = linkFromArgv(argv);
     if (link) openInstallLink(link);
   });
@@ -692,11 +744,12 @@ if (!app.requestSingleInstanceLock()) {
   if (firstLink) openInstallLink(firstLink);
   app.whenReady().then(() => {
     registerScheme();
+    if (loginItem.enabled()) ensureTray();
     buildMenu();
     createWindow();
     scheduleUpdateChecks();
   });
-  app.on("activate", () => { if (!win) createWindow(); });
+  app.on("activate", showWindow);
   app.on("window-all-closed", () => app.quit());
   let obsQuitWaiting = false;
   let obsQuitReady = false;

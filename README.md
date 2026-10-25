@@ -186,6 +186,8 @@ or run it with `--appimage-extract-and-run`.
 
 ## Open the app
 
+**Optional: open at login.** In the installed desktop app, choose **Frame → Open at Login**. It is off by default. When on, a login launch starts in the tray or menu bar if that control is available; click its icon to open the window, or use its **Quit Frame Control** menu item. Closing the window keeps the app in the tray while this option is on. Turn the same menu option off to remove its OS login item. On Linux this creates or removes only Frame Control's own file in `~/.config/autostart/` (or `$XDG_CONFIG_HOME/autostart/`). If the desktop has no working tray, the window opens at login instead. A source checkout does not offer this setting.
+
 - **macOS:** open the `.dmg`, drag **Frame Control** to **Applications**, then
   open it from Applications. For the unsigned-app warning, use the macOS steps
   above. Allow local network access and control of Terminal when prompted.
