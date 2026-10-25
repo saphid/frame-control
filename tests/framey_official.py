@@ -18,8 +18,8 @@ PLUGINS = (
      'folder': 'decky-steamgriddb', 'sha256': 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'},
 )
 
-# Managed store install works, but the legacy frontend has no supported bridge.
-BACKEND_ONLY = (
+# This archive has a legacy IIFE frontend with no manifest API version.
+LEGACY_PLUGINS = (
     {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': None,
      'folder': 'SDH-CssLoader', 'sha256': '99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231'},
 )

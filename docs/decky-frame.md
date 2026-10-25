@@ -66,8 +66,9 @@ new check because its manifest and binaries can change.
 
 Pinned CSS Loader 2.1.3 and SteamGridDB 1.8.1 archives now pass the fake Frame
 managed install/remove flow. CSS Loader's `plugin.json` has no `api_version` and
-its bundle uses Decky's older global frontend format, so Framey refuses its
-panel. SteamGridDB declares API v1 and its bundle passes Framey's packaging
+its bundle uses Decky's older global frontend format. These fixture tests do
+not exercise its panel; legacy frontend support is tracked separately in
+[#261](https://github.com/saphid/frame-control/pull/261). SteamGridDB declares API v1 and its bundle passes Framey's packaging
 check, but it looks up Steam library modules while loading and patches game
 context menus. Those modules and menus do not exist in Framey's isolated
 iframe, so its artwork picker cannot be called a usable VR panel. Framey does

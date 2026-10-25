@@ -10,9 +10,9 @@ import threading
 import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
-from framey_official import BACKEND_ONLY, PLUGINS as PANEL_PLUGINS, archive as official_archive
+from framey_official import LEGACY_PLUGINS, PLUGINS as PANEL_PLUGINS, archive as official_archive
 
-OFFICIAL_PLUGINS = PANEL_PLUGINS + BACKEND_ONLY
+OFFICIAL_PLUGINS = PANEL_PLUGINS + LEGACY_PLUGINS
 
 require()  # Skip the module outside the disposable fake Frame, like its peers.
 

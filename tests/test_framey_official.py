@@ -17,24 +17,20 @@ import io
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
 import frame_decky_store
 import framey_panel
-from framey_official import BACKEND_ONLY, PLUGINS, archive
+from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 
 class OfficialBundles(unittest.TestCase):
-    def test_legacy_css_loader_store_archive_installs_but_has_no_framey_panel(self):
-        plugin = BACKEND_ONLY[0]
+    def test_legacy_css_loader_store_archive_has_unversioned_frontend(self):
+        plugin = LEGACY_PLUGINS[0]
         data = archive(plugin)
         self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
         self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
-        with tempfile.TemporaryDirectory() as root, zipfile.ZipFile(io.BytesIO(data)) as bundle:
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
             manifest = json.loads(bundle.read(plugin['folder'] + '/plugin.json'))
             self.assertNotIn('api_version', manifest)
-            bundle.extractall(root)
-            folder = Path(root) / plugin['folder']
-            (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
-            with patch.object(framey_panel, 'PLUGINS', Path(root)):
-                with self.assertRaises(FileNotFoundError):
-                    framey_panel.panel(plugin['id'])
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js')
+            self.assertIn(b'deckyFrontendLib.definePlugin', frontend)
 
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_bluetooth_initial_panel_uses_safe_token_fallback(self):
