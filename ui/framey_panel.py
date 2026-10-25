@@ -44,12 +44,16 @@ def local_bundle(plugin_id):
                 raise FileNotFoundError('Framey plugin manifest unavailable')
             flags = data.get('flags', [])
             version = data.get('api_version')
-            if type(version) is not int or version not in (1, 2) or not isinstance(flags, list) or any(x in flags for x in ('root', '_root')):
-                raise FileNotFoundError('This Decky frontend is not API v1/v2 or needs root')
+            if ((version is not None and (type(version) is not int or version not in (1, 2))) or
+                    not isinstance(flags, list) or any(x in flags for x in ('root', '_root'))):
+                raise FileNotFoundError('This Decky frontend has an unsupported API or needs root')
             if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
                 raise FileNotFoundError('Framey plugin frontend unavailable')
             bundle = entry.read_bytes()
-            if version == 1 and b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit' not in bundle:
+            legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
+            if version is None and not legacy:
+                raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
+            if version == 1 and not legacy and b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit' not in bundle:
                 raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
             return bundle
         except (OSError, ValueError):
@@ -76,23 +80,27 @@ import json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path.home()/'.local/share/frame-control/headset/bundle/ui'))
 from frame_steam import Page
 payload = json.loads(sys.argv[1])
-expression = "(async()=>{if(!window.DeckyBackend)throw Error('Decky frontend is unavailable in Steam CEF');return await DeckyBackend.call('loader/call_plugin_method'," + json.dumps(payload['name']) + ',' + json.dumps(payload['method']) + ',' + ','.join(json.dumps(x) for x in payload['args']) + ')})()'
+route = 'loader/call_legacy_plugin_method' if payload.get('legacy') else 'loader/call_plugin_method'
+arguments = [payload['name'], payload['method'], *payload['args']]
+expression = "(async()=>{if(!window.DeckyBackend)throw Error('Decky frontend is unavailable in Steam CEF');return await DeckyBackend.call(" + ','.join(json.dumps(x) for x in [route, *arguments]) + ')})()'
 page = Page()
 try: print(json.dumps({'result':page.eval(expression)}))
 finally: page.sock.close()
 '''
 
 
-def call_method(ssh, plugin_id, method, args):
+def call_method(ssh, plugin_id, method, args, legacy=False):
     if type(plugin_id) is not int or plugin_id <= 0:
         raise PanelError('Choose an installed Decky store plugin')
     if not isinstance(method, str) or not METHOD.fullmatch(method):
         raise PanelError('Invalid plugin method')
     if not isinstance(args, list) or len(args) > 8 or len(json.dumps(args)) > 8192:
         raise PanelError('Plugin method arguments are too large')
+    if type(legacy) is not bool or (legacy and (len(args) != 1 or not isinstance(args[0], dict))):
+        raise PanelError('Legacy plugin methods need one keyword argument object')
     found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
     if len(found) != 1:
         raise PanelError('The plugin is not managed by the Frame Control Decky store')
-    payload = {'name':found[0]['name'], 'method':method, 'args':args}
+    payload = {'name':found[0]['name'], 'method':method, 'args':args, 'legacy':legacy}
     return json.loads(ssh('python3 - ' + shlex.quote(json.dumps(payload)),
                           stdin=METHOD_SCRIPT, timeout=25))

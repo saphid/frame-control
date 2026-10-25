@@ -229,7 +229,7 @@ window.addEventListener('message',async event=>{
   if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
   if(req.type!=='framey:call'||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
   const pluginId=activeFrameyId,reply={type:'framey:reply',id:req.id};
-  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args});reply.result=data.result;}
+  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
   if(pluginId===activeFrameyId&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });

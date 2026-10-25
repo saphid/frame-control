@@ -59,13 +59,13 @@
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
   setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
-  function ask(method, args) {
+  function ask(method, args, legacy=false) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
     const id = ++nextId;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, 30000);
       pending.set(id, {resolve, reject, timer});
-      parent.postMessage({type:'framey:call', id, method, args}, '*');
+      parent.postMessage({type:'framey:call', id, method, args, legacy}, '*');
     });
   }
   addEventListener('message', event => {
@@ -247,15 +247,30 @@
       useQuickAccessVisible: () => true,
     }),
   };
+  const legacyServerAPI = {
+    routerHook, toaster,
+    callPluginMethod: (method, kwargs={}) => {
+      if (!kwargs || typeof kwargs !== 'object' || Array.isArray(kwargs))
+        return Promise.resolve({success:false, result:'Legacy plugin arguments must be an object'});
+      // Decky's legacy route takes keyword arguments and returns this envelope.
+      return ask(method, [kwargs], true).catch(failure=>({success:false, result:String(failure.message || failure)}));
+    },
+    fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
+  };
   async function start() {
     try {
       await seeded;
       const bytes = Uint8Array.from(atob(document.getElementById('framey-bundle').textContent), c=>c.charCodeAt(0));
-      const url = URL.createObjectURL(new Blob([bytes], {type:'text/javascript'}));
+      // Old Decky builds are expressions returning the initializer, rather than
+      // ES modules. A module wrapper preserves the sandbox and avoids eval.
+      const legacy = /^\s*\(function\s*\(/.test(new TextDecoder().decode(bytes));
+      const url = URL.createObjectURL(new Blob(legacy ?
+        ['const __frameyLegacy =\n', bytes, '\nexport default __frameyLegacy;'] : [bytes], {type:'text/javascript'}));
       let module;
       try { module = await import(url); } finally { URL.revokeObjectURL(url); }
       if (typeof module.default !== 'function') throw Error('The Decky frontend has no plugin entry point');
-      plugin = await module.default();
+      plugin = await module.default(legacyServerAPI);
+      if (legacy && plugin?.title && !plugin.titleView) plugin.titleView = plugin.title;
       if (!plugin?.content && !plugin?.settings) throw Error('The Decky plugin has no panel to display');
       window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null,
         R.createElement(PluginSurface, {plugin})));

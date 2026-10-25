@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
-const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface;\n})();');
+const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
@@ -111,3 +111,17 @@ assert.equal(window.DFL.findModuleChild(()=>true),null);
 window.DFL.Navigation.CloseSideMenus();
 assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0);
 undo();assert.equal(window.DFL.Navigation.Navigate('/plugin/details'),false);
+
+// Legacy backend methods preserve Decky keyword arguments and success envelopes.
+const legacyReply=window.__legacy.callPluginMethod('get_setting',{key:'theme'});
+const legacyCall=messages.filter(message=>message.type==='framey:call').at(-1);
+assert.equal(legacyCall.legacy,true);
+assert.deepEqual(JSON.parse(JSON.stringify(legacyCall.args)),[{key:'theme'}]);
+listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:legacyCall.id,
+  result:{success:true,result:'dark'}}});
+assert.equal((await legacyReply).result,'dark');
+assert.equal((await window.__legacy.callPluginMethod('get_setting',[])).success,false);
+const failedLegacy=window.__legacy.callPluginMethod('get_setting',{});
+const failedCall=messages.filter(message=>message.type==='framey:call').at(-1);
+listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:failedCall.id,error:'Unavailable'}});
+assert.equal((await failedLegacy).success,false);
