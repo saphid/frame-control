@@ -132,7 +132,7 @@ Choose the operating system and processor of the computer you will use.
 
 ### Is it safe? Check your download
 
-Get the installer and [SHA256SUMS](https://github.com/saphid/frame-control/releases/latest/download/SHA256SUMS) from the **same release**. A matching SHA-256 means your file matches that release asset. It does not prove the app is free of malware. Use the command for your downloaded file, then compare all 64 characters with its line in `SHA256SUMS`:
+Starting with **v0.4.26**, get the installer and [SHA256SUMS](https://github.com/saphid/frame-control/releases/latest/download/SHA256SUMS) from the **same release**. Earlier releases do not have this file. A matching SHA-256 means your file matches that release asset. It does not prove the app is free of malware. Use the command for your downloaded file, then compare all 64 characters with its line in `SHA256SUMS`:
 
 ```powershell
 # Windows PowerShell
@@ -144,9 +144,9 @@ Get-FileHash .\Frame-Control-Setup-x64.exe -Algorithm SHA256
 # Linux: sha256sum Frame-Control-linux-x86_64.AppImage
 ```
 
-The [source](https://github.com/saphid/frame-control) and [release build workflow](.github/workflows/release.yml) are public. The Windows installer is **unsigned**, so SmartScreen may warn. The macOS DMG is **unsigned and not notarized**, so Gatekeeper may warn or block it. Only follow the opening steps below if you trust the download.
+The [source](https://github.com/saphid/frame-control) and [release build workflow](.github/workflows/release.yml) are public. The Windows installer is **not code-signed**, so SmartScreen may warn. The macOS app has only an **ad hoc signature**, not an Apple Developer ID signature; the DMG is **unsigned and not notarized**, so Gatekeeper may warn or block it. Only follow the opening steps below if you trust the download.
 
-日本語: 公式リリースからダウンロードし、SHA256SUMS とファイルの SHA-256 値を照合してください。Windows と macOS のアプリは署名されていません。
+日本語: v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。
 
 **Which build?** On a Mac, check Apple menu → About This Mac: the download is
 for Apple Silicon (M-series); no Intel Mac build is published. On Windows,
@@ -205,7 +205,7 @@ or run it with `--appimage-extract-and-run`.
 ## Open the app
 
 - **macOS:** open the `.dmg`, drag **Frame Control** to **Applications**, then
-  open it from Applications. For the unsigned-app warning, use the macOS steps
+  open it from Applications. For the Gatekeeper warning, use the macOS steps
   above. Allow local network access and control of Terminal when prompted.
 - **Windows:** run the installer, then open **Frame Control** from Start. For
   the portable download, extract the entire `.zip` first and run
