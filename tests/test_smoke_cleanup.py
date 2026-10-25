@@ -275,7 +275,8 @@ class PortableWrapper(unittest.TestCase):
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory(prefix='smoke wrapper ')
         self.addCleanup(self.tmp.cleanup)
-        self.folder = Path(self.tmp.name)
+        # macOS aliases /var to /private/var; relative commands need the physical cwd.
+        self.folder = Path(self.tmp.name).resolve()
         self.bin = self.folder / 'bin'
         self.bin.mkdir()
         # No zsh or SSH on PATH: --help must exit before any headset access.
