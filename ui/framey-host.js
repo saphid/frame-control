@@ -72,6 +72,36 @@
     render() { return this.state.failure ? R.createElement('p', null,
       `This Decky panel is not compatible with Framey: ${this.state.failure.message}`) : this.props.children; }
   }
+  function PluginSurface({plugin}) {
+    const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
+    const [running, setRunning] = R.useState(null);
+    const [message, setMessage] = R.useState('');
+    const actions = Array.isArray(plugin.frameyQuickActions) ? plugin.frameyQuickActions.slice(0, 8)
+      .filter(action => action && typeof action.label === 'string' && action.label.length <= 80 &&
+        typeof action.onClick === 'function') : [];
+    async function runAction(action, index) {
+      if (running !== null) return;
+      setRunning(index); setMessage(`${action.label}…`);
+      try {
+        const result = await action.onClick();
+        setMessage(typeof result === 'string' && result.length < 200 ? result : `${action.label} done`);
+      } catch (failure) { setMessage(`${action.label} failed: ${failure.message || failure}`); }
+      finally { setRunning(null); }
+    }
+    return R.createElement(R.Fragment, null,
+      plugin.titleView && R.createElement('header', null, plugin.titleView),
+      plugin.settings && R.createElement('nav', {'aria-label':'Plugin views'},
+        R.createElement('button', {type:'button', 'aria-current':view === 'panel' ? 'page' : undefined,
+          onClick:()=>setView('panel')}, 'Panel'),
+        R.createElement('button', {type:'button', 'aria-current':view === 'settings' ? 'page' : undefined,
+          onClick:()=>setView('settings')}, 'Settings')),
+      actions.length > 0 && R.createElement('section', {'aria-label':'Plugin quick actions'},
+        R.createElement('h2', null, 'Quick actions'),
+        ...actions.map((action, index) => R.createElement('button', {key:index, type:'button',
+          disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
+      message && R.createElement('p', {role:'status'}, message),
+      R.createElement('div', null, view === 'settings' ? plugin.settings : plugin.content));
+  }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {
     connect: (version, name) => ({
       _version: Math.min(version, 2),
@@ -95,8 +125,9 @@
       try { module = await import(url); } finally { URL.revokeObjectURL(url); }
       if (typeof module.default !== 'function') throw Error('The Decky frontend has no plugin entry point');
       plugin = await module.default();
-      if (!plugin?.content) throw Error('The Decky plugin has no panel to display');
-      window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null, plugin.content));
+      if (!plugin?.content && !plugin?.settings) throw Error('The Decky plugin has no panel to display');
+      window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null,
+        R.createElement(PluginSurface, {plugin})));
       parent.postMessage({type:'framey:ready'}, '*');
     } catch (failure) {
       error.textContent = `This Decky panel is not compatible with Framey: ${failure.message}`;

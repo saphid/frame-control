@@ -83,6 +83,15 @@ about Steam Deck hardware. Declare settings defaults so a fresh user service
 can render without pre-existing files. Test your ZIP with the store validator
 and the fake Frame flow before asking users to install it.
 
+An API v2 plugin's normal `content` is its default VR panel. Framey also shows
+an optional `settings` React element under a **Settings** tab and an optional
+`titleView` above it. For one-tap headset controls, return
+`frameyQuickActions: [{label: 'Refresh data', onClick: refreshData}]` from the
+plugin initializer. Framey displays up to eight actions and reports a pending,
+success, or failure state. These descriptor fields are Framey additions; Decky
+ignores them. Use a plugin backend method through `@decky/api` for work needing
+persistent state, and keep a quick action safe to repeat.
+
 The [Frame Control extension API](extensions.md) is an alternative for a
 Frame-specific panel. It needs only a local manifest, HTML, and the read-only
 `status` bridge; it does not need Decky.
