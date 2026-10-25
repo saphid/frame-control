@@ -1,5 +1,5 @@
-import {callable, definePlugin, toaster} from '@decky/api';
-import {ButtonItem, PanelSection, PanelSectionRow, ToggleField} from '@decky/ui';
+import {callable, definePlugin, routerHook, toaster} from '@decky/api';
+import {ButtonItem, Navigation, PanelSection, PanelSectionRow, ToggleField, useParams} from '@decky/ui';
 import {useEffect, useState} from 'react';
 
 const getSetting = callable<[key: string, fallback: boolean], boolean>('get_setting');
@@ -45,14 +45,27 @@ function Content() {
         checked={enabled} disabled={busy} onChange={(value: boolean) => {void change(value);}} />
     </PanelSectionRow>
     <PanelSectionRow><ButtonItem disabled={busy} onClick={() => {void refresh();}}>Reload saved setting</ButtonItem></PanelSectionRow>
+    <PanelSectionRow><ButtonItem onClick={() => Navigation.Navigate('/framey-sample/details/saved-setting')}>About this setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><p role="status">{message}</p></PanelSectionRow>
   </PanelSection>;
 }
 
-export default definePlugin(() => Object.assign({
+function Details() {
+  const {topic} = useParams<{topic?: string}>();
+  return <PanelSection title="Sample detail page">
+    <PanelSectionRow><p>Topic: {topic || 'overview'}</p></PanelSectionRow>
+    <PanelSectionRow><p>The toggle is stored by this plugin's Decky backend in the user's settings directory.</p></PanelSectionRow>
+    <PanelSectionRow><ButtonItem onClick={() => Navigation.NavigateBack()}>Back to setting</ButtonItem></PanelSectionRow>
+  </PanelSection>;
+}
+
+export default definePlugin(() => {
+  routerHook.addRoute('/framey-sample/details/:topic?', Details);
+  return Object.assign({
   name: 'Framey Settings Sample',
   icon: <span aria-hidden="true">⚙</span>,
   content: <Content />,
+  onDismount: () => routerHook.removeRoute('/framey-sample/details/:topic?'),
 }, {
   // Framey additions are ignored by Decky's own menu. Keep the main content
   // usable there too, while showing authors the extra VR settings view.
@@ -64,4 +77,5 @@ export default definePlugin(() => Object.assign({
       return `Saved setting is ${enabled ? 'on' : 'off'}`;
     },
   }],
-}));
+  });
+});
