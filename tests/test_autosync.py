@@ -7,11 +7,13 @@ import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import errno
 import json
 import shutil
+import subprocess
 import sys
 import tempfile
 import threading
 import unittest
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "ui"))
 import frame_autosync as fa  # noqa: E402
@@ -35,13 +37,15 @@ class FakeFrame:
         self.device, self.busy, self.down = "frame-a", False, False
         self.save_error = self.export_error = None
 
-    def list_shots(self):
+    def list_shots(self, device):
+        assert device == self.device
         self.calls.append("list_shots")
         if self.down:
             raise RuntimeError("ssh: connect to host frame port 22: Connection timed out")
         return {"shots": list(self.shots)}
 
-    def list_clips(self):
+    def list_clips(self, device):
+        assert device == self.device
         self.calls.append("list_clips")
         if self.down:
             raise RuntimeError("ssh: connect to host frame port 22: Connection timed out")
@@ -263,6 +267,134 @@ class AutoSyncTest(unittest.TestCase):
         for _ in range(fa.TRIES + 2):
             self.sync.tick()
         self.assertEqual(self.frame.calls.count("export_clip"), fa.TRIES)
+        self.assertIn("ffmpeg couldn't join", self.sync.state()["error"] or "")
+        self.assertIn("Resume", self.sync.state()["error"] or "")
+
+    def test_explicit_retry_recovers_without_recopying_successful_items(self):
+        for kind in ("shots", "clips"):
+            for action in ("resume", "copy_all"):
+                with self.subTest(kind=kind, action=action):
+                    self.frame = FakeFrame()
+                    f = self.frame
+                    sync = self.make()
+                    sync.update({"screenshots": True, "clips": True})
+                    f.shots, f.clips = [shot(1, NOW + 5)], [clip(1, NOW + 5)]
+                    error_attr = "save_error" if kind == "shots" else "export_error"
+                    copy_call = "save_shots" if kind == "shots" else "export_clip"
+                    setattr(f, error_attr, RuntimeError("source not ready"))
+                    for _ in range(fa.TRIES + 2):
+                        sync.tick()
+                    self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                    self.assertIn("source not ready", sync.state()["error"] or "")
+                    setattr(f, error_attr, None)
+                    sync.tick()  # recovery alone must not create unlimited automatic retries
+                    self.assertEqual(f.calls.count(copy_call), fa.TRIES)
+                    getattr(sync, action)()
+                    sync.tick()
+                    self.assertEqual(f.saved, [("frame-a", [shot(1, 0)["id"]])])
+                    self.assertEqual(f.exported, [("frame-a", clip(1, 0)["id"])])
+                    self.assertIsNone(sync.state()["error"])
+                    # Resume preserves the per-headset ledger even if a local file was deleted.
+                    for item in f.shots + f.clips:
+                        item["saved"] = False
+                    sync.resume()
+                    sync.tick()
+                    self.assertEqual((len(f.saved), len(f.exported)), (1, 1))
+                    self.sync.path.unlink(missing_ok=True)
+
+    def test_explicit_retry_is_still_bounded(self):
+        self.sync.update({"clips": True})
+        self.frame.clips = [clip(1, NOW + 5)]
+        self.frame.export_error = RuntimeError("bad source")
+        for action in ("resume", "copy_all"):
+            for _ in range(fa.TRIES + 2):
+                self.sync.tick()
+            before = self.frame.calls.count("export_clip")
+            getattr(self.sync, action)()
+            for _ in range(fa.TRIES + 2):
+                self.sync.tick()
+            self.assertEqual(self.frame.calls.count("export_clip") - before, fa.TRIES)
+            self.assertIn("bad source", self.sync.state()["error"] or "")
+
+    def test_failed_item_saved_by_hand_clears_error(self):
+        self.sync.update({"clips": True})
+        self.frame.clips = [clip(1, NOW + 5)]
+        self.frame.export_error = RuntimeError("bad source")
+        for _ in range(fa.TRIES + 1):
+            self.sync.tick()
+        self.frame.clips[0]["saved"] = True
+        self.sync.tick()
+        self.assertIsNone(self.sync.state()["error"])
+        self.assertIn(clip(1, 0)["id"], self.sync._synced("frame-a", "clips"))
+
+    def test_switch_after_capture_does_not_list_the_new_headset(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        def switched():
+            self.frame.device = "frame-b"
+            return False
+        self.sync.busy = switched  # tick has already captured frame-a
+        self.assertEqual(self.sync.tick(), fa.BUSY_WAIT)
+        self.assertEqual(self.frame.calls, [])
+
+    def test_list_callbacks_receive_the_captured_device(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        self.sync.list_shots = mock.Mock(return_value={"shots": []})
+        self.sync.list_clips = mock.Mock(return_value={"clips": []})
+        self.sync.tick()
+        self.sync.list_shots.assert_called_once_with("frame-a")
+        self.sync.list_clips.assert_called_once_with("frame-a")
+
+    def test_switch_during_listing_does_not_mark_or_copy_its_results(self):
+        for kind, item in (("shots", shot(1, NOW + 5)), ("clips", clip(1, NOW + 5))):
+            with self.subTest(kind=kind):
+                self.frame.device = "frame-a"
+                self.sync.update({"screenshots": kind == "shots", "clips": kind == "clips"})
+                def listing(*_args):
+                    self.frame.device = "frame-b"
+                    return {kind: [dict(item, saved=True), dict(item, id="uncopied", saved=False)]}
+                setattr(self.sync, "list_" + kind, listing)
+                self.assertEqual(self.sync.tick(), fa.BUSY_WAIT)
+                self.assertEqual(self.sync._synced("frame-a", kind), set())
+                self.assertEqual(self.sync._synced("frame-b", kind), set())
+                self.assertEqual((self.frame.saved, self.frame.exported), ([], []))
+
+    def test_switch_between_kinds_does_not_read_clips_or_mark_transfer(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        self.frame.shots = [shot(1, NOW + 5)]
+        self.frame.clips = [clip(1, NOW + 5, saved=True)]
+        save = self.sync.save_shots
+        def then_switch(device, ids):
+            save(device, ids)
+            self.frame.device = "frame-b"
+        self.sync.save_shots = then_switch
+        self.assertEqual(self.sync.tick(), fa.BUSY_WAIT)
+        self.assertNotIn("list_clips", self.frame.calls)
+        self.assertEqual(self.sync._synced("frame-a", "clips"), set())
+        self.assertEqual(self.sync._synced("frame-a", "shots"), set())
+
+    def test_switch_after_bookkeeping_stops_before_next_kind(self):
+        self.sync.update({"screenshots": True, "clips": True})
+        self.frame.shots = [shot(1, NOW + 5, saved=True)]
+        mark = self.sync._mark
+        def then_switch(device, kind, ids):
+            mark(device, kind, ids)
+            self.frame.device = "frame-b"
+        self.sync._mark = then_switch
+        self.assertEqual(self.sync.tick(), fa.BUSY_WAIT)
+        self.assertNotIn("list_clips", self.frame.calls)
+
+    def test_switch_before_transfer_does_not_copy(self):
+        for kind, item in (("shots", shot(1, NOW + 5)), ("clips", clip(1, NOW + 5))):
+            with self.subTest(kind=kind):
+                self.frame.device = "frame-a"
+                self.sync.update({"screenshots": kind == "shots", "clips": kind == "clips"})
+                setattr(self.frame, kind, [item])
+                def switched_space(_folder):
+                    self.frame.device = "frame-b"
+                    return 100 * GB
+                self.sync.space = switched_space
+                self.assertEqual(self.sync.tick(), fa.BUSY_WAIT)
+                self.assertEqual((self.frame.saved, self.frame.exported), ([], []))
 
     def test_worker_stops(self):
         stop = threading.Event()
@@ -275,6 +407,75 @@ class AutoSyncTest(unittest.TestCase):
 
 
 class Server(unittest.TestCase):
+    def test_switch_at_list_callback_entry_does_not_read_or_mark_the_new_headset(self):
+        import server
+        with tempfile.TemporaryDirectory() as folder:
+            for kind in ("shots", "clips"):
+                with self.subTest(kind=kind):
+                    active = {"id": "frame-a"}
+                    link = mock.Mock()
+                    link.active_device.side_effect = lambda: dict(active)
+                    listing = mock.Mock(return_value={kind: [
+                        shot(1, NOW + 5, saved=True) if kind == "shots" else clip(1, NOW + 5, saved=True)]})
+                    def switch_then_list(device):
+                        active["id"] = "frame-b"
+                        return server._sync_list(listing)(device)
+                    with mock.patch.object(server, "LINK", link), mock.patch.object(server, "_work", [0]):
+                        sync = fa.AutoSync(switch_then_list, mock.Mock(), switch_then_list, mock.Mock(),
+                                           lambda: active["id"], lambda: False,
+                                           path=Path(folder) / (kind + ".json"), clock=lambda: NOW)
+                        sync.update({"screenshots": kind == "shots", "clips": kind == "clips"})
+                        sync.tick()
+                        listing.assert_not_called()
+                        sync.save_shots.assert_not_called()
+                        sync.export_clip.assert_not_called()
+                        self.assertEqual(sync._synced("frame-a", kind), set())
+                        self.assertEqual(sync._synced("frame-b", kind), set())
+                        self.assertIn("switched headsets", sync.state()["error"])
+                        self.assertEqual(server._work[0], 0)
+
+    def test_listing_rejects_switch_before_reserving_work(self):
+        import server
+        link = mock.Mock()
+        link.active_device.return_value = {"id": "frame-b"}
+        listing = mock.Mock(return_value={"shots": [shot(1, NOW, saved=True)]})
+        with mock.patch.object(server, "LINK", link), mock.patch.object(server, "_work", [0]):
+            with self.assertRaisesRegex(server.Failure, "switched headsets"):
+                server._sync_list(listing)("frame-a")
+            listing.assert_not_called()
+            self.assertEqual(server._work[0], 0)
+
+    def test_listing_reserves_work_on_the_captured_device(self):
+        import server
+        link = mock.Mock()
+        link.active_device.return_value = {"id": "frame-a", "name": "Frame A"}
+        def listing():
+            self.assertGreater(server._work[0], 0)
+            with self.assertRaises(server.Failure):
+                server.devices_post({"action": "use", "id": "frame-b"})
+            return {"shots": []}
+        with mock.patch.object(server, "LINK", link), \
+                mock.patch.object(server, "PRIVATE", False), mock.patch.object(server, "_work", [0]):
+            self.assertEqual(server._sync_list(listing)("frame-a"), {"shots": []})
+            self.assertEqual(server._work[0], 0)
+
+    def test_copy_rejects_switch_after_listing(self):
+        import server
+        link = mock.Mock()
+        link.active_device.return_value = {"id": "frame-a"}
+        with mock.patch.object(server, "LINK", link), mock.patch.object(server, "_work", [0]), \
+                mock.patch.object(server, "save_shots") as save, \
+                mock.patch.object(server.frame_clips, "export_clip") as export:
+            server._sync_list(lambda: {"shots": []})("frame-a")
+            link.active_device.return_value = {"id": "frame-b"}
+            for copy in (lambda: server._sync_shots("frame-a", [shot(1, NOW)["id"]]),
+                         lambda: server._sync_clip("frame-a", clip(1, NOW)["id"])):
+                with self.assertRaisesRegex(server.Failure, "switched headsets"):
+                    copy()
+            save.assert_not_called()
+            export.assert_not_called()
+            self.assertEqual(server._work[0], 0)
+
     def test_route_and_settings(self):
         import server
         self.assertIn("/api/autosync", server.POST)
@@ -285,6 +486,30 @@ class Server(unittest.TestCase):
         if server.LINK is None:
             with self.assertRaises(server.Failure):
                 server.auto_sync({"action": "now"})  # nothing connected
+
+
+@unittest.skipUnless(shutil.which("node"), "Node exercises the Settings renderer")
+class Settings(unittest.TestCase):
+    def test_resume_is_available_after_a_copy_error(self):
+        page = (Path(__file__).resolve().parents[1] / "ui/index.html").read_text(encoding="utf-8")
+        script = page.split("const autoSync =", 1)[1].split("async function loadAutoSync", 1)[0]
+        harness = r'''
+const assert = require('node:assert/strict');
+const nodes = {};
+const $ = id => nodes[id] ||= {};
+const HOST = {mobile: false};
+const esc = value => value;
+'''
+        checks = r'''
+for (const state of [{error: 'Could not copy clip'}, {paused: 'Disk full'}, {}]) {
+  renderAutoSync(state);
+  assert.equal($('syncResume').hidden, !(state.error || state.paused));
+  if (state.error) assert.match($('syncStatus').textContent, /Could not copy clip/);
+}
+'''
+        result = subprocess.run(["node", "-e", harness + "const autoSync =" + script + checks],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
 
 
 if __name__ == "__main__":

@@ -225,3 +225,8 @@
   shared Wine services are left alone. Verified with local Linux process
   regressions and a 13/13 real Frame smoke run that stopped five test-owned
   Proton process PIDs before removing the Windows test title.
+
+- Keep failed automatic screenshot and clip copies visible after three attempts.
+  **Resume** and **Copy everything now** allow another try without restarting;
+  headset switches cannot use another headset's list or saved-file history.
+  [Copying guide](docs/recording.md).

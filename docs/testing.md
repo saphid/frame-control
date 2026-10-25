@@ -12,6 +12,21 @@ A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/ste
 
 ## Unit tests
 
+Automatic screenshot and clip copying has offline coverage in
+`tests/test_autosync.py`:
+
+```sh
+python3 -m unittest discover -s tests -p test_autosync.py -v
+```
+
+Fake sources exercise the three-attempt limit, visible exhausted errors,
+Resume/Copy everything now recovery, successful-copy deduplication, disk-full
+pauses and headset changes around lists and transfers. Server tests use the
+production `working(meant)` reservation and listing/copy adapters; a Node test
+executes the Settings renderer to check that Resume is available after an error.
+These tests use no headset. See the
+[auto-sync reliability test record](evidence/autosync-reliability-2026-10-25.md).
+
 The gamescope keyboard/trackpad route has focused suites in `test_input.py`,
 `test_touch.py` and `test_service_regressions.py`. They cover pad translation,
 ASCII/modifier keys, Unicode queuing/retries, stale panel targets, release

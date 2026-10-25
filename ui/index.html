@@ -5610,7 +5610,7 @@ const syncWhen = t => new Date(t * 1000).toLocaleString([], { dateStyle: "medium
 function renderAutoSync(s) {
   autoSync.s = s;
   $("syncShots").checked = s.screenshots; $("syncClips").checked = s.clips;
-  $("syncResume").hidden = !s.paused;
+  $("syncResume").hidden = !(s.paused || s.error);
   const on = s.screenshots || s.clips, lines = [];
   if (s.paused) lines.push(s.paused);
   else if (s.error) lines.push(`Last problem: ${s.error}`);
