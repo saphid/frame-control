@@ -59,7 +59,9 @@ def main():
     if args.id:
         print(int(release["id"]))
     else:
-        sys.stdout.write(checksums(release))
+        # Windows text stdout changes LF to CRLF. SHA256SUMS must have the same
+        # bytes on every runner, including publish-release.sh's verification.
+        sys.stdout.buffer.write(checksums(release).encode("ascii"))
 
 
 if __name__ == "__main__":
