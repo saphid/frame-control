@@ -14,8 +14,21 @@ panel. **Show in SteamVR** requests that dashboard tab; the wearer can select
 it again from SteamVR's dashboard. Closing the panel stops its browser and
 server. The service is not enabled at boot.
 
-The page shows battery, free home storage and SteamVR status. Its per-run UI
-key is passed in the URL fragment, removed from the address bar after load,
+The page shows battery, free home storage and SteamVR status. It can request
+SteamVR's main Game Mode dashboard, list and force quit a running game after an
+unsaved-progress confirmation, save an OpenVR screenshot to
+`~/Pictures/FrameControl`, and record the SteamVR mirror to
+`~/Videos/FrameControl`. Recordings have a 20-minute limit and use a separate
+work folder from desktop Frame Control's recorder; they may have no audio if
+the monitor source is unavailable. Captures made in standby can be dark.
+
+The page also discovers extensions from
+`~/.local/share/frame-control/extensions` and opens them in sandboxed iframes.
+It offers the version 1 read-only `capabilities` and `status` bridge from
+[the extension guide](extensions.md). Installing an extension still means
+copying its folder to the Frame; the panel does not download third-party code.
+
+The per-run UI key is passed in the URL fragment, removed from the address bar after load,
 and sent in the `X-Frame-UI` header. The key is absent from the HTTP request
 line and server log. The usual host/origin and anti-framing checks still apply.
 
@@ -41,6 +54,19 @@ The test then removed the managed service and app bundle. Its unit became
 inactive, port 47813 closed, the SteamVR overlay disappeared, and the Frame's
 battery was 100%. Steam and SteamVR were left running. The browser profile and
 extensions folder were deliberately kept.
+
+A second test on the same build installed the expanded panel with the
+`headset-glance` example extension. The headset's authenticated loopback API
+returned live status (99% battery), discovered and served the extension, and
+listed no running games. The Game Mode dashboard request succeeded; an invalid
+force-quit app ID was rejected with HTTP 400. Screenshot and recording actions
+saved a PNG and a 3.6 MB MP4 in the headset user's folders. The recording
+reported an audio source. The per-run UI key was absent from the server log.
+After another wake and dashboard request, SteamVR still reported the panel
+`not_visible`. No wearer-visible screenshot or controller interaction was
+obtained. The test removed its example extension and captured media, then
+uninstalled the service. The unit, port, bundle and overlay were absent after
+removal; Steam and SteamVR remained running.
 
 ## Remove
 

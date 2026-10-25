@@ -2,37 +2,96 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Frame Control VR [fc-headset]</title>
 <style>
-:root{color-scheme:dark;font:24px/1.4 system-ui,sans-serif;background:#0d1925;color:#f3f7fa}
-*{box-sizing:border-box}body{margin:0;padding:34px;max-width:1280px}h1{font-size:40px;margin:0 0 6px}
-p{margin:0 0 22px;color:#b9c9d6}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
-.card{background:#1b3042;border:1px solid #40576c;border-radius:14px;padding:24px;min-height:158px}
-.label{display:block;color:#b9c9d6;font-size:20px}.value{display:block;font-size:38px;font-weight:700;margin-top:14px}
-button{font:inherit;background:#23618c;color:white;border:1px solid #72baf0;border-radius:12px;padding:15px 24px;cursor:pointer}
-button:focus-visible{outline:5px solid #f8d370;outline-offset:3px}#message{min-height:1.5em;margin-top:18px}
-@media(max-width:720px){.cards{grid-template-columns:1fr}body{padding:20px}}
+:root{color-scheme:dark;font:22px/1.4 system-ui,sans-serif;background:#0d1925;color:#f3f7fa}
+*{box-sizing:border-box}body{margin:0;padding:30px;max-width:1280px}h1{font-size:40px;margin:0 0 6px}
+h2{font-size:29px;margin:25px 0 10px}p{margin:0 0 18px;color:#b9c9d6}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.card,.block{background:#1b3042;border:1px solid #40576c;border-radius:14px;padding:20px}.card{min-height:140px}
+.label{display:block;color:#b9c9d6;font-size:19px}.value{display:block;font-size:34px;font-weight:700;margin-top:10px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.stack{display:grid;gap:12px}
+button{font:inherit;background:#23618c;color:white;border:1px solid #72baf0;border-radius:12px;padding:13px 20px;cursor:pointer;min-height:62px}
+button:focus-visible{outline:5px solid #f8d370;outline-offset:3px}button:disabled{opacity:.55;cursor:default}
+button.secondary{background:#253c50;border-color:#617f97}button.danger{background:#78372d;border-color:#d78d79}
+small{color:#b9c9d6}#message,#actionStatus{min-height:1.5em;margin:12px 0}.game{display:flex;gap:14px;justify-content:space-between;align-items:center}
+iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid #617f97;border-radius:12px;margin-top:14px}
+@media(max-width:720px){.cards{grid-template-columns:1fr}body{padding:18px}.game{display:block}.game button{margin-top:12px}}
 </style></head><body>
-<h1>Frame Control</h1><p>Your Frame, from inside SteamVR. Open this panel from the dashboard at any time.</p>
+<h1>Frame Control</h1><p>Your Frame, from inside SteamVR. Select this panel again from the dashboard after switching away.</p>
 <div class="cards">
   <div class="card"><span class="label">Battery</span><span class="value" id="battery">…</span></div>
   <div class="card"><span class="label">Home storage free</span><span class="value" id="storage">…</span></div>
   <div class="card"><span class="label">SteamVR</span><span class="value" id="steamvr">…</span></div>
 </div>
 <p id="message" role="status" aria-live="polite"></p>
-<button id="refresh">Refresh status</button>
+<div class="row"><button id="refresh">Refresh status</button><button id="gameMode" class="secondary">Return to Game Mode</button>
+  <button id="screenshot" class="secondary">Save screenshot</button><button id="record" class="secondary">Start recording</button></div>
+<p id="actionStatus" role="status" aria-live="polite"></p>
+<h2>Running games</h2><div class="row"><button id="gamesRefresh" class="secondary">Refresh games</button></div>
+<div id="games" class="stack" style="margin-top:12px">Loading…</div>
+<h2>Extensions</h2><p>Local additions run only when opened in the isolated panel below. They can read status but cannot change headset settings through the extension API.</p>
+<div class="row"><button id="extensionsRefresh" class="secondary">Refresh extensions</button><span id="extensionsFolder"><small></small></span></div>
+<div id="extensions" class="stack" style="margin-top:12px">Loading…</div>
+<div id="extensionPanel" hidden><div class="row" style="margin-top:16px"><strong id="extensionTitle"></strong><button id="extensionClose" class="secondary">Close extension</button></div>
+  <iframe id="extensionFrame" title="Frame Control extension" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
 <script>
 const key=location.hash.slice(1)||sessionStorage.getItem('frameHeadsetKey')||'';
 if(key)sessionStorage.setItem('frameHeadsetKey',key);
 history.replaceState(null,'',location.pathname);
 const byId=id=>document.getElementById(id);
+let latestStatus=null, activeExtension=null, recordBusy=false;
 async function api(path,body){const response=await fetch(path,{method:body?'POST':'GET',
   headers:{'X-Frame-UI':key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
   const data=await response.json();if(!response.ok)throw Error(data.error||'Frame request failed');return data;}
-async function refresh(){try{const status=await api('/api/status');
+async function refresh(){try{const status=latestStatus=await api('/api/status');
   byId('battery').textContent=status.battery?.percent==null?'Unavailable':`${status.battery.percent}%`;
   const free=status.disk?.home?.free;
   byId('storage').textContent=Number.isFinite(free)?`${(free/1e9).toFixed(1)} GB`:'Unavailable';
   byId('steamvr').textContent=status.services?.steamvr?'Running':'Unavailable';
   byId('message').textContent=`Frame OS ${status.os?.version||'unknown'} · Updated ${new Date().toLocaleTimeString()}`;
-  }catch(error){byId('message').textContent=error.message;}}
-byId('refresh').onclick=refresh;refresh();
+  }catch(error){latestStatus=null;byId('message').textContent=error.message;}}
+async function act(action){const button=byId(action==='game-mode'?'gameMode':'screenshot');button.disabled=true;
+  try{const result=await api('/api/headset/quick',{action});byId('actionStatus').textContent=result.message;}
+  catch(error){byId('actionStatus').textContent=error.message;}finally{button.disabled=false;}}
+async function refreshGames(){const list=byId('games');try{const data=await api('/api/running');list.replaceChildren();
+  for(const game of data.running){const row=document.createElement('div');row.className='block game';
+    const name=document.createElement('strong');name.textContent=game.name||`App ${game.appid}`;
+    const quit=document.createElement('button');quit.className='danger';quit.textContent=`Force quit ${name.textContent}`;
+    quit.onclick=async()=>{if(!confirm(`Force quit ${name.textContent}? Unsaved progress may be lost.`))return;
+      quit.disabled=true;try{const result=await api('/api/running',{action:'quit',appid:String(game.appid)});
+      byId('actionStatus').textContent=result.message||`Quit ${name.textContent}`;await refreshGames();}
+      catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
+    row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
+  }catch(error){list.textContent=error.message;}}
+async function refreshRecord(){try{const data=await api('/api/record');
+  byId('record').textContent=['recording','starting'].includes(data.state)?'Stop recording':'Start recording';
+  byId('record').disabled=recordBusy||['stopping','saving'].includes(data.state);
+  if(data.state==='recording')byId('actionStatus').textContent=`Recording ${Math.round(data.elapsed||0)} s${data.audio?' with sound':' without sound'}`;
+  else if(data.state==='saved'||data.state==='failed')byId('actionStatus').textContent=data.message||data.error;
+  }catch(error){byId('record').disabled=true;byId('actionStatus').textContent=error.message;}}
+async function toggleRecord(){if(recordBusy)return;recordBusy=true;byId('record').disabled=true;
+  try{const state=await api('/api/record');const action=state.state==='recording'?'stop':'start';
+    const result=await api('/api/record',{action});byId('actionStatus').textContent=result.message||result.state;}
+  catch(error){byId('actionStatus').textContent=error.message;}finally{recordBusy=false;refreshRecord();}}
+async function refreshExtensions(){const list=byId('extensions');try{const data=await api('/api/extensions');
+  byId('extensionsFolder').textContent=`Folder: ${data.folder}`;list.replaceChildren();
+  for(const ext of data.extensions){const row=document.createElement('div');row.className='block game';
+    const label=document.createElement('span');label.textContent=`${ext.name} · ${ext.description}`;
+    const open=document.createElement('button');open.textContent=`Open ${ext.name}`;open.onclick=()=>{
+      activeExtension=ext.id;byId('extensionTitle').textContent=ext.name;
+      byId('extensionFrame').src=`/extension/${encodeURIComponent(ext.id)}/index.html`;
+      byId('extensionPanel').hidden=false;byId('extensionPanel').scrollIntoView();};
+    row.append(label,open);list.append(row);}if(!data.extensions.length)list.textContent='No extensions installed.';
+  if(data.errors.length){const errors=document.createElement('p');errors.textContent=data.errors.map(x=>`${x.folder}: ${x.error}`).join('; ');list.append(errors);}
+  }catch(error){list.textContent=error.message;}}
+byId('refresh').onclick=refresh;byId('gameMode').onclick=()=>act('game-mode');byId('screenshot').onclick=()=>act('screenshot');
+byId('gamesRefresh').onclick=refreshGames;byId('record').onclick=toggleRecord;byId('extensionsRefresh').onclick=refreshExtensions;
+byId('extensionClose').onclick=()=>{activeExtension=null;byId('extensionFrame').removeAttribute('src');byId('extensionPanel').hidden=true;};
+window.addEventListener('message',event=>{if(!activeExtension||event.source!==byId('extensionFrame').contentWindow)return;
+  const request=event.data;if(!request||request.type!=='frame-control:request'||!Number.isSafeInteger(request.id))return;
+  let value;if(request.action==='capabilities')value={apiVersion:1,actions:['capabilities','status']};
+  else if(request.action==='status')value={connected:!!latestStatus,
+    os:{version:latestStatus?.os?.version||null,build:latestStatus?.os?.build||null},
+    battery:{percent:latestStatus?.battery?.percent??null},steamvr:!!latestStatus?.services?.steamvr};
+  else return;event.source.postMessage({type:'frame-control:response',id:request.id,value},'*');});
+refresh();refreshGames();refreshRecord();refreshExtensions();
+setInterval(()=>{if(!document.hidden){refresh();refreshRecord();}},15000);
 </script></body></html>
