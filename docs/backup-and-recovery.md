@@ -100,7 +100,21 @@ copy one by hand if you need it.
 - Steam Cloud's own folders (`userdata/<account>/<appid>`), shader caches and
   screenshots (**Tools → Capture & Live** saves those to Pictures).
 - Android apps themselves, their OBB files and shared storage (`/sdcard`).
-- Symbolic links (never followed), and single files over 2 GiB.
+- Symbolic links, including any ancestor below the home folder of a selected
+  save or settings path, and single files over 2 GiB. Discovery checks each
+  component, and packing checks it again before opening each file.
+
+Steam backups use the normal `~/.local/share/Steam` directory tree. A separate
+`~/.steam/steam` alias does not affect this route. A library, Proton prefix or
+Wine save folder redirected by a symlink below the home folder is skipped,
+even if its target is inside home; it is not resolved and backed up elsewhere.
+The home folder itself is trusted and may use the host's normal path aliases.
+
+These are path checks, not a filesystem snapshot: a concurrent rename or link
+replacement between a check and a read can still race it. Close games and
+avoid moving or relinking these folders during backup. This fix rejects links
+already present when checked, including ones introduced after discovery; it
+does not provide atomic protection against concurrent filesystem changes.
 
 Backups aren't encrypted. Game folders can still hold a launcher's login, and
 Android app data can hold an app's, so keep backups private.
@@ -192,11 +206,18 @@ If the button can't help, or the headset isn't reachable:
 `tests/test_backup.py` runs the headset-side script (`ui/frame_backup_remote.py`)
 for real against a folder laid out like the Frame's home, with only SSH faked:
 which paths are picked, that sign-in files and keys never are (also inside game
-folders), links never followed, the manifest and its checksums, restore checks
+folders), links in save/settings roots and their ancestors refused, the manifest
+and its checksums, restore checks
 after a reset (game not installed, no Proton folders yet, not signed in), that a
 restore replaces only its own files and keeps the old ones, unsafe archives
 (`..`, absolute paths, links, other games' folders) writing nothing, backup
 names that try to leave the backups folder, and the exact Game Mode command.
+Synthetic symlink fixtures cover every component of a Proton save root below
+home, including `compatdata/<appid>` and `steamuser/AppData`, plus directory
+and file links introduced between discovery and packing. Ordinary Proton and
+non-Steam saves, Linux saves, controller layouts, reference settings and home
+aliases still pack with their original bytes. These are local fixture checks;
+this path fix has not been tested on a headset.
 `tests/e2e/test_recovery_kit.py` backs up a Proton save from the fake Frame through
 the server, deletes it and restores it. Neither involves a real headset.
 

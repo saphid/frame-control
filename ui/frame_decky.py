@@ -31,8 +31,14 @@ def plugins(folder):
             if info.is_symlink() or not info.is_file() or info.stat().st_size > 16384: continue
             try:
                 data = json.loads(info.read_text())
+                marker = child / '.frame-control-store.json'
+                try:
+                    owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
+                except (OSError, ValueError): owned = {}
                 found.append({'folder': child.name, 'name': str(data.get('name', child.name))[:80],
-                              'author': str(data.get('author', ''))[:80]})
+                              'author': str(data.get('author', ''))[:80],
+                              'storeId': owned.get('storeId') if isinstance(owned.get('storeId'), int) else None,
+                              'version': str(owned.get('version', ''))[:40]})
             except (ValueError, OSError, UnicodeError): pass
     return found
 os_release = {}

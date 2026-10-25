@@ -19,6 +19,7 @@ import os
 from pathlib import Path, PurePosixPath
 import re
 import shutil
+import stat
 import subprocess
 import sys
 import tarfile
@@ -88,28 +89,57 @@ def _under(rel, root):
     return rel == root or rel.startswith(root + '/')
 
 
+def _backup_stat(rel):
+    """lstat a backup path only if every component below trusted HOME is link-free.
+
+    Rechecked at discovery and before reads; not atomic against concurrent renames.
+    HOME itself may use the host's normal home/temp-directory aliases.
+    """
+    if not safe_rel(rel):
+        return None
+    path = HOME
+    try:
+        for component in rel.split('/'):
+            path = path / component
+            st = path.lstat()
+            if stat.S_ISLNK(st.st_mode):
+                return None
+        return st
+    except OSError:
+        return None
+
+
+def _backup_dir(rel):
+    st = _backup_stat(rel)
+    return st is not None and stat.S_ISDIR(st.st_mode)
+
+
 def _walk(rel_root, skip=()):
     """Regular files under HOME/rel_root, never following links: [(rel, size)], [skipped]."""
     files, skipped = [], []
     base = HOME / rel_root
-    if base.is_symlink() or not base.is_dir():
-        if base.is_file() and not base.is_symlink():
-            return [(rel_root, base.stat().st_size)], skipped
+    st = _backup_stat(rel_root)
+    if st is None or is_secret(rel_root):
+        return files, skipped
+    if stat.S_ISREG(st.st_mode):
+        if st.st_size > MAX_FILE:
+            skipped.append({'path': rel_root, 'reason': 'over 2 GiB'})
+            return files, skipped
+        return [(rel_root, st.st_size)], skipped
+    if not stat.S_ISDIR(st.st_mode):
         return files, skipped
     for top, dirs, names in os.walk(str(base)):
         rel_top = PurePosixPath(rel_root, *Path(top).relative_to(base).parts).as_posix()
-        dirs[:] = sorted(d for d in dirs if not os.path.islink(os.path.join(top, d)) and
+        if not _backup_dir(rel_top):
+            dirs[:] = []
+            continue
+        dirs[:] = sorted(d for d in dirs if _backup_dir(rel_top + '/' + d) and
                          not any(_under(rel_top + '/' + d, s) for s in skip) and
                          not is_secret(rel_top + '/' + d + '/x'))
         for name in sorted(names):
-            path, rel = os.path.join(top, name), rel_top + '/' + name
-            if os.path.islink(path) or is_secret(rel):
-                continue
-            try:
-                st = os.lstat(path)
-            except OSError:
-                continue
-            if not os.path.isfile(path):
+            rel = rel_top + '/' + name
+            st = _backup_stat(rel)
+            if st is None or not stat.S_ISREG(st.st_mode) or is_secret(rel):
                 continue
             if st.st_size > MAX_FILE:
                 skipped.append({'path': rel, 'reason': 'over 2 GiB'})
@@ -124,26 +154,34 @@ def _manifest_field(text, key):
 
 
 def game_name(appid):
+    rel = '%s/steamapps/appmanifest_%s.acf' % (STEAM, appid)
+    st = _backup_stat(rel)
+    if st is None or not stat.S_ISREG(st.st_mode):
+        return None
     try:
-        text = (HOME / STEAM / 'steamapps' / ('appmanifest_%s.acf' % appid)).read_text(errors='replace')
+        text = (HOME / rel).read_text(errors='replace')
     except OSError:
         return None
     return _manifest_field(text, 'name')
 
 
 def accounts():
-    root = HOME / STEAM / 'userdata'
+    rel = STEAM + '/userdata'
+    if not _backup_dir(rel):
+        return []
     try:
-        return sorted(p.name for p in root.iterdir() if p.name.isdigit() and p.is_dir()
-                      and not p.is_symlink() and p.name != '0')
+        return sorted(p.name for p in (HOME / rel).iterdir() if p.name.isdigit() and
+                      p.name != '0' and _backup_dir(rel + '/' + p.name))
     except OSError:
         return []
 
 
 def _prefixes():
+    if not _backup_dir(COMPAT):
+        return []
     try:
         return sorted((p.name for p in (HOME / COMPAT).iterdir()
-                       if p.name.isdigit() and (p / PREFIX_USER).is_dir()), key=int)
+                       if p.name.isdigit() and _backup_dir(COMPAT + '/' + p.name + '/' + PREFIX_USER)), key=int)
     except OSError:
         return []
 
@@ -244,9 +282,14 @@ def pack(part, output):
     with tarfile.open(fileobj=output, mode='w|gz') as archive:
         for rel, _ in files:
             path = HOME / rel
+            st = _backup_stat(rel)
+            if st is None or not stat.S_ISREG(st.st_mode) or is_secret(rel):
+                continue
             try:
                 with open(str(path), 'rb') as src:
                     st = os.fstat(src.fileno())
+                    if not stat.S_ISREG(st.st_mode) or st.st_size > MAX_FILE:
+                        continue
                     member = tarfile.TarInfo(rel)
                     member.size, member.mtime, member.mode = st.st_size, int(st.st_mtime), st.st_mode & 0o755
                     archive.addfile(member, src)
