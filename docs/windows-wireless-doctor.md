@@ -56,6 +56,16 @@ whether the PC's own Wi-Fi drops too. A new `#2` name is not proof that this
 instance caused the failure. Keep the time of the drop and the two snapshots
 for Steam Support; the doctor does not save or upload them.
 
+The app shows **Changes since previous read** after the second click. It
+compares exact PnP IDs, known status fields and reported channels/bands; an
+unknown value is never treated as a state change. If the PnP source was
+unavailable in either read, it declines to compare devices. Each successful
+read becomes the baseline for the next one. **Forget previous read** clears the
+baseline and comparison; closing the app clears them too. The before/after
+comparison stays in local memory and is not uploaded or added to telemetry.
+Reported changes can reflect sequential query timing or a service recovering,
+not a fault or permission to disable any instance.
+
 To narrow a drop at stream start, try one condition at a time: wired PC
 networking instead of PC Wi-Fi, wired headphones instead of 2.4 GHz audio, and
 spacing the USB radio dongles apart. Recheck the stream after each change. The

@@ -1441,8 +1441,9 @@
 <section class="panel" id="wireless" hidden>
   <h2>Wireless Adapter doctor</h2>
   <p class="sub">Read-only snapshot of this Windows PC. Works without a headset connection. Nothing on the Frame is read or changed.</p>
-  <button class="action" id="wirelessRead">Read PC adapters</button>
+  <div class="row"><button class="action" id="wirelessRead">Read PC adapters</button><button id="wirelessForget" disabled>Forget previous read</button></div>
   <p id="wirelessStatus" role="status" aria-live="polite">Choose Read PC adapters to start. No automatic polling.</p>
+  <div id="wirelessComparison" aria-live="polite"></div>
   <div id="wirelessResult"></div>
   <div class="card" style="margin-top:16px"><h3>Before changing an adapter</h3>
     <p>Multiple Microsoft Wi-Fi Direct Virtual Adapter instances can be normal. A number such as #2, a disconnected link or a non-present device does not establish which instance is extra or safe to disable. This tool cannot reliably identify the Steam dongle's primary or active instance, so it offers no disable action.</p>
@@ -5670,7 +5671,34 @@ document.querySelectorAll('[data-power-format]').forEach(b => b.onclick = async 
 
 // ---- Read-only PC wireless doctor ----
 let wirelessSeq = 0;
+let wirelessPrevious = null;  // memory only; never sent or saved
 const wirelessKnown = value => value === true ? 'Yes' : value === false ? 'No' : 'Unknown';
+function compareWireless(previous, current) {
+  if (previous.sources?.pnp !== 'ok' || current.sources?.pnp !== 'ok')
+    return '<p class="hint">Exact device comparison unavailable: the PnP inventory was incomplete in one read. The current snapshot is shown below.</p>';
+  const keyed = snapshot => new Map((snapshot.devices || [])
+    .filter(d => typeof d.id === 'string' && d.id)
+    .map(d => [d.id.toLowerCase(), d]));
+  const before = keyed(previous), after = keyed(current), changes = [];
+  const describe = d => `${esc(d.name || 'Unnamed device')} (<code>${esc(d.id)}</code>)`;
+  for (const [id, device] of after) {
+    const old = before.get(id);
+    if (!old) { changes.push(`Newly listed: ${describe(device)}`); continue; }
+    for (const [field, label] of [['present','presence'], ['pnpStatus','PnP status'],
+      ['problemCode','problem code'], ['operational','operation'], ['media','media'],
+      ['defaultRoute','default route'], ['channel','reported channel'], ['band','reported band']]) {
+      if (old[field] == null || device[field] == null || old[field] === device[field]) continue;
+      const value = v => typeof v === 'boolean' ? wirelessKnown(v) : esc(v);
+      changes.push(`${describe(device)}: ${label} ${value(old[field])} → ${value(device[field])}`);
+    }
+  }
+  for (const [id, device] of before) if (!after.has(id)) changes.push(`No longer listed: ${describe(device)}`);
+  const shown = changes.slice(0, 25);
+  return `<div class="card"><h3>Changes since previous read</h3>
+    <p class="sub">${esc(previous.observedAt || 'Earlier read')} → ${esc(current.observedAt || 'Current read')}. These are reported changes, not proof of a new fault or an unused adapter. A newly listed numbered Wi-Fi Direct instance is not a safe disable target.</p>
+    ${shown.length ? `<ul>${shown.map(line => `<li>${line}</li>`).join('')}</ul>` : '<p>No reported device changes in the available fields.</p>'}
+    ${changes.length > shown.length ? `<p>${changes.length - shown.length} more changes omitted; inspect the current snapshot below.</p>` : ''}</div>`;
+}
 function renderWireless(r) {
   const unknown = value => value == null ? 'Unknown' : esc(value);
   const states = (value, known) => known[value] || (value == null ? 'Unknown' : `Other (${esc(value)})`);
@@ -5689,6 +5717,8 @@ function renderWireless(r) {
 $('wirelessRead').onclick = async () => {
   const seq = ++wirelessSeq;
   $('wirelessRead').disabled = true;
+  $('wirelessForget').disabled = true;
+  $('wirelessComparison').textContent = '';
   $('wirelessResult').textContent = '';
   $('wirelessStatus').textContent = 'Reading this PC’s adapters…';
   try {
@@ -5698,13 +5728,25 @@ $('wirelessRead').onclick = async () => {
       $('wirelessStatus').textContent = r.message || 'PC wireless inventory unavailable.';
       return;
     }
+    $('wirelessComparison').innerHTML = wirelessPrevious ? compareWireless(wirelessPrevious, r) :
+      '<p class="hint">Read PC adapters again after a dropout to compare exact device reports. The previous read stays only in this open app.</p>';
+    wirelessPrevious = r;
     $('wirelessResult').innerHTML = renderWireless(r);
     $('wirelessStatus').textContent = r.state === 'partial' ? 'Partial PC snapshot. Some sources are unavailable. No settings changed.' : 'PC snapshot received. Unknown channel/band fields may remain. No settings changed.';
   } catch (e) {
     if (seq === wirelessSeq) $('wirelessStatus').textContent = `PC wireless inventory unavailable: ${e.message}`;
   } finally {
-    if (seq === wirelessSeq) $('wirelessRead').disabled = false;
+    if (seq === wirelessSeq) {
+      $('wirelessRead').disabled = false;
+      $('wirelessForget').disabled = !wirelessPrevious;
+    }
   }
+};
+$('wirelessForget').onclick = () => {
+  wirelessPrevious = null;
+  $('wirelessForget').disabled = true;
+  $('wirelessComparison').textContent = '';
+  $('wirelessStatus').textContent = 'Previous adapter read forgotten. Read again to start a new comparison.';
 };
 
 // ---- Read-only game storage ----
