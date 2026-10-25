@@ -1,6 +1,31 @@
 /* Framey panel compatibility layer. The iframe has an opaque origin and no UI key. */
 (() => {
   'use strict';
+  // Opaque-origin iframes throw on localStorage access. Give plugins a small
+  // panel-lifetime cache without granting their code the parent page's origin.
+  const cache = new Map();
+  const cacheLimit = 262144; // UTF-16 code units: at most 512 KiB of keys and values.
+  const cacheQuotaError = () => {
+    const error = new Error('Framey panel cache is full');
+    error.name = 'QuotaExceededError';
+    return error;
+  };
+  const panelStorage = Object.freeze({
+    get length() { return cache.size; },
+    key(index) { return Number.isInteger(Number(index)) ? [...cache.keys()][Number(index)] ?? null : null; },
+    getItem(key) { return cache.get(String(key)) ?? null; },
+    setItem(key, value) {
+      key = String(key); value = String(value);
+      const previous = cache.get(key);
+      const size = [...cache].reduce((total, [name, data]) => total + name.length + data.length, 0)
+        - (previous === undefined ? 0 : key.length + previous.length) + key.length + value.length;
+      if ((previous === undefined && cache.size >= 256) || size > cacheLimit) throw cacheQuotaError();
+      cache.set(key, value);
+    },
+    removeItem(key) { cache.delete(String(key)); },
+    clear() { cache.clear(); },
+  });
+  Object.defineProperty(window, 'localStorage', {value:panelStorage, enumerable:true});
   const R = window.SP_REACT = window.React;
   window.SP_REACTDOM = window.ReactDOM;
   const jsx = (type, props, key) => {
