@@ -45,13 +45,17 @@ def check(appimage):
     digest = hashlib.sha256(appimage.read_bytes()).hexdigest()
     with tempfile.TemporaryDirectory(prefix="frame-appimage-smoke-") as directory:
         profile = Path(directory)
+        (profile / "tmp").mkdir()
         env = dict(os.environ)
         env.update(
             APPIMAGE_EXTRACT_AND_RUN="1", ELECTRON_DISABLE_SANDBOX="1",
+            TMPDIR=str(profile / "tmp"),
             XDG_CONFIG_HOME=str(profile / "config"),
             XDG_CACHE_HOME=str(profile / "cache"),
             XDG_DATA_HOME=str(profile / "data"),
             FRAME_ALIAS="frame-control-appimage-smoke-no-headset",
+            FRAME_CONTROL_TELEMETRY="0", FRAME_CONTROL_NO_UPDATE_CHECK="1",
+            DO_NOT_TRACK="1",
         )
         output = profile / "app.log"
         port = None

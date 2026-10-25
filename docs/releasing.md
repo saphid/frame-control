@@ -22,8 +22,10 @@ count. So a build reaches people only when you publish it, after testing it.
    the affected upload; it refuses ambiguous matches.
    The Linux build runs `scripts/check-appimage-launch.py` before upload. It
    starts the built x86_64 AppImage on an isolated Xvfb display, checks that
-   its bundled server answers, and checks that the server stops on exit. This
-   CI test does not test a physical display, FUSE mount or a headset.
+   its bundled server answers, and checks that the server stops on exit. The
+   check disables telemetry and update requests, and keeps extraction in its
+   temporary profile. This CI test does not test a physical display, FUSE mount
+   or a headset.
 
 2. Download the draft's installers and test them. An installed copy of the
    previous version won't offer the draft, so install it directly.
