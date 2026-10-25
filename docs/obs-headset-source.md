@@ -49,3 +49,20 @@ default output was present in the saved audio. The headset was in standby, so
 the video showed the standby mirror. Nobody listened to OBS's monitoring output,
 and audio/video sync and active passthrough remain unverified. See the
 [test evidence](evidence/obs-media-source-real-2026-10-25.md).
+
+## Known issue: game audio in OBS
+
+A Frame owner [reported](https://x.com/AzizahStellazio/status/2114147449468293171)
+that OBS **Game Capture / Application Audio Capture** can lose game audio when
+the headset turns on. OBS support attributed this to Valve/SteamVR. Frame
+Control cannot change that game-audio routing. If it happens, use Frame
+Control's **Start OBS source** and OBS **Media Source** steps above to capture
+the headset view and its output audio. You can also try OBS **Desktop Audio
+Capture** for the computer's output, then check its meter and a short test
+recording before you stream. Do not leave two active sources for the same audio
+unless you want duplicate sound.
+
+The real Frame/OBS check above proved that a synthetic tone from the Frame's
+output reached the Media Source recording. It did **not** use a running game,
+listen to the audio, reproduce the reported Game Capture failure, or measure
+audio/video sync. Real game audio while the headset is awake remains unverified.
