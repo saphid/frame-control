@@ -91,7 +91,7 @@ import json, pathlib, sys
 d = json.load(open(sys.argv[1]))
 body = (d.get("body") or "").rstrip()
 if "## Is it safe?" not in body:
-    note = pathlib.Path(sys.argv[2]).read_text().replace("{tag}", sys.argv[3]).strip()
+    note = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8").replace("{tag}", sys.argv[3]).strip()
     body = (body + "\n\n" if body else "") + note
 d["body"] = body
 json.dump(d, sys.stdout)
@@ -99,7 +99,7 @@ EOF
 mv "$tmp/release-with-note.json" "$tmp/release.json"
 python3 - "$tmp/release.json" > "$tmp/release-body.txt" <<'EOF'
 import json, sys
-print(json.load(open(sys.argv[1]))["body"], end="")
+sys.stdout.buffer.write(json.load(open(sys.argv[1]))["body"].encode("utf-8"))
 EOF
 
 # update.json: what running copies read (app/updater.js), from github.com's
