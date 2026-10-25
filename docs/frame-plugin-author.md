@@ -32,6 +32,9 @@ Frame Control now has an experimental [Framey panel host](framey-loader.md)
 for API v2 Decky frontend bundles. It renders common settings controls in the
 separate SteamVR dashboard panel, but Steam library and store page patches
 remain unavailable. Wearer-visible use is not yet verified.
+The [settings sample](../examples/framey-settings/README.md) shows an official
+Decky JSX build, backend persistence, a toggle and a local toast. Framey offers
+only official-store-owned plugins in its VR panel.
 
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
@@ -47,6 +50,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Decky API or UI feature | Framey behavior | Verified in |
 | --- | --- | --- |
 | `definePlugin` with `content`, `titleView` | Renders a React panel and optional title | Local browser with ProtonDB Badges; host unit test |
+| Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls | Local browser and host unit test |
 | Optional `settings`, `frameyQuickActions` | Separate settings tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e for setting read/write across CEF calls, update, and reinstall; host unit test. Real Decky persistence remains unverified. |

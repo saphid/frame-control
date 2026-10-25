@@ -80,6 +80,9 @@ list before making another change.
 
 ## For plugin authors
 
+Start with the [Framey settings sample](../examples/framey-settings/README.md)
+for a buildable Decky API v2 panel and Python settings backend.
+
 Publish a normal [Decky store](https://plugins.deckbrew.xyz/) API v2 release
 with `plugin.json`, a single `dist/index.js` ESM frontend entry point, and a
 Python backend if needed. Give the frontend a `content` React element returned
