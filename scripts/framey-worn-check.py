@@ -5,8 +5,10 @@ Requires an already installed Frame Control VR panel, Decky user service, and
 one Framey-managed plugin. It never installs, restarts, or removes a service.
 """
 import datetime
+import hashlib
 import json
 from pathlib import Path
+import re
 import secrets
 import shlex
 import subprocess
@@ -86,12 +88,20 @@ def check_file():
     return json.loads(remote('python3 -c ' + shlex.quote(code)))
 
 
+def color_count(text):
+    return len(set(re.findall(r'#[0-9A-Fa-f]{6,8}', text)))
+
+
 def main():
     result = {'time':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'proof':'worn-headset check'}
     token = 'framey-' + secrets.token_hex(12)
     locked = False
     challenge = False
     try:
+        # Do not read even standby status until this task owns the device lock.
+        remote('mkdir ' + LOCK + ' && { printf %s ' + shlex.quote(token) +
+               ' > ' + LOCK + '/owner || { rm -f ' + LOCK + '/owner; rmdir ' + LOCK + '; exit 1; }; }')
+        locked = True
         before = probe()
         result['before'] = before
         if not before['battery'] or min(x['percent'] for x in before['battery']) < 20:
@@ -100,8 +110,6 @@ def main():
             raise RuntimeError('SteamVR is in standby; no worn-headset check started')
         if not before['panelService'] or not before['plugins']:
             raise RuntimeError('Install and open the Frame Control panel and a Framey plugin before this check')
-        remote('mkdir ' + LOCK + ' && printf %s ' + shlex.quote(token) + ' > ' + LOCK + '/owner')
-        locked = True
         after_lock = probe()
         if after_lock['activity'] >= 3 or min(x['percent'] for x in after_lock['battery']) < 20:
             raise RuntimeError('Activity or battery changed after acquiring the lock')
@@ -128,14 +136,17 @@ def main():
         if result['panelVisible'] and result['pluginPanelReady']:
             shot = json.loads(remote('python3 -', stdin=(ROOT/'ui/frame_vrshot.py').read_text(), timeout=20))['path']
             local = Path('/tmp')/('framey-worn-' + token + '.png')
-            with local.open('wb') as out:
-                copy = subprocess.run([*SSH, 'cat ' + shlex.quote(shot)], stdout=out, stderr=subprocess.PIPE, timeout=20)
-            remote('rm -f ' + shlex.quote(shot))
-            if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
-            result['screenshot'] = str(local)
-            pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
-                                    capture_output=True, text=True, timeout=15)
-            result['screenshotColors'] = len(set(re.findall(r'#[0-9A-Fa-f]{6,8}', pixels.stdout))) if pixels.returncode == 0 else None
+            try:
+                with local.open('wb') as out:
+                    copy = subprocess.run([*SSH, 'cat ' + shlex.quote(shot)], stdout=out, stderr=subprocess.PIPE, timeout=20)
+                if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
+                result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
+                pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
+                                        capture_output=True, text=True, timeout=15)
+                result['screenshotColors'] = color_count(pixels.stdout) if pixels.returncode == 0 else None
+            finally:
+                local.unlink(missing_ok=True)
+                remote('rm -f ' + shlex.quote(shot))
         result['passed'] = (result['worn'] and result['panelVisible'] and result['controllerInput'] and
                             result['pluginPanelReady'] and (result.get('screenshotColors') or 0) > 8)
     except Exception as exc:

@@ -17,33 +17,41 @@ spec.loader.exec_module(worn)
 class WornGate(unittest.TestCase):
     def run_gate(self, state, remote_side_effect=None):
         out = io.StringIO()
-        with patch.object(worn, 'probe', return_value=state), \
+        with patch.object(worn, 'probe', return_value=state) as probe, \
                 patch.object(worn, 'remote', side_effect=remote_side_effect) as remote, \
                 contextlib.redirect_stdout(out):
             result = worn.main()
-        return result, out.getvalue(), remote
+        return result, out.getvalue(), remote, probe
 
-    def test_standby_never_takes_lock(self):
+    def test_standby_is_read_only_under_owned_lock_and_releases_it(self):
         state = {'battery':[{'percent':99}], 'activity':3, 'panelService':True,
                  'plugins':[{'id':14,'name':'ProtonDB Badges'}], 'panel':None}
-        code, report, remote = self.run_gate(state)
+        code, report, remote, probe = self.run_gate(state)
         self.assertEqual(code, 1)
         self.assertIn('standby', report)
-        remote.assert_not_called()
+        probe.assert_called_once()
+        self.assertEqual(remote.call_count, 2)
+        self.assertIn('mkdir /tmp/frame-test.lock', remote.call_args_list[0].args[0])
+        self.assertIn('rmdir /tmp/frame-test.lock', remote.call_args_list[1].args[0])
 
-    def test_low_battery_never_takes_lock(self):
+    def test_low_battery_releases_owned_lock(self):
         state = {'battery':[{'percent':19}], 'activity':0, 'panelService':True,
                  'plugins':[{'id':14,'name':'ProtonDB Badges'}], 'panel':None}
-        code, report, remote = self.run_gate(state)
+        code, report, remote, probe = self.run_gate(state)
         self.assertEqual(code, 1)
         self.assertIn('below 20%', report)
-        remote.assert_not_called()
+        probe.assert_called_once()
+        self.assertEqual(remote.call_count, 2)
 
-    def test_foreign_lock_is_never_removed(self):
+    def test_foreign_lock_prevents_all_sensor_reads_and_is_never_removed(self):
         state = {'battery':[{'percent':99}], 'activity':0, 'panelService':True,
                  'plugins':[{'id':14,'name':'ProtonDB Badges'}], 'panel':None}
-        code, report, remote = self.run_gate(state, RuntimeError('File exists'))
+        code, report, remote, probe = self.run_gate(state, RuntimeError('File exists'))
         self.assertEqual(code, 1)
         self.assertIn('File exists', report)
+        probe.assert_not_called()
         self.assertEqual(remote.call_count, 1)
         self.assertIn('mkdir /tmp/frame-test.lock', remote.call_args.args[0])
+
+    def test_screenshot_palette_counts_distinct_colors(self):
+        self.assertEqual(worn.color_count('0 #ff00aa 1 #ff00aa 2 #00ff00'), 2)

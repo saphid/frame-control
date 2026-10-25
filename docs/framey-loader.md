@@ -90,13 +90,15 @@ The Decky and headset service manual removal commands are in
 
 With an already installed Framey plugin and someone wearing the headset, run
 `python3 scripts/framey-worn-check.py` from a paired computer. The script
-checks battery and SteamVR activity before atomically acquiring
-`/tmp/frame-test.lock`; it stops before changing anything if the headset is
-in standby or another job owns the lock. Within 35 seconds, use a controller
+atomically acquires `/tmp/frame-test.lock` before reading battery or SteamVR
+activity. If another job owns the lock, it makes no sensor reads. It releases
+its own lock without starting the interaction when the headset is in standby.
+Within 35 seconds, use a controller
 to open a managed plugin panel and touch one setting. The script records a
 fresh trusted pointer event, the panel-ready event, SteamVR overlay visibility,
 and a stereo screenshot with varied pixels. It deletes its own short-lived
-challenge and releases only its own lock. A screenshot under `/tmp/framey-worn-*`
-is left for visual review; pixel variety alone cannot prove the UI text was
-legible. The script does not install or remove a plugin, alter Steam settings,
-or wake the headset.
+challenge and releases only its own lock. It records the screenshot hash and
+color count, then removes the private temporary image from both devices.
+Pixel variety alone cannot prove the UI text was legible; a person must still
+confirm the view in the headset. The script does not install or remove a plugin,
+alter Steam settings, or wake the headset.
