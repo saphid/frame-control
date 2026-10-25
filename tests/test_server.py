@@ -94,6 +94,33 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(headers["X-Frame-Options"], "DENY")
         self.assertIn(b"<title>APK Store</title>", payload)
 
+    def test_local_extension_is_listed_and_sandboxed(self):
+        folder = Path(os.environ["FRAME_CONTROL_DATA_DIR"]) / "extensions" / "test-glance"
+        folder.mkdir(parents=True, exist_ok=True)
+        (folder / "manifest.json").write_text(json.dumps({"id": "test-glance", "name": "Test Glance",
+            "version": "1.0", "description": "Test status", "entry": "index.html"}))
+        (folder / "index.html").write_text('<script src="main.js"></script>')
+        (folder / "main.js").write_text('parent.postMessage({type:"frame-control:request",id:1,action:"status"},"*");')
+        try:
+            code, _, body = self.request("GET", "/api/extensions", headers={"X-Frame-UI": "1"})
+            self.assertEqual(code, 200)
+            self.assertIn("test-glance", [x["id"] for x in json.loads(body)["extensions"]])
+            code, headers, body = self.request("GET", "/extension/test-glance/index.html")
+            self.assertEqual(code, 200)
+            self.assertIn(b"main.js", body)
+            self.assertIn("frame-ancestors 'self'", headers["Content-Security-Policy"])
+            self.assertNotIn("X-Frame-Options", headers)
+            self.assertEqual(self.request("GET", "/extension/test-glance/manifest.json")[0], 404)
+            self.assertEqual(self.request("GET", "/extension/test-glance/../index.html")[0], 404)
+            try:
+                (folder / "escape.js").symlink_to(Path(__file__))
+            except OSError:  # Windows may not allow an unprivileged test to create a symlink.
+                pass
+            else:
+                self.assertEqual(self.request("GET", "/extension/test-glance/escape.js")[0], 404)
+        finally:
+            shutil.rmtree(folder)
+
     def test_foreign_host_rejected(self):
         # DNS rebinding: a hostile name pointed at 127.0.0.1.
         for path in ("/", "/api/status"):

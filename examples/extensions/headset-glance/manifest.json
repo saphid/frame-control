@@ -1,0 +1,7 @@
+{
+  "id": "headset-glance",
+  "name": "Headset Glance",
+  "version": "1.0.0",
+  "description": "Shows a small read-only summary of the connected Steam Frame.",
+  "entry": "index.html"
+}

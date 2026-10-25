@@ -1436,8 +1436,18 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Modding & extensions</h2><div class="quick-routes"><a href="#extensions"><span>Extensions</span><small>Add local tools to Frame Control</small></a></div></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
+  <section class="panel" id="extensions">
+    <div class="shelf-head"><h2>Extensions</h2><span class="spacer"></span><button class="small" id="extensionsRefresh">Refresh</button></div>
+    <p class="sub">Add local tools to Frame Control. An extension runs only when you open it, in an isolated panel with read-only headset status.</p>
+    <div id="extensionsList" class="sub">Loading…</div>
+    <div id="extensionsFolder" class="hint"></div>
+    <div id="extensionPanel" hidden style="margin-top:16px">
+      <div class="shelf-head"><h2 id="extensionTitle"></h2><span class="spacer"></span><button class="small" id="extensionClose">Close</button></div>
+      <iframe id="extensionFrame" title="Frame Control extension" sandbox="allow-scripts" referrerpolicy="no-referrer" style="width:100%;height:440px;border:1px solid rgba(255,255,255,.12);border-radius:4px;background:#101820"></iframe>
+    </div>
+  </section>
 <section class="panel" id="wireless" hidden>
   <h2>Wireless Adapter doctor</h2>
   <p class="sub">Read-only snapshot of this Windows PC. Works without a headset connection. Nothing on the Frame is read or changed.</p>
@@ -2122,6 +2132,46 @@
 
 <script>
 const $ = (id) => document.getElementById(id);
+let activeExtension = null;
+async function loadExtensions() {
+  try {
+    const data = await api('/api/extensions');
+    $('extensionsFolder').textContent = `Put a folder with manifest.json and index.html in ${data.folder}`;
+    $('extensionsList').innerHTML = data.extensions.length
+      ? data.extensions.map(x => `<div class="row" style="margin:7px 0"><button class="small" data-extension="${esc(x.id)}">Open ${esc(x.name)}</button><span class="sub">${esc(x.description)} · ${esc(x.version)}</span></div>`).join('')
+      : 'No extensions installed.';
+    if (data.errors.length) $('extensionsList').innerHTML += `<div class="hint">${data.errors.map(x => `${esc(x.folder)}: ${esc(x.error)}`).join('<br>')}</div>`;
+    $('extensionsList').querySelectorAll('[data-extension]').forEach(button => button.onclick = () => {
+      const ext = data.extensions.find(x => x.id === button.dataset.extension);
+      if (!ext) return;
+      activeExtension = ext.id;
+      $('extensionTitle').textContent = ext.name;
+      $('extensionFrame').src = `/extension/${encodeURIComponent(ext.id)}/index.html`;
+      $('extensionPanel').hidden = false;
+    });
+  } catch (error) { $('extensionsList').textContent = error.message; }
+}
+$('extensionsRefresh').onclick = loadExtensions;
+$('extensionClose').onclick = () => {
+  activeExtension = null;
+  $('extensionFrame').removeAttribute('src');
+  $('extensionPanel').hidden = true;
+};
+window.addEventListener('message', event => {
+  if (!activeExtension || event.source !== $('extensionFrame').contentWindow) return;
+  const request = event.data;
+  if (!request || request.type !== 'frame-control:request' || !Number.isSafeInteger(request.id)) return;
+  let value;
+  if (request.action === 'capabilities') value = {apiVersion: 1, actions: ['capabilities', 'status']};
+  else if (request.action === 'status') {
+    const snapshot = stateRead.valid ? state : null;
+    value = {connected: !!snapshot,
+      os: {version: snapshot?.os?.version || null, build: snapshot?.os?.build || null},
+      battery: {percent: snapshot?.battery?.percent ?? null}, steamvr: !!snapshot?.services?.steamvr};
+  }
+  else return;
+  event.source.postMessage({type:'frame-control:response', id:request.id, value}, '*');
+});
 // Every /api/ request carries this header. The desktop server takes "1"; the
 // iPhone app's server, on the Frame, takes a fresh key it puts in the page URL.
 const UI_KEY = new URLSearchParams(location.search).get("key") || "1";
@@ -6067,6 +6117,7 @@ async function loadSteamPipewire() {
     $('steamPipewireLaunch').disabled = $('steamPipewireReset').disabled = true;
     $('steamPipewireStatus').textContent = e.message;
   }
+
 }
 async function steamPipewireAction(action) {
   if (steamPipewireBusy) return;
@@ -6090,10 +6141,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   steamPipewire:"tools", vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools", extensions:"tools"};
 const TOOL_TITLES = {steamPipewire:"Steam desktop sharing", transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery", extensions:"Extensions"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -6200,6 +6251,7 @@ function showPage(e) {
   if (tool === 'steamPipewire') loadSteamPipewire();
   if (tool === 'macview') loadMacView();
   if (tool === 'panels') loadPanelSwitcher();
+  if (tool === 'extensions') loadExtensions();
   if (tool === 'backup') loadBackups();
   if (tool === 'storage') loadStorage();
   if (tool === 'powerReport') loadPower();

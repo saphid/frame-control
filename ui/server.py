@@ -78,6 +78,7 @@ import frame_utilities  # noqa: E402
 import frame_wireless_doctor  # noqa: E402
 import frame_wired_doctor  # noqa: E402
 import frame_compat_db  # noqa: E402
+import frame_extensions  # noqa: E402
 
 frame_host.trust_bundled_cas()
 
@@ -546,6 +547,7 @@ def status(_body):
                                    len(LINK.reg.devices()) if LINK else None)
         frame_report.frame.update(build=osr.get("build"), version=osr.get("version"))
     return s
+
 
 
 COMFORT_FILES = ("frame_comfort.py", "frame_status.py", "frame_steam.py")
@@ -3466,7 +3468,7 @@ class Handler(BaseHTTPRequestHandler):
             return False
         return True
 
-    def send_bytes(self, data, ctype, status=200, headers=()):
+    def send_bytes(self, data, ctype, status=200, headers=(), extension=False):
         self.send_response(status)
         self.send_header("Content-Type", ctype)
         for name, value in headers:
@@ -3474,8 +3476,12 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
         # Nobody may frame the UI (clickjacking).
-        self.send_header("X-Frame-Options", "DENY")
-        self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
+        self.send_header("X-Content-Type-Options", "nosniff")
+        if extension:
+            self.send_header("Content-Security-Policy", "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; frame-ancestors 'self'; base-uri 'none'; form-action 'none'")
+        else:
+            self.send_header("X-Frame-Options", "DENY")
+            self.send_header("Content-Security-Policy", "frame-ancestors 'none'")
         try:
             self.end_headers()
             self.wfile.write(data)
@@ -3514,6 +3520,19 @@ class Handler(BaseHTTPRequestHandler):
                     raise Failure(str(exc), 409) from exc
                 self.send_bytes(data.encode('utf-8'), mime,
                                 headers=[('Content-Disposition', f'attachment; filename="frame-power-{report_id}.{format}"')])
+            elif path == "/api/extensions":
+                self.send_json(frame_extensions.list_extensions())
+            elif path.startswith("/extension/"):
+                parts = path.split("/")
+                if len(parts) != 4:
+                    self.send_json({"error": "not found"}, 404)
+                else:
+                    try:
+                        data, ctype = frame_extensions.asset(parts[2], parts[3])
+                    except (FileNotFoundError, ValueError, OSError):
+                        self.send_json({"error": "extension asset not found"}, 404)
+                    else:
+                        self.send_bytes(data, ctype, extension=True)
             elif path == "/api/settings/artwork":
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
