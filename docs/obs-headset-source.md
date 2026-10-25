@@ -1,7 +1,7 @@
 # Headset view in OBS
 
 Frame Control can send SteamVR's headset mirror and the Frame's output audio to
-OBS on a Windows, Linux or macOS computer. The helper uses the same `/dev/video99` video
+OBS on a Linux or macOS computer. A checkout helper is also available for Windows tests. The helper uses the same `/dev/video99` video
 source and default-output monitor as **Capture & Live → Record**. It sends a
 local MPEG-TS stream; no port is opened to the LAN or internet.
 
@@ -11,7 +11,10 @@ local MPEG-TS stream; no port is opened to the LAN or internet.
    **Start OBS source**. Keep Frame Control open; **Stop OBS source**, switching
    headsets, or quitting the app closes its SSH stream. It uses the selected
    headset and the app's bundled helper.
-3. In OBS, add a **Media Source**, clear **Local File**, set **Input** to
+3. Expand **OBS setup** in the app to copy the Input URL and format. The port
+   can be changed before Start if another program uses 15099. Use that same
+   port in OBS. The sender cannot identify which program is listening.
+4. In OBS, add a **Media Source**, clear **Local File**, set **Input** to
    `udp://127.0.0.1:15099`, and set **Input Format** to `mpegts`. The source
    carries video and AAC audio. Use OBS's audio mixer to choose monitoring and
    recording levels.
@@ -24,9 +27,12 @@ run:
    ```
 
 Ctrl+C stops the checkout helper. The app closes a control pipe when you click
-Stop or quit; the helper then closes its SSH child, including on Windows. On
-Windows, install Python 3 and OpenSSH Client if Frame Control cannot find them.
-The Windows app Start/Stop path still needs a physical Windows/Frame test.
+Stop or quit; the helper then closes its SSH child, including on Windows. Encoding runs on the Frame; the computer does not need FFmpeg. The desktop
+app bundles Python. A source checkout needs Python 3.8+ and OpenSSH Client.
+The Windows button is hidden: native Windows/Frame streaming and OBS have
+not passed an end-to-end test. A Windows 11 VM passed the helper control-pipe,
+late UDP receiver and child-cleanup fixture; its real-headset bridge delivered
+zero packets. These are separate results, not native Windows support.
 If no first packet arrives within 20 seconds, or an active stream sends no
 packet for 10 seconds, the helper closes SSH and shows an error instead of
 leaving **Start OBS source** waiting or a frozen source running indefinitely.
@@ -43,18 +49,22 @@ udp://127.0.0.1:15099` in a second terminal while the helper is running.
 
 This is the composited, undistorted one-eye **SteamVR mirror**, not a raw
 passthrough camera feed. The mirror may be blank when the headset is idle or
-unworn. Whether active passthrough pixels appear in it is still unverified.
+unworn. **Room passthrough is verified** in this mirror and the saved OBS/MP4 outputs
+on SteamOS 0.5.6 after a safe SteamVR wake. Check the picture before sharing;
+other games and modes may differ.
 The helper does not send a microphone. It is designed for one local OBS
 receiver. **Verified 2026-10-25:** the helper bundled in the Linux AppImage
 sent a real Frame stream to OBS 30's Media Source. OBS recorded 37.6 seconds
 with H.264 video and AAC audio; a brief 440 Hz tone played to the Frame's
 default output was present in the saved audio. The headset was in standby, so
-the video showed the standby mirror. Nobody listened to OBS's monitoring output,
-and audio/video sync and active passthrough remain unverified. See the
+the video showed the standby mirror. That initial check did not assess listening quality, A/V sync or active
+passthrough. The full validation below supersedes those gaps with measurements
+and a positive passthrough result, while listening remains unverified. See the
 [test evidence](evidence/obs-media-source-real-2026-10-25.md).
 The [follow-up Linux/Frame transport check](evidence/obs-followup-2026-10-25.md)
 measured packet continuity and a short MP4 recording on the current SteamOS
-build. The headset was still in standby.
+build. The newer [full OBS validation](evidence/obs-validation-2026-10-25.md)
+records more than three minutes and measures audio, sync, latency and cleanup.
 
 ## SteamOS / Steam Machine PC host
 
@@ -108,3 +118,27 @@ The real Frame/OBS check above proved that a synthetic tone from the Frame's
 output reached the Media Source recording. It did **not** use a running game,
 listen to the audio, reproduce the reported Game Capture failure, or measure
 audio/video sync. Real game audio while the headset is awake remains unverified.
+
+## Check sync and recover a blank source
+
+Make a short recording of a visible click, clap or other simultaneous marker
+and sound before streaming. Open **Advanced Audio Properties** in OBS. If audio
+arrives early, hide/deactivate this Media Source, add a positive **Sync Offset
+(ms)** in Advanced Audio Properties, then show/reactivate it, record again,
+and check the result. Changing the offset during playback did not correct
+the tested OBS 30 source. Setting it before activation did: a +480 ms offset
+reduced a 480 ms lead to 0 ms within the test resolution in three pulses. The 2026-10-25 Linux software-rendering test measured
+about 0.4 seconds of audio lead with default OBS settings. This is a measured
+setup result, not a universal offset. Do not apply it blindly to another host.
+
+Start Frame Control's source before adding or activating the OBS Media Source.
+After Stop/Start or a connection failure, hide and show the Media Source, or
+reopen its properties and click OK, to reopen its UDP receiver. Keep only one
+receiver on a port. If another application owns 15099, stop the relay, choose
+another port in **OBS setup**, and change the OBS Input to match. Sending UDP
+packets does not confirm that OBS has received or decoded them.
+
+A stalled stream ends with an error. Wake or reconnect the Frame and press
+Start again; automatic reconnection is not implemented. Standby can produce
+valid but blank frames, so it does not necessarily trigger a packet timeout.
+A fully suspended Frame cannot be woken over an unavailable SSH connection.

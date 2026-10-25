@@ -68,6 +68,9 @@ class ObsSourceTests(unittest.TestCase):
             def terminate(self):
                 self.stopped.set()
 
+            def wait(self, timeout=None):
+                return 255
+
         for ready in (False, True):
             with self.subTest(ready=ready):
                 child = Child()
@@ -80,7 +83,71 @@ class ObsSourceTests(unittest.TestCase):
                 finally:
                     watchdog.close()
 
-    @unittest.skipIf(sys.platform == 'win32', 'the packaged Start/Stop control is Linux/macOS only')
+    def test_shutdown_kills_an_unresponsive_ssh_child(self):
+        proc = mock.Mock()
+        proc.poll.return_value = None
+        proc.wait.side_effect = [subprocess.TimeoutExpired('ssh', 5), 137]
+        obs.stop_child(proc)
+        proc.terminate.assert_called_once()
+        proc.kill.assert_called_once()
+        self.assertEqual(proc.wait.call_count, 2)
+
+    def test_windows_sender_ignores_absent_receiver_and_hides_ssh_console(self):
+        proc = mock.Mock()
+        proc.stdout = io.BytesIO(bytes(range(188)) * 7)
+        proc.poll.return_value = proc.wait.return_value = 0
+        # These are the actual Python Winsock control and subprocess constants.
+        with mock.patch.object(obs.sys, 'platform', 'win32'), \
+             mock.patch.object(obs.subprocess, 'CREATE_NO_WINDOW', 0x08000000, create=True), \
+             mock.patch.object(obs.socket, 'socket') as socket_factory, \
+             mock.patch.object(obs.subprocess, 'Popen', return_value=proc) as popen:
+            self.assertEqual(obs.main(['--frame', 'test-frame']), 0)
+        udp = socket_factory.return_value.__enter__.return_value
+        self.assertEqual(popen.call_args.kwargs['creationflags'], 0x08000000)
+        udp.sendto.assert_called_once()
+
+    def test_windows_recovers_from_an_unreachable_udp_receiver(self):
+        udp = mock.Mock()
+        udp.sendto.side_effect = [ConnectionResetError(10054, 'receiver closed'), 188]
+        sender = obs._Sender(udp, ('127.0.0.1', 15099))
+        with mock.patch.object(obs.sys, 'platform', 'win32'):
+            sender.send(b'G' * 188)
+            self.assertFalse(sender.ready)
+            sender.send(b'G' * 188)
+            self.assertTrue(sender.ready)
+        self.assertEqual(udp.sendto.call_count, 2)
+
+    @unittest.skipIf(sys.platform == 'win32', 'the fake SSH executable uses a POSIX shebang')
+    def test_stall_exits_cleanly_even_while_app_control_pipe_stays_open(self):
+        with tempfile.TemporaryDirectory() as folder:
+            directory = Path(folder)
+            fake = directory / 'ssh'
+            fake.write_text("#!/usr/bin/env python3\n"
+                            "import signal,sys,time\n"
+                            "signal.signal(signal.SIGTERM, signal.SIG_IGN)\n"
+                            "sys.stdout.buffer.write(b'G'*1316);sys.stdout.buffer.flush()\n"
+                            "while True: time.sleep(1)\n")
+            fake.chmod(0o755)
+            wrapper = ("import importlib.util; "
+                       f"s=importlib.util.spec_from_file_location('obs', {str(SCRIPT)!r}); "
+                       "o=importlib.util.module_from_spec(s);s.loader.exec_module(o); "
+                       "o.STARTUP_TIMEOUT=o.STREAM_STALL=o.CHILD_STOP_TIMEOUT=0.15; "
+                       "o.main(['--frame','fake-frame','--control-stdin'])")
+            env = {**os.environ, 'PATH': str(directory) + os.pathsep + os.environ.get('PATH', '')}
+            process = subprocess.Popen([sys.executable, '-c', wrapper], stdin=subprocess.PIPE,
+                                       stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
+            try:
+                # Keep stdin OPEN: real Electron does this until the helper exits.
+                self.assertEqual(process.wait(timeout=4), 1)
+                error = process.stderr.read().decode(errors='replace')
+                self.assertIn('video stopped', error)
+                self.assertNotIn('Fatal Python error', error)
+            finally:
+                if process.poll() is None:
+                    process.kill(); process.wait(timeout=5)
+                process.stdin.close(); process.stderr.close()
+
+    @unittest.skipIf(sys.platform == 'win32', 'the fake SSH executable uses a POSIX shebang')
     def test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe(self):
         for mode in ('signal', 'control-pipe'):
             with self.subTest(mode=mode):

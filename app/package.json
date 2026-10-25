@@ -36,6 +36,7 @@
     },
     "files": [
       "main.js",
+      "obs-source.js",
       "preload.js",
       "install-link.js",
       "updater.js",

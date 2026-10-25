@@ -1243,6 +1243,15 @@
       <div id="obsControl" class="hint" hidden>
         <button class="small" id="obsBtn">Start OBS source</button>
         <span id="obsStatus" role="status"></span>
+        <details style="margin-top:8px">
+          <summary>OBS setup</summary>
+          <p>Start the source here, then add a Media Source in OBS and clear <strong>Local File</strong>.</p>
+          <label>Local UDP port <input id="obsPort" type="number" min="1024" max="65535" step="1" value="15099" style="width:100px"></label>
+          <p>Input: <input id="obsUrl" readonly value="udp://127.0.0.1:15099" aria-label="OBS input URL" style="width:260px"> <button class="small" id="obsCopyUrl">Copy URL</button></p>
+          <p>Input Format: <code>mpegts</code> <button class="small" id="obsCopyFormat">Copy format</button></p>
+          <p>Use one receiver. If another program uses this port, choose a different port here and in OBS, then restart the source. Sending does not confirm OBS is receiving.</p>
+          <p>If OBS stays blank after Start or a restart, hide and show its Media Source, or reopen its properties and click OK. The stream includes output sound and may show your room through passthrough. If sound arrives before the picture, hide the Media Source, add a positive Sync Offset in OBS Advanced Audio Properties, then show it and check a test recording. OBS Virtual Camera carries video only.</p>
+        </details>
       </div>
       <p class="sub"><a href="https://github.com/saphid/frame-control/blob/main/docs/obs-headset-source.md" target="_blank" rel="noopener noreferrer">Set up the headset view and sound in OBS →</a></p>
     </section>
@@ -5634,23 +5643,31 @@ if (window.frameApp?.obs) {
   const obs = window.frameApp.obs;
   const wrap = $("obsControl"), button = $("obsBtn"), status = $("obsStatus");
   let state = { state: "idle" };
+  const port = $("obsPort"), input = $("obsUrl");
+  port.oninput = () => { input.value = `udp://127.0.0.1:${port.value}`; };
+  $("obsCopyUrl").onclick = e => act("Copy OBS URL", () => copyText(input.value), e.currentTarget);
+  $("obsCopyFormat").onclick = e => act("Copy OBS format", () => copyText("mpegts"), e.currentTarget);
   function showObs(next) {
     if (!next) return;
     state = next;
     wrap.hidden = !next.supported;
-    button.textContent = next.state === "running" ? "Stop OBS source" : "Start OBS source";
-    button.disabled = next.state === "starting" || next.state === "stopping";
+    const active = next.state === "starting" || next.state === "running";
+    button.textContent = active ? "Stop OBS source" : "Start OBS source";
+    button.disabled = next.state === "stopping";
+    port.disabled = active || next.state === "stopping";
+    if (port.disabled && next.port) { port.value = next.port; port.oninput(); }
     status.textContent = next.state === "starting" ? "Connecting to the Frame and waiting for video…"
-      : next.state === "running" ? `Sending ${next.alias} view and sound to udp://127.0.0.1:15099`
+      : next.state === "running" ? `Sending ${next.alias} view and sound to udp://127.0.0.1:${next.port || 15099}`
       : next.state === "stopping" ? "Stopping the OBS source…"
       : next.state === "failed" ? next.error : "";
   }
   obs.onState(showObs);
   obs.status().then(showObs).catch(() => {});
   button.onclick = async e => {
-    const stopping = state.state === "running";
+    const stopping = state.state === "starting" || state.state === "running";
+    if (!stopping && !port.reportValidity()) return;
     const result = await act(stopping ? "Stop OBS source" : "Start OBS source",
-                             () => stopping ? obs.stop() : obs.start(), e.currentTarget);
+                             () => stopping ? obs.stop() : obs.start(Number(port.value)), e.currentTarget);
     if (result) showObs(result);
   };
 }
