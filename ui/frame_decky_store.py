@@ -151,7 +151,8 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             (unpacked/marker).write_text(json.dumps({'storeId':int(plugin_id),'sha256':digest,'version':version})+'\n')
-    if running: service('stop','frame-control-decky.service')
+    # Stop even a failed unit before removal to cancel any pending auto-restart.
+    if running or action=='remove': service('stop','frame-control-decky.service')
     try:
         if action!='install': target.rename(backup)
         if action!='remove': (stage/folder).rename(target)

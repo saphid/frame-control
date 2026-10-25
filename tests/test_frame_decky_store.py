@@ -121,7 +121,8 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.folder.exists())
-        self.assertFalse((Path(self.tmp.name) / 'service-calls').exists())
+        self.assertEqual((Path(self.tmp.name) / 'service-calls').read_text().splitlines(),
+                         ['--user stop frame-control-decky.service'])
 
     def test_shared_lock_rejects_plugin_and_loader_changes(self):
         import fcntl
