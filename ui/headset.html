@@ -46,7 +46,10 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <h2>Decky plugins</h2><p>Manage official store plugins here. Decky's Quick Access Menu is absent from this VR shell. Framey can show compatible plugin panels and settings below; Steam library and store page patches are unavailable.</p>
 <div class="row"><button id="deckyRefresh" class="secondary">Refresh plugins</button><button id="deckyStoreLoad" class="secondary">Open official store</button></div>
 <p id="deckyState" role="status"></p><div id="deckyInstalled" class="stack"></div>
-<div id="deckyStorePanel" hidden><label>Find a plugin <input id="deckySearch" type="search" placeholder="Search Decky store"></label><div id="deckyStoreList" class="stack"></div></div>
+<div id="deckyStorePanel" hidden><div class="row" style="margin:16px 0"><label>Find a plugin <input id="deckySearch" type="search" placeholder="Name, author or description"></label>
+  <label>Show <select id="deckyStoreFilter"><option value="all">All plugins</option><option value="compatible">Without root requirement</option><option value="installed">Installed plugins</option></select></label></div>
+  <p id="deckyStoreSummary" role="status" aria-live="polite"></p><div id="deckyStoreList" class="stack"></div>
+  <div class="row" style="margin-top:14px"><button id="deckyStorePrevious" class="secondary">Previous</button><span id="deckyStorePage"></span><button id="deckyStoreNext" class="secondary">Next</button></div></div>
 <div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button></div>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
@@ -97,7 +100,7 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
-let deckyState=null, deckyStore=[],activeFrameyId=null;
+let deckyState=null, deckyStore=[], deckyStoreIndex=0, activeFrameyId=null;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':'Decky is not running. Install it from Frame Control on your computer.';
   const list=byId('deckyInstalled');list.replaceChildren();
@@ -109,13 +112,25 @@ async function refreshDecky(){try{deckyState=await api('/api/decky');
       button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
-async function loadDeckyStore(){try{const data=await api('/api/decky/store');deckyStore=data.plugins;
-  byId('deckyStorePanel').hidden=false;showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
+async function loadDeckyStore(){byId('deckyStorePanel').hidden=false;
+  byId('deckyStoreSummary').textContent='Loading official Decky store…';
+  try{const data=await api('/api/decky/store');deckyStore=data.plugins;deckyStoreIndex=0;showDeckyStore();}
+  catch(error){byId('deckyStoreSummary').textContent=`Store unavailable: ${error.message}`;}}
 function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren();
   const q=byId('deckySearch').value.trim().toLowerCase();
-  for(const plugin of deckyStore.filter(p=>!q||`${p.name} ${p.description}`.toLowerCase().includes(q)).slice(0,30)){
+  const filter=byId('deckyStoreFilter').value;
+  const found=deckyStore.filter(p=>(!q||`${p.name} ${p.author||''} ${p.description}`.toLowerCase().includes(q))&&
+    (filter==='all'||(filter==='compatible'&&!p.root)||(filter==='installed'&&(deckyState?.plugins||[]).some(x=>x.storeId===p.id))));
+  const size=20, pages=Math.max(1,Math.ceil(found.length/size));
+  deckyStoreIndex=Math.min(deckyStoreIndex,pages-1);
+  byId('deckyStoreSummary').textContent=`${found.length} plugin${found.length===1?'':'s'} found`;
+  byId('deckyStorePage').textContent=`Page ${deckyStoreIndex+1} of ${pages}`;
+  byId('deckyStorePrevious').disabled=deckyStoreIndex===0;
+  byId('deckyStoreNext').disabled=deckyStoreIndex>=pages-1;
+  if(!found.length)list.textContent='No plugins match this search.';
+  for(const plugin of found.slice(deckyStoreIndex*size,(deckyStoreIndex+1)*size)){
     const row=document.createElement('div');row.className='block game';
-    const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version} · ${plugin.description}`;
+    const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version}${plugin.author?' · '+plugin.author:''} · ${plugin.description}`;
     const button=document.createElement('button');button.textContent='Install';
     const installed=(deckyState?.plugins||[]).find(p=>p.storeId===plugin.id);
     if(installed)button.textContent=installed.version===plugin.version?'Reinstall':'Update';
@@ -183,7 +198,11 @@ byId('statusScreenClose').onclick=()=>{byId('statusScreen').hidden=true;byId('st
 byId('statusScreenRefresh').onclick=refresh;
 window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!byId('statusScreen').hidden)byId('statusScreenClose').click();});
 byId('gamesRefresh').onclick=refreshGames;byId('record').onclick=toggleRecord;byId('extensionsRefresh').onclick=refreshExtensions;
-byId('deckyRefresh').onclick=refreshDecky;byId('deckyStoreLoad').onclick=loadDeckyStore;byId('deckySearch').oninput=showDeckyStore;
+byId('deckyRefresh').onclick=refreshDecky;byId('deckyStoreLoad').onclick=loadDeckyStore;
+byId('deckySearch').oninput=()=>{deckyStoreIndex=0;showDeckyStore();};
+byId('deckyStoreFilter').onchange=()=>{deckyStoreIndex=0;showDeckyStore();};
+byId('deckyStorePrevious').onclick=()=>{deckyStoreIndex--;showDeckyStore();};
+byId('deckyStoreNext').onclick=()=>{deckyStoreIndex++;showDeckyStore();};
 byId('extensionClose').onclick=()=>{activeExtension=null;byId('extensionFrame').removeAttribute('src');byId('extensionPanel').hidden=true;};
 window.addEventListener('message',event=>{if(!activeExtension||event.source!==byId('extensionFrame').contentWindow)return;
   const request=event.data;if(!request||request.type!=='frame-control:request'||!Number.isSafeInteger(request.id))return;
