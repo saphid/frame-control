@@ -61,6 +61,13 @@ The root label is a compatibility warning; other APIs are checked only when a
 plugin is opened. The store still needs the managed Decky user service running
 before its Install or Update buttons are enabled.
 
+Install, Update, and Remove show the current job stage in the headset panel.
+The store verifies each downloaded archive and the headset applies it with a
+rollback if Decky cannot start. The panel remembers the current job ID for this
+browser session, so **Check result** can resume polling after a navigation or
+temporary connection error. Refresh the installed list before starting another
+operation after an error.
+
 ## For plugin authors
 
 Publish a normal [Decky store](https://plugins.deckbrew.xyz/) API v2 release

@@ -162,9 +162,10 @@ finally:
 '''
 
 
-def change(ssh, action, plugin_id):
+def change(ssh, action, plugin_id, report=lambda stage, percent=None: None):
     if action not in ('install', 'update', 'remove') or type(plugin_id) is not int or plugin_id <= 0:
         raise ValueError('Choose a valid store plugin action')
+    report('Checking installed plugins', 5)
     state = frame_decky.status(ssh)
     if not state['managed'] or not state['running']:
         raise ValueError('Start Frame Control managed Decky before changing plugins')
@@ -175,6 +176,7 @@ def change(ssh, action, plugin_id):
         folder = installed[0]['folder']
         plugin = {'sha256': '0' * 64, 'version': 'removed'}
     else:
+        report('Reading official store', 15)
         plugin = next((item for item in catalog() if item['id'] == plugin_id), None)
         if not plugin:
             raise ValueError('Plugin is not in the official Decky store')
@@ -187,9 +189,11 @@ def change(ssh, action, plugin_id):
             raise ValueError('Only an installed Frame Control store plugin can be updated')
     data = None
     if action != 'remove':
+        report('Downloading plugin archive', 30)
         url = _urls()[1] + plugin['sha256'] + '.zip'
         with urllib.request.urlopen(urllib.request.Request(url, headers={'User-Agent': 'Frame-Control'}), timeout=35) as response:
             data = response.read(MAX_ZIP + 1)
+        report('Verifying plugin archive', 50)
         folder = archive_info(data, plugin['sha256'], plugin['name'])
         if action == 'update' and installed[0]['folder'] != folder:
             raise ValueError('The store changed its plugin folder; remove the old version before installing')
@@ -199,7 +203,9 @@ def change(ssh, action, plugin_id):
     remote = '/tmp/frame-control-decky-plugin-' + token
     try:
         if data is not None:
+            report('Sending archive to Frame', 65)
             ssh('umask 077; cat > ' + remote, stdin=data, text=False, timeout=120)
+        report({'install':'Installing', 'update':'Updating', 'remove':'Removing'}[action] + ' plugin on Frame', 80)
         return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]}',
                               stdin=APPLY, timeout=90))
     finally:
