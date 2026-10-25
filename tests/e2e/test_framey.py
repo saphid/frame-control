@@ -109,13 +109,25 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                             {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'dark')
         self.assertTrue(ok('POST', '/api/framey/method',
                            {'id':123,'method':'set_setting','args':['theme','light']})['result'])
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         StoreFixture.release = 1
         job = finished(ok('POST', '/api/decky/plugin',
                           {'action':'update','id':123,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         job = finished(ok('POST', '/api/decky/plugin',
                           {'action':'remove','id':123,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'], [])
         self.assertEqual(ssh('test -e ~/.local/share/frame-control/decky/plugins/sample-panel && echo yes || echo no').strip(), 'no')
+        status, _, _ = api('POST', '/api/framey/method',
+                           {'id':123,'method':'get_setting','args':['theme','dark']})
+        self.assertEqual(status, 400)  # No method calls while the plugin is removed.
+        job = finished(ok('POST', '/api/decky/plugin',
+                          {'action':'install','id':123,'acknowledged':True}))
+        self.assertFalse(job.get('error'), job)
+        self.assertEqual(ok('POST', '/api/framey/method',
+                            {'id':123,'method':'get_setting','args':['theme','dark']})['result'], 'light')
