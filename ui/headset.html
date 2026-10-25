@@ -148,7 +148,15 @@ function deckyJobView(title,message,percent,failed=false){
 }
 async function followDeckyJob(job,action,name){
   for(let n=0;n<180;n++){
-    const progress=await api(`/api/job?id=${encodeURIComponent(job)}`);
+    let progress;
+    try{progress=await api(`/api/job?id=${encodeURIComponent(job)}`);}
+    catch(error){
+      if(/no such job/i.test(error.message)){
+        sessionStorage.removeItem('frameyPluginJob');
+        throw Error('The app restarted and lost this job result. Refresh installed plugins to see what changed.');
+      }
+      throw error;
+    }
     if(progress.done){if(progress.error){sessionStorage.removeItem('frameyPluginJob');throw Error(progress.error);}
       deckyJobView(`${action} ${name}`,progress.message||`${action} complete`,100);return;}
     deckyJobView(`${action} ${name}`,progress.stage||'Waiting for Frame…',progress.percent);
@@ -168,7 +176,7 @@ async function deckyChange(action,plugin){if(deckyBusy||!confirm(`${action} ${pl
   finally{deckyBusy=false;await refreshDecky();}
 }
 async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
-  if(!saved||typeof saved.job!=='string')return;
+  if(!saved||typeof saved.job!=='string'){sessionStorage.removeItem('frameyPluginJob');return;}
   deckyBusy=true;byId('deckyJobCheck').hidden=true;
   try{await followDeckyJob(saved.job,saved.action,saved.name);sessionStorage.removeItem('frameyPluginJob');}
   catch(error){deckyJobView(`${saved.action} ${saved.name}`,`Error: ${error.message}`,null,true);}
