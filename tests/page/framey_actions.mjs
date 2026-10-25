@@ -29,6 +29,24 @@ const fragments=window.SP_JSX.jsxs(window.SP_JSX.Fragment,{children:['one','two'
 assert.equal(fragments.type,React.Fragment);
 assert.deepEqual(fragments.children,[['one','two']]);
 const nodes=(tree,type)=>[...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
+// Official Decky controls use disabled while a backend call is in progress.
+// A disabled control must stay inert even if an event handler is invoked.
+let changed=0;
+const toggle=nodes(window.DFL.ToggleField({label:'Enabled',checked:true,disabled:true,
+  onChange:()=>changed++}),'input')[0];
+const dropdown=nodes(window.DFL.DropdownItem({label:'Mode',disabled:true,rgOptions:[{data:'a',label:'A'}],
+  onChange:()=>changed++}),'select')[0];
+const button=nodes(window.DFL.ButtonItem({label:'Reload',description:'Read setting',disabled:true,
+  onClick:()=>changed++}),'button')[0];
+for(const control of [toggle,dropdown,button])assert.equal(control.props.disabled,true);
+toggle.props.onChange({target:{checked:false}});
+dropdown.props.onChange({target:{value:'a'}});
+button.props.onClick({});
+assert.equal(changed,0);
+const readyButton=nodes(window.DFL.ButtonItem({label:'Reload',onClick:()=>changed++}),'button')[0];
+assert.equal(readyButton.props.disabled,false);
+readyButton.props.onClick({});
+assert.equal(changed,1);
 let called=0;
 const plugin={content:{type:'content'},settings:{type:'settings'},titleView:{type:'title'},
   frameyQuickActions:[{label:'Refresh data',onClick:async()=>{called++;return 'Fresh';}},
