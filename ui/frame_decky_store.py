@@ -77,13 +77,20 @@ def archive_info(data, expected_hash, expected_name):
         folder = manifests[0].split('/')[0]
         if not SAFE_FOLDER.fullmatch(folder):
             raise ValueError('Invalid plugin folder')
+        seen = set()
         for entry in files:
             name = entry.filename
             mode = entry.external_attr >> 16
-            if ('\\' in name or name.startswith('/') or '..' in name.split('/') or
-                name.split('/')[0] != folder or entry.file_size > 30 * 1024 * 1024 or
-                mode & 0o170000 == 0o120000):
+            kind = mode & 0o170000
+            parts = name.split('/')
+            if entry.is_dir() and parts[-1] == '':
+                parts = parts[:-1]
+            if ('\\' in name or name.startswith('/') or
+                any(part in ('', '.', '..') for part in parts) or name in seen or
+                parts[0] != folder or entry.file_size > 30 * 1024 * 1024 or
+                kind not in (0, 0o040000, 0o100000)):
                 raise ValueError('Unsafe plugin archive member')
+            seen.add(name)
             if entry.is_dir():
                 continue
             with archive.open(entry) as source:
@@ -93,6 +100,8 @@ def archive_info(data, expected_hash, expected_name):
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
         manifest = json.loads(archive.read(manifests[0]))
+        if not isinstance(manifest, dict):
+            raise ValueError('Invalid plugin manifest')
         if manifest.get('name') != expected_name:
             raise ValueError('Plugin name differs from the official store')
         flags = manifest.get('flags', [])
@@ -142,10 +151,17 @@ try:
             files=z.infolist()
             if not files or len(files)>3000 or sum(f.file_size for f in files)>150*1024*1024:
                 raise RuntimeError('Plugin archive too large')
-            if any(f.filename.split('/')[0]!=folder or f.filename.startswith('/') or
-                   '..' in f.filename.split('/') or '\\' in f.filename or
-                   f.file_size>30*1024*1024 or f.external_attr>>16&0o170000==0o120000 for f in files):
-                raise RuntimeError('Unsafe plugin archive')
+            seen=set()
+            for f in files:
+                parts=f.filename.split('/')
+                if f.is_dir() and parts[-1]=='': parts=parts[:-1]
+                kind=f.external_attr>>16&0o170000
+                if (not parts or parts[0]!=folder or f.filename.startswith('/') or
+                    any(part in ('','.','..') for part in parts) or '\\' in f.filename or
+                    f.filename in seen or f.file_size>30*1024*1024 or
+                    kind not in (0,0o040000,0o100000)):
+                    raise RuntimeError('Unsafe plugin archive')
+                seen.add(f.filename)
             stage.mkdir(mode=0o700)
             z.extractall(stage)
             unpacked=stage/folder

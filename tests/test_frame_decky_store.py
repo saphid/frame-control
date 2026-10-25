@@ -11,6 +11,7 @@ import sys
 import tempfile
 import unittest
 from unittest.mock import patch
+import warnings
 import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'ui'))
@@ -53,6 +54,22 @@ class ArchiveTests(unittest.TestCase):
             with self.subTest(data=hashlib.sha256(data).hexdigest()[:8]):
                 with self.assertRaises(ValueError):
                     frame_decky_store.archive_info(data, hashlib.sha256(data).hexdigest(), 'Example')
+
+    def test_rejects_zip_path_collisions_and_non_object_manifest(self):
+        for name in ('Example/dist/index.js', 'Example/./dist/index.js',
+                     'Example//dist/index.js'):
+            with self.subTest(name=name), warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                data, digest = archive(extra=(name, 'replacement'))
+                with self.assertRaisesRegex(ValueError, 'Unsafe|duplicate'):
+                    frame_decky_store.archive_info(data, digest, 'Example')
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as bundle:
+            bundle.writestr('Example/plugin.json', '[]')
+            bundle.writestr('Example/dist/index.js', ' ' * 1200)
+        data = stream.getvalue()
+        with self.assertRaisesRegex(ValueError, 'manifest'):
+            frame_decky_store.archive_info(data, hashlib.sha256(data).hexdigest(), 'Example')
 
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
@@ -145,6 +162,15 @@ class StoreTransaction(unittest.TestCase):
         installed = self.apply('install', data)
         self.assertEqual(installed.returncode, 0, installed.stderr)
         self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_remote_apply_rejects_colliding_zip_paths(self):
+        for name in ('Example/dist/index.js', 'Example/./dist/index.js'):
+            with self.subTest(name=name), warnings.catch_warnings():
+                warnings.simplefilter('ignore', UserWarning)
+                data, _ = archive(extra=(name, 'replacement'))
+                result = self.apply('install', data)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertFalse(self.folder.exists())
 
 
 class StoreHost(unittest.TestCase):
