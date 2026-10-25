@@ -19,7 +19,8 @@ panel or Decky backend keeps plugin folders until each is removed separately.
 
 Frame Control's existing official-store manager downloads a published ZIP from
 Decky's content-addressed CDN, verifies its store SHA-256 hash and manifest,
-rejects unsafe ZIP members and root plugins, and swaps one managed plugin
+rejects unsafe ZIP members, path collisions, special files and root plugins,
+and swaps one managed plugin
 folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
 The Decky user service restarts after a file change. Framey's panel host accepts
 only API v2 bundles with `dist/index.js`; other installed plugins remain
