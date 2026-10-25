@@ -13,7 +13,12 @@ button:focus-visible{outline:5px solid #f8d370;outline-offset:3px}button:disable
 button.secondary{background:#253c50;border-color:#617f97}button.danger{background:#78372d;border-color:#d78d79}
 small{color:#b9c9d6}#message,#actionStatus{min-height:1.5em;margin:12px 0}.game{display:flex;gap:14px;justify-content:space-between;align-items:center}
 iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid #617f97;border-radius:12px;margin-top:14px}
-@media(max-width:720px){.cards{grid-template-columns:1fr}body{padding:18px}.game{display:block}.game button{margin-top:12px}}
+#statusScreen[hidden]{display:none}#statusScreen{position:fixed;inset:0;z-index:10;overflow:auto;background:#07131f;padding:30px}
+#statusScreen h2{font-size:clamp(40px,6vw,76px);margin:10px 0 20px}#statusScreen .cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+#statusScreen .card{min-height:170px}#statusScreen .value{font-size:clamp(40px,6vw,76px)}
+#statusScreen .value.warn{color:#ffd27a}#statusScreen .value.bad{color:#ff9585}
+#statusScreen .meta{font-size:20px;margin-top:22px;color:#b9c9d6}
+@media(max-width:720px){.cards,#statusScreen .cards{grid-template-columns:1fr}body{padding:18px}.game{display:block}.game button{margin-top:12px}}
 </style></head><body>
 <h1>Frame Control</h1><p>Your Frame, from inside SteamVR. Select this panel again from the dashboard after switching away.</p>
 <div class="cards">
@@ -22,9 +27,20 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <div class="card"><span class="label">SteamVR</span><span class="value" id="steamvr">…</span></div>
 </div>
 <p id="message" role="status" aria-live="polite"></p>
-<div class="row"><button id="refresh">Refresh status</button><button id="gameMode" class="secondary">Return to Game Mode</button>
+<div class="row"><button id="refresh">Refresh status</button><button id="statusScreenOpen" class="secondary">Large status screen</button><button id="gameMode" class="secondary">Return to Game Mode</button>
   <button id="screenshot" class="secondary">Save screenshot</button><button id="record" class="secondary">Start recording</button></div>
 <p id="actionStatus" role="status" aria-live="polite"></p>
+<section id="statusScreen" role="dialog" aria-modal="true" aria-labelledby="statusScreenTitle" hidden>
+  <div class="row"><button id="statusScreenClose">Close status screen</button><button id="statusScreenRefresh" class="secondary">Refresh</button></div>
+  <h2 id="statusScreenTitle">Frame status</h2>
+  <div class="cards">
+    <div class="card"><span class="label">Battery</span><span class="value" id="bigBattery">…</span></div>
+    <div class="card"><span class="label">SteamVR</span><span class="value" id="bigSteamvr">…</span></div>
+    <div class="card"><span class="label">Home storage free</span><span class="value" id="bigStorage">…</span></div>
+    <div class="card"><span class="label">Frame OS</span><span class="value" id="bigOs">…</span></div>
+  </div>
+  <p id="bigStatusMessage" class="meta" role="status" aria-live="polite">Read-only status. This view does not diagnose a crash.</p>
+</section>
 <h2>Running games</h2><div class="row"><button id="gamesRefresh" class="secondary">Refresh games</button></div>
 <div id="games" class="stack" style="margin-top:12px">Loading…</div>
 <h2>Decky plugins</h2><p>Manage official store plugins here. Their backend can run on Frame, but Decky's Steam Deck Quick Access Menu is absent from this VR shell. Plugin pages, settings, routes, and toasts are not yet available in this panel.</p>
@@ -51,7 +67,20 @@ async function refresh(){try{const status=latestStatus=await api('/api/status');
   byId('storage').textContent=Number.isFinite(free)?`${(free/1e9).toFixed(1)} GB`:'Unavailable';
   byId('steamvr').textContent=status.services?.steamvr?'Running':'Unavailable';
   byId('message').textContent=`Frame OS ${status.os?.version||'unknown'} · Updated ${new Date().toLocaleTimeString()}`;
-  }catch(error){latestStatus=null;byId('message').textContent=error.message;}}
+  renderLargeStatus(status);
+  }catch(error){latestStatus=null;byId('message').textContent=error.message;renderLargeStatus(null,error.message);}}
+function renderLargeStatus(status,error=''){
+  const battery=status?.battery?.percent;
+  byId('bigBattery').textContent=Number.isFinite(battery)?`${battery}%`:'Unavailable';
+  byId('bigBattery').className='value'+(Number.isFinite(battery)&&battery<20?' bad':Number.isFinite(battery)&&battery<40?' warn':'');
+  byId('bigSteamvr').textContent=status?.services?.steamvr?'Running':'Unavailable';
+  byId('bigSteamvr').className='value'+(status?.services?.steamvr?'':' bad');
+  const free=status?.disk?.home?.free;
+  byId('bigStorage').textContent=Number.isFinite(free)?`${(free/1e9).toFixed(1)} GB`:'Unavailable';
+  byId('bigStorage').className='value'+(Number.isFinite(free)&&free<5e9?' warn':'');
+  byId('bigOs').textContent=status?.os?.version||'Unknown';
+  byId('bigStatusMessage').textContent=error||`Read-only status · Frame OS build ${status?.os?.build||'unknown'} · Updated ${new Date().toLocaleTimeString()}. This view does not diagnose a crash.`;
+}
 async function act(action){const button=byId(action==='game-mode'?'gameMode':'screenshot');button.disabled=true;
   try{const result=await api('/api/headset/quick',{action});byId('actionStatus').textContent=result.message;}
   catch(error){byId('actionStatus').textContent=error.message;}finally{button.disabled=false;}}
@@ -115,6 +144,10 @@ async function refreshExtensions(){const list=byId('extensions');try{const data=
   if(data.errors.length){const errors=document.createElement('p');errors.textContent=data.errors.map(x=>`${x.folder}: ${x.error}`).join('; ');list.append(errors);}
   }catch(error){list.textContent=error.message;}}
 byId('refresh').onclick=refresh;byId('gameMode').onclick=()=>act('game-mode');byId('screenshot').onclick=()=>act('screenshot');
+byId('statusScreenOpen').onclick=()=>{byId('statusScreen').hidden=false;renderLargeStatus(latestStatus);byId('statusScreenClose').focus();};
+byId('statusScreenClose').onclick=()=>{byId('statusScreen').hidden=true;byId('statusScreenOpen').focus();};
+byId('statusScreenRefresh').onclick=refresh;
+window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!byId('statusScreen').hidden)byId('statusScreenClose').click();});
 byId('gamesRefresh').onclick=refreshGames;byId('record').onclick=toggleRecord;byId('extensionsRefresh').onclick=refreshExtensions;
 byId('deckyRefresh').onclick=refreshDecky;byId('deckyStoreLoad').onclick=loadDeckyStore;byId('deckySearch').oninput=showDeckyStore;
 byId('extensionClose').onclick=()=>{activeExtension=null;byId('extensionFrame').removeAttribute('src');byId('extensionPanel').hidden=true;};

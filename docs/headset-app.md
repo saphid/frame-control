@@ -14,8 +14,13 @@ panel. **Show in SteamVR** requests that dashboard tab; the wearer can select
 it again from SteamVR's dashboard. Closing the panel stops its browser and
 server. The service is not enabled at boot.
 
-The page shows battery, free home storage and SteamVR status. It can request
-SteamVR's main Game Mode dashboard, list and force quit a running game after an
+The page shows battery, free home storage and SteamVR status.
+The **Large status screen** uses large read-only values for battery, SteamVR,
+free home storage and Frame OS, with a refresh button and clear unknown values.
+It is an at-a-glance view, not a crash diagnosis or a Decky plugin page.
+The headset must still be worn to verify that a person can see and use it.
+
+The page can request SteamVR's main Game Mode dashboard, list and force quit a running game after an
 unsaved-progress confirmation, save an OpenVR screenshot to
 `~/Pictures/FrameControl`, and record the SteamVR mirror to
 `~/Videos/FrameControl`. Recordings have a 20-minute limit and use a separate
