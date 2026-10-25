@@ -4,7 +4,8 @@
 0.5.6 and injects into Steam's shared CEF context. Its Decky tab registers in
 JavaScript. A usable plugin menu in the Frame's VR shell has **not** been
 verified. Frame Control therefore labels its user-service manager experimental.
-No individual Decky plugin has been tested on the headset.
+ProtonDB Badges loaded in the backend and Gamepad UI plugin registry, but its
+VR user interface has not been seen or used.
 
 ## What was checked on the real headset
 
@@ -34,6 +35,33 @@ service, binary or listening port 1337. Decky's already injected JavaScript
 remained in Steam's running web helper until that helper was restarted. After a
 web helper restart, both `deckyHasLoaded` and the tab hook were absent. All
 temporary trial files and the test's empty managed data folder were removed.
+
+## ProtonDB Badges compatibility test
+
+The [ProtonDB Badges v1.1.0 release](https://github.com/OMGDuke/protondb-decky/releases/tag/v1.1.0)
+was tested on the same Frame OS build. It is a popular, passive Decky plugin
+(133 GitHub stars at test time) that adds badges to game pages. The published
+archive SHA-256 was
+`b4c72ff0ffe60b1a14abafe75a62f644cbb6689f398a753a1905c281151d9173`.
+Its six archive entries had no links or path traversal, and its manifest declared
+`flags: []` and `api_version: 2`. The release contains a frontend bundle and
+no backend `main.py`; its source backend only manages its own settings.
+
+The test copied the archive into Frame Control's managed Decky plugin folder,
+then installed the official Decky 3.3.0 ARM64 binary as a user service. Decky's
+log said `Plugin ProtonDB Badges is passive` and `Loaded ProtonDB Badges`.
+`DeckyPluginLoader.plugins` in Steam's `SharedJSContext` contained
+`ProtonDB Badges`; `deckyHasLoaded` was true there. The separate `SteamVR`
+CEF target had no Decky globals or plugin text, and SteamVR listed no Decky
+overlay. The headset was in standby, so no in-headset plugin page or badge
+interaction was verified. The backend's unauthenticated root URL returned
+HTTP 403, as expected.
+
+The test removed the managed Decky service and binary, the test plugin folder,
+and its shared-device lock. The service was no longer running, the plugin list
+was empty, the binary and unit were gone, and port 1337 was closed. Decky's
+already injected frontend may remain in the running Steam web helper until
+Steam normally restarts; the test did not restart Steam or SteamVR.
 
 ## Why the official Decky installer is not used
 
@@ -94,6 +122,10 @@ Control refuses to install alongside an upstream system service.
 In the headset, open Steam's VR dashboard and look for Decky's plugin tab or
 Quick Access Menu after an opt-in install. If none appears, inspect whether
 the VR shell exposes a different menu component and whether Decky's frontend
-can target it without patching Steam globally. Then test one harmless plugin's
-install, visible UI, restart persistence and removal. Until those checks pass,
-Frame Control should not describe Decky plugins as supported on the Frame.
+can target it without patching Steam globally. Confirm the plugin's visible
+UI, controller interaction, and persistence across a normal Steam restart.
+Until those checks pass,
+Frame Control should not describe Decky plugins as usable in VR yet. A worn
+headset check is needed for both the Decky menu and the Frame Control SteamVR
+panel; only then can their controller interaction and plugin presentation be
+confirmed.
