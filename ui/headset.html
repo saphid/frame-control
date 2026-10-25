@@ -105,7 +105,9 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
   }catch(error){list.textContent=error.message;}}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, activeFrameyId=null, deckyBusy=false;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
-  byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':'Decky is not running. Install it from Frame Control on your computer.';
+  byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':
+    deckyState.managed?'Decky is stopped. You can remove a managed plugin to recover, then start Decky from Frame Control on your computer.':
+    'Decky is not running. Install it from Frame Control on your computer.';
   const list=byId('deckyInstalled');list.replaceChildren();
   for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
     const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);

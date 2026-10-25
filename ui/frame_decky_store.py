@@ -167,9 +167,13 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None):
         raise ValueError('Choose a valid store plugin action')
     report('Checking installed plugins', 5)
     state = frame_decky.status(ssh)
-    if not state['managed'] or not state['running']:
-        raise ValueError('Start Frame Control managed Decky before changing plugins')
+    if not state['managed']:
+        raise ValueError('Install Frame Control managed Decky before changing plugins')
+    if action != 'remove' and not state['running']:
+        raise ValueError('Start Frame Control managed Decky before installing or updating plugins')
     installed = [p for p in state['plugins'] if p.get('storeId') == plugin_id]
+    if action == 'install' and installed:
+        raise ValueError('This store plugin is already installed; use Update or Remove')
     if action == 'remove':
         if len(installed) != 1:
             raise ValueError('Only an installed Frame Control store plugin can be removed')

@@ -60,6 +60,16 @@ assert.equal(el('deckyJobStatus').textContent,'Installed Plugin 2');
 assert.equal(el('deckyJobProgress').value,100);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+// A stopped Decky service must still offer recovery by removing its owned plugin.
+ctx.mockApi=async path => path==='/api/decky' ?
+  {managed:true,running:false,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]} :
+  Promise.reject(Error(`unexpected ${path}`));
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx);
+assert.equal(el('deckyInstalled').children[0].children[2].disabled,false);
+el('deckySearch').value='';el('deckyStoreFilter').value='all';
+vm.runInContext('showDeckyStore()',ctx);
+assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
 ctx.mockApi=async path => {
   if(path==='/api/decky/plugin')return {job:'job-2'};
   if(path.startsWith('/api/job'))return {done:true,error:'archive digest mismatch'};
