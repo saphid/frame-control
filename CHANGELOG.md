@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Save Steam screenshots under a separate folder for each headset, Steam
+  account and game. Equal screenshot filenames no longer overwrite one another;
+  existing files in the old flat folder are left in place.
+  [Copying guide](docs/recording.md).
+
 - Compare two explicit Windows Wireless Adapter doctor reads in local memory.
   Highlight exact PnP instances and known state changes after a dropout;
   incomplete inventories stay unknown. A Forget button clears the comparison.
