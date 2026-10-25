@@ -16,6 +16,7 @@ if (api._version != API_VERSION) {
     console.warn(`[@decky/api] Requested API version ${API_VERSION} but the running loader only supports version ${api._version}. Some features may not work.`);
 }
 const callable = api.callable;
+const routerHook = api.routerHook;
 const toaster = api.toaster;
 const definePlugin = (fn) => {
     return (...args) => {
@@ -59,24 +60,32 @@ function Content() {
             setBusy(false);
         }
     }
-    return SP_JSX.jsxs(DFL.PanelSection, { title: "Framey settings sample", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Example setting", description: "Stored by the Decky Python backend", checked: enabled, disabled: busy, onChange: (value) => { void change(value); } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: () => { void refresh(); }, children: "Reload saved setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { role: "status", children: message }) })] });
+    return SP_JSX.jsxs(DFL.PanelSection, { title: "Framey settings sample", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Example setting", description: "Stored by the Decky Python backend", checked: enabled, disabled: busy, onChange: (value) => { void change(value); } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: () => { void refresh(); }, children: "Reload saved setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { onClick: () => DFL.Navigation.Navigate('/framey-sample/details/saved-setting'), children: "About this setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { role: "status", children: message }) })] });
 }
-var index = definePlugin(() => Object.assign({
-    name: 'Framey Settings Sample',
-    icon: SP_JSX.jsx("span", { "aria-hidden": "true", children: "\u2699" }),
-    content: SP_JSX.jsx(Content, {}),
-}, {
-    // Framey additions are ignored by Decky's own menu. Keep the main content
-    // usable there too, while showing authors the extra VR settings view.
-    settings: SP_JSX.jsx(Content, {}),
-    frameyQuickActions: [{
-            label: 'Read saved setting',
-            onClick: async () => {
-                const enabled = await getSetting('enabled', false);
-                return `Saved setting is ${enabled ? 'on' : 'off'}`;
-            },
-        }],
-}));
+function Details() {
+    const { topic } = DFL.useParams();
+    return SP_JSX.jsxs(DFL.PanelSection, { title: "Sample detail page", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsxs("p", { children: ["Topic: ", topic || 'overview'] }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { children: "The toggle is stored by this plugin's Decky backend in the user's settings directory." }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { onClick: () => DFL.Navigation.NavigateBack(), children: "Back to setting" }) })] });
+}
+var index = definePlugin(() => {
+    routerHook.addRoute('/framey-sample/details/:topic?', Details);
+    return Object.assign({
+        name: 'Framey Settings Sample',
+        icon: SP_JSX.jsx("span", { "aria-hidden": "true", children: "\u2699" }),
+        content: SP_JSX.jsx(Content, {}),
+        onDismount: () => routerHook.removeRoute('/framey-sample/details/:topic?'),
+    }, {
+        // Framey additions are ignored by Decky's own menu. Keep the main content
+        // usable there too, while showing authors the extra VR settings view.
+        settings: SP_JSX.jsx(Content, {}),
+        frameyQuickActions: [{
+                label: 'Read saved setting',
+                onClick: async () => {
+                    const enabled = await getSetting('enabled', false);
+                    return `Saved setting is ${enabled ? 'on' : 'off'}`;
+                },
+            }],
+    });
+});
 
 export { index as default };
 //# sourceMappingURL=index.js.map

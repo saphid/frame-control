@@ -103,7 +103,8 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
-let deckyState=null, deckyStore=[], deckyStoreIndex=0, activeFrameyId=null, frameySession=null, deckyBusy=false;
+let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
+  activeFrameyId=null, frameySession=null, deckyBusy=false;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':
     deckyState.managed?'Decky is stopped. You can remove a managed plugin to recover, then start Decky from Frame Control on your computer.':
@@ -117,10 +118,14 @@ async function refreshDecky(){try{deckyState=await api('/api/decky');
       button.disabled=deckyBusy;button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
-async function loadDeckyStore(){byId('deckyStorePanel').hidden=false;
+async function loadDeckyStore(){const request=++deckyStoreRequest;byId('deckyStorePanel').hidden=false;
+  deckyStore=[];deckyStoreIndex=0;showDeckyStore();
   byId('deckyStoreSummary').textContent='Loading official Decky store…';
-  try{const data=await api('/api/decky/store');deckyStore=data.plugins;deckyStoreIndex=0;showDeckyStore();}
-  catch(error){byId('deckyStoreSummary').textContent=`Store unavailable: ${error.message}`;}}
+  try{const data=await api('/api/decky/store');if(request!==deckyStoreRequest)return;
+    deckyStore=data.plugins;deckyStoreIndex=0;showDeckyStore();}
+  catch(error){if(request!==deckyStoreRequest)return;
+    deckyStore=[];deckyStoreIndex=0;showDeckyStore();
+    byId('deckyStoreSummary').textContent=`Store unavailable: ${error.message}`;}}
 function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren();
   const q=byId('deckySearch').value.trim().toLowerCase();
   const filter=byId('deckyStoreFilter').value;
@@ -229,7 +234,7 @@ window.addEventListener('message',async event=>{
   if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
   if(req.type!=='framey:call'||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
   const pluginId=activeFrameyId,reply={type:'framey:reply',id:req.id};
-  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args});reply.result=data.result;}
+  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
   if(pluginId===activeFrameyId&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });

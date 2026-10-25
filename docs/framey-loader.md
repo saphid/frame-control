@@ -24,7 +24,10 @@ and swaps one managed plugin
 folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
-with `dist/index.js`; other installed plugins remain manageable but have no
+with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
+also accepted: their returned initializer receives the legacy `serverAPI`, and
+keyword backend calls use Decky's legacy RPC. The wrapper runs as a blob ES
+module inside the same sandbox; it does not require `eval`. Other installed plugins remain manageable but have no
 Framey panel. API v1 admission is a compatibility attempt, not a guarantee
 that the plugin's controls work in VR. The store manager does not currently
 screen a plugin's runtime network downloads.
