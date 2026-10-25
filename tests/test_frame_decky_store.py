@@ -41,6 +41,15 @@ class ArchiveTests(unittest.TestCase):
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertEqual([(p['id'], p['author']) for p in frame_decky_store.catalog()], [(42, 'Panel Author')])
 
+    def test_catalog_marks_underscore_root_and_omits_ambiguous_store_ids(self):
+        records = [{'id': 42, 'name': 'Needs root', 'tags': ['_root'],
+                    'versions': [{'name': '1.0', 'hash': 'a' * 64}]},
+                   {'id': 43, 'name': 'First', 'versions': [{'name': '1.0', 'hash': 'b' * 64}]},
+                   {'id': 43, 'name': 'Second', 'versions': [{'name': '2.0', 'hash': 'c' * 64}]}]
+        with patch.object(frame_decky_store.urllib.request, 'urlopen',
+                          return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertEqual([(p['id'], p['root']) for p in frame_decky_store.catalog()], [(42, True)])
+
     def test_accepts_hashed_non_root_archive(self):
         data, digest = archive()
         self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
