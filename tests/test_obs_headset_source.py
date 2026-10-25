@@ -9,8 +9,10 @@ import socket
 import subprocess
 import sys
 import tempfile
+import threading
 import time
 import unittest
+from unittest import mock
 
 
 SCRIPT = Path(__file__).resolve().parents[1] / 'scripts' / 'obs-headset-source.py'
@@ -55,6 +57,29 @@ class ObsSourceTests(unittest.TestCase):
         self.assertIn('-f mpegts', with_audio)
         self.assertNotIn('@DEFAULT_MONITOR@', obs.remote_command(audio=False))
 
+    def test_watchdog_ends_a_stalled_child_on_every_host_platform(self):
+        class Child:
+            def __init__(self):
+                self.stopped = threading.Event()
+
+            def poll(self):
+                return 255 if self.stopped.is_set() else None
+
+            def terminate(self):
+                self.stopped.set()
+
+        for ready in (False, True):
+            with self.subTest(ready=ready):
+                child = Child()
+                watchdog = obs.StreamWatchdog(child, startup=0.1, stall=0.1)
+                if ready:
+                    watchdog.packet()
+                try:
+                    self.assertTrue(child.stopped.wait(1), 'a stalled SSH child was not terminated')
+                    self.assertIn('stopped' if ready else 'no OBS video', watchdog.reason)
+                finally:
+                    watchdog.close()
+
     @unittest.skipIf(sys.platform == 'win32', 'the packaged Start/Stop control is Linux/macOS only')
     def test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe(self):
         for mode in ('signal', 'control-pipe'):
@@ -70,7 +95,7 @@ class ObsSourceTests(unittest.TestCase):
                             "import os, signal, sys, time\n"
                             "def stop(*_):\n"
                             "    open(os.environ['FAKE_SSH_STOPPED'], 'w').close()\n"
-                            "    sys.exit(0)\n"
+                            "    sys.exit(255)\n"
                             "signal.signal(signal.SIGTERM, stop)\n"
                             "sys.stdout.buffer.write(b'G' * 1316)\n"
                             "sys.stdout.buffer.flush()\n"
@@ -111,6 +136,33 @@ class ObsSourceTests(unittest.TestCase):
                     process.communicate(timeout=5)
                 process.stdout.close()
                 process.stderr.close()
+
+    @unittest.skipIf(sys.platform == 'win32', 'the stand-in SSH script uses a POSIX shebang')
+    def test_startup_and_stream_stalls_end_ssh_with_a_clear_error(self):
+        for mode in ('startup', 'stream'):
+            with self.subTest(mode=mode), tempfile.TemporaryDirectory() as folder:
+                directory = Path(folder)
+                fake = directory / 'ssh'
+                fake.write_text("#!/usr/bin/env python3\n"
+                                "import os, signal, sys, time\n"
+                                "def stop(*_):\n"
+                                "    open(os.environ['FAKE_SSH_STOPPED'], 'w').close()\n"
+                                "    sys.exit(255)\n"
+                                "signal.signal(signal.SIGTERM, stop)\n"
+                                "if os.environ['FAKE_SSH_MODE'] == 'stream':\n"
+                                "    sys.stdout.buffer.write(b'G' * 1316)\n"
+                                "    sys.stdout.buffer.flush()\n"
+                                "while True: time.sleep(1)\n")
+                fake.chmod(0o755)
+                stopped = directory / 'stopped'
+                env = {'PATH': str(directory) + os.pathsep + os.environ.get('PATH', ''),
+                       'FAKE_SSH_STOPPED': str(stopped), 'FAKE_SSH_MODE': mode}
+                with mock.patch.dict(os.environ, env), \
+                     mock.patch.object(obs, 'STARTUP_TIMEOUT', 0.3), \
+                     mock.patch.object(obs, 'STREAM_STALL', 0.3):
+                    with self.assertRaisesRegex(RuntimeError, 'no OBS video' if mode == 'startup' else 'video stopped'):
+                        obs.main(['--frame', 'fake-frame'])
+                self.assertTrue(stopped.exists(), 'SSH survived the relay timeout')
 
 
 if __name__ == '__main__':

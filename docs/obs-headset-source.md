@@ -27,6 +27,9 @@ Ctrl+C stops the checkout helper. The app closes a control pipe when you click
 Stop or quit; the helper then closes its SSH child, including on Windows. On
 Windows, install Python 3 and OpenSSH Client if Frame Control cannot find them.
 The Windows app Start/Stop path still needs a physical Windows/Frame test.
+If no first packet arrives within 20 seconds, or an active stream sends no
+packet for 10 seconds, the helper closes SSH and shows an error instead of
+leaving **Start OBS source** waiting or a frozen source running indefinitely.
 
 To share the OBS view in a call, see the short
 [Discord setup guide](streaming-to-discord.md).
@@ -49,6 +52,9 @@ default output was present in the saved audio. The headset was in standby, so
 the video showed the standby mirror. Nobody listened to OBS's monitoring output,
 and audio/video sync and active passthrough remain unverified. See the
 [test evidence](evidence/obs-media-source-real-2026-10-25.md).
+The [follow-up Linux/Frame transport check](evidence/obs-followup-2026-10-25.md)
+measured packet continuity and a short MP4 recording on the current SteamOS
+build. The headset was still in standby.
 
 ## Known issue: game audio in OBS
 
