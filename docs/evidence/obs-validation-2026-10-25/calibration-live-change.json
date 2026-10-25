@@ -1,0 +1,88 @@
+{
+  "offset_ms": 367,
+  "records": [
+    {
+      "duration_s": 19.966666666666665,
+      "video_frames": 599,
+      "marker_pixel_xy": [
+        50,
+        0
+      ],
+      "marker_levels": [
+        0.0,
+        255.0
+      ],
+      "visual_markers_s": [
+        6.133333333333334,
+        7.266666666666667,
+        12.266666666666667,
+        17.266666666666666
+      ],
+      "audio_onsets_s": [
+        6.9,
+        11.9,
+        16.9
+      ],
+      "audio_minus_video_ms": [
+        766.6666666666666,
+        -366.66666666666623,
+        -366.66666666666714,
+        -366.66666666666714
+      ],
+      "offset_median_ms": -366.6666666666667,
+      "offset_min_max_ms": [
+        -366.66666666666714,
+        766.6666666666666
+      ],
+      "peak_dbfs": -13.215461730957031,
+      "clipped_samples": 0,
+      "tone_frequency_hz": 996.09375,
+      "harmonics_to_fundamental_db": -84.12980132719696,
+      "rms_peak": 0.15284518897533417,
+      "phase": "before",
+      "recording": "2026-10-25 06-28-11.mkv"
+    },
+    {
+      "duration_s": 20.066666666666666,
+      "video_frames": 602,
+      "marker_pixel_xy": [
+        50,
+        0
+      ],
+      "marker_levels": [
+        0.0,
+        255.0
+      ],
+      "visual_markers_s": [
+        4.4,
+        9.4,
+        14.4,
+        19.4
+      ],
+      "audio_onsets_s": [
+        4.03,
+        9.03,
+        14.03,
+        19.03
+      ],
+      "audio_minus_video_ms": [
+        -370.0000000000001,
+        -370.000000000001,
+        -370.000000000001,
+        -369.99999999999744
+      ],
+      "offset_median_ms": -370.00000000000057,
+      "offset_min_max_ms": [
+        -370.000000000001,
+        -369.99999999999744
+      ],
+      "peak_dbfs": -13.167834281921387,
+      "clipped_samples": 0,
+      "tone_frequency_hz": 996.09375,
+      "harmonics_to_fundamental_db": -82.16381051643725,
+      "rms_peak": 0.15364883840084076,
+      "phase": "after",
+      "recording": "2026-10-25 06-28-34.mkv"
+    }
+  ]
+}

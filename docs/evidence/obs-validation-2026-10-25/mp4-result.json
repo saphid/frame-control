@@ -1,0 +1,10 @@
+{
+  "elapsed_s": 7.434504003729671,
+  "result": {
+    "state": "saved",
+    "file": "/tmp/obs-aacapv3evh/mp4/rec-20261025-062251.mp4",
+    "audio": true,
+    "seconds": 5,
+    "message": "Saved rec-20261025-062251.mp4 to /tmp OBS evidence"
+  }
+}

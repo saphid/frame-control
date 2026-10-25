@@ -5,6 +5,7 @@ OBS opens udp://127.0.0.1:15099 with input format mpegts. Nothing is bound to
 the network: this process sends MPEG-TS packets to the computer's loopback.
 """
 import argparse
+import os
 import shlex
 import signal
 import socket
@@ -18,6 +19,7 @@ PACKET = 188
 DATAGRAM = PACKET * 7
 STARTUP_TIMEOUT = 20
 STREAM_STALL = 10
+CHILD_STOP_TIMEOUT = 5
 
 
 def remote_command(height=720, fps=30, audio=True):
@@ -58,19 +60,34 @@ def relay(source, destination, on_packet=None):
     return total
 
 
-def watch_control(stream, proc, stopped):
+def stop_child(proc):
+    """Bound cleanup even if a stalled SSH process does not handle termination."""
+    if proc.poll() is not None:
+        return
+    try:
+        proc.terminate()
+        proc.wait(timeout=CHILD_STOP_TIMEOUT)
+    except subprocess.TimeoutExpired:
+        proc.kill()
+        proc.wait()
+    except ProcessLookupError:
+        pass  # another shutdown path already reaped it
+
+
+def watch_control(fd, proc, stopped):
     """A desktop app closes its pipe to stop SSH, including on Windows.
 
     Windows TerminateProcess does not run Python's finally block. The pipe also
     closes if the app crashes, so the SSH connection is closed in either case.
+    Read the descriptor directly: a blocked daemon must not hold sys.stdin's
+    buffered-I/O lock when a timeout makes the main thread exit.
     """
     try:
-        stream.read(1)
+        os.read(fd, 1)
     except OSError:
         pass
     stopped.set()
-    if proc.poll() is None:
-        proc.terminate()
+    stop_child(proc)
 
 
 class StreamWatchdog:
@@ -111,8 +128,7 @@ class StreamWatchdog:
                 self.condition.wait(left)
             else:
                 return
-        if self.proc.poll() is None:
-            self.proc.terminate()
+        stop_child(self.proc)
 
 
 def main(argv=None):
@@ -129,16 +145,19 @@ def main(argv=None):
     if not args.frame or args.frame.startswith('-') or any(c.isspace() for c in args.frame):
         parser.error('frame must be one SSH host or alias')
     command = remote_command(args.height, args.fps, not args.no_audio)
-    ssh = ['ssh', '-T', '-o', 'BatchMode=yes', args.frame, 'bash', '-lc', shlex.quote(command)]
+    ssh = ['ssh', '-T', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=10',
+           '-o', 'ServerAliveInterval=5', '-o', 'ServerAliveCountMax=2',
+           args.frame, 'bash', '-lc', shlex.quote(command)]
     target = ('127.0.0.1', args.port)
     print(f'Sending Frame view to udp://127.0.0.1:{args.port} for OBS; press Ctrl+C to stop.', file=sys.stderr)
     signal.signal(signal.SIGTERM, lambda *_: sys.exit(0))
     with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp:
-        proc = subprocess.Popen(ssh, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE)
+        options = {'creationflags': subprocess.CREATE_NO_WINDOW} if sys.platform == 'win32' else {}
+        proc = subprocess.Popen(ssh, stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, **options)
         stopped = threading.Event()
         watchdog = StreamWatchdog(proc)
         if args.control_stdin:
-            threading.Thread(target=watch_control, args=(sys.stdin.buffer, proc, stopped), daemon=True).start()
+            threading.Thread(target=watch_control, args=(sys.stdin.fileno(), proc, stopped), daemon=True).start()
         try:
             amount = relay(proc.stdout, _Sender(udp, target), watchdog.packet)
             code = proc.wait(timeout=10)
@@ -155,13 +174,7 @@ def main(argv=None):
         finally:
             watchdog.close()
             proc.stdout.close()
-            if proc.poll() is None:
-                proc.terminate()
-                try:
-                    proc.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    proc.kill()
-                    proc.wait()
+            stop_child(proc)
 
 
 class _Sender:
@@ -170,7 +183,14 @@ class _Sender:
         self.ready = False
 
     def send(self, data):
-        self.sock.sendto(data, self.target)
+        try:
+            self.sock.sendto(data, self.target)
+        except ConnectionResetError:
+            # Winsock can report a previous ICMP "port unreachable" here while
+            # OBS is closed. Keep sending so opening the receiver can recover.
+            if sys.platform != 'win32':
+                raise
+            return
         if not self.ready:
             self.ready = True
             print('Frame Control OBS stream is ready', file=sys.stderr, flush=True)

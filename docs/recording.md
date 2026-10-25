@@ -52,18 +52,19 @@ Recording and **Live** can run together; both read the same device.
 
 ### Does Record include passthrough?
 
-**Record captures SteamVR's `system.HeadsetView` mirror from `/dev/video99`.**
-Frame Control does not open the headset's passthrough cameras or add a separate
-camera layer to the MP4. If SteamVR puts passthrough into that mirror, it will
-appear in the recording; Frame Control cannot force or promise that result.
-Steam's own **Steam clips** use a separate game recording path and may differ.
+**Yes, the MP4 recording and OBS mirror can include room passthrough.** On
+25 October 2026, SteamOS 0.5.6 build `20261022.6153909`, a safe SteamVR wake
+produced real room pixels behind panels in `/dev/video99`. Room pixels also
+appeared in decoded frames of both the OBS recording and a five-second MP4
+made with the packaged production recorder. The private room images are not
+published. See the [test record](evidence/obs-validation-2026-10-25.md).
 
-On 25 October 2026, the Frame was in standby. A frame captured from
-`/dev/video99` was black, as expected in standby, so this check **did not
-establish whether active passthrough appears in the mirror**. A wearer-visible
-passthrough session and its simultaneous mirror frame are still needed for a
-yes-or-no answer about passthrough pixels. See the
-[live compatibility evidence](evidence/steamos-compat-live-2026-10-25.md).
+Both paths read SteamVR's `system.HeadsetView` mirror. Frame Control does not
+open raw passthrough cameras or add a camera layer. The observed mirror includes
+SteamVR's composited room and panels; it is not limited to a game's image.
+This does not promise that every game or passthrough mode appears the same way.
+The mirror can be blank in standby. Steam's own **Steam clips** use a separate
+game recording path and were not checked for passthrough in this test.
 
 ## Steam clips
 

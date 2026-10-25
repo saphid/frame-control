@@ -1,0 +1,70 @@
+[
+  {
+    "test": "start-stop",
+    "cycle": 1,
+    "port": 15101,
+    "first_packet_s": 0.890392117202282,
+    "packet_bytes": 1316,
+    "stop_s": 0.06173023069277406,
+    "state": {
+      "state": "idle",
+      "alias": "frame",
+      "port": 15101,
+      "error": "",
+      "supported": true
+    }
+  },
+  {
+    "test": "start-stop",
+    "cycle": 2,
+    "port": 15102,
+    "first_packet_s": 0.7008698149584234,
+    "packet_bytes": 1316,
+    "stop_s": 0.0526565620675683,
+    "state": {
+      "state": "idle",
+      "alias": "frame",
+      "port": 15102,
+      "error": "",
+      "supported": true
+    }
+  },
+  {
+    "test": "start-stop",
+    "cycle": 3,
+    "port": 15103,
+    "first_packet_s": 0.7092029112391174,
+    "packet_bytes": 1316,
+    "stop_s": 0.052990387193858624,
+    "state": {
+      "state": "idle",
+      "alias": "frame",
+      "port": 15103,
+      "error": "",
+      "supported": true
+    }
+  },
+  {
+    "test": "stalled-ssh",
+    "ssh_pid": 3025339,
+    "elapsed_s": 15.008651106152683,
+    "state": {
+      "state": "failed",
+      "alias": "frame",
+      "port": 15105,
+      "error": "OBS source stopped (1). The Frame OBS video stopped for 10 seconds",
+      "supported": true
+    },
+    "helper_gone": true,
+    "ssh_gone": true
+  },
+  {
+    "test": "restart-after-stall",
+    "first_packet_s": 0.6910299891605973
+  },
+  {
+    "test": "quit-streaming",
+    "checked_after_s": 2.020789209753275,
+    "surviving_helpers": []
+  }
+]

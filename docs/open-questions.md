@@ -20,10 +20,10 @@ compatibility](steamos-2026-10-compat.md). For the charge-limit result, see
   No charging control was written. An 80% limit is **not supported** by Frame
   Control; see [charge-limit.md](charge-limit.md) and the
   [headset check](evidence/round3-headset-2026-10-25.md).
-- Active passthrough in the recording mirror remains **unknown**: the only
-  captured mirror frame was uniform while the headset was unworn in standby.
-  A worn, active passthrough check is still needed; see the
-  [headset check](evidence/round3-headset-2026-10-25.md).
+- Passthrough in the MP4 and OBS mirror is **verified on 0.5.6**: after a safe
+  SteamVR wake, room pixels appeared behind panels in the actual mirror and
+  saved outputs. Per-game behavior and Steam's own clips remain unverified;
+  see the [OBS validation](evidence/obs-validation-2026-10-25.md).
 
 ## Verified on device (2026-09-25)
 
