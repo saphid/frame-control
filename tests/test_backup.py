@@ -113,6 +113,108 @@ class Remote(unittest.TestCase):
         os.symlink(str(outside), str(base / 'linked-file'))
         self.assertFalse([f for f in self.files('saves:1234') if 'linked' in f])
 
+    def packed(self, part):
+        out = io.BytesIO()
+        remote.pack(part, out)
+        out.seek(0)
+        with tarfile.open(fileobj=out, mode='r:gz') as archive:
+            return {m.name: archive.extractfile(m).read() for m in archive}
+
+    @unittest.skipIf(os.name == 'nt', 'symlinks need privileges on Windows')
+    def test_backup_rejects_every_ancestor_of_a_save_root(self):
+        save = USER % 1234 + '/AppData/Roaming/Game/fixture.dat'
+        # Each component below HOME, including the selected root itself.
+        components = (USER % 1234 + '/AppData/Roaming').split('/')
+        for end in range(1, len(components) + 1):
+            ancestor = '/'.join(components[:end])
+            with self.subTest(ancestor=ancestor), tempfile.TemporaryDirectory() as tmp:
+                home = Path(tmp) / 'home'
+                manifest(home, 1234, 'Synthetic game')
+                path = write(home, save, b'synthetic fixture')
+                linked = home / ancestor
+                outside = Path(tmp) / 'outside/.ssh'
+                outside.parent.mkdir()
+                linked.rename(outside)
+                linked.symlink_to(outside, target_is_directory=True)
+                # Only synthetic bytes: the lexical archive path hides .ssh.
+                self.assertEqual(path.read_bytes(), b'synthetic fixture')
+                with patch.object(remote, 'HOME', home):
+                    self.assertEqual(self.files('saves:1234'), [])
+                    self.assertNotIn('saves:1234', [p['id'] for p in remote.plan()['parts']])
+                    self.assertEqual(self.packed('saves:1234'), {})
+
+    @unittest.skipIf(os.name == 'nt', 'symlinks need privileges on Windows')
+    def test_pack_rechecks_links_changed_after_discovery(self):
+        save = USER % 1234 + '/Documents/Game/fixture.dat'
+        for ancestor in (remote.COMPAT + '/1234', USER % 1234 + '/Documents', save):
+            with self.subTest(ancestor=ancestor), tempfile.TemporaryDirectory() as tmp:
+                home = Path(tmp) / 'home'
+                write(home, save, b'original save')
+                linked = home / ancestor
+                outside = Path(tmp) / 'outside/.ssh'
+                outside.parent.mkdir()
+                part_files = remote.part_files
+
+                def discover_then_link(part):
+                    result = part_files(part)
+                    self.assertEqual(result[0], [(save, len(b'original save'))])
+                    linked.rename(outside)
+                    linked.symlink_to(outside, target_is_directory=outside.is_dir())
+                    (home / save).write_bytes(b'synthetic redirected bytes')
+                    return result
+
+                with patch.object(remote, 'HOME', home), \
+                        patch.object(remote, 'part_files', side_effect=discover_then_link):
+                    self.assertEqual(self.packed('saves:1234'), {})
+
+    def test_legitimate_steam_layout_and_reference_files_still_pack(self):
+        frame_home(self.home)
+        manifest(self.home, 2800000002, 'Synthetic non-Steam game')
+        save = USER % 2800000002 + '/Saved Games/fixture.dat'
+        write(self.home, save, b'non-Steam save')
+        controller = STEAM + '/steamapps/common/Steam Controller Configs/555/config/layout.vdf'
+        write(self.home, controller, b'controller layout')
+        for part in ('saves:1234', 'saves:2800000002', 'saves:linux',
+                     'settings:steam', 'settings:system'):
+            with self.subTest(part=part):
+                expected = {rel: (self.home / rel).read_bytes() for rel in self.files(part)}
+                self.assertTrue(expected)
+                self.assertEqual(self.packed(part), expected)
+        self.assertEqual(self.packed('saves:2800000002'), {save: b'non-Steam save'})
+        self.assertIn(controller, self.packed('settings:steam'))
+
+    @unittest.skipIf(os.name == 'nt', 'symlinks need privileges on Windows')
+    def test_settings_discovery_and_manifest_reads_reject_links(self):
+        frame_home(self.home)
+        for ancestor, part in (('.config', 'settings:system'),
+                               (STEAM + '/userdata', 'settings:steam')):
+            with self.subTest(ancestor=ancestor):
+                linked = self.home / ancestor
+                moved = linked.with_name(linked.name + '-original')
+                linked.rename(moved)
+                linked.symlink_to(moved, target_is_directory=True)
+                self.assertEqual(self.files(part), [])
+                self.assertEqual(self.packed(part), {})
+                if part == 'settings:steam':
+                    self.assertEqual(remote.accounts(), [])
+        appmanifest = self.home / STEAM / 'steamapps/appmanifest_1234.acf'
+        moved = appmanifest.with_suffix('.original')
+        appmanifest.rename(moved)
+        appmanifest.symlink_to(moved)
+        with patch.object(Path, 'read_text', side_effect=AssertionError('must not read a link')):
+            self.assertIsNone(remote.game_name('1234'))
+
+    @unittest.skipIf(os.name == 'nt', 'symlinks need privileges on Windows')
+    def test_home_alias_and_unused_steam_alias_preserve_normal_backups(self):
+        frame_home(self.home)
+        alias = self.home / 'home-alias'
+        alias.symlink_to(self.home, target_is_directory=True)
+        (self.home / '.steam/steam').symlink_to(self.home / STEAM, target_is_directory=True)
+        expected = self.packed('saves:1234')
+        with patch.object(remote, 'HOME', alias):
+            self.assertEqual(self.packed('saves:1234'), expected)
+            self.assertEqual(remote.game_name('1234'), 'Test Game')
+
     def test_big_files_are_listed_as_skipped(self):
         frame_home(self.home)
         with patch.object(remote, 'MAX_FILE', 3):
