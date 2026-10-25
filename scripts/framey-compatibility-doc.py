@@ -95,12 +95,12 @@ def main():
     parser.add_argument('--check', action='store_true')
     args = parser.parse_args()
     output = ROOT/'docs/framey-compatibility.md'
-    expected = render(json.loads((ROOT/'ui/framey-compatibility.json').read_text()))
+    expected = render(json.loads((ROOT/'ui/framey-compatibility.json').read_text(encoding='utf-8')))
     if args.check:
-        if not output.exists() or output.read_text() != expected:
+        if not output.exists() or output.read_text(encoding='utf-8') != expected:
             raise SystemExit('Compatibility documentation differs from canonical store data')
     else:
-        output.write_text(expected)
+        output.write_text(expected, encoding='utf-8')
 
 
 if __name__ == '__main__':
