@@ -6,6 +6,8 @@ user services under `~/.local/share/frame-control`; neither needs root or a
 read-write SteamOS root filesystem. Decky's standard Quick Access menu still
 does not appear in the separate SteamVR CEF target.
 
+See the [complete official-store compatibility table](framey-compatibility.md) for version-specific statuses, blockers and verification limits. Both stores and installed panels show the same digest-scoped results; a new published archive starts unverified.
+
 ## Use in the headset
 
 Install **Frame Control in VR** and **Decky Loader on Frame** from Frame Control

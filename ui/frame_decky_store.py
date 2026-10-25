@@ -13,6 +13,7 @@ import urllib.request
 import zipfile
 
 import frame_decky
+import framey_compatibility
 
 
 STORE_URL = 'https://plugins.deckbrew.xyz/plugins'
@@ -65,7 +66,10 @@ def catalog():
     counts = {}
     for item in result:
         counts[item['id']] = counts.get(item['id'], 0) + 1
-    return [item for item in result if counts[item['id']] == 1]
+    unique = [item for item in result if counts[item['id']] == 1]
+    for item in unique:
+        item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
+    return unique
 
 
 def archive_info(data, expected_hash, expected_name):
@@ -222,6 +226,8 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             raise ValueError('The official store version changed; refresh the store and review it again')
         if plugin['root']:
             raise ValueError('Root plugins are not supported by the Frame user service')
+        if plugin.get('compatibility', {}).get('blockInstall'):
+            raise ValueError(plugin['compatibility']['reason'])
         existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']]
         if action == 'install' and existing_name:
             raise ValueError('A plugin with this name is already installed')

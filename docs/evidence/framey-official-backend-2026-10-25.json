@@ -1,0 +1,66 @@
+{
+  "timeUtc": "2026-10-25T23:35:22.022586+00:00",
+  "method": "Real Frame ARM64 Decky 3.3.0, isolated removable user service; explicit read-only plugin methods only",
+  "plugins": [
+    {
+      "id": 14,
+      "version": "1.3.4",
+      "sha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+      "method": "get_setting",
+      "result": {
+        "result": "default"
+      },
+      "errors": [
+        "Transient CEF reconnect during Decky frontend injection; succeeded on retry."
+      ]
+    },
+    {
+      "id": 123,
+      "version": "1.2.3",
+      "sha256": "9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e",
+      "method": "get_settings",
+      "result": {
+        "keys": [
+          "enable_notification_antiflood",
+          "enable_notifications",
+          "gateway_api_key",
+          "gateway_url",
+          "refresh_interval_seconds",
+          "show_history",
+          "show_regions",
+          "show_trending_games"
+        ],
+        "defaultRefreshInterval": 120
+      },
+      "errors": []
+    }
+  ],
+  "before": {
+    "battery": [
+      100
+    ],
+    "deckyService": "inactive",
+    "panelService": "inactive"
+  },
+  "service": {
+    "created": true
+  },
+  "decky": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+  },
+  "passed": true,
+  "cleanup": {
+    "baseAbsent": true,
+    "unitAbsent": true
+  },
+  "after": {
+    "battery": [
+      99
+    ],
+    "deckyService": "inactive",
+    "panelService": "inactive"
+  },
+  "lockReleased": true,
+  "cleanupErrors": []
+}
