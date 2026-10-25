@@ -1436,7 +1436,7 @@
 
   <div class="page" data-page="tools">
 <div class="workspace-heading"><div><a href="#tools" id="toolBack" class="workspace-link" hidden>← All tools</a><h1 id="toolTitle">Tools</h1><p id="toolSubtitle">Choose a task for your Frame.</p></div></div>
-<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Modding & extensions</h2><div class="quick-routes"><a href="#extensions"><span>Extensions</span><small>Add local tools to Frame Control</small></a><a href="#decky"><span>Decky Loader</span><small>Experimental Steam plugin loader</small></a></div></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
+<div id="toolDirectory"><section class="tool-group"><h2>Content & files</h2><div class="quick-routes"><a href="#transfer"><span>Send to Frame</span><small>Add files, APKs or your own games</small></a><a href="#media"><span>Media player</span><small>Play your own videos and media</small></a><a href="#linuxApps"><span>Linux apps</span><small>Install and manage desktop apps</small></a></div></section><section class="tool-group"><h2>Play & control</h2><div class="quick-routes"><a href="#capture"><span>Capture & Live</span><small>See and control the headset view</small></a><a href="#pad" title="Type on the headset (T)"><span>Type on the headset</span><small>Keyboard, trackpad and clipboard</small></a><a href="#panels"><span>Panel switcher</span><small>Bring an open panel into view</small></a><a href="#vrTools"><span>VR tools</span><small>Performance HUD and VR utilities</small></a><a href="#comfort"><span>Family & comfort</span><small>Session reminders and breaks</small></a><a href="#macview" id="macToolLink" hidden><span>Mac in the headset</span><small>Share Mac windows and displays</small></a><a href="#steamPipewire" id="steamPipewireLink" hidden><span>Steam desktop sharing</span><small>Linux: launch Steam or re-pick a screen</small></a><a href="#macview" id="pcToolLink" hidden><span>PC in the headset</span><small>Experimental: share this PC's screen</small></a></div></section><section class="tool-group" id="wirelessToolGroup" hidden><h2>This PC</h2><div class="quick-routes"><a href="#wireless"><span>Wireless Adapter doctor</span><small>Read-only Windows adapter and interference checks</small></a></div></section><section class="tool-group"><h2>Your Frame</h2><div class="quick-routes"><a href="#powerReport"><span>Power &amp; heat report</span><small>Read-only observation and offline downloads</small></a><a href="#storage"><span>Game storage</span><small>Free space and Steam install sizes</small></a><a href="#backup" id="backupToolLink"><span>Backup &amp; recovery</span><small>Save games and settings, restore after a reset</small></a></div><a class="workspace-link" href="#settings">Connection, display &amp; preferences →</a></section><section class="tool-group"><h2>Modding & extensions</h2><div class="quick-routes"><a href="#extensions"><span>Extensions</span><small>Add local tools to Frame Control</small></a><a href="#decky"><span>Decky Loader</span><small>Experimental Steam plugin loader</small></a><a href="#headsetPanel"><span>Frame Control in VR</span><small>Open tools inside the headset</small></a></div></section><section class="tool-group"><h2>Assistant</h2><a class="workspace-link" href="/assistant">Open assistant &amp; AI agents →</a><p class="sub">Use your own model endpoint or review a proposed MCP action.</p></section></div>
   <div class="grid-3" id="toolWorkspace">
   <section class="panel" id="extensions">
     <div class="shelf-head"><h2>Extensions</h2><span class="spacer"></span><button class="small" id="extensionsRefresh">Refresh</button></div>
@@ -1456,6 +1456,14 @@
     <label class="popt"><input type="checkbox" id="deckyAck"> I understand that the VR menu and individual plugins may not work. Install only if I want to test Decky.</label>
     <div class="row" style="margin-top:10px"><button class="small action" id="deckyInstall" disabled>Install</button><button class="small" id="deckyUpdate" disabled>Update</button><button class="small danger" id="deckyRemove" disabled>Remove managed Decky</button></div>
     <div class="hint">Install and update download Decky's official ARM64 release and verify its published SHA-256. Frame Control uses a removable user service and does not change the root filesystem. Remove keeps plugin files.</div>
+  </section>
+  <section class="panel" id="headsetPanel">
+    <div class="shelf-head"><h2>Frame Control in VR</h2><span class="spacer"></span><button class="small" id="headsetRefresh">Refresh</button></div>
+    <p class="sub">Open a Frame Control panel in SteamVR's dashboard. The panel runs on the Frame through a loopback server and an opt-in user service.</p>
+    <div id="headsetState" class="sub">Checking…</div>
+    <label class="popt"><input type="checkbox" id="headsetAck"> I want to install this local headset panel. Closing or removing it leaves SteamVR and my extensions running.</label>
+    <div class="row" style="margin-top:10px"><button class="small action" id="headsetInstall" disabled>Install &amp; open</button><button class="small" id="headsetUpdate" disabled>Update</button><button class="small" id="headsetOpen" disabled>Show in SteamVR</button><button class="small" id="headsetClose" disabled>Close</button><button class="small danger" id="headsetRemove" disabled>Remove</button></div>
+    <p class="hint">Open SteamVR's dashboard to find Frame Control. Remove stops its user service and removes its app bundle; your extension folders and browser profile stay on the Frame.</p>
   </section>
 <section class="panel" id="wireless" hidden>
   <h2>Wireless Adapter doctor</h2>
@@ -2192,6 +2200,34 @@ for (const action of ['Install', 'Update', 'Remove']) {
     if (verb === 'remove' && !confirm('Remove the Frame Control managed Decky service and binary? Plugin files will stay.')) return;
     await runJob(`${action} Decky Loader`, 'decky', () => api('/api/decky', {action:verb, acknowledged:true}));
     loadDecky();
+  };
+}
+let headsetInfo = null;
+async function loadHeadsetPanel() {
+  try {
+    const d = headsetInfo = await api('/api/headset');
+    $('headsetState').textContent = `${d.os || 'Unknown Frame OS'} · ${d.arch} · ${d.managed ? `installed ${d.version || ''}` : 'not installed'} · ${d.running ? d.overlayRegistered ? 'SteamVR panel registered' : 'service starting' : 'stopped'}`;
+  } catch (error) { headsetInfo = null; $('headsetState').textContent = error.message; }
+  headsetButtons();
+}
+function headsetButtons() {
+  const d = headsetInfo, ready = !!d && d.arch === 'aarch64' && d.variant === 'vr';
+  $('headsetInstall').disabled = !ready || !!d.managed || !$('headsetAck').checked;
+  $('headsetUpdate').disabled = !ready || !d.managed || !$('headsetAck').checked;
+  $('headsetOpen').disabled = !ready || !d.managed;
+  $('headsetClose').disabled = !d?.running;
+  $('headsetRemove').disabled = !d?.managed || !$('headsetAck').checked;
+}
+$('headsetAck').onchange = headsetButtons;
+$('headsetRefresh').onclick = loadHeadsetPanel;
+for (const action of ['Install', 'Update', 'Open', 'Close', 'Remove']) {
+  $(`headset${action}`).onclick = async () => {
+    if (!headsetInfo) return;
+    const verb = action.toLowerCase();
+    if (verb === 'remove' && !confirm('Remove the Frame Control headset user service and app bundle? Your extensions and browser profile will stay.')) return;
+    await runJob(`${action} Frame Control in VR`, 'headset-panel',
+      () => api('/api/headset', {action:verb, acknowledged:$('headsetAck').checked}));
+    loadHeadsetPanel();
   };
 }
 window.addEventListener('message', event => {
@@ -6178,10 +6214,10 @@ const PAGES = ["apps", "games", "tools", "settings"];
 const SECONDARY_PAGES = ["home", "capture", "devices", "control"];
 const SECTION_PAGE = {library:"games", discover:"apps", android:"apps", view:"capture", shots:"capture", device:"home",
   steamPipewire:"tools", vrTools:"tools", comfort:"tools", assistant:"tools", pad:"tools", sideloaded:"games", getgames:"games", steamStore:"games", androidLibrary:"apps", appStore:"apps", linuxApps:"apps",
-  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools", extensions:"tools", decky:"tools"};
+  display:"settings", androidSettings:"settings", transfer:"tools", media:"tools", artworkSettings:"settings", autoSync:"settings", power:"settings", macview:"tools", privacy:"settings", panels:"tools", storage:"tools", wireless:"tools", powerReport:"tools", backup:"tools", extensions:"tools", decky:"tools", headsetPanel:"tools"};
 const TOOL_TITLES = {steamPipewire:"Steam desktop sharing", transfer:"Send to Frame", media:"Media player", artworkSettings:"Library artwork", autoSync:"Copy to this computer",
   pad:"Type on the headset", panels:"Panel switcher", vrTools:"VR tools", comfort:"Family & comfort", androidSettings:"App display & reports",
-  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery", extensions:"Extensions", decky:"Decky Loader"};
+  power:"Remote & power", macview:"Mac in the headset", privacy:"Privacy & updates", storage:"Game storage", wireless:"Wireless Adapter doctor", powerReport:"Power & heat report", backup:"Backup & recovery", extensions:"Extensions", decky:"Decky Loader", headsetPanel:"Frame Control in VR"};
 const workspace = {source:"all", scope:"installed", apps:"installed", scroll:new Map(), key:null, hash:null, y:0};
 let page = "apps";
 // Reuse the existing live lists and form handlers in their new destinations.
@@ -6290,6 +6326,7 @@ function showPage(e) {
   if (tool === 'panels') loadPanelSwitcher();
   if (tool === 'extensions') loadExtensions();
   if (tool === 'decky') loadDecky();
+  if (tool === 'headsetPanel') loadHeadsetPanel();
   if (tool === 'backup') loadBackups();
   if (tool === 'storage') loadStorage();
   if (tool === 'powerReport') loadPower();

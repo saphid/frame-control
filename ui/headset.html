@@ -1,0 +1,38 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Frame Control VR [fc-headset]</title>
+<style>
+:root{color-scheme:dark;font:24px/1.4 system-ui,sans-serif;background:#0d1925;color:#f3f7fa}
+*{box-sizing:border-box}body{margin:0;padding:34px;max-width:1280px}h1{font-size:40px;margin:0 0 6px}
+p{margin:0 0 22px;color:#b9c9d6}.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:#1b3042;border:1px solid #40576c;border-radius:14px;padding:24px;min-height:158px}
+.label{display:block;color:#b9c9d6;font-size:20px}.value{display:block;font-size:38px;font-weight:700;margin-top:14px}
+button{font:inherit;background:#23618c;color:white;border:1px solid #72baf0;border-radius:12px;padding:15px 24px;cursor:pointer}
+button:focus-visible{outline:5px solid #f8d370;outline-offset:3px}#message{min-height:1.5em;margin-top:18px}
+@media(max-width:720px){.cards{grid-template-columns:1fr}body{padding:20px}}
+</style></head><body>
+<h1>Frame Control</h1><p>Your Frame, from inside SteamVR. Open this panel from the dashboard at any time.</p>
+<div class="cards">
+  <div class="card"><span class="label">Battery</span><span class="value" id="battery">…</span></div>
+  <div class="card"><span class="label">Home storage free</span><span class="value" id="storage">…</span></div>
+  <div class="card"><span class="label">SteamVR</span><span class="value" id="steamvr">…</span></div>
+</div>
+<p id="message" role="status" aria-live="polite"></p>
+<button id="refresh">Refresh status</button>
+<script>
+const key=location.hash.slice(1)||sessionStorage.getItem('frameHeadsetKey')||'';
+if(key)sessionStorage.setItem('frameHeadsetKey',key);
+history.replaceState(null,'',location.pathname);
+const byId=id=>document.getElementById(id);
+async function api(path,body){const response=await fetch(path,{method:body?'POST':'GET',
+  headers:{'X-Frame-UI':key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
+  const data=await response.json();if(!response.ok)throw Error(data.error||'Frame request failed');return data;}
+async function refresh(){try{const status=await api('/api/status');
+  byId('battery').textContent=status.battery?.percent==null?'Unavailable':`${status.battery.percent}%`;
+  const free=status.disk?.home?.free;
+  byId('storage').textContent=Number.isFinite(free)?`${(free/1e9).toFixed(1)} GB`:'Unavailable';
+  byId('steamvr').textContent=status.services?.steamvr?'Running':'Unavailable';
+  byId('message').textContent=`Frame OS ${status.os?.version||'unknown'} · Updated ${new Date().toLocaleTimeString()}`;
+  }catch(error){byId('message').textContent=error.message;}}
+byId('refresh').onclick=refresh;refresh();
+</script></body></html>

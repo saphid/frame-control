@@ -290,7 +290,7 @@ Frame's software fits together, all checked against a real headset and labelled
 | [PC in the headset](docs/pc-in-headset.md) | Experimental, Windows only, off until you turn it on: a whole PC screen as a panel in the Frame. Tested in a Windows VM; individual windows need a WGC-enabled build |
 | [Mac in the headset](docs/mac-in-headset.md) | Mac windows and screens as panels in the Frame, with laser and keyboard input |
 | [VR mods and custom songs](docs/mods.md) | UEVR for Unreal games from Frame Control (install, play in VR, remove), the per-game table, Beat Saber blockers |
-| [Decky Loader on Frame](docs/decky-frame.md) · [Frame Control extensions](docs/extensions.md) | Experimental Decky support, removal, and the local extension API |
+| [Decky Loader on Frame](docs/decky-frame.md) · [Frame Control in VR](docs/headset-app.md) · [Frame Control extensions](docs/extensions.md) | Experimental Decky support, a removable headset panel, and the local extension API |
 | [SSH](docs/ssh.md) · [Streaming](docs/streaming.md) · [Files](docs/file-transfer.md) · [Panels](docs/panels.md) · [Tailscale](docs/tailscale.md) | Topic notes |
 | [Frame Control for iPhone](docs/iphone.md) | The iPhone and iPad app, how it runs the server on the Frame, pairing |
 | [Recovery and OS images](docs/recovery-and-images.md) | Where to download the Frame's OS, what's inside, testing without the headset |

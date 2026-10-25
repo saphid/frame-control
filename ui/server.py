@@ -80,6 +80,7 @@ import frame_wired_doctor  # noqa: E402
 import frame_compat_db  # noqa: E402
 import frame_extensions  # noqa: E402
 import frame_decky  # noqa: E402
+import frame_headset  # noqa: E402
 
 frame_host.trust_bundled_cas()
 
@@ -557,6 +558,17 @@ def decky(body):
     if body.get("acknowledged") is not True:
         raise Failure("Confirm that Decky support on the Frame is experimental", 400)
     return start_job("Decky Loader " + action, lambda: frame_decky.change(ssh, action))
+
+
+def headset_action(body):
+    if LOCAL:
+        raise Failure("Manage the headset panel from Frame Control on your computer", 400)
+    action = body.get("action")
+    if action not in ("install", "update", "open", "close", "remove"):
+        raise Failure("Choose install, update, open, close, or remove", 400)
+    if action in ("install", "update", "remove") and body.get("acknowledged") is not True:
+        raise Failure("Confirm the opt-in headset installation or removal", 400)
+    return start_job("Headset panel " + action, lambda: frame_headset.change(ssh, action))
 
 
 COMFORT_FILES = ("frame_comfort.py", "frame_status.py", "frame_steam.py")
@@ -3332,6 +3344,7 @@ POST = {
     "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/decky": decky,
+    "/api/headset": headset_action,
     "/api/vr": vr,
     "/api/comfort": comfort, "/api/media": media, "/api/agent/call": agent_call,
     "/api/agent/approval": agent_approval, "/api/assistant/chat": assistant_chat,
@@ -3515,6 +3528,9 @@ class Handler(BaseHTTPRequestHandler):
         try:
             if path in ("/", "/index.html"):
                 self.send_bytes((HERE / "index.html").read_bytes(), "text/html; charset=utf-8")
+            elif path == "/headset":
+                # Dedicated, large-control UI for the opt-in SteamVR panel.
+                self.send_bytes((HERE / "headset.html").read_bytes(), "text/html; charset=utf-8")
             elif path == "/store":
                 # The Android store as a headset panel (scripts/store-on-frame.sh).
                 self.send_bytes((HERE / "store.html").read_bytes(), "text/html; charset=utf-8")
@@ -3534,6 +3550,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_extensions.list_extensions())
             elif path == "/api/decky":
                 self.send_json(frame_decky.status(ssh))
+            elif path == "/api/headset":
+                if LOCAL:
+                    raise Failure("Manage this panel from Frame Control on your computer", 400)
+                self.send_json(frame_headset.status(ssh))
             elif path.startswith("/extension/"):
                 parts = path.split("/")
                 if len(parts) != 4:
