@@ -166,7 +166,7 @@ def bundle():
                 if path.suffix not in ('.py', '.html', '.js', '.css', '.json', '.sh', '.gz', '.zst', '.so', '.txt', '.md') and path.name not in ('ssh',):
                     continue
                 data = path.read_bytes()
-                info = tarfile.TarInfo(str(path.relative_to(ROOT)))
+                info = tarfile.TarInfo(path.relative_to(ROOT).as_posix())
                 info.size, info.mtime, info.uid, info.gid = len(data), 0, 0, 0
                 info.mode = 0o755 if path.stat().st_mode & 0o111 else 0o644
                 archive.addfile(info, io.BytesIO(data))

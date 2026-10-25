@@ -26,6 +26,7 @@ class HeadsetBundle(unittest.TestCase):
         self.assertIn('ui/headset.html', names)
         self.assertIn('ui/frame_headset_runtime.py', names)
         self.assertIn('ui/server.py', names)
+        self.assertFalse(any('\\' in name for name in names))
         self.assertFalse(any('__pycache__' in name for name in names))
 
     def test_incompatible_device_is_rejected_before_upload(self):
