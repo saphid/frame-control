@@ -17,7 +17,7 @@ class PanelError(ValueError):
 
 
 def local_bundle(plugin_id):
-    """Read only an API v2 bundle with a store receipt; reject linked paths."""
+    """Read a modern Decky bundle with a store receipt; reject linked paths."""
     if type(plugin_id) is not int or plugin_id <= 0 or not PLUGINS.is_dir() or PLUGINS.is_symlink():
         raise FileNotFoundError('Framey plugin unavailable')
     for folder in PLUGINS.iterdir():
@@ -43,11 +43,15 @@ def local_bundle(plugin_id):
             if not isinstance(data, dict):
                 raise FileNotFoundError('Framey plugin manifest unavailable')
             flags = data.get('flags', [])
-            if data.get('api_version') != 2 or not isinstance(flags, list) or any(x in flags for x in ('root', '_root')):
-                raise FileNotFoundError('This Decky frontend is not API v2 or needs root')
+            version = data.get('api_version')
+            if type(version) is not int or version not in (1, 2) or not isinstance(flags, list) or any(x in flags for x in ('root', '_root')):
+                raise FileNotFoundError('This Decky frontend is not API v1/v2 or needs root')
             if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
                 raise FileNotFoundError('Framey plugin frontend unavailable')
-            return entry.read_bytes()
+            bundle = entry.read_bytes()
+            if version == 1 and b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit' not in bundle:
+                raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
+            return bundle
         except (OSError, ValueError):
             raise FileNotFoundError('Framey plugin files are invalid')
     raise FileNotFoundError('Plugin is not managed by the Frame Control Decky store')

@@ -109,6 +109,10 @@
   const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
+  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
+    R.createElement('label', null,
+      R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
+        onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
@@ -147,9 +151,9 @@
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
-    Dropdown: DropdownItem, ButtonItem, TextField, SliderField,
+    Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
-    DialogButton: passthrough('button'), ConfirmModal,
+    DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
