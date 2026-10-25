@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Fix smoke cleanup skipping orphan metadata and Steam shortcuts after a test
+  title directory was already removed. Sweep and verify all six exact reserved
+  smoke IDs; preserve similarly named titles. Make `scripts/frame-smoke.sh`
+  work with POSIX sh and Python 3 without zsh, including from another working
+  directory. Local regressions cover both fixes; no new headset run.
+
 - Skip backup saves and settings reached through a symbolic link anywhere below
   the home folder, and recheck paths before packing each file. Local synthetic
   tests cover redirected Proton prefixes and links changed after discovery;
