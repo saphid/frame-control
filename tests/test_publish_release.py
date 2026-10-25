@@ -7,6 +7,7 @@ Run: python3 -m unittest discover -s tests
 """
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
+import hashlib
 import os
 import subprocess
 import tempfile
@@ -26,6 +27,9 @@ def draft(tag_name="untagged-c6ddfed7f75d67db2e99", name="Frame Control 9.8.7", 
     if assets is None:
         assets = [{"id": 100 + i, "name": n, "size": 1000 + i, "digest": "sha256:" + "%064x" % i}
                   for i, n in enumerate(INSTALLERS)]
+        body = "".join(f"{i:064x}  {n}\n" for i, n in enumerate(INSTALLERS)).encode()
+        assets.append({"id": 200, "name": "SHA256SUMS", "size": len(body),
+                       "digest": "sha256:" + hashlib.sha256(body).hexdigest()})
     return {"id": rid, "tag_name": tag_name, "name": name, "draft": True, "prerelease": False,
             "body": "notes", "html_url": "https://github.com/saphid/frame-control/releases/tag/" + tag_name,
             "assets": assets}
@@ -78,6 +82,16 @@ class PublishRelease(unittest.TestCase):
         self.assertIn("NO HASH  Frame-Control-mac-arm64.zip", p.stdout)
         self.assertIsNone(upload)
         self.assertFalse(any(c[1:3] == ["-X", "PATCH"] for c in log))
+
+    def test_refuses_missing_or_stale_checksums(self):
+        for assets in (draft()["assets"][:-1],
+                       draft()["assets"][:-1] + [{"id": 200, "name": "SHA256SUMS",
+                                                  "digest": "sha256:" + "0" * 64}]):
+            p, log, upload = self.run_script([draft(assets=assets)], "v9.8.7")
+            self.assertNotEqual(p.returncode, 0)
+            self.assertIn("SHA256SUMS is absent or does not match", p.stderr)
+            self.assertIsNone(upload)
+            self.assertFalse(any("PATCH" in c for c in log))
 
     def test_refuses_ambiguous_or_absent_drafts_and_missing_tags(self):
         p, _, _ = self.run_script([draft(rid=1), draft(rid=2)], "v9.8.7")

@@ -70,6 +70,38 @@ print(next((a.get("digest") or "" for a in d["assets"] if a["name"]==n), "absent
 done
 [ -z "$missing" ] || { echo "not publishing: fix the assets above" >&2; exit 1; }
 
+# The workflow uploads this only after all eight platform builds complete.
+# Regenerate it from GitHub's installer digests and compare its own GitHub
+# digest, so a stale or partial checksum file cannot pass the release gate.
+python3 "$(dirname "$0")/release-checksums.py" < "$tmp/release.json" > "$tmp/SHA256SUMS"
+expected_sum=$(sha256sum "$tmp/SHA256SUMS" | cut -d ' ' -f 1)
+checksum_digest=$(python3 -c 'import json,sys
+d=json.load(open(sys.argv[1])); matches=[a.get("digest") for a in d["assets"] if a["name"]=="SHA256SUMS"]
+print(matches[0] if len(matches)==1 else "absent")' "$tmp/release.json")
+[ "$checksum_digest" = "sha256:$expected_sum" ] || {
+  echo "not publishing: SHA256SUMS is absent or does not match the eight installer digests" >&2; exit 1;
+}
+echo "ok       SHA256SUMS"
+
+# Every published release carries the same concrete verification instructions.
+# Keep the release's own notes, and append this section only once. The tag URL
+# is stable even while a draft temporarily has an untagged-* API name.
+python3 - "$tmp/release.json" "$(dirname "$0")/release-safety-note.md" "$tag" > "$tmp/release-with-note.json" <<'EOF'
+import json, pathlib, sys
+d = json.load(open(sys.argv[1]))
+body = (d.get("body") or "").rstrip()
+if "## Is it safe?" not in body:
+    note = pathlib.Path(sys.argv[2]).read_text(encoding="utf-8").replace("{tag}", sys.argv[3]).strip()
+    body = (body + "\n\n" if body else "") + note
+d["body"] = body
+json.dump(d, sys.stdout)
+EOF
+mv "$tmp/release-with-note.json" "$tmp/release.json"
+python3 - "$tmp/release.json" > "$tmp/release-body.txt" <<'EOF'
+import json, sys
+sys.stdout.buffer.write(json.load(open(sys.argv[1]))["body"].encode("utf-8"))
+EOF
+
 # update.json: what running copies read (app/updater.js), from github.com's
 # latest/download link rather than the rate-limited REST API.
 python3 - "$tmp/release.json" "$tag" "$page" "$expected" > "$tmp/update.json" <<'EOF'
@@ -87,6 +119,7 @@ print(" ".join(str(a["id"]) for a in d["assets"] if a["name"]=="update.json"))' 
 if [ -n "$dry" ]; then
   echo "dry run: would replace update.json (old asset ids: ${old:-none}) with:"
   cat "$tmp/update.json"
+  echo "dry run: would include the Is it safe? section in the release body"
   echo "dry run: would PATCH release $id: tag_name=$tag draft=false prerelease=false make_latest=true"
   exit 0
 fi
@@ -98,6 +131,6 @@ gh api -X POST "https://uploads.github.com/repos/$repo/releases/$id/assets?name=
   -H "Content-Type: application/json" --input "$tmp/update.json" >/dev/null
 echo "ok       update.json"
 
-gh api -X PATCH "repos/$repo/releases/$id" -f tag_name="$tag" -F draft=false -F prerelease=false \
+gh api -X PATCH "repos/$repo/releases/$id" -f tag_name="$tag" -f body="$(cat "$tmp/release-body.txt")" -F draft=false -F prerelease=false \
   -f make_latest=true --jq '"published " + .tag_name + " at " + .html_url'
 echo "running copies will offer $tag at their next check"
