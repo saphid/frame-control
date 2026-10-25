@@ -121,7 +121,7 @@ jobs:
           test -n "$bundle"
           resources="$bundle/Contents/Resources"
           for binary in "$bundle/Contents/MacOS/Frame Control" "$resources/python/bin/python3" "$resources/tools/adb" "$resources/mac/bin/frame-mac-view"; do
-            lipo -verify_arch "$(uname -m)" "$binary"
+            lipo "$binary" -verify_arch "$(uname -m)"
           done
           "$resources/python/bin/python3" -I -B -c 'import http.server, ssl, sqlite3; print(ssl.OPENSSL_VERSION)'
       - name: Launch the built Linux AppImage
