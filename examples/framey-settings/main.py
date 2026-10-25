@@ -16,10 +16,11 @@ class Plugin:
         if key != 'enabled':
             raise ValueError('Unknown setting')
         try:
-            stored = json.loads(settings_file().read_text())
-        except FileNotFoundError:
+            stored = json.loads(settings_file().read_text(encoding='utf-8'))
+        except (FileNotFoundError, json.JSONDecodeError, UnicodeDecodeError):
             return default
-        return stored.get(key, default)
+        value = stored.get(key) if isinstance(stored, dict) else None
+        return value if type(value) is bool else default
 
     async def set_setting(self, key: str, value: bool):
         if key != 'enabled' or type(value) is not bool:

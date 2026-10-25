@@ -35,6 +35,12 @@ remain unavailable. Wearer-visible use is not yet verified.
 The [settings sample](../examples/framey-settings/README.md) shows an official
 Decky JSX build, backend persistence, a toggle and a local toast. Framey offers
 only official-store-owned plugins in its VR panel.
+For persistent backend settings, use Decky's `decky.decky_SETTINGS_DIR` rather
+than assuming an environment variable or Steam Deck home path. Validate stored
+types when reading, write through a temporary file before replacing the old
+file, and give the panel a safe default if settings are missing or damaged.
+Removing a managed plugin leaves its Decky settings behind; document how users
+can reset data your plugin owns.
 
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect

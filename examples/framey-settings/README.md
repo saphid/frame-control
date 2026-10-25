@@ -4,7 +4,9 @@ This is a small Decky API v2 plugin for authors. Its panel uses the official
 `@decky/api`, `@decky/ui`, and `@decky/rollup` packages. A toggle calls a Python
 backend method, stores one boolean under `decky.decky_SETTINGS_DIR`,
 and reads it back when the panel opens. The backend rejects other keys and
-values. The frontend also shows a local toast after a successful save.
+values. The frontend also shows a local toast after a successful save. A
+missing, damaged, or old non-boolean value reads as the caller's default;
+the next save atomically replaces the sample's settings file.
 
 ## Build
 
@@ -33,5 +35,5 @@ has passed for this sample yet.
 
 The plugin needs no root access or system changes. Its settings remain after
 the managed plugin folder is removed, following Decky's settings behavior.
-For a production plugin, add migration and recovery handling for damaged
-settings files, and test every UI path in a worn headset.
+For a production plugin, add explicit migrations for every supported schema,
+explain how users can reset settings, and test every UI path in a worn headset.

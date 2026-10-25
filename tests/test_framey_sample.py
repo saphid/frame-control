@@ -45,6 +45,18 @@ class SamplePlugin(unittest.TestCase):
             with self.assertRaises(ValueError): asyncio.run(plugin.set_setting('enabled', 'yes'))
             self.assertFalse((Path(folder) / 'settings.json').exists())
 
+    def test_corrupt_or_old_setting_uses_default_and_can_be_replaced(self):
+        with tempfile.TemporaryDirectory() as folder:
+            plugin = backend(folder)
+            path = Path(folder) / 'settings.json'
+            for data in ('broken JSON', '[]', '{"enabled": "yes"}'):
+                with self.subTest(data=data):
+                    path.write_text(data)
+                    self.assertFalse(asyncio.run(plugin.get_setting('enabled', False)))
+                    self.assertTrue(asyncio.run(plugin.get_setting('enabled', True)))
+            self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
+            self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+
 
 if __name__ == '__main__':
     unittest.main()
