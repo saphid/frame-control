@@ -112,6 +112,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_remove_while_service_is_stopped_does_not_restart_it(self):
+        data, _ = archive()
+        self.assertEqual(self.apply('install', data).returncode, 0)
+        fake = Path(self.tmp.name) / 'systemctl'
+        fake.write_text('#!/bin/sh\nif [ "$2" = is-active ]; then exit 1; fi\n'
+                        'echo "$*" >> "$HOME/service-calls"\nexit 0\n')
+        result = self.apply('remove')
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(self.folder.exists())
+        self.assertEqual((Path(self.tmp.name) / 'service-calls').read_text().splitlines(),
+                         ['--user stop frame-control-decky.service'])
+
     def test_shared_lock_rejects_plugin_and_loader_changes(self):
         import fcntl
 
@@ -136,6 +148,30 @@ class StoreTransaction(unittest.TestCase):
 
 
 class StoreHost(unittest.TestCase):
+    def test_stopped_managed_service_allows_removing_owned_plugin(self):
+        state = {'managed': True, 'running': False, 'plugins':
+                 [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
+        calls = []
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog') as network:
+            result = frame_decky_store.change(lambda command, **kwargs: calls.append(command) or '{}',
+                                               'remove', 42)
+        self.assertEqual(result, {})
+        self.assertEqual(len(calls), 1)
+        network.assert_not_called()
+
+    def test_renamed_store_plugin_cannot_be_installed_twice(self):
+        state = {'managed': True, 'running': True, 'plugins':
+                 [{'storeId': 42, 'folder': 'OldFolder', 'name': 'Old Name', 'version': '1.0'}]}
+        catalog = [{'id': 42, 'name': 'New Name', 'root': False, 'sha256': 'a' * 64, 'version': '2.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog) as network, \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', side_effect=AssertionError('No download expected')):
+            with self.assertRaisesRegex(ValueError, 'already installed'):
+                frame_decky_store.change(lambda *args, **kwargs: self.fail('No headset write expected'),
+                                         'install', 42)
+            network.assert_not_called()
+
     def test_owned_plugin_can_be_removed_without_store_network(self):
         state = {'managed': True, 'running': True, 'plugins':
                  [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
