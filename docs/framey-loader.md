@@ -103,7 +103,10 @@ The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel remembers the current job ID for this
 browser session, so **Check result** can resume polling after a navigation or
 temporary connection error. Refresh the installed list before starting another
-operation after an error. If Frame Control restarts, it cannot recover the old
+operation after an error. The headset panel and desktop app send the hash of
+the version you saw; if the official store changes that version before the job
+starts, Frame Control stops before downloading or changing the headset. Refresh
+the store and review the new version before retrying. If Frame Control restarts, it cannot recover the old
 job result. The panel clears that job ID and asks you to refresh the installed
 list before making another change.
 

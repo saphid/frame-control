@@ -169,7 +169,8 @@ async function followDeckyJob(job,action,name){
 async function deckyChange(action,plugin){if(deckyBusy||!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
   deckyBusy=true;showDeckyStore();
   deckyJobView(`${action} ${plugin.name}`,'Starting…',0);
-  try{const started=await api('/api/decky/plugin',{action,id:plugin.id,acknowledged:true});
+  try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
+    sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true});
     if(!started.job)throw Error('The server did not return a job ID');
     sessionStorage.setItem('frameyPluginJob',JSON.stringify({job:started.job,action,name:plugin.name}));
     await followDeckyJob(started.job,action,plugin.name);
@@ -191,7 +192,7 @@ function openFrameyPanel(id,name){
   byId('frameyFrame').src=`/framey/panel/${id}#${frameySession}`;
   byId('frameyPanel').hidden=false;byId('frameyPanel').scrollIntoView();
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
-    byId('frameyPanelStatus').textContent='No compatible API v2 panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
+    byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
 }
 byId('frameyClose').onclick=()=>{activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}

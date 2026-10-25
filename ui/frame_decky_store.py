@@ -193,9 +193,12 @@ finally:
 '''
 
 
-def change(ssh, action, plugin_id, report=lambda stage, percent=None: None):
+def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, reviewed_hash=None):
     if action not in ('install', 'update', 'remove') or type(plugin_id) is not int or plugin_id <= 0:
         raise ValueError('Choose a valid store plugin action')
+    if reviewed_hash is not None and (action == 'remove' or not isinstance(reviewed_hash, str)
+                                      or not SHA.fullmatch(reviewed_hash)):
+        raise ValueError('Invalid reviewed store version')
     report('Checking installed plugins', 5)
     state = frame_decky.status(ssh)
     if not state['managed']:
@@ -215,6 +218,8 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None):
         plugin = next((item for item in catalog() if item['id'] == plugin_id), None)
         if not plugin:
             raise ValueError('Plugin is not in the official Decky store')
+        if reviewed_hash is not None and plugin['sha256'] != reviewed_hash:
+            raise ValueError('The official store version changed; refresh the store and review it again')
         if plugin['root']:
             raise ValueError('Root plugins are not supported by the Frame user service')
         existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']]

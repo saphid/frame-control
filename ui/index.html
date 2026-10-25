@@ -2244,7 +2244,8 @@ function showDeckyStore() {
 }
 async function changeDeckyPlugin(action, plugin) {
   if (!$('deckyAck').checked || !confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
-  try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin', {action,id:plugin.id,acknowledged:true}));
+  try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
+    {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true}));
     await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
 }
 function deckyButtons() {
