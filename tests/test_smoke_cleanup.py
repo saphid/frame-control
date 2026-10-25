@@ -119,15 +119,6 @@ class Safety(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, 'survived cleanup'):
                 stop_processes.stop(['fc_smoke_exe'], grace=0)
 
-    def test_cleanup_scans_even_when_title_already_removed(self):
-        with mock.patch.object(frame_smoke.frame_titles, 'list_titles', return_value=[]), \
-                mock.patch.object(frame_smoke, 'ssh') as ssh, \
-                mock.patch.object(frame_smoke, 'stop_titles', return_value={'stopped_pids': [42]}) as stop:
-            result = frame_smoke.cleanup(frame_smoke.Smoke())
-            self.assertEqual(stop.call_args_list, [mock.call(stop_processes.IDS)] * 2)
-            self.assertEqual(result['process_cleanup'][0]['stopped_pids'], [42])
-            ssh.assert_not_called()
-
     def test_stop_failure_prevents_file_removal(self):
         with mock.patch.object(frame_smoke.frame_titles, 'list_titles', return_value=[{'id': 'fc_smoke_exe'}]), \
                 mock.patch.object(frame_smoke, 'ssh') as ssh, \
@@ -151,3 +142,164 @@ class Safety(unittest.TestCase):
             self.assertEqual(frame_smoke.main(), 1)
             cycle.assert_not_called()
             self.assertEqual(len(list(Path(folder).glob('*-fake.json'))), 1)
+
+
+@unittest.skipUnless(os.name == 'posix', 'local POSIX shell required')
+class OrphanCleanup(unittest.TestCase):
+    """Run the real cleanup shell commands in a throwaway home; mock Steam/SSH."""
+
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.tmp.cleanup)
+        self.home = Path(self.tmp.name)
+        self.games = self.home / 'devkit-game'
+        self.games.mkdir()
+        self.shortcuts = set()
+        self.sync_outputs = None
+        self.events = []
+        self.smoke = frame_smoke.Smoke()
+        for target, name, kwargs in (
+                (frame_smoke, 'ssh', {'side_effect': self.local_ssh}),
+                (frame_smoke, 'stop_titles', {'side_effect': self.stop}),
+                (frame_smoke.frame_titles, 'list_titles', {'return_value': []}),
+                (frame_smoke.frame_titles, 'remove', {'side_effect': self.remove}),
+                (frame_smoke.frame_titles, 'ensure_utils', {}),
+                (frame_smoke.frame_titles, 'devkit_script', {'return_value': 'smoke-sync'})):
+            patcher = mock.patch.object(target, name, **kwargs)
+            setattr(self, name + '_mock', patcher.start())
+            self.addCleanup(patcher.stop)
+
+    def stop(self, ids):
+        self.assertEqual(ids, stop_processes.IDS)
+        self.events.append('stop')
+        return {'stopped_pids': [42] if len(self.events) == 1 else []}
+
+    def remove(self, gid):
+        self.assertIn(gid, stop_processes.IDS)
+        self.events.append('remove')
+        shutil.rmtree(self.games / gid)
+
+    def local_ssh(self, command, timeout=60):
+        self.events.append(command)
+        self.assertEqual(self.events[0], 'stop', 'processes must stop before file cleanup')
+        if command == 'smoke-sync 2>&1':
+            if self.sync_outputs is not None:
+                return self.sync_outputs.pop(0)
+            # Valve logs the registered IDs before reconciling with disk.
+            out = '\n'.join(f'Found Devkit Game registered with Steam Client: {gid!r}'
+                            for gid in sorted(self.shortcuts))
+            self.shortcuts = {gid for gid in self.shortcuts if (self.games / gid).is_dir()}
+            return out
+        return subprocess.run(command, shell=True, check=True, capture_output=True,
+                              text=True, timeout=timeout,
+                              env={**os.environ, 'HOME': str(self.home)}).stdout
+
+    def metadata(self, gid):
+        paths = [self.games / f'{gid}-{kind}.json'
+                 for kind in ('argv', 'env', 'settings', 'framecontrol')]
+        for path in paths:
+            path.write_text('{}')
+        return paths
+
+    def test_orphan_metadata_for_every_reserved_id_is_removed_and_shortcuts_rechecked(self):
+        paths = [path for gid in stop_processes.IDS for path in self.metadata(gid)]
+        self.shortcuts = set(stop_processes.IDS)
+        result = frame_smoke.cleanup(self.smoke)
+        self.assertTrue(all(not path.exists() for path in paths))
+        self.assertFalse(self.shortcuts)
+        self.assertEqual(result['removed'], sorted(stop_processes.IDS))
+        self.assertEqual(result['process_cleanup'], [{'stopped_pids': [42]}, {'stopped_pids': []}])
+        self.assertEqual(self.events[-1], 'stop')
+        self.assertEqual(self.events.count('smoke-sync 2>&1'), 2)
+        self.ensure_utils_mock.assert_called_once_with()
+        self.remove_mock.assert_not_called()
+
+    def test_shortcut_only_leftover_is_synced_without_title_or_install_record(self):
+        self.shortcuts = {'fc_smoke_exe'}
+        frame_smoke.cleanup(self.smoke)
+        self.assertFalse(self.shortcuts)
+        self.assertEqual(self.events.count('smoke-sync 2>&1'), 2)
+
+    def test_unrelated_titles_and_metadata_survive_even_if_in_install_tracker(self):
+        others = ('portal2', 'fc_smoke_custom', 'fc_smoke_exe-other', 'fc_smoke_exe_other')
+        paths = []
+        for gid in ('fc_smoke_exe', *others):
+            (self.games / gid).mkdir()
+            paths.extend(self.metadata(gid) if gid in others else [])
+        self.shortcuts = {'fc_smoke_exe', *others}
+        self.smoke.installed = {'fc_smoke_exe', *others, 'fc_smoke_exe/../portal2'}
+        frame_smoke.cleanup(self.smoke)
+        self.assertFalse((self.games / 'fc_smoke_exe').exists())
+        self.assertTrue(all((self.games / gid).is_dir() for gid in others))
+        self.assertTrue(all(path.exists() for path in paths))
+        self.assertEqual(self.shortcuts, set(others))
+        self.assertNotIn('fc_smoke_exe', self.smoke.installed)
+        self.remove_mock.assert_called_once_with('fc_smoke_exe')
+
+    def test_still_registered_current_or_legacy_shortcut_fails_cleanup(self):
+        for gid in sorted(stop_processes.IDS):
+            with self.subTest(gid=gid):
+                self.sync_outputs = ['', f'Found Devkit Game registered with Steam Client: {gid!r}']
+                self.smoke.installed = {gid}
+                with self.assertRaisesRegex(AssertionError, f'{gid} is still registered with Steam'):
+                    frame_smoke.cleanup(self.smoke)
+                self.assertIn(gid, self.smoke.installed)
+
+    def test_sync_failure_in_either_pass_fails_cleanup(self):
+        for failed_pass in (0, 1):
+            with self.subTest(failed_pass=failed_pass):
+                self.sync_outputs = ['', '']
+                self.sync_outputs[failed_pass] = 'Steam client sync of devkit games failed: offline'
+                self.smoke.installed = {'fc_smoke_exe'}
+                with self.assertRaisesRegex(AssertionError, 'sync of devkit games failed'):
+                    frame_smoke.cleanup(self.smoke)
+                self.assertIn('fc_smoke_exe', self.smoke.installed)
+
+    def test_metadata_remaining_after_delete_fails_cleanup(self):
+        self.metadata('fc_smoke_exe')
+        real_ssh = self.local_ssh
+        with mock.patch.object(frame_smoke, 'ssh', side_effect=lambda command, **kwargs:
+                               '' if command.startswith('rm -f ') else real_ssh(command, **kwargs)):
+            with self.assertRaisesRegex(AssertionError, 'fc_smoke_exe is still on the Frame'):
+                frame_smoke.cleanup(self.smoke)
+
+    def test_missing_utils_cannot_report_success_without_shortcut_verification(self):
+        self.ensure_utils_mock.side_effect = frame_smoke.frame_android.FrameError('copy failed')
+        with self.assertRaisesRegex(AssertionError, "syncing Steam's shortcuts: copy failed"):
+            frame_smoke.cleanup(self.smoke)
+        self.assertEqual(self.events[-1], 'stop')
+
+
+@unittest.skipUnless(os.name == 'posix', 'POSIX wrapper')
+class PortableWrapper(unittest.TestCase):
+    def setUp(self):
+        self.tmp = tempfile.TemporaryDirectory(prefix='smoke wrapper ')
+        self.addCleanup(self.tmp.cleanup)
+        # macOS aliases /var to /private/var; relative commands need the physical cwd.
+        self.folder = Path(self.tmp.name).resolve()
+        self.bin = self.folder / 'bin'
+        self.bin.mkdir()
+        # No zsh or SSH on PATH: --help must exit before any headset access.
+        (self.bin / 'dirname').symlink_to(shutil.which('dirname'))
+        self.env = {**os.environ, 'PATH': str(self.bin), 'CDPATH': str(self.folder)}
+        self.wrapper = SMOKE.parent.parent / 'scripts' / 'frame-smoke.sh'
+
+    def test_help_runs_directly_and_with_posix_sh_from_another_cwd_without_zsh(self):
+        (self.bin / 'python3').symlink_to(sys.executable)
+        for launcher in ([], ['/bin/sh']):
+            with self.subTest(launcher=launcher):
+                result = subprocess.run([*launcher, str(self.wrapper), '--help'], cwd=self.folder,
+                                        env=self.env, capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertIn('--pair', result.stdout)
+                self.assertIn('Headset smoke test', result.stdout)
+
+    def test_relative_invocation_preserves_arguments_and_python_exit_status(self):
+        python = self.bin / 'python3'
+        python.write_text('#!/bin/sh\nprintf "<%s>\\n" "$@"\nexit 7\n')
+        python.chmod(0o755)
+        result = subprocess.run([os.path.relpath(self.wrapper, self.folder), '--pair', 'two words', ''],
+                                cwd=self.folder, env=self.env, capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 7, result.stderr)
+        self.assertEqual(result.stdout.splitlines(),
+                         [f'<{SMOKE / "frame_smoke.py"}>', '<--pair>', '<two words>', '<>'])
