@@ -4,6 +4,7 @@
 Requires an already installed Frame Control VR panel, Decky user service, and
 one Framey-managed plugin. It never installs, restarts, or removes a service.
 """
+import argparse
 import datetime
 import hashlib
 import json
@@ -18,10 +19,16 @@ import time
 ROOT = Path(__file__).resolve().parents[1]
 SSH = ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=5', 'frame']
 LOCK = '/tmp/frame-test.lock'
+VIA = None
+
+def ssh_argv(command):
+    argv = [*SSH, command]
+    return ['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', VIA, shlex.join(argv)] if VIA else argv
+
 
 
 def remote(command, stdin=None, timeout=15):
-    run = subprocess.run([*SSH, command], input=stdin, capture_output=True,
+    run = subprocess.run(ssh_argv(command), input=stdin, capture_output=True,
                          text=True, timeout=timeout)
     if run.returncode:
         raise RuntimeError((run.stderr or run.stdout).strip() or f'SSH exited {run.returncode}')
@@ -92,12 +99,14 @@ def color_count(text):
     return len(set(re.findall(r'#[0-9A-Fa-f]{6,8}', text)))
 
 
-def main():
-    result = {'time':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'proof':'worn-headset check'}
+def main(worn_confirmed=False):
+    result = {'time':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'proof':'operator-confirmed worn check', 'operatorWornConfirmed':worn_confirmed}
     token = 'framey-' + secrets.token_hex(12)
     locked = False
     challenge = False
     try:
+        if not worn_confirmed:
+            raise RuntimeError('A wearer must be present; pass --worn-confirmed only after checking in person. Wake/activity and trusted pointer events alone do not prove wearing or controller hardware.')
         # Do not read even standby status until this task owns the device lock.
         remote('mkdir ' + LOCK + ' && { printf %s ' + shlex.quote(token) +
                ' > ' + LOCK + '/owner || { rm -f ' + LOCK + '/owner; rmdir ' + LOCK + '; exit 1; }; }')
@@ -126,11 +135,11 @@ def main():
             time.sleep(1)
         result['interaction'] = state
         result['after'] = probe()
-        result['worn'] = isinstance(result['after']['activity'], int) and result['after']['activity'] < 3
+        result['activeHeadset'] = isinstance(result['after']['activity'], int) and result['after']['activity'] < 3
         result['overlay'] = json.loads(remote('python3 -', stdin=OVERLAY_PROBE, timeout=15))
         result['panelVisible'] = result['overlay']['visible'] is True
         installed_ids = {p['id'] for p in before['plugins']}
-        result['controllerInput'] = bool(state.get('input', {}).get('at', 0) > state.get('started', 0))
+        result['trustedPointerInput'] = bool(state.get('input', {}).get('at', 0) > state.get('started', 0))
         result['pluginPanelReady'] = bool(state.get('panel', {}).get('at', 0) > state.get('started', 0)
                                           and state['panel'].get('pluginId') in installed_ids)
         if result['panelVisible'] and result['pluginPanelReady']:
@@ -138,7 +147,7 @@ def main():
             local = Path('/tmp')/('framey-worn-' + token + '.png')
             try:
                 with local.open('wb') as out:
-                    copy = subprocess.run([*SSH, 'cat ' + shlex.quote(shot)], stdout=out, stderr=subprocess.PIPE, timeout=20)
+                    copy = subprocess.run(ssh_argv('cat ' + shlex.quote(shot)), stdout=out, stderr=subprocess.PIPE, timeout=20)
                 if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
                 result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
                 pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
@@ -147,7 +156,7 @@ def main():
             finally:
                 local.unlink(missing_ok=True)
                 remote('rm -f ' + shlex.quote(shot))
-        result['passed'] = (result['worn'] and result['panelVisible'] and result['controllerInput'] and
+        result['passed'] = (result['activeHeadset'] and result['panelVisible'] and result['trustedPointerInput'] and
                             result['pluginPanelReady'] and (result.get('screenshotColors') or 0) > 8)
     except Exception as exc:
         result['error'] = str(exc)
@@ -167,4 +176,11 @@ def main():
 
 
 if __name__ == '__main__':
-    sys.exit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--host', default='frame')
+    parser.add_argument('--via', help='Paired SSH hop, e.g. lxso2')
+    parser.add_argument('--worn-confirmed', action='store_true', help='Operator confirms someone is wearing the Frame')
+    args = parser.parse_args()
+    SSH[-1] = args.host
+    VIA = args.via
+    sys.exit(main(args.worn_confirmed))

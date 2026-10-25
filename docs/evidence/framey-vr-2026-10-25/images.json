@@ -1,0 +1,80 @@
+[
+  {
+    "source": "stereo-private.png",
+    "sourceSha256": "25944a3f3ffe0c217ef25cbc3f5e08a104f9d8901075b755c928ec5049a4cb3c",
+    "published": "stereo-left-panel-redacted.png",
+    "publishedSha256": "0de6fbf0f31d0587c8ba91817406acf455b8adb10d343bd56daa605f9a3051c7",
+    "maskPolygon": [
+      [
+        50,
+        435
+      ],
+      [
+        910,
+        365
+      ],
+      [
+        940,
+        920
+      ],
+      [
+        700,
+        910
+      ],
+      [
+        350,
+        945
+      ],
+      [
+        90,
+        1000
+      ]
+    ],
+    "crop": [
+      50,
+      365,
+      941,
+      1001
+    ],
+    "background": "solid black; only inset panel pixels retained"
+  },
+  {
+    "source": "mirror-private.png",
+    "sourceSha256": "44d193943ca3164269feeea38f5cbfb0d58cefb79d6c0e8231eab4a5069985b8",
+    "published": "mirror-panel-redacted.png",
+    "publishedSha256": "86fa296a36171efca6a9aa627ec3589496df73f3c03f8f9428454c411a904a77",
+    "maskPolygon": [
+      [
+        455,
+        445
+      ],
+      [
+        1420,
+        390
+      ],
+      [
+        1470,
+        940
+      ],
+      [
+        1150,
+        910
+      ],
+      [
+        850,
+        940
+      ],
+      [
+        495,
+        1020
+      ]
+    ],
+    "crop": [
+      455,
+      390,
+      1471,
+      1021
+    ],
+    "background": "solid black; only inset panel pixels retained"
+  }
+]

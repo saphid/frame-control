@@ -21,6 +21,7 @@ const parent=vm.createContext({document:{getElementById:el,createElement:()=>({}
 vm.runInContext(parentSource,parent);
 vm.runInContext('deckyState={plugins:[{storeId:14}]};openFrameyPanel(14,"Steam Status")',parent);
 let session=vm.runInContext('frameySession',parent);
+const firstURL=new URL(el('frameyFrame').src,'http://127.0.0.1');
 const onParent=parentListeners.find(x=>x.type==='message').fn;
 
 function iframe(){
@@ -49,6 +50,11 @@ const oldSession=session;
 vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 assert.notEqual(session,oldSession);
+const reopenedURL=new URL(el('frameyFrame').src,'http://127.0.0.1');
+// Fragment-only navigation preserves the old document, host and cache session.
+assert.notEqual(reopenedURL.pathname+reopenedURL.search,firstURL.pathname+firstURL.search);
+assert.equal(reopenedURL.searchParams.get('session'),session);
+assert.equal(reopenedURL.hash.slice(1),session);
 let reopened=iframe();
 assert.equal(reopened.storage.getItem('status-cache'),'{"online":true}');
 assert.equal(reopened.storage.length,1);

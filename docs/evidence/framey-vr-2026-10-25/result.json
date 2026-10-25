@@ -1,0 +1,189 @@
+{
+  "schema": 1,
+  "time": "2026-10-25T23:27:34.130334+00:00",
+  "controllerHardwareVerified": false,
+  "wornVisualComfortVerified": false,
+  "sourceCommit": "cb9ad1b6cb7302008783d5f7fe42fa77a4dd43af",
+  "before": {
+    "battery": [
+      99
+    ],
+    "dashboardVisible": false,
+    "stats": [
+      {
+        "activity_level": 3,
+        "operation": "status",
+        "version": "2.18.2",
+        "version_timestamp": 1791331621
+      }
+    ],
+    "overlays": "---- OVERLAYS ---- \n'system.HeadsetView' -- 'Headset View', 2048x1280 not_visible VROverlayType_Basic \n'system.toast' -- 'Toast', not_visible VROverlayType_Basic \n'system.cursor.ibeam' -- 'system.cursor.ibeam', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000d00000002\n'system.pointer' -- 'system.pointer', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000e00000003\n'system.pointer.secondary' -- 'system.pointer.secondary', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000f00000004\n'system.standalone' -- 'Standalone Overlay Manager', not_visible VROverlayType_Basic \n'valve.steam.desktopgame.0' -- 'Gamescope', not_visible VROverlayType_Dashboard_Main \n     flags=0x29A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x0000001100000006\n'valve.steam.desktopgame.0.thumb' -- 'Gamescope (Thumb)', 256x256 not_visible VROverlayType_Dashboard_Thumbnail \n     flags=0x20200000 +premult  overlayhandle=0x0000001200000007\n'valve.steam.desktopgame.0.layer1' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001300000008\n'valve.steam.desktopgame.0.layer2' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001400000009\n'valve.steam.desktopgame.0.layer3' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000150000000a\n'valve.steam.desktopgame.0.layer4' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000160000000b\n'valve.steam.desktopgame.0.layer5' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000170000000c\n'valve.steam.desktopgame.0.layer6' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000180000000d\n'valve.steam.desktopgame.0.layer7' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000190000000e\n'valve.steam.desktopgame.0.layer8' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001a0000000f\n'gamescope.gamescope-0.cursor.0' -- 'Mouse Cursor', not_visible VROverlayType_Basic \n     flags=0x60000000   overlayhandle=0x0000001b00000010\n'system.systemui' -- 'systemui', 1860x2048 not_visible VROverlayType_Basic \n     flags=0x08230008 -dash, +interactive, +smoothscroll, +premult, +clickstab  overlayhandle=0x0000001c00000011\n'system.vrwebhelper.controllerbinding' -- 'controllerbinding', 2400x1350 not_visible VROverlayType_Dashboard_Main \n     flags=0x09228108 -dash, +scrollwheel, +dash, +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x0000003800000012\n'system.vrwebhelper.controllerbinding.thumb' -- 'controllerbinding (Thumb)', 16x16 not_visible VROverlayType_Dashboard_Thumbnail \n'valve.steam.gamepadui.main' -- 'SteamVR', 0x0 not_visible VROverlayType_Dashboard_Main \n     flags=0x69A28000 +dash, +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001a400000014\n'valve.steam.gamepadui.main.thumb' -- 'Webhelper (Thumb)', 300x300 not_visible VROverlayType_Dashboard_Thumbnail \n     flags=0x20200000 +premult  overlayhandle=0x000001a500000015\n'valve.steam.browserview_MainBrowser_2' -- 'data:text/html,<body><%2Fbody>', 0x0 not_visible VROverlayType_Subview \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001a600000016\n'valve.steam.gamepadui.keyboard' -- 'SteamVR - Keyboard', 0x0 not_visible VROverlayType_Basic \n     flags=0x31A30000 +interactive, +smoothscroll, +premult, +keyboard, +2cursor  overlayhandle=0x000001a700000017\n'valve.steam.gamepadui.bar' -- 'SteamVR - valve.steam.gamepadui.bar (85370000)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001a800000018\n'valve.steam.gamepadui.barpopup.85370001' -- 'SteamVR - valve.steam.gamepadui.barpopup.85370001 (85370001)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001a900000019\n'valve.steam.gamepadui.tooltip.85370002' -- 'SteamVR - valve.steam.gamepadui.tooltip.85370002 (85370002)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001aa0000001a\n'valve.steam.gamepadui.volumelevel' -- 'SteamVR - valve.steam.gamepadui.volumelevel (85370003)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001ab0000001b\n'valve.steam.gamepadui.floatingfooter' -- 'SteamVR - valve.steam.gamepadui.floatingfooter (85370004)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001ac0000001c\n'XRService-CameraOverlay' -- 'XRService-CameraOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x000000790000001d\n'XRService-LiveCalibrationSummaryOverlay' -- 'XRService-LiveCalibrationSummaryOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007a0000001e\n'XRService-PerformanceSummaryOverlay' -- 'XRService-PerformanceSummaryOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007b0000001f\n'XRService - LHTrackedOverlay' -- 'XRService - LHTrackedOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007c00000020\n'XRService-InternalSLAMState' -- 'XRService-InternalSLAMState', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007d00000021\n'valve.steam.gamepadui.frame.menu.85370005' -- 'SteamVR - valve.steam.gamepadui.frame.menu.85370005 (85370005)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001ad00000022\n'valve.steam.gamepadui.frame.menu.85370006' -- 'SteamVR - valve.steam.gamepadui.frame.menu.85370006 (85370006)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001c400000023\n'valve.steam.gamepadui.notifications' -- 'SteamVR - Notifications', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001c500000024",
+    "pause": "power.pauseCompositorOnStandby=false",
+    "timeout": "power.turnOffScreensTimeout=5.000000"
+  },
+  "powerRecovery": {
+    "timer": "framey-vr-5e068da08ef73637-restore.timer",
+    "script": "/tmp/framey-vr-5e068da08ef73637-restore.py",
+    "originalPause": "false",
+    "originalTimeout": "5.000000"
+  },
+  "deckyInstall": {
+    "message": "Decky Loader v3.3.0 is running as a user service. The VR menu is experimental."
+  },
+  "panelInstall": {
+    "message": "Installed Frame Control on the headset. Asked SteamVR to show Frame Control. Select its panel in the dashboard if it is hidden.",
+    "version": "4968ad070054d005",
+    "overlay": "valve.steam.desktopgame.2001947813"
+  },
+  "overlay": {
+    "state": {
+      "interface": "IVROverlay_027",
+      "visible": true,
+      "dashboardVisible": false,
+      "activeDashboard": false,
+      "texture": {
+        "error": 0,
+        "width": 0,
+        "height": 0
+      },
+      "transform": {
+        "error": 18,
+        "typeError": 0,
+        "type": 5,
+        "origin": 0,
+        "matrix": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "input": {
+        "error": 0,
+        "method": 1,
+        "scaleError": 0,
+        "scale": [
+          1920.0,
+          1080.0
+        ]
+      }
+    },
+    "imageRead": {
+      "error": 24,
+      "width": 0,
+      "height": 0
+    }
+  },
+  "beforeStereoSha256": "5d0635d02e44d7cf2d5c249e72ea01c5cd161996427c1012cfd1c42fa5aa5751",
+  "input": {
+    "clickTransport": "IVROverlayView_003.PostOverlayEvent",
+    "textTransport": "CDP Input.insertText after OpenVR focus",
+    "controllerHardwareVerified": false,
+    "initialText": "PanelSettings\nQuick actions\nRead saved setting\nFramey settings sample\nExample setting\nStored by the Decky Python backend\nReload saved setting\nAbout this setting\n\nSaved setting: off",
+    "savedText": "Framey sample\n\nSetting saved\n\nDismiss\nPanelSettings\nQuick actions\nRead saved setting\nFramey settings sample\nExample setting\nStored by the Decky Python backend\nReload saved setting\nAbout this setting\n\nSaved setting: on",
+    "pointerEvents": [
+      {
+        "trusted": true,
+        "x": 594.6666870117188,
+        "y": 280.0625
+      }
+    ],
+    "trustedOverlayPointer": true,
+    "diskSetting": {
+      "enabled": true
+    },
+    "reopenedText": "PanelSettings\nQuick actions\nRead saved setting\nFramey settings sample\nExample setting\nStored by the Decky Python backend\nReload saved setting\nAbout this setting\n\nSaved setting: on",
+    "reopenedChecked": true,
+    "quickActionText": "PanelSettings\nQuick actions\nRead saved setting\n\nSaved setting is on\n\nFramey settings sample\nExample setting\nStored by the Decky Python backend\nReload saved setting\nAbout this setting\n\nSaved setting: on",
+    "sliderValue": "50",
+    "textValue": "framey-ci",
+    "scrollBefore": 0,
+    "scrollAfter": 0,
+    "nativeScrollMoved": false,
+    "finalOverlay": {
+      "interface": "IVROverlay_027",
+      "visible": true,
+      "dashboardVisible": false,
+      "activeDashboard": false,
+      "texture": {
+        "error": 0,
+        "width": 0,
+        "height": 0
+      },
+      "transform": {
+        "error": 18,
+        "typeError": 0,
+        "type": 5,
+        "origin": 0,
+        "matrix": [
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ],
+          [
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        ]
+      },
+      "input": {
+        "error": 0,
+        "method": 1,
+        "scaleError": 0,
+        "scale": [
+          1920.0,
+          1080.0
+        ]
+      }
+    },
+    "passed": true
+  },
+  "stereoSha256": "25944a3f3ffe0c217ef25cbc3f5e08a104f9d8901075b755c928ec5049a4cb3c",
+  "compositorChanged": true,
+  "mirrorSha256": "44d193943ca3164269feeea38f5cbfb0d58cefb79d6c0e8231eab4a5069985b8",
+  "passed": true,
+  "after": {
+    "battery": [
+      99
+    ],
+    "dashboardVisible": false,
+    "stats": [
+      {
+        "activity_level": 0,
+        "operation": "status",
+        "version": "2.18.2",
+        "version_timestamp": 1791331621
+      }
+    ],
+    "overlays": "---- OVERLAYS ---- \n'system.HeadsetView' -- 'Headset View', 2048x1280 not_visible VROverlayType_Basic \n'system.toast' -- 'Toast', not_visible VROverlayType_Basic \n'system.cursor.ibeam' -- 'system.cursor.ibeam', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000d00000002\n'system.pointer' -- 'system.pointer', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000e00000003\n'system.pointer.secondary' -- 'system.pointer.secondary', 64x64 not_visible VROverlayType_Basic \n     flags=0x00200000 +premult  overlayhandle=0x0000000f00000004\n'system.standalone' -- 'Standalone Overlay Manager', not_visible VROverlayType_Basic \n'valve.steam.desktopgame.0' -- 'Gamescope', not_visible VROverlayType_Dashboard_Main \n     flags=0x29A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x0000001100000006\n'valve.steam.desktopgame.0.thumb' -- 'Gamescope (Thumb)', 256x256 not_visible VROverlayType_Dashboard_Thumbnail \n     flags=0x20200000 +premult  overlayhandle=0x0000001200000007\n'valve.steam.desktopgame.0.layer1' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001300000008\n'valve.steam.desktopgame.0.layer2' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001400000009\n'valve.steam.desktopgame.0.layer3' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000150000000a\n'valve.steam.desktopgame.0.layer4' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000160000000b\n'valve.steam.desktopgame.0.layer5' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000170000000c\n'valve.steam.desktopgame.0.layer6' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000180000000d\n'valve.steam.desktopgame.0.layer7' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x000000190000000e\n'valve.steam.desktopgame.0.layer8' -- 'Gamescope Layer', not_visible VROverlayType_Subview \n     flags=0x28200000 +premult, +clickstab  overlayhandle=0x0000001a0000000f\n'gamescope.gamescope-0.cursor.0' -- 'Mouse Cursor', not_visible VROverlayType_Basic \n     flags=0x60000000   overlayhandle=0x0000001b00000010\n'system.systemui' -- 'systemui', 1860x2048 not_visible VROverlayType_Basic \n     flags=0x08230008 -dash, +interactive, +smoothscroll, +premult, +clickstab  overlayhandle=0x0000001c00000011\n'system.vrwebhelper.controllerbinding' -- 'controllerbinding', 2400x1350 not_visible VROverlayType_Dashboard_Main \n     flags=0x09228108 -dash, +scrollwheel, +dash, +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x0000003800000012\n'system.vrwebhelper.controllerbinding.thumb' -- 'controllerbinding (Thumb)', 16x16 not_visible VROverlayType_Dashboard_Thumbnail \n'valve.steam.gamepadui.main' -- 'SteamVR', 0x0 not_visible VROverlayType_Dashboard_Main \n     flags=0x69A28000 +dash, +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001c600000014\n'valve.steam.gamepadui.main.thumb' -- 'Webhelper (Thumb)', 300x300 not_visible VROverlayType_Dashboard_Thumbnail \n     flags=0x20200000 +premult  overlayhandle=0x000001c700000015\n'valve.steam.browserview_MainBrowser_2' -- 'data:text/html,<body><%2Fbody>', 0x0 not_visible VROverlayType_Subview \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001c800000016\n'valve.steam.gamepadui.keyboard' -- 'SteamVR - Keyboard', 0x0 not_visible VROverlayType_Basic \n     flags=0x31A30000 +interactive, +smoothscroll, +premult, +keyboard, +2cursor  overlayhandle=0x000001c900000017\n'valve.steam.gamepadui.bar' -- 'SteamVR - valve.steam.gamepadui.bar (85430000)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001ca00000018\n'valve.steam.gamepadui.barpopup.85430001' -- 'SteamVR - valve.steam.gamepadui.barpopup.85430001 (85430001)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001cb00000019\n'valve.steam.gamepadui.tooltip.85430002' -- 'SteamVR - valve.steam.gamepadui.tooltip.85430002 (85430002)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001cc0000001a\n'valve.steam.gamepadui.volumelevel' -- 'SteamVR - valve.steam.gamepadui.volumelevel (85430003)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001cd0000001b\n'valve.steam.gamepadui.floatingfooter' -- 'SteamVR - valve.steam.gamepadui.floatingfooter (85430004)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001ce0000001c\n'XRService-CameraOverlay' -- 'XRService-CameraOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x000000790000001d\n'XRService-LiveCalibrationSummaryOverlay' -- 'XRService-LiveCalibrationSummaryOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007a0000001e\n'XRService-PerformanceSummaryOverlay' -- 'XRService-PerformanceSummaryOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007b0000001f\n'XRService - LHTrackedOverlay' -- 'XRService - LHTrackedOverlay', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007c00000020\n'XRService-InternalSLAMState' -- 'XRService-InternalSLAMState', not_visible VROverlayType_Basic \n     flags=0x20000000   overlayhandle=0x0000007d00000021\n'valve.steam.gamepadui.frame.menu.85430005' -- 'SteamVR - valve.steam.gamepadui.frame.menu.85430005 (85430005)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001cf00000022\n'valve.steam.gamepadui.frame.menu.85430006' -- 'SteamVR - valve.steam.gamepadui.frame.menu.85430006 (85430006)', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001e600000023\n'valve.steam.gamepadui.notifications' -- 'SteamVR - Notifications', 0x0 not_visible VROverlayType_Basic \n     flags=0x69A20000 +smoothscroll, +premult, +keyboard, +clickstab  overlayhandle=0x000001e700000024",
+    "pause": "power.pauseCompositorOnStandby=false",
+    "timeout": "power.turnOffScreensTimeout=5.000000"
+  },
+  "powerRecoveryRemoved": true,
+  "lockReleased": true,
+  "cleanupErrors": []
+}

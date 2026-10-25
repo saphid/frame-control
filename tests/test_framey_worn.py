@@ -20,8 +20,14 @@ class WornGate(unittest.TestCase):
         with patch.object(worn, 'probe', return_value=state) as probe, \
                 patch.object(worn, 'remote', side_effect=remote_side_effect) as remote, \
                 contextlib.redirect_stdout(out):
-            result = worn.main()
+            result = worn.main(worn_confirmed=True)
         return result, out.getvalue(), remote, probe
+
+    def test_no_wearer_confirmation_means_no_sensor_or_input_claim(self):
+        with patch.object(worn,'remote') as remote, contextlib.redirect_stdout(io.StringIO()) as out:
+            self.assertEqual(worn.main(),1)
+        remote.assert_not_called()
+        self.assertIn('trusted pointer events alone do not prove',out.getvalue())
 
     def test_standby_is_read_only_under_owned_lock_and_releases_it(self):
         state = {'battery':[{'percent':99}], 'activity':3, 'panelService':True,
