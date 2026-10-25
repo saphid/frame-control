@@ -571,8 +571,10 @@ def decky_plugin(body):
         raise Failure('Choose an official store plugin and action', 400)
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
+    reviewed_hash = body.get('sha256')
     return start_job('Decky plugin ' + action,
-                     lambda report: frame_decky_store.change(ssh, action, plugin_id, report), progress=True)
+                     lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
+                                                            reviewed_hash=reviewed_hash), progress=True)
 
 
 def framey_method_action(body):

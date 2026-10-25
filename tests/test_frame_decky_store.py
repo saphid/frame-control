@@ -183,6 +183,18 @@ class StoreTransaction(unittest.TestCase):
 
 
 class StoreHost(unittest.TestCase):
+    def test_reviewed_archive_changed_before_install_does_not_download(self):
+        state = {'managed': True, 'running': True, 'plugins': []}
+        catalog = [{'id': 42, 'name': 'Example', 'root': False,
+                    'sha256': 'b' * 64, 'version': '2.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen',
+                          side_effect=AssertionError('No download expected')):
+            with self.assertRaisesRegex(ValueError, 'version changed'):
+                frame_decky_store.change(lambda *args, **kwargs: self.fail('No headset write expected'),
+                                         'install', 42, reviewed_hash='a' * 64)
+
     def test_stopped_managed_service_allows_removing_owned_plugin(self):
         state = {'managed': True, 'running': False, 'plugins':
                  [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}

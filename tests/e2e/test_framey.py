@@ -142,6 +142,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('POST', '/api/framey/method',
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
+        stale = finished(ok('POST', '/api/decky/plugin',
+                            {'action':'update','id':999,'sha256':HASHES[0],
+                             'acknowledged':True}))
+        self.assertIn('version changed', stale.get('error', ''))
+        self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
 
     def test_pinned_official_api_v1_and_v2_plugins_install_and_remove(self):
         self.backend()
