@@ -1,5 +1,8 @@
 # Decky Loader on Steam Frame
 
+For the modding-path survey, licence review and update limits, see
+[plugin and modding research](plugins-research.md).
+
 **Status, 2026-10-25:** Decky Loader 3.3.0's ARM64 backend starts on Frame OS
 0.5.6 and injects into Steam's shared CEF context. Its Decky tab registers in
 JavaScript. A usable plugin menu in the Frame's VR shell has **not** been
