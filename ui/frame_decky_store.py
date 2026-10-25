@@ -151,7 +151,8 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             (unpacked/marker).write_text(json.dumps({'storeId':int(plugin_id),'sha256':digest,'version':version})+'\n')
-    if running: service('stop','frame-control-decky.service')
+    # Stop even a failed unit before removal to cancel any pending auto-restart.
+    if running or action=='remove': service('stop','frame-control-decky.service')
     try:
         if action!='install': target.rename(backup)
         if action!='remove': (stage/folder).rename(target)
@@ -176,9 +177,13 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None):
         raise ValueError('Choose a valid store plugin action')
     report('Checking installed plugins', 5)
     state = frame_decky.status(ssh)
-    if not state['managed'] or not state['running']:
-        raise ValueError('Start Frame Control managed Decky before changing plugins')
+    if not state['managed']:
+        raise ValueError('Install Frame Control managed Decky before changing plugins')
+    if action != 'remove' and not state['running']:
+        raise ValueError('Start Frame Control managed Decky before installing or updating plugins')
     installed = [p for p in state['plugins'] if p.get('storeId') == plugin_id]
+    if action == 'install' and installed:
+        raise ValueError('This store plugin is already installed; use Update or Remove')
     if action == 'remove':
         if len(installed) != 1:
             raise ValueError('Only an installed Frame Control store plugin can be removed')

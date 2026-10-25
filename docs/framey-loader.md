@@ -65,7 +65,9 @@ Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
 The root label is a compatibility warning; other APIs are checked only when a
 plugin is opened. The store still needs the managed Decky user service running
-before its Install or Update buttons are enabled.
+before its Install or Update buttons are enabled. If a plugin prevents Decky
+from starting, Remove remains available for Frame Control-owned plugins while
+the managed service is stopped; it does not restart the service.
 
 Install, Update, and Remove show the current job stage in the headset panel.
 The store verifies each downloaded archive and the headset applies it with a
@@ -77,6 +79,9 @@ job result. The panel clears that job ID and asks you to refresh the installed
 list before making another change.
 
 ## For plugin authors
+
+Start with the [Framey settings sample](../examples/framey-settings/README.md)
+for a buildable Decky API v2 panel and Python settings backend.
 
 Publish a normal [Decky store](https://plugins.deckbrew.xyz/) API v2 release
 with `plugin.json`, a single `dist/index.js` ESM frontend entry point, and a
