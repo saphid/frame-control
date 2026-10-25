@@ -165,6 +165,8 @@ It preserves plugin files and settings so unrelated user data is not deleted.
 Open **Official plugin store** to review a plugin, then confirm each install,
 update, or remove. Root and x86-only plugins are blocked. The manager only
 removes plugin folders that it installed; it leaves other Decky folders alone.
+The desktop app and headset panel share one lock for managed Decky changes.
+If another change is in progress, wait for it to finish and try again.
 Restart Steam or the headset to clear the frontend already injected into its
 current web helper process. No action wipes the headset.
 

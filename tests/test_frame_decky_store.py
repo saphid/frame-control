@@ -15,6 +15,7 @@ import zipfile
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / 'ui'))
 import frame_decky_store
+import frame_decky
 
 
 def archive(flags=(), extra=None):
@@ -121,6 +122,28 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(self.folder.exists())
         self.assertFalse((Path(self.tmp.name) / 'service-calls').exists())
+
+    def test_shared_lock_rejects_plugin_and_loader_changes(self):
+        import fcntl
+
+        lock_path = Path(self.tmp.name) / '.local/share/frame-control/decky-transaction.lock'
+        lock_path.parent.mkdir(parents=True, exist_ok=True)
+        data, _ = archive()
+        with lock_path.open('w+b') as held:
+            fcntl.flock(held, fcntl.LOCK_EX | fcntl.LOCK_NB)
+            plugin = self.apply('install', data)
+            loader = subprocess.run([sys.executable, '-', 'remove', 'none', 'none', 'none'],
+                                    input=frame_decky.APPLY, text=True, capture_output=True,
+                                    env=self.env, timeout=15)
+            self.assertNotEqual(plugin.returncode, 0)
+            self.assertNotEqual(loader.returncode, 0)
+            self.assertIn('Another Decky change is in progress', plugin.stderr)
+            self.assertIn('Another Decky change is in progress', loader.stderr)
+            self.assertFalse(self.folder.exists())
+
+        installed = self.apply('install', data)
+        self.assertEqual(installed.returncode, 0, installed.stderr)
+        self.assertEqual(self.apply('remove').returncode, 0)
 
 
 class StoreHost(unittest.TestCase):

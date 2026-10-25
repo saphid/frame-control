@@ -104,7 +104,7 @@ def archive_info(data, expected_hash, expected_name):
 
 
 APPLY = r'''
-import hashlib,json,pathlib,shutil,subprocess,sys,zipfile
+import fcntl,hashlib,json,os,pathlib,shutil,subprocess,sys,zipfile
 action,token,plugin_id,digest,folder,version = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
@@ -113,6 +113,7 @@ archive=pathlib.Path('/tmp/frame-control-decky-plugin-'+token)
 stage=base/('.frame-control-stage-'+token)
 backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
+transaction_lock=None
 def owned():
     if target.is_symlink() or not target.is_dir(): return False
     try: return json.loads((target/marker).read_text()).get('storeId') == int(plugin_id)
@@ -120,12 +121,19 @@ def owned():
 def service(*args):
     p=subprocess.run(['systemctl','--user',*args],capture_output=True,text=True,timeout=25)
     if p.returncode: raise RuntimeError((p.stderr or p.stdout).strip()[-400:] or 'Decky service failed')
-if not unit.is_file(): raise RuntimeError('Install Frame Control managed Decky first')
-if action not in ('install','update','remove'): raise RuntimeError('Invalid plugin action')
-if action=='install' and (target.exists() or target.is_symlink()): raise RuntimeError('Plugin folder already exists')
-if action in ('update','remove') and not owned(): raise RuntimeError('Only a Frame Control store plugin can be changed')
-running=subprocess.run(['systemctl','--user','is-active','--quiet','frame-control-decky.service']).returncode==0
 try:
+    # A desktop request and a headset-panel request must not change the same
+    # Decky user service at once. Keep this lock until rollback/cleanup ends.
+    base.parent.parent.mkdir(parents=True,exist_ok=True)
+    lock_path=base.parent.parent/'decky-transaction.lock'
+    transaction_lock=os.fdopen(os.open(lock_path,os.O_CREAT|os.O_RDWR|os.O_NOFOLLOW,0o600),'r+b')
+    try: fcntl.flock(transaction_lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
+    except BlockingIOError: raise RuntimeError('Another Decky change is in progress; try again after it finishes')
+    if not unit.is_file(): raise RuntimeError('Install Frame Control managed Decky first')
+    if action not in ('install','update','remove'): raise RuntimeError('Invalid plugin action')
+    if action=='install' and (target.exists() or target.is_symlink()): raise RuntimeError('Plugin folder already exists')
+    if action in ('update','remove') and not owned(): raise RuntimeError('Only a Frame Control store plugin can be changed')
+    running=subprocess.run(['systemctl','--user','is-active','--quiet','frame-control-decky.service']).returncode==0
     if action!='remove':
         data=archive.read_bytes()
         if not 1024<len(data)<=50*1024*1024 or hashlib.sha256(data).hexdigest()!=digest:
@@ -159,6 +167,7 @@ try:
 finally:
     archive.unlink(missing_ok=True)
     if stage.exists(): shutil.rmtree(stage)
+    if transaction_lock is not None: transaction_lock.close()
 '''
 
 

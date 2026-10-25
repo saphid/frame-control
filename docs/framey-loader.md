@@ -54,6 +54,12 @@ has no supported injection target in the Frame Control panel.
 The [browser and fake Frame evidence](evidence/framey-browser-2026-10-25.md)
 records exactly what was exercised.
 
+The fake Frame integration test now writes a Decky setting through Framey's
+scoped backend endpoint, reads it in a new CEF request, updates the plugin,
+then checks it again. It also confirms removal blocks method calls and a
+reinstall can read the retained setting. This tests the bridge and fixture;
+real Decky settings persistence on a worn Frame is still unverified.
+
 The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
