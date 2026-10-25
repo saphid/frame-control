@@ -37,6 +37,11 @@ through Decky's *existing* websocket connection. Framey never opens a second
 Decky websocket, because Decky allows only one frontend connection. The iframe
 does not receive Frame Control's UI key. React and ReactDOM are bundled for
 offline use under their MIT licenses in `ui/vendor`.
+Framey gives each plugin panel a bounded, in-memory `localStorage` substitute
+because browser storage is denied to an opaque-origin iframe. It supports the
+usual item methods, up to 256 entries and 512 KiB of keys and values. The data
+is cleared when the panel reloads or closes. Use the plugin backend for settings
+that must survive a new panel session.
 
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
@@ -58,8 +63,10 @@ records exactly what was exercised.
 The pinned official Steam Status 1.2.3 frontend also
 [rendered in local Chromium](evidence/framey-steam-status-browser-2026-10-25.md)
 with a stubbed settings reply. Its public status request worked, but its cache
-logged `localStorage` errors in Framey's opaque iframe. No real Decky backend
-or worn headset test was part of that check.
+logged `localStorage` errors in Framey's v0.4.34 opaque iframe. A later
+[local browser check](evidence/framey-session-cache-2026-10-25.md) confirmed
+that the panel-lifetime substitute avoids those errors while preserving the
+opaque origin. Neither check used a real Decky backend or a worn headset.
 Fake Frame CI also installs and removes pinned official ProtonDB Badges 1.3.4
 and Steam Status 1.2.3 archives, checks their API v2 manifests and frontend
 bytes, and verifies they can be packed as Framey panels. It does not execute
