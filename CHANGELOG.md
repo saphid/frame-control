@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- Add recovery steps to the Windows Wireless Adapter doctor for streams that
+  drop as they start and dongles that will not reconnect. Compare exact PnP IDs
+  and test one connection condition at a time. In-app disable/re-enable remains
+  deferred until an active Steam adapter instance can be identified safely.
+  [Guide and limits](docs/windows-wireless-doctor.md).
+
 - Add an explicit host window-switch button to whole-display panels: Alt-Tab
   on Windows and Command-Tab on macOS. Single-window panels keep their own
   source, so the button is hidden there.

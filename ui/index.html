@@ -1452,6 +1452,14 @@
     <p>A Razer or other 2.4 GHz audio dongle can share spectrum with Wi-Fi. This inventory cannot measure interference, detect the audio dongle's channel or prove what caused a dropout or PC shutdown.</p>
     <p>Try wired headphones briefly and compare. Space USB radio dongles apart with an extension lead; if your PC uses 2.4 GHz Wi-Fi, compare Ethernet or an existing 5/6 GHz network. Change one thing at a time and keep notes. No network or security settings are changed here.</p>
   </div>
+  <div class="card" style="margin-top:16px"><h3>If streaming drops as it starts</h3>
+    <p>Read PC adapters before starting, then refresh immediately after a drop. Compare exact PnP instance IDs, presence and problem codes; a new numbered name alone does not identify a fault. Note whether the PC's own Wi-Fi also drops.</p>
+    <p>Retry once with wired PC networking or wired audio if available, then with the radio dongles spaced apart. Change one condition at a time. The PC Wi-Fi channel shown above is not the Steam dongle channel, and this check cannot prove RF interference.</p>
+  </div>
+  <div class="card" style="margin-top:16px"><h3>If the adapter will not reconnect</h3>
+    <p>Stop the failed stream, close Steam's streaming session, and check that the adapter still appears in the refreshed PC snapshot. If it is absent, reconnect the USB dongle once at the PC and read again; this will interrupt any connection using it.</p>
+    <p>If the same exact PnP instance shows problem code 22 (disabled), use Windows Device Manager to review that instance and its enable action. Do not enable or disable a different numbered instance by guesswork. If it stays missing or reports another problem code, keep the before/after IDs and error for Steam Support. Frame Control does not change the driver, radio or network settings.</p>
+  </div>
 </section>
 
 <section class="panel" id="powerReport">
