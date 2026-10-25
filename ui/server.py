@@ -637,6 +637,7 @@ def _headset_view():
 SHOT_ROOT = ".local/share/Steam/userdata"
 SHOT_ID = re.compile(r"(\d{1,12})/(\d{1,20})/(\d{14}_\d{1,4}\.(?:jpg|png))")
 SHOTS_DIR = Path.home() / "Pictures" / "SteamFrame"
+_shots_copy_lock = threading.Lock()
 LIST_SHOTS = f"""cd ~/{SHOT_ROOT} 2>/dev/null || exit 0
 find . -mindepth 6 -maxdepth 6 -path './*/760/remote/*/screenshots/*' -type f \\
   \\( -name '*.jpg' -o -name '*.png' \\) -printf '%P\\t%s\\t%T@\\n'"""
@@ -649,8 +650,19 @@ def shot_path(shot_id, thumb=False):
     return f"{SHOT_ROOT}/{m[1]}/760/remote/{m[2]}/screenshots/{'thumbnails/' if thumb else ''}{m[3]}"
 
 
+def shot_local_path(shot_id, device_id=None):
+    """Keep equal Steam filenames from different headsets/accounts/games separate."""
+    m = SHOT_ID.fullmatch(shot_id) if isinstance(shot_id, str) else None
+    if not m:
+        raise Failure("bad screenshot id", 400)
+    identity = device_id if device_id is not None else agent_target()["id"]
+    headset = hashlib.sha256(identity.encode("utf-8")).hexdigest()[:12]
+    return SHOTS_DIR / f"headset-{headset}" / m[1] / m[2] / m[3]
+
+
 def list_shots():
     shots = []
+    device_id = agent_target()["id"]
     for line in ssh(LIST_SHOTS, timeout=20).splitlines():
         rel, _, rest = line.partition("\t")
         parts = rel.split("/")  # account/760/remote/appid/screenshots/file
@@ -662,7 +674,7 @@ def list_shots():
             when = float(mtime)
         except ValueError:
             continue
-        local = SHOTS_DIR / parts[-1]
+        local = shot_local_path(shot_id, device_id)
         shots.append({"id": shot_id, "appid": parts[3], "file": parts[-1], "size": int(size), "time": when,
                       "saved": local.exists() and local.stat().st_size == int(size)})
     shots.sort(key=lambda s: s["time"], reverse=True)
@@ -684,31 +696,51 @@ def shot_image(query):
 
 
 def save_shots(body):
-    """Copy screenshots to ~/Pictures/SteamFrame, skipping ones already there."""
+    """Copy screenshots to per-headset/account/game folders without name collisions."""
     ids = body.get("ids")
     if not isinstance(ids, list) or not 0 < len(ids) <= 1000:
         raise Failure("ids must be a list of 1-1000 screenshot ids", 400)
-    paths = [shot_path(i) for i in ids]
-    todo = [p for p in paths if not (SHOTS_DIR / p.rsplit("/", 1)[-1]).exists()]
-    if todo:
-        SHOTS_DIR.mkdir(parents=True, exist_ok=True)
-        ensure_master()
-        # Copy into a hidden folder and move complete files in, so a cut-off
-        # copy never looks saved. -p keeps the time the shot was taken.
-        incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
-        try:
+    device_id = agent_target()["id"]
+    items = [(shot_path(i), shot_local_path(i, device_id)) for i in ids]
+    n = 0
+    with _shots_copy_lock:
+        todo = [(remote, local) for remote, local in items if not local.exists()]
+        if todo:
+            SHOTS_DIR.mkdir(parents=True, exist_ok=True)
+            ensure_master()
+        # scp flattens source paths into one destination directory. Split equal
+        # basenames into separate transfers before assigning each file its ID path.
+        while todo:
+            names, group, rest = set(), [], []
+            for item in todo:
+                if item[1].name in names:
+                    rest.append(item)
+                else:
+                    names.add(item[1].name)
+                    group.append(item)
+            todo = rest
+            # Stage under the destination filesystem, then move complete files in.
+            # -p keeps Steam's screenshot timestamp.
+            incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
             try:
-                r = frame_host.run_ssh(["scp", "-p", *SSH[1:], *(f"{FRAME}:{p}" for p in todo), str(incoming)],
-                                       capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
-            except subprocess.TimeoutExpired:
-                raise Failure("Copying screenshots timed out")
-            if r.returncode != 0:
-                raise Failure(strip_ansi(r.stderr).strip() or f"scp exited {r.returncode}")
-            for f in incoming.iterdir():
-                os.replace(f, SHOTS_DIR / f.name)
-        finally:
-            shutil.rmtree(incoming, ignore_errors=True)
-    n, skipped = len(todo), len(ids) - len(todo)
+                try:
+                    r = frame_host.run_ssh(["scp", "-p", *SSH[1:],
+                                            *(f"{FRAME}:{remote}" for remote, _ in group), str(incoming)],
+                                           capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
+                except subprocess.TimeoutExpired:
+                    raise Failure("Copying screenshots timed out")
+                if r.returncode != 0:
+                    raise Failure(strip_ansi(r.stderr).strip() or f"scp exited {r.returncode}")
+                if any(not (incoming / local.name).is_file() for _, local in group):
+                    raise Failure("Screenshot copy did not contain every requested file")
+                for _, local in group:
+                    local.parent.mkdir(parents=True, exist_ok=True)
+                    if not local.exists():
+                        os.replace(incoming / local.name, local)
+                        n += 1
+            finally:
+                shutil.rmtree(incoming, ignore_errors=True)
+    skipped = len(ids) - n
     msg = f"Saved {n} screenshot{'s' * (n != 1)} to ~/Pictures/SteamFrame"
     return {"message": msg + (f" ({skipped} already there)" if skipped else ""), "saved": n}
 
@@ -1938,7 +1970,7 @@ def open_thing(body):
             frame_host.open_path(frame_clips.VIDEOS_DIR)
             return {"message": f"Opened {frame_clips.VIDEOS_DIR} in {frame_host.FILE_MANAGER}"}
         if what == "shot":
-            saved = SHOTS_DIR / shot_path(body.get("id")).rsplit("/", 1)[-1]
+            saved = shot_local_path(body.get("id"))
             if not saved.exists():
                 raise Failure("That screenshot isn't saved on this computer yet", 404)
             frame_host.reveal_path(saved)

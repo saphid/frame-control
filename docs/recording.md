@@ -107,6 +107,18 @@ about once a minute and copies what's new with the same code as **Save** and
 **Export**: screenshots to `~/Pictures/SteamFrame`, clips to
 `~/Videos/SteamFrame`.
 
+Each newly saved screenshot lives under
+`~/Pictures/SteamFrame/headset-<id>/<Steam account>/<game ID>/<filename>`.
+The headset folder uses a short hash of Frame Control's device identity.
+Steam can use the same screenshot filename for two games or accounts; these
+folders keep both originals. Existing screenshots in the old flat
+`~/Pictures/SteamFrame/<filename>` layout stay where they are. They cannot be
+matched reliably to one headset and game, so **Copy everything now** can create
+a new, correctly identified copy. It never overwrites the old file.
+One real Frame screenshot was copied through this path on 25 October 2026;
+see the [test record](evidence/screenshot-copy-2026-10-25.md). The collision
+case was tested with separate fake sources, not two real same-name screenshots.
+
 - **Only what's new.** It copies what you take after turning it on, so the
   shots and clips already on the headset don't all arrive at once. **Copy
   everything now** copies everything that isn't on this computer yet, once.
