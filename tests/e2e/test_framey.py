@@ -10,7 +10,9 @@ import threading
 import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
-from framey_official import PLUGINS as OFFICIAL_PLUGINS, archive as official_archive
+from framey_official import BACKEND_ONLY, PLUGINS as PANEL_PLUGINS, archive as official_archive
+
+OFFICIAL_PLUGINS = PANEL_PLUGINS + BACKEND_ONLY
 
 require()  # Skip the module outside the disposable fake Frame, like its peers.
 
@@ -148,7 +150,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertIn('version changed', stale.get('error', ''))
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
 
-    def test_pinned_official_api_v1_and_v2_plugins_install_and_remove(self):
+    def test_pinned_official_plugins_install_and_remove(self):
         self.backend()
         catalog = {plugin['id']:plugin for plugin in ok('GET', '/api/decky/store')['plugins']}
         for plugin in OFFICIAL_PLUGINS:
@@ -165,7 +167,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
-                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['api_version'], plugin['api_version'])
+                self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version'), plugin['api_version'])
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)

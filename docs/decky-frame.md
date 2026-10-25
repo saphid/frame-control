@@ -59,10 +59,20 @@ catalogue. All 11 had a frontend bundle, but their manifests differed:
 The [archive audit record](evidence/framey-official-archive-audit-2026-10-25.json)
 has each store ID, exact version, SHA-256, manifest field, and bundle check.
 The archive audit itself is static PC inspection. Later local host and fake
-Frame tests cover the Storage Cleaner and HLTB cases noted above; none shows
+Frame tests cover the Storage Cleaner, HLTB, CSS Loader and SteamGridDB cases noted above; none shows
 that a plugin is visible or usable in the headset. The earlier real Frame backend checks in the table above
 remain the only device evidence for these versions. A new store version needs a
 new check because its manifest and binaries can change.
+
+Pinned CSS Loader 2.1.3 and SteamGridDB 1.8.1 archives now pass the fake Frame
+managed install/remove flow. CSS Loader's `plugin.json` has no `api_version` and
+its bundle uses Decky's older global frontend format, so Framey refuses its
+panel. SteamGridDB declares API v1 and its bundle passes Framey's packaging
+check, but it looks up Steam library modules while loading and patches game
+context menus. Those modules and menus do not exist in Framey's isolated
+iframe, so its artwork picker cannot be called a usable VR panel. Framey does
+not apply its Steam library changes. These checks did not run CSS themes or
+modify game artwork on the real Frame.
 
 The new store transaction was also exercised on the same real Frame:
 **managed loader install → ProtonDB Badges 1.3.4 store install → status →

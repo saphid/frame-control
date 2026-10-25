@@ -14,6 +14,14 @@ PLUGINS = (
      'folder': 'Bluetooth', 'sha256': 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'},
     {'id': 26, 'name': 'HLTB for Deck', 'version': '2.0.12', 'api_version': 1,
      'folder': 'hltb-for-deck', 'sha256': 'bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558'},
+    {'id': 36, 'name': 'SteamGridDB', 'version': '1.8.1', 'api_version': 1,
+     'folder': 'decky-steamgriddb', 'sha256': 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'},
+)
+
+# Managed store install works, but the legacy frontend has no supported bridge.
+BACKEND_ONLY = (
+    {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': None,
+     'folder': 'SDH-CssLoader', 'sha256': '99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231'},
 )
 
 
