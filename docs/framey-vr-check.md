@@ -109,3 +109,7 @@ the same-plugin navigation regression without a headset.
    works. Record comfort/legibility, controller model, any haptic behavior,
    keyboard behavior and the command's JSON separately. Confirm battery and
    release only your lock. Do not infer these human checks from synthetic input.
+
+The watchdog's creation and cancellation are exercised on the real Frame.
+A forced host kill/network loss followed by timer recovery has not been fault
+injected. Its saved recovery script remains available on a cleanup failure.
