@@ -54,8 +54,10 @@ def catalog():
         if not latest:
             continue
         tags = item.get('tags') if isinstance(item.get('tags'), list) else []
+        author = item.get('author') if isinstance(item.get('author'), str) else ''
         result.append({'id': item['id'], 'name': item['name'][:100],
                        'description': str(item.get('description') or '')[:300],
+                       'author': author[:100],
                        'version': latest['name'][:40], 'sha256': latest['hash'],
                        'root': 'root' in tags})
     return result

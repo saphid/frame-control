@@ -30,14 +30,14 @@ def archive(flags=(), extra=None):
 
 class ArchiveTests(unittest.TestCase):
     def test_catalog_selects_valid_visible_latest_versions(self):
-        records = [{'id': 42, 'name': 'Example', 'visible': True, 'versions':
+        records = [{'id': 42, 'name': 'Example', 'author': 'Panel Author', 'visible': True, 'versions':
                     [{'name': '1.0', 'hash': 'a' * 64}], 'tags': []},
                    {'id': 43, 'name': 'Hidden', 'visible': False, 'versions':
                     [{'name': '1.0', 'hash': 'b' * 64}]},
                    {'id': 44, 'name': 'Unsafe', 'visible': True, 'versions':
                     [{'name': '1.0; touch /tmp/bad', 'hash': 'c' * 64}]}]
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
-            self.assertEqual([p['id'] for p in frame_decky_store.catalog()], [42])
+            self.assertEqual([(p['id'], p['author']) for p in frame_decky_store.catalog()], [(42, 'Panel Author')])
 
     def test_accepts_hashed_non_root_archive(self):
         data, digest = archive()

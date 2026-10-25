@@ -5,6 +5,7 @@ import http.client
 import io
 import json
 from pathlib import Path
+import subprocess
 import sys
 import tempfile
 import tarfile
@@ -19,6 +20,11 @@ import server
 
 
 class Panel(unittest.TestCase):
+    def test_vr_store_browsing_and_search(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def setUp(self):
         tmp = tempfile.TemporaryDirectory()
         self.addCleanup(tmp.cleanup)

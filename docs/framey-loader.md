@@ -54,6 +54,13 @@ has no supported injection target in the Frame Control panel.
 The [browser and fake Frame evidence](evidence/framey-browser-2026-10-25.md)
 records exactly what was exercised.
 
+The in-headset **Open official store** view loads the full official catalogue.
+Search matches names, authors, and descriptions. Filters show non-root plugins
+or installed plugins, and Previous/Next buttons browse 20 results per page.
+The root label is a compatibility warning; other APIs are checked only when a
+plugin is opened. The store still needs the managed Decky user service running
+before its Install or Update buttons are enabled.
+
 ## For plugin authors
 
 Publish a normal [Decky store](https://plugins.deckbrew.xyz/) API v2 release
