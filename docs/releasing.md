@@ -13,7 +13,7 @@ count. So a build reaches people only when you publish it, after testing it.
    ```
 
    `.github/workflows/release.yml` builds macOS, Windows and Linux, and
-   attaches everything to a **draft** release for that tag. After all eight
+   attaches everything to a **draft** release for that tag. After all ten
    installers upload, the workflow also attaches `SHA256SUMS` built from
    GitHub's SHA-256 digests of those uploaded bytes. Nobody is
    offered a draft. Editing a draft while installers are uploading can make
@@ -39,9 +39,9 @@ count. So a build reaches people only when you publish it, after testing it.
    scripts/publish-release.sh v0.4.0
    ```
 
-   The script checks that the tag is on GitHub and that all eight installers
+   The script checks that the tag is on GitHub and that all ten installers
    are attached, each with the SHA-256 digest GitHub records. It also checks
-   that the uploaded `SHA256SUMS` digest matches a fresh list of those eight
+   that the uploaded `SHA256SUMS` digest matches a fresh list of those ten
    installer digests. It attaches
    `update.json` (the version, the notes, the release page and each
    installer's digest), then publishes the release and marks it latest. It

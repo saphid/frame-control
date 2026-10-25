@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Print SHA256SUMS for the eight release installers from GitHub asset metadata.
+"""Print SHA256SUMS for the ten release installers from GitHub asset metadata.
 
 GitHub computes each asset digest from its uploaded bytes. The workflow runs
 this only after all platform builds finish; publish-release.sh checks that the
@@ -13,6 +13,7 @@ import sys
 INSTALLERS = (
     "Frame-Control-mac-arm64.dmg",
     "Frame-Control-mac-arm64.zip",
+    "Frame-Control-mac-x64.dmg", "Frame-Control-mac-x64.zip",
     "Frame-Control-Setup-x64.exe",
     "Frame-Control-win-x64.zip",
     "Frame-Control-linux-x86_64.AppImage",

@@ -70,6 +70,9 @@ jobs:
           - os: macos-latest
             script: dist
             files: app/dist/*.dmg app/dist/*.zip
+          - os: macos-15-intel
+            script: dist:mac:x64
+            files: app/dist/*.dmg app/dist/*.zip
           - os: windows-latest
             script: dist:win
             files: app/dist/*.exe app/dist/*.zip
@@ -110,6 +113,17 @@ jobs:
         run: npm ci && npm run ${{ matrix.script }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Check the Mac bundle matches its runner
+        if: runner.os == 'macOS'
+        shell: bash
+        run: |
+          bundle=$(find app/dist -maxdepth 2 -name 'Frame Control.app' -type d -print -quit)
+          test -n "$bundle"
+          resources="$bundle/Contents/Resources"
+          for binary in "$bundle/Contents/MacOS/Frame Control" "$resources/python/bin/python3" "$resources/tools/adb" "$resources/mac/bin/frame-mac-view"; do
+            lipo -verify_arch "$(uname -m)" "$binary"
+          done
+          "$resources/python/bin/python3" -I -B -c 'import http.server, ssl, sqlite3; print(ssl.OPENSSL_VERSION)'
       - name: Launch the built Linux AppImage
         if: matrix.os == 'ubuntu-latest'
         run: python3 scripts/check-appimage-launch.py app/dist/Frame-Control-linux-x86_64.AppImage

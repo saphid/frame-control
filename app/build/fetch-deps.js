@@ -4,7 +4,7 @@
 // copies into the app's resources. Also KDE Connect for the Frame (the same arm64
 // packages for every build), into ../frame/kdeconnect/packages as listed in
 // ../frame/kdeconnect/packages.json. Everything is pinned by version and SHA-256.
-//   node build/fetch-deps.js mac arm64 | win x64 | linux x64 arm64
+//   node build/fetch-deps.js mac arm64 x64 | win x64 | linux x64 arm64
 const crypto = require("crypto");
 const fs = require("fs");
 const https = require("https");
@@ -15,6 +15,7 @@ const PY = "3.12.14+20260924";
 const PY_URL = (triple) => "https://github.com/astral-sh/python-build-standalone/releases/download/"
   + `${PY.split("+")[1]}/cpython-${PY}-${triple}-install_only_stripped.tar.gz`;
 const PYTHON = {
+  "mac-x64": ["x86_64-apple-darwin", "7ea9761b9069c10b9a20531d568645849d604c59e9c7f11f6659f1e1790c968e"],
   "mac-arm64": ["aarch64-apple-darwin", "c2edb321cd32ec2b170df208db0446dccc4398db602ca27cf2079098fb1f7d9d"],
   "win-x64": ["x86_64-pc-windows-msvc", "c5bf8edfe858c1df9891be498b5bbc8761d383df5b9790658b088fea4870433a"],
   "linux-x64": ["x86_64-unknown-linux-gnu", "269b2c99e4db15b242bf01832f4fea1e8f1a664f273cff519393f296e9820b41"],
