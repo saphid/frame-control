@@ -5,7 +5,12 @@ This is a small Decky API v2 plugin for authors. Its panel uses the official
 backend method, stores one boolean under `decky.decky_SETTINGS_DIR`,
 and reads it back when the panel opens. The backend rejects other keys and
 values. The frontend also shows a local toast after a successful save. A
-missing, damaged, or old non-boolean value reads as the caller's default;
+Framey settings tab exposes the same toggle, and a read-only quick action
+fetches the saved value without changing it. These two fields are Framey
+additions; Decky's own menu still uses the main panel content. The quick
+action calls the backend, so it reads the persisted setting rather than a
+browser cache. A missing, damaged, or old non-boolean value reads as the
+caller's default;
 the next save atomically replaces the sample's settings file.
 
 ## Build
@@ -29,7 +34,8 @@ plugin directory does not enable its VR panel.
 
 Run `python3 -m unittest discover -s tests -p test_framey_sample.py` from the
 repository root. It checks backend persistence and evaluates the built bundle
-against Framey's actual host script. The fake Frame store flow is exercised by
+against Framey's actual host script, including the quick action's scoped
+backend call. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 

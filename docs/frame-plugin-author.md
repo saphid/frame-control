@@ -65,6 +65,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Optional `settings`, `frameyQuickActions` | Separate settings tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e for setting read/write across CEF calls, update, and reinstall; host unit test. Real Decky persistence remains unverified. |
 | `toaster.toast` | Visible toast inside the plugin panel; `dismiss` and optional `onClick` | Host unit test; no Steam system notification |
+| `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
 | `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack` | Local routes inside this plugin panel only | Host unit test |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
@@ -79,3 +80,8 @@ store archive and do not assume SteamClient app details, library patches, or
 destructive actions work in VR. The
 [Storage Cleaner browser check](evidence/framey-api-v1-browser-2026-10-25.md)
 used empty stub data and did not invoke its cleanup actions.
+Use the Decky Python backend for settings that must survive browser cache loss.
+The Framey `localStorage` bridge is for disposable frontend caches, including
+the cache read attempted by Steam Status 1.2.3. It does not expose another
+plugin's cache or the Frame Control UI key. A real Steam Status panel reopen
+and a worn-headset settings check are still needed.

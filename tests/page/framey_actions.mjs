@@ -19,23 +19,6 @@ const context=vm.createContext({window,document:{getElementById:id=>{
   navigator:{language:'en'}, parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
-// A plugin gets bounded, panel-lifetime storage without the parent's origin.
-const storage=window.localStorage;
-assert.equal(storage.getItem('missing'),null);
-storage.setItem('theme','dark');
-storage.setItem('count',2);
-assert.equal(storage.length,2);
-assert.equal(storage.key(0),'theme');
-assert.equal(storage.getItem('count'),'2');
-storage.setItem('theme','light');
-assert.equal(storage.getItem('theme'),'light');
-assert.throws(()=>storage.setItem('large','x'.repeat(262144)),{name:'QuotaExceededError'});
-assert.equal(storage.getItem('theme'),'light');
-storage.removeItem('count');
-assert.equal(storage.length,1);
-storage.clear();
-assert.equal(storage.length,0);
-assert.throws(()=>Object.defineProperty(window,'localStorage',{value:{}}),TypeError);
 // Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
 const jsx=window.SP_JSX.jsx('p',{id:'message',children:'Saved'},'message-key');
 assert.equal(jsx.type,'p');
@@ -105,9 +88,10 @@ assert.equal(nodes(window.__surface({plugin:{settings:{type:'settings'}}}),'nav'
 // API v2 backend calls remain request-scoped and errors return to the caller.
 const api=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'Test');
 const reply=api.call('get_setting','mode','default');
-assert.equal(messages[0].method,'get_setting');
-assert.deepEqual(Array.from(messages[0].args),['mode','default']);
-listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:messages[0].id,result:'dark'}});
+const call=messages.find(message=>message.type==='framey:call');
+assert.equal(call.method,'get_setting');
+assert.deepEqual(Array.from(call.args),['mode','default']);
+listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:call.id,result:'dark'}});
 assert.equal(await reply,'dark');
 await assert.rejects(api.call('x;alert(1)'),/Invalid backend method/);
 

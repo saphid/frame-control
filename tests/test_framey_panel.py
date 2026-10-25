@@ -20,6 +20,11 @@ import server
 
 
 class Panel(unittest.TestCase):
+    def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_vr_store_browsing_and_search(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
                                 capture_output=True, text=True, timeout=10)

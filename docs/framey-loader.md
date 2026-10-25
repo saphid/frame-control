@@ -39,11 +39,12 @@ through Decky's *existing* websocket connection. Framey never opens a second
 Decky websocket, because Decky allows only one frontend connection. The iframe
 does not receive Frame Control's UI key. React and ReactDOM are bundled for
 offline use under their MIT licenses in `ui/vendor`.
-Framey gives each plugin panel a bounded, in-memory `localStorage` substitute
-because browser storage is denied to an opaque-origin iframe. It supports the
-usual item methods, up to 256 entries and 512 KiB of keys and values. The data
-is cleared when the panel reloads or closes. Use the plugin backend for settings
-that must survive a new panel session.
+Framey gives each plugin a bounded `localStorage` substitute because browser
+storage is denied to an opaque-origin iframe. The parent panel keeps a separate
+cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
+restores the cache when a panel reopens if the parent's browser storage is
+available. If storage is denied or cleared, the cache lasts only for the current
+panel. Use the plugin backend for settings that must survive cache loss.
 
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
@@ -67,8 +68,10 @@ The pinned official Steam Status 1.2.3 frontend also
 with a stubbed settings reply. Its public status request worked, but its cache
 logged `localStorage` errors in Framey's v0.4.34 opaque iframe. A later
 [local browser check](evidence/framey-session-cache-2026-10-25.md) confirmed
-that the panel-lifetime substitute avoids those errors while preserving the
-opaque origin. Neither check used a real Decky backend or a worn headset.
+that a panel-lifetime substitute avoids those errors while preserving the
+opaque origin. A [second browser check](evidence/framey-cache-browser-2026-10-25.md)
+tested the per-plugin cache after reopening a panel. These checks used a stub
+backend and no worn headset.
 Fake Frame CI also installs and removes pinned official ProtonDB Badges 1.3.4,
 Steam Status 1.2.3, and Storage Cleaner 1.4.0 archives, checks their API v1/v2
 manifests and frontend bytes, and verifies they can be packed as Framey panels.
@@ -87,7 +90,10 @@ The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
 The root label is a compatibility warning; other APIs are checked only when a
-plugin is opened. The store still needs the managed Decky user service running
+plugin is opened. Both `root` and `_root`
+store tags mark a plugin as needing root, and duplicate store IDs are omitted
+because an ID alone could select a different archive than the visible row.
+The store still needs the managed Decky user service running
 before its Install or Update buttons are enabled. If a plugin prevents Decky
 from starting, Remove remains available for Frame Control-owned plugins while
 the managed service is stopped; it does not restart the service.
