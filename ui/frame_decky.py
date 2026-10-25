@@ -63,7 +63,7 @@ print(json.dumps({'arch':platform.machine(), 'frameOS':os_release.get('VERSION_I
 
 
 APPLY = r'''
-import hashlib, json, os, pathlib, subprocess, sys
+import fcntl, hashlib, json, os, pathlib, subprocess, sys
 action, token, digest, version = sys.argv[1:]
 home = pathlib.Path.home()
 base = home / '.local/share/frame-control/decky'
@@ -72,6 +72,7 @@ binary = base / 'PluginLoader'
 receipt = base / '.frame-control/receipt.json'
 legacy = base / 'settings/release.json'
 stage = pathlib.Path('/tmp/frame-control-decky-' + token)
+transaction_lock = None
 def systemd(*args):
     p = subprocess.run(['systemctl','--user',*args], capture_output=True, text=True, timeout=20)
     if p.returncode: raise RuntimeError((p.stderr or p.stdout).strip() or 'systemd failed')
@@ -79,6 +80,13 @@ def owned():
     try: return json.loads((receipt if receipt.exists() else legacy).read_text()).get('managedBy') == 'Frame Control' and service.is_file()
     except (OSError, ValueError): return False
 try:
+    # The desktop and headset servers are separate processes. Lock the shared
+    # user-service transaction on the Frame before inspecting or changing it.
+    base.parent.mkdir(parents=True, exist_ok=True)
+    lock_path = base.parent / 'decky-transaction.lock'
+    transaction_lock = os.fdopen(os.open(lock_path, os.O_CREAT | os.O_RDWR | os.O_NOFOLLOW, 0o600), 'r+b')
+    try: fcntl.flock(transaction_lock, fcntl.LOCK_EX | fcntl.LOCK_NB)
+    except BlockingIOError: raise RuntimeError('Another Decky change is in progress; try again after it finishes')
     if action == 'remove':
         if not owned(): raise RuntimeError('No Frame Control managed Decky install to remove')
         systemd('disable','--now','frame-control-decky.service')
@@ -141,6 +149,7 @@ try:
         print(json.dumps({'message':'Decky Loader '+version+' is running as a user service. The VR menu is experimental.'}))
 finally:
     stage.unlink(missing_ok=True)
+    if transaction_lock is not None: transaction_lock.close()
 '''
 
 

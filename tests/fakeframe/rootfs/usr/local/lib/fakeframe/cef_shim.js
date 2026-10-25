@@ -30,8 +30,14 @@ function build(steam) {
   const deckyBackend = {async call(route, plugin, method, ...args) {
     if (route !== 'loader/call_plugin_method' || plugin !== 'Sample Panel')
       throw Error('unexpected Decky plugin route');
-    if (method === 'get_setting') return args[1];
-    if (method === 'set_setting') return true;
+    const settings = (steam.decky_settings ||= {});
+    const owned = (settings[plugin] ||= {});
+    if (method === 'get_setting')
+      return Object.hasOwn(owned, args[0]) ? owned[args[0]] : args[1];
+    if (method === 'set_setting') {
+      owned[args[0]] = args[1];
+      return true;
+    }
     throw Error('method unavailable in fake Decky backend');
   }};
   const findShortcut = id => steam.shortcuts.find(s => s.appid === Number(id));
