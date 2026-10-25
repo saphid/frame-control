@@ -58,6 +58,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `definePlugin` with `content`, `titleView` | Renders a React panel and optional title | Local browser with ProtonDB Badges; host unit test |
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
+| `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
 | Optional `settings`, `frameyQuickActions` | Separate settings tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e for setting read/write across CEF calls, update, and reinstall; host unit test. Real Decky persistence remains unverified. |
 | `toaster.toast` | Visible toast inside the plugin panel; `dismiss` and optional `onClick` | Host unit test; no Steam system notification |

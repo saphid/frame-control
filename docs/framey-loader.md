@@ -38,7 +38,8 @@ Decky websocket, because Decky allows only one frontend connection. The iframe
 does not receive Frame Control's UI key. React and ReactDOM are bundled for
 offline use under their MIT licenses in `ui/vendor`.
 
-The host currently supplies sections, rows, buttons, toggles, dropdowns,
+The host currently supplies sections, rows, buttons, toggles, text fields,
+sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
 and backend calls for the plugin that owns the panel. Steam library/store page
 patches, global Steam UI components, file pickers, and privileged root methods

@@ -28,25 +28,45 @@ assert.deepEqual(jsx.children,['Saved']);
 const fragments=window.SP_JSX.jsxs(window.SP_JSX.Fragment,{children:['one','two']});
 assert.equal(fragments.type,React.Fragment);
 assert.deepEqual(fragments.children,[['one','two']]);
-const nodes=(tree,type)=>[...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
-// Official Decky controls use disabled while a backend call is in progress.
-// A disabled control must stay inert even if an event handler is invoked.
+const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,type)):
+  [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
+// Disabled controls stay inert even if a caller invokes their handlers directly.
 let changed=0;
 const toggle=nodes(window.DFL.ToggleField({label:'Enabled',checked:true,disabled:true,
   onChange:()=>changed++}),'input')[0];
-const dropdown=nodes(window.DFL.DropdownItem({label:'Mode',disabled:true,rgOptions:[{data:'a',label:'A'}],
+const options=[{label:'Modes',options:[{label:'Slow',data:'slow'},{label:'Fast',data:'fast'}]}];
+const dropdown=nodes(window.DFL.Dropdown({rgOptions:options,selectedOption:'fast',disabled:true,
   onChange:()=>changed++}),'select')[0];
 const button=nodes(window.DFL.ButtonItem({label:'Reload',description:'Read setting',disabled:true,
   onClick:()=>changed++}),'button')[0];
-for(const control of [toggle,dropdown,button])assert.equal(control.props.disabled,true);
+const input=nodes(window.DFL.TextField({label:'Alias',value:'Old',placeholder:'New',disabled:true,
+  onChange:()=>changed++}),'input')[0];
+const slider=nodes(window.DFL.SliderField({label:'Speed',value:2,min:0,max:10,step:2,disabled:true,
+  onChange:()=>changed++}),'input')[0];
+for(const control of [toggle,dropdown,button,input,slider])assert.equal(control.props.disabled,true);
+assert.equal(input.props.value,'Old');
+assert.equal(slider.props.type,'range');
+assert.equal(dropdown.props.value,'1');
+assert.equal(nodes(dropdown,'optgroup').length,1);
 toggle.props.onChange({target:{checked:false}});
-dropdown.props.onChange({target:{value:'a'}});
+dropdown.props.onChange({target:{value:'0'}});
 button.props.onClick({});
+input.props.onChange({target:{value:'New'}});
+slider.props.onChange({target:{value:'4'}});
 assert.equal(changed,0);
+let entered='';
+const readyInput=nodes(window.DFL.TextField({label:'Alias',value:'Old',onChange:e=>{entered=e.target.value;}}),'input')[0];
+readyInput.props.onChange({target:{value:'New'}});assert.equal(entered,'New');
+let speed=0;
+const readySlider=nodes(window.DFL.SliderField({label:'Speed',value:2,onChange:v=>{speed=v;}}),'input')[0];
+readySlider.props.onChange({target:{value:'4'}});assert.equal(speed,4);
+let selected;
+const readyDropdown=nodes(window.DFL.Dropdown({rgOptions:options,selectedOption:'fast',
+  onChange:option=>{selected=option;}}),'select')[0];
+readyDropdown.props.onChange({target:{value:'0'}});assert.equal(selected.data,'slow');
 const readyButton=nodes(window.DFL.ButtonItem({label:'Reload',onClick:()=>changed++}),'button')[0];
 assert.equal(readyButton.props.disabled,false);
-readyButton.props.onClick({});
-assert.equal(changed,1);
+readyButton.props.onClick({});assert.equal(changed,1);
 let called=0;
 const plugin={content:{type:'content'},settings:{type:'settings'},titleView:{type:'title'},
   frameyQuickActions:[{label:'Refresh data',onClick:async()=>{called++;return 'Fresh';}},
