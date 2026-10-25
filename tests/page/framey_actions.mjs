@@ -19,6 +19,15 @@ const context=vm.createContext({window,document:{getElementById:id=>{
   navigator:{language:'en'}, parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
+// Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
+const jsx=window.SP_JSX.jsx('p',{id:'message',children:'Saved'},'message-key');
+assert.equal(jsx.type,'p');
+assert.equal(jsx.props.id,'message');
+assert.equal(jsx.props.key,'message-key');
+assert.deepEqual(jsx.children,['Saved']);
+const fragments=window.SP_JSX.jsxs(window.SP_JSX.Fragment,{children:['one','two']});
+assert.equal(fragments.type,React.Fragment);
+assert.deepEqual(fragments.children,[['one','two']]);
 const nodes=(tree,type)=>[...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
 let called=0;
 const plugin={content:{type:'content'},settings:{type:'settings'},titleView:{type:'title'},

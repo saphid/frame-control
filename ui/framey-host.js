@@ -3,6 +3,14 @@
   'use strict';
   const R = window.SP_REACT = window.React;
   window.SP_REACTDOM = window.ReactDOM;
+  const jsx = (type, props, key) => {
+    const {children, ...elementProps} = props || {};
+    if (key !== undefined) elementProps.key = key;
+    return Object.prototype.hasOwnProperty.call(props || {}, 'children')
+      ? R.createElement(type, elementProps, children)
+      : R.createElement(type, elementProps);
+  };
+  window.SP_JSX = {jsx, jsxs:jsx, Fragment:R.Fragment};
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en']};
   const root = document.getElementById('framey-root');
   const error = document.getElementById('framey-error');
