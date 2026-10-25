@@ -44,22 +44,23 @@ For a new plugin, follow the [Frame plugin and extension guide](frame-plugin-aut
 
 ### Which of these plugins can open a Framey panel?
 
-The separate Framey panel accepts a Frame Control store install only when its
-`plugin.json` declares `api_version: 2` and it has `dist/index.js`. A backend
-load does not bypass this frontend check. We downloaded the 11 versions above
+The separate Framey panel accepts a Frame Control store install when its
+`plugin.json` declares API v1 or v2 and it has a modern Decky frontend bundle
+in `dist/index.js`. A backend load does not bypass this frontend check. We downloaded the 11 versions above
 again on 25 October 2026 and matched every ZIP's SHA-256 to the official store
 catalogue. All 11 had a frontend bundle, but their manifests differed:
 
 | Manifest in the checked archive | Plugins | Framey panel result |
 | --- | --- | --- |
 | API v2 | ProtonDB Badges 1.3.4 | Eligible; settings rendered in local Chromium. No worn VR check. |
-| API v1 | Bluetooth 3.1.1, HLTB for Deck 2.0.12, SteamGridDB 1.8.1, Storage Cleaner 1.4.0, Wine Cellar 0.2.1, MagicPods 2.0.21 | Framey refuses these frontends. Wine Cellar and MagicPods also fail the ARM64 archive check. |
+| API v1 | Bluetooth 3.1.1, HLTB for Deck 2.0.12, SteamGridDB 1.8.1, Storage Cleaner 1.4.0, Wine Cellar 0.2.1, MagicPods 2.0.21 | Storage Cleaner rendered its empty-data panel in local Chromium. HLTB started and built a settings view in a local host test; its Steam game page patches have no target. Other panels remain untested. Wine Cellar and MagicPods fail the ARM64 archive check. None has a worn VR result. |
 | No `api_version` field | CSS Loader 2.1.3, Animation Changer 1.3.2, Audio Loader 1.6.1, PowerTools 2.0.3 | Framey refuses these frontends. Audio Loader and PowerTools also request root. |
 
 The [archive audit record](evidence/framey-official-archive-audit-2026-10-25.json)
 has each store ID, exact version, SHA-256, manifest field, and bundle check.
-This is a static PC inspection. It does not show that any plugin is visible or
-usable in the headset. The earlier real Frame backend checks in the table above
+The archive audit itself is static PC inspection. Later local host and fake
+Frame tests cover the Storage Cleaner and HLTB cases noted above; none shows
+that a plugin is visible or usable in the headset. The earlier real Frame backend checks in the table above
 remain the only device evidence for these versions. A new store version needs a
 new check because its manifest and binaries can change.
 
@@ -83,7 +84,7 @@ API v2 pages and API v1 bundles that use Decky's modern frontend initializer,
 with settings, local routes, and panel toasts where supported.
 Steam route patches and system notifications remain unavailable. The panel
 still needs a worn-headset visual and controller check. See the
-[current compatibility table](frame-plugin-author.md#framey-api-v2-compatibility).
+[current compatibility table](frame-plugin-author.md#framey-decky-api-compatibility).
 
 ## What was checked on the real headset
 
