@@ -85,9 +85,10 @@ assert.equal(nodes(window.__surface({plugin:{settings:{type:'settings'}}}),'nav'
 // API v2 backend calls remain request-scoped and errors return to the caller.
 const api=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'Test');
 const reply=api.call('get_setting','mode','default');
-assert.equal(messages[0].method,'get_setting');
-assert.deepEqual(Array.from(messages[0].args),['mode','default']);
-listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:messages[0].id,result:'dark'}});
+const call=messages.find(message=>message.type==='framey:call');
+assert.equal(call.method,'get_setting');
+assert.deepEqual(Array.from(call.args),['mode','default']);
+listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:call.id,result:'dark'}});
 assert.equal(await reply,'dark');
 await assert.rejects(api.call('x;alert(1)'),/Invalid backend method/);
 
