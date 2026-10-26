@@ -279,16 +279,39 @@
   };
   DFL.Router = {...DFL.Navigation, MainRunningApp:undefined};
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
-  const toaster = {toast: ({title, body, duration, showToast=true, onClick}={}) => {
-    const data = {title, body};
+  const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
+    const data = {title, body, subtext, icon, logo};
     if (!showToast) return {data, dismiss(){}};
     const item = document.createElement('section');
     item.setAttribute('role','status');
-    const heading = document.createElement('strong'); heading.textContent = String(title || 'Plugin notice');
-    const detail = document.createElement('p'); detail.textContent = String(body || '');
+    const roots = [];
+    const addContent = (tag, value) => {
+      if (value === null || value === undefined || value === false) return;
+      const node = document.createElement(tag);
+      if (R.isValidElement(value) || Array.isArray(value)) {
+        const root = window.ReactDOM.createRoot(node);
+        roots.push(root);
+        root.render(value);
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        node.textContent = String(value);
+      } else return;
+      item.append(node);
+    };
+    addContent('span', logo);
+    addContent('span', icon);
+    addContent('strong', title || 'Plugin notice');
+    addContent('p', body);
+    addContent('small', subtext);
     const close = document.createElement('button'); close.type='button'; close.textContent='Dismiss';
-    const dismiss = () => {item.remove(); clearTimeout(timer);};
-    close.onclick=dismiss; item.append(heading, detail, close);
+    let dismissed = false;
+    const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
+      clearTimeout(timer);
+      for (const root of roots) root.unmount();
+      item.remove();
+    };
+    close.onclick=dismiss; item.append(close);
     if (typeof onClick === 'function') {
       const open = document.createElement('button'); open.type='button'; open.textContent='Open';
       open.onclick=()=>{onClick(); dismiss();}; item.append(open);
