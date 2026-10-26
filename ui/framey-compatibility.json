@@ -2985,12 +2985,13 @@
         "https://github.com/mk-fg/python-pulse-control"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; user PulseAudio/PipeWire mixer backend and volume changes unverified.",
+      "reason": "Local Chromium discovers and changes a private silent stream through the actual Decky 3.3.0 Linux backend, with independent Pulse readback. Frame ARM64 libraries/audio session and Bluetooth playback controls remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Linux backend"
       ],
       "browser": {
         "id": 38,
@@ -3013,13 +3014,19 @@
         "folder": "VolumeMixer-decky"
       },
       "backend": "Python",
-      "hardware": "sudo",
+      "hardware": "PulseAudio/PipeWire, libpulse/libdbus and D-Bus; optional Bluetooth playback",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 38,
         "sha256": "11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "localBackend": {
+        "runtime": "Decky 3.3.0 amd64",
+        "evidence": "docs/evidence/framey-audio-backends-2026-10-26.json",
+        "audio": "private silent virtual targets",
+        "realFrame": false
       }
     },
     {
@@ -4005,12 +4012,13 @@
         "https://github.com/saumya-banthia/volume-boost.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; PulseAudio/PipeWire volume backend is unverified.",
+      "reason": "Local Chromium sync/separate sliders, numeric volume entry and cache reopen pass through the actual Decky 3.3.0 backend on a private virtual stereo sink. Frame pactl/default sink, boost above 100% and physical audio remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Linux backend"
       ],
       "browser": {
         "id": 58,
@@ -4033,13 +4041,19 @@
         "folder": "volume-boost"
       },
       "backend": "Python",
-      "hardware": "pactl",
+      "hardware": "PulseAudio/PipeWire and pactl; hard-coded /run/user/1000",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 58,
         "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "localBackend": {
+        "runtime": "Decky 3.3.0 amd64",
+        "evidence": "docs/evidence/framey-audio-backends-2026-10-26.json",
+        "audio": "private silent virtual targets",
+        "realFrame": false
       }
     },
     {
@@ -13220,12 +13234,13 @@
         "https://github.com/allmazz/decky-volume-mixer.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; actual audio mixer backend and volume changes unverified.",
+      "reason": "Local Chromium numeric stream volume and filter save/reopen pass through the actual Decky 3.3.0 Linux backend; filters survive its restart. Frame pw-dump/wpctl, real audio session and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Linux backend"
       ],
       "browser": {
         "id": 144,
@@ -13253,7 +13268,7 @@
         "folder": "decky-volume-mixer"
       },
       "backend": "Python",
-      "hardware": "flatpak",
+      "hardware": "PipeWire, pw-dump and wpctl",
       "uiSurfaces": [
         "toasts"
       ],
@@ -13262,6 +13277,12 @@
         "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "localBackend": {
+        "runtime": "Decky 3.3.0 amd64",
+        "evidence": "docs/evidence/framey-audio-backends-2026-10-26.json",
+        "audio": "private silent virtual targets",
+        "realFrame": false
       }
     },
     {
