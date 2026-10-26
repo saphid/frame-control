@@ -6154,27 +6154,24 @@
         "https://github.com/JtdeGraaf/IsThereAnyDeal-DeckyPlugin",
         "https://github.com/JtdeGraaf/IsThereAnyDeal-DeckyPlugin.git"
       ],
-      "status": "broken",
-      "reason": "Country lookup calls missing SteamClient.User.GetIPCountry; deal loading fails after initialization.",
+      "status": "partial",
+      "reason": "Country settings render and select the real Frame Steam country through the read-only bridge. Settings writes, deal lookups and Steam page integration remain unverified; plugin backend calls were denied.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 81,
         "name": "IsThereAnyDeal for Deck",
         "ready": true,
         "error": null,
-        "logs": [
-          {
-            "kind": "rejection",
-            "message": "TypeError: SteamClient.User.GetIPCountry is not a function"
-          }
-        ],
+        "logs": [],
         "methods": [
-          "settings_load"
+          "settings_load",
+          "settings_save"
         ]
       },
       "archiveValidation": {
@@ -7202,7 +7199,7 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
       "status": "broken",
-      "reason": "Initializer succeeds; game selection fails because SteamClient.InstallFolder.GetInstallFolders is unavailable.",
+      "reason": "Real Steam install folders are now available; game selection still fails on missing collectionStore.allGamesCollection. Steam library context, proxy fetch and backend actions remain unsupported/unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7217,11 +7214,11 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[decky-game-settings:GameSelectView] Error fetching installed games: TypeError: Cannot read properties of undefined (reading 'GetInstallFolders')"
+            "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
           },
           {
             "kind": "error",
-            "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+            "message": "[decky-game-settings:GameSelectView] Error fetching installed games: TypeError: Cannot read properties of undefined (reading 'allGamesCollection')"
           }
         ],
         "methods": []

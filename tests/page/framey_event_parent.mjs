@@ -47,3 +47,22 @@ assert.equal(replies.length,1);assert.equal(replies[0].result.events[0].args[0],
 el('frameyClose').onclick();
 assert.equal(requests[3].body.session,session);assert.equal(requests[3].body.events.length,0);
 for(const request of requests.slice(1))request.resolve({ok:true,json:async()=>({events:[],cursor:0})});
+
+// Only explicit zero-argument Steam reads reach the trusted parent endpoint.
+vm.runInContext('openFrameyPanel(96,"Timer")',context);
+session=vm.runInContext('frameySession',context);
+const steamRead={type:'framey:steam',id:10,session,method:'GetIPCountry',args:[]};
+const initialCount=requests.length;
+for(const change of [{method:'ShutdownPC'},{method:'User.GetIPCountry'},{args:['injected']},{session:'stale'}])
+  await send({...steamRead,...change});
+await send(steamRead,{});
+assert.equal(requests.length,initialCount);
+const read=send(steamRead);
+assert.equal(requests.at(-1).path,'/api/framey/steam');assert.equal(requests.at(-1).body.id,96);
+requests.at(-1).resolve({ok:true,json:async()=>({result:'AU'})});
+await read;assert.equal(replies.at(-1).result,'AU');
+const staleRead=send({...steamRead,id:11});
+vm.runInContext('openFrameyPanel(96,"Timer")',context);
+const priorReplies=replies.length;
+requests.at(-1).resolve({ok:true,json:async()=>({result:'AU'})});
+await staleRead;assert.equal(replies.length,priorReplies);

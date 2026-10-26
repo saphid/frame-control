@@ -1,0 +1,99 @@
+{
+  "checkedAtUtc": "2026-10-26T00:40:00Z",
+  "scope": "Actual SteamClient parameterless reads through Steam CEF on ARM64 Frame. Official frontends ran in local Chromium with plugin backend/network calls denied. Private loopback relay used the production read bridge with fixture installed-plugin status and the real frame_steam module supplied in memory because the optional headset service was not deployed. This does not verify a deployed real-Frame HTTP endpoint.",
+  "allowlist": [
+    "User.GetIPCountry",
+    "InstallFolder.GetInstallFolders",
+    "System.GetSystemInfo"
+  ],
+  "probeResults": {
+    "GetIPCountry": {
+      "ok": true,
+      "type": "string",
+      "length": 2,
+      "value": "redacted"
+    },
+    "GetInstallFolders": {
+      "ok": true,
+      "folders": 1,
+      "apps": 29,
+      "pathsAndTitles": "redacted"
+    },
+    "GetSystemInfo": {
+      "ok": true,
+      "fields": 27,
+      "identifiers": "redacted"
+    }
+  },
+  "officialPanels": {
+    "IsThereAnyDeal for Deck": {
+      "observation": {
+        "id": 81,
+        "name": "IsThereAnyDeal for Deck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "settings_load",
+          "settings_save"
+        ]
+      },
+      "countryDropdownMatchesLiveFrameValue": true,
+      "backendSettingsSave": "attempted by official frontend; denied; no setting written",
+      "dealLookups": "not run"
+    },
+    "Deck Settings": {
+      "observation": {
+        "id": 93,
+        "name": "Deck Settings",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+          },
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:GameSelectView] Error fetching installed games: TypeError: Cannot read properties of undefined (reading 'allGamesCollection')"
+          }
+        ],
+        "methods": []
+      },
+      "remainingBlocker": "collectionStore.allGamesCollection"
+    }
+  },
+  "boundariesTested": [
+    "Only three explicit zero-argument APIs",
+    "Installed store plugin required",
+    "Headset-service gate",
+    "Iframe source and current session required",
+    "Late replies dropped after reopen",
+    "256 KiB UTF-8 response cap and socket cleanup"
+  ],
+  "deviceState": {
+    "sharedLock": "owned normally; released after testing",
+    "servicesInstalledOrStarted": false,
+    "powerChanges": false,
+    "deviceFilesForSteamProbe": false
+  },
+  "unverified": [
+    "Deployed headset HTTP endpoint",
+    "Plugin backend settings/deal lookups",
+    "Steam page patches and live library context",
+    "Worn VR/controller/keyboard"
+  ],
+  "catalogRefresh": {
+    "source": "https://plugins.deckbrew.xyz/plugins",
+    "checkedAtUtc": "2026-10-26T00:44:00Z",
+    "visiblePlugins": 116,
+    "idVersionDigestChanges": 0
+  },
+  "localRegressionAudit": {
+    "exactArchivedFrontends": 116,
+    "ready": 98,
+    "failed": 18,
+    "initializationRegressions": 0,
+    "pluginBackendAndNetworkActions": "denied, including live Steam read APIs"
+  }
+}

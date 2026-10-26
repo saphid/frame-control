@@ -108,6 +108,41 @@ def call_method(ssh, plugin_id, method, args, legacy=False):
                           stdin=METHOD_SCRIPT, timeout=25))
 
 
+# Only parameterless read APIs. Never resolve a plugin-supplied property path
+# against SteamClient or evaluate a plugin-supplied expression in trusted CEF.
+STEAM_READS = {
+    'GetIPCountry': 'SteamClient.User.GetIPCountry()',
+    'GetInstallFolders': 'SteamClient.InstallFolder.GetInstallFolders()',
+    'GetSystemInfo': 'SteamClient.System.GetSystemInfo()',
+}
+STEAM_READ_SCRIPT = r'''
+import json, pathlib, sys
+sys.path.insert(0, str(pathlib.Path.home()/'.local/share/frame-control/headset/bundle/ui'))
+from frame_steam import Page
+page = Page()
+try:
+    encoded = json.dumps({'result':page.eval(__FRAMEY_STEAM_READ__)})
+    if len(encoded.encode('utf-8')) > 256*1024:
+        raise ValueError('Steam read response is too large')
+    print(encoded)
+finally: page.sock.close()
+'''
+
+
+def read_steam(ssh, plugin_id, method):
+    """Read one explicitly supported Steam API for an installed store panel."""
+    if type(plugin_id) is not int or plugin_id <= 0:
+        raise PanelError('Choose an installed Decky store plugin')
+    if not isinstance(method, str) or method not in STEAM_READS:
+        raise PanelError('This Steam API is unavailable in Framey')
+    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    if len(found) != 1:
+        raise PanelError('The plugin is not managed by the Frame Control Decky store')
+    expression = '(async()=>await ' + STEAM_READS[method] + ')()'
+    script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression))
+    return json.loads(ssh('python3 -', stdin=script, timeout=25))
+
+
 EVENT_SCRIPT = r'''
 import json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path.home()/'.local/share/frame-control/headset/bundle/ui'))
