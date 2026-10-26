@@ -54,6 +54,8 @@ def render(data):
         'All other official backends remain unexecuted. '
         'The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. '
         'No worn-VR official-plugin result is claimed. '
+        'A [local UI follow-up](evidence/framey-ui-fallbacks-2026-10-26.json) rendered Pause Games and Tailscale Control settings '
+        'with all backend/network actions denied; it does not verify process pausing or Tailscale changes. '
         'Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), '
         '[Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), '
         '[Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and '

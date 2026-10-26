@@ -113,6 +113,17 @@ work. IndexedDB is hidden because the browser exposes it but denies access in
 an opaque iframe; localForage can then select Framey's bounded localStorage.
 Direct IndexedDB users remain unsupported.
 
+`SuspensefulImage` renders a native image. SteamClient `Storage.GetJSON` and
+`SetObject` use the same bounded per-plugin cache, including panel reopen
+persistence; they do not read Steam's account/global JSON store. Missing keys
+reject with `Not found`. Detached `SteamUIStore.RunningApps` is a frozen empty
+list, and the suspend store has no methods. Optional Steam app/account globals
+are undefined. These fallbacks let settings render without inventing live
+games or account identity. [The exact-bundle follow-up](evidence/framey-ui-fallbacks-2026-10-26.json)
+verifies Pause Games and Tailscale Control settings in local Chromium; their
+primary backend actions remain unverified. PlayTime still requires Steam's
+real app store and game observers.
+
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,
 then checks it again. It also confirms removal blocks method calls and a

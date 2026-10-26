@@ -11,6 +11,11 @@
       : R.createElement(type, elementProps);
   };
   window.SP_JSX = {jsx, jsxs:jsx, Fragment:R.Fragment};
+  // Let plugins use optional chaining for Steam-only globals without inventing
+  // user identity or suspend state in this isolated document.
+  for (const name of ['App','appStore','appInfoStore','collectionStore']) window[name] = undefined;
+  window.SuspendResumeStore = Object.freeze({});
+  window.SteamUIStore = Object.freeze({RunningApps:Object.freeze([]), MainRunningApp:undefined});
   // Steam normally fills these token maps. Official plugins can safely use
   // their own fallback strings when the isolated panel has no Steam tokens.
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en'],
@@ -284,6 +289,7 @@
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
     Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
+    SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
@@ -326,17 +332,30 @@
     Settings:{GetCurrentLanguage:async()=>steamLanguage(),
       ...register(['RegisterForSettingsChanges'])},
     Apps:register(['RegisterForAppDetails','RegisterForGameActionTaskChange',
-      'RegisterForGameActionStart','RegisterForGameActionEnd']),
+      'RegisterForGameActionStart','RegisterForGameActionEnd','RegisterForGameActionUserRequest']),
     GameSessions:register(['RegisterForAppLifetimeNotifications','RegisterForScreenshotNotification']),
     System:{...register(['RegisterForOnResumeFromSuspend','RegisterForOnSuspendRequest']),
-      UI:register(['RegisterForFocusChangeEvents'])},
+      UI:register(['RegisterForFocusChangeEvents','RegisterForSystemKeyEvents'])},
     Input:register(['RegisterForControllerInputMessages','RegisterForControllerStateChanges']),
     User:register(['RegisterForLoginStateChange','RegisterForPrepareForSystemSuspendProgress',
       'RegisterForResumeSuspendedGamesProgress','RegisterForCurrentUserChanges']),
     Overlay:register(['RegisterForOverlayActivated']),
     UI:register(['RegisterForUIModeChanged']),
+    // This is private plugin cache, not Steam's account/global JSON store.
+    Storage:{
+      GetJSON:async key=>{
+        const value=storage.getItem('steam-client:'+String(key));
+        if(value===null)throw Error('Not found');
+        return value;
+      },
+      SetObject:async(key,value)=>{
+        const encoded=JSON.stringify(value);
+        if(encoded===undefined)throw Error('SteamClient.Storage requires a JSON value');
+        storage.setItem('steam-client:'+String(key),encoded);
+      },
+    },
   };
-  DFL.Router = {...DFL.Navigation, MainRunningApp:undefined};
+  DFL.Router = {...DFL.Navigation, ...window.SteamUIStore};
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
     const data = {title, body, subtext, icon, logo};
