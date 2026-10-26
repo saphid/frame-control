@@ -53,7 +53,12 @@ iframe through its own debugging target, and reads control geometry. OpenVR's
 actual gamescope overlay. The check verifies delivery to the intended element
 and a trusted pointer event, toggles the sample, reads its real Decky settings
 file, reopens a fresh iframe, and checks the saved value. It also clicks the
-Settings/Panel tabs and quick action. A smooth-scroll event is attempted and its measured scroll offset is reported.
+Settings/Panel tabs and quick action. The scroll diagnostic creates a temporary
+160-pixel-high region with more than 700 pixels of content, moves the native
+pointer over it, then attempts OpenVR smooth and discrete scroll events. It
+reports region geometry, trusted pointer events, wheel events and `scrollTop`.
+No wheel event or offset change means this synthetic injection path remains
+unverified; it does not establish whether a physical controller can scroll.
 Temporary controls exercise the shipped
 `DFL.SliderField` and `DFL.TextField`; their values remain UI-only. Text uses
 CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,
