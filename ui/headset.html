@@ -244,7 +244,8 @@ function closeFrameyEvents(){
       session:frameySession,active:false}).catch(()=>{});
   frameyRunningActive=false;
   if(frameyEventsActive&&activeFrameyId!==null&&frameySession)
-    api('/api/framey/events',{id:activeFrameyId,session:frameySession,events:[],cursor:0}).catch(()=>{});
+    api('/api/framey/events',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+      session:frameySession,events:[],cursor:0}).catch(()=>{});
   frameyEventsActive=false;
 }
 function closeFrameyPanel(){closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
@@ -309,9 +310,11 @@ window.addEventListener('message',async event=>{
       req.args.length!==2||!Array.isArray(req.args[0])||req.args[0].length>32||
       req.args[0].some(name=>typeof name!=='string'||!/^[A-Za-z0-9_:/.-]{1,128}$/.test(name))||
       !Number.isSafeInteger(req.args[1])||req.args[1]<0)return;
-    const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
+    const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
+      reply={type:'framey:reply',id:req.id};
     frameyEventsActive=req.args[0].length>0;
-    try{reply.result=await api('/api/framey/events',{id:pluginId,session,events:req.args[0],cursor:req.args[1]});}
+    try{reply.result=await api('/api/framey/events',{id:pluginId,receipt,session,
+      events:req.args[0],cursor:req.args[1]});}
     catch(error){reply.error=error.message;}
     if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
       event.source.postMessage(reply,'*');
@@ -320,9 +323,10 @@ window.addEventListener('message',async event=>{
   if(!['framey:call','framey:steam'].includes(req.type)||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
   const steamRead=req.type==='framey:steam';
   if(steamRead&&(req.args.length!==0||!['GetIPCountry','GetInstallFolders','GetSystemInfo','GetLibrarySnapshot'].includes(req.method)))return;
-  const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
+  const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
+    reply={type:'framey:reply',id:req.id};
   try{const data=await api(steamRead?'/api/framey/steam':'/api/framey/method',
-    {id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
+    {id:pluginId,receipt,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
   if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });

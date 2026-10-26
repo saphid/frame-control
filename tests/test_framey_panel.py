@@ -18,6 +18,8 @@ import framey_panel
 import frame_headset
 import server
 
+RECEIPT = 'a' * 64
+
 
 class Panel(unittest.TestCase):
     def test_running_queue_and_host_contract(self):
@@ -70,7 +72,7 @@ class Panel(unittest.TestCase):
 
     def test_steam_reads_are_allowlisted_and_installed_only(self):
         with patch.object(framey_panel.frame_decky, 'status', return_value={
-                'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck'}]}):
+                'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck','sha256':RECEIPT}]}):
             for method, expression in framey_panel.STEAM_READS.items():
                 def fake_ssh(command, stdin, **_):
                     self.assertEqual(command, 'python3 -')
@@ -78,13 +80,16 @@ class Panel(unittest.TestCase):
                     self.assertIn(expression.replace('\n', r'\n'), stdin)
                     self.assertNotIn('__FRAMEY_STEAM_READ__', stdin)
                     return '{"result":"actual read"}'
-                self.assertEqual(framey_panel.read_steam(fake_ssh,81,method)['result'], 'actual read')
+                self.assertEqual(framey_panel.read_steam(fake_ssh,81,method,RECEIPT)['result'], 'actual read')
             for plugin_id, method in [(True,'GetIPCountry'), (0,'GetIPCountry'),
                     (82,'GetIPCountry'), (81,'ShutdownPC'), (81,'User.GetIPCountry'),
                     (81,[]), (81,'GetIPCountry();alert(1)')]:
                 with self.subTest(plugin_id=plugin_id, method=method):
                     with self.assertRaises(framey_panel.PanelError):
-                        framey_panel.read_steam(lambda *a,**k:self.fail('Unexpected SSH'),plugin_id,method)
+                        framey_panel.read_steam(lambda *a,**k:self.fail('Unexpected SSH'),plugin_id,method,RECEIPT)
+            with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
+                framey_panel.read_steam(lambda *a,**k:self.fail('Stale read reached SSH'),
+                                        81,'GetIPCountry','b'*64)
 
     def test_steam_read_response_limit_and_socket_cleanup(self):
         from types import SimpleNamespace
@@ -134,19 +139,19 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertEqual(json.loads(ast.literal_eval(assignment.value.args[0]))['args'],args)
             return '{"result":null}'
         with patch.object(framey_panel.frame_decky,'status',return_value={
-                'plugins':[{'storeId':53,'name':'Shotty'}]}):
+                'plugins':[{'storeId':53,'name':'Shotty','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh,
-                53,'set_id_map_fronend',args,True),{'result':None})
+                53,'set_id_map_fronend',args,True,RECEIPT),{'result':None})
         with self.assertRaisesRegex(framey_panel.PanelError,'too large'):
             framey_panel.call_method(lambda *a,**k:self.fail('Unexpected SSH'),
-                53,'set_id_map_fronend',[{'allapps':'x'*(256*1024)}],True)
+                53,'set_id_map_fronend',[{'allapps':'x'*(256*1024)}],True,RECEIPT)
 
     def test_steam_reads_have_the_headset_service_boundary(self):
         with patch.object(server,'HEADSET_RUNTIME',False), patch.dict(server.os.environ,{'FRAME_E2E_CONTAINER':'0'}):
             with self.assertRaises(server.Failure):server.framey_steam_action({'id':81,'method':'GetIPCountry'})
         with patch.object(server,'HEADSET_RUNTIME',True), patch.object(framey_panel,'read_steam',return_value={'result':'AU'}) as read:
-            self.assertEqual(server.framey_steam_action({'id':81,'method':'GetIPCountry'}),{'result':'AU'})
-            read.assert_called_once_with(server.ssh,81,'GetIPCountry')
+            self.assertEqual(server.framey_steam_action({'id':81,'method':'GetIPCountry','receipt':RECEIPT}),{'result':'AU'})
+            read.assert_called_once_with(server.ssh,81,'GetIPCountry',RECEIPT)
 
     def test_decky_event_queue_scope_bounds_expiry_and_reconnect(self):
         for name in ('framey_events.mjs', 'framey_event_parent.mjs'):
@@ -165,8 +170,11 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertIn('loader/plugin_event', stdin)
             return json.dumps({'events':[{'event':'timer:tick', 'args':[42]}], 'cursor':6})
         with patch.object(framey_panel.frame_decky, 'status', return_value={
-            'plugins':[{'storeId':96,'name':'Simple Timer'}]}):
-            self.assertEqual(framey_panel.poll_events(fake_ssh, 96, 'test-123.45', ['timer:tick'], 5)['cursor'], 6)
+            'plugins':[{'storeId':96,'name':'Simple Timer','sha256':RECEIPT}]}):
+            self.assertEqual(framey_panel.poll_events(fake_ssh, 96, 'test-123.45', ['timer:tick'], 5, RECEIPT)['cursor'], 6)
+            with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
+                framey_panel.poll_events(lambda *a,**k:self.fail('Stale poll reached SSH'),
+                                         96,'test-123.45',['timer:tick'],5,'b'*64)
             for plugin_id, session, events, cursor in [
                 (True,'test',['tick'],0), (96,'bad session',['tick'],0),
                 (96,'test',['a']*33,0), (96,'test',['bad event'],0),
@@ -177,7 +185,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                 with self.subTest(plugin_id=plugin_id, session=session, events=events, cursor=cursor):
                     with self.assertRaises(framey_panel.PanelError):
                         framey_panel.poll_events(lambda *a, **k:self.fail('Unexpected SSH'),
-                                                plugin_id, session, events, cursor)
+                                                plugin_id, session, events, cursor, RECEIPT)
 
     def test_event_action_has_same_headset_boundary_as_methods(self):
         with patch.object(server, 'HEADSET_RUNTIME', False), patch.dict(server.os.environ, {'FRAME_E2E_CONTAINER':'0'}):
@@ -185,8 +193,8 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                 server.framey_events_action({'id':96,'session':'test','events':['tick']})
         with patch.object(server, 'HEADSET_RUNTIME', True), \
              patch.object(framey_panel, 'poll_events', return_value={'events':[], 'cursor':0}) as poll:
-            self.assertEqual(server.framey_events_action({'id':96,'session':'test','events':['tick']})['events'], [])
-            poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0)
+            self.assertEqual(server.framey_events_action({'id':96,'session':'test','events':['tick'],'receipt':RECEIPT})['events'], [])
+            poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0, RECEIPT)
 
     def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
@@ -268,12 +276,12 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertIn('loader/call_legacy_plugin_method', stdin)
             return json.dumps({'result':{'success':True, 'result':'dark'}})
         with patch.object(framey_panel.frame_decky, 'status', return_value={
-            'plugins':[{'storeId':14,'name':'Legacy'}]}):
-            self.assertEqual(framey_panel.call_method(fake_ssh, 14, 'read_setting', [{'key':'mode'}], True),
+            'plugins':[{'storeId':14,'name':'Legacy','sha256':RECEIPT}]}):
+            self.assertEqual(framey_panel.call_method(fake_ssh, 14, 'read_setting', [{'key':'mode'}], True, RECEIPT),
                              {'result':{'success':True, 'result':'dark'}})
             for args, legacy in [([],True), ([[]],True), ([{},{}],True), ([{}],'true')]:
                 with self.assertRaises(framey_panel.PanelError):
-                    framey_panel.call_method(fake_ssh, 14, 'read_setting', args, legacy)
+                    framey_panel.call_method(fake_ssh, 14, 'read_setting', args, legacy, RECEIPT)
 
     def test_unsupported_root_symlink_and_unmanaged_are_refused(self):
         manifest = self.folder/'plugin.json'
@@ -303,11 +311,15 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertNotIn('__FRAMEY_METHOD_PAYLOAD__',stdin)
             return json.dumps({'result':{'theme':'dark'}})
         with patch.object(framey_panel.frame_decky, 'status', return_value={
-            'plugins':[{'storeId':14,'name':'ProtonDB Badges'}]}):
-            self.assertEqual(framey_panel.call_method(fake_ssh,14,'get_setting',['theme','dark']),
+            'plugins':[{'storeId':14,'name':'ProtonDB Badges','sha256':RECEIPT}]}):
+            self.assertEqual(framey_panel.call_method(fake_ssh,14,'get_setting',['theme','dark'],receipt=RECEIPT),
                              {'result':{'theme':'dark'}})
-            with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,15,'get_setting',[])
-            with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,14,'x;alert(1)',[])
+            with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,15,'get_setting',[],receipt=RECEIPT)
+            with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,14,'x;alert(1)',[],receipt=RECEIPT)
+            for stale in (None, 'b' * 64, 'invalid'):
+                with self.subTest(stale=stale), self.assertRaisesRegex(framey_panel.PanelError, 'receipt|changed'):
+                    framey_panel.call_method(lambda *a, **k:self.fail('Stale receipt reached SSH'),
+                                             14,'get_setting',[],receipt=stale)
         compile(framey_panel.METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__',repr('{}')), '<remote method>', 'exec')
 
     def test_headset_bundle_contains_runtime_and_licenses(self):

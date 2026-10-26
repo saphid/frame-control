@@ -76,6 +76,8 @@ class NativeContracts(unittest.TestCase):
             frameworks = str(Path(developer) / "Platforms/MacOSX.platform/Developer/Library/Frameworks")
             libraries = str(Path(developer) / "Platforms/MacOSX.platform/Developer/usr/lib")
             shared = str(Path(developer).parent / "SharedFrameworks")
+            if not (Path(frameworks) / "XCTest.framework").is_dir():
+                self.skipTest("Foundation XCTest contracts need full Xcode; Command Line Tools lack XCTest")
             result = subprocess.run(["swiftc", "-I", libraries, "-L", libraries, "-F", frameworks, "-Xlinker", "-rpath", "-Xlinker", frameworks,
                                      "-Xlinker", "-rpath", "-Xlinker", libraries,
                                      "-Xlinker", "-rpath", "-Xlinker", shared,
