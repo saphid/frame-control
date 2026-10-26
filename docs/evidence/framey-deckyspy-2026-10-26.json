@@ -63,12 +63,15 @@
   "localRuntime": "Actual published Decky 3.3.0 amd64: all five cases passed, including historical bad-shim negative control.",
   "tests": {
     "python": {
-      "run": 1648,
+      "run": 1649,
       "skipped": 16,
       "result": "passed"
     },
     "fakeFramePinnedTransactions": "passed",
-    "node24": "passed"
+    "node24": {
+      "run": 46,
+      "result": "passed"
+    }
   },
   "unverified": [
     "Automatic low-battery/OOM alerts",

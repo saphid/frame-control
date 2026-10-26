@@ -50,7 +50,7 @@ kept out of published evidence.
 
 Local verification also passed all five actual-Decky amd64 regression cases,
 the focused fake-Frame pinned install/remove transaction (backend execution
-stubbed), 1,648 Python tests (16 skips), and the app tests with Node 24. The
+stubbed), 1,649 Python tests (16 skips), and 46 app tests with Node 24. The
 native ARM64 CI gate additionally runs discovery/public calls for this shim.
 
 **Works** covers useful read-only system monitoring, a silent test warning and
