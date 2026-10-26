@@ -9,6 +9,8 @@ import frame_decky
 
 
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
+EVENT = re.compile(r'[A-Za-z0-9_:/.-]{1,128}\Z')
+SESSION = re.compile(r'[A-Za-z0-9_.-]{1,100}\Z')
 PLUGINS = Path.home()/'.local/share/frame-control/decky/plugins'
 
 
@@ -104,3 +106,36 @@ def call_method(ssh, plugin_id, method, args, legacy=False):
     payload = {'name':found[0]['name'], 'method':method, 'args':args, 'legacy':legacy}
     return json.loads(ssh('python3 - ' + shlex.quote(json.dumps(payload)),
                           stdin=METHOD_SCRIPT, timeout=25))
+
+
+EVENT_SCRIPT = r'''
+import json, pathlib, sys
+sys.path.insert(0, str(pathlib.Path.home()/'.local/share/frame-control/headset/bundle/ui'))
+from frame_steam import Page
+payload = json.loads(sys.argv[1])
+source = __FRAMEY_EVENTS_SOURCE__
+page = Page()
+try: print(json.dumps(page.eval('(' + source + ')(' + json.dumps(payload) + ')')))
+finally: page.sock.close()
+'''
+
+
+def poll_events(ssh, plugin_id, session, events, cursor=0):
+    """Read only this store-owned plugin's subscribed events; never trust its claimed name."""
+    if type(plugin_id) is not int or plugin_id <= 0:
+        raise PanelError('Choose an installed Decky store plugin')
+    if not isinstance(session, str) or not SESSION.fullmatch(session):
+        raise PanelError('Invalid Framey event session')
+    if (not isinstance(events, list) or len(events) > 32 or
+            any(not isinstance(event, str) or not EVENT.fullmatch(event) for event in events)):
+        raise PanelError('Invalid Decky event names')
+    if type(cursor) is not int or not 0 <= cursor <= 9007199254740991:
+        raise PanelError('Invalid Decky event cursor')
+    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    if len(found) != 1:
+        raise PanelError('The plugin is not managed by the Frame Control Decky store')
+    payload = {'name':found[0]['name'], 'session':session, 'events':events, 'cursor':cursor}
+    # Embed only our bundled source as a Python string; plugin data stays in JSON.
+    source = Path(__file__).with_name('framey-events.js').read_text(encoding='utf-8')
+    script = EVENT_SCRIPT.replace('__FRAMEY_EVENTS_SOURCE__', repr(source))
+    return json.loads(ssh('python3 - ' + shlex.quote(json.dumps(payload)), stdin=script, timeout=25))

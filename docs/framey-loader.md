@@ -51,6 +51,25 @@ restores the cache when a panel reopens if the parent's browser storage is
 available. If storage is denied or cleared, the cache lasts only for the current
 panel. Use the plugin backend for settings that must survive cache loss.
 
+Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
+events while the panel is open. The parent resolves the plugin name from its
+installed store receipt, polls Steam's existing Decky event connection, and sends
+only subscribed events to that panel session. A subscription is established
+before a backend call can emit its response. The bridge allows 32 event names,
+queues at most 64 events and 48 KiB, and drops any event whose arguments exceed
+8 KiB. Polling occurs about once a second, so this is unsuitable for high-rate
+input/audio streams. Closing/reopening a panel removes its subscriptions;
+abandoned CEF subscriptions expire after 15 seconds. This does not deliver
+global notifications while a Framey panel is closed.
+
+The [26 October live checks](evidence/framey-events-backend-2026-10-26.json)
+used the actual official Notebook and Simple Timer Python backends in a private
+removable ARM64 Decky service. Notebook's default notebook saved a pointer stroke
+and loaded it after a backend restart. Simple Timer's start/cancel controls,
+countdown, completion toast and persisted recents/subtle mode worked. Simple
+Timer remains partial: its own expired-timer startup raises a missing
+`timer_task` error, sound/suspend are unsupported, and worn VR was not checked.
+
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,

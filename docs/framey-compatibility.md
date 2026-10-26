@@ -4,9 +4,9 @@ Snapshot: 2026-10-25T23:19:48.854504+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 0 · Partial: 43 · Broken: 62 · N/A: 11.**
+**Works: 1 · Partial: 42 · Broken: 62 · N/A: 11.**
 
-- **Works** requires verified useful plugin behavior with its real backend. None qualifies from this audit.
+- **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means a limited frontend/settings surface initialized or rendered. Backend-dependent functionality remains unverified; it is not an end-to-end success claim.
 - **Broken** means a concrete archive, frontend or Steam dependency blocks the audited version. An artificial backend/network denial alone is not evidence that the real backend is broken.
 - **N/A** means the plugin targets hardware or a display/UI surface that Framey does not provide. The store disables installation for these versions.
@@ -27,7 +27,7 @@ Open the browser audit URL in local Chromium, run `runAudit()` and inspect/downl
 
 The current published digests are pinned in the JSON; if the store changed, retain/download those exact archives for reproduction. Audit downloads permit larger ZIPs for inspection; production installer limits remain 50 MiB ZIP / 150 MiB unpacked / 30 MiB per member.
 
-After the VR job released the shared lock, this audit acquired it and used a private temporary Decky 3.3.0 ARM64 user service. Read-only ProtonDB `get_setting` and Steam Status `get_settings` calls succeeded through the live Steam CEF websocket. The service and private base were removed and the lock released; normal managed services stayed inactive, battery was 100 → 99, and no power setting was changed. [Redacted results](evidence/framey-official-backend-2026-10-25.json) record exactly what ran. All other official backends remain unexecuted. The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. No worn-VR official-plugin result is claimed. Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), [Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), [Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and [legacy MusicControl](evidence/framey-legacy-2026-10-25.md).
+After the VR job released the shared lock, this audit acquired it and used a private temporary Decky 3.3.0 ARM64 user service. Read-only ProtonDB `get_setting` and Steam Status `get_settings` calls succeeded through the live Steam CEF websocket. The service and private base were removed and the lock released; normal managed services stayed inactive, battery was 100 → 99, and no power setting was changed. [Redacted results](evidence/framey-official-backend-2026-10-25.json) record exactly what ran. A [2026-10-26 follow-up](evidence/framey-events-backend-2026-10-26.json) verified default Notebook drawing/save/reopen across a real backend restart and Simple Timer start/cancel, countdown/completion events, a visible toast and persisted recents/subtle mode. Only private test settings were written. Simple Timer remains partial because its own expired-timer startup raises a missing `timer_task` error; sound/suspend are unsupported. All other official backends remain unexecuted. The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. No worn-VR official-plugin result is claimed. Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), [Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), [Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and [legacy MusicControl](evidence/framey-legacy-2026-10-25.md).
 
 ## Every current plugin
 
@@ -44,7 +44,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 14: ProtonDB Badges 1.3.4 | 2 / 2 | partial | Settings render locally and read-only get_setting RPC returned the default through real Decky 3.3.0 on ARM64 Frame. Steam game-page badges have no patch target; live writes and VR controls unverified. | static archive, local browser, fake-Frame, real Frame SSH |
 | 16: Audio Loader 1.6.1 | legacy / legacy | broken | This plugin needs root and is not supported by the Frame user service. Frontend audit failed: Cannot read properties of null (reading 'm_GamepadUIAudioStore'). | static archive, local browser, fake-Frame |
 | 18: Bluetooth 3.1.1 | 1 / 2 | partial | Controls render with fixture replies; actual Bluetooth discovery, labels and connections remain unverified. | static archive, local browser, fake-Frame |
-| 19: Notebook 0.1.5 | legacy / legacy | partial | Notebook initializes; real note load/save remains unverified. | static archive, local browser, fake-Frame |
+| 19: Notebook 0.1.5 | legacy / legacy | works | Default notebook drawing, save and reopen verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Per-game auto-selection and background artwork unavailable; worn-VR input unverified. | static archive, local browser, fake-Frame, real Frame SSH |
 | 21: PowerTools 2.0.3 | legacy / legacy | N/A | Not supported on Frame: Targets AMD Ryzen power controls; Frame uses an ARM64 SoC. | static archive, local browser, fake-Frame |
 | 22: Memory Deck 0.1.8 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: memory-deck/bin/libscanmem.so.1.0.0. | static archive, local browser, fake-Frame |
 | 23: Animation Changer 1.3.2 | legacy / legacy | partial | Initializer succeeds; forced backend failure prevents loading animations. Boot-video changes untested. | static archive, local browser, fake-Frame |
@@ -102,7 +102,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 93: Deck Settings 1.2.6 | 1 / 2 | broken | Initializer succeeds; game selection fails because SteamClient.InstallFolder.GetInstallFolders is unavailable. | static archive, local browser, fake-Frame |
 | 94: Decky DoT DNS 0.0.2 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |
 | 95: Decky-SpoofDPI 0.12.0 | 1 / 2 | broken | Plugin contains a non-ARM64 Linux binary: decky-spoof-dpi/bin/spoofdpi. | static archive, local browser, fake-Frame |
-| 96: Simple Timer 1.0.0 | 1 / 2 | partial | Timer panel initializes; live timer persistence, notifications and audio are unverified. | static archive, local browser, fake-Frame |
+| 96: Simple Timer 1.0.0 | 1 / 2 | partial | Live start/cancel, countdown events, completion toast, persisted recents/subtle mode verified in Chromium with real ARM64 Decky. Upstream expired-timer restart raises missing timer_task. Audio/suspend unsupported; alerts require an open panel; worn VR unverified. | static archive, local browser, fake-Frame, real Frame SSH |
 | 97: Decky-Framegen 0.11.15 | 1 / 2 | broken | Plugin archive size or SHA-256 did not match the store. | static archive, local browser, fake-Frame |
 | 98: Decky-Lookup 0.1.0 | 1 / 2 | partial | Initializer succeeds; game-page context actions and live lookups remain unverified. | static archive, local browser, fake-Frame |
 | 99: Decky Zerotier 0.3.1 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |

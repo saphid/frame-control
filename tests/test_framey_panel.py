@@ -20,6 +20,46 @@ import server
 
 
 class Panel(unittest.TestCase):
+    def test_decky_event_queue_scope_bounds_expiry_and_reconnect(self):
+        for name in ('framey_events.mjs', 'framey_event_parent.mjs'):
+            with self.subTest(script=name):
+                result = subprocess.run(['node', str(Path(__file__).parent/'page'/name)],
+                                        capture_output=True, text=True, timeout=10)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_events_validate_before_ssh_and_resolve_name_from_store_receipt(self):
+        def fake_ssh(command, stdin=None, **_):
+            import shlex
+            payload = json.loads(shlex.split(command)[2])
+            self.assertEqual(payload, {'name':'Simple Timer', 'session':'test-123.45',
+                                      'events':['timer:tick'], 'cursor':5})
+            compile(stdin, '<event poll>', 'exec')
+            self.assertIn('loader/plugin_event', stdin)
+            return json.dumps({'events':[{'event':'timer:tick', 'args':[42]}], 'cursor':6})
+        with patch.object(framey_panel.frame_decky, 'status', return_value={
+            'plugins':[{'storeId':96,'name':'Simple Timer'}]}):
+            self.assertEqual(framey_panel.poll_events(fake_ssh, 96, 'test-123.45', ['timer:tick'], 5)['cursor'], 6)
+            for plugin_id, session, events, cursor in [
+                (True,'test',['tick'],0), (96,'bad session',['tick'],0),
+                (96,'test',['a']*33,0), (96,'test',['bad event'],0),
+                (96,'test',[None],0), (96,'test',['tick'],-1),
+                (96,'test',['tick'],True), (96,'test',['tick'],2**53),
+                (19,'test',['tick'],0),
+            ]:
+                with self.subTest(plugin_id=plugin_id, session=session, events=events, cursor=cursor):
+                    with self.assertRaises(framey_panel.PanelError):
+                        framey_panel.poll_events(lambda *a, **k:self.fail('Unexpected SSH'),
+                                                plugin_id, session, events, cursor)
+
+    def test_event_action_has_same_headset_boundary_as_methods(self):
+        with patch.object(server, 'HEADSET_RUNTIME', False), patch.dict(server.os.environ, {'FRAME_E2E_CONTAINER':'0'}):
+            with self.assertRaises(server.Failure):
+                server.framey_events_action({'id':96,'session':'test','events':['tick']})
+        with patch.object(server, 'HEADSET_RUNTIME', True), \
+             patch.object(framey_panel, 'poll_events', return_value={'events':[], 'cursor':0}) as poll:
+            self.assertEqual(server.framey_events_action({'id':96,'session':'test','events':['tick']})['events'], [])
+            poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0)
+
     def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
                                 capture_output=True, text=True, timeout=10)
@@ -124,6 +164,7 @@ class Panel(unittest.TestCase):
         with tarfile.open(fileobj=io.BytesIO(gzip.decompress(packed))) as archive:
             names = set(archive.getnames())
         self.assertTrue({'ui/framey_panel.py','ui/framey-host.js',
+                         'ui/framey-events.js',
                          'ui/vendor/react-18.3.1.min.js','ui/vendor/react-dom-18.3.1.min.js',
                          'ui/vendor/REACT-LICENSE.txt','ui/vendor/REACT-DOM-LICENSE.txt'} <= names)
 

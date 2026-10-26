@@ -197,6 +197,7 @@ byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
   const installed=(deckyState?.plugins||[]).find(p=>p.storeId===id);if(!installed)return;
   byId('frameyCompatibility').textContent=compatibilityText(installed);
+  closeFrameyEvents();
   activeFrameyId=id;frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
   byId('frameyPanelStatus').textContent='Loading plugin panel…';
   byId('frameyFrame').src=`/framey/panel/${id}?session=${encodeURIComponent(frameySession)}#${frameySession}`;
@@ -204,7 +205,13 @@ function openFrameyPanel(id,name){
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
     byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
 }
-byId('frameyClose').onclick=()=>{activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
+let frameyEventsActive=false;
+function closeFrameyEvents(){
+  if(frameyEventsActive&&activeFrameyId!==null&&frameySession)
+    api('/api/framey/events',{id:activeFrameyId,session:frameySession,events:[],cursor:0}).catch(()=>{});
+  frameyEventsActive=false;
+}
+byId('frameyClose').onclick=()=>{closeFrameyEvents();activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
@@ -237,11 +244,27 @@ window.addEventListener('message',async event=>{
     api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
   if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
   if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
-  if(req.type!=='framey:call'||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
-  const pluginId=activeFrameyId,reply={type:'framey:reply',id:req.id};
+  if(req.type==='framey:events:close'){
+    if(req.session===frameySession)closeFrameyEvents();return;
+  }
+  if(req.type==='framey:events'){
+    if(req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||!Array.isArray(req.args)||
+      req.args.length!==2||!Array.isArray(req.args[0])||req.args[0].length>32||
+      req.args[0].some(name=>typeof name!=='string'||!/^[A-Za-z0-9_:/.-]{1,128}$/.test(name))||
+      !Number.isSafeInteger(req.args[1])||req.args[1]<0)return;
+    const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
+    frameyEventsActive=req.args[0].length>0;
+    try{reply.result=await api('/api/framey/events',{id:pluginId,session,events:req.args[0],cursor:req.args[1]});}
+    catch(error){reply.error=error.message;}
+    if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
+      event.source.postMessage(reply,'*');
+    return;
+  }
+  if(req.type!=='framey:call'||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
+  const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
   try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
-  if(pluginId===activeFrameyId&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
+  if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });
 window.addEventListener('pointerup',event=>{if(event.isTrusted)
   api('/api/framey/check',{kind:'input'}).catch(()=>{});},{passive:true});
