@@ -36,12 +36,18 @@ def remote(command, stdin=None, timeout=15):
 
 
 PROBE = r'''
-import json, pathlib, subprocess
+import json, math, pathlib, subprocess
 power=[]
 for item in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
     try:
         if (item.parent/'type').read_text().strip() == 'Battery':
             power.append({'name':item.parent.name,'percent':int(item.read_text().strip())})
+    except (OSError,ValueError): pass
+proximity=[]
+for item in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
+    try:
+        value=float(item.read_text().strip())
+        if math.isfinite(value) and value >= 0: proximity.append(value)
     except (OSError,ValueError): pass
 stats=subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--stats'],capture_output=True,text=True,timeout=5)
 try:
@@ -62,7 +68,7 @@ if base.is_dir() and not base.is_symlink():
             if isinstance(p.get('storeId'),int): plugins.append({'id':p['storeId'],'name':manifest['name']})
         except (OSError,ValueError,KeyError): pass
 service=subprocess.run(['systemctl','--user','is-active','frame-control-headset.service'],capture_output=True,text=True)
-print(json.dumps({'battery':power,'activity':activity,'panel':panel,
+print(json.dumps({'battery':power,'proximity':proximity,'activity':activity,'panel':panel,
                   'panelService':service.returncode==0,'plugins':plugins}))
 '''
 
@@ -120,11 +126,15 @@ def main(worn_confirmed=False):
             raise RuntimeError('Battery capacity unavailable or below 20%; no device session started')
         if before['activity'] is None or before['activity'] >= 3:
             raise RuntimeError('SteamVR is in standby; no worn-headset check started')
+        if not before.get('proximity'):
+            raise RuntimeError('Proximity reading unavailable; no worn-headset check started')
         if not before['panelService'] or not before['plugins']:
             raise RuntimeError('Install and open the Frame Control panel and a Framey plugin before this check')
         after_lock = probe()
-        if after_lock['activity'] >= 3 or min(x['percent'] for x in after_lock['battery']) < 20:
-            raise RuntimeError('Activity or battery changed after acquiring the lock')
+        if (not isinstance(after_lock.get('activity'), int) or after_lock['activity'] >= 3 or
+                not after_lock.get('proximity') or not after_lock.get('battery') or
+                min(x['percent'] for x in after_lock['battery']) < 20):
+            raise RuntimeError('Activity, proximity or battery changed after acquiring the lock')
         state = json.dumps({'nonce':token,'started':time.time()})
         code = "import pathlib; p=pathlib.Path.home()/'.local/share/frame-control/headset/worn-check.json'; p.write_text(" + repr(state) + ")"
         remote('python3 -c ' + shlex.quote(code))
