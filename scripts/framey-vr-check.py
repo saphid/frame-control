@@ -90,6 +90,15 @@ def settings(state):
     return pause, timeout
 
 
+def steamvr_activity(rows):
+    """Read the unique status row; metrics can precede it in --stats output."""
+    if not isinstance(rows, list):
+        return None
+    levels = [row.get('activity_level') for row in rows
+              if isinstance(row, dict) and row.get('operation') == 'status']
+    return levels[0] if len(levels) == 1 and type(levels[0]) is int else None
+
+
 def diagnostic_source():
     return (ROOT / 'scripts/framey_openvr.py').read_text() + '''
 import json
@@ -183,9 +192,7 @@ def main(argv=None):
         if not before['battery'] or min(before['battery']) < 20:
             raise RuntimeError('Battery unknown or below 20%')
         if args.wake or args.exercise:
-            stats = before.get('stats')
-            if (not isinstance(stats, list) or not stats or
-                    not isinstance(stats[0], dict) or stats[0].get('activity_level') != 3):
+            if steamvr_activity(before.get('stats')) != 3:
                 raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
         if args.wake or args.exercise:
             # Independent systemd timer restores power even if the controller is

@@ -15,6 +15,18 @@ spec.loader.exec_module(check)
 
 
 class Safety(unittest.TestCase):
+    def test_status_row_can_follow_metrics_and_ambiguous_status_fails_closed(self):
+        self.assertEqual(check.steamvr_activity([
+            {'operation':'performance','frame_presents':12},
+            {'operation':'status','activity_level':3}]), 3)
+        self.assertEqual(check.steamvr_activity([
+            {'operation':'performance','frame_presents':12},
+            {'operation':'status','activity_level':1}]), 1)
+        self.assertIsNone(check.steamvr_activity([
+            {'operation':'status','activity_level':3},
+            {'operation':'status','activity_level':1}]))
+        self.assertIsNone(check.steamvr_activity([{'activity_level':3}]))
+
     def test_overlay_wait_is_bounded_and_stops_when_visible(self):
         from unittest.mock import Mock
         remote = Mock()
@@ -61,7 +73,7 @@ class Safety(unittest.TestCase):
     def test_power_restore_after_partial_setter_failure(self):
         state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
                  'timeout':'power.turnOffScreensTimeout=17.000000','dashboardVisible':False,
-                 'stats':[{'activity_level':3}], 'proximity':[6.25]}
+                 'stats':[{'operation':'status','activity_level':3}], 'proximity':[6.25]}
         with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
             remote = factory.return_value
             remote.python.return_value = state
@@ -78,7 +90,9 @@ class Safety(unittest.TestCase):
             self.assertIn('rmdir /tmp/frame-test.lock', commands[-1])
 
     def test_awake_or_unknown_activity_refuses_wake_and_install(self):
-        for stats in ([{'activity_level':1}], [{'activity_level':2}], [], None):
+        for stats in ([{'operation':'status','activity_level':1}],
+                      [{'operation':'performance'}, {'operation':'status','activity_level':2}],
+                      [], None):
             state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
                      'timeout':'power.turnOffScreensTimeout=17.000000',
                      'dashboardVisible':False, 'stats':stats, 'proximity':[0.0]}

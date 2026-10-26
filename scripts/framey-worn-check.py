@@ -44,8 +44,11 @@ for item in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
             power.append({'name':item.parent.name,'percent':int(item.read_text().strip())})
     except (OSError,ValueError): pass
 stats=subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--stats'],capture_output=True,text=True,timeout=5)
-try: activity=json.loads(stats.stdout)[0]['activity_level'] if stats.returncode == 0 else None
-except (ValueError,KeyError,IndexError,TypeError): activity=None
+try:
+    rows=json.loads(stats.stdout) if stats.returncode == 0 else None
+    levels=[row.get('activity_level') for row in rows if isinstance(row,dict) and row.get('operation')=='status'] if isinstance(rows,list) else []
+    activity=levels[0] if len(levels)==1 and type(levels[0]) is int else None
+except (ValueError,TypeError): activity=None
 panels=subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--overlays'],capture_output=True,text=True,timeout=5)
 panel=next((line.strip() for line in panels.stdout.splitlines() if 'valve.steam.desktopgame.2001947813' in line),None)
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
