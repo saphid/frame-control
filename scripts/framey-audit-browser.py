@@ -102,7 +102,9 @@ window.runAudit=async(ids,settleMs=1200)=>{
       library:librarySnapshot?'snapshot replay':'unavailable',running:runningSnapshot?'snapshot replay':'unavailable'};
     progress.textContent=plugin.id+' '+plugin.name;panel.src='/panel/'+plugin.id;
     await new Promise(resolve=>setTimeout(resolve,settleMs));
-    panel.contentWindow.postMessage({type:'audit:inspect'},'*');
+    // Detached Steam snapshots may contain personal library data. Keep text
+    // observations out of reports that replay either snapshot.
+    if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);active=null;
     panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));
