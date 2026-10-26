@@ -14,6 +14,9 @@ action calls the backend, so it reads the persisted setting rather than a
 browser cache. A missing, damaged, or old non-boolean value reads as the
 caller's default;
 the next save atomically replaces the sample's settings file.
+The panel also guards its own read and write calls synchronously. If two
+controller events arrive before React redraws a disabled control, the second
+event is ignored; after the request settles, a new change can be saved.
 
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,

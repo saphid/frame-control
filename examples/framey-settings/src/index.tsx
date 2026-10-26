@@ -1,6 +1,6 @@
 import {callable, definePlugin, routerHook, toaster} from '@decky/api';
 import {ButtonItem, Navigation, PanelSection, PanelSectionRow, ToggleField, useParams} from '@decky/ui';
-import {useEffect, useState} from 'react';
+import {useEffect, useRef, useState} from 'react';
 
 const getSetting = callable<[key: string, fallback: boolean], boolean>('get_setting');
 const setSetting = callable<[key: string, value: boolean], boolean>('set_setting');
@@ -9,8 +9,11 @@ function Content() {
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(true);
   const [message, setMessage] = useState('Loading setting…');
+  const pending = useRef(false);
 
   async function refresh() {
+    if (pending.current) return;
+    pending.current = true;
     setBusy(true);
     try {
       const value = await getSetting('enabled', false);
@@ -19,6 +22,7 @@ function Content() {
     } catch (error) {
       setMessage(`Could not read setting: ${String(error)}`);
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }
@@ -26,6 +30,10 @@ function Content() {
   useEffect(() => {void refresh();}, []);
 
   async function change(value: boolean) {
+    // Two controller events can arrive before React redraws the disabled toggle.
+    // Keep writes ordered so a late first reply cannot replace the final choice.
+    if (pending.current) return;
+    pending.current = true;
     setBusy(true);
     try {
       await setSetting('enabled', value);
@@ -36,6 +44,7 @@ function Content() {
     } catch (error) {
       setMessage(`Could not save setting: ${String(error)}`);
     } finally {
+      pending.current = false;
       setBusy(false);
     }
   }

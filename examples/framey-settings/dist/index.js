@@ -30,7 +30,11 @@ function Content() {
     const [enabled, setEnabled] = SP_REACT.useState(false);
     const [busy, setBusy] = SP_REACT.useState(true);
     const [message, setMessage] = SP_REACT.useState('Loading setting…');
+    const pending = SP_REACT.useRef(false);
     async function refresh() {
+        if (pending.current)
+            return;
+        pending.current = true;
         setBusy(true);
         try {
             const value = await getSetting('enabled', false);
@@ -41,11 +45,17 @@ function Content() {
             setMessage(`Could not read setting: ${String(error)}`);
         }
         finally {
+            pending.current = false;
             setBusy(false);
         }
     }
     SP_REACT.useEffect(() => { void refresh(); }, []);
     async function change(value) {
+        // Two controller events can arrive before React redraws the disabled toggle.
+        // Keep writes ordered so a late first reply cannot replace the final choice.
+        if (pending.current)
+            return;
+        pending.current = true;
         setBusy(true);
         try {
             await setSetting('enabled', value);
@@ -58,6 +68,7 @@ function Content() {
             setMessage(`Could not save setting: ${String(error)}`);
         }
         finally {
+            pending.current = false;
             setBusy(false);
         }
     }

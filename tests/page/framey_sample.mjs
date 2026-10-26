@@ -8,7 +8,8 @@ const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js'
 assert.match(bundle,/SP_JSX\.jsx/);
 const React={Fragment:Symbol('fragment'),Component:class {},
   createElement:(type,props,...children)=>({type,props:props||{},children}),
-  useState:value=>[value,()=>{}],useEffect(){},isValidElement:value=>!!value?.type};
+  useState:value=>[value,()=>{}],useRef:value=>({current:value}),
+  useEffect(){},isValidElement:value=>!!value?.type};
 class Element {
   constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...nodes){this.children.push(...nodes);}
@@ -51,8 +52,12 @@ assert.equal(calls[0].method,'get_setting');
 assert.deepEqual(Array.from(calls[0].args),['enabled',false]);
 // Exercise the built sample's save path through the real Framey toast host.
 // Its JSX body must reach a React root, rather than stringify to an object.
-content.children[0][0].children[0].props.onChange(true);
+const toggle=content.children[0][0].children[0];
+toggle.props.onChange(true);
+toggle.props.onChange(false); // Before React redraws disabled, do not race the first write.
 await new Promise(resolve=>setImmediate(resolve));
+assert.equal(calls.filter(call=>call.method==='set_setting').length,1);
+assert.deepEqual(Array.from(calls.find(call=>call.method==='set_setting').args),['enabled',true]);
 const toast=elements.get('framey-toasts').children[0];
 assert.equal(toast.attributes.role,'status');
 assert.equal(toast.children[0].textContent,'Framey sample');
@@ -62,6 +67,10 @@ assert.match(JSON.stringify(toastBody),/Setting saved/);
 assert.match(JSON.stringify(toastBody),/on/);
 toast.children[2].onclick();
 assert.equal(roots.get(toast.children[1]).unmounted,true);
+toggle.props.onChange(false);
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(calls.filter(call=>call.method==='set_setting').length,2,
+  'a completed save must release the sample setting lock');
 assert.equal(window.DFL.Navigation.Navigate('/framey-sample/details/saved-setting'),true);
 assert.equal(window.DFL.useParams().topic,'saved-setting');
 assert.equal(window.DFL.Navigation.Navigate('/library/home'),false);
