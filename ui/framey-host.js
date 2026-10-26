@@ -366,7 +366,10 @@
     showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
-    findInReactTree: () => null, findModule, findModuleChild, findModuleDetailsByExport,
+    // The isolated panel has no Steam React root. Legacy plugins can inspect
+    // this null result and keep their own controls without patching Steam UI.
+    getReactRoot: () => null, findInReactTree: () => null,
+    findModule, findModuleChild, findModuleDetailsByExport,
     findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
     findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],
     createModuleMapping, findAllModules:filter=>[...createModuleMapping(filter).values()],

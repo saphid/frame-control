@@ -4184,12 +4184,13 @@
         "https://github.com/jessebofill/DeckWebBrowser.git"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: deckyFrontendLib.getReactRoot is not a function.",
+      "reason": "The exact frontend now initializes with a null Steam React-root lookup. The browser itself still requires Steam GamepadUI CDP injection and a backend WebSocket unavailable in Framey; no working browser tab was verified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "focused local browser"
       ],
       "browser": {
         "id": 59,
@@ -4241,6 +4242,17 @@
         "sha256": "1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "focusedBrowser": {
+        "hostChange": "DFL.getReactRoot returns null without exposing a Steam tree",
+        "ready": true,
+        "error": null,
+        "methods": [
+          "set_main_tab",
+          "load"
+        ],
+        "backendAndNetwork": "denied",
+        "scope": "initializer only; no usable browser tab or real backend verified"
       }
     },
     {
