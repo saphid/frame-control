@@ -112,7 +112,13 @@ def panel(plugin_id):
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
 button:focus-visible,select:focus-visible,input:focus-visible{outline:4px solid #f8d370}button{margin:4px 8px 4px 0}button:disabled{opacity:.55}section{padding:12px;margin:12px 0;background:#1b3042;border-radius:10px}
-label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}</style>
+label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
+.framey-spinner,.framey-loading{display:grid;place-items:center;min-height:80px}.framey-loading{background:#1b3042}
+.framey-status{color:#b9c9d6}.framey-medium{font-size:1em}.framey-footer{padding:12px 0}
+.framey-sections,.framey-library{display:flex;flex-direction:column;gap:12px}.framey-actions{display:flex;flex-wrap:wrap;gap:8px}
+.framey-action{min-height:52px}.framey-button-child{display:inline-flex;align-items:center;gap:8px}.framey-green{background:#246b42}
+.framey-long-title{overflow-wrap:anywhere}.framey-muted{background:#1b3042}.framey-image{max-width:100%;object-fit:contain}
+.framey-focus:focus-visible{outline:4px solid #f8d370}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
 <script id="framey-bundle" type="application/json"''' + module + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>

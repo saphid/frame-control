@@ -49,7 +49,7 @@ context.SP_JSX=window.SP_JSX;
 vm.runInContext(official,context,{timeout:2000});
 const plugin=window.__official();
 assert.equal(typeof window.DFL.findModuleChild,'function');
-assert.equal(window.DFL.findModuleChild(()=>{}),null); // Steam has no matching module in the VR panel.
+assert.equal(window.DFL.findModuleChild(()=>{}),undefined); // Steam has no matching module in the VR panel.
 assert.equal(plugin.content?.type?.name,'QuickAccessView');
 const panel=plugin.content.type();
 assert.ok(panel?.type); // Read-only settings render with empty local data.

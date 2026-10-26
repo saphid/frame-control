@@ -288,6 +288,50 @@
       R.createElement('button', {type:'button',onClick:closeModal}, 'Close'), element));
     return {Close:closeModal};
   };
+  // These are Framey's own styles and components, never Steam's webpack cache.
+  // Keep the registry finite: an unknown Steam implementation stays unavailable.
+  const classModules = new Map(Object.entries({
+    'framey/spinner': {SpinnerLoaderContainer:'framey-spinner', ContainerBackground:'framey-loading',
+      LoadingStatus:'framey-status', Medium:'framey-medium'},
+    'framey/footer': {QuickAccessFooter:'framey-footer', BasicFooter:'framey-footer'},
+    'framey/app-details': {AppDetailSectionList:'framey-sections', AppActionButton:'framey-action'},
+    'framey/play-button': {PlayButtonContainer:'framey-actions', ButtonChild:'framey-button-child',
+      Green:'framey-green', PlayButton:'framey-action'},
+    'framey/library-image': {LongTitles:'framey-long-title', GreyBackground:'framey-muted', Image:'framey-image'},
+    'framey/library': {GamepadLibrary:'framey-library'},
+    'framey/focus': {FocusRingRoot:'framey-focus', FocusRing:'framey-focus'},
+  }).map(([id, classes]) => [id, Object.freeze(classes)]));
+  const localModules = new Map(classModules);
+  const moduleVariants = module => [module?.default, module].filter(value => value != null);
+  function findModule(filter) {
+    for (const module of localModules.values())
+      for (const value of moduleVariants(module)) if (filter(value)) return value;
+  }
+  function findModuleDetailsByExport(filter, minExports) {
+    for (const [id, module] of localModules)
+      for (const value of moduleVariants(module)) {
+        if (typeof value !== 'object' || (minExports && Object.keys(value).length < minExports)) continue;
+        for (const name in value) {
+          if (!value[name]) continue;
+          // DFL tolerates filters that dereference an incompatible export.
+          try { if (filter(value[name], name)) return [value, value[name], name, id]; } catch (_) {}
+        }
+      }
+    return [undefined, undefined, undefined, undefined];
+  }
+  function findModuleChild(filter) {
+    for (const module of localModules.values())
+      for (const value of moduleVariants(module)) {
+        const result = filter(value);
+        if (result) return result;
+      }
+  }
+  function createModuleMapping(filter) {
+    const mapping = new Map();
+    for (const [id, module] of localModules)
+      for (const value of moduleVariants(module)) if (filter(value)) mapping.set(id, value);
+    return mapping;
+  }
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
@@ -301,6 +345,7 @@
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
+    ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
     ProgressBar, ProgressBarWithInfo:ProgressBar,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
@@ -314,12 +359,30 @@
     showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
-    findInReactTree: () => null, findModuleExport: () => null, findModuleChild: () => null,
-    findModule:()=>null, findModuleByExport:()=>null, findClassModule:()=>null,
-    findClass:()=>null, findSP:()=>null, fakeRenderComponent:()=>null,
+    findInReactTree: () => null, findModule, findModuleChild, findModuleDetailsByExport,
+    findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
+    findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],
+    createModuleMapping, findAllModules:filter=>[...createModuleMapping(filter).values()],
+    findClassModule:filter=>[...classModules.values()].find(filter),
+    findClass:(id,name)=>classModules.get(id)?.[name],
+    findClassByName:name=>[...classModules.values()].find(classes=>classes[name])?.[name],
+    unminifyClass:token=>{
+      for(const classes of classModules.values())
+        for(const name of Object.keys(classes)) if(classes[name]===token)return name;
+    },
+    findSP:()=>null, fakeRenderComponent:()=>null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
     useParams: () => currentParams,
   };
+  localModules.set('framey/components', Object.freeze(Object.fromEntries(
+    Object.entries(DFL).filter(([name,value])=>typeof value==='function' && /^[A-Z]/.test(name)))));
+  // Some panels eagerly look up the optional Steam UI sound player. Allow the
+  // lookup, but never claim playback or expose Steam's mutable audio store.
+  localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
+    GamepadUIAudio:Object.freeze({available:false, AudioPlaybackManager:Object.freeze({
+      PlayAudioURL:()=>{throw Error('Steam UI sound playback is not supported in Framey');},
+    })}),
+  })}));
   // No Steam game is attached to an isolated panel. Subscriptions have a
   // disposable handle but emit no fabricated game, power, or input events.
   const subscription = () => {const dispose=()=>{};dispose.unregister=dispose;return dispose;};

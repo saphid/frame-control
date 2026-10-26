@@ -793,7 +793,7 @@
         "https://github.com/SteamDeckHomebrew/decky-loader"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service. Frontend audit failed: Cannot read properties of null (reading 'm_GamepadUIAudioStore').",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Steam UI sound lookup is present as explicitly unsupported; the frontend still requires Steam m_GamepadUIAudioStore.m_AudioPlaybackManager, which is unavailable in the isolated panel.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -804,7 +804,7 @@
         "id": 16,
         "name": "Audio Loader",
         "ready": false,
-        "error": "Cannot read properties of null (reading 'm_GamepadUIAudioStore')",
+        "error": "Cannot read properties of undefined (reading 'm_AudioPlaybackManager')",
         "logs": [
           {
             "kind": "warn",
@@ -2784,7 +2784,7 @@
         "https://github.com/SteamGridDB/decky-steamgriddb"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: DFL.createModuleMapping is not a function.",
+      "reason": "Local module mapping is available; frontend still requires the Steam LibraryContextMenu implementation, which has no target in the isolated Framey panel.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -2795,7 +2795,7 @@
         "id": 36,
         "name": "SteamGridDB",
         "ready": false,
-        "error": "DFL.createModuleMapping is not a function",
+        "error": "Cannot convert undefined or null to object",
         "logs": [],
         "methods": []
       },
@@ -4403,8 +4403,8 @@
         "https://github.com/Tormak9970/TabMaster",
         "https://github.com/Tormak9970/TabMaster.git"
       ],
-      "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of null (reading 'GamepadUIAudio').",
+      "status": "partial",
+      "reason": "Local Chromium rendered the QAM and navigable Overview/Filters documentation with an actual Decky 3.3.0 amd64 backend. Library-tab editing remains unavailable: Steam login/library patches and MobX reactions have no target. ARM64 and worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4414,10 +4414,17 @@
       "browser": {
         "id": 61,
         "name": "TabMaster",
-        "ready": false,
-        "error": "Cannot read properties of null (reading 'GamepadUIAudio')",
-        "logs": [],
-        "methods": []
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c TabMaster %c ERROR %c background: #ff6d05; color: black; background: #c70808; color: black; background: transparent; Could not find mobx.reaction"
+          }
+        ],
+        "methods": [
+          "log_message"
+        ]
       },
       "archiveValidation": {
         "id": 61,
@@ -6462,7 +6469,7 @@
         "https://github.com/ebenbruyns/junkstore.git"
       ],
       "status": "broken",
-      "reason": "Route registration succeeds; rendering fails on a missing Steam ContainerBackground component.",
+      "reason": "Local CSS lookup fixes the loading view crash. Actual Decky 3.3.0 amd64 startup/static InitActions return a script execution/JSON error; the published scripts are not executable after extraction. Store install/login/game launch and ARM64 remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -6474,14 +6481,10 @@
         "name": "Junk-Store",
         "ready": true,
         "error": null,
-        "logs": [
-          {
-            "kind": "error",
-            "message": "TypeError: Cannot read properties of null (reading 'ContainerBackground')"
-          }
-        ],
+        "logs": [],
         "methods": [
-          "fetch_rss_feed"
+          "fetch_rss_feed",
+          "execute_action"
         ]
       },
       "archiveValidation": {
@@ -8473,7 +8476,7 @@
         "https://github.com/jessebofill/DeckSP.git"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of null (reading 'GamepadUIAudio').",
+      "reason": "Optional UI-audio lookup succeeds, but the published frontend raises \"Cannot access PluginManager before initialization\" when Steam MobX reaction lookup is unavailable. JamesDSP installation/audio routing and ARM64 remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -8484,7 +8487,7 @@
         "id": 102,
         "name": "DeckSP",
         "ready": false,
-        "error": "Cannot read properties of null (reading 'GamepadUIAudio')",
+        "error": "Cannot access 'PluginManager' before initialization",
         "logs": [],
         "methods": []
       },

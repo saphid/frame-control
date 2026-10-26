@@ -63,7 +63,7 @@ def render(data):
         'A [chunked frontend follow-up](evidence/framey-deck-shelves-browser-2026-10-26.md) loaded Deck Shelves 2.0.0 '
         'through a managed JavaScript module route and rendered its settings in an opaque local Chromium panel. '
         'Its backend was denied; Steam Home shelves and worn VR remain unverified. '
-        'Other official backends remain unexecuted. '
+        'A [local module lookup follow-up](evidence/framey-module-lookup-2026-10-26.md) supplies a finite registry of Framey-local controls and CSS. TabMaster QAM/docs now render; Steam library-tab editing remains unavailable. Junk-Store loading/error views render, but its real backend cannot execute the extracted startup script, so it stays broken. SteamGridDB still requires Steam context-menu internals and DeckSP still fails its published MobX fallback. TabMaster/Junk-Store ran in actual isolated amd64 Decky; no ARM64 or worn-VR result is claimed. Beyond the documented checks, official backends remain unexecuted. '
         'The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. '
         'No worn-VR official-plugin result is claimed. '
         'A [local UI follow-up](evidence/framey-ui-fallbacks-2026-10-26.json) rendered Pause Games and Tailscale Control settings '
