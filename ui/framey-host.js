@@ -197,6 +197,26 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
+    const actionable=typeof onActivate==='function' || typeof onClick==='function';
+    const activate = event => {
+      if (disabled || event.defaultPrevented) return;
+      event.stopPropagation();
+      (onClick || onActivate)?.(event);
+    };
+    return R.createElement('div', {...props, role:role || (actionable ? 'button' : undefined),
+      tabIndex:tabIndex ?? (actionable ? (disabled ? -1 : 0) : undefined),
+      'aria-disabled':actionable && disabled ? true : undefined,
+      onClick:actionable ? activate : undefined, onKeyDown:event=>{
+        onKeyDown?.(event);
+        if (actionable && !disabled && !event.defaultPrevented && event.target===event.currentTarget &&
+            (event.key==='Enter' || event.key===' ')) {
+          event.preventDefault();
+          event.stopPropagation();
+          (onActivate || onClick)?.(event);
+        }
+      }}, children);
+  };
   const Field = ({label, description, children}) => R.createElement('label', null,
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
@@ -263,11 +283,61 @@
   const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
-  const ConfirmModal = ({strTitle, strOKButtonText, onOK, children}) => R.createElement('section', null,
-    R.createElement('h2', null, strTitle), children,
-    R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
+  const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
+    strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal,
+    bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
+    const action = (callback, disabled) => () => {
+      if (disabled) return;
+      callback?.();
+      closeModal?.();
+    };
+    return R.createElement('section', null,
+      R.createElement('h2', null, strTitle),
+      strDescription && R.createElement('div', null, strDescription), children,
+      R.createElement('button', {type:'button', disabled:!!bOKDisabled,
+        onClick:action(onOK, bOKDisabled)}, strOKButtonText || 'OK'),
+      onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled,
+        onClick:action(onMiddleButton, bMiddleDisabled)}, strMiddleButtonText || 'More'),
+      !bAlertDialog && R.createElement('button', {type:'button', disabled:!!bCancelDisabled,
+        onClick:action(onCancel, bCancelDisabled)}, strCancelButtonText || 'Cancel'));
+  };
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
-  const closeModal = () => modalRoot.render(null);
+  const modals = [];
+  let modalId = 0;
+  const renderModals = () => {
+    document.getElementById('framey-root').inert = modals.length > 0;
+    modalRoot.render(modals.length ? modals.map((modal,index) =>
+    R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
+      ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
+      role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
+      'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
+      !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
+        type:'button', disabled:!!modal.element?.props?.bCancelDisabled,
+        onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
+  };
+  function dismissModal(modal) {
+    if (modal.element?.props?.bCancelDisabled) return;
+    modal.element?.props?.onCancel?.();
+    modal.dismiss();
+  }
+  addEventListener('keydown', event => {
+    const modal=modals.at(-1);
+    if (!modal) return;
+    if (event.key === 'Tab') {
+      const controls = [...(modal.node?.querySelectorAll('button,input,select,textarea,a[href],[tabindex]') || [])]
+        .filter(node=>!node.disabled && node.tabIndex>=0 && node.getClientRects().length);
+      const index=controls.indexOf(document.activeElement);
+      if (index < 0 || (!event.shiftKey && index===controls.length-1) || (event.shiftKey && index===0)) {
+        event.preventDefault();
+        (event.shiftKey ? controls.at(-1) : controls[0])?.focus();
+      }
+      return;
+    }
+    if (event.key !== 'Escape') return;
+    event.preventDefault();
+    if (modal.element?.props?.onEscKeypress) modal.element.props.onEscKeypress();
+    else dismissModal(modal);
+  });
   const localPath = path => typeof path === 'string' && path.length <= 120 &&
     /^\/[A-Za-z0-9/_-]+$/.test(path) && !path.includes('//');
   const routePattern = path => typeof path === 'string' && path.length <= 120 &&
@@ -321,9 +391,34 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   const showModal = element => {
-    modalRoot.render(R.createElement('section', null,
-      R.createElement('button', {type:'button',onClick:closeModal}, 'Close'), element));
-    return {Close:closeModal};
+    let resolveClosed;
+    const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
+    const modal = {id:++modalId, previousFocus:document.activeElement};
+    const Close = () => {
+      const index=modals.indexOf(modal);
+      if (index < 0) return;
+      const wasTop=index===modals.length-1;
+      modals.splice(index,1);
+      renderModals();
+      resolveClosed();
+      if (wasTop) setTimeout(()=>{
+        if (modals.length) modals.at(-1).node?.focus();
+        else if (modal.previousFocus?.isConnected) modal.previousFocus.focus();
+      },0);
+    };
+    modal.dismiss = () => {
+      if (!modals.includes(modal)) return;
+      element?.props?.closeModal?.(); Close();
+    };
+    modal.element = R.isValidElement(element) ? R.cloneElement(element, {closeModal:modal.dismiss}) : element;
+    modals.push(modal);
+    renderModals();
+    setTimeout(()=>{if(modals.at(-1)===modal) modal.node?.focus();},0);
+    return {Close, ClosedPromise, Update:next=>{
+      if (!modals.includes(modal)) return;
+      // Decky's Update replaces the element without injecting new callbacks.
+      modal.element=next; renderModals();
+    }};
   };
   // These are Framey's own styles and components, never Steam's webpack cache.
   // Keep the registry finite: an unknown Steam implementation stays unavailable.
@@ -373,7 +468,7 @@
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
-    Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
+    Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
     Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,

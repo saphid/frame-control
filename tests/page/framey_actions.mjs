@@ -7,6 +7,7 @@ const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__s
 assert.notEqual(testSource,source);
 const states=[];
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+  cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
   useEffect(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
@@ -357,7 +358,70 @@ await assert.rejects(window.SteamClient.Storage.SetObject('undefined',undefined)
 assert.equal(window.indexedDB,undefined); // localForage must use bounded plugin storage.
 const unpatch=window.DFL.beforePatch({},'method',()=>{});
 assert.equal(unpatch.unpatch,unpatch);unpatch.unpatch();
-assert.equal(typeof window.DFL.showModal({type:'p'}).Close,'function');
+// Official AlarMe uses Focusable onActivate for pause, save and delete, without onClick.
+let activated=0, stopped=0;
+const activatable=window.DFL.Focusable({onActivate:()=>activated++});
+assert.equal(activatable.props.role,'button');assert.equal(activatable.props.tabIndex,0);
+activatable.props.onClick({stopPropagation:()=>stopped++});
+const ownTarget={};
+for(const key of ['Enter',' '])activatable.props.onKeyDown({key,target:ownTarget,currentTarget:ownTarget,
+  preventDefault(){},stopPropagation:()=>stopped++});
+activatable.props.onKeyDown({key:'Enter',target:{},currentTarget:ownTarget,preventDefault(){}});
+assert.equal(activated,3);assert.equal(stopped,3);
+const inertFocusable=window.DFL.Focusable({onActivate:()=>activated++,disabled:true});
+inertFocusable.props.onClick({});
+inertFocusable.props.onKeyDown({key:'Enter',target:ownTarget,currentTarget:ownTarget});
+assert.equal(activated,3);assert.equal(inertFocusable.props['aria-disabled'],true);
+let pointerCalls=0;
+window.DFL.Focusable({onClick:()=>pointerCalls++,onActivate:()=>activated++}).props.onClick({stopPropagation(){}});
+assert.equal(pointerCalls,1);assert.equal(activated,3);
+// Dialog actions must preserve descriptions, cancellation and the dialog they belong to.
+const modalRoot=roots.get(elements.get('framey-modal'));
+let confirmed=0, cancelled=0, dismissed=0;
+const modalHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
+  strTitle:'Remove preset?',strDescription:'Only this private preset will be removed.',
+  strOKButtonText:'Remove',strCancelButtonText:'Keep',
+  onOK:()=>confirmed++,onCancel:()=>cancelled++,closeModal:()=>dismissed++}));
+let modal=modalRoot.value.at(-1).children.at(-1);
+let confirm=modal.type(modal.props);
+assert.equal(nodes(confirm,'div')[0].children[0],'Only this private preset will be removed.');
+assert.deepEqual(nodes(confirm,'button').map(button=>button.children[0]),['Remove','Keep']);
+nodes(confirm,'button')[1].props.onClick();
+await modalHandle.ClosedPromise;
+assert.equal(confirmed,0);assert.equal(cancelled,1);assert.equal(dismissed,1);
+assert.equal(modalRoot.value,null);
+modalHandle.Close();assert.equal(dismissed,1);
+// Opening a confirmation from another dialog preserves its state; stale Close handles
+// cannot dismiss the newer dialog. Programmatic Close does not call plugin callbacks.
+const parentModal=window.DFL.showModal(React.createElement('p',{closeModal:()=>dismissed++}));
+const childModal=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
+  strTitle:'Confirm',bOKDisabled:true,bCancelDisabled:true,bMiddleDisabled:true,
+  onOK:()=>confirmed++,onCancel:()=>cancelled++,onMiddleButton:()=>confirmed++}));
+assert.equal(modalRoot.value.length,2);assert.equal(modalRoot.value[0].props.hidden,true);
+modal=modalRoot.value.at(-1).children.at(-1);confirm=modal.type(modal.props);
+for(const button of nodes(confirm,'button')){assert.equal(button.props.disabled,true);button.props.onClick();}
+assert.equal(confirmed,0);assert.equal(cancelled,1);
+let prevented=0;
+listeners.find(listener=>listener.type==='keydown').handler({key:'Escape',preventDefault:()=>prevented++});
+assert.equal(prevented,1);assert.equal(modalRoot.value.length,2);
+parentModal.Close();parentModal.Close();await parentModal.ClosedPromise;
+assert.equal(modalRoot.value.length,1);assert.equal(dismissed,1);
+childModal.Close();await childModal.ClosedPromise;assert.equal(modalRoot.value,null);
+let replacement;
+const first=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
+  onOK:()=>{replacement=window.DFL.showModal(React.createElement('p',null,'Next dialog'));}}));
+modal=modalRoot.value.at(-1).children.at(-1);
+nodes(modal.type(modal.props),'button')[0].props.onClick();
+await first.ClosedPromise;assert.equal(modalRoot.value.length,1);
+replacement.Update(React.createElement('p',null,'Updated'));
+assert.equal(modalRoot.value[0].children.at(-1).children[0],'Updated');
+replacement.Close();await replacement.ClosedPromise;
+const alert=window.DFL.ConfirmModal({bAlertDialog:true,onCancel:()=>cancelled++});
+assert.equal(nodes(alert,'button').length,1);
+const escapeModal=window.DFL.showModal(React.createElement('p',{onCancel:()=>cancelled++}));
+listeners.find(listener=>listener.type==='keydown').handler({key:'Escape',preventDefault(){}});
+await escapeModal.ClosedPromise;assert.equal(cancelled,2);assert.equal(modalRoot.value,null);
+
 let selectedMenuItem=0;
 window.DFL.MenuItem({onSelected:()=>selectedMenuItem++}).props.onClick({});
 window.DFL.MenuItem({disabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});

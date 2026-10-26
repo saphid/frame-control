@@ -1,0 +1,305 @@
+{
+  "checkedAtUtc": "2026-10-26T09:28:48.295443+00:00",
+  "plugin": {
+    "id": 124,
+    "name": "AlarMe",
+    "version": "1.6.3",
+    "sha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe"
+  },
+  "status": "partial",
+  "sharedControls": {
+    "ConfirmModalOfficialImporters": 43,
+    "FocusableOfficialImporters": 65,
+    "claim": "Import counts show shared surface, not successful behavior in every plugin. Only AlarMe received a real-backend follow-up."
+  },
+  "realFrame": {
+    "os": "Frame OS 0.5.6",
+    "arch": "aarch64",
+    "decky": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "transport": "trusted SSH through coordinator host; receipt-bound real CEF Decky RPC/events",
+    "isolation": "Exact official archive installed by production APPLY into a random private path. Removable unprivileged user service, not enabled, RuntimeMaxSec=900 and TimeoutStopSec=5.",
+    "settings": {
+      "timer_subtle_mode": true,
+      "timer_volume": 0,
+      "timer_auto_suspend": false,
+      "timer_prevent_sleep": false,
+      "pomodoro_subtle_mode": true,
+      "pomodoro_volume": 0,
+      "pomodoro_prevent_sleep": false,
+      "overlay_enabled": false
+    },
+    "safeRpcResults": [
+      {
+        "method": "create_timer",
+        "args": [
+          300,
+          "Framey silent private timer",
+          true,
+          false,
+          false
+        ],
+        "result": "91c1f87d"
+      },
+      {
+        "method": "pause_timer",
+        "args": [
+          "91c1f87d"
+        ],
+        "result": true
+      },
+      {
+        "method": "save_preset_from_timer",
+        "args": [
+          "91c1f87d"
+        ],
+        "result": {
+          "id": "47c046cd",
+          "seconds": 300,
+          "label": "Framey silent private timer",
+          "subtle_mode": true,
+          "auto_suspend": false,
+          "prevent_sleep": false
+        }
+      },
+      {
+        "method": "remove_preset",
+        "args": [
+          "47c046cd"
+        ],
+        "result": true
+      },
+      {
+        "method": "cancel_timer",
+        "args": [
+          "91c1f87d"
+        ],
+        "result": true
+      },
+      {
+        "method": "stopwatch_start",
+        "args": [],
+        "result": {
+          "status": "running",
+          "start_time": 1793006404.791917,
+          "elapsed_ms": 0,
+          "laps": [],
+          "prevent_sleep": false,
+          "current_elapsed_ms": 1.0344982147216797
+        }
+      },
+      {
+        "method": "stopwatch_lap",
+        "args": [],
+        "result": {
+          "status": "running",
+          "start_time": 1793006404.791917,
+          "elapsed_ms": 0,
+          "laps": [
+            {
+              "label": "Lap 1",
+              "absolute_ms": 31747.3783493042,
+              "split_ms": 31747.3783493042
+            }
+          ],
+          "prevent_sleep": false,
+          "current_elapsed_ms": 31750.77533721924,
+          "total_lap_count": 1,
+          "lap_limit_reached": false
+        }
+      },
+      {
+        "method": "stopwatch_pause",
+        "args": [],
+        "result": {
+          "status": "paused",
+          "start_time": null,
+          "elapsed_ms": 34339.426040649414,
+          "laps": [
+            {
+              "label": "Lap 1",
+              "absolute_ms": 31747.3783493042,
+              "split_ms": 31747.3783493042
+            }
+          ],
+          "prevent_sleep": false,
+          "current_elapsed_ms": 34339.426040649414,
+          "total_lap_count": 1,
+          "lap_limit_reached": false
+        }
+      },
+      {
+        "method": "stopwatch_reset",
+        "args": [],
+        "result": {
+          "status": "idle",
+          "start_time": null,
+          "elapsed_ms": 0,
+          "laps": [],
+          "current_elapsed_ms": 0
+        }
+      }
+    ],
+    "eventCounts": {
+      "alarme_timers_updated": 3,
+      "alarme_sleep_inhibitor_updated": 6,
+      "alarme_timer_tick": 124,
+      "alarme_presets_updated": 2,
+      "alarme_stopwatch_updated": 3
+    },
+    "finalReadback": {
+      "timers": [],
+      "stopwatch": {
+        "status": "idle",
+        "start_time": null,
+        "elapsed_ms": 0,
+        "laps": [],
+        "current_elapsed_ms": 0
+      },
+      "sleep": {
+        "active": false,
+        "items": []
+      },
+      "presets": [
+        {
+          "id": "preset-5",
+          "seconds": 300,
+          "label": "5 minutes",
+          "subtle_mode": false,
+          "auto_suspend": false
+        },
+        {
+          "id": "preset-10",
+          "seconds": 600,
+          "label": "10 minutes",
+          "subtle_mode": false,
+          "auto_suspend": false
+        },
+        {
+          "id": "preset-15",
+          "seconds": 900,
+          "label": "15 minutes",
+          "subtle_mode": false,
+          "auto_suspend": false
+        },
+        {
+          "id": "preset-30",
+          "seconds": 1800,
+          "label": "30 minutes",
+          "subtle_mode": false,
+          "auto_suspend": false
+        }
+      ]
+    },
+    "before": {
+      "decky": "failed",
+      "panel": "inactive",
+      "battery": [
+        97
+      ]
+    },
+    "after": {
+      "decky": "failed",
+      "panel": "inactive",
+      "battery": [
+        96
+      ]
+    },
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true
+    },
+    "lockReleased": true
+  },
+  "browser": {
+    "host": "Repository headset.html and opaque allow-scripts iframe with bundled React 18.3.1; loopback RPC/event relay to the real ARM64 backend",
+    "verified": [
+      "labeled silent timer creation and live tick display",
+      "timer pause through onActivate and backend readback",
+      "save paused timer as preset through onActivate",
+      "delete confirmation shows preset name and description",
+      "Cancel closes dialog without dispatching remove_preset; backend readback retains preset",
+      "Delete invokes remove_preset once and readback removes the private preset",
+      "timer cancellation",
+      "Watch tab activation; stopwatch start/lap/pause",
+      "fresh panel reopen retains paused 34.339-second stopwatch and one lap",
+      "stopwatch reset; no active timers or sleep inhibitors in final backend readback"
+    ],
+    "domFixture": {
+      "type": "fixture:result",
+      "checks": [
+        "description visible",
+        "underlying panel inert",
+        "dialog fixed",
+        "Tab wraps in top dialog",
+        "Cancel callback once",
+        "parent draft preserved",
+        "disabled actions",
+        "old Close retains child",
+        "programmatic Close skips callback",
+        "OK does not close newly opened dialog",
+        "Update changes body",
+        "Escape cancels top dialog",
+        "panel reactivated",
+        "pointer Enter Space activate once each"
+      ]
+    },
+    "limits": "Local Chromium with real backend, not the deployed headset HTTP host or worn VR. Synthetic DOM checks use programmatic DOM events, not physical controllers."
+  },
+  "fixtureCorrection": {
+    "issue": "Initial seed used settings/<display-name>; actual Decky uses settings/<folder>. Safety assertion failed on readback before any timer action.",
+    "resolution": "First private service/data removed and lock released. Correct folder seed read back before second run exposed actions."
+  },
+  "cleanupAudit": {
+    "servicesAudited": 2,
+    "allBaseUnitArchiveAbsent": true,
+    "allLoadStateNotFound": true,
+    "allActiveStateInactive": true,
+    "allMainPidZero": true,
+    "sharedLock": "Fresh atomic lock acquired and released for cleanup audit"
+  },
+  "unverified": [
+    "audio playback and sound imports",
+    "alarms and reminders",
+    "auto-suspend and /dev/uinput sleep inhibition",
+    "in-game/global Steam overlay: no injection target in isolated panel",
+    "background notifications after panel closes",
+    "worn VR and physical controller/keyboard input"
+  ],
+  "validation": {
+    "fullPython": {
+      "ran": 1628,
+      "skipped": 16,
+      "result": "pass"
+    },
+    "nodeContracts": [
+      "tests/page/framey_actions.mjs",
+      "tests/page/framey_running.mjs"
+    ],
+    "siteTestFiles": 2,
+    "currentStoreRefresh": {
+      "plugins": 116,
+      "exactIdsVersionsAndDigestsUnchanged": true
+    },
+    "fakeFrame": {
+      "blocked": 56,
+      "installed-removed": 60
+    },
+    "noContextBrowser": {
+      "plugins": 116,
+      "ready": 101,
+      "failed": 15,
+      "noRegressionsAgainstCatalogBaseline": true,
+      "scope": "Initialization only, all backend/network denied; library-dependent plugins lack Steam context"
+    },
+    "contextReplayBrowser": {
+      "plugins": 116,
+      "ready": 104,
+      "failed": 12,
+      "initializationRegressionsAgainstPriorContextReplay": [],
+      "scope": "Synthetic library/running replay; backend and network denied, initialization only"
+    }
+  }
+}
