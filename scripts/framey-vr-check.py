@@ -99,6 +99,22 @@ finally: vr.close()
 '''
 
 
+HIDDEN_OVERLAY_DIAGNOSTIC = '''
+import json,pathlib,subprocess
+key='valve.steam.desktopgame.2001947813'
+p=subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--overlays'],
+                 capture_output=True,text=True,timeout=8)
+lines=[line.strip() for line in p.stdout.splitlines() if "'"+key+"'" in line]
+service=subprocess.run(['systemctl','--user','is-active','frame-control-headset.service'],
+                       capture_output=True,text=True,timeout=8)
+state=pathlib.Path.home()/'.local/share/frame-control/headset/state.json'
+try: window=json.loads(state.read_text()).get('window')
+except (OSError,ValueError): window=None
+print(json.dumps({'overlayLines':lines[:2], 'overlayCommandExit':p.returncode,
+                  'serviceActive':service.stdout.strip()=='active', 'windowRegistered':bool(window)}))
+'''
+
+
 def debug_bundle(original, profile):
     """Only the test-owned browser gets CDP and a disposable profile."""
     out = io.BytesIO()
@@ -227,6 +243,12 @@ time.sleep(2)
 print('{}')
 ''')
             report['overlay'] = remote.python(diagnostic_source())
+        if args.exercise and not report['overlay']['state']['visible']:
+            try:
+                report['hiddenOverlay'] = remote.python(HIDDEN_OVERLAY_DIAGNOSTIC)
+            except Exception as exc:
+                report['hiddenOverlayError'] = str(exc)
+            raise RuntimeError('Frame Control overlay stayed hidden after focus retry; no input sent')
         if args.wake or args.exercise:
             shot = remote.python((ROOT/'ui/frame_vrshot.py').read_text(), timeout=20)['path']
             try:

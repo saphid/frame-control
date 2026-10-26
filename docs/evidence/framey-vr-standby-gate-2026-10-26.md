@@ -25,3 +25,20 @@ power change.
 Synthetic pointer events and captures do not prove physical controller use,
 wearer-visible readability, optical comfort or VR keyboard behavior. Those
 remain unverified.
+
+## Combined v0.4.39 candidate reruns
+
+After #278 and #279 joined main, the combined `bc72c41` branch ran the same
+locked exercise three times. The first two runs (02:01 and 02:02 UTC) loaded
+the sample UI in Chromium, but SteamVR kept its overlay hidden even after the
+existing test-window focus retry. Synthetic input reached no panel control;
+both runs failed. The third run (02:05 UTC) showed the overlay without that
+retry and passed the sample setting, input, stereo and mirror checks. Every run
+restored the original power settings, removed its recovery timer and released
+its own lock with no cleanup errors. The [numeric summary](framey-vr-standby-gate-2026-10-26.json)
+records all three outcomes.
+
+The intermittent hidden-overlay condition remains a reliability limit. The
+runner now records a small read-only diagnostic and refuses to send synthetic
+input if the overlay stays hidden after its focus retry. A successful Chromium
+panel alone is not treated as VR visibility.
