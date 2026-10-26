@@ -390,6 +390,7 @@
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
+  class MissingSteamComponent {}
   const showModal = element => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
@@ -509,7 +510,11 @@
       for(const classes of classModules.values())
         for(const name of Object.keys(classes)) if(classes[name]===token)return name;
     },
-    findSP:()=>null, fakeRenderComponent:()=>null,
+    findSP:()=>null,
+    // Some legacy panels dereference the type of a Steam-only component before
+    // installing a patch. Give them an inert local type; no Steam tree is
+    // rendered or patched in this isolated iframe.
+    fakeRenderComponent:()=>({type:MissingSteamComponent}),
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
     useParams: () => currentParams,
   };

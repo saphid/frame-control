@@ -28,6 +28,10 @@ for(const key of ['error','warn']){const original=console[key];console[key]=(...
   report(key,args.map(String).join(' '));original(...args);};}
 window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));
 window.WebSocket=class{constructor(){throw Error('Audit blocks WebSocket');}};
+addEventListener('message', event=>{
+  if(event.source!==parent||event.data?.type!=='audit:inspect')return;
+  parent.postMessage({type:'audit:snapshot',text:(document.getElementById('framey-root')?.innerText||'').slice(0,2000)},'*');
+});
 </script>'''
 
 
@@ -76,6 +80,7 @@ addEventListener('message',event=>{
   if(event.source!==panel.contentWindow||!active)return;
   const data=event.data;
   if(data.type==='audit:log'&&active.logs.length<8)active.logs.push({kind:data.kind,message:data.message.split('\\n')[0].slice(0,400)});
+  if(data.type==='audit:snapshot')active.rootText=String(data.text).slice(0,2000);
   if(data.type==='framey:error')active.error=String(data.message).slice(0,500);
   if(data.type==='framey:ready')active.ready=true;
   if(data.type==='framey:events')event.source.postMessage({type:'framey:reply',id:data.id,result:{events:[],cursor:0}},'*');
@@ -93,10 +98,15 @@ window.runAudit=async(ids,settleMs=1200)=>{
   if(!Number.isInteger(settleMs)||settleMs<1200||settleMs>10000)throw Error('Invalid audit settle time');
   if(running)throw Error('Audit already running');running=true;run.disabled=true;
   try{for(const plugin of plugins.filter(plugin=>!ids||ids.includes(plugin.id))){
-    active={id:plugin.id,name:plugin.name,ready:false,error:null,logs:[],methods:[],
+    active={id:plugin.id,name:plugin.name,ready:false,error:null,logs:[],methods:[],rootText:'',
       library:librarySnapshot?'snapshot replay':'unavailable',running:runningSnapshot?'snapshot replay':'unavailable'};
     progress.textContent=plugin.id+' '+plugin.name;panel.src='/panel/'+plugin.id;
-    await new Promise(resolve=>setTimeout(resolve,settleMs));results.push(active);active=null;
+    await new Promise(resolve=>setTimeout(resolve,settleMs));
+    // Detached Steam snapshots may contain personal library data. Keep text
+    // observations out of reports that replay either snapshot.
+    if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
+    await new Promise(resolve=>setTimeout(resolve,80));
+    results.push(active);active=null;
     panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
