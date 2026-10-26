@@ -549,3 +549,41 @@ Fixtures cover duplicate instance identity, unknown states, GUID matching,
 localised/denied channel data and 6 GHz ambiguity. No tests contact a real Frame.
 A Windows CI runner/VM cannot prove physical Steam dongle behaviour or audio RF
 interference. See [sources and limits](windows-wireless-doctor.md).
+
+### Actual Decky backend shim gate
+
+Fake-Frame tests stub plugin execution, so they cannot prove Decky's Python
+calling convention. `Decky backend runtime` CI separately runs the published,
+SHA-256-pinned **Decky 3.3.0** executable on native amd64 and ARM64 Linux.
+The loader discovers production-managed official archives and calls their public
+methods over its actual websocket API. No test imports or instantiates `Plugin`.
+
+```sh
+python3 scripts/framey-test-decky-runtime.py --output /tmp/decky-runtime.json
+# Offline loader cache (still checked against its pinned native digest):
+python3 scripts/framey-test-decky-runtime.py --loader /path/to/PluginLoader --output /tmp/decky-runtime.json
+```
+
+Run on Linux with Docker. Image build and the pinned loader download need network;
+plugin execution has no network, published ports, host home/audio/D-Bus/device
+mounts, capabilities or writable repository. Each case has its own unprivileged
+container, private tmpfs home and temporary files. Nothing contacts the headset
+or its shared lock. Failed/timed-out containers and the private image tag are
+removed by the runner.
+
+Every `compat_shims.append` in the managed installer must have a case in
+`tests/decky-runtime/cases.json`. Add each affected pinned official archive and
+a safe public-method probe when introducing a shim. Ordinary unit tests reject
+uncovered shim names. The runtime job verifies the managed receipt, loader
+plugin discovery, and a successful backend call; a discovery listing alone
+could conceal a crashed backend process.
+
+Current cases cover both Music Control entries and Shotty. Music Control uses
+the private silent MPRIS fixture to check discovery, metadata, play/pause,
+next/previous, seek and volume, with independent service-state readbacks.
+Shotty checks backend import, rescuer state and empty screenshot aggregation
+inside its disposable home. A fourth negative-control case deliberately
+reintroduces #335's incorrect bound-method transformation and must reproduce
+the real loader's legacy backend-call failure. The gate fails if that regression goes
+undetected. These checks verify backend behavior in a container; they do not
+upgrade any plugin's Frame, actual media playback or worn-VR compatibility claim.
