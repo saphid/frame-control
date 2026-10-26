@@ -2871,12 +2871,13 @@
         "https://github.com/andrewburgess/steamdeck-discord-status.git"
       ],
       "status": "broken",
-      "reason": "RunningApps and appStore are absent; Discord activity integration fails after initialization.",
+      "reason": "Detached app overviews are now available, but RunningApps/lifetime observations and Steam artwork helpers still lack a live mapping. Discord activity integration remains unavailable/unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 37,
@@ -2911,6 +2912,11 @@
         "sha256": "00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "libraryFollowUp": {
+        "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
+        "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
       }
     },
     {
@@ -3358,13 +3364,14 @@
         "https://github.com/geeksville/steamback",
         "https://github.com/geeksville/steamback.git"
       ],
-      "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of undefined (reading 'm_CurrentUser'). Steam account/app context is unavailable.",
+      "status": "partial",
+      "reason": "Panel opens using the real Frame current-user/library snapshot. Account setup and empty save-list reads pass through actual Decky 3.3.0 amd64 in isolation. ARM64 backend, supported-save discovery, automatic backups and restore remain unverified; no backup/restore ran.",
       "blockInstall": true,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 46,
@@ -3391,6 +3398,11 @@
         "archiveValidation": "Unsafe plugin archive member",
         "result": "blocked",
         "reason": "ValueError: Unsafe plugin archive member. Frontend audit failed: App is not defined."
+      },
+      "libraryFollowUp": {
+        "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
+        "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
       }
     },
     {
@@ -3842,12 +3854,13 @@
         "https://github.com/safijari/Shotty"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of undefined (reading 'allApps').",
+      "reason": "Library snapshot fixes the frontend allApps crash. Actual published Decky 3.3.0 amd64 backend fails importing click.get_app_dir (ModuleNotFoundError); the archive does not bundle click. Screenshot aggregation/rescue was not run.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 53,
@@ -3873,6 +3886,11 @@
         "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "libraryFollowUp": {
+        "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
+        "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
       }
     },
     {
@@ -4936,13 +4954,14 @@
         "https://github.com/pnpm/pnpm",
         "https://github.com/your-username/PlayTime"
       ],
-      "status": "broken",
-      "reason": "Private SteamClient JSON cache now works; initialization still fails on missing Steam appStore.m_mapApps. Live app data and MobX game observations are unavailable; backend actions were denied.",
+      "status": "partial",
+      "reason": "Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. ARM64 backend, live MobX/running-game observations and automatic recording remain unverified/unsupported.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 66,
@@ -4983,6 +5002,11 @@
         "sha256": "10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "libraryFollowUp": {
+        "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
+        "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
       }
     },
     {
@@ -7212,13 +7236,14 @@
         "https://github.com/DeckSettings/game-reports-steamos",
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
-      "status": "broken",
-      "reason": "Real Steam install folders are now available; game selection still fails on missing collectionStore.allGamesCollection. Steam library context, proxy fetch and backend actions remain unsupported/unverified.",
+      "status": "partial",
+      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Remote reports/proxy fetch, settings changes and ARM64 backend remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 93,
@@ -7254,6 +7279,11 @@
         "sha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "libraryFollowUp": {
+        "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
+        "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
       }
     },
     {

@@ -36,7 +36,7 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 <button id=run>Run catalog</button> <button id=download>Download observations</button><p id=progress></p>
 <iframe id=panel sandbox="allow-scripts" style="width:1100px;height:740px"></iframe>
 <script>
-const plugins=CATALOG_DATA;
+const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA;
 window.results=[];let active=null,running=false;
 addEventListener('message',event=>{
   if(event.source!==panel.contentWindow||!active)return;
@@ -45,7 +45,9 @@ addEventListener('message',event=>{
   if(data.type==='framey:error')active.error=String(data.message).slice(0,500);
   if(data.type==='framey:ready')active.ready=true;
   if(data.type==='framey:events')event.source.postMessage({type:'framey:reply',id:data.id,result:{events:[],cursor:0}},'*');
-  if(data.type==='framey:steam')event.source.postMessage({type:'framey:reply',id:data.id,error:'Read-only compatibility audit: live Steam API blocked'},'*');
+  if(data.type==='framey:steam')event.source.postMessage({type:'framey:reply',id:data.id,
+    ...(data.method==='GetLibrarySnapshot'&&librarySnapshot?
+      {result:librarySnapshot}:{error:'Read-only compatibility audit: live Steam API blocked'})},'*');
   if(data.type==='framey:call'){
     if(!active.methods.includes(data.method))active.methods.push(data.method);
     event.source.postMessage({type:'framey:reply',id:data.id,error:'Read-only compatibility audit: backend method blocked'},'*');}
@@ -54,7 +56,8 @@ addEventListener('message',event=>{
 window.runAudit=async(ids)=>{
   if(running)throw Error('Audit already running');running=true;run.disabled=true;
   try{for(const plugin of plugins.filter(plugin=>!ids||ids.includes(plugin.id))){
-    active={id:plugin.id,name:plugin.name,ready:false,error:null,logs:[],methods:[]};
+    active={id:plugin.id,name:plugin.name,ready:false,error:null,logs:[],methods:[],
+      library:librarySnapshot?'snapshot replay':'unavailable'};
     progress.textContent=plugin.id+' '+plugin.name;panel.src='/panel/'+plugin.id;
     await new Promise(resolve=>setTimeout(resolve,1200));results.push(active);active=null;
     panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));
@@ -72,9 +75,17 @@ def main():
     parser.add_argument('--cache', type=Path, required=True)
     parser.add_argument('--catalog', type=Path, default=ROOT/'ui/framey-compatibility.json')
     parser.add_argument('--port', type=int, default=18765)
+    parser.add_argument('--library-snapshot', type=Path,
+                        help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     args = parser.parse_args()
     plugins = json.loads(args.catalog.read_text())['plugins']
     records = {p['id']: p for p in plugins}
+    library = None
+    if args.library_snapshot:
+        raw = args.library_snapshot.read_bytes()
+        if len(raw) > 2*1024*1024:
+            parser.error('library snapshot exceeds 2 MiB')
+        library = json.loads(raw)
 
     class Handler(BaseHTTPRequestHandler):
         def log_message(self, *_):
@@ -86,7 +97,8 @@ def main():
             if path == '/':
                 # Only names/IDs are needed by the UI; never embed raw executable source.
                 catalog = json.dumps([{'id': p['id'], 'name': p['name']} for p in plugins]).replace('<', '\\u003c')
-                body = PAGE.replace('CATALOG_DATA', catalog).encode()
+                body = PAGE.replace('CATALOG_DATA', catalog).replace(
+                    'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).encode()
             elif path.startswith('/panel/'):
                 try:
                     record = records[int(path.split('/')[-1])]
