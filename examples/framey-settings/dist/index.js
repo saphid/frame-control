@@ -51,7 +51,8 @@ function Content() {
             await setSetting('enabled', value);
             setEnabled(value);
             setMessage(`Saved setting: ${value ? 'on' : 'off'}`);
-            toaster.toast({ title: 'Framey sample', body: 'Setting saved' });
+            toaster.toast({ title: 'Framey sample',
+                body: SP_JSX.jsxs("span", { children: ["Setting saved: ", SP_JSX.jsx("strong", { children: value ? 'on' : 'off' })] }) });
         }
         catch (error) {
             setMessage(`Could not save setting: ${String(error)}`);
