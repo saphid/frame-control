@@ -287,14 +287,15 @@ class ArtworkTests(unittest.TestCase):
             with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(5) and []), \
                     patch.object(_images.threading.Thread, 'join', bounded_join):
                 start = time.monotonic()
+                deadline = start + 0.1
                 with self.assertRaisesRegex(_images.SourceError, 'too long'):
-                    _images.get('https://example.org/a.png', deadline=start + 0.1)
+                    _images.get('https://example.org/a.png', deadline=deadline)
             # Check the requested wait, not elapsed runner time: a loaded CI
             # host can deschedule this test after the bounded join returns.
             self.assertEqual(len(waits), 1)
             self.assertIsNotNone(waits[0])
             self.assertGreaterEqual(waits[0], 0)
-            self.assertLessEqual(waits[0], 0.1)
+            self.assertLessEqual(waits[0], deadline - start)
         finally:
             gate.set()
         wait_for_idle_resolvers()
