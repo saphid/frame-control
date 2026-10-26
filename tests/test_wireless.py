@@ -192,6 +192,12 @@ class Probe(unittest.TestCase):
     @unittest.skipUnless(wireless.frame_host.WINDOWS, 'Live read-only Windows inventory runs on Windows CI')
     def test_live_windows_inventory(self):
         r = wireless.diagnose()
+        # Shared Windows runners can spend the entire probe budget starting
+        # PowerShell. Retry only that transient timeout; a second failure must
+        # still fail this live inventory gate.
+        if (r['state'] == 'unavailable' and
+                r.get('message') == 'Windows wireless inventory timed out. No settings were changed.'):
+            r = wireless.diagnose()
         self.assertIn(r['state'], ('ok', 'partial'), r)
         self.assertEqual(r['sources']['adapters'], 'ok', r['sources'])
         self.assertTrue(r['devices'], 'Windows runner should expose at least its virtual network interface')
