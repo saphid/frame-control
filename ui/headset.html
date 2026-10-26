@@ -106,8 +106,11 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
   }catch(error){list.textContent=error.message;}}
 function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
+  deckyStatusRequest=0,
   activeFrameyId=null, frameySession=null, deckyBusy=false;
-async function refreshDecky(){try{deckyState=await api('/api/decky');
+async function refreshDecky(){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
+  if(request!==deckyStatusRequest)return;
+  deckyState=state;
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':
     deckyState.managed?'Decky is stopped. You can remove a managed plugin to recover, then start Decky from Frame Control on your computer.':
     'Decky is not running. Install it from Frame Control on your computer.';
@@ -120,7 +123,12 @@ async function refreshDecky(){try{deckyState=await api('/api/decky');
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
       button.disabled=deckyBusy;button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
-  showDeckyStore();}catch(error){byId('deckyState').textContent=error.message;}}
+  showDeckyStore();}catch(error){if(request!==deckyStatusRequest)return;
+    deckyState=null;
+    byId('deckyState').textContent=`Installed plugins unavailable: ${error.message}`;
+    byId('deckyInstalled').replaceChildren();
+    byId('deckyInstalled').textContent='Refresh to check installed plugins.';
+    showDeckyStore();}}
 async function loadDeckyStore(){const request=++deckyStoreRequest;byId('deckyStorePanel').hidden=false;
   deckyStore=[];deckyStoreIndex=0;showDeckyStore();
   byId('deckyStoreSummary').textContent='Loading official Decky store…';
