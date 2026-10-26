@@ -76,3 +76,26 @@ missing/stale receipts are rejected before CEF after plugin replacement, and a
 reopened panel can poll and close with the new receipt. Rejected stale closes
 retain the tested finite-lease cleanup. This authorization-only follow-up did
 not repeat the device checks above; their recorded hardware scope is unchanged.
+
+## Post-merge unworn panel exercise
+
+On merged main `daee952873255b86018cce1d2a4d3bd070ec4341`,
+`scripts/framey-vr-check.py --exercise --output /tmp/framey-post304-exercise`
+acquired its own `/tmp/frame-test.lock` before any headset read. At 05:54 UTC,
+preflight found SteamVR activity 3 (standby), proximity 6.25 and battery 99%.
+The temporary sample panel passed the real Decky setting save and fresh-iframe
+reopen, a trusted synthetic OpenVR pointer, quick action, slider value 50 and
+CDP text entry after OpenVR focus. Stereo compositor SHA-256 changed from
+`50fcab1ee25e6d9398106cc0c24ec6616e07bcf4573b52be1774c715b756060b`
+to `98241806fb1f775e7f4c5ef0b0564bfd3c552ee896ff225b4d0cb5b7b53f70d1`;
+the `/dev/video99` mirror capture hash was
+`c284c05f86b60362168c1d1f58fe775974b70ac54bbfd57834802b892eb4509e`.
+The command exited 0 with `passed=true`. The original power values (`false` and
+`5.000000`) were read back, battery remained 99%, the recovery timer was removed,
+cleanup errors were empty and the run released only its own lock. The private
+full report is `/tmp/framey-post304-exercise/result.json` on the test host.
+
+This exercise covered the sample panel path after the running-context merge. It
+did not observe a nonempty running-game list, a game lifetime callback, Discord
+activity, a worn display or physical controller input. Synthetic native scroll
+again did not move (`scrollTop=0`, no wheel event).
