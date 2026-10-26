@@ -3,7 +3,7 @@
   "checkedAtUtc": "2026-10-25T23:19:48.854504+00:00",
   "source": "https://plugins.deckbrew.xyz/plugins",
   "hostCommit": "779f9c5",
-  "method": "Exact SHA-256 verified archives. All frontends attempted in opaque-iframe Chromium for 1.2 s with backend calls and network denied; ready means initializer only. No official backend code was executed. See docs/framey-compatibility.md.",
+  "method": "Exact SHA-256 verified archives. All frontends attempted in opaque-iframe Chromium for 1.2 s with backend calls and network denied; ready means initializer only. Backend calls were denied in the baseline browser audit. Scoped live backend follow-ups are recorded separately in docs/framey-compatibility.md.",
   "plugins": [
     {
       "id": 1,
@@ -579,8 +579,8 @@
         "https://github.com/wynn1212/SDH-PauseGames",
         "https://github.com/wynn1212/SDH-PauseGames.git"
       ],
-      "status": "broken",
-      "reason": "Frontend audit failed: SteamClient.System.UI.RegisterForSystemKeyEvents is not a function.",
+      "status": "partial",
+      "reason": "Settings render locally with inert system-key subscriptions and empty detached Steam context. Live-game discovery, process pause/resume and suspend integration are unsupported/unverified; no backend actions ran.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -590,8 +590,8 @@
       "browser": {
         "id": 13,
         "name": "Pause Games",
-        "ready": false,
-        "error": "SteamClient.System.UI.RegisterForSystemKeyEvents is not a function",
+        "ready": true,
+        "error": null,
         "logs": [],
         "methods": [
           "load_settings"
@@ -3155,8 +3155,8 @@
         "https://github.com/saumya-banthia/tailscale-control.git",
         "https://github.com/tailscale-dev/deck-tailscale"
       ],
-      "status": "broken",
-      "reason": "Initializer succeeds but React rejects a missing component (#130); no usable control claim.",
+      "status": "partial",
+      "reason": "Settings render locally after the SuspensefulImage fallback. Tailscale daemon/state, connection and exit-node changes unverified; bundled localhost QR asset remains unavailable. No network settings were changed.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3168,13 +3168,10 @@
         "name": "Tailscale Control",
         "ready": true,
         "error": null,
-        "logs": [
-          {
-            "kind": "error",
-            "message": "Error: Minified React error #130; visit https://reactjs.org/docs/error-decoder.html?invariant=130&args[]=undefined&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
-          }
-        ],
-        "methods": []
+        "logs": [],
+        "methods": [
+          "get_tailscale_state"
+        ]
       },
       "archiveValidation": {
         "id": 43,
@@ -3355,7 +3352,7 @@
         "https://github.com/geeksville/steamback.git"
       ],
       "status": "broken",
-      "reason": "Unsafe plugin archive member. Frontend audit failed: App is not defined.",
+      "reason": "Frontend audit failed: Cannot read properties of undefined (reading 'm_CurrentUser'). Steam account/app context is unavailable.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -3366,7 +3363,7 @@
         "id": 46,
         "name": "Steamback",
         "ready": false,
-        "error": "App is not defined",
+        "error": "Cannot read properties of undefined (reading 'm_CurrentUser')",
         "logs": [],
         "methods": []
       },
@@ -4926,7 +4923,7 @@
         "https://github.com/your-username/PlayTime"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of undefined (reading 'GetJSON').",
+      "reason": "Private SteamClient JSON cache now works; initialization still fails on missing Steam appStore.m_mapApps. Live app data and MobX game observations are unavailable; backend actions were denied.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4937,9 +4934,21 @@
         "id": 66,
         "name": "PlayTime",
         "ready": false,
-        "error": "Cannot read properties of undefined (reading 'GetJSON')",
-        "logs": [],
-        "methods": []
+        "error": "Cannot read properties of undefined (reading 'm_mapApps')",
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Impossible to get \"RunningApps\" observe. Events will not be attached."
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Unable to get settings, saving defaults Error: Not found"
+          }
+        ],
+        "methods": [
+          "fetch_playtime_information",
+          "statistics_for_last_two_weeks"
+        ]
       },
       "archiveValidation": {
         "id": 66,
@@ -10375,7 +10384,7 @@
         "https://github.com/kayon/memscan"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: Reroll/bin/memscan.so. Frontend audit failed: window.SteamClient.Apps.RegisterForGameActionUserRequest is not a function.",
+      "reason": "Frontend now initializes with inert game-action subscriptions, but the archive contains x86_64 memscan.so and requests root. No process-memory access was run.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -10385,11 +10394,12 @@
       "browser": {
         "id": 120,
         "name": "Reroll",
-        "ready": false,
-        "error": "window.SteamClient.Apps.RegisterForGameActionUserRequest is not a function",
+        "ready": true,
+        "error": null,
         "logs": [],
         "methods": [
-          "get_setting"
+          "get_setting",
+          "version"
         ]
       },
       "archiveValidation": {
@@ -10399,7 +10409,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "memscan.so needs ARM64 process-memory support and ABI testing; root requirement and missing Steam hook remain.",
+      "nativePort": "memscan.so needs ARM64 process-memory support and ABI testing; root requirement remains. Frontend initializes but no memory access was tested.",
       "uiSurfaces": [
         "QAM/global tabs",
         "Steam stores"

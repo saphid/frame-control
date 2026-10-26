@@ -20,7 +20,7 @@ const window={React,ReactDOM:{createRoot:node=>{
 const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
-  navigator:{language:'en'}, parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
+  navigator:{language:'en'}, parent,DOMException,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
 // Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
@@ -175,6 +175,25 @@ assert.equal(unsubscribe.unregister,unsubscribe);
 unsubscribe.unregister();unsubscribe();assert.equal(eventCount,0);
 assert.equal(window.SteamClient.System.ShutdownPC,undefined);
 assert.equal(window.DFL.Router.MainRunningApp,undefined);
+assert.equal(window.DFL.Router.RunningApps.length,0);
+assert.equal(window.DFL.Router.RunningApps,window.SteamUIStore.RunningApps);
+assert.ok(Object.isFrozen(window.SteamUIStore));
+assert.ok(Object.isFrozen(window.SuspendResumeStore));
+assert.equal(window.SuspendResumeStore.InitiateSleep,undefined);
+for(const name of ['App','appStore','appInfoStore','collectionStore'])assert.equal(window[name],undefined);
+for(const register of [window.SteamClient.System.UI.RegisterForSystemKeyEvents,
+  window.SteamClient.Apps.RegisterForGameActionUserRequest]){
+  const dispose=register(()=>eventCount++);assert.equal(dispose.unregister,dispose);dispose();
+}
+assert.equal(eventCount,0);
+const image=window.DFL.SuspensefulImage({src:'data:image/svg+xml,<svg/>',alt:'Setup',style:{width:50}});
+assert.equal(image.type,'img');assert.equal(image.props.alt,'Setup');assert.equal(image.props.style.width,50);
+await assert.rejects(window.SteamClient.Storage.GetJSON('missing'),/Not found/);
+await window.SteamClient.Storage.SetObject('settings',{enabled:false,count:3});
+assert.equal(await window.SteamClient.Storage.GetJSON('settings'),'{"enabled":false,"count":3}');
+assert.equal(window.localStorage.getItem('steam-client:settings'),'{"enabled":false,"count":3}');
+await assert.rejects(window.SteamClient.Storage.SetObject('large','x'.repeat(65537)),/Framey plugin cache is full/);
+await assert.rejects(window.SteamClient.Storage.SetObject('undefined',undefined),/JSON value/);
 assert.equal(window.indexedDB,undefined); // localForage must use bounded plugin storage.
 const unpatch=window.DFL.beforePatch({},'method',()=>{});
 assert.equal(unpatch.unpatch,unpatch);unpatch.unpatch();
