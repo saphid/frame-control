@@ -141,7 +141,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                           {'action':'update','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
-        status, _, stale_reply = api('POST', '/api/framey/method',
+        status, stale_reply, _ = api('POST', '/api/framey/method',
             {'id':999,'receipt':receipt,'method':'get_setting','args':['theme','dark']})
         self.assertEqual(status, 400)
         self.assertIn('changed', str(stale_reply))
