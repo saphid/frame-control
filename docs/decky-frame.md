@@ -88,8 +88,11 @@ entries. Install, update, and remove need an explicit confirmation. They only
 change Frame Control owned plugin folders under
 `~/.local/share/frame-control/decky/plugins`. The installer checks the store
 hash and archive paths, blocks root plugins and non-ARM64 binaries, and rolls
-back an update if the service restart fails. The current VR shell does not
-provide Decky's Steam Deck Quick Access Menu. Frame Control's headset panel
+back an update if the service restart fails. An update is also refused if its
+new plugin name is already used by another installed plugin, because Decky
+routes backend calls by name. This collision check has local tests only.
+The current VR shell does not provide Decky's Steam Deck Quick Access Menu.
+Frame Control's headset panel
 shows installed plugins and store actions. Its separate Framey iframe hosts
 API v2 pages and API v1 bundles that use Decky's modern frontend initializer,
 with settings, local routes, and panel toasts where supported.
