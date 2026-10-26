@@ -131,3 +131,35 @@ assert.equal(el('deckyStoreList').children.length,0);
 vm.runInContext('openFrameyPanel(900,"Hardware only")',ctx);
 assert.match(el('frameyCompatibility').textContent,/Deck fan hardware/);
 assert.match(el('frameyCompatibility').textContent,/local browser/);
+
+// A failed installed-status read must not leave stale Remove or Install actions.
+// Older responses must not replace a newer status, even if they arrive last.
+vm.runInContext('deckyStore=[{id:2,name:"Plugin 2",version:"1.0",description:"A panel",root:false}];' +
+  'deckyState={running:true,plugins:[{storeId:2,name:"Plugin 2",version:"1.0"}]};showDeckyStore()',ctx);
+let statusCalls=[];
+ctx.mockApi=path=>{assert.equal(path,'/api/decky');
+  return new Promise((resolve,reject)=>statusCalls.push({resolve,reject}));};
+vm.runInContext('api=mockApi',ctx);
+const staleSuccess=vm.runInContext('refreshDecky()',ctx);
+const latestFailure=vm.runInContext('refreshDecky()',ctx);
+statusCalls[1].reject(Error('offline'));
+await latestFailure;
+assert.match(el('deckyState').textContent,/Installed plugins unavailable: offline/);
+assert.equal(el('deckyInstalled').children.length,0);
+assert.equal(el('deckyInstalled').textContent,'Refresh to check installed plugins.');
+assert.equal(el('deckyStoreList').children[0].children[1].disabled,true);
+statusCalls[0].resolve({running:true,plugins:[{storeId:2,name:'Stale',version:'1.0'}]});
+await staleSuccess;
+assert.match(el('deckyState').textContent,/offline/);
+assert.equal(el('deckyInstalled').children.length,0);
+
+statusCalls=[];
+const staleFailure=vm.runInContext('refreshDecky()',ctx);
+const latestSuccess=vm.runInContext('refreshDecky()',ctx);
+statusCalls[1].resolve({managed:true,running:true,plugins:[{storeId:2,name:'Current',version:'1.0'}]});
+await latestSuccess;
+statusCalls[0].reject(Error('old offline error'));
+await staleFailure;
+assert.match(el('deckyInstalled').children[0].children[0].textContent,/Current/);
+assert.doesNotMatch(el('deckyState').textContent,/offline/);
+assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
