@@ -2682,5 +2682,15 @@
     "Local custom artwork",
     "Closed-panel automation, suspend/input and private MobX observation",
     "Worn VR and physical controller/keyboard use"
-  ]
+  ],
+  "receiptIntegration": {
+    "prerequisite": "#301 merged at ad57662",
+    "verification": "Local Python/Node tests; hardware checks above preceded this authorization-only change",
+    "checks": [
+      "Parent poll and both close paths include pinned SHA-256",
+      "Missing/stale receipts rejected before CEF for active polls and close after plugin replacement",
+      "Reopened panel accepts current receipt for poll and close",
+      "Finite subscription lease unchanged for rejected stale close"
+    ]
+  }
 }

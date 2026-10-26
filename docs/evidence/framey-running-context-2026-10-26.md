@@ -69,3 +69,10 @@ suspend/input events, game actions or closed-panel automation.
 Discord shortcut detection, real IPC connection/activity, local custom artwork,
 actual running-game transitions, worn VR and physical controller/keyboard use
 remain unverified. None of the new fixture checks promotes a plugin to works.
+
+After #301 merged, running polls and both close paths adopted its pinned SHA-256
+receipt guard. Local Python/Node tests verify the parent carries that receipt,
+missing/stale receipts are rejected before CEF after plugin replacement, and a
+reopened panel can poll and close with the new receipt. Rejected stale closes
+retain the tested finite-lease cleanup. This authorization-only follow-up did
+not repeat the device checks above; their recorded hardware scope is unchanged.
