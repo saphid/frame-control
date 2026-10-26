@@ -131,14 +131,14 @@ class ObsSourceTests(unittest.TestCase):
             wrapper = ("import importlib.util; "
                        f"s=importlib.util.spec_from_file_location('obs', {str(SCRIPT)!r}); "
                        "o=importlib.util.module_from_spec(s);s.loader.exec_module(o); "
-                       "o.STARTUP_TIMEOUT=o.STREAM_STALL=o.CHILD_STOP_TIMEOUT=0.15; "
+                       "o.STARTUP_TIMEOUT=5; o.STREAM_STALL=o.CHILD_STOP_TIMEOUT=0.15; "
                        "o.main(['--frame','fake-frame','--control-stdin'])")
             env = {**os.environ, 'PATH': str(directory) + os.pathsep + os.environ.get('PATH', '')}
             process = subprocess.Popen([sys.executable, '-c', wrapper], stdin=subprocess.PIPE,
                                        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, env=env)
             try:
                 # Keep stdin OPEN: real Electron does this until the helper exits.
-                self.assertEqual(process.wait(timeout=4), 1)
+                self.assertEqual(process.wait(timeout=10), 1)
                 error = process.stderr.read().decode(errors='replace')
                 self.assertIn('video stopped', error)
                 self.assertNotIn('Fatal Python error', error)
@@ -209,6 +209,7 @@ class ObsSourceTests(unittest.TestCase):
         for mode in ('startup', 'stream'):
             with self.subTest(mode=mode), tempfile.TemporaryDirectory() as folder:
                 directory = Path(folder)
+                ready = directory / 'ready'
                 fake = directory / 'ssh'
                 fake.write_text("#!/usr/bin/env python3\n"
                                 "import os, signal, sys, time\n"
@@ -219,12 +220,29 @@ class ObsSourceTests(unittest.TestCase):
                                 "if os.environ['FAKE_SSH_MODE'] == 'stream':\n"
                                 "    sys.stdout.buffer.write(b'G' * 1316)\n"
                                 "    sys.stdout.buffer.flush()\n"
+                                "open(os.environ['FAKE_SSH_READY'], 'w').close()\n"
                                 "while True: time.sleep(1)\n")
                 fake.chmod(0o755)
                 stopped = directory / 'stopped'
                 env = {'PATH': str(directory) + os.pathsep + os.environ.get('PATH', ''),
-                       'FAKE_SSH_STOPPED': str(stopped), 'FAKE_SSH_MODE': mode}
+                       'FAKE_SSH_STOPPED': str(stopped), 'FAKE_SSH_MODE': mode,
+                       'FAKE_SSH_READY': str(ready)}
+                real_popen = subprocess.Popen
+
+                def start_ready(*args, **kwargs):
+                    proc = real_popen(*args, **kwargs)
+                    # Start the short watchdog clock after the stand-in installed
+                    # its handler, independent of native interpreter launch time.
+                    end = time.monotonic() + 5
+                    while not ready.exists() and proc.poll() is None and time.monotonic() < end:
+                        time.sleep(0.01)
+                    if not ready.exists():
+                        obs.stop_child(proc)
+                        self.fail('Stand-in SSH did not finish startup')
+                    return proc
+
                 with mock.patch.dict(os.environ, env), \
+                     mock.patch.object(obs.subprocess, 'Popen', side_effect=start_ready), \
                      mock.patch.object(obs, 'STARTUP_TIMEOUT', 0.3), \
                      mock.patch.object(obs, 'STREAM_STALL', 0.3):
                     with self.assertRaisesRegex(RuntimeError, 'no OBS video' if mode == 'startup' else 'video stopped'):

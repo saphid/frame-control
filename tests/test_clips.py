@@ -440,6 +440,15 @@ sys.exit(255 if stop else 0)
 class Recording(unittest.TestCase):
     """The Recorder with the real record/finish/cleanup shell, run locally under bash."""
 
+    @classmethod
+    def setUpClass(cls):
+        # The Frame's Bash 5 returns >128 for a timed-out read, distinct from EOF.
+        # macOS Bash 3.2 returns 1 for both, so it would falsely simulate Stop.
+        result = subprocess.run(["bash", "-c", "(( BASH_VERSINFO[0] >= 4 ))"],
+                                capture_output=True, timeout=5)
+        if result.returncode:
+            raise unittest.SkipTest("Recording shell fixtures need Bash 4+ timeout semantics; macOS ships Bash 3.2")
+
     def setUp(self):
         self.dir = Path(tempfile.mkdtemp())
         self.addCleanup(shutil.rmtree, self.dir, ignore_errors=True)
