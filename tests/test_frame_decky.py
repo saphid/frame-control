@@ -76,17 +76,22 @@ class DeckyServiceScript(unittest.TestCase):
         self.assertEqual((self.base / 'PluginLoader').read_bytes(), first)
         receipt = self.base / '.frame-control/receipt.json'
         self.assertEqual(json.loads(receipt.read_text())['version'], 'v3.3.0')
-        self.assertTrue((Path(self.tmp.name) / '.config/systemd/user/frame-control-decky.service').is_file())
+        service = Path(self.tmp.name) / '.config/systemd/user/frame-control-decky.service'
+        first_unit = service.read_text()
+        self.assertIn('Environment=PATH='+str(Path(self.tmp.name) / '.local/bin')+
+                      ':/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n', first_unit)
 
         second = arm_binary(b'B')
         result = self.apply('update', second, version='v3.3.1', fail=True)
         self.assertNotEqual(result.returncode, 0)
         self.assertEqual((self.base / 'PluginLoader').read_bytes(), first)
         self.assertEqual(json.loads(receipt.read_text())['version'], 'v3.3.0')
+        self.assertEqual(service.read_text(), first_unit)
 
         result = self.apply('update', second, version='v3.3.1')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((self.base / 'PluginLoader').read_bytes(), second)
+        self.assertIn('Environment=PATH=', service.read_text())
         result = self.apply('remove')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.base / 'PluginLoader').exists())
