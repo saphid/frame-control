@@ -16,6 +16,10 @@ plugins → Open official store**. Search the catalogue, confirm an install, and
 choose **Open panel** from the installed plugin list. The panel contains the
 plugin's own controls and settings. Update and Remove affect only plugin
 folders that Frame Control's store manager installed.
+Use **Scroll plugin up** and **Scroll plugin down** above an open panel when
+wheel scrolling is unavailable. Point at a scrollable part of the plugin first
+to move that section; otherwise the buttons move the panel document. Each
+press moves about three quarters of the visible section and stops at its edge.
 Removing a plugin keeps its Decky settings. Removing the Frame Control headset
 panel or Decky backend keeps plugin folders until each is removed separately.
 
@@ -82,7 +86,11 @@ record the resulting TabMaster documentation support and remaining blockers.
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
-and backend calls for the plugin that owns the panel. Steam library/store page
+and backend calls for the plugin that owns the panel. The headset's scroll
+buttons send only a direction to the isolated iframe. They target the last
+scrollable region reached by a trusted pointer move and fall back to the iframe
+document when that region disappears. A result message reports whether content
+moved; this bridge has no backend or Steam privilege. Steam library/store page
 patches, global Steam UI components, file pickers, and privileged root methods
 have no VR target. A plugin that depends on them can render only part of its UI
 or show an incompatibility message. A Decky plugin's Python backend still runs as

@@ -34,6 +34,25 @@
   const root = document.getElementById('framey-root');
   const error = document.getElementById('framey-error');
   const toastRoot = document.getElementById('framey-toasts');
+  let lastScrollTarget = null;
+  function scrollTarget(element) {
+    for (let node = element; node && node !== document; node = node.parentElement) {
+      if (node.scrollHeight <= node.clientHeight + 1) continue;
+      if (node === document.scrollingElement || /^(auto|scroll|overlay)$/.test(getComputedStyle(node).overflowY))
+        return node;
+    }
+    return document.scrollingElement;
+  }
+  function scrollPlugin(direction) {
+    if (direction !== 'up' && direction !== 'down') return false;
+    const target = lastScrollTarget?.isConnected ? lastScrollTarget : document.scrollingElement;
+    if (!target) return false;
+    const before = target.scrollTop;
+    const maximum = Math.max(0, target.scrollHeight - target.clientHeight);
+    const step = Math.max(120, Math.round(target.clientHeight * 0.75));
+    target.scrollTop = Math.max(0, Math.min(maximum, before + (direction === 'down' ? step : -step)));
+    return target.scrollTop !== before;
+  }
   const pending = new Map();
   const routes = new Map();
   const routeListeners = new Set();
@@ -139,6 +158,14 @@
     return request(method, args, legacy);
   }
   addEventListener('message', event => {
+    if (event.source === parent && event.data?.type === 'framey:scroll' &&
+        event.data.session === cacheSession) {
+      if (event.data.direction !== 'up' && event.data.direction !== 'down') return;
+      const moved = scrollPlugin(event.data.direction);
+      parent.postMessage({type:'framey:scroll:result', session:cacheSession,
+        direction:event.data.direction, moved}, '*');
+      return;
+    }
     if (event.source === parent && event.data?.type === 'framey:cache:seed' &&
         event.data.session === cacheSession && acceptSeed) {
       const entries = event.data.entries;
@@ -164,6 +191,9 @@
   });
   addEventListener('pointerup', event => {
     if (event.isTrusted) parent.postMessage({type:'framey:input'}, '*');
+  }, {passive:true});
+  addEventListener('pointermove', event => {
+    if (event.isTrusted) lastScrollTarget = scrollTarget(event.target);
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
