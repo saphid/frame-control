@@ -31,7 +31,8 @@ function Content() {
       await setSetting('enabled', value);
       setEnabled(value);
       setMessage(`Saved setting: ${value ? 'on' : 'off'}`);
-      toaster.toast({title: 'Framey sample', body: 'Setting saved'});
+      toaster.toast({title: 'Framey sample',
+        body: <span>Setting saved: <strong>{value ? 'on' : 'off'}</strong></span>});
     } catch (error) {
       setMessage(`Could not save setting: ${String(error)}`);
     } finally {

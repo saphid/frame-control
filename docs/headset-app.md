@@ -41,8 +41,9 @@ frontend host is browser-tested, but wearer-visible VR use remains unverified.
 The panel also lists Decky plugins and can install, update, or remove compatible
 plugins from the official store when the opt-in managed loader is running.
 Each change asks for confirmation. The Frame VR shell does not show Decky's
-Steam Deck Quick Access Menu, so Decky plugin pages, settings, routes, and
-toasts are not available in this panel yet. The [compatibility table](decky-frame.md)
+Steam Deck Quick Access Menu. Framey's separate panel can show compatible
+plugin pages, settings, local routes, and local toasts, but these controls
+still need a worn-headset check. The [compatibility table](decky-frame.md)
 separates backend loading from VR use. Authors can use the
 [Frame plugin and extension guide](frame-plugin-author.md).
 

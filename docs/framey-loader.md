@@ -191,7 +191,7 @@ plugin initializer. Framey displays up to eight actions and reports a pending,
 success, or failure state. These descriptor fields are Framey additions; Decky
 ignores them. Use a plugin backend method through `@decky/api` for work needing
 persistent state, and keep a quick action safe to repeat.
-See the [API v2 compatibility table](frame-plugin-author.md#framey-api-v2-compatibility)
+See the [Decky API compatibility table](frame-plugin-author.md#framey-decky-api-compatibility)
 for tested behavior and remaining limits.
 
 The [Frame Control extension API](extensions.md) is an alternative for a
