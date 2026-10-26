@@ -156,16 +156,7 @@ final class FrameConnection implements AutoCloseable, SyncEngine.Transport {
         });
     try {
       s.connect(15000);
-      String key = new PhoneIdentity().authorizedKey(install);
-      run(
-          s,
-          "umask 077; mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch ~/.ssh/authorized_keys && chmod"
-              + " 600 ~/.ssh/authorized_keys && (grep -qxF "
-              + quote(key)
-              + " ~/.ssh/authorized_keys || printf '%s\\n' "
-              + quote(key)
-              + " >> ~/.ssh/authorized_keys)",
-          10000);
+      run(s, authorizeCommand(new PhoneIdentity().authorizedKey(install)), 10000);
     } finally {
       s.disconnect();
     }
@@ -179,6 +170,56 @@ final class FrameConnection implements AutoCloseable, SyncEngine.Transport {
     } finally {
       check.disconnect();
     }
+  }
+
+  /**
+   * Idempotently appends {@code key}. A last line without a newline is terminated first, so the
+   * existing key is never merged with the new one (the same guard as the iPhone app).
+   */
+  static String authorizeCommand(String key) {
+    String file = "~/.ssh/authorized_keys";
+    return "umask 077; mkdir -p ~/.ssh && chmod 700 ~/.ssh && touch "
+        + file
+        + " && chmod 600 "
+        + file
+        + " && { grep -qxF "
+        + quote(key)
+        + " "
+        + file
+        + " || { if [ -s "
+        + file
+        + " ] && [ -n \"$(tail -c 1 "
+        + file
+        + ")\" ]; then printf '\\n' >> "
+        + file
+        + "; fi; printf '%s\\n' "
+        + quote(key)
+        + " >> "
+        + file
+        + "; }; }";
+  }
+
+  /**
+   * Lists Steam account directories, including ones with no screenshots. Prints "absent" when
+   * Steam has not created userdata yet; any other failure exits non-zero.
+   */
+  static final String ACCOUNTS_COMMAND =
+      "d=\"$HOME/.local/share/Steam/userdata\"; if [ ! -e \"$d\" ]; then echo absent; else"
+          + " cd \"$d\" || exit 1; echo present; for a in *; do case \"$a\" in ''|*[!0-9]*) ;;"
+          + " *) if [ -d \"$a\" ]; then printf '%s\\n' \"$a\"; fi ;; esac; done; fi";
+
+  static Set<String> parseAccounts(String output) throws IOException {
+    String[] lines = output.split("\n", -1);
+    Set<String> accounts = new TreeSet<>();
+    if (lines.length == 2 && lines[0].equals("absent") && lines[1].isEmpty()) return accounts;
+    if (lines.length < 2 || !lines[0].equals("present") || !lines[lines.length - 1].isEmpty())
+      throw new IOException("Could not read Steam accounts on the headset.");
+    for (int i = 1; i < lines.length - 1; i++) {
+      if (!lines[i].matches("[0-9]+")) throw new IOException("Unexpected Steam account entry.");
+      // The headset server ignores longer ids; so does the screenshot listing.
+      if (lines[i].length() <= 12) accounts.add(lines[i]);
+    }
+    return accounts;
   }
 
   static String run(Session s, String command, int timeout) throws Exception {
@@ -330,6 +371,12 @@ final class FrameConnection implements AutoCloseable, SyncEngine.Transport {
     c.setInstanceFollowRedirects(false);
     c.setRequestProperty("X-Frame-UI", apiKey);
     return c;
+  }
+
+  /** Accounts are read first; one that appears before the screenshot query is still new. */
+  SyncEngine.Listing listing() throws Exception {
+    Set<String> accounts = parseAccounts(run(session, ACCOUNTS_COMMAND, 10000));
+    return new SyncEngine.Listing(accounts, shots());
   }
 
   List<SyncEngine.Shot> shots() throws Exception {

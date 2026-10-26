@@ -17,6 +17,10 @@ import java.util.concurrent.*;
 
 public final class MainActivity extends Activity {
   private final ExecutorService network = Executors.newSingleThreadExecutor();
+  // Journal parsing and file checks stay off the main thread.
+  private final ExecutorService library = Executors.newSingleThreadExecutor();
+  private boolean loading;
+  private String renderedPin;
   private final Handler handler = new Handler(Looper.getMainLooper());
   private LinearLayout root, downloads;
   private FrameLayout content;
@@ -33,6 +37,9 @@ public final class MainActivity extends Activity {
   private static final int INK = Color.rgb(232, 240, 238),
       MUTED = Color.rgb(164, 183, 179),
       ACCENT = Color.rgb(124, 216, 195);
+  private static final String EMPTY =
+      "Pair and start syncing. Existing headset screenshots stay on the headset; new captures"
+          + " will appear here.";
   private final Runnable refresh =
       new Runnable() {
         public void run() {
@@ -169,8 +176,8 @@ public final class MainActivity extends Activity {
     companionBody.addView(
         text(
             "New captures download automatically while sync is running. A notification keeps the"
-                + " connection visible. Stop syncing to disconnect. Android may delay transfers in"
-                + " battery-saving modes.",
+                + " connection visible. Stop syncing to disconnect. Android may delay transfers"
+                + " while the phone is locked or in battery-saving modes.",
             14,
             MUTED));
     companionBody.addView(
@@ -179,12 +186,7 @@ public final class MainActivity extends Activity {
                 + " earlier app-only downloads.",
             14,
             MUTED));
-    empty =
-        text(
-            "Pair and start syncing. Existing headset screenshots stay on the headset; new captures"
-                + " will appear here.",
-            14,
-            MUTED);
+    empty = text(EMPTY, 14, MUTED);
     companionBody.addView(empty);
     downloads = new LinearLayout(this);
     downloads.setOrientation(LinearLayout.VERTICAL);
@@ -297,51 +299,89 @@ public final class MainActivity extends Activity {
     port.setEnabled(!running && !busy);
     user.setEnabled(!running && !busy);
     if (controls && !Objects.equals(loadedPage, SyncService.page())) show(true);
-    try {
-      List<SyncEngine.Item> items = SyncService.items(this);
-      StringBuilder signature = new StringBuilder();
-      for (var item : items)
-        signature
-            .append(item.file.getAbsolutePath())
-            .append('|')
-            .append(item.destination)
-            .append('|')
-            .append(item.file.exists())
-            .append('\n');
-      if (signature.toString().equals(librarySignature)) return;
-      librarySignature = signature.toString();
+    String pin = SyncService.prefs(this).getString("pin", null);
+    if (!Objects.equals(pin, renderedPin)) {
+      // Never leave another headset's originals shareable while the new library loads.
+      renderedPin = pin;
+      librarySignature = "";
       downloads.removeAllViews();
-      empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
-      int shown = 0;
-      for (SyncEngine.Item item : items) {
-        if (shown++ >= downloadLimit) {
-          downloads.addView(
-              button(
-                  "Show 100 more downloads",
-                  () -> {
-                    downloadLimit += 100;
-                    librarySignature = "";
-                    update();
-                  }));
-          break;
-        }
-        String label = item.shot.id.substring(item.shot.id.lastIndexOf('/') + 1);
-        LinearLayout card = new LinearLayout(this);
-        card.setOrientation(LinearLayout.VERTICAL);
-        card.setPadding(0, dp(12), 0, dp(12));
-        card.addView(text(label, 16, INK));
-        String where =
-            item.destination.equals("saved")
-                ? "Saved to Gallery"
-                : item.destination.equals("appOnly") ? "In Frame Control" : "Gallery save pending";
-        if (!item.file.exists()) where = "Download pending";
-        card.addView(text(where + " · Game " + item.shot.id.split("/")[1], 13, MUTED));
-        if (item.file.exists()) card.addView(button("Open / share original", () -> share(item)));
-        downloads.addView(card);
-      }
-    } catch (Exception e) {
+      empty.setText(EMPTY);
       empty.setVisibility(View.VISIBLE);
-      empty.setText("Could not read screenshot downloads: " + SyncService.message(e));
+    }
+    if (loading) return;
+    loading = true;
+    library.execute(
+        () -> {
+          List<SyncEngine.Item> items = null;
+          Set<SyncEngine.Item> present = new HashSet<>();
+          Exception failure = null;
+          try {
+            items = SyncService.items(this, pin);
+            for (SyncEngine.Item item : items) if (item.file.exists()) present.add(item);
+          } catch (Exception e) {
+            failure = e;
+          }
+          List<SyncEngine.Item> loaded = items;
+          Exception error = failure;
+          runOnUiThread(
+              () -> {
+                loading = false;
+                if (isFinishing() || isDestroyed()) return;
+                // A result for a previously paired headset is discarded; the next tick reloads.
+                if (!Objects.equals(pin, SyncService.prefs(this).getString("pin", null))) return;
+                if (error != null) {
+                  librarySignature = "";
+                  empty.setVisibility(View.VISIBLE);
+                  empty.setText("Could not read screenshot downloads: " + SyncService.message(error));
+                  return;
+                }
+                render(loaded, present);
+              });
+        });
+  }
+
+  private void render(List<SyncEngine.Item> items, Set<SyncEngine.Item> present) {
+    StringBuilder signature = new StringBuilder();
+    for (var item : items)
+      signature
+          .append(item.file.getAbsolutePath())
+          .append('|')
+          .append(item.destination)
+          .append('|')
+          .append(present.contains(item))
+          .append('\n');
+    if (signature.toString().equals(librarySignature)) return;
+    librarySignature = signature.toString();
+    downloads.removeAllViews();
+    empty.setText(EMPTY);
+    empty.setVisibility(items.isEmpty() ? View.VISIBLE : View.GONE);
+    int shown = 0;
+    for (SyncEngine.Item item : items) {
+      if (shown++ >= downloadLimit) {
+        downloads.addView(
+            button(
+                "Show 100 more downloads",
+                () -> {
+                  downloadLimit += 100;
+                  librarySignature = "";
+                  update();
+                }));
+        break;
+      }
+      String label = item.shot.id.substring(item.shot.id.lastIndexOf('/') + 1);
+      LinearLayout card = new LinearLayout(this);
+      card.setOrientation(LinearLayout.VERTICAL);
+      card.setPadding(0, dp(12), 0, dp(12));
+      card.addView(text(label, 16, INK));
+      String where =
+          item.destination.equals("saved")
+              ? "Saved to Gallery"
+              : item.destination.equals("appOnly") ? "In Frame Control" : "Gallery save pending";
+      boolean exists = present.contains(item);
+      if (!exists) where = "Download pending";
+      card.addView(text(where + " · Game " + item.shot.id.split("/")[1], 13, MUTED));
+      if (exists) card.addView(button("Open / share original", () -> share(item)));
+      downloads.addView(card);
     }
   }
 
@@ -502,6 +542,7 @@ public final class MainActivity extends Activity {
   @Override
   protected void onDestroy() {
     network.shutdownNow();
+    library.shutdownNow();
     if (fileSelection != null) fileSelection.onReceiveValue(null);
     if (web != null) {
       web.destroy();

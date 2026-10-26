@@ -13,6 +13,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
@@ -72,9 +74,32 @@ public class SyncEngineTest {
         throw new AssertionError("Expected operation to reject invalid or unavailable state");
     }
 
+    /** Fixture accounts, present on the headset from the first poll onward. */
+    private static final Set<String> ACCOUNTS = accounts("123", "124", "123456789012");
+
+    private static Set<String> accounts(String... ids) { return new TreeSet<>(Arrays.asList(ids)); }
+
     private static void reconcile(SyncEngine engine, Transfer transfer, Gallery gallery,
                                   SyncEngine.Shot... shots) throws Exception {
-        engine.reconcile(Arrays.asList(shots), transfer, gallery);
+        poll(engine, transfer, gallery, ACCOUNTS, shots);
+    }
+
+    private static void poll(SyncEngine engine, Transfer transfer, Gallery gallery, Set<String> accounts,
+                             SyncEngine.Shot... shots) throws Exception {
+        engine.reconcile(new SyncEngine.Listing(accounts, Arrays.asList(shots)), transfer, gallery);
+    }
+
+    /** Replaces the journal with a directory, so any journal write fails. */
+    private static byte[] blockJournal(File root) throws IOException {
+        File journal = new File(root, "receipts.json");
+        byte[] saved = Files.readAllBytes(journal.toPath());
+        Files.delete(journal.toPath()); Files.createDirectory(journal.toPath());
+        return saved;
+    }
+
+    private static void unblockJournal(File root, byte[] saved) throws IOException {
+        File journal = new File(root, "receipts.json");
+        Files.delete(journal.toPath()); Files.write(journal.toPath(), saved);
     }
 
     private static void observed(SyncEngine engine, Transfer transfer, Gallery gallery,
@@ -388,6 +413,10 @@ public class SyncEngineTest {
     @Test public void corruptedAndIncompleteJournalsFailClosed() throws Exception {
         for (String content : new String[]{"", "{", "null", "{}", "{\"gallery\":true}",
                 "{\"version\":2,\"initialized\":true,\"gallery\":true,\"records\":{}}",
+                "{\"version\":3,\"initialized\":true,\"gallery\":true,\"accounts\":[],\"records\":{}}",
+                "{\"version\":1,\"initialized\":true,\"gallery\":true,\"accounts\":[],\"records\":{}}",
+                "{\"version\":2,\"initialized\":true,\"gallery\":true,\"accounts\":[\"x1\"],\"records\":{}}",
+                "{\"version\":2,\"initialized\":false,\"gallery\":true,\"accounts\":[\"1\"],\"records\":{}}",
                 "{\"version\":1,\"initialized\":true,\"gallery\":true,\"records\":{}} trailing"}) {
             File root = temporary.newFolder();
             File journal = new File(root, "receipts.json");
@@ -442,15 +471,16 @@ public class SyncEngineTest {
                 FIRST + "\n", FIRST + "/extra", "123/456/20261024120000_1.gif"}) {
             fails(() -> reconcile(engine, transfer, gallery, shot(id)));
         }
-        for (long size : new long[]{0, -1, 30L * 1024 * 1024 + 1, Long.MAX_VALUE}) {
-            fails(() -> reconcile(engine, transfer, gallery, new SyncEngine.Shot(FIRST, size, 1)));
-        }
         for (double time : new double[]{Double.NaN, Double.POSITIVE_INFINITY, Double.NEGATIVE_INFINITY}) {
             fails(() -> reconcile(engine, transfer, gallery, new SyncEngine.Shot(FIRST, 1, time)));
         }
         fails(() -> engine.reconcile(null, transfer, gallery));
+        fails(() -> engine.reconcile(new SyncEngine.Listing(ACCOUNTS, null), transfer, gallery));
+        fails(() -> engine.reconcile(new SyncEngine.Listing(null, Collections.emptyList()), transfer, gallery));
         fails(() -> reconcile(engine, transfer, gallery, (SyncEngine.Shot) null));
         fails(() -> reconcile(engine, transfer, gallery, A, new SyncEngine.Shot(FIRST, 5, 1)));
+        // An ineligible duplicate still conflicts with the eligible row of the same id.
+        fails(() -> reconcile(engine, transfer, gallery, A, new SyncEngine.Shot(FIRST, 0, A.time)));
         assertTrue(transfer.downloads.isEmpty());
     }
 
@@ -785,5 +815,301 @@ public class SyncEngineTest {
         assertEquals(Arrays.asList(FIRST, SECOND), fresh.downloads);
         assertTrue(item(engine, FIRST).file.isFile());
         assertTrue(item(engine, SECOND).file.isFile());
+    }
+
+    // F3: the journal is rewritten only when a receipt changes.
+
+    @Test public void stablePollsDoNotRewriteJournal() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, true);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        reconcile(engine, transfer, gallery, A);
+        byte[] saved = blockJournal(root);
+        for (int i = 0; i < 3; i++) reconcile(engine, transfer, gallery, A);
+        reconcile(engine, transfer, gallery); // A missing: a baseline receipt has nothing to reset.
+        fails(() -> reconcile(engine, transfer, gallery, A, B)); // A new screenshot is persisted.
+        unblockJournal(root, saved);
+        reconcile(engine, transfer, gallery, A, B);
+        reconcile(engine, transfer, gallery, A, B);
+        assertEquals("saved", item(engine, SECOND).destination);
+        saved = blockJournal(root);
+        for (int i = 0; i < 3; i++) reconcile(engine, transfer, gallery, A, B);
+        assertEquals(Collections.singletonList(SECOND), transfer.downloads);
+        assertEquals(1, gallery.attempts);
+        unblockJournal(root, saved);
+        assertEquals("saved", item(new SyncEngine(root, true), SECOND).destination);
+    }
+
+    @Test public void deniedExportRetriesEveryPollWithoutJournalWrites() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, true);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        observed(engine, transfer, gallery, A);
+        gallery.deny = true;
+        reconcile(engine, transfer, gallery, A);
+        byte[] saved = blockJournal(root);
+        reconcile(engine, transfer, gallery, A);
+        reconcile(engine, transfer, gallery);
+        assertEquals(3, gallery.attempts);
+        unblockJournal(root, saved);
+        gallery.deny = false;
+        reconcile(engine, transfer, gallery, A);
+        assertEquals("saved", new SyncEngine(root, true).items().get(0).destination);
+        assertEquals(1, transfer.downloads.size());
+    }
+
+    @Test public void failedDownloadRetriesWithoutWritesButMissingPollResetIsPersisted() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        observed(engine, transfer, gallery, A);
+        transfer.truncated = true;
+        fails(() -> reconcile(engine, transfer, gallery, A));
+        byte[] saved = blockJournal(root);
+        IOException retry = fails(() -> reconcile(engine, transfer, gallery, A));
+        assertTrue(retry.getMessage(), retry.getMessage().contains("Incomplete downloaded image"));
+        assertEquals(2, transfer.downloads.size());
+        // A missing poll changes stability, so it must reach disk; the blocked journal rejects it.
+        fails(() -> reconcile(engine, transfer, gallery));
+        unblockJournal(root, saved);
+        transfer.truncated = false;
+        reconcile(engine, transfer, gallery);
+        SyncEngine relaunched = new SyncEngine(root, false);
+        reconcile(relaunched, transfer, gallery, A); // One observation after the reset.
+        assertEquals(2, transfer.downloads.size());
+        reconcile(relaunched, transfer, gallery, A);
+        assertEquals(3, transfer.downloads.size());
+        assertTrue(relaunched.items().get(0).file.isFile());
+    }
+
+    // F4: an empty or oversized file is skipped per item.
+
+    @Test public void emptyOrOversizedFilesAreSkippedWithoutBlockingBaselineOrOtherScreenshots() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, true);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        SyncEngine.Shot empty = new SyncEngine.Shot("123/456/20261024120005_5.jpg", 0, 1);
+        SyncEngine.Shot huge = new SyncEngine.Shot("124/456/20261024120006_6.png", 30L * 1024 * 1024 + 1, 1);
+        SyncEngine.Shot negative = new SyncEngine.Shot("123/457/20261024120007_7.jpg", -1, 1);
+        SyncEngine.Shot maximum = new SyncEngine.Shot("123/458/20261024120008_8.jpg", Long.MAX_VALUE, 1);
+        reconcile(engine, transfer, gallery, empty, huge, negative, maximum); // Baseline is still set.
+        assertEquals(4, engine.skipped());
+        reconcile(engine, transfer, gallery, empty, huge, A);
+        reconcile(engine, transfer, gallery, empty, huge, A);
+        assertEquals(2, engine.skipped());
+        assertEquals(Collections.singletonList(FIRST), transfer.downloads);
+        assertEquals("saved", item(engine, FIRST).destination);
+        // A capture still being written at baseline time is new once it is complete.
+        SyncEngine.Shot finished = new SyncEngine.Shot(empty.id, 4, 2);
+        reconcile(engine, transfer, gallery, finished, huge, A);
+        // Becoming empty again is an absence: stability restarts.
+        reconcile(engine, transfer, gallery, empty, huge, A);
+        reconcile(engine, transfer, gallery, finished, huge, A);
+        assertEquals(1, transfer.downloads.size());
+        reconcile(engine, transfer, gallery, finished, huge, A);
+        assertEquals(Arrays.asList(FIRST, empty.id), transfer.downloads);
+        assertEquals(1, engine.skipped());
+        assertEquals(2, new SyncEngine(root, true).items().size());
+    }
+
+    // F5: the screen reads a library without writing it.
+
+    @Test public void readOnlySnapshotNeverCreatesUpgradesOrRewrites() throws Exception {
+        File missing = new File(temporary.getRoot(), "missing/library");
+        assertTrue(SyncEngine.snapshot(missing).isEmpty());
+        assertFalse(missing.getParentFile().exists());
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, true);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        observed(engine, transfer, gallery, A);
+        reconcile(engine, transfer, gallery, A);
+        engine.setGallery(false);
+        File journal = new File(root, "receipts.json");
+        byte[] before = Files.readAllBytes(journal.toPath());
+        java.nio.file.attribute.FileTime modified = Files.getLastModifiedTime(journal.toPath());
+        Set<String> entries = new TreeSet<>(Arrays.asList(root.list()));
+        List<SyncEngine.Item> items = SyncEngine.snapshot(root);
+        assertEquals(1, items.size());
+        assertEquals("saved", items.get(0).destination);
+        assertTrue(items.get(0).file.isFile());
+        assertArrayEquals(before, Files.readAllBytes(journal.toPath()));
+        assertEquals(modified, Files.getLastModifiedTime(journal.toPath()));
+        assertEquals(entries, new TreeSet<>(Arrays.asList(root.list())));
+        // A version 1 journal stays version 1 when only viewed.
+        String legacy = "{\"version\":1,\"initialized\":true,\"gallery\":true,\"records\":{}}";
+        Files.write(journal.toPath(), legacy.getBytes(StandardCharsets.UTF_8));
+        assertTrue(SyncEngine.snapshot(root).isEmpty());
+        assertEquals(legacy, new String(Files.readAllBytes(journal.toPath()), StandardCharsets.UTF_8));
+        Files.write(journal.toPath(), "{".getBytes(StandardCharsets.UTF_8));
+        fails(() -> SyncEngine.snapshot(root));
+        assertEquals("{", new String(Files.readAllBytes(journal.toPath()), StandardCharsets.UTF_8));
+    }
+
+    // F1: a closed engine (stopped service) can never write after another engine takes over.
+
+    @Test public void closedEngineCannotWriteAfterAnotherEngineTakesOver() throws Exception {
+        File root = temporary.newFolder();
+        File journal = new File(root, "receipts.json");
+        SyncEngine engine = new SyncEngine(root, true);
+        CountDownLatch entered = new CountDownLatch(1), release = new CountDownLatch(1);
+        Transfer slow = new Transfer() {
+            @Override public void download(SyncEngine.Shot shot, File file) throws Exception {
+                entered.countDown(); await(release);
+                Files.write(file.toPath(), new byte[]{9, 9, 9, 9});
+            }
+        };
+        Transfer fresh = new Transfer(); Gallery gallery = new Gallery();
+        observed(engine, fresh, gallery, A);
+        SyncEngine next;
+        byte[] saved;
+        try (Async async = new Async(() -> reconcile(engine, slow, gallery, A))) {
+            try {
+                await(entered);
+                engine.close();
+                next = new SyncEngine(root, false);
+                reconcile(next, fresh, gallery, A);
+                saved = Files.readAllBytes(journal.toPath());
+            } finally { release.countDown(); }
+            async.finish();
+        }
+        assertArrayEquals(saved, Files.readAllBytes(journal.toPath()));
+        assertTrue(engine.isClosed());
+        assertFalse(engine.setGallery(true));
+        try { reconcile(engine, fresh, gallery, A); fail("Closed engine accepted a poll"); }
+        catch (IllegalStateException expected) { /* Stop is permanent. */ }
+        assertArrayEquals(saved, Files.readAllBytes(journal.toPath()));
+        assertArrayEquals(new byte[4], Files.readAllBytes(item(next, FIRST).file.toPath()));
+        assertEquals("appOnly", item(new SyncEngine(root, false), FIRST).destination);
+    }
+
+    // F7: each Steam account gets its own baseline the first time it is present.
+
+    @Test public void absentUserdataThenAccountWithHistoryIsBaselinedNotImported() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, true);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        poll(engine, transfer, gallery, accounts()); // userdata absent on the first poll
+        poll(engine, transfer, gallery, accounts("123"), A, B);
+        poll(new SyncEngine(root, true), transfer, gallery, accounts("123"), A, B);
+        engine = new SyncEngine(root, true);
+        poll(engine, transfer, gallery, accounts("123"), A, B);
+        assertTrue(transfer.downloads.isEmpty());
+        assertTrue(engine.items().isEmpty());
+        SyncEngine.Shot later = shot("123/456/20261024120002_3.jpg");
+        poll(engine, transfer, gallery, accounts("123"), A, B, later);
+        poll(engine, transfer, gallery, accounts("123"), A, B, later);
+        assertEquals(Collections.singletonList(later.id), transfer.downloads);
+    }
+
+    @Test public void establishedAccountWithoutScreenshotsImportsItsFirstCapture() throws Exception {
+        SyncEngine engine = new SyncEngine(temporary.newFolder(), false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        poll(engine, transfer, gallery, accounts("123"));
+        poll(engine, transfer, gallery, accounts("123"), A);
+        poll(engine, transfer, gallery, accounts("123"), A);
+        assertEquals(Collections.singletonList(FIRST), transfer.downloads);
+    }
+
+    @Test public void newAccountIsBaselinedEvenWhenListedOnlyByItsScreenshots() throws Exception {
+        SyncEngine engine = new SyncEngine(temporary.newFolder(), false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        SyncEngine.Shot other = shot("124/456/20261024120000_1.jpg");
+        SyncEngine.Shot raced = shot("125/456/20261024120000_1.jpg");
+        poll(engine, transfer, gallery, accounts("123"));
+        poll(engine, transfer, gallery, accounts("123", "124"), A, other);
+        // Account 125 appeared between the account and screenshot queries.
+        poll(engine, transfer, gallery, accounts("123", "124"), A, other, raced);
+        poll(engine, transfer, gallery, accounts("123", "124", "125"), A, other, raced);
+        assertEquals(Collections.singletonList(FIRST), transfer.downloads);
+        SyncEngine.Shot next = shot("125/456/20261024120009_9.jpg");
+        poll(engine, transfer, gallery, accounts("123", "124", "125"), A, other, raced, next);
+        poll(engine, transfer, gallery, accounts("123", "124", "125"), A, other, raced, next);
+        assertEquals(Arrays.asList(FIRST, next.id), transfer.downloads);
+    }
+
+    @Test public void removedAndRestoredAccountIsBaselinedAgainButKeepsItsReceipts() throws Exception {
+        File root = temporary.newFolder();
+        SyncEngine engine = new SyncEngine(root, false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        poll(engine, transfer, gallery, accounts("123"));
+        poll(engine, transfer, gallery, accounts("123"), A);
+        poll(engine, transfer, gallery, accounts());
+        engine = new SyncEngine(root, false);
+        poll(engine, transfer, gallery, accounts("123"), A, B); // B returns as history.
+        poll(engine, transfer, gallery, accounts("123"), A, B);
+        assertEquals(Collections.singletonList(FIRST), transfer.downloads);
+        assertEquals(1, engine.items().size());
+    }
+
+    @Test public void invalidAccountListRejectsWholePoll() throws Exception {
+        SyncEngine engine = new SyncEngine(temporary.newFolder(), false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        for (String account : new String[]{"", "../123", "12a", "1234567890123", " 123", null}) {
+            Set<String> bad = new java.util.HashSet<>(Arrays.asList("123", account));
+            fails(() -> poll(engine, transfer, gallery, bad, A));
+        }
+        poll(engine, transfer, gallery, accounts("123"), A); // Still the first, baseline poll.
+        poll(engine, transfer, gallery, accounts("123"), A);
+        poll(engine, transfer, gallery, accounts("123"), A);
+        assertTrue(transfer.downloads.isEmpty());
+    }
+
+    @Test public void versionOneJournalUpgradesAndOnlyTrustsAccountsItHasSeen() throws Exception {
+        File root = temporary.newFolder();
+        File journal = new File(root, "receipts.json");
+        String legacy = "{\"version\":1,\"initialized\":true,\"gallery\":false,\"records\":{\""
+                + FIRST + "\":{\"shot\":{\"id\":\"" + FIRST + "\",\"size\":4,\"time\":100.5},"
+                + "\"state\":\"baseline\",\"observations\":0}}}";
+        Files.write(journal.toPath(), legacy.getBytes(StandardCharsets.UTF_8));
+        SyncEngine engine = new SyncEngine(root, false);
+        Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+        SyncEngine.Shot history = shot("124/456/20261024120000_1.jpg");
+        poll(engine, transfer, gallery, accounts("123", "124"), A, B, history);
+        String upgraded = new String(Files.readAllBytes(journal.toPath()), StandardCharsets.UTF_8);
+        assertTrue(upgraded, upgraded.contains("\"version\":2"));
+        assertTrue(upgraded, upgraded.contains("\"accounts\":[\"123\",\"124\"]"));
+        poll(new SyncEngine(root, false), transfer, gallery, accounts("123", "124"), A, B, history);
+        assertEquals(Collections.singletonList(SECOND), transfer.downloads);
+    }
+
+    // R1: a Gallery change before the first poll keeps a version 1 journal valid.
+
+    @Test public void versionOneJournalStaysValidWhenGalleryChangesBeforeFirstPoll() throws Exception {
+        for (boolean viaConstructor : new boolean[]{true, false}) {
+            File root = temporary.newFolder();
+            File journal = new File(root, "receipts.json");
+            String legacy = "{\"version\":1,\"initialized\":true,\"gallery\":true,\"records\":{\""
+                    + FIRST + "\":{\"shot\":{\"id\":\"" + FIRST + "\",\"size\":4,\"time\":100.5},"
+                    + "\"state\":\"baseline\",\"observations\":0},\""
+                    + SECOND + "\":{\"shot\":{\"id\":\"" + SECOND + "\",\"size\":4,\"time\":100.5},"
+                    + "\"state\":\"queued\",\"observations\":2,\"destination\":\"pending\"}}}";
+            Files.write(journal.toPath(), legacy.getBytes(StandardCharsets.UTF_8));
+            // Constructor: the saved preference differs. Setter: the toggle changes while offline.
+            if (viaConstructor) new SyncEngine(root, false);
+            else assertTrue(new SyncEngine(root, true).setGallery(false));
+            String written = new String(Files.readAllBytes(journal.toPath()), StandardCharsets.UTF_8);
+            assertTrue(written, written.contains("\"version\":1"));
+            assertTrue(written, written.contains("\"gallery\":false"));
+            assertFalse(written, written.contains("accounts"));
+            // Reopening immediately works for the screen and for a later session.
+            assertEquals("appOnly", SyncEngine.snapshot(root).get(0).destination);
+            SyncEngine engine = new SyncEngine(root, false);
+            assertEquals("appOnly", item(engine, SECOND).destination);
+            assertTrue(engine.setGallery(true));
+            assertTrue(engine.setGallery(false));
+            new SyncEngine(root, true);
+            engine = new SyncEngine(root, false);
+            // The first poll still upgrades with the version 1 baseline policy.
+            Transfer transfer = new Transfer(); Gallery gallery = new Gallery();
+            SyncEngine.Shot history = shot("124/456/20261024120000_1.jpg");
+            poll(engine, transfer, gallery, accounts("123", "124"), A, B, history);
+            String upgraded = new String(Files.readAllBytes(journal.toPath()), StandardCharsets.UTF_8);
+            assertTrue(upgraded, upgraded.contains("\"version\":2"));
+            assertTrue(upgraded, upgraded.contains("\"accounts\":[\"123\",\"124\"]"));
+            poll(new SyncEngine(root, false), transfer, gallery, accounts("123", "124"), A, B, history);
+            assertEquals(Collections.singletonList(SECOND), transfer.downloads);
+            assertEquals(0, gallery.attempts);
+            assertEquals("appOnly", item(new SyncEngine(root, false), SECOND).destination);
+        }
     }
 }

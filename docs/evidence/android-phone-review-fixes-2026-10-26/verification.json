@@ -1,0 +1,23 @@
+{
+  "platform": "Android API 36 emulator",
+  "nativeTests": 6,
+  "nativeFailures": 0,
+  "nativeSkipped": 0,
+  "supervisorExit": 0,
+  "jvmTests": 54,
+  "jvmFailures": 0,
+  "jvmErrors": 0,
+  "jvmSkipped": 0,
+  "buildExit": 0,
+  "headsetAccountListing": {
+    "sshExit": 0,
+    "state": "present",
+    "accountCount": 1,
+    "numericEntriesOnly": true
+  },
+  "apkSha256": {
+    "android/app/build/outputs/apk/debug/app-debug.apk": "139443c8f3246527ed629731b4f2a099939a2ba7590b628cde415f3f0d7ab996",
+    "android/app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk": "3a84246a7b40436fd5fc521154541603050805270e21e052e26b31a5fa1e0cc2"
+  },
+  "productionReleased": false
+}

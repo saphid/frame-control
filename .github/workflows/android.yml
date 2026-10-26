@@ -3,7 +3,7 @@ on:
   pull_request:
     paths: ['android/**', 'ui/**', 'scripts/**', 'frame/**', 'apk-catalog/**', 'ios/scripts/make_frame_bundle.py', '.github/workflows/android.yml']
   push:
-    branches: [main, 'feat/phone-screenshot-autosync-108']
+    branches: [main]
     paths: ['android/**', 'ui/**', 'scripts/**', 'frame/**', 'apk-catalog/**', 'ios/scripts/make_frame_bundle.py', '.github/workflows/android.yml']
 permissions:
   contents: read

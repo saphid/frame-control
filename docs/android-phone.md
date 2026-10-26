@@ -20,12 +20,28 @@ implementation, separate from the headset's `frame/android` Lepton tools.
    items without broad photo-reading permission.
 
 The first successful listing establishes a history baseline. Existing screenshots
-are not imported automatically. The app waits for two equal size/time listings,
-checks the original's byte count and image decode, and saves it atomically.
-Identity includes the paired headset, Steam account, game and filename.
+are not imported automatically. The baseline is kept per Steam account: the app
+also lists the headset's account folders, so an account that is present (even
+with no screenshots yet) is established, and its later captures download. If
+Steam's userdata folder is missing, or an account folder appears later (a new
+sign-in, or one removed and restored), that account's screenshots at that moment
+become its baseline instead of being imported. The status reads "Waiting for a
+Steam account on the headset" while no account exists.
+
+The app waits for two equal size/time listings, checks the original's byte count
+and image decode, and saves it atomically. Identity includes the paired headset,
+Steam account, game and filename. An empty (still being written) or over-30 MB
+file is skipped for that poll only and does not hold up other screenshots; the
+status shows how many were skipped. A capture still being written when the
+baseline is taken downloads once it is complete. Unsafe identifiers, non-finite
+times and conflicting duplicate rows still reject the whole listing. The receipt
+journal is rewritten only when a receipt changes, not on every poll.
 
 Turning Gallery off keeps automatic downloads inside Frame Control. Pending
 exports become app-only; enabling it again does not export those earlier items.
+Turning it off also removes this app's hidden, unfinished Gallery rows left by an
+interrupted export, for every retained headset library (best effort; retried
+when sync starts with Gallery off). Published Gallery images are never removed.
 Previously saved Gallery items stay there. Original files remain available from
 **Open / share original** when disconnected. The app keeps each headset's
 library separately.
@@ -34,6 +50,9 @@ Gallery export uses a deterministic app-owned MediaStore row. A pending row is
 rewritten after interruption, and a completed row is recognized before inserting
 another. A failed export leaves the app original available for retry. Preferences
 and the final Gallery commit are serialized so a disabled setting is respected.
+Gallery exports are also serialized across sync sessions, so an export still
+finishing after **Stop syncing** cannot remove or overwrite an image that a newer
+session saves.
 
 **Headset controls** opens the shared Frame Control web interface through a
 loopback-only SSH tunnel. The server has a fresh session key and listens only on
@@ -46,14 +65,17 @@ web bridges; native screenshot originals use the downloads screen.
 Sync is an explicit, user-started Android `connectedDevice` foreground service.
 It can continue after leaving the app while its notification is present and
 reconnects when the headset returns. It is not a Firebase push receiver.
-Android battery-saving/Doze, loss of network, force-stop or process termination
-can delay or end the session. The app does not request battery-optimization
+Android battery-saving/Doze, a locked phone with its screen off, loss of
+network, force-stop or process termination can delay or end the session. The app
+holds no wake lock; downloads may wait until the phone wakes. The app does not request battery-optimization
 exemption, use unrelated background modes, or restart itself after force-stop.
 Restart sync from the app if the session ends.
 
 The full cross-platform request still requires actual locked-phone background
 proof. iOS APNs delivery is a separate unimplemented dependency. An emulator
 test is not evidence that either physical platform meets that requirement.
+Stopping sync ends that session's status and notification; a transfer still
+finishing in the background cannot bring them back or change a newer session.
 Do not publish this as a verified always-on screenshot feature.
 
 ## Build and verify
@@ -63,7 +85,7 @@ Use JDK 17 and an Android SDK containing platform 36/build-tools 36.0.0:
 ```sh
 export JAVA_HOME=/path/to/jdk17
 export ANDROID_HOME=/path/to/android-sdk
-./android/gradlew -p android assembleDebug testDebugUnitTest lintDebug
+./android/gradlew -p android assembleDebug testDebugUnitTest assembleDebugAndroidTest lintDebug
 ```
 
 The Gradle wrapper pins version 9.4.1 and its distribution checksum. The build

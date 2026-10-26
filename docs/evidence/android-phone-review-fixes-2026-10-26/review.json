@@ -1,0 +1,32 @@
+{
+  "taskId": "node:delegated-task:command%3Amcp%3A3ef9db23-13cf-4959-afe1-b003a3f2d950%3Adelegate-task%3Aframe108-android-sol-review-fixes-20261026-r2",
+  "providerInstanceId": "codex_secondary",
+  "model": "gpt-6.1-sol",
+  "reasoningEffort": "high",
+  "status": "completed",
+  "findings": "No actionable findings in the frozen Android hardening delta; R1-R3 addressed.",
+  "frozenFiles": {
+    ".github/workflows/android.yml": "aaea48149abd1030f18a844d9f245d9a0ad249152e5df838cd53c8863f7f2220",
+    "android/app/src/androidTest/java/com/saphid/framecontrol/ScreenshotDeviceTest.java": "87f9629858a75a2ba4ced1a0f4ccc792d03a40bd39fed7e25e211cd6c1d15cbf",
+    "android/app/src/main/java/com/saphid/framecontrol/FrameConnection.java": "edb7b62b4d9a01e8e6802e8758504044c965f6d1b2939536617a3f57832b13a9",
+    "android/app/src/main/java/com/saphid/framecontrol/GalleryExporter.java": "b0c0c5331ea1184baf780f67329908d481491e7383bfb98c09733ada84582b5d",
+    "android/app/src/main/java/com/saphid/framecontrol/MainActivity.java": "8069a9c6ac3ab0e5e6bb315055dd2bef2a28b6f1c0084f8355db237857b736c1",
+    "android/app/src/main/java/com/saphid/framecontrol/SyncEngine.java": "0096ae5002c7ba5d1c7b8128aeee920eb4f29d8d94ad71d885ce86c5be70c854",
+    "android/app/src/main/java/com/saphid/framecontrol/SyncService.java": "dd852b8ef7f45fc472a8d790ba7e335040355889ef8d082ba8f1e80a1d4fd690",
+    "android/app/src/test/java/com/saphid/framecontrol/SyncEngineTest.java": "df1fa6ce8873098ea78fca3f5069e31712eae5eedde54824dd83216b6ac67f09",
+    "docs/android-phone.md": "a274daed1118be64b83313eaad03ddbf080fbbc7dad6e39ce601843bc227c1a3",
+    "android/app/src/main/java/com/saphid/framecontrol/SessionGate.java": "470a164820ececcbe897f55b3f4c90498c215d9dd1b93554e08d15fcc22a9fa2",
+    "android/app/src/test/java/com/saphid/framecontrol/FrameConnectionTest.java": "05010052ef11e9d9e019ae4ccb2959a8931a03b2d23528832d4821d184623727",
+    "android/app/src/test/java/com/saphid/framecontrol/SessionGateTest.java": "5e1e88bee54c82188ce0a1ac8c37d081565fc41c827c67b7d5ef0070b00ab15e",
+    "docs/evidence/android-phone-review-fixes-2026-10-26.md": "eb2a961abe935541c04e65d43ad8d61036b73afe8f63696891771f5e8bc6b7b1",
+    "docs/evidence/android-phone-review-fixes-2026-10-26/api36-instrumentation.txt": "d31e729b455ddd8ff3122e5a68bd2221361e27ef3553ba737447598a39d89bd9",
+    "docs/evidence/android-phone-review-fixes-2026-10-26/verification.json": "2bd1644b0c77c83f3ce85ae1713baba1ea7c0cedce0161bc35e3eff587bce7a7"
+  },
+  "manifestSha256": "e3417c56926d08faecb6e5beacaf081c9e4fc395ef494c4de999a4b2282900ad",
+  "independentVerification": {
+    "jvmTests": 54,
+    "jvmFailures": 0,
+    "localExportHandoff": "passed"
+  },
+  "productionReleaseReady": false
+}

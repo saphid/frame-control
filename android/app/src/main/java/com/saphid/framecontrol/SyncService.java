@@ -12,29 +12,31 @@ import java.util.concurrent.*;
 public final class SyncService extends Service {
   static final String CHANNEL = "headset-sync";
   static final Object SETTINGS_LOCK = new Object();
+  private static final int NOTIFICATION = 108;
+  private static final SessionGate GATE = new SessionGate();
   private static volatile SyncService instance;
-  private static volatile String state = "Disconnected";
-  private static volatile String page;
   private final ExecutorService worker = Executors.newSingleThreadExecutor();
+  private long session;
   private volatile boolean stopping;
   private volatile FrameConnection connection;
   private volatile SyncEngine engine;
+  private volatile String pin;
 
   static SharedPreferences prefs(Context c) {
     return c.getSharedPreferences("frame", MODE_PRIVATE);
   }
 
   static String state() {
-    return state;
+    return GATE.state();
   }
 
   static String page() {
-    return page;
+    return GATE.page();
   }
 
   static boolean running() {
     SyncService service = instance;
-    return service != null && !service.stopping;
+    return service != null && !service.stopping && GATE.active(service.session);
   }
 
   static String install(Context c) {
@@ -58,7 +60,8 @@ public final class SyncService extends Service {
       // Journal first: a failed disk write must not appear as a saved setting.
       String pin = prefs(c).getString("pin", null);
       SyncEngine live = service == null ? null : service.engine;
-      if (live != null) live.setGallery(value);
+      // A closed engine belongs to a stopped session; update its library from disk instead.
+      if (live != null && !live.setGallery(value)) live = null;
       if (!value) {
         // The setting is global. Latch the opt-out in every retained library,
         // including headsets that are not currently paired or connected.
@@ -78,22 +81,24 @@ public final class SyncService extends Service {
       }
       if (!prefs(c).edit().putBoolean("gallery", value).commit())
         throw new java.io.IOException("Could not save the Gallery setting.");
+      // Interrupted exports can leave hidden pending rows; app-only receipts never retry them.
+      if (!value) GalleryExporter.discardPending(c);
     }
   }
 
-  static List<SyncEngine.Item> items(Context c) throws Exception {
-    SyncService service = instance;
-    if (service != null && service.engine != null) return service.engine.items();
-    String pin = prefs(c).getString("pin", null);
+  /** Read-only, for a background thread. Never creates or rewrites a library. */
+  static List<SyncEngine.Item> items(Context c, String pin) throws Exception {
     if (pin == null) return Collections.emptyList();
-    synchronized (SETTINGS_LOCK) {
-      return new SyncEngine(library(c, pin), prefs(c).getBoolean("gallery", true)).items();
-    }
+    SyncService service = instance;
+    SyncEngine live = service == null ? null : service.engine;
+    if (live != null && !live.isClosed() && pin.equals(service.pin)) return live.items();
+    return SyncEngine.snapshot(library(c, pin));
   }
 
   @Override
   public void onCreate() {
     super.onCreate();
+    session = GATE.begin();
     instance = this;
     stopping = false;
     NotificationManager manager = getSystemService(NotificationManager.class);
@@ -125,9 +130,12 @@ public final class SyncService extends Service {
         .build();
   }
 
+  /** A stale worker cannot reach the notification once its session has ended. */
   private void status(String text) {
-    state = text;
-    getSystemService(NotificationManager.class).notify(108, notification(text));
+    GATE.status(
+        session,
+        text,
+        t -> getSystemService(NotificationManager.class).notify(NOTIFICATION, notification(t)));
   }
 
   @Override
@@ -137,11 +145,12 @@ public final class SyncService extends Service {
       return START_NOT_STICKY;
     }
     if (connection != null || stopping) return START_NOT_STICKY;
-    state = "Connecting to headset";
+    String text = "Connecting to headset";
+    GATE.status(session, text, null);
     if (Build.VERSION.SDK_INT >= 34)
       startForeground(
-          108, notification(state), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
-    else startForeground(108, notification(state));
+          NOTIFICATION, notification(text), ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE);
+    else startForeground(NOTIFICATION, notification(text));
     connection = new FrameConnection(this);
     worker.execute(this::runSession);
     return START_NOT_STICKY;
@@ -152,13 +161,22 @@ public final class SyncService extends Service {
       SharedPreferences p = prefs(this);
       String pin = p.getString("pin", null);
       if (pin == null) throw new java.io.IOException("Pair with your headset first.");
+      SyncEngine created;
       synchronized (SETTINGS_LOCK) {
-        engine = new SyncEngine(library(this, pin), p.getBoolean("gallery", true));
+        boolean gallery = p.getBoolean("gallery", true);
+        created = new SyncEngine(library(this, pin), gallery);
+        // Retry cleanup of hidden rows if an earlier opt-out's cleanup was interrupted.
+        if (!gallery) GalleryExporter.discardPending(this);
+        this.pin = pin;
+        engine = created;
       }
+      // Pairs with onDestroy: it sets stopping before reading engine.
+      if (stopping) created.close();
       while (!stopping) {
         try {
           FrameConnection active = new FrameConnection(this);
           connection = active;
+          if (stopping) break;
           status("Connecting to headset");
           active.connect(
               p.getString("host", ""),
@@ -170,13 +188,14 @@ public final class SyncService extends Service {
             active.close();
             break;
           }
-          page = active.page();
+          GATE.page(session, active.page());
           status("Syncing new screenshots");
           GalleryExporter exporter = new GalleryExporter(this, pin, SETTINGS_LOCK);
           while (!stopping && active.connected()) {
             try {
-              engine.reconcile(active.shots(), active, exporter);
-              status("Syncing new screenshots");
+              SyncEngine.Listing listing = active.listing();
+              created.reconcile(listing, active, exporter);
+              status(progress(listing, created.skipped()));
             } catch (Exception e) {
               status("Screenshot pending · " + message(e));
             }
@@ -184,8 +203,9 @@ public final class SyncService extends Service {
           }
           if (!stopping) throw new java.io.IOException("Connection lost. Reconnecting…");
         } catch (Exception e) {
-          page = null;
-          if (connection != null) connection.close();
+          GATE.page(session, null);
+          FrameConnection c = connection;
+          if (c != null) c.close();
           if (stopping) break;
           status("Waiting for headset · " + message(e));
           Thread.sleep(10000);
@@ -194,12 +214,22 @@ public final class SyncService extends Service {
     } catch (InterruptedException ignored) {
       Thread.currentThread().interrupt();
     } catch (Exception e) {
-      state = message(e);
+      GATE.status(session, message(e), null);
     } finally {
-      page = null;
-      if (connection != null) connection.close();
-      stopSelf();
+      GATE.page(session, null);
+      FrameConnection c = connection;
+      if (c != null) c.close();
+      // Only a still-current session may stop the service; Stop already ended a stale one.
+      GATE.ifActive(session, this::stopSelf);
     }
+  }
+
+  static String progress(SyncEngine.Listing listing, int skipped) {
+    if (listing.accounts.isEmpty()) return "Waiting for a Steam account on the headset";
+    String text = "Syncing new screenshots";
+    if (skipped == 1) text += " · 1 file skipped (empty or over 30 MB)";
+    else if (skipped > 1) text += " · " + skipped + " files skipped (empty or over 30 MB)";
+    return text;
   }
 
   static String message(Exception e) {
@@ -215,15 +245,17 @@ public final class SyncService extends Service {
   @Override
   public void onDestroy() {
     stopping = true;
-    page = null;
-    if (engine != null) engine.stop();
-    if (connection != null) connection.close();
+    // After this, the old worker cannot post status, page or notification updates.
+    GATE.end(session);
+    SyncEngine live = engine;
+    if (live != null) live.close();
+    FrameConnection c = connection;
+    if (c != null) c.close();
     worker.shutdownNow();
-    instance = null;
-    if (state.equals("Syncing new screenshots")
-        || state.startsWith("Waiting")
-        || state.startsWith("Connecting")) state = "Disconnected";
+    if (instance == this) instance = null;
     stopForeground(STOP_FOREGROUND_REMOVE);
+    // Also clear a notification posted just before the gate closed.
+    getSystemService(NotificationManager.class).cancel(NOTIFICATION);
     super.onDestroy();
   }
 

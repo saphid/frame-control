@@ -31,6 +31,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.BooleanSupplier;
 import java.util.regex.Pattern;
 
@@ -39,6 +40,7 @@ public final class SyncEngine {
     private static final long MAX_SIZE = 30L * 1024 * 1024;
     private static final Pattern ID = Pattern.compile(
             "^[0-9]{1,12}/[0-9]{1,20}/[0-9]{14}_[0-9]{1,4}\\.(jpg|png)$");
+    private static final Pattern ACCOUNT = Pattern.compile("^[0-9]{1,12}$");
     private static final Gson GSON = new GsonBuilder().registerTypeAdapter(Shot.class,
             new TypeAdapter<Shot>() {
                 @Override public void write(JsonWriter writer, Shot shot) throws IOException {
@@ -92,6 +94,20 @@ public final class SyncEngine {
         }
     }
 
+    /**
+     * One headset poll. {@code accounts} names every Steam account directory present on the
+     * headset, including accounts with no screenshots yet. An absent userdata root is an empty set.
+     */
+    public static final class Listing {
+        public final Set<String> accounts;
+        public final List<Shot> shots;
+
+        public Listing(Set<String> accounts, List<Shot> shots) {
+            this.accounts = accounts;
+            this.shots = shots;
+        }
+    }
+
     public interface Transport {
         void download(Shot shot, File destination) throws Exception;
         boolean validImage(File f) throws Exception;
@@ -119,7 +135,15 @@ public final class SyncEngine {
         Integer version;
         Boolean initialized;
         Boolean gallery;
+        /** Accounts already baselined. Absent only in version 1 journals. */
+        Set<String> accounts;
         Map<String, Receipt> records;
+    }
+
+    private static final class Poll {
+        final Map<String, Shot> eligible = new LinkedHashMap<>();
+        final Set<String> accounts = new TreeSet<>();
+        int skipped;
     }
 
     private static final class Receipt {
@@ -152,18 +176,29 @@ public final class SyncEngine {
     private Ledger ledger;
     private long generation;
     private long active;
+    private boolean closed;
+    private volatile int skipped;
 
     public SyncEngine(File root, boolean gallery) throws Exception {
+        this(root, Boolean.valueOf(gallery));
+    }
+
+    /** A null gallery opens a read-only view that never creates, upgrades or rewrites anything. */
+    private SyncEngine(File root, Boolean gallery) throws Exception {
         if (root == null || Files.isSymbolicLink(root.toPath())) {
             throw new IOException("Unsafe sync root");
         }
         this.root = root.getCanonicalFile().toPath();
-        List<Path> missingDirectories = new ArrayList<>();
-        for (Path path = this.root; path != null && !Files.exists(path); path = path.getParent()) {
-            missingDirectories.add(path);
+        if (gallery == null) {
+            closed = true;
+        } else {
+            List<Path> missingDirectories = new ArrayList<>();
+            for (Path path = this.root; path != null && !Files.exists(path); path = path.getParent()) {
+                missingDirectories.add(path);
+            }
+            Files.createDirectories(this.root);
+            for (Path directory : missingDirectories) syncDirectory(directory.getParent());
         }
-        Files.createDirectories(this.root);
-        for (Path directory : missingDirectories) syncDirectory(directory.getParent());
         originals = this.root.resolve("originals");
         journal = this.root.resolve("receipts.json");
         checkPath(originals);
@@ -188,7 +223,7 @@ public final class SyncEngine {
                 throw new IOException("Corrupt sync journal", e);
             }
             validateLedger();
-            setGallery(gallery);
+            if (gallery != null) setGallery(gallery);
         } else {
             if (Files.exists(originals, LinkOption.NOFOLLOW_LINKS)) {
                 try (java.util.stream.Stream<Path> paths = Files.walk(originals)) {
@@ -198,14 +233,25 @@ public final class SyncEngine {
                 }
             }
             ledger = emptyLedger();
-            ledger.gallery = gallery;
-            persist(ledger);
+            if (gallery == null) {
+                ledger.gallery = false;
+            } else {
+                ledger.gallery = gallery;
+                persist(ledger);
+            }
         }
     }
 
-    public void setGallery(boolean enabled) throws Exception {
+    /** Post-baseline receipts read without locks, directory creation or journal writes. */
+    public static List<Item> snapshot(File root) throws Exception {
+        return new SyncEngine(root, (Boolean) null).items();
+    }
+
+    /** Returns false, without writing, once this engine is closed. */
+    public boolean setGallery(boolean enabled) throws Exception {
         synchronized (lock) {
-            if (ledger.gallery == enabled) return;
+            if (closed) return false;
+            if (ledger.gallery == enabled) return true;
             Ledger next = copy();
             next.gallery = enabled;
             if (!enabled) {
@@ -214,53 +260,87 @@ public final class SyncEngine {
                 }
             }
             commit(next);
+            return true;
         }
     }
 
-    /** A second live reconcile is rejected. stop() cancels its generation and permits a new run. */
-    public void reconcile(List<Shot> shots, Transport transport, Exporter exporter) throws Exception {
+    /**
+     * A second live reconcile is rejected. stop() cancels its generation and permits a new run;
+     * close() cancels it permanently. The journal is rewritten only when a receipt changes.
+     */
+    public void reconcile(Listing listing, Transport transport, Exporter exporter) throws Exception {
         final long run;
         synchronized (lock) {
+            if (closed) throw new IllegalStateException("Sync stopped");
             if (active != 0) throw new IllegalStateException("Sync already in progress");
             run = ++generation;
             active = run;
         }
         try {
-            Map<String, Shot> listing = listing(shots);
+            Poll poll = poll(listing);
             synchronized (lock) {
                 if (active != run) return;
+                skipped = poll.skipped;
                 Ledger next = copy();
                 if (!next.initialized) {
-                    for (Shot shot : listing.values()) {
+                    for (Shot shot : poll.eligible.values()) {
                         next.records.put(shot.id, new Receipt(shot, "baseline", 0, null));
                     }
                     next.initialized = true;
+                    next.version = 2;
+                    next.accounts = poll.accounts;
                     commit(next);
                     return;
                 }
+                boolean changed = false;
+                Set<String> known = next.accounts;
+                if (known == null) {
+                    // Version 1 journals did not record accounts. Trust only accounts that already
+                    // have receipts; any other account present now is history and is baselined.
+                    known = new TreeSet<>();
+                    for (String id : next.records.keySet()) known.add(account(id));
+                    // The account comparison below always records the set with this version.
+                    next.version = 2;
+                    changed = true;
+                }
                 // Missing observations break consecutiveness, including across restarts.
                 for (Receipt receipt : next.records.values()) {
-                    if (!listing.containsKey(receipt.shot.id)
+                    if (!poll.eligible.containsKey(receipt.shot.id) && receipt.observations != 0
                             && ("observing".equals(receipt.state) || "queued".equals(receipt.state))) {
                         receipt.observations = 0;
+                        changed = true;
                     }
                 }
-                for (Shot shot : listing.values()) {
+                for (Shot shot : poll.eligible.values()) {
                     Receipt receipt = next.records.get(shot.id);
-                    if (receipt == null) {
+                    if (receipt == null && !known.contains(account(shot.id))) {
+                        // A newly appearing account (or a returning one) starts with its own
+                        // baseline, so its existing screenshots are never imported.
+                        next.records.put(shot.id, new Receipt(shot, "baseline", 0, null));
+                        changed = true;
+                    } else if (receipt == null) {
                         // Latch eligibility at discovery, before waiting for a stable second sample.
                         next.records.put(shot.id, new Receipt(shot, "observing", 1,
                                 next.gallery ? "pending" : "appOnly"));
+                        changed = true;
                     } else if ("observing".equals(receipt.state) || "queued".equals(receipt.state)) {
-                        receipt.observations = same(receipt.shot, shot)
-                                ? Math.min(2, receipt.observations + 1) : 1;
+                        boolean stable = same(receipt.shot, shot);
+                        int observations = stable ? Math.min(2, receipt.observations + 1) : 1;
+                        if (!stable || observations != receipt.observations) changed = true;
+                        receipt.observations = observations;
                         receipt.shot = shot;
                         if (receipt.observations == 2 && "observing".equals(receipt.state)) {
                             receipt.state = "queued";
                         }
                     }
                 }
-                commit(next); // Queue and its disposition reach disk before any download.
+                // Accounts absent now are forgotten; if one returns it is baselined again.
+                if (!poll.accounts.equals(next.accounts)) {
+                    next.accounts = poll.accounts;
+                    changed = true;
+                }
+                // Queue and its disposition reach disk before any download.
+                if (changed) commit(next);
             }
 
             List<String> ids;
@@ -317,10 +397,33 @@ public final class SyncEngine {
         }
     }
 
+    /** Listed files left out of the last poll because they were empty or over 30 MiB. */
+    public int skipped() {
+        return skipped;
+    }
+
     public void stop() {
         synchronized (lock) {
             ++generation;
             active = 0;
+        }
+    }
+
+    /**
+     * Permanently cancels this engine. Once it returns, no in-flight or later call can write the
+     * journal, so another engine may safely take over the same root.
+     */
+    public void close() {
+        synchronized (lock) {
+            closed = true;
+            ++generation;
+            active = 0;
+        }
+    }
+
+    public boolean isClosed() {
+        synchronized (lock) {
+            return closed;
         }
     }
 
@@ -411,24 +514,55 @@ public final class SyncEngine {
                 && "downloaded".equals(receipt.state) && "pending".equals(receipt.destination);
     }
 
-    private static Map<String, Shot> listing(List<Shot> shots) throws IOException {
-        if (shots == null) throw new IOException("Missing screenshot listing");
-        Map<String, Shot> result = new LinkedHashMap<>();
-        for (Shot shot : shots) {
-            validateShot(shot);
-            Shot previous = result.put(shot.id, shot);
+    private static Poll poll(Listing listing) throws IOException {
+        if (listing == null || listing.shots == null || listing.accounts == null) {
+            throw new IOException("Missing screenshot listing");
+        }
+        Poll result = new Poll();
+        for (String account : listing.accounts) {
+            if (account == null || !ACCOUNT.matcher(account).matches()) {
+                throw new IOException("Invalid Steam account");
+            }
+            result.accounts.add(account);
+        }
+        Map<String, Shot> seen = new LinkedHashMap<>();
+        for (Shot shot : listing.shots) {
+            // Unsafe ids, non-finite times and conflicting duplicates reject the whole listing.
+            validateIdentity(shot);
+            Shot previous = seen.put(shot.id, shot);
             if (previous != null && !same(previous, shot)) {
                 throw new IOException("Conflicting screenshot identity: " + shot.id);
             }
+            // The account directory may appear between the account and screenshot queries.
+            result.accounts.add(account(shot.id));
+        }
+        for (Shot shot : seen.values()) {
+            // An empty, still-writing or oversized file is only this item's problem: treat it
+            // as absent from this poll so it never blocks other screenshots or the baseline.
+            if (eligibleSize(shot)) result.eligible.put(shot.id, shot);
+            else result.skipped++;
         }
         return result;
     }
 
-    private static void validateShot(Shot shot) throws IOException {
+    private static String account(String id) {
+        return id.substring(0, id.indexOf('/'));
+    }
+
+    private static void validateIdentity(Shot shot) throws IOException {
         if (shot == null || shot.id == null || !ID.matcher(shot.id).matches()
-                || shot.size <= 0 || shot.size > MAX_SIZE || !Double.isFinite(shot.time)) {
+                || !Double.isFinite(shot.time)) {
             throw new IOException("Invalid screenshot metadata");
         }
+    }
+
+    private static boolean eligibleSize(Shot shot) {
+        return shot.size > 0 && shot.size <= MAX_SIZE;
+    }
+
+    private static void validateShot(Shot shot) throws IOException {
+        validateIdentity(shot);
+        if (!eligibleSize(shot)) throw new IOException("Invalid screenshot metadata");
     }
 
     private static boolean same(Shot a, Shot b) {
@@ -436,10 +570,22 @@ public final class SyncEngine {
     }
 
     private void validateLedger() throws IOException {
-        if (ledger == null || ledger.version == null || ledger.version != 1
-                || ledger.initialized == null || ledger.gallery == null || ledger.records == null
-                || (!ledger.initialized && !ledger.records.isEmpty())) {
+        if (ledger == null || ledger.version == null || ledger.initialized == null
+                || ledger.gallery == null || ledger.records == null
+                || (ledger.version == 1 && ledger.accounts != null)
+                || (ledger.version == 2 && ledger.accounts == null)
+                || (ledger.version != 1 && ledger.version != 2)
+                || (!ledger.initialized && !ledger.records.isEmpty())
+                || (!ledger.initialized && ledger.accounts != null && !ledger.accounts.isEmpty())) {
             throw new IOException("Invalid sync journal header");
+        }
+        if (ledger.accounts != null) {
+            for (String account : ledger.accounts) {
+                if (account == null || !ACCOUNT.matcher(account).matches()) {
+                    throw new IOException("Invalid sync journal header");
+                }
+            }
+            ledger.accounts = new TreeSet<>(ledger.accounts);
         }
         for (Map.Entry<String, Receipt> entry : ledger.records.entrySet()) {
             Receipt receipt = entry.getValue();
@@ -515,10 +661,16 @@ public final class SyncEngine {
         }
     }
 
+    /**
+     * Keeps the version: a version 1 journal (no account set) stays version 1 through setting
+     * changes, and only reconcile upgrades it, recording the version and accounts together.
+     */
     private Ledger copy() {
         Ledger next = emptyLedger();
+        next.version = ledger.version;
         next.initialized = ledger.initialized;
         next.gallery = ledger.gallery;
+        next.accounts = ledger.accounts == null ? null : new TreeSet<>(ledger.accounts);
         for (Map.Entry<String, Receipt> entry : ledger.records.entrySet()) {
             Receipt receipt = entry.getValue();
             next.records.put(entry.getKey(), new Receipt(receipt.shot, receipt.state,
@@ -529,13 +681,15 @@ public final class SyncEngine {
 
     private static Ledger emptyLedger() {
         Ledger result = new Ledger();
-        result.version = 1;
+        result.version = 2;
         result.initialized = false;
+        result.accounts = new TreeSet<>();
         result.records = new LinkedHashMap<>();
         return result;
     }
 
     private void commit(Ledger next) throws IOException {
+        if (closed) throw new IOException("Sync journal is read-only");
         persist(next);
         ledger = next;
     }
