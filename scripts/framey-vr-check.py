@@ -66,12 +66,16 @@ finally: lib.VR_ShutdownInternal()
 battery=[]
 for p in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
     if (p.parent/'type').read_text().strip()=='Battery': battery.append(int(p.read_text()))
+proximity=[]
+for p in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
+    try: proximity.append(float(p.read_text().strip()))
+    except (OSError,ValueError): pass
 def cmd(*args):
     p=subprocess.run(args,capture_output=True,text=True,timeout=8)
     if p.returncode: raise RuntimeError(p.stderr or p.stdout)
     return p.stdout.strip()
 vr='/opt/steamvr/bin/linuxarm64/vrcmd'
-print(json.dumps({'battery':battery,'dashboardVisible':dashboard,'stats':json.loads(cmd(vr,'--stats')),
+print(json.dumps({'battery':battery,'proximity':proximity,'dashboardVisible':dashboard,'stats':json.loads(cmd(vr,'--stats')),
  'overlays':cmd(vr,'--overlays'),
  'pause':cmd(vr,'--settings-bool','power.pauseCompositorOnStandby'),
  'timeout':cmd(vr,'--settings-float','power.turnOffScreensTimeout')}))
@@ -151,6 +155,11 @@ def main(argv=None):
         pause, timeout = settings(before)
         if not before['battery'] or min(before['battery']) < 20:
             raise RuntimeError('Battery unknown or below 20%')
+        if args.wake or args.exercise:
+            stats = before.get('stats')
+            if (not isinstance(stats, list) or not stats or
+                    not isinstance(stats[0], dict) or stats[0].get('activity_level') != 3):
+                raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
         if args.wake or args.exercise:
             # Independent systemd timer restores power even if the controller is
             # killed or SSH disappears. It retains the test lock for recovery.

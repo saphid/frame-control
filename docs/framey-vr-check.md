@@ -16,8 +16,10 @@ pixels. Review/redact them before committing or sharing. JSON reports have
 screenshot hashes and no UI access keys.
 
 The runner acquires `/tmp/frame-test.lock` by atomic `mkdir`, writes a random
-owner, then reads battery and SteamVR state. A foreign lock prevents sensor
-reads, wake, installation and input. Unknown battery or below 20% aborts.
+owner, then reads battery, proximity and SteamVR state. A foreign lock prevents
+sensor reads, wake, installation and input. Unknown battery or below 20% aborts.
+`--wake` and `--exercise` also require SteamVR activity 3 (standby); awake or
+unknown activity exits before power changes, service installation or input.
 Battery is read again before release. The default check never wakes or
 installs anything; it returns nonzero when the panel is absent/hidden.
 

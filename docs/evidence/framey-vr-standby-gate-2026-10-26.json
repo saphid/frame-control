@@ -1,0 +1,49 @@
+{
+  "timeUtc": "2026-10-26T01:52:44.513151+00:00",
+  "testedMainCommit": "c62bffc8efe88e107a82e2f2ef481228021acc88",
+  "change": "uncommitted standby/proximity preflight in this PR",
+  "preflight": {
+    "activity": 3,
+    "proximityRaw": [
+      6.3125
+    ],
+    "batteryPercent": [
+      99
+    ],
+    "pause": "power.pauseCompositorOnStandby=false",
+    "screenTimeout": "power.turnOffScreensTimeout=5.000000"
+  },
+  "result": {
+    "passed": true,
+    "overlayVisible": true,
+    "stereoChanged": true,
+    "mirrorCaptured": true,
+    "trustedSyntheticOpenVRPointer": true,
+    "liveDeckySavedSetting": {
+      "enabled": true
+    },
+    "settingPersistedAfterReopen": true,
+    "quickActionObserved": true,
+    "sliderValue": "50",
+    "textValue": "framey-ci",
+    "nativeScrollMoved": false
+  },
+  "cleanup": {
+    "batteryPercent": [
+      99
+    ],
+    "proximityRaw": [
+      6.1875
+    ],
+    "pause": "power.pauseCompositorOnStandby=false",
+    "screenTimeout": "power.turnOffScreensTimeout=5.000000",
+    "powerRecoveryRemoved": true,
+    "lockReleased": true,
+    "errors": []
+  },
+  "limits": {
+    "controllerHardwareVerified": false,
+    "wornVisualComfortVerified": false,
+    "vrKeyboardVerified": false
+  }
+}
