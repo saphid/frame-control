@@ -3,7 +3,9 @@ import sandbox  # noqa: F401
 import contextlib
 import importlib.util
 import io
+import json
 from pathlib import Path
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -61,3 +63,22 @@ class WornGate(unittest.TestCase):
 
     def test_screenshot_palette_counts_distinct_colors(self):
         self.assertEqual(worn.color_count('0 #ff00aa 1 #ff00aa 2 #00ff00'), 2)
+
+    def test_probe_reads_activity_from_status_after_metrics(self):
+        rows = [{'operation':'performance','frame_presents':12},
+                {'operation':'status','activity_level':1}]
+        def run(argv, **_):
+            if argv[-1] == '--stats':
+                return SimpleNamespace(returncode=0, stdout=json.dumps(rows))
+            return SimpleNamespace(returncode=1, stdout='')
+        for current, expected in (
+            (rows, 1),
+            ([{'operation':'performance','frame_presents':12}], None),
+            (rows + [{'operation':'status','activity_level':3}], None),
+        ):
+            with self.subTest(rows=current):
+                rows = current
+                out = io.StringIO()
+                with patch('subprocess.run', side_effect=run), contextlib.redirect_stdout(out):
+                    exec(worn.PROBE, {})
+                self.assertEqual(json.loads(out.getvalue())['activity'], expected)
