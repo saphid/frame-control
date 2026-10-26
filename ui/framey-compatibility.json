@@ -3882,14 +3882,15 @@
       "sourceURLs": [
         "https://github.com/safijari/Shotty"
       ],
-      "status": "broken",
-      "reason": "Library snapshot fixes the frontend allApps crash. Actual published Decky 3.3.0 amd64 backend fails importing click.get_app_dir (ModuleNotFoundError); the archive does not bundle click. Screenshot aggregation/rescue was not run.",
+      "status": "partial",
+      "reason": "The frontend starts with the read-only Frame library snapshot. Frame Control adds a digest-scoped click.get_app_dir compatibility module to the managed install; the exact backend then imports and copies a synthetic Steam screenshot into a temporary Pictures folder in isolated Python. Actual Decky 3.3.0 ARM64 loading, live screenshots/rescue, in-VR panel and physical controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame SSH"
+        "real Frame SSH",
+        "isolated Python backend"
       ],
       "browser": {
         "id": 53,
@@ -3920,6 +3921,13 @@
         "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
         "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
         "frontendReady": true
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-shotty-python-2026-10-26.md",
+        "mode": "exact archive managed transaction and isolated Python import/copy with temporary HOME",
+        "compatShim": "shotty-click-app-dir",
+        "syntheticScreenshotCopied": true,
+        "actualDeckyArm64": false
       }
     },
     {

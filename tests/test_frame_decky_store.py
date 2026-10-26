@@ -121,14 +121,14 @@ class StoreTransaction(unittest.TestCase):
         self.folder = home / '.local/share/frame-control/decky/plugins/Example'
         self.folder.parent.mkdir(parents=True)
 
-    def apply(self, action, data=None, expected='-'):
+    def apply(self, action, data=None, expected='-', plugin_id=42, folder='Example', version='1.0'):
         token = secrets.token_hex(12)
         source = Path('/tmp/frame-control-decky-plugin-' + token)
         if data is not None:
             source.write_bytes(data)
         digest = hashlib.sha256(data or b'').hexdigest()
         try:
-            return subprocess.run([sys.executable, '-', action, token, '42', digest, 'Example', '1.0', expected],
+            return subprocess.run([sys.executable, '-', action, token, str(plugin_id), digest, folder, version, expected],
                                   input=frame_decky_store.APPLY, text=True, capture_output=True,
                                   env=self.env, timeout=15)
         finally:
@@ -160,6 +160,59 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove')
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
+
+    def test_exact_shotty_archive_gets_isolated_click_import(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 53)
+        data = official_archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        shotty = self.folder.parent / plugin['folder']
+        args = {'plugin_id': plugin['id'], 'folder': plugin['folder'], 'version': plugin['version']}
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads((shotty / '.frame-control-store.json').read_text())
+        self.assertEqual(receipt['sha256'], plugin['sha256'])
+        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir'])
+        compat = shotty / 'py_modules/click.py'
+        self.assertTrue(compat.is_file())
+        source = '''import asyncio, importlib.util, logging, sys, types
+from pathlib import Path
+folder = Path(sys.argv[1])
+sys.path.insert(0, str(folder/'py_modules'))
+decky = types.ModuleType('decky_plugin')
+decky.logger = logging.getLogger('shotty-test')
+decky.DECKY_PLUGIN_DIR = str(folder)
+sys.modules['decky_plugin'] = decky
+spec = importlib.util.spec_from_file_location('shotty', folder/'main.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+assert module.Plugin.__name__ == 'Plugin'
+from click import get_app_dir
+assert get_app_dir('Shotty') == str(Path.home()/'.config/Shotty')
+photo = Path.home()/'.local/share/Steam/userdata/100/760/remote/42/screenshots/test.jpg'
+photo.parent.mkdir(parents=True)
+photo.write_bytes(b'local screenshot fixture')
+plugin = module.Plugin()
+assert asyncio.run(plugin.aggregate_all([[42, 'Local Test Game']])) == 1
+copied = Path.home()/'Pictures/Screenshots/Local Test Game/test.jpg'
+assert copied.read_bytes() == b'local screenshot fixture'
+'''
+        imported = subprocess.run([sys.executable, '-c', source, str(shotty)],
+                                  capture_output=True, text=True,
+                                  env={**self.env, 'XDG_CONFIG_HOME': str(Path(self.tmp.name)/'.config')}, timeout=10)
+        self.assertEqual(imported.returncode, 0, imported.stderr)
+        result = self.apply('remove', expected=plugin['sha256'], **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(shotty.exists())
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as bundle:
+            bundle.writestr('Shotty/plugin.json', json.dumps({'name': 'Shotty', 'flags': []}))
+            bundle.writestr('Shotty/dist/index.js', 'export default {};' + ' ' * 1200)
+        other = stream.getvalue()
+        result = self.apply('install', other, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((shotty / 'py_modules/click.py').exists())
+        self.assertNotIn('compatShims', json.loads((shotty / '.frame-control-store.json').read_text()))
 
     def test_installed_script_entrypoints_execute_without_zip_exec_bits(self):
         data, _ = archive(extra=('Example/scripts/start.py',

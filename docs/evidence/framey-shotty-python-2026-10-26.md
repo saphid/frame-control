@@ -1,0 +1,9 @@
+# Shotty Python compatibility, 26 October 2026
+
+The exact official Shotty 0.1.0 archive (store ID 53, SHA-256 `ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe`) imports `click.get_app_dir` at startup but never calls it. The archive includes an empty `py_modules` directory and no `click` package. A prior actual Decky 3.3.0 amd64 backend check stopped at `ModuleNotFoundError: click`; its local frontend separately starts with Framey's read-only Steam library snapshot.
+
+Frame Control now writes a small Linux `click.get_app_dir` compatibility module into **only this exact digest's** managed `Shotty/py_modules` folder during staging. Decky Loader adds each plugin's `py_modules` folder to that plugin's Python search path. The staging transaction records `shotty-click-app-dir` in the receipt and removes the whole staged folder on failure. A different Shotty digest receives no module. The official ZIP bytes and their verified hash remain unchanged.
+
+An isolated transaction test installed the pinned archive, imported its unchanged `main.py` using the staged module, and called its `aggregate_all` method with a synthetic Steam screenshot under a temporary `HOME`. It copied one fixture image into that temporary home's `Pictures/Screenshots/Local Test Game` folder; reopening the copied bytes matched the source. Removal deleted the managed folder. A second synthetic Shotty archive with another digest installed without the module. The test neither started the plugin's continuous screenshot rescuer nor touched a person's Steam library or screenshots.
+
+This supports **partial** compatibility for the local frontend and a narrow backend copy path. Actual Decky 3.3.0 ARM64 plugin startup, gamescope screenshot rescue, real screenshot aggregation, VR panel visibility, and physical controller use remain unverified. No headset lock was acquired or headset state changed for this check.

@@ -17,6 +17,8 @@ PLUGINS = (
      'folder': 'hltb-for-deck', 'sha256': 'bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558'},
     {'id': 36, 'name': 'SteamGridDB', 'version': '1.8.1', 'api_version': 1,
      'folder': 'decky-steamgriddb', 'sha256': 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'},
+    {'id': 53, 'name': 'Shotty', 'version': '0.1.0', 'api_version': 'legacy',
+     'folder': 'Shotty', 'sha256': 'ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe'},
     {'id': 63, 'name': 'Free Loader', 'version': '1.6.0', 'api_version': 1,
      'folder': 'free-loader', 'sha256': '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a'},
     {'id': 135, 'name': 'Deck Shelves', 'version': '2.0.0', 'api_version': 1,

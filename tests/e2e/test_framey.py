@@ -192,6 +192,10 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(
                         ssh(f'sha256sum {installed}/dist/{chunk}').split()[0],
                         hashlib.sha256(expected_chunk).hexdigest())
+                if plugin['id'] == 53:
+                    self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir'])
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)
