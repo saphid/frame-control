@@ -3705,8 +3705,8 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_json({'error':'Framey panel unavailable'}, 404)
             elif path.startswith('/framey/module/'):
                 try:
-                    plugin_id, name = path.removeprefix('/framey/module/').split('/', 1)
-                    module = framey_panel.local_module(int(plugin_id), name)
+                    plugin_id, receipt, name = path.removeprefix('/framey/module/').split('/', 2)
+                    module = framey_panel.local_module(int(plugin_id), receipt, name)
                     # The plugin iframe has an opaque origin; only its module
                     # imports need cross-origin access to these public JS files.
                     self.send_bytes(module, 'text/javascript; charset=utf-8', framey=True,

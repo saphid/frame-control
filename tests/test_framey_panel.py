@@ -227,7 +227,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         self.plugins = Path(tmp.name)/'plugins'
         self.folder = self.plugins/'protondb-decky'
         (self.folder/'dist').mkdir(parents=True)
-        (self.folder/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'version':'1.3.4'}))
+        (self.folder/'.frame-control-store.json').write_text(json.dumps({'storeId':14,'version':'1.3.4','sha256':RECEIPT}))
         (self.folder/'plugin.json').write_text(json.dumps({'name':'ProtonDB Badges','api_version':2,'flags':[]}))
         (self.folder/'dist/index.js').write_text("export default () => ({content: SP_REACT.createElement('p', null, 'OK')});")
         home = patch.object(framey_panel, 'PLUGINS', self.plugins)
@@ -260,18 +260,36 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         chunks.mkdir()
         (chunks/'view.js').write_text('export const title = "Settings";')
         page = framey_panel.panel(14).decode()
-        self.assertIn('data-module="/framey/module/14/index.js"', page)
-        self.assertEqual(framey_panel.local_module(14, 'chunks/view.js'),
+        self.assertIn(f'data-module="/framey/module/14/{RECEIPT}/index.js"', page)
+        self.assertEqual(framey_panel.local_module(14, RECEIPT, 'chunks/view.js'),
                          b'export const title = "Settings";')
         for name in ('../plugin.json', 'chunks/../../plugin.json',
                      'chunks/view.js.map', 'other.js', 'chunks/%2e%2e/view.js'):
             with self.subTest(name=name), self.assertRaises(FileNotFoundError):
-                framey_panel.local_module(14, name)
+                framey_panel.local_module(14, RECEIPT, name)
         (chunks/'linked.js').symlink_to(chunks/'view.js')
         with self.assertRaises(FileNotFoundError):
-            framey_panel.local_module(14, 'chunks/linked.js')
+            framey_panel.local_module(14, RECEIPT, 'chunks/linked.js')
         with self.assertRaises(FileNotFoundError):
-            framey_panel.local_module(15, 'chunks/view.js')
+            framey_panel.local_module(15, RECEIPT, 'chunks/view.js')
+
+    def test_chunked_panel_rejects_modules_from_a_replaced_store_receipt(self):
+        (self.folder/'dist/index.js').write_text("import './chunks/view.js'; export default () => ({});")
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const version = 1;')
+        old_url = f'/framey/module/14/{RECEIPT}/chunks/view.js'
+        self.assertIn(f'/framey/module/14/{RECEIPT}/index.js', framey_panel.panel(14).decode())
+        self.assertEqual(framey_panel.local_module(14, RECEIPT, 'chunks/view.js'), b'export const version = 1;')
+        (self.folder/'.frame-control-store.json').write_text(json.dumps({
+            'storeId':14,'version':'2.0','sha256':'b'*64}))
+        (chunks/'view.js').write_text('export const version = 2;')
+        with self.assertRaisesRegex(FileNotFoundError, 'changed'):
+            framey_panel.local_module(14, RECEIPT, 'chunks/view.js')
+        self.assertEqual(framey_panel.local_module(14, 'b'*64, 'chunks/view.js'), b'export const version = 2;')
+        self.assertNotIn(old_url, framey_panel.panel(14).decode())
+        with self.assertRaises(FileNotFoundError):
+            framey_panel.local_module(14, 'invalid', 'chunks/view.js')
 
     def test_legacy_keyword_rpc_is_scoped_and_validated(self):
         import shlex
@@ -365,12 +383,16 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
 
         (self.folder/'dist/chunks').mkdir()
         (self.folder/'dist/chunks/view.js').write_text('export const value = 1;')
-        status, headers, body = get('/framey/module/14/chunks/view.js')
+        status, headers, body = get(f'/framey/module/14/{RECEIPT}/chunks/view.js')
         self.assertEqual(status, 200)
         self.assertEqual(headers['Access-Control-Allow-Origin'], 'null')
         self.assertEqual(body, b'export const value = 1;')
-        self.assertEqual(get('/framey/module/14/chunks/../plugin.json')[0], 404)
-        self.assertEqual(get('/framey/module/15/chunks/view.js')[0], 404)
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/chunks/../plugin.json')[0], 404)
+        self.assertEqual(get(f'/framey/module/15/{RECEIPT}/chunks/view.js')[0], 404)
+        (self.folder/'.frame-control-store.json').write_text(json.dumps({
+            'storeId':14,'version':'2.0','sha256':'b'*64}))
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/chunks/view.js')[0], 404)
+        self.assertEqual(get(f'/framey/module/14/{"b"*64}/chunks/view.js')[0], 200)
 
 
 if __name__ == '__main__':

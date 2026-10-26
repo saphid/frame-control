@@ -217,6 +217,10 @@ frontend cannot call the changing backend. Open panel is unavailable while a
 store job is pending. A later installed-status refresh also closes an open panel
 if Decky stopped, its store receipt changed, or the status read failed. Reopen
 the plugin after a successful refresh to use its current frontend.
+Chunked frontends load modules through URLs bound to the installed store
+receipt. If a desktop store update replaces the plugin during panel startup,
+old module requests fail and the panel must be reopened; Framey does not mix
+chunks from two installed versions.
 The headset also includes the panel's store SHA-256 receipt with each backend
 call, Steam read, and event poll. It rejects a request if the installed receipt
 changed before the next status refresh; reopen the panel to use the new version.

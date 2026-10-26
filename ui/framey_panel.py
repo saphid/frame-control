@@ -20,7 +20,17 @@ class PanelError(ValueError):
     pass
 
 
-def _owned_dist(plugin_id):
+def _receipt_digest(path):
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > 16_384:
+        raise FileNotFoundError('Framey plugin store receipt unavailable')
+    meta = json.loads(path.read_text())
+    digest = meta.get('sha256') if isinstance(meta, dict) else None
+    if not isinstance(digest, str) or not RECEIPT.fullmatch(digest):
+        raise FileNotFoundError('Framey plugin store receipt unavailable')
+    return meta, digest
+
+
+def _owned_dist(plugin_id, expected_receipt=None):
     """Locate a compatible store-owned frontend without following linked paths."""
     if type(plugin_id) is not int or plugin_id <= 0 or not PLUGINS.is_dir() or PLUGINS.is_symlink():
         raise FileNotFoundError('Framey plugin unavailable')
@@ -31,16 +41,17 @@ def _owned_dist(plugin_id):
         manifest = folder/'plugin.json'
         dist = folder/'dist'
         entry = dist/'index.js'
-        if any(p.is_symlink() for p in (receipt, manifest, dist, entry)):
+        if any(p.is_symlink() for p in (manifest, dist, entry)):
             continue
         try:
-            if not receipt.is_file() or receipt.stat().st_size > 16_384:
-                continue
-            meta = json.loads(receipt.read_text())
-            if not isinstance(meta, dict):
-                continue
-            if meta.get('storeId') != plugin_id:
-                continue
+            meta, digest = _receipt_digest(receipt)
+        except (OSError, ValueError, UnicodeError):
+            continue
+        if meta.get('storeId') != plugin_id:
+            continue
+        try:
+            if expected_receipt is not None and digest != expected_receipt:
+                raise FileNotFoundError('Framey plugin changed; reopen its panel')
             if not manifest.is_file() or manifest.stat().st_size > 16_384:
                 raise FileNotFoundError('Framey plugin manifest unavailable')
             data = json.loads(manifest.read_text())
@@ -76,7 +87,11 @@ def _owned_dist(plugin_id):
                             supported = True
                 if not supported:
                     raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
-            return dist, bundle
+            if _receipt_digest(receipt) != (meta, digest):
+                raise FileNotFoundError('Framey plugin changed; reopen its panel')
+            return dist, bundle, digest
+        except FileNotFoundError:
+            raise
         except (OSError, ValueError):
             raise FileNotFoundError('Framey plugin files are invalid')
     raise FileNotFoundError('Plugin is not managed by the Frame Control Decky store')
@@ -87,11 +102,13 @@ def local_bundle(plugin_id):
     return _owned_dist(plugin_id)[1]
 
 
-def local_module(plugin_id, name):
+def local_module(plugin_id, receipt, name):
     """Serve only JavaScript within a store-owned dist directory for module imports."""
     if not isinstance(name, str) or not MODULE_PATH.fullmatch(name):
         raise FileNotFoundError('Framey module path unavailable')
-    dist, bundle = _owned_dist(plugin_id)
+    if not isinstance(receipt, str) or not RECEIPT.fullmatch(receipt):
+        raise FileNotFoundError('Framey module receipt unavailable')
+    dist, bundle, _ = _owned_dist(plugin_id, receipt)
     if name == 'index.js':
         return bundle
     target = dist
@@ -101,14 +118,17 @@ def local_module(plugin_id, name):
             raise FileNotFoundError('Framey module path unavailable')
     if not target.is_file() or target.stat().st_size > 8*1024*1024:
         raise FileNotFoundError('Framey module unavailable')
-    return target.read_bytes()
+    data = target.read_bytes()
+    if _receipt_digest(dist.parent/'.frame-control-store.json')[1] != receipt:
+        raise FileNotFoundError('Framey plugin changed; reopen its panel')
+    return data
 
 
 def panel(plugin_id):
     """The plugin receives no Frame UI key and is sandboxed to an opaque origin."""
-    bundle = local_bundle(plugin_id)
+    _, bundle, receipt = _owned_dist(plugin_id)
     encoded = base64.b64encode(bundle).decode('ascii')
-    module = f' data-module="/framey/module/{plugin_id}/index.js"' if b'./chunks/' in bundle else ''
+    module = f' data-module="/framey/module/{plugin_id}/{receipt}/index.js"' if b'./chunks/' in bundle else ''
     return ('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
