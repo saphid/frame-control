@@ -33,7 +33,10 @@ class GateError(Exception):
 
 
 def api(path):
-    command = ["gh", "api", f"repos/{REPO}/{path}"]
+    # publish-release.sh already requires sh. Resolve gh through that same
+    # shell: on Git Bash, Python's Windows CreateProcess skips an extensionless
+    # test gh shim in PATH and accidentally launches the real gh.exe instead.
+    command = ["sh", "-c", 'gh api "$1"', "sh", f"repos/{REPO}/{path}"]
     result = subprocess.run(command, text=True, capture_output=True, check=False)
     if result.returncode:
         raise GateError(f"GitHub gate read failed for {path}: {result.stderr.strip()}")
