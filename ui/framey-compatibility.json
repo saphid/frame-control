@@ -1005,13 +1005,14 @@
         "https://github.com/popsUlfr/SDH-Notebook",
         "https://github.com/popsUlfr/SDH-Notebook.git"
       ],
-      "status": "partial",
-      "reason": "Notebook initializes; real note load/save remains unverified.",
+      "status": "works",
+      "reason": "Default notebook drawing, save and reopen verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Per-game auto-selection and background artwork unavailable; worn-VR input unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 19,
@@ -1069,6 +1070,16 @@
         "sha256": "c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "realFrame": {
+        "evidence": "docs/evidence/framey-events-backend-2026-10-26.json",
+        "checks": {
+          "pointerStrokeSaved": true,
+          "sameStrokeLoadedAfterBackendRestart": true,
+          "defaultAppId": 0,
+          "existingNotesTouched": false
+        },
+        "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
       }
     },
     {
@@ -7436,12 +7447,13 @@
         "https://github.com/decktools-xyz/simple-timer.git"
       ],
       "status": "partial",
-      "reason": "Timer panel initializes; live timer persistence, notifications and audio are unverified.",
+      "reason": "Live start/cancel, countdown events, completion toast, persisted recents/subtle mode verified in Chromium with real ARM64 Decky. Upstream expired-timer restart raises missing timer_task. Audio/suspend unsupported; alerts require an open panel; worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 96,
@@ -7471,6 +7483,18 @@
         "sha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "realFrame": {
+        "evidence": "docs/evidence/framey-events-backend-2026-10-26.json",
+        "checks": {
+          "uiStart300Seconds": true,
+          "uiCancel": true,
+          "shortTimer5Seconds": true,
+          "completionToastVisible": true,
+          "recentTimersAndSubtleModeSurvivedRestart": true,
+          "subscriptionsAfterPanelClose": 0
+        },
+        "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
       }
     },
     {
@@ -13342,5 +13366,5 @@
     }
   ],
   "fakeFrameMethod": "116 exact archives validated and attempted through real HTTP/SSH in private disposable fake Frame; 60 installed, frontend bytes/receipt checked, then removed; 56 rejected. Official backend code never executed.",
-  "realFrameMethod": "2026-10-25: shared lock held; isolated temporary Decky 3.3.0 ARM64 user service with only exact ProtonDB/Steam Status backends; read-only settings RPCs succeeded via existing Steam CEF websocket. Temporary service/base removed and lock released; battery 100 to 99; no power settings changed. No official plugin panel was opened in VR."
+  "realFrameMethod": "2026-10-25: shared lock held; isolated temporary Decky 3.3.0 ARM64 user service with only exact ProtonDB/Steam Status backends; read-only settings RPCs succeeded via existing Steam CEF websocket. Temporary service/base removed and lock released; battery 100 to 99; no power settings changed. No official plugin panel was opened in VR. Follow-up 2026-10-26: safe isolated Notebook draw/save/reopen and Simple Timer event/start/cancel/persistence checks; see docs/evidence/framey-events-backend-2026-10-26.json."
 }

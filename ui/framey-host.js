@@ -29,6 +29,9 @@
   let currentParams = {};
   let nextId = 0;
   let plugin;
+  const eventListeners = new Map();
+  let eventCursor = 0, eventRevision = 0, subscribedRevision = -1;
+  let eventRequest = null, eventTimer = null, eventClosed = false;
   // A sandboxed iframe has an opaque origin, so its native localStorage getter
   // throws SecurityError. Keep the familiar synchronous API inside the iframe;
   // the parent stores only this plugin's bounded snapshot under its own origin.
@@ -63,14 +66,65 @@
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
   setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
-  function ask(method, args, legacy=false) {
+  function request(method, args, legacy=false, type='framey:call') {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
     const id = ++nextId;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, 30000);
       pending.set(id, {resolve, reject, timer});
-      parent.postMessage({type:'framey:call', id, method, args, legacy}, '*');
+      parent.postMessage({type, id, method, args, legacy, session:cacheSession}, '*');
     });
+  }
+  function syncEvents() {
+    if (eventClosed) return Promise.resolve();
+    if (eventRequest) return eventRequest.then(() =>
+      subscribedRevision !== eventRevision ? syncEvents() : undefined);
+    const revision = eventRevision;
+    eventRequest = request('events', [[...eventListeners.keys()], eventCursor], false, 'framey:events')
+      .then(data => {
+        subscribedRevision = revision;
+        if (!data || !Array.isArray(data.events) || !Number.isSafeInteger(data.cursor))
+          throw Error('Invalid Decky event response');
+        eventCursor = data.cursor;
+        for (const event of data.events) {
+          if (!Array.isArray(event.args)) continue;
+          for (const listener of eventListeners.get(event.event) || [])
+            Promise.resolve().then(() => listener(...event.args)).catch(failure =>
+              console.warn('Decky event listener failed', failure));
+        }
+      }).finally(() => {eventRequest = null;});
+    return eventRequest.then(() => subscribedRevision !== eventRevision ? syncEvents() : undefined);
+  }
+  function refreshEvents() {
+    clearTimeout(eventTimer);
+    syncEvents().catch(failure => console.warn('Decky event bridge unavailable', failure.message))
+      .finally(() => {
+        clearTimeout(eventTimer);
+        if (!eventClosed && eventListeners.size)
+          eventTimer = setTimeout(refreshEvents, 1000);
+      });
+  }
+  function addPluginEvent(event, listener) {
+    if (typeof event !== 'string' || !/^[A-Za-z0-9_:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
+      throw Error('Invalid Decky event listener');
+    if (!eventListeners.has(event)) {
+      if (eventListeners.size >= 32) throw Error('Too many Decky event names');
+      eventListeners.set(event, new Set());
+    }
+    eventListeners.get(event).add(listener);
+    eventRevision++; refreshEvents();
+    return listener; // Decky returns the registered callback, not a disposer.
+  }
+  function removePluginEvent(event, listener) {
+    const listeners = eventListeners.get(event);
+    if (!listeners?.delete(listener)) return;
+    if (!listeners.size) eventListeners.delete(event);
+    eventRevision++; refreshEvents();
+  }
+  async function ask(method, args, legacy=false) {
+    // Subscribe before a backend call can emit its immediate response events.
+    if (eventListeners.size && (eventRequest || subscribedRevision !== eventRevision)) await syncEvents();
+    return request(method, args, legacy);
   }
   addEventListener('message', event => {
     if (event.source === parent && event.data?.type === 'framey:cache:seed' &&
@@ -90,7 +144,12 @@
     pending.delete(event.data.id); clearTimeout(item.timer);
     if (event.data.error) item.reject(Error(event.data.error)); else item.resolve(event.data.result);
   });
-  addEventListener('unload', () => { try { plugin?.onDismount?.(); } catch (_) {} });
+  addEventListener('unload', () => {
+    eventClosed = true; clearTimeout(eventTimer);
+    try { plugin?.onDismount?.(); } catch (_) {}
+    // Parent tears down the remote session on close; CEF also expires it after 15s.
+    parent.postMessage({type:'framey:events:close', session:cacheSession}, '*');
+  });
   addEventListener('pointerup', event => {
     if (event.isTrusted) parent.postMessage({type:'framey:input'}, '*');
   }, {passive:true});
@@ -366,7 +425,7 @@
       _version: Math.min(version, 2),
       call: (method, ...args) => ask(method, args),
       callable: method => (...args) => ask(method, args),
-      addEventListener: () => {}, removeEventListener: () => {},
+      addEventListener:addPluginEvent, removeEventListener:removePluginEvent,
       routerHook, toaster,
       fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
       executeInTab: () => Promise.reject(Error('Steam tab injection is unavailable in Framey')),

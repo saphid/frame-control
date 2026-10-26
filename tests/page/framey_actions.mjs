@@ -206,3 +206,35 @@ assert.throws(()=>api.routerHook.addRoute('/plugin/:id?/art',GameRoute));
 removeGame();
 assert.equal(window.DFL.useParams().appid,undefined);
 assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);
+
+// Event subscription is acknowledged before a method that immediately emits.
+const onMessage=listeners.find(x=>x.type==='message').handler;
+const eventValues=[];
+const callback=(...args)=>eventValues.push(args);
+assert.equal(api.addEventListener('timer:tick',callback),callback);
+const subscribe=messages.at(-1);
+assert.equal(subscribe.type,'framey:events');
+assert.deepEqual(Array.from(subscribe.args[0]),['timer:tick']);
+const before=messages.length;
+const timerCall=api.call('load_remaining_seconds');
+assert.equal(messages.length,before);
+// Other windows cannot inject backend replies.
+onMessage({source:{},data:{type:'framey:reply',id:subscribe.id,result:{events:[],cursor:0}}});
+await Promise.resolve();assert.equal(messages.length,before);
+onMessage({source:parent,data:{type:'framey:reply',id:subscribe.id,
+  result:{events:[{event:'timer:tick',args:[12,'seconds']}],cursor:1}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(eventValues,[[12,'seconds']]);
+const timerRequest=messages.at(-1);
+assert.equal(timerRequest.type,'framey:call');assert.equal(timerRequest.method,'load_remaining_seconds');
+onMessage({source:parent,data:{type:'framey:reply',id:timerRequest.id,result:null}});await timerCall;
+api.removeEventListener('timer:tick',callback);
+const unsubscribeRequest=messages.at(-1);assert.equal(unsubscribeRequest.type,'framey:events');
+assert.equal(unsubscribeRequest.args[0].length,0);
+onMessage({source:parent,data:{type:'framey:reply',id:unsubscribeRequest.id,
+  result:{events:[{event:'timer:tick',args:[99]}],cursor:2}}});
+for(let i=0;i<12;i++)await Promise.resolve();assert.equal(eventValues.length,1);
+assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky event/);
+assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
+listeners.find(x=>x.type==='unload').handler();
+assert.equal(messages.at(-1).type,'framey:events:close');

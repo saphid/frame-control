@@ -22,7 +22,7 @@ def render(data):
         'Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. '
         'Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.', '',
         f"**Works: {counts['works']} · Partial: {counts['partial']} · Broken: {counts['broken']} · N/A: {counts['na']}.**", '',
-        '- **Works** requires verified useful plugin behavior with its real backend. None qualifies from this audit.',
+        '- **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.',
         '- **Partial** means a limited frontend/settings surface initialized or rendered. Backend-dependent functionality remains unverified; it is not an end-to-end success claim.',
         '- **Broken** means a concrete archive, frontend or Steam dependency blocks the audited version. An artificial backend/network denial alone is not evidence that the real backend is broken.',
         '- **N/A** means the plugin targets hardware or a display/UI surface that Framey does not provide. The store disables installation for these versions.', '',
@@ -46,7 +46,12 @@ def render(data):
         'Read-only ProtonDB `get_setting` and Steam Status `get_settings` calls succeeded through the live Steam CEF websocket. '
         'The service and private base were removed and the lock released; normal managed services stayed inactive, battery was 100 → 99, '
         'and no power setting was changed. [Redacted results](evidence/framey-official-backend-2026-10-25.json) '
-        'record exactly what ran. All other official backends remain unexecuted. '
+        'record exactly what ran. A [2026-10-26 follow-up](evidence/framey-events-backend-2026-10-26.json) '
+        'verified default Notebook drawing/save/reopen across a real backend restart and Simple Timer start/cancel, '
+        'countdown/completion events, a visible toast and persisted recents/subtle mode. '
+        'Only private test settings were written. Simple Timer remains partial because its own expired-timer startup '
+        'raises a missing `timer_task` error; sound/suspend are unsupported. '
+        'All other official backends remain unexecuted. '
         'The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. '
         'No worn-VR official-plugin result is claimed. '
         'Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), '
