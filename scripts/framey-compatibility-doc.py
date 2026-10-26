@@ -80,7 +80,10 @@ def render(data):
         'Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), '
         '[Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), '
         '[Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and '
-        '[legacy MusicControl](evidence/framey-legacy-2026-10-25.md).', '',
+        '[legacy MusicControl](evidence/framey-legacy-2026-10-25.md). '
+        'A [Music Control 1.1.7 backend follow-up](evidence/framey-music-control-bound-methods-2026-10-26.md) '
+        'repairs exact-archive bound-method calls and verifies transport/volume command dispatch against an isolated dbus-send fixture. '
+        'A real MPRIS player and actual ARM64 Decky backend remain unverified.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',

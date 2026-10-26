@@ -1,14 +1,16 @@
 # Pinned Decky store test archives
 
 These are unmodified ZIPs downloaded from the official Decky store CDN on
-2026-10-25. Each ZIP includes its upstream `LICENSE`. They are test data, not
-plugins shipped or installed by Frame Control. The fake Frame tests serve them
+2026-10-25, except `111.zip` downloaded on 2026-10-26. Each ZIP includes its
+upstream `LICENSE`. They are test data, not plugins shipped or installed by
+Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
 | `7.zip` | CSS Loader | 2.1.3 | `99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231` |
 | `12.zip` | MusicControl | 1.1.6 | `246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62` |
+| `111.zip` | Music Control | 1.1.7 | `3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9` |
 | `14.zip` | ProtonDB Badges | 1.3.4 | `90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358` |
 | `123.zip` | Steam Status | 1.2.3 | `9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e` |
 | `50.zip` | Storage Cleaner | 1.4.0 | `1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591` |
@@ -20,6 +22,7 @@ from a local fixture so CI does not depend on the store being online.
 The matching source projects are
 [CSS Loader](https://github.com/suchmememanyskill/SDH-CssLoader),
 [MusicControl](https://github.com/nikurasu/MusicControl),
+[Music Control](https://github.com/martinpl/music-control),
 [ProtonDB Badges](https://github.com/bschelst/protondb-decky),
 [Steam Status](https://github.com/bschelst/steamstatus-decky),
 [Storage Cleaner](https://github.com/mcarlucci/decky-storage-cleaner),
