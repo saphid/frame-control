@@ -1,0 +1,288 @@
+{
+  "release": "v0.4.39",
+  "tagCommit": "fd0b0a946f11d92fd1cc480cd9d1a83be795bf71",
+  "job": "1vbt29ptkw",
+  "date": "2026-10-26",
+  "host": {
+    "model": "MacBookAir9,1",
+    "cpu": "Intel Core i3-1000NG4",
+    "arch": "x86_64",
+    "macOS": "15.7.7",
+    "build": "24G720"
+  },
+  "artifacts": {
+    "Frame-Control-mac-x64.dmg": {
+      "bytes": 169230398,
+      "sha256": "f47b5a188b5090f97a72467394d4fa65ccc73fe3169a6276e2a32cab5c8019d8",
+      "matchesSHA256SUMS": true
+    },
+    "Frame-Control-mac-x64.zip": {
+      "bytes": 169141014,
+      "sha256": "bafc1aec0c11c1fae097dbe1e4b585ebc13a0f8eaf1b249717c14d78811e08d7",
+      "matchesSHA256SUMS": true
+    }
+  },
+  "native": {
+    "title": "Apps \u00b7 Frame Control",
+    "bridge": true,
+    "preferencesBefore": {},
+    "views": [
+      {
+        "view": "apps",
+        "title": "Apps \u00b7 Frame Control",
+        "heading": [
+          "Apps"
+        ]
+      },
+      {
+        "view": "games",
+        "title": "Games \u00b7 Frame Control",
+        "heading": [
+          "Games"
+        ]
+      },
+      {
+        "view": "tools",
+        "title": "Tools \u00b7 Frame Control",
+        "heading": [
+          "Tools"
+        ]
+      },
+      {
+        "view": "settings",
+        "title": "Settings \u00b7 Frame Control",
+        "heading": [
+          "Settings"
+        ]
+      },
+      {
+        "view": "privacy",
+        "title": "Privacy & updates \u00b7 Frame Control",
+        "heading": [
+          "Privacy & updates"
+        ]
+      },
+      {
+        "view": "capture",
+        "title": "Capture \u00b7 Frame Control",
+        "heading": [
+          "Capture & Live"
+        ]
+      },
+      {
+        "view": "decky",
+        "title": "Decky Loader \u00b7 Frame Control",
+        "heading": [
+          "Decky Loader"
+        ]
+      }
+    ],
+    "decky": {
+      "state": "116 plugins in the official store. Select a plugin to install it.",
+      "rows": 40,
+      "search": "ProtonDB Badges \u00b7 1.3.4 Display tappable ProtonDB badges on your game pages\n\npartial: Settings render locally and read-only get_setting RPC returned the default through real Decky 3.3.0 on ARM64 Frame. Steam game-page badges have no patch target; live writes and VR controls unverified. Verified: static archive, local browser, fake-Frame, real Frame SSH.\n\nInstall",
+      "installDisabled": [
+        {
+          "text": "Install",
+          "disabled": true
+        }
+      ]
+    },
+    "preferenceWritten": "0",
+    "preferencesAfter": {
+      "mvSeparate": "0"
+    },
+    "update": {
+      "status": "available",
+      "current": "0.4.39",
+      "error": null,
+      "canInstall": true,
+      "latest": "0.4.40"
+    },
+    "obs": {
+      "before": {
+        "state": "idle",
+        "alias": "",
+        "port": 15099,
+        "error": "",
+        "supported": true
+      },
+      "start": {
+        "state": "starting",
+        "alias": "frame",
+        "port": 15139,
+        "error": "",
+        "supported": true
+      },
+      "stop": {
+        "state": "stopping",
+        "alias": "frame",
+        "port": 15139,
+        "error": "",
+        "supported": true
+      },
+      "after": {
+        "state": "idle",
+        "alias": "frame",
+        "port": 15139,
+        "error": "",
+        "supported": true
+      }
+    },
+    "preferencesAfterRestart": {
+      "mvSeparate": "0"
+    }
+  },
+  "loginItem": {
+    "enabledBeforeQuit": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Open at Login\", \"mark\": \"\\u2713\", \"role\": \"AXMenuItem\"}\n{\"title\": \"Show Server Log\", \"mark\": null, \"role\": \"AXMenuItem\"}\n",
+    "nativeQuit": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\nPRESS 0\n{\"title\": \"Open at Login\", \"mark\": \"\\u2713\", \"role\": \"AXMenuItem\"}\n{\"title\": \"Show Server Log\", \"mark\": null, \"role\": \"AXMenuItem\"}\n",
+    "restartPid": 50393,
+    "enabledAfterRestart": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Open at Login\", \"mark\": \"\\u2713\", \"role\": \"AXMenuItem\"}\n{\"title\": \"Show Server Log\", \"mark\": null, \"role\": \"AXMenuItem\"}\n",
+    "beforeRestore": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Open at Login\", \"mark\": \"\\u2713\", \"role\": \"AXMenuItem\"}\n{\"title\": \"Show Server Log\", \"mark\": null, \"role\": \"AXMenuItem\"}\n",
+    "restoreOff": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Open at Login\", \"mark\": \"\\u2713\", \"role\": \"AXMenuItem\"}\nPRESS 0\n",
+    "finalMenu": "trusted True\n{\"title\": \"Check for Updates\\u2026\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Quit Frame Control\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Open at Login\", \"mark\": null, \"role\": \"AXMenuItem\"}\n{\"title\": \"Show Server Log\", \"mark\": null, \"role\": \"AXMenuItem\"}\n",
+    "restoredOriginalOff": true
+  },
+  "macHelper": {
+    "permissions": {
+      "accessibility": false,
+      "screen": false
+    },
+    "displays": {
+      "displays": [
+        {
+          "h": 900,
+          "id": 69734464,
+          "main": true,
+          "name": "Built-in Retina Display",
+          "src": "display:69734464",
+          "w": 1440
+        }
+      ]
+    },
+    "windows": {
+      "screen": false,
+      "count": 3,
+      "frameControlCount": 2
+    }
+  },
+  "headset": {
+    "timestamp": "2026-10-26T04:56:52.808203+00:00",
+    "route": "Mac SSH -> pinned lxso2 -> trusted frame SSH",
+    "owner": "intel-v0439-1vbt29ptkw-20261026",
+    "payloadBytes": 54,
+    "coordinatorLock": "locked\n",
+    "headset": {
+      "os": {
+        "VERSION_ID": "0.5.6",
+        "BUILD_ID": "20261022.6153909",
+        "VARIANT_ID": "vr"
+      },
+      "battery": [
+        {
+          "percent": 99,
+          "status": "Not charging"
+        }
+      ],
+      "homeStorage": {
+        "total": 996984774656,
+        "free": 769012412416
+      },
+      "screenshotJpegs": 7,
+      "transfer": {
+        "path": "/tmp/intel-v0439-1vbt29ptkw-20261026-vtynzyky/intel-mac-check.txt",
+        "bytes": 54,
+        "sha256": "82029b7e8b519bac65e43a6e90386a06da9988b23330aa7c48fea0abdfac0a8b",
+        "deleted": true
+      }
+    },
+    "headsetLockReleased": true,
+    "coordinatorLockRelease": "released\n"
+  },
+  "gatekeeper": {
+    "downloadMethod": "gh release download",
+    "downloadQuarantinePresent": false,
+    "controlledSyntheticQuarantine": "inconclusive",
+    "cleanQuarantinedOpen": "NSPOSIXErrorDomain Code=16 Resource busy",
+    "cleanSpctl": "timeout after 15 seconds",
+    "rightClickOpenVerified": false,
+    "openAnywayVerified": false,
+    "appSpecificXattrFallbackUsed": true,
+    "globalGatekeeperChanged": false
+  },
+  "headsetCleanupReadback": {
+    "headset": {
+      "testFoldersAbsent": true,
+      "lockAbsent": false,
+      "subsequentLockOwner": "frame-smoke-92bb2294f1d9cd4b7084",
+      "subsequentLockLeftUntouched": true
+    },
+    "coordinatorLockAbsent": true
+  },
+  "cleanup": {
+    "debugPortClosed": true,
+    "originalPreferencesRestored": true,
+    "ownedAppRemaining": [],
+    "desk": {
+      "foreground_apps": [
+        "Finder",
+        "Messages",
+        "cmux"
+      ],
+      "display_on": false,
+      "notifications_found": 0,
+      "attention": []
+    },
+    "dmgejected": true,
+    "installedSignatureValidAfterRuntime": true,
+    "finalInstalledSignature": {
+      "removedOnlyGeneratedBytecodeFiles": 36,
+      "finalSignatureExit": 0,
+      "finalSignatureStderr": ""
+    }
+  },
+  "validation": {
+    "sourceBase": "741735aa98e615fb51bb1a5adb665c9d12e3fd2a",
+    "initialMacFullSuite": {
+      "python": "system 3.9",
+      "tests": 1621,
+      "failures": 6,
+      "skipped": 20,
+      "seconds": 818.353
+    },
+    "affectedMacModulesAfterFix": {
+      "python": "official bundled 3.12",
+      "tests": 87,
+      "skipped": 2,
+      "seconds": 37.605,
+      "result": "OK"
+    },
+    "focusedAppTests": {
+      "tests": 14,
+      "passed": 14
+    },
+    "websiteTests": {
+      "tests": 18,
+      "passed": 18
+    },
+    "testFixes": [
+      "Skip local Frame recording shell fixtures on Bash 3.2, whose read timeout status differs from Frame Bash 5",
+      "Require actual XCTest.framework for standalone XCTest contracts",
+      "Separate OBS fixture interpreter startup from stream-stall deadlines and synchronize signal-handler readiness",
+      "Leave margin between panel fixture delays and individual X tool timeouts"
+    ],
+    "linuxFullSuiteAfterFix": {
+      "tests": 1621,
+      "skipped": 16,
+      "seconds": 170.313,
+      "result": "OK",
+      "isolation": "temporary archived checkout on lxso2"
+    },
+    "testedFileSHA256": {
+      "tests/test_clips.py": "00ba70866cda2b6cacaa0dd9bd19e9f2a9532a035cef66c9d8e2bd0021b1f489",
+      "tests/test_ios_contracts.py": "f1cc22e54873617e381025233c6b422245e6943ba7432331fc2d01e7a9ae4fc1",
+      "tests/test_obs_headset_source.py": "62462cbadbfcf67d4c200edf54ee45697b6f8d6547cd4c538f0344d71cf70241",
+      "tests/test_touch.py": "c34c646d134e57130c4fb43cd3d53e6c859369f774f9b7fd1dd8c3e718b72b6f"
+    }
+  }
+}

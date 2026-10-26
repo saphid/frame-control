@@ -529,9 +529,10 @@ class PanelsAsAFreshProcess(unittest.TestCase):
         self.assertNotIn("why", out)
 
     def test_slow_x_tools_stay_inside_the_servers_timeout(self):
-        # Review of #83: X tools answering in 4.6 s each would take well over the server's
-        # 20 s; one deadline for the run (PANELS_DEADLINE, 12 s) returns in time, saying why.
-        out, took = self.run_panels(4.6)
+        # Several 3 s calls exceed the whole-run deadline before a panel is complete.
+        # Keep clear of each tool's 5 s timeout, including process startup on Intel Macs.
+        # One deadline (12 s) must return inside the server's 20 s timeout, saying why.
+        out, took = self.run_panels(3)
         self.assertLess(took, 15, out)
         self.assertEqual(out["panels"], [])
         self.assertIn("took too long", out["why"])
