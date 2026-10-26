@@ -46,7 +46,7 @@ def exercise(profile, plugin_id, folder):
 
     def text(): return panel.eval('document.body.innerText')
 
-    def click(selector):
+    def point(selector):
         # Account for CSS pixels, iframe position, border, HiDPI scaling, and
         # OpenVR's bottom-left mouse origin; read geometry after scrolling.
         panel.eval(f'document.querySelector({json.dumps(selector)}).scrollIntoView({{block:"center"}})')
@@ -58,6 +58,10 @@ def exercise(profile, plugin_id, folder):
         y = sy - (outer['y'] + pos['y']) * sy / outer['h']
         if not 0 <= x <= sx or not 0 <= y <= sy:
             raise RuntimeError('Control is outside the visible viewport')
+        return x, y
+
+    def click(selector):
+        x, y = point(selector)
         count = panel.eval('__vrClickCount')
         vr.post_mouse(300, x, y)
         vr.post_mouse(301, x, y, 1)
@@ -113,12 +117,39 @@ def exercise(profile, plugin_id, folder):
         # CDP only types text; OpenVR supplies pointer focus into the field.
         command(parent, 'Input.insertText', {'text':'framey-ci'})
         result['textValue'] = wait(lambda:panel.eval('document.querySelector("#vr-controls input[type=text]").value'), lambda v:v == 'framey-ci')
-        panel.eval('window.scrollTo(0,0)')
-        result['scrollBefore'] = panel.eval('scrollY')
-        vr.post_scroll(0,-3)
-        time.sleep(.5)
-        result['scrollAfter'] = panel.eval('scrollY')
+        # The sample alone may be shorter than its iframe. Use an owned,
+        # visibly scrollable region so a zero offset is a meaningful result.
+        panel.eval('''(()=>{
+          const box=document.createElement('div');box.id='vr-scroll-probe';
+          box.style.cssText='height:160px;overflow-y:scroll;border:2px solid #72baf0';
+          box.innerHTML='<div style="height:700px;padding:8px">Scroll probe</div>';
+          document.body.append(box);
+          window.__vrWheelEvents=[];
+          document.addEventListener('wheel',e=>__vrWheelEvents.push({trusted:e.isTrusted,
+            deltaY:e.deltaY,target:e.target?.id||e.target?.tagName}),{capture:true,passive:true});
+          return true;
+        })()''')
+        result['scrollGeometry'] = panel.eval('(()=>{let e=document.getElementById("vr-scroll-probe");return {height:e.clientHeight,content:e.scrollHeight}})()')
+        if result['scrollGeometry']['content'] <= result['scrollGeometry']['height']:
+            raise RuntimeError('Scroll diagnostic did not create overflow')
+        x, y = point('#vr-scroll-probe')
+        panel.eval('window.__vrScrollPointer=[];document.addEventListener("pointermove",e=>__vrScrollPointer.push({trusted:e.isTrusted,target:e.target?.id||e.target?.tagName}),{capture:true});true')
+        vr.post_mouse(300, x, y)
+        time.sleep(.2)
+        result['scrollPointer'] = panel.eval('__vrScrollPointer')
+        result['scrollBefore'] = panel.eval('document.getElementById("vr-scroll-probe").scrollTop')
+        result['scrollAttempts'] = []
+        for kind in (309, 305):
+            vr.post_scroll(0,-3,kind)
+            time.sleep(.5)
+            offset = panel.eval('document.getElementById("vr-scroll-probe").scrollTop')
+            result['scrollAttempts'].append({'eventType':kind,'offset':offset})
+            if offset != result['scrollBefore']:
+                break
+        result['scrollAfter'] = result['scrollAttempts'][-1]['offset']
+        result['scrollEvents'] = panel.eval('__vrWheelEvents')
         result['nativeScrollMoved'] = result['scrollAfter'] != result['scrollBefore']
+        panel.eval('document.getElementById("vr-scroll-probe").remove()')
         panel.eval('document.getElementById("vr-controls").remove()')
         # Scroll saved status into the visible iframe for compositor evidence.
         panel.eval('document.querySelector("[role=status]").scrollIntoView({block:"center"})')

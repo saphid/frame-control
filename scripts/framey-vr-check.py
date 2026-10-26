@@ -260,6 +260,11 @@ print('{}')
             except Exception as exc:
                 report['hiddenOverlayError'] = str(exc)
             raise RuntimeError('Frame Control overlay stayed hidden after focus retry; no input sent')
+        if args.exercise:
+            lines = remote(VRCMD + ' --overlays').splitlines()
+            report['testOverlayListing'] = [line.strip() for index, line in enumerate(lines)
+                                            if line.startswith("'" + KEY + "'") or
+                                            (index and lines[index - 1].startswith("'" + KEY + "'"))]
         if args.wake or args.exercise:
             shot = remote.python((ROOT/'ui/frame_vrshot.py').read_text(), timeout=20)['path']
             try:
