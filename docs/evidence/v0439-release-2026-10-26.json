@@ -170,5 +170,43 @@
       }
     ],
     "ownedLockReleased": true
+  },
+  "postReleasePr282": {
+    "headCommit": "ce6e8f807f44b614e5bbd5c5a5a6a2093236d917",
+    "mergedCommit": "67b9151513bc9fb550f5dfb2d2eec925df390ab3",
+    "exactHeadCiPassed": 11,
+    "unwornVrExercise": {
+      "passed": true,
+      "beforeActivity": 3,
+      "beforeBattery": [
+        99
+      ],
+      "afterBattery": [
+        99
+      ],
+      "overlayVisible": true,
+      "compositorChanged": true,
+      "stereoCaptureSha256": "c7edc11877aca35dd3aebe480feee93253d04825fe9bd75d02136bb7e3510b97",
+      "mirrorCaptureSha256": "8e5932fb0046b218a1781a6b06cfaa6e3c13dc7874799e287066ed6e43640cd4",
+      "syntheticPointerInputPassed": true,
+      "liveSettingReopened": true,
+      "nativeScrollMoved": false,
+      "powerRecoveryRemoved": true,
+      "ownedLockReleased": true,
+      "cleanupErrors": [],
+      "physicalControllerVerified": false,
+      "wornVisualVerified": false,
+      "officialPluginsInVrVerified": false
+    },
+    "realFrameSmoke": {
+      "passed": 13,
+      "failed": 0,
+      "beforeActivity": 3,
+      "battery": [
+        99
+      ],
+      "buildId": "20261022.6153909",
+      "ownedLockReleased": true
+    }
   }
 }
