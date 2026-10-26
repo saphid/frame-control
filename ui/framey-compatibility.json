@@ -580,7 +580,7 @@
         "https://github.com/wynn1212/SDH-PauseGames.git"
       ],
       "status": "partial",
-      "reason": "Settings render locally with inert system-key subscriptions and empty detached Steam context. Live-game discovery, process pause/resume and suspend integration are unsupported/unverified; no backend actions ran.",
+      "reason": "Settings and running-game list initialize in local Chromium with an explicit synthetic game; live Frame empty-list reads and lifetime registration/cleanup passed. Process pause/resume, automatic pausing and suspend integration remain unverified/unsupported; backend writes were denied.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -613,6 +613,11 @@
         "sha256": "4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -1006,7 +1011,7 @@
         "https://github.com/popsUlfr/SDH-Notebook.git"
       ],
       "status": "works",
-      "reason": "Default notebook drawing, save and reopen verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Per-game auto-selection and background artwork unavailable; worn-VR input unverified.",
+      "reason": "Default notebook drawing, save and reopen verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Running-game context is now supplied; per-game selection was attempted with a synthetic game and backend calls denied. Real per-game selection, background artwork and worn-VR input remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -1080,6 +1085,11 @@
           "existingNotesTouched": false
         },
         "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -2870,8 +2880,8 @@
         "https://github.com/andrewburgess/steamdeck-discord-status",
         "https://github.com/andrewburgess/steamdeck-discord-status.git"
       ],
-      "status": "broken",
-      "reason": "Detached app overviews are now available, but RunningApps/lifetime observations and Steam artwork helpers still lack a live mapping. Discord activity integration remains unavailable/unverified.",
+      "status": "partial",
+      "reason": "Disconnected panel renders; running-activity construction accepts a synthetic game in local Chromium. Exact official is_connected returned false in real Decky 3.3.0 ARM64. Empty live running-list reads and lifetime registration/cleanup passed. Real game transitions, Discord shortcut detection/connection/activity, local custom artwork and worn VR remain unverified/unsupported.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -2916,6 +2926,11 @@
       "libraryFollowUp": {
         "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
         "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       }
     },
@@ -3403,6 +3418,11 @@
       "libraryFollowUp": {
         "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
         "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       }
     },
@@ -3985,6 +4005,11 @@
         "sha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -4447,6 +4472,11 @@
         "sha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -4964,7 +4994,7 @@
         "https://github.com/your-username/PlayTime"
       ],
       "status": "partial",
-      "reason": "Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. ARM64 backend, live MobX/running-game observations and automatic recording remain unverified/unsupported.",
+      "reason": "Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. Running snapshots are now exposed, but its private MobX observation is unsupported; automatic recording and ARM64 backend remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -5015,6 +5045,11 @@
       "libraryFollowUp": {
         "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
         "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       }
     },
@@ -6920,6 +6955,11 @@
         "sha256": "2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -7288,6 +7328,11 @@
       "libraryFollowUp": {
         "evidence": "docs/evidence/framey-library-context-2026-10-26.json",
         "mode": "real Frame read-only CEF projection; local Chromium snapshot replay; scoped actual amd64 backends",
+        "frontendReady": true
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       }
     },
@@ -7719,6 +7764,11 @@
         "sha256": "49309a02fa028d26c77230cc9f70fec9bcce91d59e887bfe8f9d3e42f8a19139",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -7906,6 +7956,11 @@
         "sha256": "b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -8607,6 +8662,11 @@
         "sha256": "8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -8716,6 +8776,11 @@
         "sha256": "65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": false
       }
     },
     {
@@ -9710,6 +9775,11 @@
         "sha256": "ec59fc8aceb4e1abe2066b3a0707ed6313cabc4421b7c17765397903e2f8fd26",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -10845,6 +10915,11 @@
         "sha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -11207,6 +11282,11 @@
         "sha256": "3def99993c412b669933376b6420e44c68cd1fe9d9baf14b77a1f231242bd7e8",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -11691,6 +11771,11 @@
         "sha256": "248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {
@@ -13228,6 +13313,11 @@
         "sha256": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "runningFollowUp": {
+        "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
+        "mode": "synthetic nonempty running/library replay; backend and network denied",
+        "frontendReady": true
       }
     },
     {

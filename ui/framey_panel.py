@@ -238,3 +238,22 @@ def poll_events(ssh, plugin_id, session, events, cursor=0):
     source = Path(__file__).with_name('framey-events.js').read_text(encoding='utf-8')
     script = EVENT_SCRIPT.replace('__FRAMEY_EVENTS_SOURCE__', repr(source))
     return json.loads(ssh('python3 - ' + shlex.quote(json.dumps(payload)), stdin=script, timeout=25))
+
+
+def poll_running(ssh, plugin_id, session, active, cursor=0):
+    """Project running apps and actual lifetime events for one installed panel."""
+    if type(plugin_id) is not int or plugin_id <= 0:
+        raise PanelError('Choose an installed Decky store plugin')
+    if not isinstance(session, str) or not SESSION.fullmatch(session):
+        raise PanelError('Invalid Framey running session')
+    if type(active) is not bool or type(cursor) is not int or not 0 <= cursor <= 9007199254740991:
+        raise PanelError('Invalid Framey running request')
+    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    if len(found) != 1:
+        raise PanelError('The plugin is not managed by the Frame Control Decky store')
+    payload = {'pluginId':plugin_id, 'session':session, 'active':active, 'cursor':cursor}
+    source = Path(__file__).with_name('framey-running.js').read_text(encoding='utf-8')
+    expression = '(' + source + ')(' + json.dumps(payload) + ')'
+    script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
+        '__FRAMEY_STEAM_LIMIT__', str(256*1024))
+    return json.loads(ssh('python3 -', stdin=script, timeout=25))

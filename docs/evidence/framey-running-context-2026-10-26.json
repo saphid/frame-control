@@ -1,0 +1,2686 @@
+{
+  "timeUtc": "2026-10-26T05:14:48.736975+00:00",
+  "baseCommit": "b5d50a8",
+  "verificationLimits": {
+    "fakeFrame": "Archive HTTP/SSH install/receipt/removal only; backend execution stubbed",
+    "localBrowser": "Exact unmodified frontends, opaque iframe; explicitly synthetic library and nonempty running-game fixture; all backend/network calls denied",
+    "realFrameSSH": "Frame OS 0.5.6 aarch64; exact official Discord Status read-only backend in actual Decky 3.3.0; running-context empty reads/subscription/poll/close; no game launch or process actions",
+    "wornVR": "Not tested"
+  },
+  "catalogRefresh": {
+    "checkedAtUtc": "2026-10-26T05:18:22.485814+00:00",
+    "plugins": 116,
+    "changedIdsVersionsDigests": 0
+  },
+  "realFrame": {
+    "runtime": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "plugin": {
+      "id": 37,
+      "name": "Discord Status",
+      "version": "1.5.0",
+      "sha256": "00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45"
+    },
+    "isConnected": false,
+    "first": {
+      "apps": [],
+      "artwork": [],
+      "runningIds": [],
+      "mainAppId": null,
+      "events": [],
+      "cursor": 0,
+      "lifetimeAvailable": true
+    },
+    "second": {
+      "apps": [],
+      "artwork": [],
+      "runningIds": [],
+      "mainAppId": null,
+      "events": [],
+      "cursor": 0,
+      "lifetimeAvailable": true
+    },
+    "afterClose": {
+      "sessions": 0,
+      "timer": null
+    },
+    "before": {
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "battery": [
+        99
+      ]
+    },
+    "after": {
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "battery": [
+        99
+      ]
+    },
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true
+    },
+    "lockReleased": true,
+    "freshCleanupAudit": {
+      "locked": true,
+      "result": {
+        "sessions": 0,
+        "timer": null
+      },
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "service": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n"
+    },
+    "runtimeNote": "Decky startup reinjected its frontend/restarted Steam CEF; no plugin game, power, audio or process-control action was invoked."
+  },
+  "liveAPIShape": {
+    "RunningAppsGetter": "Maps running IDs through GetAppOverviewByAppID and filters missing overviews",
+    "MainRunningAppGetter": "Looks up MainRunningAppID through GetAppOverviewByAppID",
+    "lifetimeHandle": {
+      "type": "object",
+      "keys": [
+        "unregister"
+      ],
+      "unregister": "function"
+    },
+    "publicArtwork": {
+      "vertical": "function",
+      "custom": "function",
+      "example": {
+        "protocol": "https:",
+        "hostname": "shared.steamstatic.com",
+        "hasQuery": true,
+        "validType": "string"
+      }
+    }
+  },
+  "syntheticRunningFixture": {
+    "apps": [
+      [
+        10,
+        "Test Running Game",
+        "test running game",
+        1,
+        "10",
+        30,
+        5,
+        123
+      ]
+    ],
+    "runningIds": [
+      10
+    ],
+    "mainAppId": 10,
+    "artwork": [
+      [
+        10,
+        "https://shared.steamstatic.com/steam/apps/10/library_600x900.jpg",
+        []
+      ]
+    ],
+    "events": [],
+    "cursor": 0,
+    "lifetimeAvailable": true
+  },
+  "syntheticLibraryFixture": {
+    "apps": [
+      [
+        10,
+        "Test Running Game",
+        "test running game",
+        1,
+        "10",
+        30,
+        5,
+        123
+      ]
+    ],
+    "gameIds": [
+      10
+    ],
+    "steamId": "76561198000000001"
+  },
+  "focusedBrowser": [
+    {
+      "id": 13,
+      "name": "Pause Games",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "load_settings",
+        "pid_from_appid"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 19,
+      "name": "Notebook",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "warn",
+          "message": "No stroke found!"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "listPages",
+        "loadLastSelectedPage",
+        "loadPage"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 46,
+      "name": "Steamback",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "TypeError: saveInfos.map is not a function"
+        }
+      ],
+      "methods": [
+        "set_account_id",
+        "get_saveinfos"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 56,
+      "name": "MangoPeel",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "get_steamChannel",
+        "get_steamIndex"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 61,
+      "name": "TabMaster",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "%c TabMaster %c ERROR %c background: #ff6d05; color: black; background: #c70808; color: black; background: transparent; Could not find mobx.reaction"
+        }
+      ],
+      "methods": [
+        "log_message"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 66,
+      "name": "PlayTime",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Impossible to get \"RunningApps\" observe. Events will not be attached."
+        },
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Unable to get settings, saving defaults Error: Not found"
+        },
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Failed to set current user: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "set_current_user",
+        "fetch_playtime_information",
+        "statistics_for_last_two_weeks",
+        "daily_statistics_for_period"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 89,
+      "name": "DeckySpy",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "log",
+        "get_token",
+        "log_err",
+        "check_token"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 93,
+      "name": "Deck Settings",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+        },
+        {
+          "kind": "error",
+          "message": "[decky-game-settings:GameSelectView] Error fetching installed games: Error: Read-only compatibility audit: live Steam API blocked"
+        }
+      ],
+      "methods": [],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 98,
+      "name": "Decky-Lookup",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 100,
+      "name": "Virtual Surround Sound",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+        },
+        {
+          "kind": "error",
+          "message": "[decky-virtual-surround-sound:AudioControlsView] Error fetching app details: Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "get_sink_inputs"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 103,
+      "name": "Decky Ludusavi",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "get_config",
+        "get_ludusavi_version"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 104,
+      "name": "Game Sync",
+      "ready": false,
+      "error": "Read-only compatibility audit: backend method blocked",
+      "logs": [],
+      "methods": [
+        "get_config"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 113,
+      "name": "Decky LSFG-VK",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "Error loading lsfg config: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Error loading profiles: Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "check_lsfg_vk_installed",
+        "check_lossless_scaling_dll",
+        "get_lsfg_config",
+        "get_profiles"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 124,
+      "name": "AlarMe",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "Failed to load timers: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load recent timers: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load sleep inhibitor status: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to fetch missed items Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load timers: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "Failed to load recent timers: Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "get_active_timers",
+        "get_recent_timers",
+        "get_settings",
+        "get_presets",
+        "get_sleep_inhibitor_status",
+        "get_missed_items",
+        "stopwatch_get_state",
+        "get_pomodoro_state",
+        "get_reminders",
+        "get_game_status"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 127,
+      "name": "Decky Translator",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "get_enabled_state",
+        "get_provider_status",
+        "get_all_settings",
+        "check_web_reachability",
+        "get_hidraw_button_state"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 132,
+      "name": "SuggestMe",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load config: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load library status: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load play next list: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load excluded games: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load filter presets: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load history: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load non-steam info: Error: Read-only compatibility audit: backend method blocked"
+        },
+        {
+          "kind": "error",
+          "message": "[SuggestMe] Failed to load collections: Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "log_message",
+        "get_config",
+        "get_library_status",
+        "get_play_next_list",
+        "get_excluded_games",
+        "get_filter_presets",
+        "get_suggestion_history",
+        "get_non_steam_games",
+        "get_collections",
+        "get_available_genres",
+        "get_available_tags",
+        "get_available_community_tags"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 143,
+      "name": "Desktop Apps",
+      "ready": true,
+      "error": null,
+      "logs": [
+        {
+          "kind": "error",
+          "message": "%c @decky/ui %c DesktopApps %c background: #16a085; color: black; background: #FF0000; background: transparent; Failed to fetch apps Error: Read-only compatibility audit: backend method blocked"
+        }
+      ],
+      "methods": [
+        "get_temporary_shortcuts",
+        "get_apps"
+      ],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    },
+    {
+      "id": 37,
+      "name": "Discord Status",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [],
+      "library": "snapshot replay",
+      "running": "snapshot replay"
+    }
+  ],
+  "fullBrowser": {
+    "attempted": 116,
+    "ready": 103,
+    "notReady": 13,
+    "observations": [
+      {
+        "id": 1,
+        "name": "XR Gaming",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "retrieve_config",
+          "is_breezy_install_pending",
+          "retrieve_driver_state",
+          "retrieve_dont_show_again_keys"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 7,
+        "name": "CSS Loader",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          },
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          },
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          },
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          }
+        ],
+        "methods": [
+          "get_themes",
+          "store_read",
+          "dummy_function",
+          "get_last_load_errors"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 10,
+        "name": "vibrantDeck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "set_vibrancy"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 11,
+        "name": "Fantastic",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "CompileError: WebAssembly.instantiateStreaming(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob:\"."
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'get_enable')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'get_interpolate')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'get_curve_x')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'get_temperature')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'get_fan_rpm')"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 12,
+        "name": "MusicControl",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          },
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          }
+        ],
+        "methods": [
+          "sp_list_media_players"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 13,
+        "name": "Pause Games",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "load_settings",
+          "pid_from_appid"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 14,
+        "name": "ProtonDB Badges",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_setting"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 16,
+        "name": "Audio Loader",
+        "ready": false,
+        "error": "Cannot read properties of undefined (reading 'm_AudioPlaybackManager')",
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          }
+        ],
+        "methods": [
+          "store_read"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 18,
+        "name": "Bluetooth",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_bluetooth_status",
+          "get_paired_devices_with_info"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 19,
+        "name": "Notebook",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "No stroke found!"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "listPages",
+          "loadLastSelectedPage",
+          "loadPage"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 21,
+        "name": "PowerTools",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "`WebAssembly.instantiateStreaming` failed because your server does not serve wasm with `application/wasm` MIME type. Falling back to `WebAssembly.instantiate` which is slower. Original error:"
+          },
+          {
+            "kind": "rejection",
+            "message": "CompileError: WebAssembly.instantiate(): Compiling or instantiating WebAssembly module violates the following Content Security policy directive because 'unsafe-eval' is not an allowed source of script in the following Content Security Policy directive: \"script-src 'self' 'unsafe-inline' blob:\"."
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 22,
+        "name": "Memory Deck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_processes",
+          "get_attached_process"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 23,
+        "name": "Animation Changer",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'map')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'map')"
+          }
+        ],
+        "methods": [
+          "getState"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 24,
+        "name": "RadiYo!",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "error while fetching http://api.dar.fm/topsongs.php?callback=json&page_size=10&q=Music&partner_token=7090975725"
+          }
+        ],
+        "methods": [
+          "fetch"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 26,
+        "name": "HLTB for Deck",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "HLTB - LibraryContextMenu component not found"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 27,
+        "name": "AutoSuspend",
+        "ready": false,
+        "error": "Cannot read properties of undefined (reading '6')",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 28,
+        "name": "Emuchievements",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'apps')"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 30,
+        "name": "TunnelDeck",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "TypeError: connections.filter is not a function"
+          }
+        ],
+        "methods": [
+          "active_connection",
+          "is_openvpn_pacman_installed",
+          "is_openvpn_enabled",
+          "show",
+          "reset_cached_data",
+          "get_priority_interface",
+          "is_internet_available",
+          "get_prioritized_network_info"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 32,
+        "name": "AutoFlatpaks",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Uncaught TypeError: Cannot read properties of undefined (reading 'batteryState')"
+          }
+        ],
+        "methods": [
+          "settings_getSetting"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 35,
+        "name": "MoonDeck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 36,
+        "name": "SteamGridDB",
+        "ready": false,
+        "error": "Cannot convert undefined or null to object",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 37,
+        "name": "Discord Status",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 38,
+        "name": "Volume Mixer",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[VolumeMixer] Error while calling get_sink_inputs"
+          }
+        ],
+        "methods": [
+          "get_sink_inputs"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 40,
+        "name": "Controller Tools",
+        "ready": false,
+        "error": "Audit blocks WebSocket",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 43,
+        "name": "Tailscale Control",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_tailscale_state"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 44,
+        "name": "DeckMTP",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "rejection",
+            "message": "Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "rejection",
+            "message": "Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "is_drd_enabled",
+          "is_running"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 46,
+        "name": "Steamback",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "TypeError: saveInfos.map is not a function"
+          }
+        ],
+        "methods": [
+          "set_account_id",
+          "get_saveinfos"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 48,
+        "name": "Quick Launch",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "undefined"
+          }
+        ],
+        "methods": [
+          "get_config"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 49,
+        "name": "Decky Cloud Save",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of null (reading 'callPluginMethod')"
+          },
+          {
+            "kind": "rejection",
+            "message": "Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_config",
+          "get_backend_type",
+          "get_log_level"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 50,
+        "name": "Storage Cleaner",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "list_games_with_temp_data",
+          "get_size"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 52,
+        "name": "Game Theme Music",
+        "ready": false,
+        "error": "Cannot read properties of null (reading 'type')",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 53,
+        "name": "Shotty",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "set_id_map_fronend"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 56,
+        "name": "MangoPeel",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_steamChannel",
+          "get_steamIndex"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 58,
+        "name": "Volume Boost",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to get volume for channel: left"
+          }
+        ],
+        "methods": [
+          "get_volume_state"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 59,
+        "name": "Web Browser",
+        "ready": false,
+        "error": "deckyFrontendLib.getReactRoot is not a function",
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "%c Web Browser %c Styling %c background: #7627D3; color: #E5E1EA; background: #AF70F9; color: black; background: transparent; No SP Window"
+          },
+          {
+            "kind": "error",
+            "message": "%c Web Browser %c background: #7627D3; color: #E5E1EA; background: transparent; Error setting main tab for establishing ws server Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "%c Web Browser %c Settings Manager %c background: #7627D3; color: #E5E1EA; background: #AF70F9; color: black; background: transparent; Failed to load settings"
+          },
+          {
+            "kind": "error",
+            "message": "%c Web Browser %c Settings Manager %c background: #7627D3; color: #E5E1EA; background: #AF70F9; color: black; background: transparent; Failed to load favorites"
+          },
+          {
+            "kind": "error",
+            "message": "%c Web Browser %c Settings Manager %c background: #7627D3; color: #E5E1EA; background: #AF70F9; color: black; background: transparent; Failed to load history"
+          }
+        ],
+        "methods": [
+          "set_main_tab",
+          "load"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 60,
+        "name": "DeckyFileServer",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 61,
+        "name": "TabMaster",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c TabMaster %c ERROR %c background: #ff6d05; color: black; background: #c70808; color: black; background: transparent; Could not find mobx.reaction"
+          }
+        ],
+        "methods": [
+          "log_message"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 62,
+        "name": "TS3 QuickAccess",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "Error: failed to fetch status"
+          }
+        ],
+        "methods": [
+          "status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 63,
+        "name": "Free Loader",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "settings_read",
+          "logger_error",
+          "read_deals",
+          "logger_info"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 64,
+        "name": "Syncthing",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Decky Syncthing: failed loading state: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Decky Syncthing: failed loading state: Error: Audit blocks plugin network"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 65,
+        "name": "Decky Terminal",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_terminals"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 66,
+        "name": "PlayTime",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Impossible to get \"RunningApps\" observe. Events will not be attached."
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Unable to get settings, saving defaults Error: Not found"
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Failed to set current user: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "set_current_user",
+          "fetch_playtime_information",
+          "statistics_for_last_two_weeks",
+          "daily_statistics_for_period"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 67,
+        "name": "Battery Tracker",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "TypeError: Cannot read properties of undefined (reading 'map')"
+          },
+          {
+            "kind": "rejection",
+            "message": "TypeError: Cannot read properties of undefined (reading 'length')"
+          }
+        ],
+        "methods": [
+          "set_app",
+          "get_recent_data"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 68,
+        "name": "Wine Cellar",
+        "ready": false,
+        "error": "Audit blocks WebSocket",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 70,
+        "name": "MicroSDeck",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c MicroSDeck %c Error: %c Failed to fetch \"http://localhost:12412/health\" with error Error: Audit blocks plugin network background: #165da0; color: black; background: #d63a57; color: black; background: transparent; color:#6e6e6e; [object Object]"
+          },
+          {
+            "kind": "error",
+            "message": "Error: Minified React error #31; visit https://reactjs.org/docs/error-decoder.html?invariant=31&args[]=object%20with%20keys%20%7B%24%24typeof%2C%20type%2C%20key%2C%20ref%2C%20props%7D for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+          },
+          {
+            "kind": "error",
+            "message": "Error: Minified React error #31; visit https://reactjs.org/docs/error-decoder.html?invariant=31&args[]=object%20with%20keys%20%7B%24%24typeof%2C%20type%2C%20key%2C%20ref%2C%20props%7D for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 72,
+        "name": "ScreenshotUploader",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "getCounter",
+          "getSetting"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 73,
+        "name": "EmuDecky",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "rejection",
+            "message": "SyntaxError: Unexpected token 'R', \"Read-only \"... is not valid JSON"
+          }
+        ],
+        "methods": [
+          "getSettings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 74,
+        "name": "KDE Connect",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "is_enabled"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 75,
+        "name": "Reshadeck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_shader_list",
+          "get_screensaver_list",
+          "get_current_shader",
+          "get_current_screensaver"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 76,
+        "name": "CheatDeck",
+        "ready": false,
+        "error": "Cannot convert undefined or null to object",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 77,
+        "name": "BT Wake Control",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 78,
+        "name": "Brightness Bar",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "settings_load"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 79,
+        "name": "Decky Notifications",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "device_list",
+          "notification_list",
+          "get_event"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 80,
+        "name": "MagicBlack",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load allow_touch setting Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load mute_mic setting Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load mute_sound setting Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load off_anykey setting Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load off_upon_waking setting Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MagicBlack] Failed to load overlay_opacity number setting Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "load_setting"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 81,
+        "name": "IsThereAnyDeal for Deck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "settings_load"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 82,
+        "name": "MagicPods",
+        "ready": false,
+        "error": "Audit blocks WebSocket",
+        "logs": [],
+        "methods": [
+          "load_setting",
+          "logger_react"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 84,
+        "name": "Junk-Store",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "fetch_rss_feed",
+          "execute_action"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 85,
+        "name": "Decky-Undervolt",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "init"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 87,
+        "name": "ScreenSaver",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_settings",
+          "get_event"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 88,
+        "name": "steamdeck-input-disabler",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 89,
+        "name": "DeckySpy",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "log",
+          "get_token",
+          "log_err",
+          "check_token"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 90,
+        "name": "Picture in Picture",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 91,
+        "name": "PlayCount",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 92,
+        "name": "Crosshair",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_current_offsets"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 93,
+        "name": "Deck Settings",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+          },
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:GameSelectView] Error fetching installed games: Error: Read-only compatibility audit: live Steam API blocked"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 94,
+        "name": "Decky DoT DNS",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_presets",
+          "get_dns_settings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 95,
+        "name": "Decky-SpoofDPI",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "getStatus",
+          "getSettings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 96,
+        "name": "Simple Timer",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "load_recents",
+          "load_remaining_seconds",
+          "load_subtle_mode"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 97,
+        "name": "Decky-Framegen",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "check_fgmod_path",
+          "log_error"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 98,
+        "name": "Decky-Lookup",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 99,
+        "name": "Decky Zerotier",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "info",
+          "list_networks"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 100,
+        "name": "Virtual Surround Sound",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+          },
+          {
+            "kind": "error",
+            "message": "[decky-virtual-surround-sound:AudioControlsView] Error fetching app details: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_sink_inputs"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 101,
+        "name": "XIVOmega",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "curr_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 102,
+        "name": "DeckSP",
+        "ready": false,
+        "error": "Cannot access 'PluginManager' before initialization",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 103,
+        "name": "Decky Ludusavi",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_config",
+          "get_ludusavi_version"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 104,
+        "name": "Game Sync",
+        "ready": false,
+        "error": "Read-only compatibility audit: backend method blocked",
+        "logs": [],
+        "methods": [
+          "get_config"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 105,
+        "name": "WiFi Locker",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error getting WiFi status: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_wifi_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 106,
+        "name": "LetMeReShade",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error fetching games: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "check_reshade_path",
+          "detect_steam_deck_model",
+          "has_shader_preferences",
+          "load_autohdr_preference",
+          "load_installed_configuration",
+          "list_installed_games",
+          "find_heroic_games",
+          "log_error"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 107,
+        "name": "Decky Sunshine",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[SUN] Backend method isSunshineRunning failed Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SUN] Backend method areCredentialsValid failed Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SUN] Backend method getSunshineVersionInfo failed Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "isSunshineRunning",
+          "areCredentialsValid",
+          "getSunshineVersionInfo"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 108,
+        "name": "HueSync",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Uncaught TypeError: Cannot read properties of undefined (reading 'acStateOverwrite')"
+          },
+          {
+            "kind": "warn",
+            "message": "[2026-10-26 05:19:20.461] WARN HueSync: ignoring empty suspend mode value"
+          },
+          {
+            "kind": "error",
+            "message": "[2026-10-26 05:19:20.463] ERROR Failed to init power LED control: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load msi custom presets: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load ayaneo custom presets: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load rog_ally custom presets: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_settings",
+          "log_info",
+          "log_warn",
+          "get_device_capabilities",
+          "get_custom_rgb_presets",
+          "log_error"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 109,
+        "name": "MuraDeck",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[MuraDeck] Failed to register brightness listener TypeError: Cannot read properties of undefined (reading 'RegisterForBrightnessChanges')"
+          }
+        ],
+        "methods": [
+          "get_has_seen_welcome",
+          "get_enabled",
+          "get_display_mode",
+          "is_external_display",
+          "get_ext_monitor_watcher",
+          "get_brightness_enabled",
+          "check_shader_status",
+          "get_sharpness_perapp_enabled",
+          "get_sharpness",
+          "get_cas_perapp_enabled",
+          "get_cas"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 110,
+        "name": "Dimmer Deck",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "activate"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 111,
+        "name": "Music Control",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          },
+          {
+            "kind": "warn",
+            "message": "Resolve failed: [object Object] promise [object Promise]"
+          }
+        ],
+        "methods": [
+          "sp_list_media_players"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 112,
+        "name": "Better Keyboard",
+        "ready": false,
+        "error": "window.SteamClient.UI.GetUIMode is not a function",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 113,
+        "name": "Decky LSFG-VK",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error loading lsfg config: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Error loading profiles: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "check_lsfg_vk_installed",
+          "check_lossless_scaling_dll",
+          "get_lsfg_config",
+          "get_profiles"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 114,
+        "name": "Network Sentinel",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to get network status: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to get live ping: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load connection info: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to get network history: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_network_status",
+          "get_live_ping",
+          "get_settings",
+          "get_connection_info",
+          "get_network_history"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 115,
+        "name": "Decky Clash",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_version",
+          "get_config",
+          "get_subscription_list",
+          "get_dashboard_list",
+          "get_ip"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 116,
+        "name": "Muon",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to fetch IP address Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to initialize settings: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_ip_address",
+          "load_settings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 117,
+        "name": "DeckyParty File Manager",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 118,
+        "name": "Speed Test",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Download test error: Error: Audit blocks plugin network"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 119,
+        "name": "Decky Clipboard",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to get server status: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to get clipboard: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_server_status",
+          "get_clipboard_data"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 120,
+        "name": "Reroll",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_setting",
+          "version",
+          "clear"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 121,
+        "name": "DeckPass",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "check_setup_state",
+          "check_keepass_flatpak_install_state"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 123,
+        "name": "Steam Status",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Background monitor: Failed to fetch Steam status: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to fetch Steam status: Audit blocks plugin network"
+          },
+          {
+            "kind": "error",
+            "message": "[SteamStatus] loadSettings: Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SteamStatus] loadSettings: Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SteamStatus] loadSettings: Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SteamStatus] loadSettings: Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_settings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 124,
+        "name": "AlarMe",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to load timers: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load recent timers: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load sleep inhibitor status: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to fetch missed items Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load timers: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to load recent timers: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_active_timers",
+          "get_recent_timers",
+          "get_settings",
+          "get_presets",
+          "get_sleep_inhibitor_status",
+          "get_missed_items",
+          "stopwatch_get_state",
+          "get_pomodoro_state",
+          "get_reminders",
+          "get_game_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 125,
+        "name": "Decky Localsend",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Failed to load receive history: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_receive_history",
+          "get_backend_status",
+          "get_backend_config"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 126,
+        "name": "Launch Options",
+        "ready": false,
+        "error": "Cannot convert undefined or null to object",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 127,
+        "name": "Decky Translator",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_enabled_state",
+          "get_provider_status",
+          "get_all_settings",
+          "check_web_reachability",
+          "get_hidraw_button_state"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 128,
+        "name": "Quick User Switcher",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[MultiUser] Pending launch check failed: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[MultiUser] Error loading users: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "trigger_pending_launch",
+          "get_users",
+          "get_current_user",
+          "get_setting"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 129,
+        "name": "ShadowDeck",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[FRONTEND] loadInitialSettings: Failed to load settings: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_all_settings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 130,
+        "name": "Games Prefix Manager",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 131,
+        "name": "Download All",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "TypeError: Cannot read properties of undefined (reading 'RegisterForDownloadItems')"
+          },
+          {
+            "kind": "error",
+            "message": "Failed to log: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "log_from_ui"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 132,
+        "name": "SuggestMe",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load config: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load library status: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load play next list: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load excluded games: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load filter presets: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load history: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load non-steam info: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load collections: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "log_message",
+          "get_config",
+          "get_library_status",
+          "get_play_next_list",
+          "get_excluded_games",
+          "get_filter_presets",
+          "get_suggestion_history",
+          "get_non_steam_games",
+          "get_collections",
+          "get_available_genres",
+          "get_available_tags",
+          "get_available_community_tags"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 133,
+        "name": "Non-Steam Badges",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 134,
+        "name": "Deck Progress Tracker",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_settings",
+          "get_tag_statistics"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 135,
+        "name": "Deck Shelves",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_settings"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 136,
+        "name": "Decky-Clipper",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "is_recording"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 137,
+        "name": "Decky Proton Launch",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_games",
+          "get_configured_apps_status",
+          "is_script_installed",
+          "get_wrapper_app_ids",
+          "get_running_game",
+          "get_variables_cache"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 138,
+        "name": "Docky",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_state"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 139,
+        "name": "Output Manager",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_state",
+          "get_config"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 140,
+        "name": "IPv6 Enabler Plugin",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 141,
+        "name": "DeckyClocker",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 142,
+        "name": "MuteOnSleep",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "[MuteOnSleep] couldn't hook into SuspendResumeStore"
+          }
+        ],
+        "methods": [
+          "get_enabled"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 143,
+        "name": "Desktop Apps",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c @decky/ui %c DesktopApps %c background: #16a085; color: black; background: #FF0000; background: transparent; Failed to fetch apps Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_temporary_shortcuts",
+          "get_apps"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 144,
+        "name": "Mixer",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "get_settings",
+          "get_playbacks"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      },
+      {
+        "id": 145,
+        "name": "VARTA",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "[VARTA] library tile component not found, grid badges disabled"
+          }
+        ],
+        "methods": [
+          "get_settings",
+          "get_database_stats",
+          "get_update_status"
+        ],
+        "library": "snapshot replay",
+        "running": "snapshot replay"
+      }
+    ]
+  },
+  "fakeFrame": {
+    "attempted": 116,
+    "outcomes": {
+      "blocked": 56,
+      "installed-removed": 60
+    }
+  },
+  "remainingUnverified": [
+    "Real nonempty running-app/main-app reads",
+    "Real launch/exit callback delivery and per-game selection",
+    "Discord shortcut detection, account connection and activity publishing",
+    "Local custom artwork",
+    "Closed-panel automation, suspend/input and private MobX observation",
+    "Worn VR and physical controller/keyboard use"
+  ]
+}

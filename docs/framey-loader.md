@@ -125,13 +125,37 @@ Direct IndexedDB users remain unsupported.
 `SuspensefulImage` renders a native image. SteamClient `Storage.GetJSON` and
 `SetObject` use the same bounded per-plugin cache, including panel reopen
 persistence; they do not read Steam's account/global JSON store. Missing keys
-reject with `Not found`. Detached `SteamUIStore.RunningApps` is a frozen empty
-list, and the suspend store has no methods. Optional Steam app/account globals
-are undefined. These fallbacks let settings render without inventing live
+reject with `Not found`. The suspend store has no methods. Optional Steam app/account globals
+are undefined until a successful library read. These fallbacks let settings render without inventing live
 games or account identity. [The exact-bundle follow-up](evidence/framey-ui-fallbacks-2026-10-26.json)
 verifies Pause Games and Tailscale Control settings in local Chromium; their
 primary backend actions remain unverified. PlayTime still requires Steam's
-real app store and game observers.
+MobX game observers for automatic tracking.
+
+Panels referencing running-game APIs now receive a detached, read-only
+`SteamUIStore.RunningApps` / `MainRunningApp` snapshot, also exposed through
+`DFL.Router`. The authenticated headset-only `/api/framey/running` endpoint
+checks installed store ownership; the parent checks the active panel session.
+Fixed bundled code runs in Steam CEF. It copies at most 64 running app overviews, a main app and
+public Steam CDN capsule URLs; it never copies local artwork paths, launch
+commands or Steam objects. The host refreshes about every two seconds without
+overlapping requests. Failure clears stale context and sets
+`SteamUIStore.FrameyRunningAvailable` to false.
+
+`GameSessions.RegisterForAppLifetimeNotifications` relays actual Steam
+`{unAppID, bRunning}` callbacks through a bounded 64-event queue. Snapshot
+changes never fabricate launch/exit callbacks. Handles support `.unregister()`;
+panel close/replacement removes the CEF subscription, with a 15-second lease
+(checked every five seconds) if cleanup cannot reach Steam. At most four panel
+sessions are retained. These are open-panel observations, not closed-panel
+automation or a MobX implementation. Queue overflow can lose old callbacks.
+`appStore` capsule helpers expose only projected public URLs for running apps;
+unavailable or local custom artwork returns an empty value.
+
+[Running-context evidence](evidence/framey-running-context-2026-10-26.md) separates
+real Frame empty-list/subscription/cleanup reads, the exact Discord Status
+ARM64 backend connection check, and synthetic nonempty/transition fixtures.
+Real game transitions, Discord activity and worn-VR operation remain unverified.
 
 Three parameterless SteamClient reads use Steam's actual CEF context:
 `User.GetIPCountry`, `InstallFolder.GetInstallFolders` and `System.GetSystemInfo`.

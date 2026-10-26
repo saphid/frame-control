@@ -605,6 +605,16 @@ def framey_events_action(body):
         raise Failure(str(exc), 400) from exc
 
 
+def framey_running_action(body):
+    if not HEADSET_RUNTIME and os.environ.get('FRAME_E2E_CONTAINER') != '1':
+        raise Failure('Decky plugin panels run in the headset service', 400)
+    try:
+        return framey_panel.poll_running(ssh, body.get('id'), body.get('session'),
+                                        body.get('active'), body.get('cursor', 0))
+    except framey_panel.PanelError as exc:
+        raise Failure(str(exc), 400) from exc
+
+
 def framey_check_action(body):
     """Record only a live, explicitly started worn-headset check."""
     if not HEADSET_RUNTIME or body.get('kind') not in ('input', 'panel'):
@@ -3473,6 +3483,7 @@ POST = {
     "/api/framey/method": framey_method_action,
     "/api/framey/steam": framey_steam_action,
     "/api/framey/events": framey_events_action,
+    "/api/framey/running": framey_running_action,
     "/api/framey/check": framey_check_action,
     "/api/headset": headset_action,
     "/api/headset/quick": headset_quick,
