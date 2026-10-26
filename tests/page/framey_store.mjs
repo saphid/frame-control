@@ -68,6 +68,7 @@ ctx.mockApi=async path => path==='/api/decky' ?
 vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('refreshDecky()',ctx);
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Open panel').disabled,true);
 el('deckySearch').value='';el('deckyStoreFilter').value='all';
 vm.runInContext('showDeckyStore()',ctx);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
@@ -97,6 +98,7 @@ await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".re
 assert.equal(changes,1);
 assert.equal(session.has('frameyPluginJob'),true);
 assert.equal(el('deckyJobCheck').hidden,false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Open panel').disabled,true);
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,true);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
 await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
@@ -111,6 +113,7 @@ ctx.mockApi=async path => {
 vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('checkDeckyJob()',ctx);
 assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Open panel').disabled,false);
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,false);
 
@@ -196,3 +199,48 @@ await staleFailure;
 assert.match(el('deckyInstalled').children[0].children[0].textContent,/Current/);
 assert.doesNotMatch(el('deckyState').textContent,/offline/);
 assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
+
+// A panel must not keep an old frontend after the installed receipt changes.
+let installedHash='a'.repeat(64);
+ctx.mockApi=async path => {
+  assert.equal(path,'/api/decky');
+  return {managed:true,running:true,plugins:[{storeId:2,name:'Plugin 2',version:'1.0',sha256:installedHash}]};
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx);
+vm.runInContext('openFrameyPanel(2,"Plugin 2")',ctx);
+assert.equal(el('frameyPanel').hidden,false);
+await vm.runInContext('refreshDecky()',ctx);
+assert.equal(el('frameyPanel').hidden,false,'unchanged receipt keeps the current panel');
+installedHash='b'.repeat(64);
+await vm.runInContext('refreshDecky()',ctx);
+assert.equal(el('frameyPanel').hidden,true);
+assert.equal(el('frameyFrame').src,undefined);
+assert.match(el('deckyState').textContent,/old plugin panel was closed/);
+
+// The panel closes before updating its own backend, and stale Open handlers
+// cannot recreate it while a job is active.
+vm.runInContext('openFrameyPanel(2,"Plugin 2")',ctx);
+assert.equal(el('frameyPanel').hidden,false);
+ctx.mockApi=async (path,body) => {
+  if(path==='/api/decky/plugin'){
+    assert.equal(el('frameyPanel').hidden,true);
+    vm.runInContext('openFrameyPanel(2,"Plugin 2")',ctx);
+    assert.equal(el('frameyPanel').hidden,true);
+    return {job:'job-update'};
+  }
+  if(path.startsWith('/api/job'))return {done:true,message:'Updated Plugin 2'};
+  if(path==='/api/decky')return {managed:true,running:true,
+    plugins:[{storeId:2,name:'Plugin 2',version:'2.0',sha256:'c'.repeat(64)}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"c".repeat(64)})',ctx);
+assert.equal(el('frameyPanel').hidden,true);
+assert.match(el('deckyJobStatus').textContent,/Old plugin panel closed; reopen it/);
+vm.runInContext('openFrameyPanel(2,"Plugin 2")',ctx);
+ctx.mockApi=async()=>{throw Error('offline');};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx);
+assert.equal(el('frameyPanel').hidden,true);
+assert.match(el('deckyState').textContent,/panel was closed until status can be refreshed/);

@@ -15,7 +15,7 @@ const context=vm.createContext({document:{getElementById:el,createElement:()=>({
   setTimeout(){},setInterval(){},console,
   fetch:(path,options)=>new Promise(resolve=>requests.push({path,body:JSON.parse(options.body),resolve}))});
 vm.runInContext(source,context);
-vm.runInContext('deckyState={plugins:[{storeId:96}]};openFrameyPanel(96,"Timer")',context);
+vm.runInContext('deckyState={running:true,plugins:[{storeId:96,sha256:"a",version:"1"}]};openFrameyPanel(96,"Timer")',context);
 let session=vm.runInContext('frameySession',context);
 const onMessage=listeners.find(x=>x.type==='message').fn;
 const send=(data,origin=frame)=>onMessage({source:origin,data});

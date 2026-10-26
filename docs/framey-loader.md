@@ -201,6 +201,12 @@ the store and review the new version before retrying. If Frame Control restarts,
 job result. The panel clears that job ID and asks you to refresh the installed
 list before making another change.
 
+An open plugin panel closes before its own Update or Remove starts, so its old
+frontend cannot call the changing backend. Open panel is unavailable while a
+store job is pending. A later installed-status refresh also closes an open panel
+if Decky stopped, its store receipt changed, or the status read failed. Reopen
+the plugin after a successful refresh to use its current frontend.
+
 ## For plugin authors
 
 Start with the [Framey settings sample](../examples/framey-settings/README.md)

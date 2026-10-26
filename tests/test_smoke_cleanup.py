@@ -95,6 +95,60 @@ class RealProcesses(unittest.TestCase):
 
 
 class Safety(unittest.TestCase):
+    def test_missing_x86_runtime_skips_launch_but_still_removes_title(self):
+        smoke = frame_smoke.Smoke()
+        gid = 'fc_smoke_x86_64'
+        with mock.patch.object(frame_smoke.tiny_programs, 'write', return_value=Path('/tmp/tiny')), \
+             mock.patch.object(frame_smoke.frame_titles, 'install', return_value={
+                 'runtime': 'SteamLinuxRuntime_4'}), \
+             mock.patch.object(frame_smoke.frame_titles, 'list_titles', side_effect=[
+                 [{'id': gid}], []]), \
+             mock.patch.object(frame_smoke.frame_titles, 'launch') as launch, \
+             mock.patch.object(frame_smoke.frame_titles, 'remove') as remove, \
+             mock.patch.object(frame_smoke, 'steam_log_lines', side_effect=[
+                 [], [], [], ['Tool 4183110 Steam Linux Runtime 4.0 is found, but is not installed']]), \
+             mock.patch.object(frame_smoke, 'ssh', return_value=''), \
+             mock.patch.object(frame_smoke, 'stop_titles', return_value={'stopped_pids': []}):
+            frame_smoke.title_cycle(smoke, 'x86_64', '/tmp')
+        self.assertEqual([step['step'] for step in smoke.steps],
+                         ['x86_64: install', 'x86_64: launch', 'x86_64: remove'])
+        self.assertTrue(smoke.steps[0]['ok'])
+        self.assertFalse(smoke.steps[1]['ok'])
+        self.assertTrue(smoke.steps[1]['skipped'])
+        self.assertEqual(smoke.steps[1]['detail']['outcome'], 'runtime missing')
+        self.assertTrue(smoke.steps[2]['ok'])
+        self.assertNotIn(gid, smoke.installed)
+        launch.assert_called_once_with(gid)
+        remove.assert_called_once_with(gid)
+
+    def test_optional_runtime_skip_is_counted_separately_in_saved_result(self):
+        with tempfile.TemporaryDirectory() as root:
+            output = Path(root) / 'results'
+            folder = Path(root) / 'titles'
+            folder.mkdir()
+            def cycle(smoke, kind, _folder):
+                if kind == 'x86_64':
+                    def missing():
+                        raise frame_smoke.Skipped('optional runtime absent', {'outcome': 'runtime missing'})
+                    smoke.step(f'{kind}: launch', missing)
+                else:
+                    smoke.step(f'{kind}: launch', lambda: {'outcome': 'running'})
+            with mock.patch.object(frame_smoke, 'RESULTS', output), \
+                 mock.patch.object(frame_smoke, 'os_release', return_value={
+                     'BUILD_ID': 'fake', 'VERSION_ID': 'fake', 'VARIANT_ID': 'fake'}), \
+                 mock.patch.object(frame_smoke, 'ssh', return_value='yes'), \
+                 mock.patch.object(frame_smoke, 'cleanup', return_value={}), \
+                 mock.patch.object(frame_smoke, 'properties', return_value={}), \
+                 mock.patch.object(frame_smoke, 'status', return_value={}), \
+                 mock.patch.object(frame_smoke, 'title_cycle', side_effect=cycle), \
+                 mock.patch.object(frame_smoke.tempfile, 'mkdtemp', return_value=str(folder)):
+                self.assertEqual(frame_smoke.run_smoke(mock.Mock(pair=False),
+                                 {'activity': 3, 'proximity': [], 'battery': [100]}), 0)
+            result = json.loads(next(output.glob('*-fake.json')).read_text())
+            self.assertEqual((result['passed'], result['skipped'], result['failed']), (6, 1, 0))
+            self.assertEqual(next(s for s in result['steps'] if s['step'] == 'x86_64: launch')
+                             ['detail']['outcome'], 'runtime missing')
+
     def test_non_test_ids_rejected_before_scanning(self):
         for ids in ([], ['portal2'], ['fc_smoke_exe/../portal2'], ['fc_smoke_custom']):
             with self.subTest(ids=ids), self.assertRaises(ValueError):

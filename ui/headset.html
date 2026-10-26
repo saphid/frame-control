@@ -108,25 +108,34 @@ function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.
 function deckyJobPending(){return !!sessionStorage.getItem('frameyPluginJob');}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
-  activeFrameyId=null, frameySession=null, deckyBusy=false;
+  activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
 async function refreshDecky(){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
   if(request!==deckyStatusRequest)return;
   deckyState=state;
+  const active=(state.plugins||[]).find(p=>p.storeId===activeFrameyId);
+  const panelStale=activeFrameyId!==null&&(!state.running||!active||
+    active.sha256!==activeFrameyReceipt?.sha256||active.version!==activeFrameyReceipt?.version);
+  if(panelStale)closeFrameyPanel();
   byId('deckyState').textContent=deckyState.running?'Decky loader is running. Backend loading is not a VR menu check.':
     deckyState.managed?'Decky is stopped. You can remove a managed plugin to recover, then start Decky from Frame Control on your computer.':
     'Decky is not running. Install it from Frame Control on your computer.';
+  if(panelStale)byId('deckyState').textContent+=' The old plugin panel was closed; reopen it after refreshing.';
   const list=byId('deckyInstalled');list.replaceChildren();
   for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
     const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);
     const note=document.createElement('p');note.textContent=compatibilityText(plugin);row.append(note);
     if(plugin.storeId){const open=document.createElement('button');open.className='secondary';open.textContent='Open panel';
+      open.disabled=deckyBusy||deckyJobPending()||!deckyState.running;
       open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
       button.disabled=deckyBusy||deckyJobPending();button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){if(request!==deckyStatusRequest)return;
+    const panelClosed=activeFrameyId!==null;
+    if(panelClosed)closeFrameyPanel();
     deckyState=null;
     byId('deckyState').textContent=`Installed plugins unavailable: ${error.message}`;
+    if(panelClosed)byId('deckyState').textContent+=' The plugin panel was closed until status can be refreshed.';
     byId('deckyInstalled').replaceChildren();
     byId('deckyInstalled').textContent='Refresh to check installed plugins.';
     showDeckyStore();}}
@@ -191,14 +200,20 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
   }
   if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
   deckyBusy=true;showDeckyStore();
-  deckyJobView(`${action} ${plugin.name}`,'Starting…',0);
+  const panelClosed=(action==='update'||action==='remove')&&activeFrameyId===plugin.id;
+  const panelNote=panelClosed?(action==='remove'?' Plugin panel closed after removal.':
+    ' Old plugin panel closed; reopen it after refreshing installed plugins.') : '';
+  if(panelClosed)closeFrameyPanel();
+  deckyJobView(`${action} ${plugin.name}`,
+    panelClosed?'Starting… Old plugin panel closed until the change finishes.':'Starting…',0);
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
     sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true});
     if(!started.job)throw Error('The server did not return a job ID');
     sessionStorage.setItem('frameyPluginJob',JSON.stringify({job:started.job,action,name:plugin.name}));
     await followDeckyJob(started.job,action,plugin.name);
     sessionStorage.removeItem('frameyPluginJob');
-  }catch(error){deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}`,null,true);}
+    if(panelNote)byId('deckyJobStatus').textContent+=panelNote;
+  }catch(error){deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}${panelNote}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}
 }
 async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
@@ -210,10 +225,12 @@ async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.get
   finally{deckyBusy=false;await refreshDecky();}}
 byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
+  if(deckyBusy||deckyJobPending()||!deckyState?.running)return;
   const installed=(deckyState?.plugins||[]).find(p=>p.storeId===id);if(!installed)return;
   byId('frameyCompatibility').textContent=compatibilityText(installed);
   closeFrameyEvents();
-  activeFrameyId=id;frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
+  activeFrameyId=id;activeFrameyReceipt={sha256:installed.sha256,version:installed.version};
+  frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
   byId('frameyPanelStatus').textContent='Loading plugin panel…';
   byId('frameyFrame').src=`/framey/panel/${id}?session=${encodeURIComponent(frameySession)}#${frameySession}`;
   byId('frameyPanel').hidden=false;byId('frameyPanel').scrollIntoView();
@@ -229,7 +246,9 @@ function closeFrameyEvents(){
     api('/api/framey/events',{id:activeFrameyId,session:frameySession,events:[],cursor:0}).catch(()=>{});
   frameyEventsActive=false;
 }
-byId('frameyClose').onclick=()=>{closeFrameyEvents();activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
+function closeFrameyPanel(){closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
+  byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;}
+byId('frameyClose').onclick=closeFrameyPanel;
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
