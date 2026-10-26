@@ -85,6 +85,9 @@ def render(data):
         'All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. '
         'The three Windows DLLs belong to Decky-Framegen. The installer still rejects these archives. '
         'Apart from the explicitly described LocalSend experiment, ARM64 builds were not attempted: the constraints below remain unresolved.', '',
+        '[LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) '
+        'covers a reproducible MIT helper build and its isolated real-Frame protocol 2.0 info response. '
+        'The official x86 archive remains blocked; full plugin integration and file transfers are unverified.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:

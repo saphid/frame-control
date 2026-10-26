@@ -10897,7 +10897,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "LocalSend-Go commit 66edc509a28b9f877e7374504892dcbc653a4da4 cross-compiled successfully with CGO_ENABLED=0 GOOS=linux GOARCH=arm64. Static aarch64 ELF SHA-256 e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9. Not executed; source tip is not proven to match the shipped helper/protocol. Official ZIP is still x86_64.",
+      "nativePort": "MIT LocalSend-Go 66edc509a28b9f877e7374504892dcbc653a4da4 reproducibly cross-built with Go 1.25.7/CGO_ENABLED=0 for ARM64; SHA-256 e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9. Help/official backend CLI flags and protocol 2.0 info endpoint passed on real Frame in an isolated network namespace. No file transfer or full plugin/CEF integration tested; exact source match to shipped helper unproven. Official ZIP stays x86_64 and blocked.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",

@@ -279,6 +279,8 @@ DFL includes exports imported through decky-frontend-lib / @decky/ui. Steam stor
 
 All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. The three Windows DLLs belong to Decky-Framegen. The installer still rejects these archives. Apart from the explicitly described LocalSend experiment, ARM64 builds were not attempted: the constraints below remain unresolved.
 
+[LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) covers a reproducible MIT helper build and its isolated real-Frame protocol 2.0 info response. The official x86 archive remains blocked; full plugin integration and file transfers are unverified.
+
 | Plugin | Native payloads | ARM64 result / remaining blocker |
 | --- | --- | --- |
 | Fantastic | bin/backend | Fan backend/driver is Deck-specific; an ARM64 rebuild would not provide compatible Frame hardware. |
@@ -302,7 +304,7 @@ All published Linux native payloads in this snapshot are x86_64; no published aa
 | HueSync | bin/hello, py_modules/portio.so | portio and handheld LED backends depend on x86 I/O/unsupported hardware; ARM64 compilation alone is insufficient. |
 | Decky Clipboard | bin/xclip | xclip needs ARM64 X11 libraries/server; root and gamescope assumptions also block this archive. |
 | Reroll | bin/memscan.so | memscan.so needs ARM64 process-memory support and ABI testing; root requirement remains. Frontend initializes but no memory access was tested. |
-| Decky Localsend | bin/localsend-core | LocalSend-Go commit 66edc509a28b9f877e7374504892dcbc653a4da4 cross-compiled successfully with CGO_ENABLED=0 GOOS=linux GOARCH=arm64. Static aarch64 ELF SHA-256 e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9. Not executed; source tip is not proven to match the shipped helper/protocol. Official ZIP is still x86_64. |
+| Decky Localsend | bin/localsend-core | MIT LocalSend-Go 66edc509a28b9f877e7374504892dcbc653a4da4 reproducibly cross-built with Go 1.25.7/CGO_ENABLED=0 for ARM64; SHA-256 e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9. Help/official backend CLI flags and protocol 2.0 info endpoint passed on real Frame in an isolated network namespace. No file transfer or full plugin/CEF integration tested; exact source match to shipped helper unproven. Official ZIP stays x86_64 and blocked. |
 | Launch Options | bin/hello | Remove the template x86 bin/hello or publish an ARM64 rebuild; missing Steam module mapping also prevents frontend initialization. |
 | Decky-Clipper | bin/gstreamer-1.0/libgstproxy.so, bin/gstreamer-1.0/libgstmidi.so, bin/gstreamer-1.0/libgstmpegtsmux.so, bin/gstreamer-1.0/gst-plugin-scanner, bin/gstreamer-1.0/libgstivfparse.so, … 115 total; full list in JSON | Rebuild all bundled GStreamer libraries/plugins for ARM64 and verify capture/codec ABI against Frame SteamVR; gamescope capture differs. |
 
