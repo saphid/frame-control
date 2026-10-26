@@ -1,0 +1,32 @@
+name: Decky backend runtime
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  decky-runtime:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Actual Decky 3.3.0 discovery and safe backend probes
+        run: python3 scripts/framey-test-decky-runtime.py --output "$RUNNER_TEMP/decky-runtime.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decky-runtime-${{ matrix.os }}
+          path: ${{ runner.temp }}/decky-runtime.json
+          if-no-files-found: warn
