@@ -18,7 +18,9 @@
       "Behavior",
       "Shelves"
     ],
-    "attemptedBackendMethods": ["get_settings"],
+    "attemptedBackendMethods": [
+      "get_settings"
+    ],
     "backendMethodsExecuted": [],
     "steamLibraryRead": "denied by audit",
     "pluginNetwork": "denied by audit"
@@ -28,5 +30,27 @@
     "No official backend executed",
     "No real Frame or worn VR interaction occurred",
     "Settings visibility alone does not prove the plugin works"
-  ]
+  ],
+  "realFrameGate": {
+    "sourceCommit": "b0c4647b856035c970ae27ea4e2ddbf6e51f6963",
+    "headsetOsBuild": "20261022.6153909",
+    "preflightActivity": 3,
+    "preflightBatteryPercent": 100,
+    "postBatteryPercent": 99,
+    "sampleExercisePassed": true,
+    "sampleSettingPersistedAfterFreshIframe": true,
+    "syntheticOpenVrPointerTrusted": true,
+    "stereoPixelsChanged": true,
+    "mirrorCapturePresent": true,
+    "nativeScrollMoved": false,
+    "powerValuesRestored": true,
+    "recoveryTimerRemoved": true,
+    "lockReleased": true,
+    "cleanupErrors": [],
+    "genericFrameSmokePassed": 13,
+    "genericFrameSmokeFailed": 0,
+    "officialDeckShelvesBackendOrVrTested": false,
+    "physicalControllerVerified": false,
+    "wornVisualComfortVerified": false
+  }
 }

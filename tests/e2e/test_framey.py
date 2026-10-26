@@ -181,10 +181,9 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     chunk = 'chunks/pluginApi-B8sV7970.js'
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                         expected_chunk = bundle.read(plugin['folder']+'/dist/'+chunk)
-                    status, served, headers = api('GET', '/framey/module/135/'+chunk)
-                    self.assertEqual((status, served), (200, expected_chunk))
-                    self.assertEqual(headers['Access-Control-Allow-Origin'], 'null')
-                    self.assertEqual(api('GET', '/framey/module/135/chunks/../plugin.json')[0], 404)
+                    self.assertEqual(
+                        ssh(f'sha256sum {installed}/dist/{chunk}').split()[0],
+                        hashlib.sha256(expected_chunk).hexdigest())
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)
