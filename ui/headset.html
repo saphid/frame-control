@@ -240,7 +240,8 @@ function openFrameyPanel(id,name){
 let frameyEventsActive=false,frameyRunningActive=false;
 function closeFrameyEvents(){
   if(frameyRunningActive&&activeFrameyId!==null&&frameySession)
-    api('/api/framey/running',{id:activeFrameyId,session:frameySession,active:false}).catch(()=>{});
+    api('/api/framey/running',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+      session:frameySession,active:false}).catch(()=>{});
   frameyRunningActive=false;
   if(frameyEventsActive&&activeFrameyId!==null&&frameySession)
     api('/api/framey/events',{id:activeFrameyId,session:frameySession,events:[],cursor:0}).catch(()=>{});
@@ -284,15 +285,17 @@ window.addEventListener('message',async event=>{
   if(req.type==='framey:running:close'){
     if(req.session===frameySession&&frameyRunningActive){
       frameyRunningActive=false;
-      api('/api/framey/running',{id:activeFrameyId,session:frameySession,active:false}).catch(()=>{});
+      api('/api/framey/running',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+        session:frameySession,active:false}).catch(()=>{});
     }return;
   }
   if(req.type==='framey:running'){
     if(req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||
       !Array.isArray(req.args)||req.args.length!==1||!Number.isSafeInteger(req.args[0])||req.args[0]<0)return;
-    const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
+    const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
+      reply={type:'framey:reply',id:req.id};
     frameyRunningActive=true;
-    try{const data=await api('/api/framey/running',{id:pluginId,session,active:true,cursor:req.args[0]});reply.result=data.result;}
+    try{const data=await api('/api/framey/running',{id:pluginId,receipt,session,active:true,cursor:req.args[0]});reply.result=data.result;}
     catch(error){reply.error=error.message;}
     if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
       event.source.postMessage(reply,'*');

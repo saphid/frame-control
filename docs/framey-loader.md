@@ -136,6 +136,9 @@ Panels referencing running-game APIs now receive a detached, read-only
 `SteamUIStore.RunningApps` / `MainRunningApp` snapshot, also exposed through
 `DFL.Router`. The authenticated headset-only `/api/framey/running` endpoint
 checks installed store ownership; the parent checks the active panel session.
+Poll and close requests also carry the panel's pinned SHA-256 receipt. A missing
+or changed installed receipt is rejected before any Steam CEF request; a rejected
+stale close relies on the existing finite subscription lease for cleanup.
 Fixed bundled code runs in Steam CEF. It copies at most 64 running app overviews, a main app and
 public Steam CDN capsule URLs; it never copies local artwork paths, launch
 commands or Steam objects. The host refreshes about every two seconds without

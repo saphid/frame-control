@@ -33,21 +33,40 @@ class Panel(unittest.TestCase):
             self.assertIn('262144', stdin)
             self.assertNotIn('__FRAMEY_STEAM_', stdin)
             return '{"result":{"apps":[],"events":[],"cursor":0}}'
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[{'storeId':13}]}):
-            self.assertEqual(framey_panel.poll_running(fake_ssh,13,'test-1',True)['result']['cursor'],0)
+        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[{'storeId':13,'sha256':'a'*64}]}):
+            self.assertEqual(framey_panel.poll_running(fake_ssh,13,'test-1',True,receipt='a'*64)['result']['cursor'],0)
             for plugin_id,session,active,cursor in [(True,'test',True,0),(0,'test',True,0),
                     (14,'test',True,0),(13,'bad session',True,0),(13,'test',1,0),
                     (13,'test',True,True),(13,'test',True,-1),(13,'test',True,2**53)]:
                 with self.subTest(args=(plugin_id,session,active,cursor)):
                     with self.assertRaises(framey_panel.PanelError):
                         framey_panel.poll_running(lambda *a,**k:self.fail('Unexpected SSH'),
-                                                  plugin_id,session,active,cursor)
+                                                  plugin_id,session,active,cursor,receipt='a'*64)
         with patch.object(server, 'HEADSET_RUNTIME', False), patch.dict(server.os.environ, {'FRAME_E2E_CONTAINER':'0'}):
             with self.assertRaises(server.Failure):
                 server.framey_running_action({'id':13,'session':'test','active':True})
         with patch.object(server, 'HEADSET_RUNTIME', True), patch.object(framey_panel, 'poll_running',return_value={'result':None}) as poll:
-            self.assertEqual(server.framey_running_action({'id':13,'session':'test','active':False}),{'result':None})
-            poll.assert_called_once_with(server.ssh,13,'test',False,0)
+            self.assertEqual(server.framey_running_action({'id':13,'session':'test','active':False,'receipt':'a'*64}),{'result':None})
+            poll.assert_called_once_with(server.ssh,13,'test',False,0,'a'*64)
+
+    def test_running_rejects_stale_or_missing_receipt_after_plugin_replacement(self):
+        installed = {'storeId':13,'sha256':'a'*64}
+        def safe_ssh(command, stdin, **_):
+            self.assertEqual(command,'python3 -')
+            compile(stdin,'<running read>','exec')
+            return '{"result":null}'
+        with patch.object(framey_panel.frame_decky,'status',side_effect=lambda _: {'plugins':[installed]}):
+            framey_panel.poll_running(safe_ssh,13,'old-panel',True,receipt='a'*64)
+            installed['sha256'] = 'b'*64  # Another manager replaces the installed plugin.
+            for active in (True,False):
+                for receipt in (None,'','bad','a'*64):
+                    with self.subTest(active=active,receipt=receipt):
+                        with self.assertRaisesRegex(framey_panel.PanelError,'receipt|changed'):
+                            framey_panel.poll_running(lambda *a,**k:self.fail('Stale running request reached CEF'),
+                                                      13,'old-panel',active,receipt=receipt)
+            # A reopened panel uses the new receipt for both polling and cleanup.
+            framey_panel.poll_running(safe_ssh,13,'new-panel',True,receipt='b'*64)
+            framey_panel.poll_running(safe_ssh,13,'new-panel',False,receipt='b'*64)
 
     def test_steam_reads_are_allowlisted_and_installed_only(self):
         with patch.object(framey_panel.frame_decky, 'status', return_value={

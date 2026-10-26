@@ -610,7 +610,7 @@ def framey_running_action(body):
         raise Failure('Decky plugin panels run in the headset service', 400)
     try:
         return framey_panel.poll_running(ssh, body.get('id'), body.get('session'),
-                                        body.get('active'), body.get('cursor', 0))
+                                        body.get('active'), body.get('cursor', 0), body.get('receipt'))
     except framey_panel.PanelError as exc:
         raise Failure(str(exc), 400) from exc
 
