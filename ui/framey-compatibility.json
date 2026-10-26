@@ -10876,12 +10876,13 @@
         "https://github.com/mpcallahan/DeckyHourNotifications"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; timers, reminders, suspend inhibition and audio are unverified.",
+      "reason": "Silent labeled timer create/ticks/pause/cancel, preset save/cancel-confirm/delete and stopwatch start/lap/pause/reset/reopen pass in local Chromium with the official Decky 3.3.0 ARM64 backend. Audio, alarms/reminders, suspend inhibition, Steam overlays and worn VR remain unverified; notifications require the panel to stay open.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 124,
@@ -10941,7 +10942,7 @@
         "folder": "alarme-decky-plugin"
       },
       "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "hardware": "Timers/stopwatch use Python. Optional sleep inhibition opens /dev/uinput; sound and auto-suspend are unverified. Steam game overlays have no target in the isolated panel.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -10958,6 +10959,12 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "controlsFollowUp": {
+        "evidence": "docs/evidence/framey-dialog-controls-2026-10-26.json",
+        "mode": "local opaque-iframe Chromium with receipt-bound official ARM64 backend RPC/events; private silent data only",
+        "frontendReady": true,
+        "status": "partial"
       }
     },
     {

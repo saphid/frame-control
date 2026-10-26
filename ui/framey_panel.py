@@ -139,7 +139,9 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-sections,.framey-library{display:flex;flex-direction:column;gap:12px}.framey-actions{display:flex;flex-wrap:wrap;gap:8px}
 .framey-action{min-height:52px}.framey-button-child{display:inline-flex;align-items:center;gap:8px}.framey-green{background:#246b42}
 .framey-long-title{overflow-wrap:anywhere}.framey-muted{background:#1b3042}.framey-image{max-width:100%;object-fit:contain}
-.framey-focus:focus-visible{outline:4px solid #f8d370}</style>
+.framey-focus:focus-visible{outline:4px solid #f8d370}
+.framey-dialog{position:fixed;inset:12px;margin:0;z-index:100;overflow:auto;box-shadow:0 0 0 24px #0d1925e6}
+.framey-dialog[hidden]{display:none}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
 <script id="framey-bundle" type="application/json"''' + module + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
