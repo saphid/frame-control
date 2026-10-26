@@ -237,8 +237,12 @@ function openFrameyPanel(id,name){
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
     byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
 }
-let frameyEventsActive=false;
+let frameyEventsActive=false,frameyRunningActive=false;
 function closeFrameyEvents(){
+  if(frameyRunningActive&&activeFrameyId!==null&&frameySession)
+    api('/api/framey/running',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+      session:frameySession,active:false}).catch(()=>{});
+  frameyRunningActive=false;
   if(frameyEventsActive&&activeFrameyId!==null&&frameySession)
     api('/api/framey/events',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
       session:frameySession,events:[],cursor:0}).catch(()=>{});
@@ -279,6 +283,25 @@ window.addEventListener('message',async event=>{
     api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
   if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
   if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
+  if(req.type==='framey:running:close'){
+    if(req.session===frameySession&&frameyRunningActive){
+      frameyRunningActive=false;
+      api('/api/framey/running',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+        session:frameySession,active:false}).catch(()=>{});
+    }return;
+  }
+  if(req.type==='framey:running'){
+    if(req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||
+      !Array.isArray(req.args)||req.args.length!==1||!Number.isSafeInteger(req.args[0])||req.args[0]<0)return;
+    const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
+      reply={type:'framey:reply',id:req.id};
+    frameyRunningActive=true;
+    try{const data=await api('/api/framey/running',{id:pluginId,receipt,session,active:true,cursor:req.args[0]});reply.result=data.result;}
+    catch(error){reply.error=error.message;}
+    if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
+      event.source.postMessage(reply,'*');
+    return;
+  }
   if(req.type==='framey:events:close'){
     if(req.session===frameySession)closeFrameyEvents();return;
   }

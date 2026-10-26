@@ -69,3 +69,30 @@ vm.runInContext('openFrameyPanel(96,"Timer")',context);
 const priorReplies=replies.length;
 requests.at(-1).resolve({ok:true,json:async()=>({result:'AU'})});
 await staleRead;assert.equal(replies.length,priorReplies);
+
+// Running reads are tied to the current iframe and session, with no method path.
+session=vm.runInContext('frameySession',context);
+const running={type:'framey:running',id:20,session,args:[0]};
+const beforeRunning=requests.length;
+for(const change of [{session:'old'},{args:[-1]},{args:[true]},{args:[0,'extra']}])
+  await send({...running,...change});
+await send(running,{});assert.equal(requests.length,beforeRunning);
+const pendingRunning=send(running);
+assert.equal(requests.at(-1).path,'/api/framey/running');
+assert.equal(requests.at(-1).body.active,true);
+assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
+const oldRunning=requests.at(-1);
+vm.runInContext('openFrameyPanel(96,"Timer")',context);
+assert.equal(requests.at(-1).body.active,false);
+assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
+assert.equal(requests.at(-1).body.session,session);
+const beforeStaleReply=replies.length;
+oldRunning.resolve({ok:true,json:async()=>({result:{apps:[],events:[],cursor:0}})});
+await pendingRunning;assert.equal(replies.length,beforeStaleReply);
+session=vm.runInContext('frameySession',context);
+const finalRunning=send({...running,id:21,session});
+requests.at(-1).resolve({ok:true,json:async()=>({result:{apps:[],events:[],cursor:0}})});
+await finalRunning;
+await send({type:'framey:running:close',session});
+assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
+assert.equal(requests.at(-1).body.active,false);

@@ -115,9 +115,9 @@ Its cleanup actions were not tested; they may remove local game saves.
 
 Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
 and progress bars. Its explicit SteamClient subscription fallbacks return
-disposable handles without emitting fabricated events. There is no attached
-running game in `DFL.Router`, and power, app launch and hardware mutation methods
-are not supplied. Plugins that need live Steam stores still require integration
+disposable handles without emitting fabricated events. Running-game reads and
+lifetime notifications use the scoped bridge described below; power, app launch
+and hardware mutation methods are not supplied. Other live Steam stores require integration
 work. IndexedDB is hidden because the browser exposes it but denies access in
 an opaque iframe; localForage can then select Framey's bounded localStorage.
 Direct IndexedDB users remain unsupported.
@@ -125,13 +125,40 @@ Direct IndexedDB users remain unsupported.
 `SuspensefulImage` renders a native image. SteamClient `Storage.GetJSON` and
 `SetObject` use the same bounded per-plugin cache, including panel reopen
 persistence; they do not read Steam's account/global JSON store. Missing keys
-reject with `Not found`. Detached `SteamUIStore.RunningApps` is a frozen empty
-list, and the suspend store has no methods. Optional Steam app/account globals
-are undefined. These fallbacks let settings render without inventing live
+reject with `Not found`. The suspend store has no methods. Optional Steam app/account globals
+are undefined until a successful library read. These fallbacks let settings render without inventing live
 games or account identity. [The exact-bundle follow-up](evidence/framey-ui-fallbacks-2026-10-26.json)
 verifies Pause Games and Tailscale Control settings in local Chromium; their
 primary backend actions remain unverified. PlayTime still requires Steam's
-real app store and game observers.
+MobX game observers for automatic tracking.
+
+Panels referencing running-game APIs now receive a detached, read-only
+`SteamUIStore.RunningApps` / `MainRunningApp` snapshot, also exposed through
+`DFL.Router`. The authenticated headset-only `/api/framey/running` endpoint
+checks installed store ownership; the parent checks the active panel session.
+Poll and close requests also carry the panel's pinned SHA-256 receipt. A missing
+or changed installed receipt is rejected before any Steam CEF request; a rejected
+stale close relies on the existing finite subscription lease for cleanup.
+Fixed bundled code runs in Steam CEF. It copies at most 64 running app overviews, a main app and
+public Steam CDN capsule URLs; it never copies local artwork paths, launch
+commands or Steam objects. The host refreshes about every two seconds without
+overlapping requests. Failure clears stale context and sets
+`SteamUIStore.FrameyRunningAvailable` to false.
+
+`GameSessions.RegisterForAppLifetimeNotifications` relays actual Steam
+`{unAppID, bRunning}` callbacks through a bounded 64-event queue. Snapshot
+changes never fabricate launch/exit callbacks. Handles support `.unregister()`;
+panel close/replacement removes the CEF subscription, with a 15-second lease
+(checked every five seconds) if cleanup cannot reach Steam. At most four panel
+sessions are retained. These are open-panel observations, not closed-panel
+automation or a MobX implementation. Queue overflow can lose old callbacks.
+`appStore` capsule helpers expose only projected public URLs for running apps;
+unavailable or local custom artwork returns an empty value.
+
+[Running-context evidence](evidence/framey-running-context-2026-10-26.md) separates
+real Frame empty-list/subscription/cleanup reads, the exact Discord Status
+ARM64 backend connection check, and synthetic nonempty/transition fixtures.
+Real game transitions, Discord activity and worn-VR operation remain unverified.
 
 Three parameterless SteamClient reads use Steam's actual CEF context:
 `User.GetIPCountry`, `InstallFolder.GetInstallFolders` and `System.GetSystemInfo`.

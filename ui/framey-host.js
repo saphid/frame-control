@@ -15,7 +15,14 @@
   // user identity or suspend state in this isolated document.
   for (const name of ['App','appStore','appInfoStore','collectionStore']) window[name] = undefined;
   window.SuspendResumeStore = Object.freeze({});
-  window.SteamUIStore = Object.freeze({RunningApps:Object.freeze([]), MainRunningApp:undefined});
+  let runningApps = Object.freeze([]), mainRunningApp, runningAvailable = false;
+  let runningArtwork = new Map();
+  const runningListeners = new Set();
+  let runningCursor = 0, runningRequest = null, runningTimer = null, runningClosed = false;
+  window.SteamUIStore = Object.freeze({
+    get RunningApps() {return runningApps;}, get MainRunningApp() {return mainRunningApp;},
+    get FrameyRunningAvailable() {return runningAvailable;},
+  });
   // Steam normally fills these token maps. Official plugins can safely use
   // their own fallback strings when the isolated panel has no Steam tokens.
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en'],
@@ -383,8 +390,8 @@
       PlayAudioURL:()=>{throw Error('Steam UI sound playback is not supported in Framey');},
     })}),
   })}));
-  // No Steam game is attached to an isolated panel. Subscriptions have a
-  // disposable handle but emit no fabricated game, power, or input events.
+  // Unsupported subscriptions remain inert. Lifetime callbacks below relay
+  // actual Steam notifications; no power, input or launch events are invented.
   const subscription = () => {const dispose=()=>{};dispose.unregister=dispose;return dispose;};
   const register = names => Object.fromEntries(names.map(name=>[name,subscription]));
   const steamLanguage = () => {
@@ -403,7 +410,14 @@
       ...register(['RegisterForSettingsChanges'])},
     Apps:register(['RegisterForAppDetails','RegisterForGameActionTaskChange',
       'RegisterForGameActionStart','RegisterForGameActionEnd','RegisterForGameActionUserRequest']),
-    GameSessions:register(['RegisterForAppLifetimeNotifications','RegisterForScreenshotNotification']),
+    GameSessions:{...register(['RegisterForScreenshotNotification']),
+      RegisterForAppLifetimeNotifications:listener=>{
+        if (typeof listener !== 'function') throw Error('Invalid Steam lifetime listener');
+        if (runningListeners.size >= 32) throw Error('Too many Steam lifetime listeners');
+        runningListeners.add(listener);
+        const dispose=()=>runningListeners.delete(listener);
+        dispose.unregister=dispose; return dispose;
+      }},
     System:{...register(['RegisterForOnResumeFromSuspend','RegisterForOnSuspendRequest']),
       GetSystemInfo:()=>request('GetSystemInfo',[],false,'framey:steam'),
       UI:register(['RegisterForFocusChangeEvents','RegisterForSystemKeyEvents'])},
@@ -428,7 +442,9 @@
       },
     },
   };
-  DFL.Router = {...DFL.Navigation, ...window.SteamUIStore};
+  DFL.Router = {...DFL.Navigation,
+    get RunningApps() {return runningApps;}, get MainRunningApp() {return mainRunningApp;},
+  };
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
     const data = {title, body, subtext, icon, logo};
@@ -541,14 +557,9 @@
     },
     fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
   };
-  function setLibrarySnapshot(snapshot) {
-    // These are detached plugin-local values. Patching an overview or its Map
-    // must never mutate Steam's library. Live MobX observations are unsupported.
-    if (!snapshot || !Array.isArray(snapshot.apps) || snapshot.apps.length > 10000 ||
-        !Array.isArray(snapshot.gameIds) || snapshot.gameIds.length > 10000 ||
-        (snapshot.steamId != null && (typeof snapshot.steamId !== 'string' || !/^\d{17}$/.test(snapshot.steamId))))
-      throw Error('Invalid Steam library snapshot');
-    const apps = snapshot.apps.map(row => {
+  function projectApps(rows, limit) {
+    if (!Array.isArray(rows) || rows.length > limit) throw Error('Invalid Steam app overview');
+    return rows.map(row => {
       if (!Array.isArray(row) || row.length !== 8 || !Number.isSafeInteger(row[0]) || row[0] <= 0 ||
           typeof row[1] !== 'string' || row[1].length > 2048 ||
           (row[2] != null && typeof row[2] !== 'string') || !Number.isSafeInteger(row[3]) ||
@@ -560,16 +571,90 @@
       return {appid,display_name,sort_as,app_type,gameid,
         minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played};
     });
+  }
+  function setLibrarySnapshot(snapshot) {
+    // These are detached plugin-local values. Patching an overview or its Map
+    // must never mutate Steam's library. Live MobX observations are unsupported.
+    if (!snapshot || !Array.isArray(snapshot.apps) || snapshot.apps.length > 10000 ||
+        !Array.isArray(snapshot.gameIds) || snapshot.gameIds.length > 10000 ||
+        (snapshot.steamId != null && (typeof snapshot.steamId !== 'string' || !/^\d{17}$/.test(snapshot.steamId))))
+      throw Error('Invalid Steam library snapshot');
+    const apps = projectApps(snapshot.apps, 10000);
     const map = new Map(apps.map(app=>[app.appid,app]));
     if (map.size !== apps.length || snapshot.gameIds.some(id=>!Number.isSafeInteger(id) || !map.has(id)))
       throw Error('Invalid Steam game collection');
     window.appStore = {allApps:apps, m_mapApps:map,
       GetAppOverviewByAppID:id=>map.get(Number(id)),
       GetAppOverviewByGameID:id=>apps.find(app=>app.gameid === String(id)),
+      GetVerticalCapsuleURLForApp:app=>runningArtwork.get(Number(app?.appid))?.[0] || '',
+      GetCustomVerticalCapsuleURLs:app=>[...(runningArtwork.get(Number(app?.appid))?.[1] || [])],
     };
     window.collectionStore = {allGamesCollection:{allApps:snapshot.gameIds.map(id=>map.get(id))}};
     window.App = snapshot.steamId ? {m_CurrentUser:{strSteamID:snapshot.steamId}} : undefined;
   }
+  function setRunningSnapshot(data) {
+    if (!data || !Array.isArray(data.runningIds) || data.runningIds.length > 64 ||
+        !Array.isArray(data.events) || data.events.length > 64 ||
+        !Array.isArray(data.artwork) || data.artwork.length > 65 ||
+        !Number.isSafeInteger(data.cursor) || data.cursor < 0 || typeof data.lifetimeAvailable !== 'boolean')
+      throw Error('Invalid Steam running snapshot');
+    const apps = projectApps(data.apps, 65), map = new Map(apps.map(app=>[app.appid,app]));
+    if (map.size !== apps.length || new Set(data.runningIds).size !== data.runningIds.length ||
+        data.runningIds.some(id=>!Number.isSafeInteger(id) || !map.has(id)) ||
+        (data.mainAppId !== null && (!Number.isSafeInteger(data.mainAppId) || !map.has(data.mainAppId))))
+      throw Error('Invalid Steam running apps');
+    let sequence = 0;
+    const publicArt = value => typeof value === 'string' && value.length <= 2048 &&
+      /^https:\/\/(?:[a-z0-9-]+\.)*steamstatic\.com\/steam\/apps\/[^?#\s\\]+$/.test(value);
+    const artwork = new Map();
+    for (const row of data.artwork) {
+      if (!Array.isArray(row) || row.length !== 3 || !map.has(row[0]) || artwork.has(row[0]) ||
+          (row[1] !== null && !publicArt(row[1])) || !Array.isArray(row[2]) || row[2].length > 8 ||
+          row[2].some(url=>!publicArt(url))) throw Error('Invalid Steam public artwork');
+      artwork.set(row[0],[row[1],[...row[2]]]);
+    }
+    for (const event of data.events) {
+      if (!Number.isSafeInteger(event?.sequence) || event.sequence <= sequence || event.sequence > data.cursor ||
+          !Number.isSafeInteger(event.unAppID) || event.unAppID <= 0 || typeof event.bRunning !== 'boolean')
+        throw Error('Invalid Steam lifetime event');
+      sequence = event.sequence;
+    }
+    // Update detached stores before callbacks read Router.RunningApps.
+    runningApps = Object.freeze(data.runningIds.map(id=>map.get(id)));
+    mainRunningApp = data.mainAppId === null ? undefined : map.get(data.mainAppId);
+    runningAvailable = true;
+    runningArtwork = artwork;
+    if (window.appStore) for (const app of apps) {
+      const existing = window.appStore.m_mapApps.get(app.appid);
+      if (existing) Object.assign(existing,app);
+      else {window.appStore.m_mapApps.set(app.appid,app);window.appStore.allApps.push(app);}
+    }
+    const previous = runningCursor;
+    runningCursor = data.cursor;
+    for (const event of data.events) if (event.sequence > previous)
+      for (const listener of runningListeners)
+        Promise.resolve().then(()=>runningListeners.has(listener) && listener({unAppID:event.unAppID,bRunning:event.bRunning}))
+          .catch(failure=>console.warn('Steam lifetime listener failed',failure.message));
+  }
+  function refreshRunning() {
+    if (runningClosed) return Promise.resolve();
+    if (runningRequest) return runningRequest;
+    runningRequest = request('running',[runningCursor],false,'framey:running')
+      .then(data=>{if (!runningClosed) setRunningSnapshot(data);})
+      .catch(failure=>{
+        runningAvailable = false;
+        runningApps = Object.freeze([]); mainRunningApp = undefined; runningArtwork = new Map();
+        console.warn('Framey Steam running context unavailable',failure.message);
+      }).finally(()=>{
+        runningRequest = null;
+        if (!runningClosed) runningTimer = setTimeout(refreshRunning,2000);
+      });
+    return runningRequest;
+  }
+  addEventListener('pagehide',()=>{
+    runningClosed = true; clearTimeout(runningTimer); runningListeners.clear();
+    parent.postMessage({type:'framey:running:close',session:cacheSession},'*');
+  });
   async function start() {
     try {
       await seeded;
@@ -582,6 +667,8 @@
         try {setLibrarySnapshot(await request('GetLibrarySnapshot',[],false,'framey:steam'));}
         catch (failure) {console.warn('Framey Steam library unavailable', failure.message);}
       }
+      if (/\b(?:RunningApps|MainRunningApp|RegisterForAppLifetimeNotifications)\b/.test(bundleText))
+        await refreshRunning();
       // Old Decky builds are expressions returning the initializer, rather than
       // ES modules. A module wrapper preserves the sandbox and avoids eval.
       const legacy = /^\s*\(function\s*\(/.test(bundleText);

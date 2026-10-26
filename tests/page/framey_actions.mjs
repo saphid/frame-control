@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
-const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot;\n})();');
+const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot; window.__running=setRunningSnapshot; window.__refreshRunning=refreshRunning;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
@@ -254,6 +254,7 @@ assert.equal(window.SteamClient.System.ShutdownPC,undefined);
 assert.equal(window.DFL.Router.MainRunningApp,undefined);
 assert.equal(window.DFL.Router.RunningApps.length,0);
 assert.equal(window.DFL.Router.RunningApps,window.SteamUIStore.RunningApps);
+assert.equal(window.SteamUIStore.FrameyRunningAvailable,false);
 assert.ok(Object.isFrozen(window.SteamUIStore));
 assert.ok(Object.isFrozen(window.SuspendResumeStore));
 assert.equal(window.SuspendResumeStore.InitiateSleep,undefined);
@@ -283,6 +284,46 @@ for(const invalid of [null,{apps:[],gameIds:[10]},
   assert.throws(()=>window.__library(invalid),/Invalid Steam/);
   assert.equal(window.appStore.allApps[0].display_name,'Plugin-local patch');
 }
+const running={artwork:[[10,'https://shared.steamstatic.com/steam/apps/10/library.jpg',[]]],apps:[snapshot.apps[0]],runningIds:[10],mainAppId:10,events:[],cursor:0,lifetimeAvailable:true};
+const lifetimes=[];
+const lifetimeHandle=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(event=>{
+  lifetimes.push({...event,running:Array.from(window.DFL.Router.RunningApps,app=>app.appid)});
+});
+window.__running(running);await Promise.resolve();
+assert.equal(lifetimes.length,0); // Initial snapshots are not launch events.
+assert.equal(window.SteamUIStore.FrameyRunningAvailable,true);
+assert.equal(window.DFL.Router.MainRunningApp.display_name,'Game Ten');
+assert.equal(window.appStore.GetVerticalCapsuleURLForApp({appid:10}),'https://shared.steamstatic.com/steam/apps/10/library.jpg');
+assert.equal(window.appStore.GetCustomVerticalCapsuleURLs({appid:10}).length,0);
+assert.equal(window.DFL.Router.RunningApps,window.SteamUIStore.RunningApps);
+window.DFL.Router.MainRunningApp.display_name='Detached';
+assert.equal(running.apps[0][1],'Game Ten');
+const launch={...running,events:[{sequence:1,unAppID:10,bRunning:true}],cursor:1};
+window.__running(launch);await Promise.resolve();
+assert.equal(lifetimes.length,1);assert.deepEqual(lifetimes[0].running,[10]);
+window.__running(launch);await Promise.resolve();assert.equal(lifetimes.length,1);
+for(const invalid of [null,{...running,runningIds:[99]}, {...running,mainAppId:99},
+  {...running,runningIds:[10,10]}, {...running,artwork:[[10,'file:///private',[]]]}, {...running,cursor:-1},
+  {...running,events:[{sequence:1,unAppID:10,bRunning:'yes'}],cursor:1}]){
+  assert.throws(()=>window.__running(invalid),/Invalid Steam/);
+  assert.equal(window.DFL.Router.RunningApps.length,1);
+}
+const exited={...running,artwork:[],apps:[],runningIds:[],mainAppId:null,
+  events:[{sequence:2,unAppID:10,bRunning:false}],cursor:2};
+window.__running(exited);await Promise.resolve();
+assert.deepEqual(lifetimes[1].running,[]);assert.equal(lifetimes[1].bRunning,false);
+lifetimeHandle.unregister();lifetimeHandle();
+window.__running({...launch,cursor:3,events:[{sequence:3,unAppID:10,bRunning:true}]});
+await Promise.resolve();assert.equal(lifetimes.length,2);
+// A failed live read clears stale running context without inventing an exit.
+const refresh=window.__refreshRunning();
+const runningRequest=messages.at(-1);assert.equal(runningRequest.type,'framey:running');
+listeners.find(l=>l.type==='message').handler({source:parent,data:{type:'framey:reply',id:runningRequest.id,error:'offline'}});
+await refresh;
+assert.equal(window.SteamUIStore.FrameyRunningAvailable,false);
+assert.equal(window.DFL.Router.RunningApps.length,0);
+assert.equal(window.DFL.Router.MainRunningApp,undefined);
+assert.equal(lifetimes.length,2);
 for(const register of [window.SteamClient.System.UI.RegisterForSystemKeyEvents,
   window.SteamClient.Apps.RegisterForGameActionUserRequest]){
   const dispose=register(()=>eventCount++);assert.equal(dispose.unregister,dispose);dispose();
@@ -359,3 +400,13 @@ assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky even
 assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
 listeners.find(x=>x.type==='unload').handler();
 assert.equal(messages.at(-1).type,'framey:events:close');
+const finalRefresh=window.__refreshRunning();
+assert.equal(window.__refreshRunning(),finalRefresh,'Running reads must not overlap');
+const finalRequest=messages.at(-1);
+listeners.find(x=>x.type==='pagehide').handler();
+assert.equal(messages.at(-1).type,'framey:running:close');
+onMessage({source:parent,data:{type:'framey:reply',id:finalRequest.id,result:launch}});
+await finalRefresh;
+assert.equal(window.SteamUIStore.FrameyRunningAvailable,false,'Closed panels ignore late snapshots');
+const messageCount=messages.length;
+await window.__refreshRunning();assert.equal(messages.length,messageCount);
