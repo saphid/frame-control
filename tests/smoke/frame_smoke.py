@@ -27,7 +27,8 @@ rechecked around deletion; shared Proton services are never stopped by name.
 
 Usage: python3 tests/smoke/frame_smoke.py [--pair]     (or scripts/frame-smoke.sh)
 Env:   FRAME_ALIAS (default frame), FRAME_SMOKE_RESULTS (default tests/smoke/results)
-Exit status: 0 all passed, 1 a step failed, 2 the headset isn't reachable.
+Exit status: 0 no step failed (optional runtime may skip a launch), 1 a step
+failed, 2 the headset isn't reachable.
 """
 import argparse
 import json
@@ -125,19 +126,30 @@ class Smoke:
         self.installed = set()
 
     def step(self, name, fn, *args):
-        """Run one step; record ok/failed, its detail and how long it took."""
+        """Run one step; record passed/skipped/failed and how long it took."""
         t0 = time.monotonic()
         rec = {'step': name}
         try:
             detail = fn(*args)
             rec.update(ok=True, detail=detail)
+        except Skipped as e:
+            rec.update(ok=False, skipped=True, reason=str(e), detail=e.detail)
         except Exception as e:  # a failed step is a result, not the end of the run
             rec.update(ok=False, error=f'{type(e).__name__}: {e}', trace=traceback.format_exc(limit=3))
         rec['seconds'] = round(time.monotonic() - t0, 1)
         self.steps.append(rec)
-        print(f"  {'ok  ' if rec['ok'] else 'FAIL'} {name} ({rec['seconds']} s)"
-              + ('' if rec['ok'] else f": {rec['error']}"), flush=True)
+        label = 'ok  ' if rec['ok'] else 'SKIP' if rec.get('skipped') else 'FAIL'
+        message = '' if rec['ok'] else f": {rec.get('reason') or rec['error']}"
+        print(f"  {label} {name} ({rec['seconds']} s){message}", flush=True)
         return rec
+
+
+class Skipped(Exception):
+    """A prerequisite was unavailable; preserve its evidence without claiming a launch."""
+
+    def __init__(self, reason, detail):
+        super().__init__(reason)
+        self.detail = detail
 
 
 def ssh(cmd, timeout=60):
@@ -194,8 +206,8 @@ def steam_log_lines(*patterns):
 
 # What a launch must show, per kind. The x86-64 runtime isn't installed on the
 # Frame, so Steam acknowledges that launch and logs "... is not installed"
-# instead (docs/sideloading.md, 2026-09-26): recorded, not a failure.
-EXPECTED = {'arm64': ('running',), 'x86_64': ('running', 'runtime missing'), 'exe': ('running', 'started')}
+# instead (docs/sideloading.md, 2026-09-26): record a skip, not a launch pass.
+EXPECTED = {'arm64': ('running',), 'x86_64': ('running',), 'exe': ('running', 'started')}
 
 
 def title_cycle(smoke, kind, folder):
@@ -229,10 +241,12 @@ def title_cycle(smoke, kind, folder):
                 outcome, new = 'runtime missing', new + missing
             elif any('started devkit game' in line or 'chdir' in line for line in new):
                 outcome = 'started'
-            if outcome in EXPECTED[kind]:   # else keep looking: the log can come before the process
+            if outcome in EXPECTED[kind] or (kind == 'x86_64' and outcome == 'runtime missing'):
                 break
             time.sleep(0.5)
         detail = {'outcome': outcome, 'processes': procs, 'steam_log': new[-12:]}
+        if kind == 'x86_64' and outcome == 'runtime missing':
+            raise Skipped('Steam Linux Runtime 4 is not installed; x86_64 title did not launch', detail)
         if outcome not in EXPECTED[kind]:
             raise AssertionError(f"Steam acknowledged the launch, but {outcome} (expected "
                                  f"{' or '.join(EXPECTED[kind])}): {json.dumps(detail)[:400]}")
@@ -396,14 +410,16 @@ def run_smoke(args, before):
                        'rm -rf ~/devkit-utils ~/.devkit-utils.frame-control && echo removed')
         subprocess.run(['rm', '-rf', folder])
     passed = sum(s['ok'] for s in smoke.steps)
+    skipped = sum(s.get('skipped', False) for s in smoke.steps)
+    failed = len(smoke.steps) - passed - skipped
     RESULTS.mkdir(exist_ok=True)
     out = RESULTS / f"{started.replace(':', '')}-{build}.json"
     out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'preflight': before,
                                'os_release': release, 'paired': args.pair,
-                               'passed': passed, 'failed': len(smoke.steps) - passed,
+                               'passed': passed, 'skipped': skipped, 'failed': failed,
                                'devkit_utils_there_before': had_utils, 'steps': smoke.steps}, indent=1))
-    print(f'==> {passed}/{len(smoke.steps)} steps passed on build {build}; results in {out}')
-    return 0 if passed == len(smoke.steps) else 1
+    print(f'==> {passed} passed, {skipped} skipped, {failed} failed on build {build}; results in {out}')
+    return 0 if failed == 0 else 1
 
 
 def main():

@@ -176,19 +176,21 @@ switch while SSH is down:
 
 ## Headset smoke test
 
-**Documented shared-device procedure:** before a test installs, launches or
-stops an application, acquire `ssh frame 'mkdir /tmp/frame-test.lock'`. If it
-fails, leave that lock alone and continue offline work. Only the thread that
-acquired it releases it with `ssh frame 'rmdir /tmp/frame-test.lock'`, after
-cleanup. Keep each device session to a few minutes.
+**Documented shared-device procedure:** before any headset read or a test that
+installs, launches or stops an application, atomically create
+`/tmp/frame-test.lock` on the Frame and write a unique token to its `owner`
+file. If creation fails, leave that lock alone and continue offline work. Only
+the owner that verifies its token may remove its `owner` file and lock directory
+after cleanup. Keep each device session to a few minutes.
 
 Check battery capacity and charging state under `/sys/class/power_supply`
 before and after; keep capacity above 20%. Stop only processes started by the
 test, remove temporary installs and profiles, and restore the prior dashboard
 state. Leave Steam and SteamVR running. Do not reboot or change global settings.
 Record the build, actual interaction results, cleanup and any unworn-headset
-limits alongside screenshots or logs. These are caller responsibilities; the
-smoke script below does not acquire this shared lock itself.
+limits alongside screenshots or logs. The smoke script below acquires and
+releases its own tokenized shared lock; other device tests follow this
+procedure themselves.
 
 [Packaged Desktop Capture evidence, 2026-10-24](evidence/desktop-capture-packaged-2026-10-24.md)
 records v0.4.17 GUI button captures of a real mapped nested desktop on SteamOS
@@ -220,17 +222,19 @@ removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`
 (an ARM64 and an x86-64 static Linux program that sleep for ten seconds, and
 an x86-64 `.exe` that exits at once). A launch passes only with fresh evidence:
 the ARM64 program running, the `.exe` started (its process or Steam's log),
-and the x86-64 program running or Steam logging that its runtime isn't
-installed, which is what the Frame does today. Steam's log lines about each
-title are kept.
+and the x86-64 program running. If Steam logs that the optional x86-64 runtime
+is not installed, that launch is **skipped**, with the reason and log saved in
+the result. It does not prove that the x86-64 title ran. Steam's log lines about
+each title are kept.
 
 Everything it installs is removed again, also after a failure: the titles and
 their Steam shortcuts, a paired key, and `~/devkit-utils` if it wasn't there
 before (if it was, it stays, synced to this checkout as Frame Control always
 does). A cleanup that fails counts as a failed step. Results go to
 `tests/smoke/results/<time>-<BUILD_ID>.json` (not committed) with a summary on
-screen; it exits 0 when every step passed, 1 if one failed, 2 if the headset
-isn't reachable.
+screen. The summary counts passed, skipped and failed steps separately. It
+exits 0 when no step failed (including a skipped optional runtime), 1 if a step
+failed, or 2 if the headset isn't reachable.
 
 Smoke process cleanup runs before and after title removal and during the
 initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
