@@ -6518,7 +6518,7 @@
         "https://github.com/ebenbruyns/junkstore.git"
       ],
       "status": "partial",
-      "reason": "Executable script extraction repaired. Official Decky 3.3.0 ARM64 static menu/backend calls and local Chromium Games/Epic navigation, back and reopen pass. About still fails on missing installed-app metadata; Legendary is absent. Dependency install, login, game operations, RSS and worn VR remain unverified. Existing installs need update/reinstall.",
+      "reason": "Official Decky 3.3.0 ARM64 static menu/backend calls pass; local Chromium Games/Epic navigation, About/Dependencies tabs, Back and reopen render with real Frame library metadata. Legendary is absent; dependency install, login, game operations, RSS, optional websocket and worn VR remain unverified. Existing installs need update/reinstall for script permissions.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -6575,7 +6575,12 @@
           "init/InitActions"
         ],
         "browser": "main menu; Games/Epic static tab; back; close/reopen",
-        "remainingFailure": "About: Cannot read properties of undefined (reading 'installed'); detached app overview lacks local_per_client_data.installed"
+        "installedContext": {
+          "evidence": "docs/evidence/framey-installed-context-2026-10-26.json",
+          "field": "local_per_client_data.installed",
+          "browser": "About/Dependencies, Back, close/reopen; real library projection; static ARM64 backend calls",
+          "installedUnknown": "preserved as undefined; no fabricated false"
+        }
       }
     },
     {

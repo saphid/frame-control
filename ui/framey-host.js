@@ -563,16 +563,21 @@
   function projectApps(rows, limit) {
     if (!Array.isArray(rows) || rows.length > limit) throw Error('Invalid Steam app overview');
     return rows.map(row => {
-      if (!Array.isArray(row) || row.length !== 8 || !Number.isSafeInteger(row[0]) || row[0] <= 0 ||
+      if (!Array.isArray(row) || (row.length !== 8 && row.length !== 9) || !Number.isSafeInteger(row[0]) || row[0] <= 0 ||
           typeof row[1] !== 'string' || row[1].length > 2048 ||
           (row[2] != null && typeof row[2] !== 'string') || !Number.isSafeInteger(row[3]) ||
           typeof row[4] !== 'string' || !/^\d{1,20}$/.test(row[4]) ||
-          row.slice(5).some(value=>value != null && (!Number.isFinite(value) || value < 0)))
+          row.slice(5,8).some(value=>value != null && (!Number.isFinite(value) || value < 0)) ||
+          (row.length === 9 && row[8] !== null && typeof row[8] !== 'boolean'))
         throw Error('Invalid Steam app overview');
       const [appid,display_name,sort_as,app_type,gameid,
         minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played] = row;
       return {appid,display_name,sort_as,app_type,gameid,
-        minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played};
+        minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played,
+        // null means Steam supplied no installed boolean, not false. Keep the
+        // detached metadata object for legacy readers; never copy paths/client IDs.
+        // Older/running snapshots omit this field and must not erase library data.
+        ...(row.length === 9 ? {local_per_client_data:row[8] === null ? {} : {installed:row[8]}} : {})};
     });
   }
   function setLibrarySnapshot(snapshot) {
