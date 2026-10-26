@@ -141,6 +141,14 @@ class PublishRelease(unittest.TestCase):
             self.assertIsNone(upload)
             self.assertFalse(any("-X" in call for call in log))
 
+    def test_refuses_a_withdrawn_release_even_when_ci_is_green(self):
+        rel = dict(draft(), body="> **WITHDRAWN 26 October 2026.** Do not install.\n\n# Notes")
+        p, log, upload = self.run_script([rel], "v9.8.7")
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("marked WITHDRAWN", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
+
 
 if __name__ == "__main__":
     unittest.main()

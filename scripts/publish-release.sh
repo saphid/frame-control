@@ -61,6 +61,12 @@ json.dump(r, sys.stdout)
 EOF
 id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$tmp/release.json")
 echo "release  $id ($(python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); print(("draft" if r["draft"] else "published") + ", tag_name " + str(r["tag_name"]))' "$tmp/release.json"))"
+python3 - "$tmp/release.json" <<'EOF'
+import json, sys
+release = json.load(open(sys.argv[1]))
+if (release.get("body") or "").lstrip().startswith("> **WITHDRAWN"):
+    sys.exit("not publishing: this release is marked WITHDRAWN")
+EOF
 
 missing=""
 for name in $expected; do

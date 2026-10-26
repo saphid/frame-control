@@ -51,6 +51,8 @@ count. So a build reaches people only when you publish it, after testing it.
    (including e2e) and the tagged release workflow are green with no failed,
    cancelled, skipped or running jobs, and that all ten installers
    are attached, each with the SHA-256 digest GitHub records. It also checks
+   that the draft does not begin with a `WITHDRAWN` notice, so the preserved
+   v0.4.48 draft cannot accidentally be offered again. It checks
    that the uploaded `SHA256SUMS` digest matches a fresh list of those ten
    installer digests. It attaches
    `update.json` (the version, the notes, the release page and each
