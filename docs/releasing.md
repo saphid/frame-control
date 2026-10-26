@@ -34,13 +34,27 @@ count. So a build reaches people only when you publish it, after testing it.
 
 4. Publish:
 
+   Confirm the exact tag commit's main CI and e2e, the locked real Frame smoke,
+   release verification, independent package checks, and all four tagged
+   installer builds have passed. Hold the release if any gate is failed,
+   cancelled, skipped, still running, or unverified. The publisher also reads
+   the exact commit's GitHub CI, native Decky runtime gate, and tagged build
+   job records and refuses to
+   publish unless every required job succeeded; it cannot prove physical
+   headset or installer behavior on its own.
+
    ```sh
    scripts/publish-release.sh --dry-run v0.4.0   # checks and shows update.json, changes nothing
    scripts/publish-release.sh v0.4.0
    ```
 
-   The script checks that the tag is on GitHub and that all ten installers
+   The script checks that the tag is on GitHub, that exact-commit main CI
+   (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
+   release workflow are green with no failed,
+   cancelled, skipped or running jobs, and that all ten installers
    are attached, each with the SHA-256 digest GitHub records. It also checks
+   that the draft does not begin with a `WITHDRAWN` notice, so the preserved
+   v0.4.48 draft cannot accidentally be offered again. It checks
    that the uploaded `SHA256SUMS` digest matches a fresh list of those ten
    installer digests. It attaches
    `update.json` (the version, the notes, the release page and each

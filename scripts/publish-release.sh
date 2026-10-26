@@ -31,6 +31,11 @@ trap 'rm -rf "$tmp"' EXIT
 gh api "repos/$repo/git/ref/tags/$tag" >/dev/null 2>&1 \
   || { echo "tag $tag isn't on GitHub; push it first (git push origin $tag)" >&2; exit 1; }
 
+# A complete asset list is insufficient: a cancelled installer build can leave
+# old uploaded bytes behind. Check the exact tagged commit's main/e2e jobs and
+# the latest exact-tag release attempt before any release mutation.
+python3 "$(dirname "$0")/verify-release-gates.py" "$tag"
+
 # Every release, drafts included, one JSON object per line.
 gh api --paginate "repos/$repo/releases?per_page=100" --jq '.[]' > "$tmp/releases"
 # The release whose tag_name is the tag; failing that, the one untagged-... draft
@@ -56,6 +61,12 @@ json.dump(r, sys.stdout)
 EOF
 id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$tmp/release.json")
 echo "release  $id ($(python3 -c 'import json,sys; r=json.load(open(sys.argv[1])); print(("draft" if r["draft"] else "published") + ", tag_name " + str(r["tag_name"]))' "$tmp/release.json"))"
+python3 - "$tmp/release.json" <<'EOF'
+import json, sys
+release = json.load(open(sys.argv[1]))
+if (release.get("body") or "").lstrip().startswith("> **WITHDRAWN"):
+    sys.exit("not publishing: this release is marked WITHDRAWN")
+EOF
 
 missing=""
 for name in $expected; do
