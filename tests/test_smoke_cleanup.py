@@ -1,5 +1,6 @@
 """Smoke cleanup against real local Linux processes, never a headset or SSH."""
 import sandbox  # noqa: F401
+import json
 import os
 from pathlib import Path
 import shutil
@@ -139,9 +140,59 @@ class Safety(unittest.TestCase):
                 mock.patch.object(frame_smoke, 'cleanup', side_effect=RuntimeError('cannot stop')), \
                 mock.patch.object(frame_smoke, 'title_cycle') as cycle, \
                 mock.patch('builtins.print'):
-            self.assertEqual(frame_smoke.main(), 1)
+            self.assertEqual(frame_smoke.run_smoke(mock.Mock(pair=False),
+                             {'activity':3,'proximity':[],'battery':[100]}), 1)
             cycle.assert_not_called()
             self.assertEqual(len(list(Path(folder).glob('*-fake.json'))), 1)
+
+
+class SharedSmokeLock(unittest.TestCase):
+    def test_busy_lock_prevents_any_status_read_or_title_change(self):
+        with mock.patch.object(frame_smoke.sys, 'argv', ['frame_smoke.py']), \
+             mock.patch.object(frame_smoke, 'acquire_lock', return_value=False), \
+             mock.patch.object(frame_smoke, 'preflight') as preflight, \
+             mock.patch.object(frame_smoke, 'run_smoke') as run, \
+             mock.patch.object(frame_smoke, 'release_lock') as release:
+            self.assertEqual(frame_smoke.main(), 2)
+            preflight.assert_not_called()
+            run.assert_not_called()
+            release.assert_not_called()
+
+    def test_preflight_requires_standby_and_sufficient_battery(self):
+        for state in ({'activity':1,'proximity':[1],'battery':[100]},
+                      {'activity':None,'proximity':[],'battery':[100]},
+                      {'activity':3,'proximity':[],'battery':[19]},
+                      {'activity':3,'proximity':[],'battery':[]}):
+            with self.subTest(state=state), mock.patch.object(frame_smoke, 'remote',
+                    return_value=mock.Mock(returncode=0, stdout=json.dumps(state))):
+                with self.assertRaises(RuntimeError):
+                    frame_smoke.preflight()
+        with mock.patch.object(frame_smoke, 'remote', return_value=mock.Mock(
+                returncode=0, stdout=json.dumps({'activity':3,'proximity':[0],'battery':[99]}))):
+            self.assertEqual(frame_smoke.preflight()['battery'], [99])
+
+    def test_owner_checked_on_release_and_preflight_failure_still_releases(self):
+        commands = []
+        def remote(command, **_):
+            commands.append(command)
+            return mock.Mock(returncode=0)
+        with mock.patch.object(frame_smoke, 'remote', side_effect=remote):
+            self.assertTrue(frame_smoke.acquire_lock('frame-smoke-test-token'))
+            self.assertTrue(frame_smoke.release_lock('frame-smoke-test-token'))
+        self.assertIn('mkdir /tmp/frame-test.lock', commands[0])
+        self.assertIn('> /tmp/frame-test.lock/owner', commands[0])
+        self.assertIn('test "$(cat /tmp/frame-test.lock/owner)" = frame-smoke-test-token', commands[1])
+        self.assertLess(commands[1].index('test '), commands[1].index('rm /tmp/frame-test.lock/owner'))
+
+        with mock.patch.object(frame_smoke.sys, 'argv', ['frame_smoke.py']), \
+             mock.patch.object(frame_smoke, 'acquire_lock', return_value=True), \
+             mock.patch.object(frame_smoke, 'preflight', side_effect=RuntimeError('awake')), \
+             mock.patch.object(frame_smoke, 'run_smoke') as run, \
+             mock.patch.object(frame_smoke, 'release_lock', return_value=True) as release:
+            self.assertEqual(frame_smoke.main(), 2)
+            run.assert_not_called()
+            release.assert_called_once()
+            self.assertTrue(release.call_args.args[0].startswith('frame-smoke-'))
 
 
 @unittest.skipUnless(os.name == 'posix', 'local POSIX shell required')

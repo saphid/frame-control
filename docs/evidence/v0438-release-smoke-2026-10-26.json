@@ -1,0 +1,32 @@
+{
+  "tag": "v0.4.38",
+  "commit": "d87b863aa3c61c9833045b29ba79c7534a351ef4",
+  "startedUtc": "2026-10-26T01:47:23Z",
+  "frameOSVersion": "0.5.6",
+  "frameOSBuild": "20261022.6153909",
+  "preflight": {
+    "steamVRActivity": 3,
+    "proximityRaw": 6.3125,
+    "batteryPercent": 100
+  },
+  "postflight": {
+    "steamVRActivity": 3,
+    "proximityRaw": 6.25,
+    "batteryPercent": 100
+  },
+  "smoke": {
+    "passed": 13,
+    "failed": 0,
+    "arm64": "running",
+    "x86_64": "runtime missing",
+    "windowsExe": "running",
+    "finalCleanupPassed": true,
+    "ownedProcessesAfterCleanup": 0
+  },
+  "sharedLock": "unique owner released",
+  "limits": [
+    "No worn headset",
+    "No physical controller input",
+    "No official Decky panel tested in this smoke"
+  ]
+}

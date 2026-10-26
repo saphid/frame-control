@@ -208,6 +208,13 @@ It resolves the checkout path independently of the current working directory.
 `/path/to/checkout/scripts/frame-smoke.sh --help` is safe to run offline and
 does not contact the headset.
 
+Before reading headset status or changing titles, the smoke script atomically
+acquires the shared `/tmp/frame-test.lock` with a unique owner token. It reads
+SteamVR activity, proximity and battery while locked. An awake headset, unknown
+activity, battery below 20%, or a busy lock stops the run without installing
+anything. It releases only its own lock after cleanup. The JSON result includes
+the read-only preflight for completed smoke runs.
+
 It checks `properties.json` and the status, then installs, launches and
 removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`
 (an ARM64 and an x86-64 static Linux program that sleep for ten seconds, and
