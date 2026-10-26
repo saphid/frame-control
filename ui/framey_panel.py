@@ -11,6 +11,7 @@ import frame_decky
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
 EVENT = re.compile(r'[A-Za-z0-9_:/.-]{1,128}\Z')
 SESSION = re.compile(r'[A-Za-z0-9_.-]{1,100}\Z')
+RECEIPT = re.compile(r'[0-9a-f]{64}\Z')
 MODULE_PATH = re.compile(r'[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*/[A-Za-z0-9_.-]+\.js\Z|index\.js\Z')
 PLUGINS = Path.home()/'.local/share/frame-control/decky/plugins'
 
@@ -139,7 +140,18 @@ finally: page.sock.close()
 '''
 
 
-def call_method(ssh, plugin_id, method, args, legacy=False):
+def _current_plugin(ssh, plugin_id, receipt):
+    if not isinstance(receipt, str) or not RECEIPT.fullmatch(receipt):
+        raise PanelError('Reopen the plugin panel to refresh its store receipt')
+    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    if len(found) != 1:
+        raise PanelError('The plugin is not managed by the Frame Control Decky store')
+    if found[0].get('sha256') != receipt:
+        raise PanelError('The plugin changed; close and reopen its panel')
+    return found[0]
+
+
+def call_method(ssh, plugin_id, method, args, legacy=False, receipt=None):
     if type(plugin_id) is not int or plugin_id <= 0:
         raise PanelError('Choose an installed Decky store plugin')
     if not isinstance(method, str) or not METHOD.fullmatch(method):
@@ -148,10 +160,8 @@ def call_method(ssh, plugin_id, method, args, legacy=False):
         raise PanelError('Plugin method arguments are too large')
     if type(legacy) is not bool or (legacy and (len(args) != 1 or not isinstance(args[0], dict))):
         raise PanelError('Legacy plugin methods need one keyword argument object')
-    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
-    if len(found) != 1:
-        raise PanelError('The plugin is not managed by the Frame Control Decky store')
-    payload = {'name':found[0]['name'], 'method':method, 'args':args, 'legacy':legacy}
+    plugin = _current_plugin(ssh, plugin_id, receipt)
+    payload = {'name':plugin['name'], 'method':method, 'args':args, 'legacy':legacy}
     # Library-sized arguments can exceed the OS limit for a single SSH command
     # argument. Send them as a quoted Python literal on stdin instead.
     script = METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__', repr(json.dumps(payload)))
@@ -192,15 +202,13 @@ finally: page.sock.close()
 '''
 
 
-def read_steam(ssh, plugin_id, method):
+def read_steam(ssh, plugin_id, method, receipt=None):
     """Read one explicitly supported Steam API for an installed store panel."""
     if type(plugin_id) is not int or plugin_id <= 0:
         raise PanelError('Choose an installed Decky store plugin')
     if not isinstance(method, str) or method not in STEAM_READS:
         raise PanelError('This Steam API is unavailable in Framey')
-    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
-    if len(found) != 1:
-        raise PanelError('The plugin is not managed by the Frame Control Decky store')
+    _current_plugin(ssh, plugin_id, receipt)
     expression = '(async()=>await ' + STEAM_READS[method] + ')()'
     script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
         '__FRAMEY_STEAM_LIMIT__', str(2*1024*1024 if method == 'GetLibrarySnapshot' else 256*1024))
@@ -219,7 +227,7 @@ finally: page.sock.close()
 '''
 
 
-def poll_events(ssh, plugin_id, session, events, cursor=0):
+def poll_events(ssh, plugin_id, session, events, cursor=0, receipt=None):
     """Read only this store-owned plugin's subscribed events; never trust its claimed name."""
     if type(plugin_id) is not int or plugin_id <= 0:
         raise PanelError('Choose an installed Decky store plugin')
@@ -230,10 +238,8 @@ def poll_events(ssh, plugin_id, session, events, cursor=0):
         raise PanelError('Invalid Decky event names')
     if type(cursor) is not int or not 0 <= cursor <= 9007199254740991:
         raise PanelError('Invalid Decky event cursor')
-    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
-    if len(found) != 1:
-        raise PanelError('The plugin is not managed by the Frame Control Decky store')
-    payload = {'name':found[0]['name'], 'session':session, 'events':events, 'cursor':cursor}
+    plugin = _current_plugin(ssh, plugin_id, receipt)
+    payload = {'name':plugin['name'], 'session':session, 'events':events, 'cursor':cursor}
     # Embed only our bundled source as a Python string; plugin data stays in JSON.
     source = Path(__file__).with_name('framey-events.js').read_text(encoding='utf-8')
     script = EVENT_SCRIPT.replace('__FRAMEY_EVENTS_SOURCE__', repr(source))

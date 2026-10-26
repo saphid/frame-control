@@ -210,7 +210,7 @@ def main(argv=None):
             files = {name: base64.b64encode((ROOT/'examples/framey-settings'/name).read_bytes()).decode()
                      for name in ('plugin.json', 'main.py', 'dist/index.js')}
             source = '''
-import base64,json,pathlib
+import base64,hashlib,json,pathlib
 base=pathlib.Path.home()/'.local/share/frame-control/decky'
 folder=%r
 p=base/'plugins'/folder
@@ -219,7 +219,10 @@ p.mkdir(parents=True); (p/'dist').mkdir()
 for name,data in %r.items(): (p/name).write_bytes(base64.b64decode(data))
 manifest=json.loads((p/'plugin.json').read_text());manifest['name']='Framey VR Check '+folder
 (p/'plugin.json').write_text(json.dumps(manifest))
-(p/'.frame-control-store.json').write_text(json.dumps({'storeId':2000000001,'version':'local-vr-check'}))
+digest=hashlib.sha256()
+for name in ('plugin.json','main.py','dist/index.js'):
+ digest.update(name.encode()+b'\\0'+(p/name).read_bytes())
+(p/'.frame-control-store.json').write_text(json.dumps({'storeId':2000000001,'version':'local-vr-check','sha256':digest.hexdigest()}))
 print(json.dumps({'created':True}))
 ''' % (folder, files)
             remote.python(source)
