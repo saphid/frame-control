@@ -94,6 +94,7 @@ def main():
         def do_GET(self):
             path = self.path.split('?')[0]
             content_type = 'text/html; charset=utf-8'
+            module_asset = False
             if path == '/':
                 # Only names/IDs are needed by the UI; never embed raw executable source.
                 catalog = json.dumps([{'id': p['id'], 'name': p['name']} for p in plugins]).replace('<', '\\u003c')
@@ -113,6 +114,22 @@ def main():
                 except (KeyError, ValueError, OSError, zipfile.BadZipFile):
                     self.send_error(404, 'Verified frontend archive unavailable')
                     return
+            elif path.startswith('/framey/module/'):
+                try:
+                    plugin_id, name = path.removeprefix('/framey/module/').split('/', 1)
+                    if not framey_panel.MODULE_PATH.fullmatch(name):
+                        raise ValueError('Invalid module path')
+                    record = records[int(plugin_id)]
+                    data = (args.cache/(record['sha256']+'.zip')).read_bytes()
+                    if hashlib.sha256(data).hexdigest() != record['sha256']:
+                        raise ValueError('Archive hash mismatch')
+                    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+                        body = archive.read(record['folder']+'/dist/'+name)
+                    content_type = 'text/javascript; charset=utf-8'
+                    module_asset = True
+                except (KeyError, ValueError, OSError, zipfile.BadZipFile):
+                    self.send_error(404, 'Verified frontend module unavailable')
+                    return
             else:
                 files = {'/framey-runtime/react.js': 'ui/vendor/react-18.3.1.min.js',
                          '/framey-runtime/react-dom.js': 'ui/vendor/react-dom-18.3.1.min.js',
@@ -124,6 +141,8 @@ def main():
                 content_type = 'text/javascript'
             self.send_response(200)
             self.send_header('Content-Type', content_type)
+            if module_asset:
+                self.send_header('Access-Control-Allow-Origin', 'null')
             self.send_header('Content-Security-Policy', "default-src 'none'; script-src 'self' 'unsafe-inline' blob:; style-src 'unsafe-inline'; img-src data:; frame-src 'self'; connect-src 'none'")
             self.end_headers()
             self.wfile.write(body)

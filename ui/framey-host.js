@@ -569,7 +569,8 @@
   async function start() {
     try {
       await seeded;
-      const bytes = Uint8Array.from(atob(document.getElementById('framey-bundle').textContent), c=>c.charCodeAt(0));
+      const bundleNode = document.getElementById('framey-bundle');
+      const bytes = Uint8Array.from(atob(bundleNode.textContent), c=>c.charCodeAt(0));
       const bundleText = new TextDecoder().decode(bytes);
       // Only panels referencing library globals need the extra read. A failed
       // read leaves them unavailable rather than fabricating an empty library.
@@ -580,10 +581,15 @@
       // Old Decky builds are expressions returning the initializer, rather than
       // ES modules. A module wrapper preserves the sandbox and avoids eval.
       const legacy = /^\s*\(function\s*\(/.test(bundleText);
-      const url = URL.createObjectURL(new Blob(legacy ?
-        ['const __frameyLegacy =\n', bytes, '\nexport default __frameyLegacy;'] : [bytes], {type:'text/javascript'}));
       let module;
-      try { module = await import(url); } finally { URL.revokeObjectURL(url); }
+      if (bundleNode.dataset.module && !legacy) {
+        // A hierarchical URL lets official Vite chunks resolve relative imports.
+        module = await import(new URL(bundleNode.dataset.module, location.href).href);
+      } else {
+        const url = URL.createObjectURL(new Blob(legacy ?
+          ['const __frameyLegacy =\n', bytes, '\nexport default __frameyLegacy;'] : [bytes], {type:'text/javascript'}));
+        try { module = await import(url); } finally { URL.revokeObjectURL(url); }
+      }
       if (typeof module.default !== 'function') throw Error('The Decky frontend has no plugin entry point');
       plugin = await module.default(legacyServerAPI);
       if (legacy && plugin?.title && !plugin.titleView) plugin.titleView = plugin.title;

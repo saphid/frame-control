@@ -11,6 +11,7 @@ import frame_decky
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
 EVENT = re.compile(r'[A-Za-z0-9_:/.-]{1,128}\Z')
 SESSION = re.compile(r'[A-Za-z0-9_.-]{1,100}\Z')
+MODULE_PATH = re.compile(r'[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*/[A-Za-z0-9_.-]+\.js\Z|index\.js\Z')
 PLUGINS = Path.home()/'.local/share/frame-control/decky/plugins'
 
 
@@ -18,8 +19,8 @@ class PanelError(ValueError):
     pass
 
 
-def local_bundle(plugin_id):
-    """Read a modern Decky bundle with a store receipt; reject linked paths."""
+def _owned_dist(plugin_id):
+    """Locate a compatible store-owned frontend without following linked paths."""
     if type(plugin_id) is not int or plugin_id <= 0 or not PLUGINS.is_dir() or PLUGINS.is_symlink():
         raise FileNotFoundError('Framey plugin unavailable')
     for folder in PLUGINS.iterdir():
@@ -55,17 +56,58 @@ def local_bundle(plugin_id):
             legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
             if version is None and not legacy:
                 raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
-            if version == 1 and not legacy and b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit' not in bundle:
-                raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
-            return bundle
+            if version == 1 and not legacy:
+                marker = b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit'
+                supported = marker in bundle
+                if not supported and b'./chunks/' in bundle:
+                    chunks = dist/'chunks'
+                    if chunks.is_symlink() or not chunks.is_dir():
+                        raise FileNotFoundError('Framey plugin chunks unavailable')
+                    files = list(chunks.iterdir())
+                    if len(files) > 128:
+                        raise FileNotFoundError('Framey plugin has too many chunks')
+                    for chunk in files:
+                        if chunk.suffix != '.js':
+                            continue
+                        if chunk.is_symlink() or not chunk.is_file() or chunk.stat().st_size > 8*1024*1024:
+                            raise FileNotFoundError('Framey plugin chunk unavailable')
+                        if marker in chunk.read_bytes():
+                            supported = True
+                if not supported:
+                    raise FileNotFoundError('This API v1 frontend does not use the supported Decky API bridge')
+            return dist, bundle
         except (OSError, ValueError):
             raise FileNotFoundError('Framey plugin files are invalid')
     raise FileNotFoundError('Plugin is not managed by the Frame Control Decky store')
 
 
+def local_bundle(plugin_id):
+    """Read a modern Decky bundle with a store receipt; reject linked paths."""
+    return _owned_dist(plugin_id)[1]
+
+
+def local_module(plugin_id, name):
+    """Serve only JavaScript within a store-owned dist directory for module imports."""
+    if not isinstance(name, str) or not MODULE_PATH.fullmatch(name):
+        raise FileNotFoundError('Framey module path unavailable')
+    dist, bundle = _owned_dist(plugin_id)
+    if name == 'index.js':
+        return bundle
+    target = dist
+    for part in name.split('/'):
+        target = target/part
+        if target.is_symlink():
+            raise FileNotFoundError('Framey module path unavailable')
+    if not target.is_file() or target.stat().st_size > 8*1024*1024:
+        raise FileNotFoundError('Framey module unavailable')
+    return target.read_bytes()
+
+
 def panel(plugin_id):
     """The plugin receives no Frame UI key and is sandboxed to an opaque origin."""
-    encoded = base64.b64encode(local_bundle(plugin_id)).decode('ascii')
+    bundle = local_bundle(plugin_id)
+    encoded = base64.b64encode(bundle).decode('ascii')
+    module = f' data-module="/framey/module/{plugin_id}/index.js"' if b'./chunks/' in bundle else ''
     return ('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
@@ -78,7 +120,7 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-long-title{overflow-wrap:anywhere}.framey-muted{background:#1b3042}.framey-image{max-width:100%;object-fit:contain}
 .framey-focus:focus-visible{outline:4px solid #f8d370}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
-<script id="framey-bundle" type="application/json">''' + encoded + '''</script>
+<script id="framey-bundle" type="application/json"''' + module + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
 <script src="/framey-runtime/host.js"></script></html>''').encode()
 
