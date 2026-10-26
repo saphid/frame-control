@@ -185,7 +185,8 @@ and the fake Frame flow before asking users to install it.
 
 An API v2 plugin's normal `content` is its default VR panel. Framey also shows
 an optional `settings` React element under a **Settings** tab and an optional
-`titleView` above it. For one-tap headset controls, return
+`titleView` above it. A plugin with only `settings` opens that view directly;
+Framey shows tabs only when both views exist. For one-tap headset controls, return
 `frameyQuickActions: [{label: 'Refresh data', onClick: refreshData}]` from the
 plugin initializer. Framey displays up to eight actions and reports a pending,
 success, or failure state. These descriptor fields are Framey additions; Decky
