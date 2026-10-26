@@ -9582,12 +9582,13 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Panel initializer succeeds with backend/network blocked; actual controls and backend remain unverified.",
+      "reason": "Exact official backend bound-method calls are repaired in managed installs. An isolated fake dbus-send target accepted player discovery, transport and volume commands after the patch; real MPRIS players, actual Decky ARM64, album art and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Python backend"
       ],
       "browser": {
         "id": 111,
@@ -9623,7 +9624,9 @@
         "sha256": "3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "compatShim": "music-control-bound-methods",
+      "evidence": "docs/evidence/framey-music-control-bound-methods-2026-10-26.md"
     },
     {
       "id": 112,

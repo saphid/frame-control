@@ -214,6 +214,80 @@ assert copied.read_bytes() == b'local screenshot fixture'
         self.assertFalse((shotty / 'py_modules/click.py').exists())
         self.assertNotIn('compatShims', json.loads((shotty / '.frame-control-store.json').read_text()))
 
+    def test_exact_music_control_backend_calls_work_after_managed_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 111)
+        data = official_archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        folder = self.folder.parent / plugin['folder']
+        args = {'plugin_id': plugin['id'], 'folder': plugin['folder'], 'version': plugin['version']}
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads((folder / '.frame-control-store.json').read_text())
+        self.assertEqual(receipt['sha256'], plugin['sha256'])
+        self.assertEqual(receipt['compatShims'], ['music-control-bound-methods'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            original = bundle.read('MusicControl/main.py').decode()
+        self.assertNotEqual((folder / 'main.py').read_text(), original)
+
+        dbus = Path(self.tmp.name) / 'dbus-send'
+        dbus.write_text('''#!/usr/bin/env python3
+import os, sys
+from pathlib import Path
+args = ' '.join(sys.argv[1:])
+with Path(os.environ['MPRIS_CALLS']).open('a') as log: log.write(args + '\\n')
+if 'ListNames' in args:
+    print('method return\\n array [\\n string "org.freedesktop.DBus"\\n string "org.mpris.MediaPlayer2.fixture"\\n ]')
+elif 'string:PlaybackStatus' in args:
+    print('method return\\n variant string "Paused"')
+else:
+    print('method return')
+''')
+        dbus.chmod(0o700)
+        calls = Path(self.tmp.name) / 'mpris-calls'
+        source = '''import asyncio, importlib.util, sys, types
+from pathlib import Path
+decky = types.ModuleType('decky_plugin')
+sys.modules['decky_plugin'] = decky
+spec = importlib.util.spec_from_file_location('music_control', Path(sys.argv[1])/'main.py')
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+plugin = module.Plugin()
+async def check():
+    assert await plugin.sp_list_media_players() == 'org.mpris.MediaPlayer2.fixture'
+    await plugin.sp_set_media_player('org.mpris.MediaPlayer2.fixture')
+    assert await plugin.sp_get_media_player() == 'org.mpris.MediaPlayer2.fixture'
+    await plugin.sp_play()
+    await plugin.sp_pause()
+    await plugin.sp_next()
+    await plugin.sp_previous()
+    await plugin.sp_set_volume(0.25)
+    assert await plugin.sp_track_status() == 'Paused'
+asyncio.run(check())
+'''
+        called = subprocess.run([sys.executable, '-c', source, str(folder)],
+                                capture_output=True, text=True,
+                                env={**self.env, 'MPRIS_CALLS': str(calls)}, timeout=10)
+        self.assertEqual(called.returncode, 0, called.stderr)
+        logged = calls.read_text()
+        self.assertIn('org.freedesktop.DBus.ListNames', logged)
+        self.assertIn('org.mpris.MediaPlayer2.Player.PlayPause', logged)
+        self.assertIn('org.mpris.MediaPlayer2.Player.Pause', logged)
+        self.assertIn('string:Volume variant:double:0.25', logged)
+        self.assertIn('org.mpris.MediaPlayer2.fixture', logged)
+        result = self.apply('remove', expected=plugin['sha256'], **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+        older = next(p for p in PLUGINS if p['id'] == 12)
+        old_data = official_archive(older)
+        old_args = {'plugin_id': older['id'], 'folder': older['folder'], 'version': older['version']}
+        result = self.apply('install', old_data, **old_args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compatShims', json.loads((folder / '.frame-control-store.json').read_text()))
+        with zipfile.ZipFile(io.BytesIO(old_data)) as bundle:
+            self.assertEqual((folder / 'main.py').read_bytes(), bundle.read('MusicControl/main.py'))
+
     def test_installed_script_entrypoints_execute_without_zip_exec_bits(self):
         data, _ = archive(extra=('Example/scripts/start.py',
                                  b'#!/bin/sh\nprintf "Framey script: %s\\n" "$1"\n'))
