@@ -15,7 +15,7 @@ const context=vm.createContext({document:{getElementById:el,createElement:()=>({
   setTimeout(){},setInterval(){},console,
   fetch:(path,options)=>new Promise(resolve=>requests.push({path,body:JSON.parse(options.body),resolve}))});
 vm.runInContext(source,context);
-vm.runInContext('deckyState={running:true,plugins:[{storeId:96,sha256:"a",version:"1"}]};openFrameyPanel(96,"Timer")',context);
+vm.runInContext('deckyState={running:true,plugins:[{storeId:96,sha256:"'+'a'.repeat(64)+'",version:"1"}]};openFrameyPanel(96,"Timer")',context);
 let session=vm.runInContext('frameySession',context);
 const onMessage=listeners.find(x=>x.type==='message').fn;
 const send=(data,origin=frame)=>onMessage({source:origin,data});
@@ -28,6 +28,7 @@ const first=send(subscription);
 assert.equal(requests.length,1);
 assert.equal(requests[0].path,'/api/framey/events');
 assert.equal(requests[0].body.id,96);
+assert.equal(requests[0].body.receipt,'a'.repeat(64));
 assert.equal(requests[0].body.session,session);
 // WindowProxy survives navigation: stale same-plugin replies need a session check.
 vm.runInContext('openFrameyPanel(96,"Timer")',context);
@@ -35,6 +36,7 @@ const secondSession=vm.runInContext('frameySession',context);
 assert.notEqual(secondSession,session);
 assert.equal(requests[1].body.events.length,0); // Closes only the original subscription.
 assert.equal(requests[1].body.session,session);
+assert.equal(requests[1].body.receipt,'a'.repeat(64));
 requests[0].resolve({ok:true,json:async()=>({events:[{event:'tick',args:[42]}],cursor:1})});
 await first;assert.equal(replies.length,0);
 await send({type:'framey:call',id:2,session,method:'cancel_timer',args:[]});
@@ -59,6 +61,7 @@ await send(steamRead,{});
 assert.equal(requests.length,initialCount);
 const read=send(steamRead);
 assert.equal(requests.at(-1).path,'/api/framey/steam');assert.equal(requests.at(-1).body.id,96);
+assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
 requests.at(-1).resolve({ok:true,json:async()=>({result:'AU'})});
 await read;assert.equal(replies.at(-1).result,'AU');
 const staleRead=send({...steamRead,id:11});

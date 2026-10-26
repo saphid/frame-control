@@ -112,25 +112,28 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.0.0')
         self.assertIn('Sample 1.0.0', ssh('cat ~/.local/share/frame-control/decky/plugins/sample-panel/dist/index.js'))
+        receipt = HASHES[0]
+        def framey_call(body):
+            return ok('POST', '/api/framey/method', dict(body, receipt=receipt))
         status, _, _ = api('POST', '/api/framey/method', {'id':999,'method':'get_setting','args':[]},
                            headers={'X-Frame-UI':''})
         self.assertEqual(status, 403)
         status, _, _ = api('POST', '/api/framey/method', {'id':999,'method':'x;alert(1)','args':[]})
         self.assertEqual(status, 400)
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'dark')
-        self.assertTrue(ok('POST', '/api/framey/method',
+        self.assertTrue(framey_call(
                            {'id':999,'method':'set_setting','args':['theme','light']})['result'])
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
 
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':[{'key':'theme','default':'dark'}],
                              'legacy':True})['result'], {'success':True,'result':'light'})
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'set_setting','args':[{'key':'legacy','value':'saved'}],
                              'legacy':True})['result'], {'success':True,'result':True})
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['legacy','default']})['result'], 'saved')
 
         StoreFixture.release = 1
@@ -138,7 +141,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                           {'action':'update','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
-        self.assertEqual(ok('POST', '/api/framey/method',
+        status, _, stale_reply = api('POST', '/api/framey/method',
+            {'id':999,'receipt':receipt,'method':'get_setting','args':['theme','dark']})
+        self.assertEqual(status, 400)
+        self.assertIn('changed', str(stale_reply))
+        receipt = HASHES[1]
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         job = finished(ok('POST', '/api/decky/plugin',
                           {'action':'remove','id':999,'acknowledged':True}))
@@ -151,7 +159,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         job = finished(ok('POST', '/api/decky/plugin',
                           {'action':'install','id':999,'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
-        self.assertEqual(ok('POST', '/api/framey/method',
+        self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         stale = finished(ok('POST', '/api/decky/plugin',
                             {'action':'update','id':999,'sha256':HASHES[0],
