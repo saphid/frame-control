@@ -498,7 +498,7 @@
     return R.createElement(R.Fragment, null,
       plugin.titleView && R.createElement('header', null, plugin.titleView),
       route && R.createElement('button', {type:'button', onClick:()=>navigate(null)}, 'Back to plugin'),
-      plugin.settings && R.createElement('nav', {'aria-label':'Plugin views'},
+      plugin.content && plugin.settings && R.createElement('nav', {'aria-label':'Plugin views'},
         R.createElement('button', {type:'button', 'aria-current':view === 'panel' ? 'page' : undefined,
           onClick:()=>setView('panel')}, 'Panel'),
         R.createElement('button', {type:'button', 'aria-current':view === 'settings' ? 'page' : undefined,

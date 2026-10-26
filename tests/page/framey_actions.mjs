@@ -105,7 +105,12 @@ assert.equal(nodes(tree,'header').length,1);
 await buttons[2].props.onClick();
 assert.equal(called,1);
 assert.deepEqual(states.slice(-3),[0,'Refresh data…','Fresh',null].slice(-3));
-assert.equal(nodes(window.__surface({plugin:{settings:{type:'settings'}}}),'nav').length,1);
+const settingsOnly=window.__surface({plugin:{settings:{type:'settings'}}});
+assert.equal(nodes(settingsOnly,'nav').length,0);
+assert.equal(nodes(settingsOnly,'settings').length,1);
+const panelOnly=window.__surface({plugin:{content:{type:'content'}}});
+assert.equal(nodes(panelOnly,'nav').length,0);
+assert.equal(nodes(panelOnly,'content').length,1);
 
 // API v2 backend calls remain request-scoped and errors return to the caller.
 const api=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'Test');
