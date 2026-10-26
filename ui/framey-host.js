@@ -474,13 +474,49 @@
     },
     fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
   };
+  function setLibrarySnapshot(snapshot) {
+    // These are detached plugin-local values. Patching an overview or its Map
+    // must never mutate Steam's library. Live MobX observations are unsupported.
+    if (!snapshot || !Array.isArray(snapshot.apps) || snapshot.apps.length > 10000 ||
+        !Array.isArray(snapshot.gameIds) || snapshot.gameIds.length > 10000 ||
+        (snapshot.steamId != null && (typeof snapshot.steamId !== 'string' || !/^\d{17}$/.test(snapshot.steamId))))
+      throw Error('Invalid Steam library snapshot');
+    const apps = snapshot.apps.map(row => {
+      if (!Array.isArray(row) || row.length !== 8 || !Number.isSafeInteger(row[0]) || row[0] <= 0 ||
+          typeof row[1] !== 'string' || row[1].length > 2048 ||
+          (row[2] != null && typeof row[2] !== 'string') || !Number.isSafeInteger(row[3]) ||
+          typeof row[4] !== 'string' || !/^\d{1,20}$/.test(row[4]) ||
+          row.slice(5).some(value=>value != null && (!Number.isFinite(value) || value < 0)))
+        throw Error('Invalid Steam app overview');
+      const [appid,display_name,sort_as,app_type,gameid,
+        minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played] = row;
+      return {appid,display_name,sort_as,app_type,gameid,
+        minutes_playtime_forever,minutes_playtime_last_two_weeks,rt_last_time_played};
+    });
+    const map = new Map(apps.map(app=>[app.appid,app]));
+    if (map.size !== apps.length || snapshot.gameIds.some(id=>!Number.isSafeInteger(id) || !map.has(id)))
+      throw Error('Invalid Steam game collection');
+    window.appStore = {allApps:apps, m_mapApps:map,
+      GetAppOverviewByAppID:id=>map.get(Number(id)),
+      GetAppOverviewByGameID:id=>apps.find(app=>app.gameid === String(id)),
+    };
+    window.collectionStore = {allGamesCollection:{allApps:snapshot.gameIds.map(id=>map.get(id))}};
+    window.App = snapshot.steamId ? {m_CurrentUser:{strSteamID:snapshot.steamId}} : undefined;
+  }
   async function start() {
     try {
       await seeded;
       const bytes = Uint8Array.from(atob(document.getElementById('framey-bundle').textContent), c=>c.charCodeAt(0));
+      const bundleText = new TextDecoder().decode(bytes);
+      // Only panels referencing library globals need the extra read. A failed
+      // read leaves them unavailable rather than fabricating an empty library.
+      if (/\b(?:appStore|collectionStore|m_CurrentUser)\b/.test(bundleText)) {
+        try {setLibrarySnapshot(await request('GetLibrarySnapshot',[],false,'framey:steam'));}
+        catch (failure) {console.warn('Framey Steam library unavailable', failure.message);}
+      }
       // Old Decky builds are expressions returning the initializer, rather than
       // ES modules. A module wrapper preserves the sandbox and avoids eval.
-      const legacy = /^\s*\(function\s*\(/.test(new TextDecoder().decode(bytes));
+      const legacy = /^\s*\(function\s*\(/.test(bundleText);
       const url = URL.createObjectURL(new Blob(legacy ?
         ['const __frameyLegacy =\n', bytes, '\nexport default __frameyLegacy;'] : [bytes], {type:'text/javascript'}));
       let module;

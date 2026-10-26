@@ -3,7 +3,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
-const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI;\n})();');
+const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
@@ -210,6 +210,31 @@ assert.ok(Object.isFrozen(window.SteamUIStore));
 assert.ok(Object.isFrozen(window.SuspendResumeStore));
 assert.equal(window.SuspendResumeStore.InitiateSleep,undefined);
 for(const name of ['App','appStore','appInfoStore','collectionStore'])assert.equal(window[name],undefined);
+const snapshot={apps:[[10,'Game Ten','ten',1,'10',180,60,1234],
+  [20,'Shortcut','shortcut',1073741824,'85899345920',0,0,0]],gameIds:[10]};
+window.__library(snapshot);
+assert.equal(window.appStore.allApps.length,2);
+assert.equal(window.appStore.GetAppOverviewByAppID('10').display_name,'Game Ten');
+assert.equal(window.appStore.GetAppOverviewByGameID('85899345920').appid,20);
+assert.equal(window.appStore.GetAppOverviewByGameID('missing'),undefined);
+assert.equal(window.collectionStore.allGamesCollection.allApps[0],window.appStore.m_mapApps.get(10));
+window.appStore.m_mapApps.get(10).display_name='Plugin-local patch';
+assert.equal(snapshot.apps[0][1],'Game Ten');
+assert.equal(window.App,undefined); // No fabricated account identity.
+window.__library({...snapshot,steamId:'76561198000000001'}); // Explicit test fixture, never a fallback.
+assert.deepEqual(Object.keys(window.App.m_CurrentUser),['strSteamID']);
+assert.equal(window.App.m_CurrentUser.strSteamID,'76561198000000001');
+window.appStore.allApps[0].display_name='Plugin-local patch';
+assert.equal(window.appInfoStore,undefined); // No fake MobX store.
+for(const invalid of [null,{apps:[],gameIds:[10]},
+  {...snapshot,steamId:'invented'},
+  {...snapshot,apps:[snapshot.apps[0],snapshot.apps[0]]},
+  {...snapshot,apps:[[10,'Name','sort',1,'undefined',0,0,0]]},
+  {...snapshot,apps:[[10,'Name','sort',1,'10',-1,0,0]]},
+  {apps:Array(10001).fill(snapshot.apps[0]),gameIds:[]}]){
+  assert.throws(()=>window.__library(invalid),/Invalid Steam/);
+  assert.equal(window.appStore.allApps[0].display_name,'Plugin-local patch');
+}
 for(const register of [window.SteamClient.System.UI.RegisterForSystemKeyEvents,
   window.SteamClient.Apps.RegisterForGameActionUserRequest]){
   const dispose=register(()=>eventCount++);assert.equal(dispose.unregister,dispose);dispose();
