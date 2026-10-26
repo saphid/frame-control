@@ -123,7 +123,7 @@ def archive_info(data, expected_hash, expected_name):
 
 APPLY = r'''
 import fcntl,hashlib,json,os,pathlib,shutil,subprocess,sys,zipfile
-action,token,plugin_id,digest,folder,version = sys.argv[1:]
+action,token,plugin_id,digest,folder,version,expected_installed = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
 target=base/folder
@@ -151,6 +151,10 @@ try:
     if action not in ('install','update','remove'): raise RuntimeError('Invalid plugin action')
     if action=='install' and (target.exists() or target.is_symlink()): raise RuntimeError('Plugin folder already exists')
     if action in ('update','remove') and not owned(): raise RuntimeError('Only a Frame Control store plugin can be changed')
+    if action in ('update','remove') and expected_installed!='-':
+        current=json.loads((target/marker).read_text()).get('sha256')
+        if current!=expected_installed:
+            raise RuntimeError('Installed plugin changed; refresh the installed list and try again')
     running=subprocess.run(['systemctl','--user','is-active','--quiet','frame-control-decky.service']).returncode==0
     if action!='remove':
         data=archive.read_bytes()
@@ -261,6 +265,8 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             raise ValueError('The store changed its plugin folder; remove the old version before installing')
     if not SAFE_FOLDER.fullmatch(folder):
         raise ValueError('Unsafe installed plugin folder')
+    previous = installed[0].get('sha256') if action != 'install' else None
+    expected_installed = previous if isinstance(previous, str) and SHA.fullmatch(previous) else '-'
     token = secrets.token_hex(12)
     remote = '/tmp/frame-control-decky-plugin-' + token
     try:
@@ -268,7 +274,7 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             report('Sending archive to Frame', 65)
             ssh('umask 077; cat > ' + remote, stdin=data, text=False, timeout=120)
         report({'install':'Installing', 'update':'Updating', 'remove':'Removing'}[action] + ' plugin on Frame', 80)
-        return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]}',
+        return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]} {expected_installed}',
                               stdin=APPLY, timeout=90))
     finally:
         if data is not None:
