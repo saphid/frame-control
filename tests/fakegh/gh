@@ -13,6 +13,7 @@ import os
 import shutil
 import subprocess
 import sys
+from urllib.parse import parse_qs
 
 args = sys.argv[1:]
 with open(os.environ["FAKEGH_LOG"], "a") as f:
@@ -49,6 +50,17 @@ while i < len(args):
 
 releases = json.load(open(os.environ["FAKEGH_RELEASES"]))
 repo = "repos/saphid/frame-control/"
+gate = json.load(open(os.environ["FAKEGH_GATES"])) if os.environ.get("FAKEGH_GATES") else {}
+commit = gate.get("tag_commit", "a" * 40)
+tag_object = "b" * 40
+main_jobs = ("checks", "e2e", "ios", "wireless-windows",
+             "server-tests (ubuntu-latest, 3.13)", "server-tests (macos-latest, 3.12)",
+             "server-tests (windows-latest, 3.12)")
+release_jobs = ("draft", "checksums",
+                "build (windows-latest, dist:win, app/dist/*.exe app/dist/*.zip)",
+                "build (ubuntu-latest, dist:linux, app/dist/*.AppImage app/dist/*.deb)",
+                "build (macos-15-intel, dist:mac:x64, app/dist/*.dmg app/dist/*.zip)",
+                "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)")
 
 
 def answer(response, fallback):
@@ -67,7 +79,30 @@ if method == "GET" and endpoint.startswith(repo + "git/ref/tags/"):
     tag = endpoint.rsplit("/", 1)[1]
     if tag not in os.environ.get("FAKEGH_TAGS", "").split():
         sys.exit("gh: Not Found (HTTP 404)")
-    print(json.dumps({"ref": "refs/tags/" + tag}))
+    print(json.dumps({"ref": "refs/tags/" + tag,
+                      "object": {"type": "tag", "sha": tag_object}}))
+elif method == "GET" and endpoint == repo + "git/tags/" + tag_object:
+    print(json.dumps({"object": {"type": "commit", "sha": commit}}))
+elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
+    path, _, query = endpoint.partition("?")
+    workflow = path.split("/")[5]
+    branch = parse_qs(query).get("branch", [""])[0]
+    is_main = workflow == "checks.yml"
+    run_id = 501 if is_main else 502
+    run = {"id": run_id, "head_sha": gate.get("main_sha" if is_main else "release_sha", commit),
+           "head_branch": branch, "event": "push", "run_attempt": 1,
+           "status": gate.get("main_status" if is_main else "release_status", "completed"),
+           "conclusion": gate.get("main_conclusion" if is_main else "release_conclusion", "success"),
+           "html_url": "https://github.com/saphid/frame-control/actions/runs/%s" % run_id}
+    print(json.dumps({"workflow_runs": [run]}))
+elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
+    run_id = endpoint[len(repo + "actions/runs/"):].split("/")[0]
+    names = main_jobs if run_id == "501" else release_jobs
+    names = [name for name in names if name != gate.get("omit_job")]
+    jobs = [{"name": name, "status": "completed",
+             "conclusion": gate.get("bad_job_conclusion", "success") if name == gate.get("bad_job") else "success"}
+            for name in names]
+    print(json.dumps({"total_count": len(jobs), "jobs": jobs}))
 elif method == "GET" and endpoint.startswith(repo + "releases?"):
     # The fallback is what --jq '.[]' prints.
     answer(releases, "\n".join(json.dumps(r) for r in releases))
