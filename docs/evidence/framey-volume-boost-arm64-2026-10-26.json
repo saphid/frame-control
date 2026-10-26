@@ -1,0 +1,405 @@
+{
+  "baseCommit": "daee952873255b86018cce1d2a4d3bd070ec4341",
+  "plugin": {
+    "id": 58,
+    "name": "Volume Boost",
+    "version": "0.0.7",
+    "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc"
+  },
+  "runtime": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+    "os": "Frame OS 0.5.6",
+    "arch": "aarch64"
+  },
+  "verificationLimits": {
+    "fakeFrame": "Prior exact archive HTTP/SSH install/receipt/removal; plugin execution stubbed, not repeated",
+    "localBrowser": "Actual headset.html, React and Framey host, exact unmodified official frontend in opaque iframe; direct RPC relay to actual ARM64 backend",
+    "realFrameSSH": "Production receipt-bound framey_panel.call_method over SSH and live Steam CEF DeckyBackend.call into actual Decky 3.3.0 ARM64 plugin; default speaker sink remained muted throughout",
+    "wornVR": "Not tested",
+    "audibleOutput": "Not tested; gain writes and readbacks only",
+    "deployedHTTP": "Not tested; outer status/install/check responses were fixtures, methods used production call_method with exact current receipt"
+  },
+  "catalogRefresh": {
+    "checkedAtUtc": "2026-10-26T06:10:58.537029+00:00",
+    "plugins": 116,
+    "changedIdsVersionsDigests": 0
+  },
+  "runs": [
+    {
+      "timeUtc": "2026-10-26T06:07:19.370988+00:00",
+      "locale": "LC_ALL=C for the private Decky service",
+      "originalSink": {
+        "mute": true,
+        "volumes": {
+          "front-left": 0,
+          "front-right": 0
+        }
+      },
+      "writes": [
+        {
+          "request": {
+            "value": 125,
+            "channel": "both"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 81920,
+              "front-right": 81920
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 125,
+              "success": true
+            },
+            "right": {
+              "result": 125,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        },
+        {
+          "request": {
+            "value": 75,
+            "channel": "both"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 49152,
+              "front-right": 49152
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 75,
+              "success": true
+            },
+            "right": {
+              "result": 75,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        },
+        {
+          "request": {
+            "value": 74,
+            "channel": "both"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 48496,
+              "front-right": 48496
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 74,
+              "success": true
+            },
+            "right": {
+              "result": 74,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        },
+        {
+          "request": {
+            "value": 33,
+            "channel": "left"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 21626,
+              "front-right": 0
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 33,
+              "success": true
+            },
+            "right": {
+              "result": 0,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        },
+        {
+          "request": {
+            "value": 67,
+            "channel": "right"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 0,
+              "front-right": 43909
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 0,
+              "success": true
+            },
+            "right": {
+              "result": 67,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        },
+        {
+          "request": {
+            "value": 33,
+            "channel": "right"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 0,
+              "front-right": 21626
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 0,
+              "success": true
+            },
+            "right": {
+              "result": 33,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        }
+      ],
+      "reads": [
+        {
+          "id": 58,
+          "method": "get_volume_state",
+          "args": [
+            {
+              "channel": "left"
+            }
+          ],
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        },
+        {
+          "id": 58,
+          "method": "get_volume_state",
+          "args": [
+            {
+              "channel": "left"
+            }
+          ],
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        }
+      ],
+      "reopen": "Fresh query/session, ready; UI returned to actual restored zero; no write on mount",
+      "before": {
+        "battery": [
+          100
+        ],
+        "uid": 1000,
+        "arch": "aarch64",
+        "decky": "inactive",
+        "panel": "inactive"
+      },
+      "after": {
+        "battery": [
+          100
+        ],
+        "uid": 1000,
+        "arch": "aarch64",
+        "decky": "inactive",
+        "panel": "inactive"
+      },
+      "cleanup": {
+        "baseAbsent": true,
+        "unitAbsent": true
+      },
+      "exactSinkRestored": true,
+      "lockReleased": true
+    },
+    {
+      "timeUtc": "2026-10-26T06:12:04.889613+00:00",
+      "locale": "Inherited user-service environment, matching production unit; no LANG or LC_ALL override",
+      "originalSink": {
+        "mute": true,
+        "volumes": {
+          "front-left": 0,
+          "front-right": 0
+        }
+      },
+      "writes": [
+        {
+          "request": {
+            "value": 150,
+            "channel": "both"
+          },
+          "result": {
+            "result": true,
+            "success": true
+          },
+          "independentPulseReadback": {
+            "mute": true,
+            "volumes": {
+              "front-left": 98304,
+              "front-right": 98304
+            }
+          },
+          "backendReadback": {
+            "left": {
+              "result": 150,
+              "success": true
+            },
+            "right": {
+              "result": 150,
+              "success": true
+            }
+          },
+          "guardArmedBeforeWrite": true,
+          "exactOriginalRestored": true
+        }
+      ],
+      "reads": [
+        {
+          "id": 58,
+          "method": "get_volume_state",
+          "args": [
+            {
+              "channel": "left"
+            }
+          ],
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        },
+        {
+          "id": 58,
+          "method": "get_volume_state",
+          "args": [
+            {
+              "channel": "left"
+            }
+          ],
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        }
+      ],
+      "reopen": "Fresh query/session, ready; UI returned to actual restored zero; no write on mount",
+      "before": {
+        "battery": [
+          100
+        ],
+        "uid": 1000,
+        "arch": "aarch64",
+        "decky": "inactive",
+        "panel": "inactive"
+      },
+      "after": {
+        "battery": [
+          100
+        ],
+        "uid": 1000,
+        "arch": "aarch64",
+        "decky": "inactive",
+        "panel": "inactive"
+      },
+      "cleanup": {
+        "baseAbsent": true,
+        "unitAbsent": true
+      },
+      "exactSinkRestored": true,
+      "lockReleased": true
+    }
+  ],
+  "guard": {
+    "scope": "Private test helper only; not a shipped feature or plugin patch",
+    "timeoutSeconds": 60,
+    "runtimeMaxSec": 120,
+    "sequence": [
+      "Capture exact default sink identity, native per-channel volume integers and original mute",
+      "Persist recovery state; start bounded device-side systemd watchdog before mute/write",
+      "Require stereo front-left/front-right and mute readback before plugin call",
+      "Only official get_volume_state/set_volume_state; value 0..150, known channels",
+      "Read native Pulse volume and mute independently; read both channels through actual plugin",
+      "Restore exact native volume while muted, verify, then restore original mute and verify exact snapshot",
+      "Remove recovery state, stop only own watchdog; cleanup own service/base and release matching lock"
+    ],
+    "automaticTimeoutExercised": false,
+    "explicitRestoreExercised": true
+  },
+  "freshCleanupAudit": {
+    "exactSinkRestored": true,
+    "baseAbsent": true,
+    "unitAbsent": true,
+    "services": {
+      "framey-boost-kp0z857q58-b4126054.service": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n",
+      "framey-boost-kp0z857q58-b4126054-guard.service": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n"
+    },
+    "battery": [
+      100
+    ]
+  },
+  "remaining": [
+    "Audible sound/quality, perceived loudness and physical speaker gain are unverified",
+    "Worn VR, headset controller input and Bluetooth sinks are unverified",
+    "No default route change, playback or power-setting action was invoked",
+    "Decky startup reinjects its frontend and can restart Steam CEF; normal managed services stayed inactive"
+  ],
+  "repositoryChecks": {
+    "python": "1,626 tests, 16 skips, no failures",
+    "site": "18 passed",
+    "catalogDocCheck": "passed",
+    "diffCheck": "passed"
+  }
+}
