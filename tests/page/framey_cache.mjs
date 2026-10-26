@@ -19,7 +19,7 @@ const parent=vm.createContext({document:{getElementById:el,createElement:()=>({}
   window:{addEventListener:(type,fn)=>parentListeners.push({type,fn})},
   setTimeout(){},setInterval(){},fetch(){throw Error('No network expected');},console});
 vm.runInContext(parentSource,parent);
-vm.runInContext('deckyState={plugins:[{storeId:14}]};openFrameyPanel(14,"Steam Status")',parent);
+vm.runInContext('deckyState={running:true,plugins:[{storeId:14,sha256:"a",version:"1"}]};openFrameyPanel(14,"Steam Status")',parent);
 let session=vm.runInContext('frameySession',parent);
 const firstURL=new URL(el('frameyFrame').src,'http://127.0.0.1');
 const onParent=parentListeners.find(x=>x.type==='message').fn;
