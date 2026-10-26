@@ -20,13 +20,15 @@ const elements=new Map(), roots=new Map();
 const document={getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);
 },createElement:()=>new Element()};
-const window={React,ReactDOM:{createRoot:node=>{
+const window={React,location:{hash:'#sample-session'},ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
   roots.set(node,root);return root;
 }},addEventListener(){}};
 const listeners=[];
 const calls=[];
+const messages=[];
 const parent={postMessage(message){
+  messages.push(message);
   if(message.type!=='framey:call')return;
   calls.push(message);
   listeners.find(x=>x.type==='message').handler({source:parent,
@@ -36,6 +38,12 @@ const context=vm.createContext({window,document,
   navigator:{language:'en'},parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(host,context);
+const pointerup=listeners.find(listener=>listener.type==='pointerup').handler;
+pointerup({isTrusted:false});
+assert.equal(messages.some(message=>message.type==='framey:input'),false);
+pointerup({isTrusted:true});
+assert.equal(messages.at(-1).type,'framey:input');
+assert.equal(messages.at(-1).session,'sample-session');
 Object.assign(context,{SP_REACT:window.SP_REACT,SP_JSX:window.SP_JSX,DFL:window.DFL});
 vm.runInContext(bundle.replace(/export \{ index as default \};/, 'window.sample = index;'),context);
 const plugin=window.sample();

@@ -292,10 +292,12 @@ window.addEventListener('message',async event=>{
     if(req.session===frameySession)frameyCacheSave(activeFrameyId,req.entries);
     return;
   }
-  if(req.type==='framey:ready'){byId('frameyPanelStatus').textContent='Plugin panel ready';
+  if(req.type==='framey:ready'&&req.session===frameySession){byId('frameyPanelStatus').textContent='Plugin panel ready';
     api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
-  if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
-  if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
+  if(req.type==='framey:input'&&req.session===frameySession){
+    api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
+  if(req.type==='framey:error'&&req.session===frameySession){
+    byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
   if(req.type==='framey:running:close'){
     if(req.session===frameySession&&frameyRunningActive){
       frameyRunningActive=false;

@@ -224,6 +224,9 @@ chunks from two installed versions.
 The headset also includes the panel's store SHA-256 receipt with each backend
 call, Steam read, and event poll. It rejects a request if the installed receipt
 changed before the next status refresh; reopen the panel to use the new version.
+Panel-ready, error, and trusted-pointer reports also carry the current panel
+session. A delayed report from a closed panel cannot change the new panel's
+status or count as input to that panel.
 
 ## For plugin authors
 

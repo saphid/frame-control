@@ -107,6 +107,24 @@ await send({type:'framey:scroll:result',session:scrollSession,direction:'down',m
 assert.equal(el('frameyPanelStatus').textContent,'Scrolled plugin down');
 await send({type:'framey:scroll:result',session:scrollSession,direction:'down',moved:false});
 assert.equal(el('frameyPanelStatus').textContent,'No more plugin content in that direction');
+// WindowProxy also survives panel navigation for lifecycle and input messages.
+// An old iframe must not mark a replacement ready, hide its error, or record
+// controller evidence for the new panel.
+const beforeStatusRequests=requests.length;
+for(const type of ['framey:ready','framey:input','framey:error']) {
+  await send({type,session:'old',message:'old panel failed'});
+  await send({type,message:'missing session'});
+}
+assert.equal(requests.length,beforeStatusRequests);
+assert.equal(el('frameyPanelStatus').textContent,'No more plugin content in that direction');
+await send({type:'framey:ready',session:scrollSession});
+assert.equal(el('frameyPanelStatus').textContent,'Plugin panel ready');
+assert.equal(requests.at(-1).path,'/api/framey/check');
+assert.equal(requests.at(-1).body.kind,'panel');
+await send({type:'framey:input',session:scrollSession});
+assert.equal(requests.at(-1).body.kind,'input');
+await send({type:'framey:error',session:scrollSession,message:'current panel failed'});
+assert.equal(el('frameyPanelStatus').textContent,'Plugin panel unavailable: current panel failed');
 el('frameyClose').onclick();
 const replyCount=replies.length;
 el('frameyScrollUp').onclick();
