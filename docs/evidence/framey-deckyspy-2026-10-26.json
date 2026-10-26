@@ -1,0 +1,79 @@
+{
+  "timeUtc": "2026-10-26T22:28:36.276360+00:00",
+  "storeId": 89,
+  "version": "0.6.7",
+  "officialSha256": "2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7",
+  "runtime": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+  },
+  "architecture": "aarch64",
+  "scope": "Read-only system monitoring, a silent local warning and private plugin settings; live ARM64 backend through local opaque Chromium. No worn VR.",
+  "backend": {
+    "successfulMethods": [
+      "get_battery",
+      "get_boottime",
+      "get_cpu",
+      "get_memory",
+      "get_net_interface",
+      "get_settings",
+      "get_top_k_mem_procs",
+      "get_version"
+    ],
+    "memoryTotalMatchedProcMeminfo": true,
+    "batteryPercent": 100,
+    "noNetworkOrProcessStateChanged": true
+  },
+  "browser": {
+    "scope": "local opaque Chromium with live actual Frame ARM64 Decky 3.3.0",
+    "checks": {
+      "cpuVisible": true,
+      "memoryVisible": true,
+      "battery100": true,
+      "processVisible": true,
+      "networkVisible": true,
+      "version067": true,
+      "silentWarning": true,
+      "intervalChangedTo6": true,
+      "reopenRetainedInterval6": true,
+      "reopenedLiveArm64Metrics": true
+    }
+  },
+  "cleanup": {
+    "baseAbsent": true,
+    "unitAbsent": true,
+    "archiveAbsent": true
+  },
+  "independentCleanupAudit": {
+    "baseAbsent": true,
+    "unitAbsent": true,
+    "archiveAbsent": true,
+    "service": "MainPID=0\nLoadState=not-found\nActiveState=inactive\n",
+    "lockAbsent": true
+  },
+  "batteryBefore": [
+    100
+  ],
+  "batteryAfter": [
+    100
+  ],
+  "originalServiceStatesPreserved": true,
+  "lockReleased": true,
+  "fakeFrame": "Pinned official install/remove transaction suite passed, including dependency receipt and files; backend execution stubbed.",
+  "localRuntime": "Actual published Decky 3.3.0 amd64: all five cases passed, including historical bad-shim negative control.",
+  "tests": {
+    "python": {
+      "run": 1648,
+      "skipped": 16,
+      "result": "passed"
+    },
+    "fakeFramePinnedTransactions": "passed",
+    "node24": "passed"
+  },
+  "unverified": [
+    "Automatic low-battery/OOM alerts",
+    "Resume callbacks and game-time warnings",
+    "Sound",
+    "Worn VR and physical-controller input"
+  ]
+}

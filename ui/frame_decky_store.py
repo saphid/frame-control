@@ -3,10 +3,12 @@
 Only Frame Control owned plugin folders can be updated or removed. The store
 digest validates transport, not plugin trust; store plugins run as the user.
 """
+import base64
 import hashlib
 import io
 import json
 import os
+from pathlib import Path
 import re
 import secrets
 import urllib.request
@@ -131,8 +133,31 @@ def archive_info(data, expected_hash, expected_name):
         return folder
 
 
+DECKYSPY_DIGEST = '2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7'
+PSUTIL_DIGESTS = {
+    'x86_64': '076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+    'aarch64': 'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+}
+
+
+def apply_script(plugin_id, digest):
+    """Send verified offline dependencies only for the exact managed plugin."""
+    if plugin_id != 89 or digest != DECKYSPY_DIGEST:
+        return APPLY
+    wheels = {}
+    for arch, expected in PSUTIL_DIGESTS.items():
+        data = (Path(__file__).parent/'vendor/psutil-7.2.2'/f'{arch}.whl').read_bytes()
+        if hashlib.sha256(data).hexdigest() != expected:
+            raise ValueError('Bundled psutil dependency SHA-256 mismatch')
+        wheels[arch] = base64.b64encode(data).decode('ascii')
+    # stdin is Python source, never shell arguments or a shared remote temp file.
+    battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
+    return ('FRAMEY_BACKEND_WHEELS = '+repr(wheels)+'\n'
+            +'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'+APPLY)
+
+
 APPLY = r'''
-import fcntl,hashlib,json,os,pathlib,shutil,subprocess,sys,zipfile
+import base64,fcntl,hashlib,io,json,os,pathlib,platform,shutil,subprocess,sys,zipfile
 action,token,plugin_id,digest,folder,version,expected_installed = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
@@ -228,6 +253,51 @@ try:
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
+            # DeckySpy's official archive omits its required psutil dependency.
+            # The BSD wheels are packaged offline by Frame Control and selected
+            # for the native loader; no pip, network or system path changes.
+            if int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy':
+                arch=platform.machine()
+                pins={
+                    'x86_64':'076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+                    'aarch64':'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+                }
+                encoded=globals().get('FRAMEY_BACKEND_WHEELS',{}).get(arch)
+                if arch not in pins or not encoded:
+                    raise RuntimeError('Missing native psutil dependency for DeckySpy')
+                wheel_data=base64.b64decode(encoded,validate=True)
+                if hashlib.sha256(wheel_data).hexdigest()!=pins[arch]:
+                    raise RuntimeError('DeckySpy psutil dependency SHA-256 mismatch')
+                modules=unpacked/'py_modules'
+                for name in ('psutil','psutil-7.2.2.dist-info'):
+                    if (modules/name).exists(): raise RuntimeError('DeckySpy dependency collides with archive')
+                with zipfile.ZipFile(io.BytesIO(wheel_data)) as wheel:
+                    for member in wheel.infolist():
+                        path=pathlib.PurePosixPath(member.filename)
+                        if (path.is_absolute() or '..' in path.parts or not path.parts or
+                            path.parts[0] not in ('psutil','psutil-7.2.2.dist-info')):
+                            raise RuntimeError('Unsafe psutil dependency member')
+                        if member.is_dir(): continue
+                        payload=wheel.read(member)
+                        if payload[:4]==b'\x7fELF' and int.from_bytes(payload[18:20],'little')!=({'x86_64':62,'aarch64':183}[arch]):
+                            raise RuntimeError('Incorrect psutil native architecture')
+                        dest=modules/member.filename
+                        dest.parent.mkdir(parents=True,exist_ok=True)
+                        dest.write_bytes(payload)
+                        dest.chmod(0o600)
+                compat=modules/'framey_battery.py'
+                if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
+                battery_source=globals().get('FRAMEY_BACKEND_BATTERY_SOURCE')
+                if not isinstance(battery_source,str) or not battery_source:
+                    raise RuntimeError('Missing DeckySpy battery compatibility source')
+                compat.write_text(battery_source,encoding='utf-8')
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                old='        battery = psutil.sensors_battery()\n'
+                if source.count(old)!=1: raise RuntimeError('DeckySpy battery source changed')
+                source=source.replace(old,'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('deckyspy-psutil-and-battery')
             # These legacy backends launch system dbus-send (1.1.6 via /bin/sh).
             # Decky's PyInstaller LD_LIBRARY_PATH selects bundled libtinfo built
             # against newer glibc than Frame OS. Restore its saved system path
@@ -343,7 +413,7 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             ssh('umask 077; cat > ' + remote, stdin=data, text=False, timeout=120)
         report({'install':'Installing', 'update':'Updating', 'remove':'Removing'}[action] + ' plugin on Frame', 80)
         return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]} {expected_installed}',
-                              stdin=APPLY, timeout=90))
+                              stdin=apply_script(plugin_id, plugin["sha256"]), timeout=90))
     finally:
         if data is not None:
             try: ssh('rm -f ' + remote, timeout=10)

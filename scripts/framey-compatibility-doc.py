@@ -85,7 +85,12 @@ def render(data):
         'Exact managed installs also restore the system library path for D-Bus subprocesses, repairing a real Frame OS libtinfo/glibc failure in MusicControl 1.1.6. '
         'Both official entries pass transport/seek/volume, Info and reopen in local Chromium with actual Decky 3.3.0 amd64 and a private silent MPRIS service. '
         'Actual ARM64 Decky on the Frame passes read-only empty-player discovery for both. Existing copies need remove/reinstall or an explicit managed update. '
-        'Actual media playback on ARM64, artwork and worn VR remain unverified; both stay partial.', '',
+        'Actual media playback on ARM64, artwork and worn VR remain unverified; both stay partial. '
+        'A [DeckySpy follow-up](evidence/framey-deckyspy-2026-10-26.md) repairs its omitted psutil dependency with pinned BSD stable-ABI amd64/ARM64 wheels and a plugin-local Frame battery-name fallback. '
+        'Its actual Decky 3.3.0 ARM64 backend passed read-only metrics under the shared lock, with memory independently matched to /proc/meminfo. '
+        'Local opaque Chromium used that live ARM64 backend to render CPU, memory, battery, processes and interfaces, display a silent warning toast and save/reopen a private refresh setting. '
+        'DeckySpy qualifies as works for system monitoring while its panel is open. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified. '
+        'Cleanup and an independent removal audit passed; battery stayed 100 → 100 and original service states were preserved. Existing copies need update/reinstall.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',

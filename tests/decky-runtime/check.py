@@ -78,7 +78,7 @@ def main():
     env = dict(os.environ, PATH=str(tools)+':'+os.environ['PATH'])
     Path('/tmp/frame-control-decky-plugin-runtime-test').write_bytes(data)
     install = subprocess.run([sys.executable, '-', 'install', 'runtime-test', str(record['id']),
-        record['sha256'], record['folder'], record['version'], '-'], input=frame_decky_store.APPLY,
+        record['sha256'], record['folder'], record['version'], '-'], input=frame_decky_store.apply_script(record['id'], record['sha256']),
         capture_output=True, text=True, env=env, timeout=15)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
@@ -164,6 +164,22 @@ def main():
                 assert state['next'] == state['previous'] == 1 and state['Position'] == 45000000, state
                 report['independentState'] = state
                 report['result'] = 'discovery, metadata, transport, seek and volume passed'
+            elif case['probe'] == 'system-monitor':
+                def metric(method):
+                    response = legacy(method)
+                    if response['code'] != 0:
+                        raise ValueError(response['data'])
+                    return json.loads(response['data'])
+                assert legacy('get_version') == {'code': 0, 'data': record['version']}
+                memory = until_ready(lambda: metric('get_memory'), 'DeckySpy stats thread')
+                assert memory['vmem']['total'] > 0 and 0 <= memory['vmem']['percent'] <= 100, memory
+                cpu = metric('get_cpu')
+                assert 0 <= cpu <= 100, cpu
+                assert metric('get_boottime') > 0
+                assert isinstance(metric('get_battery')['battery'], bool)
+                assert isinstance(metric('get_net_interface'), list)
+                assert isinstance(legacy('get_settings', key='framey.runtime-test', default=True)['data'], bool)
+                report['result'] = 'discovery, native psutil import and read-only system metrics passed'
             else:
                 assert case['probe'] == 'screenshots'
                 assert legacy('was_rescued') is False

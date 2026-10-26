@@ -59,6 +59,17 @@ class Compatibility(unittest.TestCase):
                 frame_decky_store.change(no_ssh, 'install', 42)
             download.assert_not_called()
 
+    def test_old_deckyspy_copy_does_not_inherit_fixed_install_status(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 89)
+        installed = {'plugins': [dict(storeId=89, version=plugin['version'], sha256=plugin['sha256']),
+                                  dict(storeId=89, version=plugin['version'], sha256=plugin['sha256'],
+                                       compatShims=['deckyspy-psutil-and-battery'])]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
+        self.assertEqual(result[0]['compatibility']['status'], 'partial')
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertEqual(result[1]['compatibility']['status'], 'works')
+        self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
+
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
             self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')
