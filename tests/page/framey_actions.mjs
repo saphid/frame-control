@@ -12,11 +12,15 @@ class Element {constructor(){this.children=[];this.textContent='';this.attribute
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
 const elements=new Map();
-const window={React,ReactDOM:{createRoot:()=>({render(){}})},addEventListener(){}};
+const roots=new Map();
+const window={React,ReactDOM:{createRoot:node=>{
+  const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
+  roots.set(node,root);return root;
+}},addEventListener(){}};
 const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
-  navigator:{language:'en'}, parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
+  navigator:{language:'en'}, parent,DOMException,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
 // Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
@@ -101,6 +105,31 @@ assert.equal(toastNode.attributes.role,'status');
 assert.equal(toastNode.children[0].textContent,'Saved');
 assert.equal(toastNode.children[1].textContent,'Mode updated');
 toast.dismiss();assert.equal(toastNode.removed,true);
+// Decky's toast fields are ReactNode values. Keep JSX in the panel instead of
+// showing "[object Object]", and release their React roots on dismissal.
+const heading=React.createElement('em',null,'Saved');
+const detail=React.createElement('span',null,'Mode updated');
+const icon=React.createElement('svg',null);
+const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
+  subtext:'Open settings',showToast:true});
+const richNode=elements.get('framey-toasts').children[1];
+assert.equal(roots.get(richNode.children[0]).value,icon);
+assert.equal(roots.get(richNode.children[1]).value,heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(richNode.children[3].textContent,'Open settings');
+rich.dismiss();rich.dismiss();
+assert.equal(richNode.removed,true);
+for(const node of richNode.children.slice(0,3))assert.equal(roots.get(node).unmounted,true);
+let opened=0;
+const actionable=api.toaster.toast({title:'Open',onClick:()=>opened++});
+const actionNode=elements.get('framey-toasts').children[2];
+actionNode.children.at(-1).onclick();
+assert.equal(opened,1);
+assert.equal(actionNode.removed,true);
+actionable.dismiss();
+const hidden=api.toaster.toast({title:heading,showToast:false});
+assert.equal(elements.get('framey-toasts').children.length,3);
+hidden.dismiss();
 
 function LocalRoute(){return React.createElement('p',null,'Route content');}
 const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
@@ -111,6 +140,7 @@ assert.equal(window.DFL.findModuleChild(()=>true),null);
 window.DFL.Navigation.CloseSideMenus();
 assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0);
 undo();assert.equal(window.DFL.Navigation.Navigate('/plugin/details'),false);
+
 // Legacy backend methods preserve Decky keyword arguments and success envelopes.
 const legacyReply=window.__legacy.callPluginMethod('get_setting',{key:'theme'});
 const legacyCall=messages.filter(message=>message.type==='framey:call').at(-1);
@@ -124,6 +154,61 @@ const failedLegacy=window.__legacy.callPluginMethod('get_setting',{});
 const failedCall=messages.filter(message=>message.type==='framey:call').at(-1);
 listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:failedCall.id,error:'Unavailable'}});
 assert.equal((await failedLegacy).success,false);
+
+// Local UI controls work without Steam components or fabricated hardware data.
+const tabChanges=[];
+const tabs=window.DFL.Tabs({tabs:[{id:'one',title:'One',content:'First'},
+  {id:'two',title:'Two',content:'Second'},{id:'locked',title:'Locked',disabled:true}],
+  activeTab:'two',onShowTab:id=>tabChanges.push(id)});
+assert.equal(nodes(tabs,'button')[1].props['aria-selected'],true);
+assert.deepEqual(nodes(tabs,'div').at(-1).children,['Second']);
+nodes(tabs,'button')[0].props.onClick();
+nodes(tabs,'button')[2].props.onClick();
+assert.deepEqual(tabChanges,['one']);
+assert.equal(window.DFL.Spinner({}).props.role,'status');
+assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
+assert.equal(window.DFL.joinClassNames('one',null,'two'),'one two');
+let eventCount=0;
+const unsubscribe=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(()=>eventCount++);
+assert.equal(typeof unsubscribe,'function');
+assert.equal(unsubscribe.unregister,unsubscribe);
+unsubscribe.unregister();unsubscribe();assert.equal(eventCount,0);
+assert.equal(window.SteamClient.System.ShutdownPC,undefined);
+assert.equal(window.DFL.Router.MainRunningApp,undefined);
+assert.equal(window.DFL.Router.RunningApps.length,0);
+assert.equal(window.DFL.Router.RunningApps,window.SteamUIStore.RunningApps);
+assert.ok(Object.isFrozen(window.SteamUIStore));
+assert.ok(Object.isFrozen(window.SuspendResumeStore));
+assert.equal(window.SuspendResumeStore.InitiateSleep,undefined);
+for(const name of ['App','appStore','appInfoStore','collectionStore'])assert.equal(window[name],undefined);
+for(const register of [window.SteamClient.System.UI.RegisterForSystemKeyEvents,
+  window.SteamClient.Apps.RegisterForGameActionUserRequest]){
+  const dispose=register(()=>eventCount++);assert.equal(dispose.unregister,dispose);dispose();
+}
+assert.equal(eventCount,0);
+const image=window.DFL.SuspensefulImage({src:'data:image/svg+xml,<svg/>',alt:'Setup',style:{width:50}});
+assert.equal(image.type,'img');assert.equal(image.props.alt,'Setup');assert.equal(image.props.style.width,50);
+await assert.rejects(window.SteamClient.Storage.GetJSON('missing'),/Not found/);
+await window.SteamClient.Storage.SetObject('settings',{enabled:false,count:3});
+assert.equal(await window.SteamClient.Storage.GetJSON('settings'),'{"enabled":false,"count":3}');
+assert.equal(window.localStorage.getItem('steam-client:settings'),'{"enabled":false,"count":3}');
+await assert.rejects(window.SteamClient.Storage.SetObject('large','x'.repeat(65537)),/Framey plugin cache is full/);
+await assert.rejects(window.SteamClient.Storage.SetObject('undefined',undefined),/JSON value/);
+assert.equal(window.indexedDB,undefined); // localForage must use bounded plugin storage.
+const unpatch=window.DFL.beforePatch({},'method',()=>{});
+assert.equal(unpatch.unpatch,unpatch);unpatch.unpatch();
+assert.equal(typeof window.DFL.showModal({type:'p'}).Close,'function');
+let selectedMenuItem=0;
+window.DFL.MenuItem({onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({disabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({bDisabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});
+window.DFL.MenuItem({onClick:()=>selectedMenuItem++,onSelected:()=>selectedMenuItem++}).props.onClick({});
+assert.equal(selectedMenuItem,2);
+for (const [locale,expected] of [['de-DE','german'],['zh-CN','schinese'],['zh-TW','tchinese'],
+  ['pt-BR','brazilian'],['en-US','english'],['xx-ZZ','english']]) {
+  context.navigator.language=locale;
+  assert.equal(await window.SteamClient.Settings.GetCurrentLanguage(),expected);
+}
 function GameRoute(){return React.createElement('p',null,window.DFL.useParams().appid);}
 const removeGame=api.routerHook.addRoute('/plugin/game/:appid/:view?',GameRoute);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
@@ -140,3 +225,35 @@ assert.throws(()=>api.routerHook.addRoute('/plugin/:id?/art',GameRoute));
 removeGame();
 assert.equal(window.DFL.useParams().appid,undefined);
 assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);
+
+// Event subscription is acknowledged before a method that immediately emits.
+const onMessage=listeners.find(x=>x.type==='message').handler;
+const eventValues=[];
+const callback=(...args)=>eventValues.push(args);
+assert.equal(api.addEventListener('timer:tick',callback),callback);
+const subscribe=messages.at(-1);
+assert.equal(subscribe.type,'framey:events');
+assert.deepEqual(Array.from(subscribe.args[0]),['timer:tick']);
+const before=messages.length;
+const timerCall=api.call('load_remaining_seconds');
+assert.equal(messages.length,before);
+// Other windows cannot inject backend replies.
+onMessage({source:{},data:{type:'framey:reply',id:subscribe.id,result:{events:[],cursor:0}}});
+await Promise.resolve();assert.equal(messages.length,before);
+onMessage({source:parent,data:{type:'framey:reply',id:subscribe.id,
+  result:{events:[{event:'timer:tick',args:[12,'seconds']}],cursor:1}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(eventValues,[[12,'seconds']]);
+const timerRequest=messages.at(-1);
+assert.equal(timerRequest.type,'framey:call');assert.equal(timerRequest.method,'load_remaining_seconds');
+onMessage({source:parent,data:{type:'framey:reply',id:timerRequest.id,result:null}});await timerCall;
+api.removeEventListener('timer:tick',callback);
+const unsubscribeRequest=messages.at(-1);assert.equal(unsubscribeRequest.type,'framey:events');
+assert.equal(unsubscribeRequest.args[0].length,0);
+onMessage({source:parent,data:{type:'framey:reply',id:unsubscribeRequest.id,
+  result:{events:[{event:'timer:tick',args:[99]}],cursor:2}}});
+for(let i=0;i<12;i++)await Promise.resolve();assert.equal(eventValues.length,1);
+assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky event/);
+assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
+listeners.find(x=>x.type==='unload').handler();
+assert.equal(messages.at(-1).type,'framey:events:close');

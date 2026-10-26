@@ -50,10 +50,11 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <p id="deckyJobStatus" role="status" aria-live="polite"></p><progress id="deckyJobProgress" max="100"></progress>
   <div class="row"><button id="deckyJobCheck" class="secondary" hidden>Check result</button></div></div>
 <div id="deckyStorePanel" hidden><div class="row" style="margin:16px 0"><label>Find a plugin <input id="deckySearch" type="search" placeholder="Name, author or description"></label>
-  <label>Show <select id="deckyStoreFilter"><option value="all">All plugins</option><option value="compatible">Without root requirement</option><option value="installed">Installed plugins</option></select></label></div>
+  <label>Show <select id="deckyStoreFilter"><option value="all">All plugins</option><option value="compatible">No known install blocker</option><option value="installed">Installed plugins</option></select></label></div>
   <p id="deckyStoreSummary" role="status" aria-live="polite"></p><div id="deckyStoreList" class="stack"></div>
   <div class="row" style="margin-top:14px"><button id="deckyStorePrevious" class="secondary">Previous</button><span id="deckyStorePage"></span><button id="deckyStoreNext" class="secondary">Next</button></div></div>
 <div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button></div>
+  <p id="frameyCompatibility"></p>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
 <h2>Extensions</h2><p>Local additions run only when opened in the isolated panel below. They can read status but cannot change headset settings through the extension API.</p>
@@ -103,6 +104,7 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
       catch(error){byId('actionStatus').textContent=error.message;quit.disabled=false;}};
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
+function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   activeFrameyId=null, frameySession=null, deckyBusy=false;
 async function refreshDecky(){try{deckyState=await api('/api/decky');
@@ -112,6 +114,7 @@ async function refreshDecky(){try{deckyState=await api('/api/decky');
   const list=byId('deckyInstalled');list.replaceChildren();
   for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
     const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);
+    const note=document.createElement('p');note.textContent=compatibilityText(plugin);row.append(note);
     if(plugin.storeId){const open=document.createElement('button');open.className='secondary';open.textContent='Open panel';
       open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
@@ -130,7 +133,7 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
   const q=byId('deckySearch').value.trim().toLowerCase();
   const filter=byId('deckyStoreFilter').value;
   const found=deckyStore.filter(p=>(!q||`${p.name} ${p.author||''} ${p.description}`.toLowerCase().includes(q))&&
-    (filter==='all'||(filter==='compatible'&&!p.root)||(filter==='installed'&&(deckyState?.plugins||[]).some(x=>x.storeId===p.id))));
+    (filter==='all'||(filter==='compatible'&&!p.root&&!p.compatibility?.blockInstall)||(filter==='installed'&&(deckyState?.plugins||[]).some(x=>x.storeId===p.id))));
   const size=20, pages=Math.max(1,Math.ceil(found.length/size));
   deckyStoreIndex=Math.min(deckyStoreIndex,pages-1);
   byId('deckyStoreSummary').textContent=`${found.length} plugin${found.length===1?'':'s'} found`;
@@ -140,12 +143,13 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
   if(!found.length)list.textContent='No plugins match this search.';
   for(const plugin of found.slice(deckyStoreIndex*size,(deckyStoreIndex+1)*size)){
     const row=document.createElement('div');row.className='block game';
-    const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version}${plugin.author?' · '+plugin.author:''} · ${plugin.description}`;
+    const label=document.createElement('div');label.textContent=`${plugin.name} ${plugin.version}${plugin.author?' · '+plugin.author:''} · ${plugin.description}`;
     const button=document.createElement('button');button.textContent='Install';
     const installed=(deckyState?.plugins||[]).find(p=>p.storeId===plugin.id);
     if(installed)button.textContent=installed.version===plugin.version?'Reinstall':'Update';
-    button.disabled=deckyBusy||!deckyState?.running||plugin.root;
-    if(plugin.root)label.textContent+=' · Needs root; not supported on Frame';
+    button.disabled=deckyBusy||!deckyState?.running||plugin.root||!!plugin.compatibility?.blockInstall;
+    const note=document.createElement('p');note.textContent=compatibilityText(plugin);label.append(note);
+    if(plugin.root && !plugin.compatibility?.blockInstall)label.append(' · Needs root; not supported on Frame');
     button.onclick=()=>deckyChange(installed?'update':'install',plugin);row.append(label,button);list.append(row);}}
 function deckyJobView(title,message,percent,failed=false){
   byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
@@ -191,15 +195,23 @@ async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.get
   finally{deckyBusy=false;await refreshDecky();}}
 byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
-  if(!(deckyState?.plugins||[]).some(p=>p.storeId===id))return;
+  const installed=(deckyState?.plugins||[]).find(p=>p.storeId===id);if(!installed)return;
+  byId('frameyCompatibility').textContent=compatibilityText(installed);
+  closeFrameyEvents();
   activeFrameyId=id;frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
   byId('frameyPanelStatus').textContent='Loading plugin panel…';
-  byId('frameyFrame').src=`/framey/panel/${id}#${frameySession}`;
+  byId('frameyFrame').src=`/framey/panel/${id}?session=${encodeURIComponent(frameySession)}#${frameySession}`;
   byId('frameyPanel').hidden=false;byId('frameyPanel').scrollIntoView();
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
     byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
 }
-byId('frameyClose').onclick=()=>{activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
+let frameyEventsActive=false;
+function closeFrameyEvents(){
+  if(frameyEventsActive&&activeFrameyId!==null&&frameySession)
+    api('/api/framey/events',{id:activeFrameyId,session:frameySession,events:[],cursor:0}).catch(()=>{});
+  frameyEventsActive=false;
+}
+byId('frameyClose').onclick=()=>{closeFrameyEvents();activeFrameyId=null;frameySession=null;byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;};
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
@@ -232,11 +244,27 @@ window.addEventListener('message',async event=>{
     api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
   if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
   if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
-  if(req.type!=='framey:call'||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
-  const pluginId=activeFrameyId,reply={type:'framey:reply',id:req.id};
+  if(req.type==='framey:events:close'){
+    if(req.session===frameySession)closeFrameyEvents();return;
+  }
+  if(req.type==='framey:events'){
+    if(req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||!Array.isArray(req.args)||
+      req.args.length!==2||!Array.isArray(req.args[0])||req.args[0].length>32||
+      req.args[0].some(name=>typeof name!=='string'||!/^[A-Za-z0-9_:/.-]{1,128}$/.test(name))||
+      !Number.isSafeInteger(req.args[1])||req.args[1]<0)return;
+    const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
+    frameyEventsActive=req.args[0].length>0;
+    try{reply.result=await api('/api/framey/events',{id:pluginId,session,events:req.args[0],cursor:req.args[1]});}
+    catch(error){reply.error=error.message;}
+    if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
+      event.source.postMessage(reply,'*');
+    return;
+  }
+  if(req.type!=='framey:call'||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
+  const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
   try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
-  if(pluginId===activeFrameyId&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
+  if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });
 window.addEventListener('pointerup',event=>{if(event.isTrusted)
   api('/api/framey/check',{kind:'input'}).catch(()=>{});},{passive:true});

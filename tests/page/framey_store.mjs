@@ -67,7 +67,7 @@ ctx.mockApi=async path => path==='/api/decky' ?
   Promise.reject(Error(`unexpected ${path}`));
 vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('refreshDecky()',ctx);
-assert.equal(el('deckyInstalled').children[0].children[2].disabled,false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
 el('deckySearch').value='';el('deckyStoreFilter').value='all';
 vm.runInContext('showDeckyStore()',ctx);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
@@ -117,3 +117,17 @@ await vm.runInContext('checkDeckyJob()',ctx);
 assert.match(el('deckyJobStatus').textContent,/app restarted and lost this job result/);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+
+// Known hardware blockers remain visible, cannot install, and keep their reason in the opened panel.
+ctx.hardware={id:900,name:'Hardware only',version:'1.0',description:'Fan control',root:false,
+  compatibility:{status:'na',reason:'Not supported on Frame: Deck fan hardware.',verification:['static archive','local browser'],blockInstall:true}};
+el('deckySearch').value='';el('deckyStoreFilter').value='all';
+vm.runInContext('deckyStore=[hardware];deckyState={running:true,plugins:[{...hardware,storeId:900}]};showDeckyStore()',ctx);
+const hardwareRow=el('deckyStoreList').children[0];
+assert.equal(hardwareRow.children[1].disabled,true);
+assert.match(hardwareRow.children[0].children[0].textContent,/N\/A: Not supported on Frame/);
+el('deckyStoreFilter').value='compatible';vm.runInContext('showDeckyStore()',ctx);
+assert.equal(el('deckyStoreList').children.length,0);
+vm.runInContext('openFrameyPanel(900,"Hardware only")',ctx);
+assert.match(el('frameyCompatibility').textContent,/Deck fan hardware/);
+assert.match(el('frameyCompatibility').textContent,/local browser/);

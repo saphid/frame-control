@@ -11,6 +11,11 @@
       : R.createElement(type, elementProps);
   };
   window.SP_JSX = {jsx, jsxs:jsx, Fragment:R.Fragment};
+  // Let plugins use optional chaining for Steam-only globals without inventing
+  // user identity or suspend state in this isolated document.
+  for (const name of ['App','appStore','appInfoStore','collectionStore']) window[name] = undefined;
+  window.SuspendResumeStore = Object.freeze({});
+  window.SteamUIStore = Object.freeze({RunningApps:Object.freeze([]), MainRunningApp:undefined});
   // Steam normally fills these token maps. Official plugins can safely use
   // their own fallback strings when the isolated panel has no Steam tokens.
   window.LocalizationManager = {m_rgLocalesToUse:[navigator.language || 'en'],
@@ -29,6 +34,9 @@
   let currentParams = {};
   let nextId = 0;
   let plugin;
+  const eventListeners = new Map();
+  let eventCursor = 0, eventRevision = 0, subscribedRevision = -1;
+  let eventRequest = null, eventTimer = null, eventClosed = false;
   // A sandboxed iframe has an opaque origin, so its native localStorage getter
   // throws SecurityError. Keep the familiar synchronous API inside the iframe;
   // the parent stores only this plugin's bounded snapshot under its own origin.
@@ -57,17 +65,71 @@
       entries:Object.fromEntries(cache)}, '*');
   }
   Object.defineProperty(window, 'localStorage', {configurable:true, value:storage});
+  // localForage otherwise chooses the browser's exposed-but-denied IndexedDB
+  // driver in an opaque iframe. Let it detect the bounded localStorage driver.
+  Object.defineProperty(window, 'indexedDB', {configurable:true, value:undefined});
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
   setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
-  function ask(method, args, legacy=false) {
+  function request(method, args, legacy=false, type='framey:call') {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
     const id = ++nextId;
     return new Promise((resolve, reject) => {
       const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, 30000);
       pending.set(id, {resolve, reject, timer});
-      parent.postMessage({type:'framey:call', id, method, args, legacy}, '*');
+      parent.postMessage({type, id, method, args, legacy, session:cacheSession}, '*');
     });
+  }
+  function syncEvents() {
+    if (eventClosed) return Promise.resolve();
+    if (eventRequest) return eventRequest.then(() =>
+      subscribedRevision !== eventRevision ? syncEvents() : undefined);
+    const revision = eventRevision;
+    eventRequest = request('events', [[...eventListeners.keys()], eventCursor], false, 'framey:events')
+      .then(data => {
+        subscribedRevision = revision;
+        if (!data || !Array.isArray(data.events) || !Number.isSafeInteger(data.cursor))
+          throw Error('Invalid Decky event response');
+        eventCursor = data.cursor;
+        for (const event of data.events) {
+          if (!Array.isArray(event.args)) continue;
+          for (const listener of eventListeners.get(event.event) || [])
+            Promise.resolve().then(() => listener(...event.args)).catch(failure =>
+              console.warn('Decky event listener failed', failure));
+        }
+      }).finally(() => {eventRequest = null;});
+    return eventRequest.then(() => subscribedRevision !== eventRevision ? syncEvents() : undefined);
+  }
+  function refreshEvents() {
+    clearTimeout(eventTimer);
+    syncEvents().catch(failure => console.warn('Decky event bridge unavailable', failure.message))
+      .finally(() => {
+        clearTimeout(eventTimer);
+        if (!eventClosed && eventListeners.size)
+          eventTimer = setTimeout(refreshEvents, 1000);
+      });
+  }
+  function addPluginEvent(event, listener) {
+    if (typeof event !== 'string' || !/^[A-Za-z0-9_:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
+      throw Error('Invalid Decky event listener');
+    if (!eventListeners.has(event)) {
+      if (eventListeners.size >= 32) throw Error('Too many Decky event names');
+      eventListeners.set(event, new Set());
+    }
+    eventListeners.get(event).add(listener);
+    eventRevision++; refreshEvents();
+    return listener; // Decky returns the registered callback, not a disposer.
+  }
+  function removePluginEvent(event, listener) {
+    const listeners = eventListeners.get(event);
+    if (!listeners?.delete(listener)) return;
+    if (!listeners.size) eventListeners.delete(event);
+    eventRevision++; refreshEvents();
+  }
+  async function ask(method, args, legacy=false) {
+    // Subscribe before a backend call can emit its immediate response events.
+    if (eventListeners.size && (eventRequest || subscribedRevision !== eventRevision)) await syncEvents();
+    return request(method, args, legacy);
   }
   addEventListener('message', event => {
     if (event.source === parent && event.data?.type === 'framey:cache:seed' &&
@@ -87,7 +149,12 @@
     pending.delete(event.data.id); clearTimeout(item.timer);
     if (event.data.error) item.reject(Error(event.data.error)); else item.resolve(event.data.result);
   });
-  addEventListener('unload', () => { try { plugin?.onDismount?.(); } catch (_) {} });
+  addEventListener('unload', () => {
+    eventClosed = true; clearTimeout(eventTimer);
+    try { plugin?.onDismount?.(); } catch (_) {}
+    // Parent tears down the remote session on close; CEF also expires it after 15s.
+    parent.postMessage({type:'framey:events:close', session:cacheSession}, '*');
+  });
   addEventListener('pointerup', event => {
     if (event.isTrusted) parent.postMessage({type:'framey:input'}, '*');
   }, {passive:true});
@@ -133,6 +200,25 @@
     showValue && R.createElement('span', null, String(value) + valueSuffix));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
+  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Tabs = ({tabs=[], activeTab, onShowTab}) => {
+    const [selected, setSelected] = R.useState(tabs[0]?.id);
+    const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
+    return R.createElement('div', null,
+      R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
+        type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
+        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}}, tab.title))),
+      R.createElement('div', {role:'tabpanel'}, current?.content));
+  };
+  const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
+    title && R.createElement('h2', null, title), R.createElement(Tabs, {
+      tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
+        id:page.route || String(index), title:page.title, content:page.content}))}));
+  const ProgressBar = ({nProgress=0, value, max=100}) => R.createElement('progress', {
+    value:Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
+    R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
+      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
   const ConfirmModal = ({strTitle, strOKButtonText, onOK, children}) => R.createElement('section', null,
     R.createElement('h2', null, strTitle), children,
     R.createElement('button', {type:'button', onClick:()=>{onOK?.(); closeModal();}}, strOKButtonText || 'Close'));
@@ -189,34 +275,121 @@
     // Steam routes and global components have no equivalent in the isolated panel.
     addPatch:()=>()=>{}, removePatch:()=>{}, addGlobalComponent:()=>{}, removeGlobalComponent:()=>{},
   };
+  const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
+  const showModal = element => {
+    modalRoot.render(R.createElement('section', null,
+      R.createElement('button', {type:'button',onClick:closeModal}, 'Close'), element));
+    return {Close:closeModal};
+  };
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable: passthrough('div'), ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
+    DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
+    SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
+    Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
+    DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
+    Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
+    ProgressBar, ProgressBarWithInfo:ProgressBar,
+    gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
+    gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
+    quickAccessControlsClasses:{}, mainMenuAppRunningClasses:{}, libraryAssetImageClasses:{},
+    joinClassNames:(...names)=>names.filter(Boolean).join(' '),
+    sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null), CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
-    showModal: element => modalRoot.render(R.createElement('section', null,
-      R.createElement('button', {onClick:closeModal}, 'Close'), element)),
+    showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
-    afterPatch: () => () => {}, createReactTreePatcher: () => () => {},
+    afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     findInReactTree: () => null, findModuleExport: () => null, findModuleChild: () => null,
+    findModule:()=>null, findModuleByExport:()=>null, findClassModule:()=>null,
+    findClass:()=>null, findSP:()=>null, fakeRenderComponent:()=>null,
     appDetailsClasses: {}, appDetailsHeaderClasses: {},
     useParams: () => currentParams,
   };
+  // No Steam game is attached to an isolated panel. Subscriptions have a
+  // disposable handle but emit no fabricated game, power, or input events.
+  const subscription = () => {const dispose=()=>{};dispose.unregister=dispose;return dispose;};
+  const register = names => Object.fromEntries(names.map(name=>[name,subscription]));
+  const steamLanguage = () => {
+    const locale = (navigator.language || 'en').toLowerCase();
+    if (/^zh-(tw|hk|mo|hant)/.test(locale)) return 'tchinese';
+    if (locale.startsWith('pt-br')) return 'brazilian';
+    if (locale.startsWith('es-419')) return 'latam';
+    return ({en:'english',de:'german',fr:'french',es:'spanish',it:'italian',ja:'japanese',
+      ko:'koreana',zh:'schinese',ru:'russian',pl:'polish',pt:'portuguese',nl:'dutch',
+      da:'danish',fi:'finnish',sv:'swedish',no:'norwegian',cs:'czech',hu:'hungarian',
+      ro:'romanian',th:'thai',tr:'turkish',vi:'vietnamese',uk:'ukrainian',id:'indonesian'
+    })[locale.split('-')[0]] || 'english';
+  };
+  window.SteamClient = {
+    Settings:{GetCurrentLanguage:async()=>steamLanguage(),
+      ...register(['RegisterForSettingsChanges'])},
+    Apps:register(['RegisterForAppDetails','RegisterForGameActionTaskChange',
+      'RegisterForGameActionStart','RegisterForGameActionEnd','RegisterForGameActionUserRequest']),
+    GameSessions:register(['RegisterForAppLifetimeNotifications','RegisterForScreenshotNotification']),
+    System:{...register(['RegisterForOnResumeFromSuspend','RegisterForOnSuspendRequest']),
+      UI:register(['RegisterForFocusChangeEvents','RegisterForSystemKeyEvents'])},
+    Input:register(['RegisterForControllerInputMessages','RegisterForControllerStateChanges']),
+    User:register(['RegisterForLoginStateChange','RegisterForPrepareForSystemSuspendProgress',
+      'RegisterForResumeSuspendedGamesProgress','RegisterForCurrentUserChanges']),
+    Overlay:register(['RegisterForOverlayActivated']),
+    UI:register(['RegisterForUIModeChanged']),
+    // This is private plugin cache, not Steam's account/global JSON store.
+    Storage:{
+      GetJSON:async key=>{
+        const value=storage.getItem('steam-client:'+String(key));
+        if(value===null)throw Error('Not found');
+        return value;
+      },
+      SetObject:async(key,value)=>{
+        const encoded=JSON.stringify(value);
+        if(encoded===undefined)throw Error('SteamClient.Storage requires a JSON value');
+        storage.setItem('steam-client:'+String(key),encoded);
+      },
+    },
+  };
+  DFL.Router = {...DFL.Navigation, ...window.SteamUIStore};
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
-  const toaster = {toast: ({title, body, duration, showToast=true, onClick}={}) => {
-    const data = {title, body};
+  const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
+    const data = {title, body, subtext, icon, logo};
     if (!showToast) return {data, dismiss(){}};
     const item = document.createElement('section');
     item.setAttribute('role','status');
-    const heading = document.createElement('strong'); heading.textContent = String(title || 'Plugin notice');
-    const detail = document.createElement('p'); detail.textContent = String(body || '');
+    const roots = [];
+    const addContent = (tag, value) => {
+      if (value === null || value === undefined || value === false) return;
+      const node = document.createElement(tag);
+      if (R.isValidElement(value) || Array.isArray(value)) {
+        const root = window.ReactDOM.createRoot(node);
+        roots.push(root);
+        root.render(value);
+      } else if (typeof value === 'string' || typeof value === 'number') {
+        node.textContent = String(value);
+      } else return;
+      item.append(node);
+    };
+    addContent('span', logo);
+    addContent('span', icon);
+    addContent('strong', title || 'Plugin notice');
+    addContent('p', body);
+    addContent('small', subtext);
     const close = document.createElement('button'); close.type='button'; close.textContent='Dismiss';
-    const dismiss = () => {item.remove(); clearTimeout(timer);};
-    close.onclick=dismiss; item.append(heading, detail, close);
+    let dismissed = false;
+    const dismiss = () => {
+      if (dismissed) return;
+      dismissed = true;
+      clearTimeout(timer);
+      for (const root of roots) root.unmount();
+      item.remove();
+    };
+    close.onclick=dismiss; item.append(close);
     if (typeof onClick === 'function') {
       const open = document.createElement('button'); open.type='button'; open.textContent='Open';
       open.onclick=()=>{onClick(); dismiss();}; item.append(open);
@@ -271,7 +444,7 @@
       _version: Math.min(version, 2),
       call: (method, ...args) => ask(method, args),
       callable: method => (...args) => ask(method, args),
-      addEventListener: () => {}, removeEventListener: () => {},
+      addEventListener:addPluginEvent, removeEventListener:removePluginEvent,
       routerHook, toaster,
       fetchNoCors: () => Promise.reject(Error('Decky proxy fetch is unavailable in Framey')),
       executeInTab: () => Promise.reject(Error('Steam tab injection is unavailable in Framey')),

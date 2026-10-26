@@ -181,6 +181,27 @@ class StoreTransaction(unittest.TestCase):
                 self.assertNotEqual(result.returncode, 0)
                 self.assertFalse(self.folder.exists())
 
+    def test_remote_apply_rechecks_plugin_name_under_transaction_lock(self):
+        data, _ = archive()
+        other = self.folder.parent / 'Other'
+        other.mkdir()
+        (other / 'plugin.json').write_text('{"name":"Example"}')
+        result = self.apply('install', data)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('different plugin with this name', result.stderr)
+        self.assertFalse(self.folder.exists())
+        self.assertEqual((other / 'plugin.json').read_text(), '{"name":"Example"}')
+        self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
+
+        (other / 'plugin.json').write_text('{"name":"Distinct"}')
+        self.assertEqual(self.apply('install', data).returncode, 0)
+        (other / 'plugin.json').write_text('{"name":"Example"}')
+        result = self.apply('update', data)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('different plugin with this name', result.stderr)
+        self.assertTrue(self.folder.exists())
+        self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
+
 
 class StoreHost(unittest.TestCase):
     def test_reviewed_archive_changed_before_install_does_not_download(self):
@@ -218,6 +239,36 @@ class StoreHost(unittest.TestCase):
                 frame_decky_store.change(lambda *args, **kwargs: self.fail('No headset write expected'),
                                          'install', 42)
             network.assert_not_called()
+
+    def test_update_rejects_name_taken_by_another_plugin_before_download(self):
+        state = {'managed': True, 'running': True, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Old Name', 'version': '1.0'},
+            {'storeId': 43, 'folder': 'Other', 'name': 'Example', 'version': '1.0'}]}
+        catalog = [{'id': 42, 'name': 'Example', 'root': False,
+                    'sha256': 'a' * 64, 'version': '2.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen',
+                          side_effect=AssertionError('No download expected')):
+            with self.assertRaisesRegex(ValueError, 'different plugin with this name'):
+                frame_decky_store.change(lambda *args, **kwargs: self.fail('No headset write expected'),
+                                         'update', 42)
+
+    def test_update_allows_its_own_existing_name(self):
+        data, digest = archive()
+        state = {'managed': True, 'running': True, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
+        catalog = [{'id': 42, 'name': 'Example', 'root': False,
+                    'sha256': digest, 'version': '2.0'}]
+        calls = []
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            result = frame_decky_store.change(lambda command, **kwargs: calls.append(command) or '{}',
+                                               'update', 42)
+        self.assertEqual(result, {})
+        self.assertEqual(len(calls), 3)  # Upload, apply, and temporary archive cleanup.
+        self.assertIn('update', calls[1])
 
     def test_owned_plugin_can_be_removed_without_store_network(self):
         state = {'managed': True, 'running': True, 'plugins':

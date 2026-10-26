@@ -6,6 +6,8 @@ user services under `~/.local/share/frame-control`; neither needs root or a
 read-write SteamOS root filesystem. Decky's standard Quick Access menu still
 does not appear in the separate SteamVR CEF target.
 
+See the [complete official-store compatibility table](framey-compatibility.md) for version-specific statuses, blockers and verification limits. Both stores and installed panels show the same digest-scoped results; a new published archive starts unverified.
+
 ## Use in the headset
 
 Install **Frame Control in VR** and **Decky Loader on Frame** from Frame Control
@@ -49,6 +51,25 @@ restores the cache when a panel reopens if the parent's browser storage is
 available. If storage is denied or cleared, the cache lasts only for the current
 panel. Use the plugin backend for settings that must survive cache loss.
 
+Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
+events while the panel is open. The parent resolves the plugin name from its
+installed store receipt, polls Steam's existing Decky event connection, and sends
+only subscribed events to that panel session. A subscription is established
+before a backend call can emit its response. The bridge allows 32 event names,
+queues at most 64 events and 48 KiB, and drops any event whose arguments exceed
+8 KiB. Polling occurs about once a second, so this is unsuitable for high-rate
+input/audio streams. Closing/reopening a panel removes its subscriptions;
+abandoned CEF subscriptions expire after 15 seconds. This does not deliver
+global notifications while a Framey panel is closed.
+
+The [26 October live checks](evidence/framey-events-backend-2026-10-26.json)
+used the actual official Notebook and Simple Timer Python backends in a private
+removable ARM64 Decky service. Notebook's default notebook saved a pointer stroke
+and loaded it after a backend restart. Simple Timer's start/cancel controls,
+countdown, completion toast and persisted recents/subtle mode worked. Simple
+Timer remains partial: its own expired-timer startup raises a missing
+`timer_task` error, sound/suspend are unsupported, and worn VR was not checked.
+
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
@@ -82,6 +103,26 @@ It does not execute their actual backend code or prove their frontend controls
 work in VR. Storage Cleaner rendered an
 [empty-data panel in local Chromium](evidence/framey-api-v1-browser-2026-10-25.md).
 Its cleanup actions were not tested; they may remove local game saves.
+
+Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
+and progress bars. Its explicit SteamClient subscription fallbacks return
+disposable handles without emitting fabricated events. There is no attached
+running game in `DFL.Router`, and power, app launch and hardware mutation methods
+are not supplied. Plugins that need live Steam stores still require integration
+work. IndexedDB is hidden because the browser exposes it but denies access in
+an opaque iframe; localForage can then select Framey's bounded localStorage.
+Direct IndexedDB users remain unsupported.
+
+`SuspensefulImage` renders a native image. SteamClient `Storage.GetJSON` and
+`SetObject` use the same bounded per-plugin cache, including panel reopen
+persistence; they do not read Steam's account/global JSON store. Missing keys
+reject with `Not found`. Detached `SteamUIStore.RunningApps` is a frozen empty
+list, and the suspend store has no methods. Optional Steam app/account globals
+are undefined. These fallbacks let settings render without inventing live
+games or account identity. [The exact-bundle follow-up](evidence/framey-ui-fallbacks-2026-10-26.json)
+verifies Pause Games and Tailscale Control settings in local Chromium; their
+primary backend actions remain unverified. PlayTime still requires Steam's
+real app store and game observers.
 
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,
@@ -162,7 +203,7 @@ The Decky and headset service manual removal commands are in
 ## Fast worn-headset check
 
 With an already installed Framey plugin and someone wearing the headset, run
-`python3 scripts/framey-worn-check.py` from a paired computer. The script
+`python3 scripts/framey-worn-check.py --worn-confirmed` from a paired computer. The script
 atomically acquires `/tmp/frame-test.lock` before reading battery or SteamVR
 activity. If another job owns the lock, it makes no sensor reads. It releases
 its own lock without starting the interaction when the headset is in standby.
@@ -175,3 +216,14 @@ color count, then removes the private temporary image from both devices.
 Pixel variety alone cannot prove the UI text was legible; a person must still
 confirm the view in the headset. The script does not install or remove a plugin,
 alter Steam settings, or wake the headset.
+
+
+## Unattended VR checks
+
+The [unattended check](framey-vr-check.md) can wake, inspect and capture the
+real compositor, send OpenVR mouse input, and exercise a temporary sample
+against live Decky with restoration and shared-lock protection. Its
+[device evidence](evidence/framey-vr-2026-10-25/README.md) distinguishes these
+checks from physical controller and wearer validation. A trusted pointer event
+and active-headset telemetry are both reproducible without wearing the Frame;
+they must not be labelled as physical controller proof.

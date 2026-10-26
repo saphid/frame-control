@@ -13,6 +13,7 @@ import urllib.request
 import zipfile
 
 import frame_decky
+import framey_compatibility
 
 
 STORE_URL = 'https://plugins.deckbrew.xyz/plugins'
@@ -65,7 +66,10 @@ def catalog():
     counts = {}
     for item in result:
         counts[item['id']] = counts.get(item['id'], 0) + 1
-    return [item for item in result if counts[item['id']] == 1]
+    unique = [item for item in result if counts[item['id']] == 1]
+    for item in unique:
+        item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
+    return unique
 
 
 def archive_info(data, expected_hash, expected_name):
@@ -171,6 +175,19 @@ try:
             z.extractall(stage)
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
+            # Recheck under the transaction lock. Another store operation may
+            # have installed a colliding name while this archive downloaded.
+            proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
+            for peer in base.iterdir():
+                if peer==target or peer.is_symlink() or not peer.is_dir(): continue
+                manifest=peer/'plugin.json'
+                if manifest.is_symlink() or not manifest.is_file(): continue
+                try:
+                    if manifest.stat().st_size>16384: continue
+                    peer_data=json.loads(manifest.read_text())
+                    if isinstance(peer_data,dict) and peer_data.get('name')==proposed_name:
+                        raise RuntimeError('A different plugin with this name is already installed')
+                except (OSError,ValueError,UnicodeError): continue
             (unpacked/marker).write_text(json.dumps({'storeId':int(plugin_id),'sha256':digest,'version':version})+'\n')
     # Stop even a failed unit before removal to cancel any pending auto-restart.
     if running or action=='remove': service('stop','frame-control-decky.service')
@@ -222,9 +239,14 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             raise ValueError('The official store version changed; refresh the store and review it again')
         if plugin['root']:
             raise ValueError('Root plugins are not supported by the Frame user service')
-        existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']]
-        if action == 'install' and existing_name:
-            raise ValueError('A plugin with this name is already installed')
+        if plugin.get('compatibility', {}).get('blockInstall'):
+            raise ValueError(plugin['compatibility']['reason'])
+        # Decky routes backend calls by plugin name. A store update may rename
+        # its plugin, so check names for updates as well as fresh installs.
+        existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']
+                         and (action == 'install' or p.get('storeId') != plugin_id)]
+        if existing_name:
+            raise ValueError('A different plugin with this name is already installed')
         if action == 'update' and len(installed) != 1:
             raise ValueError('Only an installed Frame Control store plugin can be updated')
     data = None

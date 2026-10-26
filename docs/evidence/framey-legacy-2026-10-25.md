@@ -21,4 +21,5 @@ unmanaged plugin IDs are rejected.
 Verification: `python3 -m unittest discover -s tests -p 'test_framey*.py'`
 (21 passed), `node tests/page/framey_actions.mjs`, and
 `scripts/e2e.sh test_framey` (2 passed). No official Python backend code or
-headset state was changed by these checks. Real Frame backend behavior,+controller input, playback and worn VR use remain unverified.
+headset state was changed by these checks. Real Frame backend behavior,
+controller input, playback and worn VR use remain unverified.

@@ -10,7 +10,9 @@ import threading
 import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
-from framey_official import PLUGINS as OFFICIAL_PLUGINS, archive as official_archive
+from framey_official import LEGACY_PLUGINS, PLUGINS as PANEL_PLUGINS, archive as official_archive
+
+OFFICIAL_PLUGINS = PANEL_PLUGINS + LEGACY_PLUGINS
 
 require()  # Skip the module outside the disposable fake Frame, like its peers.
 
@@ -157,7 +159,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertIn('version changed', stale.get('error', ''))
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
 
-    def test_pinned_official_api_v1_and_v2_plugins_install_and_remove(self):
+    def test_pinned_official_plugins_install_and_remove(self):
         self.backend()
         catalog = {plugin['id']:plugin for plugin in ok('GET', '/api/decky/store')['plugins']}
         for plugin in OFFICIAL_PLUGINS:

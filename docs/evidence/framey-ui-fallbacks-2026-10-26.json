@@ -1,0 +1,107 @@
+{
+  "checkedAtUtc": "2026-10-26T00:29:00Z",
+  "scope": "Exact archived frontends only. Production Framey host with bounded SteamClient JSON cache, image fallback and inert Steam subscriptions/context. Opaque iframe; all backend calls and network denied. No headset or plugin backends used in this follow-up.",
+  "baseHostCommit": "52a0974",
+  "before": {
+    "ready": 96,
+    "failed": 20
+  },
+  "after": {
+    "ready": 98,
+    "failed": 18
+  },
+  "regressions": [],
+  "observations": [
+    {
+      "id": 13,
+      "name": "Pause Games",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "load_settings"
+      ]
+    },
+    {
+      "id": 43,
+      "name": "Tailscale Control",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "get_tailscale_state"
+      ]
+    },
+    {
+      "id": 46,
+      "name": "Steamback",
+      "ready": false,
+      "error": "Cannot read properties of undefined (reading 'm_CurrentUser')",
+      "logs": [],
+      "methods": []
+    },
+    {
+      "id": 66,
+      "name": "PlayTime",
+      "ready": false,
+      "error": "Cannot read properties of undefined (reading 'm_mapApps')",
+      "logs": [
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Impossible to get \"RunningApps\" observe. Events will not be attached."
+        },
+        {
+          "kind": "error",
+          "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Unable to get settings, saving defaults Error: Not found"
+        }
+      ],
+      "methods": [
+        "fetch_playtime_information",
+        "statistics_for_last_two_weeks"
+      ]
+    },
+    {
+      "id": 120,
+      "name": "Reroll",
+      "ready": true,
+      "error": null,
+      "logs": [],
+      "methods": [
+        "get_setting",
+        "version"
+      ]
+    }
+  ],
+  "tailscaleFocusedCheck": {
+    "rendered": [
+      "Settings",
+      "Toggle Tailscale",
+      "Exit Node IP",
+      "Toggle LAN Access",
+      "Advanced Settings",
+      "Device Status",
+      "Tailscale Setup"
+    ],
+    "assetError": "Hardcoded localhost:1337 QR SVG blocked by image CSP",
+    "actions": "Inspected only; no toggles, exit nodes, installs or connection actions"
+  },
+  "pauseGamesFocusedCheck": {
+    "rendered": [
+      "Pause before Suspend",
+      "Pause on focus loss"
+    ],
+    "actions": "Inspected only; no process signaling or suspend actions"
+  },
+  "storageChecks": [
+    "Per-plugin cache survives panel reopen",
+    "Missing key rejects Not found",
+    "JSON serialization and cache quota enforced",
+    "Malformed and stale-session cache updates rejected"
+  ],
+  "unverified": [
+    "Real backends for these plugins",
+    "Tailscale network state/actions",
+    "Live games and pause/resume",
+    "Worn VR/controller/keyboard"
+  ]
+}

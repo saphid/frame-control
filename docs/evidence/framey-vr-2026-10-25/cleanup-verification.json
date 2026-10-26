@@ -1,0 +1,2 @@
+{"batteryBefore": [99], "headsetService": {"code": 4, "out": "inactive", "err": ""}, "deckyService": {"code": 4, "out": "inactive", "err": ""}, "panelBundleExists": false, "deckyBinaryExists": false, "testPluginFolders": [], "testProfiles": [], "timers": {"code": 0, "out": "", "err": ""}, "pause": {"code": 0, "out": "power.pauseCompositorOnStandby=false", "err": ""}, "timeout": {"code": 0, "out": "power.turnOffScreensTimeout=5.000000", "err": ""}, "removedOwnedStaleDevToolsDiscovery": true, "batteryAfter": [99], "lockReleased": true}
+
