@@ -15,7 +15,7 @@ dry=""
 [ "${1:-}" = "--dry-run" ] && { dry=1; shift; }
 tag="${1:?usage: $0 [--dry-run] vX.Y.Z}"
 repo=saphid/frame-control
-expected="Frame-Control-mac-arm64.dmg Frame-Control-mac-arm64.zip Frame-Control-Setup-x64.exe
+expected="Frame-Control-mac-arm64.dmg Frame-Control-mac-arm64.zip Frame-Control-mac-x64.dmg Frame-Control-mac-x64.zip Frame-Control-Setup-x64.exe
 Frame-Control-win-x64.zip Frame-Control-linux-x86_64.AppImage Frame-Control-linux-arm64.AppImage
 Frame-Control-linux-amd64.deb Frame-Control-linux-arm64.deb"
 page="https://github.com/$repo/releases/tag/$tag"
@@ -70,7 +70,7 @@ print(next((a.get("digest") or "" for a in d["assets"] if a["name"]==n), "absent
 done
 [ -z "$missing" ] || { echo "not publishing: fix the assets above" >&2; exit 1; }
 
-# The workflow uploads this only after all eight platform builds complete.
+# The workflow uploads this only after all ten platform builds complete.
 # Regenerate it from GitHub's installer digests and compare its own GitHub
 # digest, so a stale or partial checksum file cannot pass the release gate.
 python3 "$(dirname "$0")/release-checksums.py" < "$tmp/release.json" > "$tmp/SHA256SUMS"
@@ -79,7 +79,7 @@ checksum_digest=$(python3 -c 'import json,sys
 d=json.load(open(sys.argv[1])); matches=[a.get("digest") for a in d["assets"] if a["name"]=="SHA256SUMS"]
 print(matches[0] if len(matches)==1 else "absent")' "$tmp/release.json")
 [ "$checksum_digest" = "sha256:$expected_sum" ] || {
-  echo "not publishing: SHA256SUMS is absent or does not match the eight installer digests" >&2; exit 1;
+  echo "not publishing: SHA256SUMS is absent or does not match the ten installer digests" >&2; exit 1;
 }
 echo "ok       SHA256SUMS"
 

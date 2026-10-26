@@ -9,10 +9,11 @@
   "scripts": {
     "start": "env -u ELECTRON_RUN_AS_NODE electron .",
     "icon": "env -u ELECTRON_RUN_AS_NODE electron build/make-icon.js",
-    "dist": "sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --publish never",
-    "dist:dir": "sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --dir",
+    "dist": "FRAME_MAC_ARCH=arm64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --publish never",
+    "dist:dir": "FRAME_MAC_ARCH=arm64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac arm64 && electron-builder --mac --arm64 --dir",
     "dist:linux": "node build/fetch-deps.js linux x64 arm64 && electron-builder --linux --x64 --arm64 --publish never",
-    "dist:win": "node build/fetch-deps.js win x64 && electron-builder --win --x64 --publish never"
+    "dist:win": "node build/fetch-deps.js win x64 && electron-builder --win --x64 --publish never",
+    "dist:mac:x64": "FRAME_MAC_ARCH=x86_64 sh ../mac/frame-mac-view/build.sh && node build/fetch-deps.js mac x64 && electron-builder --mac --x64 --publish never"
   },
   "devDependencies": {
     "electron": "^44.4.5",

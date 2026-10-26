@@ -17,7 +17,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 SCRIPT = ROOT / "scripts" / "publish-release.sh"
 FAKEGH = ROOT / "tests" / "fakegh"
-INSTALLERS = ["Frame-Control-mac-arm64.dmg", "Frame-Control-mac-arm64.zip", "Frame-Control-Setup-x64.exe",
+INSTALLERS = ["Frame-Control-mac-arm64.dmg", "Frame-Control-mac-arm64.zip",
+              "Frame-Control-mac-x64.dmg", "Frame-Control-mac-x64.zip", "Frame-Control-Setup-x64.exe",
               "Frame-Control-win-x64.zip", "Frame-Control-linux-x86_64.AppImage",
               "Frame-Control-linux-arm64.AppImage", "Frame-Control-linux-amd64.deb",
               "Frame-Control-linux-arm64.deb"]

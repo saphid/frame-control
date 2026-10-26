@@ -17,7 +17,7 @@ class Checksums(unittest.TestCase):
         for i, name in enumerate(module.INSTALLERS):
             assets.append({"name": name, "digest": "sha256:" + hashlib.sha256(str(i).encode()).hexdigest()})
         actual = module.checksums({"assets": assets})
-        self.assertEqual(len(actual.splitlines()), 8)
+        self.assertEqual(len(actual.splitlines()), 10)
         self.assertEqual(actual.splitlines()[0], hashlib.sha256(b"0").hexdigest() + "  " + module.INSTALLERS[0])
 
     def test_missing_duplicate_and_bad_digest_fail(self):
