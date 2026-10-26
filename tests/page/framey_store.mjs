@@ -82,6 +82,38 @@ await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"b".rep
 assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
 assert.equal(session.has('frameyPluginJob'),false);
 
+// Polling can lose the connection after the server accepted a plugin job.
+// Keep both store and installed controls disabled until its saved ID resolves.
+let changes=0;
+ctx.mockApi=async (path,body) => {
+  if(path==='/api/decky/plugin'){changes++;return {job:'job-pending'};}
+  if(path.startsWith('/api/job'))throw Error('connection lost');
+  if(path==='/api/decky')return {managed:true,running:true,
+    plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(changes,1);
+assert.equal(session.has('frameyPluginJob'),true);
+assert.equal(el('deckyJobCheck').hidden,false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,true);
+assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
+await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
+assert.equal(changes,1);
+assert.match(el('deckyJobStatus').textContent,/Check result before starting another/);
+ctx.mockApi=async path => {
+  if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
+  if(path==='/api/decky')return {managed:true,running:true,
+    plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('checkDeckyJob()',ctx);
+assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
+assert.equal(el('deckyStoreList').children[1].children[1].disabled,false);
+
 // A failed refresh must remove old install buttons. A late older response
 // must not replace the newer catalog the wearer just requested.
 ctx.mockApi=async path => {assert.equal(path,'/api/decky/store');throw Error('offline');};
@@ -117,6 +149,7 @@ await vm.runInContext('checkDeckyJob()',ctx);
 assert.match(el('deckyJobStatus').textContent,/app restarted and lost this job result/);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
 
 // Known hardware blockers remain visible, cannot install, and keep their reason in the opened panel.
 ctx.hardware={id:900,name:'Hardware only',version:'1.0',description:'Fan control',root:false,

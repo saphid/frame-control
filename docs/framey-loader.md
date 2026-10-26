@@ -166,7 +166,10 @@ Install, Update, and Remove show the current job stage in the headset panel.
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel remembers the current job ID for this
 browser session, so **Check result** can resume polling after a navigation or
-temporary connection error. Refresh the installed list before starting another
+temporary connection error. After a polling error, Install, Update, and Remove
+stay disabled while the saved job's result is unknown; use **Check result**
+before starting another change.
+Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh

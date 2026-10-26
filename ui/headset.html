@@ -105,6 +105,7 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
 function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
+function deckyJobPending(){return !!sessionStorage.getItem('frameyPluginJob');}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, frameySession=null, deckyBusy=false;
@@ -121,7 +122,7 @@ async function refreshDecky(){const request=++deckyStatusRequest;try{const state
     if(plugin.storeId){const open=document.createElement('button');open.className='secondary';open.textContent='Open panel';
       open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
-      button.disabled=deckyBusy;button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
+      button.disabled=deckyBusy||deckyJobPending();button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){if(request!==deckyStatusRequest)return;
     deckyState=null;
@@ -155,7 +156,7 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
     const button=document.createElement('button');button.textContent='Install';
     const installed=(deckyState?.plugins||[]).find(p=>p.storeId===plugin.id);
     if(installed)button.textContent=installed.version===plugin.version?'Reinstall':'Update';
-    button.disabled=deckyBusy||!deckyState?.running||plugin.root||!!plugin.compatibility?.blockInstall;
+    button.disabled=deckyBusy||deckyJobPending()||!deckyState?.running||plugin.root||!!plugin.compatibility?.blockInstall;
     const note=document.createElement('p');note.textContent=compatibilityText(plugin);label.append(note);
     if(plugin.root && !plugin.compatibility?.blockInstall)label.append(' · Needs root; not supported on Frame');
     button.onclick=()=>deckyChange(installed?'update':'install',plugin);row.append(label,button);list.append(row);}}
@@ -183,7 +184,12 @@ async function followDeckyJob(job,action,name){
   }
   throw Error('Still working. Use Check result to reconnect to this job.');
 }
-async function deckyChange(action,plugin){if(deckyBusy||!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
+async function deckyChange(action,plugin){if(deckyBusy)return;
+  if(deckyJobPending()){
+    deckyJobView('Previous plugin change','Check result before starting another plugin change.',null,true);
+    return;
+  }
+  if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
   deckyBusy=true;showDeckyStore();
   deckyJobView(`${action} ${plugin.name}`,'Starting…',0);
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
@@ -196,7 +202,8 @@ async function deckyChange(action,plugin){if(deckyBusy||!confirm(`${action} ${pl
   finally{deckyBusy=false;await refreshDecky();}
 }
 async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
-  if(!saved||typeof saved.job!=='string'){sessionStorage.removeItem('frameyPluginJob');return;}
+  if(deckyBusy)return;
+  if(!saved||typeof saved.job!=='string'){sessionStorage.removeItem('frameyPluginJob');showDeckyStore();return;}
   deckyBusy=true;byId('deckyJobCheck').hidden=true;
   try{await followDeckyJob(saved.job,saved.action,saved.name);sessionStorage.removeItem('frameyPluginJob');}
   catch(error){deckyJobView(`${saved.action} ${saved.name}`,`Error: ${error.message}`,null,true);}
