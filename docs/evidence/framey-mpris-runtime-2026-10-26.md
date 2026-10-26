@@ -69,3 +69,8 @@ for documented safeguards; official backends are stubbed in that harness. The
 regression test uses Decky's actual legacy class convention for both entries,
 checks original/absent library-path restoration without changing the parent
 environment, and rejects transferring the patch to a different archive digest.
+
+The pinned HTTP/SSH flow also passed `scripts/e2e.sh test_framey`: **2/2**
+tests in 32.590 seconds. Its receipt assertion covers the replacement shim for
+both Music Control entries; the old assertion caused the first hosted e2e
+failure and left a plugin installed, cascading into the following test.

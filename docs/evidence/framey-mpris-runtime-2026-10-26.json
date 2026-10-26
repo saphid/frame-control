@@ -796,6 +796,12 @@
       "plugins": 116,
       "allPinnedDigestsUnchanged": true
     },
-    "independentCleanupAudit": "MPRIS_CLEANUP_AUDIT_PASS: shared lock, test services/runtime directories and owned cache link absent"
+    "independentCleanupAudit": "MPRIS_CLEANUP_AUDIT_PASS: shared lock, test services/runtime directories and owned cache link absent",
+    "pinnedHttpSshFlow": {
+      "command": "scripts/e2e.sh test_framey",
+      "passed": 2,
+      "seconds": 32.59,
+      "scope": "pinned official archive receipt assertions and sample install/update/remove safeguards"
+    }
   }
 }

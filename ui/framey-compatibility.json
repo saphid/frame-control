@@ -517,7 +517,9 @@
         "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 13,
@@ -9629,8 +9631,8 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
-      "compatShim": "music-control-bound-methods",
-      "evidence": "docs/evidence/framey-music-control-bound-methods-2026-10-26.md"
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 112,
