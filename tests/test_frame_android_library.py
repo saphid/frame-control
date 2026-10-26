@@ -276,12 +276,28 @@ class ArtworkTests(unittest.TestCase):
         import threading
         from apk_sources import _images
         gate = threading.Event()
-        with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(5) and []):
-            start = time.monotonic()
-            with self.assertRaisesRegex(_images.SourceError, 'too long'):
-                _images.get('https://example.org/a.png', deadline=start + 0.1)
-            self.assertLess(time.monotonic() - start, 0.4)
-        gate.set()
+        real_join = threading.Thread.join
+        waits = []
+
+        def bounded_join(worker, timeout=None):
+            waits.append(timeout)
+            return real_join(worker, timeout)
+
+        try:
+            with patch.object(_images.socket, 'getaddrinfo', side_effect=lambda *a, **k: gate.wait(5) and []), \
+                    patch.object(_images.threading.Thread, 'join', bounded_join):
+                start = time.monotonic()
+                with self.assertRaisesRegex(_images.SourceError, 'too long'):
+                    _images.get('https://example.org/a.png', deadline=start + 0.1)
+            # Check the requested wait, not elapsed runner time: a loaded CI
+            # host can deschedule this test after the bounded join returns.
+            self.assertEqual(len(waits), 1)
+            self.assertIsNotNone(waits[0])
+            self.assertGreaterEqual(waits[0], 0)
+            self.assertLessEqual(waits[0], 0.1)
+        finally:
+            gate.set()
+        wait_for_idle_resolvers()
         with self.assertRaisesRegex(_images.SourceError, 'too long'):
             _images.get('https://example.org/a.png', deadline=time.monotonic() - 1)
 
