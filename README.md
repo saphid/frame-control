@@ -173,16 +173,39 @@ distribution's. If you already have `adb`, the app uses yours.
 <details>
 <summary><b>macOS: the app isn't notarized</b></summary>
 
-There's no paid Apple developer account behind it, so macOS says the app is
-damaged or can't be checked. Drag it to Applications, then clear the download
-quarantine once, only for a download you trust from the releases linked above:
+The app has an **ad hoc signature**, no Apple Developer ID signature, and no
+notarization. The DMG is unsigned. First verify the download against the
+`SHA256SUMS` from the same release, then open the DMG and drag **Frame Control**
+to **Applications**.
+
+Check your processor before opening: v0.4.36 and earlier publish only
+`mac-arm64` for Apple Silicon. On an Intel Mac, this build cannot run;
+removing quarantine or installing Rosetta does not make an ARM app run on Intel.
+On a real Intel MacBook Air with macOS 15.7.7, opening v0.4.35 and v0.4.36
+reported: **“The application cannot be opened because it has an incorrect
+executable format.”** This is an architecture failure, not an observed
+Gatekeeper warning. See the [real-Mac test record](docs/evidence/mac-desktop-2026-10-26.md).
+
+On a compatible Mac, if macOS blocks an unverified developer, try opening the
+app once, then go to **System Settings → Privacy & Security → Open Anyway**
+and confirm **Open**. Only do this for a download you verified and trust.
+[Apple's opening instructions](https://support.apple.com/102445) describe the
+current security controls. The exact warning and this override flow have not
+yet been verified here on Apple Silicon.
+
+If a trusted, verified copy still reports “damaged” and offers no Open Anyway
+option, the Terminal fallback removes only this app's download quarantine
+(it does not sign or notarize the app):
 
 ```sh
 xattr -dr com.apple.quarantine "/Applications/Frame Control.app"
 ```
 
-The first time, macOS also asks to allow local network access (for SSH) and
-control of Terminal (for the password prompts).
+Then open it from Applications. Do not disable Gatekeeper globally. Depending
+on the features you use, macOS may also request Local Network access, permission
+to control Terminal, or Screen Recording; approve only the feature you intend
+to use. Those permission prompts were not verified in the release test above.
+
 </details>
 
 <details>
