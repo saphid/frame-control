@@ -55,6 +55,7 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <div class="row" style="margin-top:14px"><button id="deckyStorePrevious" class="secondary">Previous</button><span id="deckyStorePage"></span><button id="deckyStoreNext" class="secondary">Next</button></div></div>
 <div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button>
   <button id="frameyScrollUp" class="secondary">Scroll plugin up</button><button id="frameyScrollDown" class="secondary">Scroll plugin down</button></div>
+  <p><small>Hold a scroll button to keep moving through plugin content.</small></p>
   <p id="frameyCompatibility"></p>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
@@ -228,6 +229,7 @@ byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
   if(deckyBusy||deckyJobPending()||!deckyState?.running)return;
   const installed=(deckyState?.plugins||[]).find(p=>p.storeId===id);if(!installed)return;
+  stopFrameyScrollHold();
   byId('frameyCompatibility').textContent=compatibilityText(installed);
   closeFrameyEvents();
   activeFrameyId=id;activeFrameyReceipt={sha256:installed.sha256,version:installed.version};
@@ -249,15 +251,52 @@ function closeFrameyEvents(){
       session:frameySession,events:[],cursor:0}).catch(()=>{});
   frameyEventsActive=false;
 }
-function closeFrameyPanel(){closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
+function closeFrameyPanel(){stopFrameyScrollHold();closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
   byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;}
 byId('frameyClose').onclick=closeFrameyPanel;
 function scrollFramey(direction){
-  if(activeFrameyId===null||!frameySession||!['up','down'].includes(direction))return;
-  byId('frameyFrame').contentWindow?.postMessage({type:'framey:scroll',session:frameySession,direction},'*');
+  if(activeFrameyId===null||!frameySession||!['up','down'].includes(direction))return false;
+  const target=byId('frameyFrame').contentWindow;if(!target)return false;
+  target.postMessage({type:'framey:scroll',session:frameySession,direction},'*');
+  return true;
 }
-byId('frameyScrollUp').onclick=()=>scrollFramey('up');
-byId('frameyScrollDown').onclick=()=>scrollFramey('down');
+let frameyScrollHold=null;
+function stopFrameyScrollHold(){
+  if(!frameyScrollHold)return;
+  clearTimeout(frameyScrollHold.delay);
+  clearInterval(frameyScrollHold.repeat);
+  frameyScrollHold=null;
+}
+function bindFrameyScroll(id,direction){
+  const button=byId(id);
+  button.onpointerdown=event=>{
+    if(event.button!==0||event.isPrimary===false)return;
+    stopFrameyScrollHold();
+    if(!scrollFramey(direction))return;
+    const hold={button,direction,pointerId:event.pointerId,delay:null,repeat:null};
+    frameyScrollHold=hold;
+    hold.delay=setTimeout(()=>{
+      if(frameyScrollHold!==hold)return;
+      hold.repeat=setInterval(()=>{
+        if(frameyScrollHold!==hold)return;
+        if(!scrollFramey(direction))stopFrameyScrollHold();
+      },180);
+    },400);
+  };
+  const stop=event=>{
+    if(frameyScrollHold?.button===button&&frameyScrollHold.pointerId===event.pointerId)
+      stopFrameyScrollHold();
+  };
+  button.onpointerup=stop;
+  button.onpointercancel=stop;
+  button.onpointerleave=stop;
+  // Pointerdown already sent one step. Keyboard activation emits a click with
+  // detail 0; direct onclick calls from older tests also mean one step.
+  button.onclick=event=>{if(!event||event.detail===0)scrollFramey(direction);};
+}
+bindFrameyScroll('frameyScrollUp','up');
+bindFrameyScroll('frameyScrollDown','down');
+window.addEventListener('blur',stopFrameyScrollHold);
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
@@ -282,6 +321,7 @@ window.addEventListener('message',async event=>{
     if(['up','down'].includes(req.direction)&&typeof req.moved==='boolean')
       byId('frameyPanelStatus').textContent=req.moved?'Scrolled plugin '+req.direction:
         'No more plugin content in that direction';
+    if(req.moved===false&&frameyScrollHold?.direction===req.direction)stopFrameyScrollHold();
     return;
   }
   if(req.type==='framey:cache:init'&&req.session===frameySession){
