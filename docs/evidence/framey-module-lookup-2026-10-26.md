@@ -29,6 +29,9 @@ signature, audio store or library patch was manufactured.
 The full exact-bundle browser pass ran with backend and network calls denied.
 It completed 102 initializers and failed 14, versus 101/15 before this theme.
 Initializer readiness alone does not establish rendered or useful behavior.
+After integrating main’s #286/#287/#288, all 116 were retried: 103 initializers
+completed and 13 failed. The additional completion is Deck Shelves from #286;
+no previously completed initializer regressed.
 
 Focused checks used actual `ui/headset.html`, React 18.3.1 and opaque
 `allow-scripts` iframes. Status/installed-plugin responses were fixture-shaped,
@@ -48,7 +51,8 @@ result is claimed.
 
 ## Regression checks
 
-- 1,620 server tests passed, 16 skipped; 42 focused Framey tests passed.
+- 1,621 server tests passed, 16 skipped; all 43 focused Framey tests passed
+  after integrating the latest main.
 - Both site test files passed.
 - All 116 exact archives passed the fake-Frame audit: 60 install/remove flows
   and 56 expected blockers. Official backend execution remained stubbed.
@@ -56,5 +60,5 @@ result is claimed.
   backend container and both loopback helpers were removed after the checks.
 
 The catalog and generated compatibility table use the same status/reasons as
-both store views. The result is **1 works / 49 partial / 55 broken / 11 N/A**;
+both store views. The result is **1 works / 50 partial / 54 broken / 11 N/A** (including main’s independent Deck Shelves improvement);
 the majority goal remains open.

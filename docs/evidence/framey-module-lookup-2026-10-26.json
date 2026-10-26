@@ -173,7 +173,8 @@
       "expectedBlockers": 56,
       "backendExecuted": false,
       "privateProject": "framey-catalog-6456d3d939",
-      "projectRemoved": true
+      "projectRemoved": true,
+      "baseCommit": "c89ddff"
     }
   },
   "storeRefresh": {
@@ -182,5 +183,40 @@
     "pinnedCount": 116,
     "unchanged": true,
     "changedIds": []
+  },
+  "postMainMerge": {
+    "mainCommit": "38c388f",
+    "mergedPRs": [
+      286,
+      287,
+      288
+    ],
+    "frameyTests": 43,
+    "fullCatalogFrontend": {
+      "attempted": 116,
+      "ready": 103,
+      "failed": 13,
+      "additionalReadyFromUpstream": [
+        135
+      ],
+      "regressionsComparedWithPreMergeAudit": []
+    },
+    "catalog": {
+      "works": 1,
+      "partial": 50,
+      "broken": 54,
+      "na": 11
+    },
+    "fullServerTests": {
+      "count": 1621,
+      "skipped": 16,
+      "result": "OK"
+    }
+  },
+  "cleanup": {
+    "focusedBackendContainerAbsent": true,
+    "loopback18770Closed": true,
+    "loopback18771Closed": true,
+    "fakeProjectAndVolumesRemoved": true
   }
 }
