@@ -3795,8 +3795,8 @@
         "https://github.com/SteamDeckHomebrew/decky-loader",
         "https://github.com/yt-dlp/yt-dlp"
       ],
-      "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of null (reading 'type').",
+      "status": "partial",
+      "reason": "An inert local component lets the exact frontend initialize and render its Settings view in opaque Chromium. Backend get_setting and plugin network were denied in the audit; Steam game-page theme injection has no verified target in Framey. Music search, playback, downloads, settings persistence and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3829,6 +3829,13 @@
         "sha256": "9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "renderFollowUp": {
+        "evidence": "docs/evidence/framey-game-theme-music-2026-10-26.md",
+        "mode": "exact archive in opaque local Chromium; backend and network denied",
+        "frontendReady": true,
+        "settingsRendered": true,
+        "steamGamePagePatched": false
       }
     },
     {

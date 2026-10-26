@@ -4,7 +4,7 @@ Snapshot: 2026-10-26T06:10:58.537029+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 4 · Partial: 50 · Broken: 51 · N/A: 11.**
+**Works: 4 · Partial: 51 · Broken: 50 · N/A: 11.**
 
 - **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.
@@ -67,7 +67,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 48: Quick Launch 1.2.1 | legacy / legacy | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |
 | 49: Decky Cloud Save 1.4.2 | legacy / legacy | broken | Unsafe plugin archive member. | static archive, local browser, fake-Frame |
 | 50: Storage Cleaner 1.4.0 | 1 / 2 | partial | Empty-data panel rendered; cleanup was deliberately not run because it can remove local data. | static archive, local browser, fake-Frame |
-| 52: Game Theme Music 1.7.1-1 | 1 / 2 | broken | Frontend audit failed: Cannot read properties of null (reading 'type'). | static archive, local browser, fake-Frame |
+| 52: Game Theme Music 1.7.1-1 | 1 / 2 | partial | An inert local component lets the exact frontend initialize and render its Settings view in opaque Chromium. Backend get_setting and plugin network were denied in the audit; Steam game-page theme injection has no verified target in Framey. Music search, playback, downloads, settings persistence and worn VR remain unverified. | static archive, local browser, fake-Frame |
 | 53: Shotty 0.1.0 | legacy / legacy | broken | Library snapshot fixes the frontend allApps crash. Actual published Decky 3.3.0 amd64 backend fails importing click.get_app_dir (ModuleNotFoundError); the archive does not bundle click. Screenshot aggregation/rescue was not run. | static archive, local browser, fake-Frame, real Frame SSH |
 | 56: MangoPeel 0.0.7 | 1 / 2 | partial | Initializer succeeds; gamescope/MangoHud actions and backend are unverified. | static archive, local browser, fake-Frame |
 | 58: Volume Boost 0.0.7 | legacy / legacy | works | Default-sink controls pass in local Chromium through real Decky 3.3.0 ARM64: linked slider/keyboard and numeric writes, separate channels, re-link and reopen, with independent Pulse readback including 125%/150% while muted. Exact original volume/mute restored. Audible output, Bluetooth sinks and worn VR unverified. | static archive, local browser, fake-Frame, isolated Linux backend, real Frame SSH |
