@@ -54,7 +54,7 @@ def render(data):
         'A [local audio follow-up](evidence/framey-audio-backends-2026-10-26.md) exercised Volume Mixer, Volume Boost and Mixer '
         'through real Decky 3.3.0 amd64 backends on private silent virtual audio targets. Sliders, numeric volume entry, '
         'independent server readbacks and Mixer filter persistence across a runtime restart passed. '
-        'These three stay partial: real ARM64 Frame audio dependencies/session mapping remain unverified because the shared headset lock was occupied. '
+        'An [ARM64 audio follow-up](evidence/framey-audio-arm64-2026-10-26.md) verified the unmodified official backends in actual Decky 3.3.0 on the Frame user audio session. Volume Mixer and Mixer now qualify as works for per-app volume: Chromium controls changed only a named silent stream, with independent Pulse readbacks. Volume Boost stays partial: default-sink reads matched, but real sink writes were denied. Audible output, Bluetooth playback and worn VR remain unverified. '
         'A [library context follow-up](evidence/framey-library-context-2026-10-26.md) read 1,106 app overviews, 895 game IDs '
         'and the current public Steam ID from real Frame CEF under the shared lock. Local Chromium replayed this detached snapshot '
         'to render Deck Settings game selection, Steamback\'s empty save panel and PlayTime statistics/settings. '
