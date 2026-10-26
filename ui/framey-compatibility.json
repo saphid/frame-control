@@ -1790,7 +1790,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "The bin/hash helper needs an ARM64 build and cross-platform hashing tests; no ARM64 artifact is published.",
+      "nativePort": "A source-matched ARM64 bin/hash helper matched the official x86_64 helper on one synthetic ROM on the real Frame (docs/evidence/framey-emuchievements-arm-2026-10-26.md). The official ZIP still bundles x86_64 bytes and remains blocked; format coverage, packaging, plugin backend/UI, login and worn VR are unverified.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
