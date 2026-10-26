@@ -30,6 +30,21 @@ def archive(flags=(), extra=None):
     return data, hashlib.sha256(data).hexdigest()
 
 
+def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
+    stream = io.BytesIO()
+    with warnings.catch_warnings(), zipfile.ZipFile(stream, 'w') as bundle:
+        warnings.simplefilter('ignore', UserWarning)
+        bundle.writestr('Example/plugin.json', json.dumps({'name': 'Example', 'flags': []}))
+        bundle.writestr('Example/dist/index.js', 'export default {};' + ' ' * 1200)
+        for mode, payload in ((0o100644, b'#!/bin/sh\nexit 0\n'), (second_mode, second)):
+            info = zipfile.ZipInfo('Example/bin/helper')
+            info.create_system = 3
+            info.external_attr = mode << 16
+            bundle.writestr(info, payload)
+    data = stream.getvalue()
+    return data, hashlib.sha256(data).hexdigest()
+
+
 class ArchiveTests(unittest.TestCase):
     def test_catalog_selects_valid_visible_latest_versions(self):
         records = [{'id': 42, 'name': 'Example', 'author': 'Panel Author', 'visible': True, 'versions':
@@ -79,6 +94,14 @@ class ArchiveTests(unittest.TestCase):
         data = stream.getvalue()
         with self.assertRaisesRegex(ValueError, 'manifest'):
             frame_decky_store.archive_info(data, hashlib.sha256(data).hexdigest(), 'Example')
+
+    def test_only_identical_duplicate_payloads_with_execute_bit_difference_are_accepted(self):
+        data, digest = duplicate_archive()
+        self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
+        for data, digest in (duplicate_archive(second=b'#!/bin/sh\nexit 1\n'),
+                             duplicate_archive(second_mode=0o100666)):
+            with self.subTest(digest=digest), self.assertRaisesRegex(ValueError, 'Unsafe'):
+                frame_decky_store.archive_info(data, digest, 'Example')
 
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
@@ -151,6 +174,16 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(ran.stdout, 'Framey script: ready\n')
         self.assertFalse((self.folder / 'plugin.json').stat().st_mode & 0o111)
         self.assertFalse((self.folder / 'dist/index.js').stat().st_mode & 0o111)
+
+    def test_identical_duplicate_archive_installs_without_widening_permissions(self):
+        data, _ = duplicate_archive()
+        result = self.apply('install', data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        helper = self.folder / 'bin/helper'
+        self.assertEqual(helper.read_bytes(), b'#!/bin/sh\nexit 0\n')
+        self.assertTrue(helper.stat().st_mode & 0o100)
+        self.assertFalse(helper.stat().st_mode & 0o6000)
+        self.assertEqual(self.apply('remove').returncode, 0)
 
     def test_declared_executable_is_owner_only_without_privilege_bits(self):
         info = zipfile.ZipInfo('Example/bin/entrypoint')

@@ -29,6 +29,18 @@ window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));
 window.WebSocket=class{constructor(){throw Error('Audit blocks WebSocket');}};
 </script>'''
 
+
+def render_panel(record, data):
+    if hashlib.sha256(data).hexdigest() != record['sha256']:
+        raise ValueError('Archive hash mismatch')
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        bundle = archive.read(record['folder']+'/dist/index.js')
+    # The audit supplies only digest-checked archive bytes, not an installed
+    # receipt. Stub the receipt-bound lookup while using the shipped renderer.
+    with patch.object(framey_panel, '_owned_dist', return_value=(None, bundle, record['sha256'])):
+        return framey_panel.panel(record['id']).replace(
+            b'<script id="framey-bundle"', PRELUDE.encode()+b'<script id="framey-bundle"')
+
 PAGE = '''<!doctype html><meta charset=utf-8><title>Framey catalog frontend audit</title>
 <h1>Framey catalog frontend audit</h1>
 <p>Exact archived frontend code runs in an opaque iframe. All backend calls and network requests are denied.
@@ -116,13 +128,7 @@ def main():
                 try:
                     record = records[int(path.split('/')[-1])]
                     data = (args.cache/(record['sha256']+'.zip')).read_bytes()
-                    if hashlib.sha256(data).hexdigest() != record['sha256']:
-                        raise ValueError('Archive hash mismatch')
-                    with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                        bundle = archive.read(record['folder']+'/dist/index.js')
-                    with patch.object(framey_panel, 'local_bundle', return_value=bundle):
-                        body = framey_panel.panel(record['id']).replace(
-                            b'<script id="framey-bundle"', PRELUDE.encode()+b'<script id="framey-bundle"')
+                    body = render_panel(record, data)
                 except (KeyError, ValueError, OSError, zipfile.BadZipFile):
                     self.send_error(404, 'Verified frontend archive unavailable')
                     return

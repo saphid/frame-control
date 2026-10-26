@@ -86,7 +86,7 @@ def archive_info(data, expected_hash, expected_name):
         folder = manifests[0].split('/')[0]
         if not SAFE_FOLDER.fullmatch(folder):
             raise ValueError('Invalid plugin folder')
-        seen = set()
+        seen = {}
         for entry in files:
             name = entry.filename
             mode = entry.external_attr >> 16
@@ -95,11 +95,21 @@ def archive_info(data, expected_hash, expected_name):
             if entry.is_dir() and parts[-1] == '':
                 parts = parts[:-1]
             if ('\\' in name or name.startswith('/') or
-                any(part in ('', '.', '..') for part in parts) or name in seen or
+                any(part in ('', '.', '..') for part in parts) or
                 parts[0] != folder or entry.file_size > 30 * 1024 * 1024 or
                 kind not in (0, 0o040000, 0o100000)):
                 raise ValueError('Unsafe plugin archive member')
-            seen.add(name)
+            prior = seen.get(name)
+            if prior is not None:
+                # Some official ZIPs repeat unchanged files with execute-bit
+                # differences. Reject any content or other mode ambiguity.
+                old_mode = prior.external_attr >> 16
+                if (prior.file_size != entry.file_size or
+                    ((old_mode ^ mode) & ~0o111) or
+                    archive.read(prior) != archive.read(entry)):
+                    raise ValueError('Unsafe plugin archive member')
+            else:
+                seen[name] = entry
             if entry.is_dir():
                 continue
             with archive.open(entry) as source:
@@ -164,17 +174,26 @@ try:
             files=z.infolist()
             if not files or len(files)>3000 or sum(f.file_size for f in files)>150*1024*1024:
                 raise RuntimeError('Plugin archive too large')
-            seen=set()
+            seen={}
             for f in files:
                 parts=f.filename.split('/')
                 if f.is_dir() and parts[-1]=='': parts=parts[:-1]
                 kind=f.external_attr>>16&0o170000
                 if (not parts or parts[0]!=folder or f.filename.startswith('/') or
                     any(part in ('','.','..') for part in parts) or '\\' in f.filename or
-                    f.filename in seen or f.file_size>30*1024*1024 or
+                    f.file_size>30*1024*1024 or
                     kind not in (0,0o040000,0o100000)):
                     raise RuntimeError('Unsafe plugin archive')
-                seen.add(f.filename)
+                prior=seen.get(f.filename)
+                if prior is not None:
+                    # Match desktop validation before zipfile overwrites a
+                    # repeated member during extraction.
+                    old_mode=prior.external_attr>>16
+                    if (prior.file_size!=f.file_size or
+                        ((old_mode^ (f.external_attr>>16)) & ~0o111) or
+                        z.read(prior)!=z.read(f)):
+                        raise RuntimeError('Unsafe plugin archive')
+                else: seen[f.filename]=f
             stage.mkdir(mode=0o700)
             z.extractall(stage)
             # zipfile drops execute bits. Legacy plugins also publish shebang

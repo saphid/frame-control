@@ -4,7 +4,7 @@ Snapshot: 2026-10-26T06:10:58.537029+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 4 · Partial: 49 · Broken: 52 · N/A: 11.**
+**Works: 4 · Partial: 50 · Broken: 51 · N/A: 11.**
 
 - **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.
@@ -24,6 +24,8 @@ python3 scripts/framey-audit-browser.py --cache /tmp/framey-archives
 ```
 
 Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.
+
+A [Free Loader duplicate-entry follow-up](evidence/framey-free-loader-duplicates-2026-10-26.md) accepts only byte-identical duplicate ZIP members whose modes differ at most in execute bits. The exact archive passed private local and focused fake-Frame install/remove; its frontend rendered in opaque Chromium and isolated Python settings/empty-deals reads passed with a Decky stub. The earlier full 116-plugin fake-Frame audit blocked this archive before the fix. Actual Decky, feed updates and worn VR remain unverified.
 
 The current published digests are pinned in the JSON; if the store changed, retain/download those exact archives for reproduction. Audit downloads permit larger ZIPs for inspection; production installer limits remain 50 MiB ZIP / 150 MiB unpacked / 30 MiB per member.
 
@@ -73,7 +75,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 60: DeckyFileServer 1.2.0 | 1 / 2 | broken | Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend. | static archive, local browser, fake-Frame |
 | 61: TabMaster 2.15.1 | 1 / 2 | partial | Local Chromium rendered the QAM and navigable Overview/Filters documentation with an actual Decky 3.3.0 amd64 backend. Library-tab editing remains unavailable: Steam login/library patches and MobX reactions have no target. ARM64 and worn VR unverified. | static archive, local browser, fake-Frame |
 | 62: TS3 QuickAccess 1.2.0 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: ts3-qs4sd/bin/ts3-qs4sd.so. | static archive, local browser, fake-Frame |
-| 63: Free Loader 1.6.0 | 1 / 2 | broken | Unsafe plugin archive member. | static archive, local browser, fake-Frame |
+| 63: Free Loader 1.6.0 | 1 / 2 | partial | The exact archive's duplicate names contain identical bytes and differ only in execute bits; the guarded installer now accepts them, and a private local install/remove transaction passed. The current opaque Chromium host renders Free Games but cannot load deals with backend/network denied. Exact official Python settings and empty local-deals methods passed in a no-network container with a Decky stub. Real Decky, feed refresh, notifications and worn VR remain unverified. | static archive, local browser, fake-Frame pinned install/remove, local exact-archive transaction, isolated Python backend |
 | 64: Syncthing 0.2.7 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog. | static archive, local browser, fake-Frame |
 | 65: Decky Terminal 0.5.3 | 1 / 2 | partial | Local routes initialize after parameter-route support; no shell commands were run. | static archive, local browser, fake-Frame |
 | 66: PlayTime 3.2.5 | 1 / 2 | partial | Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. Running snapshots are now exposed, but its private MobX observation is unsupported; automatic recording and ARM64 backend remain unverified. | static archive, local browser, fake-Frame, real Frame SSH |
