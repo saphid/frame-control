@@ -426,10 +426,27 @@ class OneServer(unittest.TestCase):
 
         # Stopped as the app stops it: by closing stdin (the only way on Windows,
         # where terminate() is a hard kill) and, elsewhere, by SIGTERM too.
-        for stop in ["stdin"] + (["sigterm"] if os.name != "nt" else []):
+        for stop in ["stdin"] + (["sigterm", "stdin+late-sigterm"] if os.name != "nt" else []):
             with self.subTest(stop=stop):
                 left_by_dead = [staged(tmp, "frame-vr-", dead.pid), staged(index_dir, ".download-", dead.pid)]
-                proc = subprocess.Popen([sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"],
+                command = [sys.executable, str(ROOT / "ui" / "server.py"), "--port", "0", "--exit-on-eof"]
+                if stop == "stdin+late-sigterm":
+                    # Deliver the app's second stop mechanism exactly as cleanup
+                    # replaces the signal handler: the race observed on a real Mac.
+                    wrapper = (
+                        "import os, runpy, signal, sys; from pathlib import Path\n"
+                        "original = signal.signal\n"
+                        "def install(sig, handler):\n"
+                        "    if sig == signal.SIGTERM and handler == signal.SIG_IGN:\n"
+                        "        os.kill(os.getpid(), signal.SIGTERM)\n"
+                        "    return original(sig, handler)\n"
+                        "signal.signal = install\n"
+                        "sys.argv = sys.argv[1:]\n"
+                        "sys.path.insert(0, str(Path(sys.argv[0]).parent))\n"
+                        "runpy.run_path(sys.argv[0], run_name='__main__')\n"
+                    )
+                    command = [sys.executable, "-c", wrapper, *command[1:]]
+                proc = subprocess.Popen(command,
                                         env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                         stderr=subprocess.STDOUT, text=True)
                 try:
@@ -437,7 +454,7 @@ class OneServer(unittest.TestCase):
                     self.assertEqual([d for d in left_by_dead if d.exists()], [])
                     in_flight = [staged(tmp, "frame-vr-", proc.pid), staged(tmp, "frame-agent-", proc.pid),
                                  staged(index_dir, ".download-", proc.pid)]
-                    if stop == "stdin":
+                    if stop.startswith("stdin"):
                         proc.stdin.close()
                     else:
                         proc.terminate()
