@@ -15,6 +15,24 @@ spec.loader.exec_module(check)
 
 
 class Safety(unittest.TestCase):
+    def test_overlay_wait_is_bounded_and_stops_when_visible(self):
+        from unittest.mock import Mock
+        remote = Mock()
+        remote.python.side_effect = [{'state':{'visible':False}},
+                                     {'state':{'visible':False}},
+                                     {'state':{'visible':True}}]
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertTrue(check.wait_overlay(remote)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+        remote.python.reset_mock(side_effect=True)
+        remote.python.return_value = {'state':{'visible':False}}
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertFalse(check.wait_overlay(remote, attempts=3)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
     def test_foreign_lock_prevents_sensor_reads_and_cleanup(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
             remote = factory.return_value
@@ -42,7 +60,8 @@ class Safety(unittest.TestCase):
 
     def test_power_restore_after_partial_setter_failure(self):
         state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
-                 'timeout':'power.turnOffScreensTimeout=17.000000','dashboardVisible':False}
+                 'timeout':'power.turnOffScreensTimeout=17.000000','dashboardVisible':False,
+                 'stats':[{'activity_level':3}], 'proximity':[6.25]}
         with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
             remote = factory.return_value
             remote.python.return_value = state
@@ -57,6 +76,28 @@ class Safety(unittest.TestCase):
             self.assertTrue(any('--set-settings-bool power.pauseCompositorOnStandby 1' in c for c in commands))
             self.assertTrue(any('--set-settings-float power.turnOffScreensTimeout 17.000000' in c for c in commands))
             self.assertIn('rmdir /tmp/frame-test.lock', commands[-1])
+
+    def test_awake_or_unknown_activity_refuses_wake_and_install(self):
+        for stats in ([{'activity_level':1}], [{'activity_level':2}], [], None):
+            state = {'battery':[99], 'pause':'power.pauseCompositorOnStandby=true',
+                     'timeout':'power.turnOffScreensTimeout=17.000000',
+                     'dashboardVisible':False, 'stats':stats, 'proximity':[0.0]}
+            for mode in ('--wake', '--exercise'):
+                with self.subTest(stats=stats, mode=mode), \
+                     tempfile.TemporaryDirectory() as folder, \
+                     patch.object(check, 'Remote') as factory, \
+                     patch.object(check.frame_decky, 'change') as install:
+                    remote = factory.return_value
+                    remote.python.return_value = state
+                    with contextlib.redirect_stdout(io.StringIO()):
+                        self.assertEqual(check.main([mode,'--output',folder]), 1)
+                    install.assert_not_called()
+                    commands = [c.args[0] for c in remote.call_args_list]
+                    self.assertEqual(len(commands), 2)
+                    self.assertIn('mkdir /tmp/frame-test.lock', commands[0])
+                    self.assertIn('rmdir /tmp/frame-test.lock', commands[-1])
+                    report = json.loads((Path(folder)/'result.json').read_text())
+                    self.assertIn('active session untouched', report['error'])
 
     def test_exact_linux_event_abi_and_debug_profile(self):
         import ctypes

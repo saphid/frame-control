@@ -98,14 +98,14 @@ class StoreTransaction(unittest.TestCase):
         self.folder = home / '.local/share/frame-control/decky/plugins/Example'
         self.folder.parent.mkdir(parents=True)
 
-    def apply(self, action, data=None):
+    def apply(self, action, data=None, expected='-'):
         token = secrets.token_hex(12)
         source = Path('/tmp/frame-control-decky-plugin-' + token)
         if data is not None:
             source.write_bytes(data)
         digest = hashlib.sha256(data or b'').hexdigest()
         try:
-            return subprocess.run([sys.executable, '-', action, token, '42', digest, 'Example', '1.0'],
+            return subprocess.run([sys.executable, '-', action, token, '42', digest, 'Example', '1.0', expected],
                                   input=frame_decky_store.APPLY, text=True, capture_output=True,
                                   env=self.env, timeout=15)
         finally:
@@ -202,6 +202,29 @@ class StoreTransaction(unittest.TestCase):
         self.assertTrue(self.folder.exists())
         self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
 
+    def test_update_and_remove_reject_stale_installed_receipt(self):
+        first, first_hash = archive()
+        second, _ = archive(extra=('Example/data.txt', 'new'))
+        self.assertEqual(self.apply('install', first).returncode, 0)
+        marker = self.folder / '.frame-control-store.json'
+        self.assertEqual(json.loads(marker.read_text())['sha256'], first_hash)
+
+        # A newer store operation wins before the caller reaches the lock.
+        current = json.loads(marker.read_text())
+        current['sha256'] = 'b' * 64
+        marker.write_text(json.dumps(current))
+        for action, data in [('update', second), ('remove', None)]:
+            with self.subTest(action=action):
+                result = self.apply(action, data, expected=first_hash)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Installed plugin changed', result.stderr)
+                self.assertTrue(self.folder.exists())
+                self.assertEqual(json.loads(marker.read_text())['sha256'], 'b' * 64)
+        self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
+        self.assertEqual(list(self.folder.parent.glob('.frame-control-old-*')), [])
+        self.assertEqual(self.apply('remove', expected='b' * 64).returncode, 0)
+        self.assertFalse(self.folder.exists())
+
 
 class StoreHost(unittest.TestCase):
     def test_reviewed_archive_changed_before_install_does_not_download(self):
@@ -218,7 +241,8 @@ class StoreHost(unittest.TestCase):
 
     def test_stopped_managed_service_allows_removing_owned_plugin(self):
         state = {'managed': True, 'running': False, 'plugins':
-                 [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
+                 [{'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0',
+                   'sha256': 'a' * 64}]}
         calls = []
         with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
              patch.object(frame_decky_store, 'catalog') as network:
@@ -226,6 +250,7 @@ class StoreHost(unittest.TestCase):
                                                'remove', 42)
         self.assertEqual(result, {})
         self.assertEqual(len(calls), 1)
+        self.assertTrue(calls[0].endswith(' ' + 'a' * 64))
         network.assert_not_called()
 
     def test_renamed_store_plugin_cannot_be_installed_twice(self):
@@ -257,7 +282,8 @@ class StoreHost(unittest.TestCase):
     def test_update_allows_its_own_existing_name(self):
         data, digest = archive()
         state = {'managed': True, 'running': True, 'plugins': [
-            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0'}]}
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0',
+             'sha256': 'a' * 64}]}
         catalog = [{'id': 42, 'name': 'Example', 'root': False,
                     'sha256': digest, 'version': '2.0'}]
         calls = []
@@ -269,6 +295,7 @@ class StoreHost(unittest.TestCase):
         self.assertEqual(result, {})
         self.assertEqual(len(calls), 3)  # Upload, apply, and temporary archive cleanup.
         self.assertIn('update', calls[1])
+        self.assertTrue(calls[1].endswith(' ' + 'a' * 64))
 
     def test_owned_plugin_can_be_removed_without_store_network(self):
         state = {'managed': True, 'running': True, 'plugins':
