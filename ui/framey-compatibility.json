@@ -1790,7 +1790,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "A source-matched ARM64 bin/hash helper matched the official x86_64 helper on one synthetic ROM on the real Frame (docs/evidence/framey-emuchievements-arm-2026-10-26.md). The official ZIP still bundles x86_64 bytes and remains blocked; format coverage, packaging, plugin backend/UI, login and worn VR are unverified.",
+      "nativePort": "A source-matched ARM64 helper matched one synthetic ROM on the real Frame (docs/evidence/framey-emuchievements-arm-2026-10-26.md). The pinned upstream source proposed for packaging also has unsafe archive extraction and cleanup paths (docs/evidence/framey-native-port-blockers-2026-10-26.md); fix and test those before shipping an ARM64 binary. The official x86_64 ZIP remains blocked; format coverage, plugin backend/UI, login and worn VR are unverified.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -3593,7 +3593,7 @@
         "https://github.com/GedasFX/decky-cloud-save.git"
       ],
       "status": "broken",
-      "reason": "Unsafe plugin archive member.",
+      "reason": "The exact official ZIP contains a 60,776,600-byte x86_64 rclone member, above the 30 MiB member limit and unusable on ARM64. Installation remains blocked.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -3628,7 +3628,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "rclone needs an ARM64 artifact; this ZIP also fails safe member validation. Cloud writes were not exercised.",
+      "nativePort": "An ARM64 rclone artifact and safe package policy are needed; the official 60,776,600-byte x86_64 member fails archive validation. No cloud writes were run (docs/evidence/framey-native-port-blockers-2026-10-26.md).",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
