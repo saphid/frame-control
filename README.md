@@ -128,6 +128,7 @@ Choose the operating system and processor of the computer you will use.
 | | Download | Needs |
 |---|---|---|
 | **macOS** (Apple Silicon) | [Frame-Control-mac-arm64.dmg](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-mac-arm64.dmg) | Nothing extra |
+| **macOS** (Intel, v0.4.39+) | [Frame-Control-mac-x64.dmg](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-mac-x64.dmg) | Nothing extra |
 | **Windows** 10 / 11 (x64) | [Frame-Control-Setup-x64.exe](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-Setup-x64.exe) · [portable .zip](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-win-x64.zip) | OpenSSH Client (normally installed) |
 | **Linux** (x64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-x86_64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-amd64.deb) | `ssh` (most desktops have it) |
 | **Linux** (arm64) | [AppImage](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.AppImage) · [.deb](https://github.com/saphid/frame-control/releases/latest/download/Frame-Control-linux-arm64.deb) | `ssh`, and `adb` for Android apps (`sudo apt install adb`) |
@@ -150,8 +151,8 @@ The [source](https://github.com/saphid/frame-control) and [release build workflo
 
 日本語: [5 ステップの接続ガイド](docs/connection-faq.md#日本語-5-ステップで接続)を参照してください。v0.4.26 以降は公式リリースの SHA256SUMS とファイルの SHA-256 値を照合してください。Windows は未署名、macOS は開発者 ID による署名・公証がありません。
 
-**Which build?** On a Mac, check Apple menu → About This Mac: the download is
-for Apple Silicon (M-series); no Intel Mac build is published. On Windows,
+**Which build?** On a Mac, check Apple menu → About This Mac: use `mac-arm64`
+for Apple Silicon (M-series), or `mac-x64` for Intel (available from v0.4.39). On Windows,
 check Settings → System → About → System type: the release is x64, not a native
 Windows ARM build. On Linux, `uname -m` reports `x86_64` (x64) or `aarch64`
 (arm64). Use `.deb` on Debian/Ubuntu, or AppImage on other distributions.
@@ -178,20 +179,25 @@ notarization. The DMG is unsigned. First verify the download against the
 `SHA256SUMS` from the same release, then open the DMG and drag **Frame Control**
 to **Applications**.
 
-Check your processor before opening: v0.4.36 and earlier publish only
+Check your processor before opening: v0.4.38 and earlier publish only
 `mac-arm64` for Apple Silicon. On an Intel Mac, this build cannot run;
 removing quarantine or installing Rosetta does not make an ARM app run on Intel.
 On a real Intel MacBook Air with macOS 15.7.7, opening v0.4.35 and v0.4.36
 reported: **“The application cannot be opened because it has an incorrect
 executable format.”** This is an architecture failure, not an observed
-Gatekeeper warning. See the [real-Mac test record](docs/evidence/mac-desktop-2026-10-26.md).
+Gatekeeper warning. The official **v0.4.39 Intel DMG** was then verified,
+installed and launched on that Air. Both CLI and T3 browser downloads lacked
+quarantine metadata; no Gatekeeper dialog appeared, while `spctl` rejected the
+ad hoc signed app. This does not verify Safari/Chrome warnings or Open Anyway.
+See the [released Intel test](docs/evidence/mac-v0439-2026-10-26.md) and
+[earlier architecture failure](docs/evidence/mac-desktop-2026-10-26.md).
 
 On a compatible Mac, if macOS blocks an unverified developer, try opening the
 app once, then go to **System Settings → Privacy & Security → Open Anyway**
 and confirm **Open**. Only do this for a download you verified and trust.
 [Apple's opening instructions](https://support.apple.com/102445) describe the
 current security controls. The exact warning and this override flow have not
-yet been verified here on Apple Silicon.
+yet been verified here on either Mac architecture.
 
 If a trusted, verified copy still reports “damaged” and offers no Open Anyway
 option, the Terminal fallback removes only this app's download quarantine
