@@ -23,7 +23,7 @@ def render(data):
         'Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.', '',
         f"**Works: {counts['works']} · Partial: {counts['partial']} · Broken: {counts['broken']} · N/A: {counts['na']}.**", '',
         '- **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.',
-        '- **Partial** means a limited frontend/settings surface initialized or rendered. Backend-dependent functionality remains unverified; it is not an end-to-end success claim.',
+        '- **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.',
         '- **Broken** means a concrete archive, frontend or Steam dependency blocks the audited version. An artificial backend/network denial alone is not evidence that the real backend is broken.',
         '- **N/A** means the plugin targets hardware or a display/UI surface that Framey does not provide. The store disables installation for these versions.', '',
         '## Verification limits', '',
@@ -51,7 +51,11 @@ def render(data):
         'countdown/completion events, a visible toast and persisted recents/subtle mode. '
         'Only private test settings were written. Simple Timer remains partial because its own expired-timer startup '
         'raises a missing `timer_task` error; sound/suspend are unsupported. '
-        'All other official backends remain unexecuted. '
+        'A [local audio follow-up](evidence/framey-audio-backends-2026-10-26.md) exercised Volume Mixer, Volume Boost and Mixer '
+        'through real Decky 3.3.0 amd64 backends on private silent virtual audio targets. Sliders, numeric volume entry, '
+        'independent server readbacks and Mixer filter persistence across a runtime restart passed. '
+        'These three stay partial: real ARM64 Frame audio dependencies/session mapping remain unverified because the shared headset lock was occupied. '
+        'Other official backends remain unexecuted. '
         'The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. '
         'No worn-VR official-plugin result is claimed. '
         'A [local UI follow-up](evidence/framey-ui-fallbacks-2026-10-26.json) rendered Pause Games and Tailscale Control settings '
