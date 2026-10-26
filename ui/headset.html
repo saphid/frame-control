@@ -64,8 +64,8 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <div id="extensionPanel" hidden><div class="row" style="margin-top:16px"><strong id="extensionTitle"></strong><button id="extensionClose" class="secondary">Close extension</button></div>
   <iframe id="extensionFrame" title="Frame Control extension" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
 <script>
-const key=location.hash.slice(1)||sessionStorage.getItem('frameHeadsetKey')||'';
-if(key)sessionStorage.setItem('frameHeadsetKey',key);
+const key=location.hash.slice(1)||(()=>{try{return sessionStorage.getItem('frameHeadsetKey')||'';}catch(_){return '';}})();
+if(key)try{sessionStorage.setItem('frameHeadsetKey',key);}catch(_){}
 history.replaceState(null,'',location.pathname);
 const byId=id=>document.getElementById(id);
 let latestStatus=null, activeExtension=null, recordBusy=false;
@@ -106,7 +106,23 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
 function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
-function deckyJobPending(){return !!sessionStorage.getItem('frameyPluginJob');}
+// Some Chromium profiles deny sessionStorage. Keep the accepted job ID in
+// memory so this open panel can still reconnect instead of offering a second
+// install while the first one may be running.
+let deckyPendingJob=null;
+function savedDeckyJob(){
+  if(deckyPendingJob)return deckyPendingJob;
+  try{return JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){return null;}
+}
+function rememberDeckyJob(job){
+  deckyPendingJob=job;
+  try{sessionStorage.setItem('frameyPluginJob',JSON.stringify(job));}catch(_){}
+}
+function clearDeckyJob(){
+  deckyPendingJob=null;
+  try{sessionStorage.removeItem('frameyPluginJob');}catch(_){}
+}
+function deckyJobPending(){return !!savedDeckyJob();}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
@@ -174,7 +190,7 @@ function deckyJobView(title,message,percent,failed=false){
   byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
   byId('deckyJobStatus').textContent=message;
   const bar=byId('deckyJobProgress');if(Number.isFinite(percent))bar.value=percent;else bar.removeAttribute('value');
-  byId('deckyJobCheck').hidden=!failed||!sessionStorage.getItem('frameyPluginJob');
+  byId('deckyJobCheck').hidden=!failed||!deckyJobPending();
 }
 async function followDeckyJob(job,action,name){
   for(let n=0;n<180;n++){
@@ -182,12 +198,12 @@ async function followDeckyJob(job,action,name){
     try{progress=await api(`/api/job?id=${encodeURIComponent(job)}`);}
     catch(error){
       if(/no such job/i.test(error.message)){
-        sessionStorage.removeItem('frameyPluginJob');
+        clearDeckyJob();
         throw Error('The app restarted and lost this job result. Refresh installed plugins to see what changed.');
       }
       throw error;
     }
-    if(progress.done){if(progress.error){sessionStorage.removeItem('frameyPluginJob');throw Error(progress.error);}
+    if(progress.done){if(progress.error){clearDeckyJob();throw Error(progress.error);}
       deckyJobView(`${action} ${name}`,progress.message||`${action} complete`,100);return;}
     deckyJobView(`${action} ${name}`,progress.stage||'Waiting for Frame…',progress.percent);
     await new Promise(resolve=>setTimeout(resolve,1000));
@@ -210,18 +226,18 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
     sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true});
     if(!started.job)throw Error('The server did not return a job ID');
-    sessionStorage.setItem('frameyPluginJob',JSON.stringify({job:started.job,action,name:plugin.name}));
+    rememberDeckyJob({job:started.job,action,name:plugin.name});
     await followDeckyJob(started.job,action,plugin.name);
-    sessionStorage.removeItem('frameyPluginJob');
+    clearDeckyJob();
     if(panelNote)byId('deckyJobStatus').textContent+=panelNote;
   }catch(error){deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}${panelNote}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}
 }
-async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
+async function checkDeckyJob(){const saved=savedDeckyJob();
   if(deckyBusy)return;
-  if(!saved||typeof saved.job!=='string'){sessionStorage.removeItem('frameyPluginJob');showDeckyStore();return;}
+  if(!saved||typeof saved.job!=='string'){clearDeckyJob();showDeckyStore();return;}
   deckyBusy=true;byId('deckyJobCheck').hidden=true;
-  try{await followDeckyJob(saved.job,saved.action,saved.name);sessionStorage.removeItem('frameyPluginJob');}
+  try{await followDeckyJob(saved.job,saved.action,saved.name);clearDeckyJob();}
   catch(error){deckyJobView(`${saved.action} ${saved.name}`,`Error: ${error.message}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}}
 byId('deckyJobCheck').onclick=checkDeckyJob;

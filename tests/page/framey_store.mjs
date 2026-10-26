@@ -244,3 +244,46 @@ vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('refreshDecky()',ctx);
 assert.equal(el('frameyPanel').hidden,true);
 assert.match(el('deckyState').textContent,/panel was closed until status can be refreshed/);
+
+// A denied sessionStorage must not lose an accepted job in the current panel.
+// Keep Update/Remove disabled after a polling outage and allow Check result.
+for(const method of ['getItem','setItem','removeItem'])
+  ctx.sessionStorage[method]=()=>{throw Error('storage denied');};
+let accepted=0;
+ctx.mockApi=async path => {
+  if(path==='/api/decky/plugin'){accepted++;return {job:'memory-job'};}
+  if(path.startsWith('/api/job'))throw Error('connection lost');
+  if(path==='/api/decky')return {managed:true,running:true,
+    plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi;deckyState={managed:true,running:true,plugins:[]};' +
+  'deckyStore=[{id:2,name:"Plugin 2",version:"1.0",description:"A panel",root:false}];showDeckyStore()',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(accepted,1);
+assert.equal(vm.runInContext('deckyJobPending()',ctx),true);
+assert.equal(el('deckyJobCheck').hidden,false);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,true);
+await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
+assert.equal(accepted,1);
+ctx.mockApi=async path => {
+  if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
+  if(path==='/api/decky')return {managed:true,running:true,
+    plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('checkDeckyJob()',ctx);
+assert.equal(vm.runInContext('deckyJobPending()',ctx),false);
+assert.equal(el('deckyJobCheck').hidden,true);
+assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
+
+// Opening the headset panel with a key in its URL must survive denied storage.
+const deniedDocument={getElementById:id=>new Element(id),createElement:()=>new Element()};
+const deniedBoot=vm.createContext({document:deniedDocument,
+  location:{hash:'#private-key',pathname:'/'},history:{replaceState(){}},
+  sessionStorage:{getItem(){throw Error('storage denied');},setItem(){throw Error('storage denied');}},
+  window:{addEventListener(){}},setInterval(){},setTimeout(){},confirm:()=>true,console,
+  fetch(){throw Error('No network expected');}});
+vm.runInContext(script,deniedBoot);
+assert.equal(vm.runInContext('key',deniedBoot),'private-key');
