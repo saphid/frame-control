@@ -112,12 +112,22 @@ class Panel(unittest.TestCase):
         script = '''const assert=require('node:assert/strict');
 const app={appid:10,display_name:'Game',sort_as:'game',app_type:1,gameid:'10',
 minutes_playtime_forever:60,minutes_playtime_last_two_weeks:20,rt_last_time_played:123,
-owner_account_id:'PRIVATE',per_client_data:{path:'PRIVATE'}};
+owner_account_id:'PRIVATE',per_client_data:{path:'PRIVATE'},
+local_per_client_data:{installed:true,clientid:'PRIVATE',install_path:'PRIVATE'}};
 global.window=global;global.appStore={allApps:[app]};
 global.App={m_CurrentUser:{strSteamID:'76561198000000001',strAccountBalance:'PRIVATE'}};
 global.collectionStore={allGamesCollection:{allApps:[app]}};
 const value=eval(EXPRESSION);
-assert.deepEqual(value,{apps:[[10,'Game','game',1,'10',60,20,123]],gameIds:[10],steamId:'76561198000000001'});
+assert.deepEqual(value,{apps:[[10,'Game','game',1,'10',60,20,123,true]],gameIds:[10],steamId:'76561198000000001'});
+assert.equal(JSON.stringify(value).includes('PRIVATE'),false);
+app.local_per_client_data.installed=false;
+assert.equal(eval(EXPRESSION).apps[0][8],false);
+delete app.local_per_client_data.installed;
+assert.equal(eval(EXPRESSION).apps[0][8],null);
+app.local_per_client_data=undefined;
+assert.equal(eval(EXPRESSION).apps[0][8],null);
+app.local_per_client_data={installed:'true'};
+assert.equal(eval(EXPRESSION).apps[0][8],null);
 appStore.allApps=Array(10001).fill(app);
 assert.throws(()=>eval(EXPRESSION),/snapshot limit/);
 appStore=undefined;

@@ -266,6 +266,17 @@ for(const name of ['App','appStore','appInfoStore','collectionStore'])assert.equ
 const snapshot={apps:[[10,'Game Ten','ten',1,'10',180,60,1234],
   [20,'Shortcut','shortcut',1073741824,'85899345920',0,0,0]],gameIds:[10]};
 window.__library(snapshot);
+assert.equal(window.appStore.GetAppOverviewByAppID(10).local_per_client_data,undefined);
+snapshot.apps[0].push(true);snapshot.apps[1].push(null);
+window.__library(snapshot);
+assert.equal(window.appStore.GetAppOverviewByAppID(10).local_per_client_data.installed,true);
+assert.deepEqual(Object.keys(window.appStore.GetAppOverviewByAppID(10).local_per_client_data),['installed']);
+assert.equal(window.appStore.GetAppOverviewByAppID(20).local_per_client_data.installed,undefined);
+window.appStore.GetAppOverviewByAppID(10).local_per_client_data.installed=false;
+assert.equal(snapshot.apps[0][8],true); // Detached from the wire data.
+window.__library({...snapshot,apps:[snapshot.apps[0].slice(0,8).concat(false),snapshot.apps[1]]});
+assert.equal(window.appStore.GetAppOverviewByAppID(10).local_per_client_data.installed,false);
+window.__library(snapshot);
 assert.equal(window.appStore.allApps.length,2);
 assert.equal(window.appStore.GetAppOverviewByAppID('10').display_name,'Game Ten');
 assert.equal(window.appStore.GetAppOverviewByGameID('85899345920').appid,20);
@@ -284,11 +295,12 @@ for(const invalid of [null,{apps:[],gameIds:[10]},
   {...snapshot,apps:[snapshot.apps[0],snapshot.apps[0]]},
   {...snapshot,apps:[[10,'Name','sort',1,'undefined',0,0,0]]},
   {...snapshot,apps:[[10,'Name','sort',1,'10',-1,0,0]]},
+  ...['true',1,{},undefined].map(installed=>({...snapshot,apps:[[10,'Name','sort',1,'10',0,0,0,installed]]})),
   {apps:Array(10001).fill(snapshot.apps[0]),gameIds:[]}]){
   assert.throws(()=>window.__library(invalid),/Invalid Steam/);
   assert.equal(window.appStore.allApps[0].display_name,'Plugin-local patch');
 }
-const running={artwork:[[10,'https://shared.steamstatic.com/steam/apps/10/library.jpg',[]]],apps:[snapshot.apps[0]],runningIds:[10],mainAppId:10,events:[],cursor:0,lifetimeAvailable:true};
+const running={artwork:[[10,'https://shared.steamstatic.com/steam/apps/10/library.jpg',[]]],apps:[snapshot.apps[0].slice(0,8)],runningIds:[10],mainAppId:10,events:[],cursor:0,lifetimeAvailable:true};
 const lifetimes=[];
 const lifetimeHandle=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(event=>{
   lifetimes.push({...event,running:Array.from(window.DFL.Router.RunningApps,app=>app.appid)});
@@ -297,6 +309,7 @@ window.__running(running);await Promise.resolve();
 assert.equal(lifetimes.length,0); // Initial snapshots are not launch events.
 assert.equal(window.SteamUIStore.FrameyRunningAvailable,true);
 assert.equal(window.DFL.Router.MainRunningApp.display_name,'Game Ten');
+assert.equal(window.appStore.GetAppOverviewByAppID(10).local_per_client_data.installed,true);
 assert.equal(window.appStore.GetVerticalCapsuleURLForApp({appid:10}),'https://shared.steamstatic.com/steam/apps/10/library.jpg');
 assert.equal(window.appStore.GetCustomVerticalCapsuleURLs({appid:10}).length,0);
 assert.equal(window.DFL.Router.RunningApps,window.SteamUIStore.RunningApps);

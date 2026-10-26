@@ -183,7 +183,8 @@ STEAM_READS = {
         const apps = Array.from(appStore.allApps);
         if (apps.length > 10000) throw Error('Steam library exceeds the Framey snapshot limit');
         return {apps:apps.map(a=>[a.appid,a.display_name,a.sort_as,a.app_type,String(a.gameid),
-            a.minutes_playtime_forever,a.minutes_playtime_last_two_weeks,a.rt_last_time_played]),
+            a.minutes_playtime_forever,a.minutes_playtime_last_two_weeks,a.rt_last_time_played,
+            typeof a.local_per_client_data?.installed === 'boolean' ? a.local_per_client_data.installed : null]),
             gameIds:Array.from(collectionStore.allGamesCollection.allApps,a=>a.appid),
             steamId:window.App?.m_CurrentUser?.strSteamID || null};
     })()''',
