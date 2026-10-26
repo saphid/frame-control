@@ -1,0 +1,184 @@
+{
+  "checkedAtUtc": "2026-10-26T07:22:08.822239+00:00",
+  "plugin": {
+    "id": 84,
+    "name": "Junk-Store",
+    "version": "1.1.13",
+    "sha256": "f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1",
+    "license": "BSD-3-Clause",
+    "sourceModified": false
+  },
+  "installer": {
+    "beforeScriptMode": "0644",
+    "afterScriptMode": "0744",
+    "policy": "Add owner execute for a shebang or ZIP-declared executable; do not restore archive privilege/write bits. Existing installs require update or reinstall."
+  },
+  "isolatedBackend": {
+    "runtime": "published Decky 3.3.0 amd64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "isolation": [
+      "unprivileged",
+      "no network",
+      "no devices",
+      "no capabilities",
+      "read-only root",
+      "private tmpfs home and tmp"
+    ],
+    "beforeInit": {
+      "result": {
+        "Type": "Error",
+        "Content": {
+          "Message": "Error parsing json result Expecting value: line 1 column 1 (char 0)",
+          "Data": "",
+          "ActionName": "init",
+          "ActionSet": "init"
+        }
+      },
+      "success": true
+    },
+    "afterInit": {
+      "result": {
+        "Type": "Success",
+        "Content": {
+          "Message": "Initialized"
+        }
+      },
+      "success": true
+    },
+    "beforeInitActions": {
+      "result": {
+        "Type": "Error",
+        "Content": {
+          "Message": "Error parsing json result Expecting value: line 1 column 1 (char 0)",
+          "Data": "",
+          "ActionName": "InitActions",
+          "ActionSet": "init"
+        }
+      },
+      "success": true
+    },
+    "afterInitActions": {
+      "outerSuccess": true,
+      "innerType": "ActionSet",
+      "setName": "MainMenu",
+      "actionCount": 4
+    }
+  },
+  "realFrame": {
+    "os": "Frame OS 0.5.6",
+    "arch": "aarch64",
+    "uid": 1000,
+    "decky": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "transport": "existing trusted SSH via lxso2",
+    "sharedLock": true,
+    "service": "private removable user service; not enabled; RuntimeMaxSec=600",
+    "installedWithProductionApply": true,
+    "scriptMode": "0o744",
+    "legendaryInstalled": false,
+    "backendMethods": [
+      "execute_action",
+      "get_websocket_port"
+    ],
+    "staticActions": [
+      "JunkStoreActions/GetContent",
+      "JunkStoreActions/GetEpicActions",
+      "MainMenu/GetContent",
+      "MainMenu/JunkStoreInit",
+      "init/InitActions"
+    ],
+    "websocketPort": 8765,
+    "websocketCommandsSent": false,
+    "librarySnapshotCounts": {
+      "apps": 1106,
+      "games": 895
+    },
+    "explicitInitActionInvoked": false,
+    "normalDeckyBeforeAfter": [
+      "inactive",
+      "inactive"
+    ],
+    "normalPanelBeforeAfter": [
+      "inactive",
+      "inactive"
+    ],
+    "batteryBeforeAfter": [
+      [
+        99
+      ],
+      [
+        100
+      ]
+    ],
+    "powerSettingChanged": false,
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true
+    },
+    "lockReleased": true
+  },
+  "localBrowser": {
+    "runtime": "local Chromium, real headset.html/framey-host.js, vendored React, official frontend in opaque iframe",
+    "backend": "production receipt-bound bridge to actual ARM64 backend",
+    "steamLibrary": "production receipt-bound GetLibrarySnapshot; only counts retained",
+    "outerStatusInstallResponses": "fixtures",
+    "passed": [
+      "Custom Stores main menu and Games/News/About navigation items render",
+      "Games route opens static Epic tab",
+      "Back returns to main menu",
+      "close/reopen returns to main menu"
+    ],
+    "remainingFailure": "About: Cannot read properties of undefined (reading 'installed'); detached app overview lacks local_per_client_data.installed",
+    "deniedActions": [
+      "fetch_rss_feed",
+      "EpicActions/GetContent"
+    ],
+    "denialIsNotBackendFailure": true
+  },
+  "cleanupAudit": {
+    "attempts": 3,
+    "allPrivateBasesAbsent": true,
+    "allPrivateUnitsAbsent": true,
+    "allArchivesAbsent": true,
+    "allServicesInactive": true,
+    "freshAuditLockReleased": true
+  },
+  "verification": {
+    "python": {
+      "run": 1628,
+      "skipped": 16,
+      "failures": 0
+    },
+    "site": {
+      "passed": 18
+    },
+    "focusedStore": {
+      "passed": 19
+    },
+    "fakeFrame": {
+      "blocked": 56,
+      "installed-removed": 60
+    },
+    "officialStore": {
+      "plugins": 116,
+      "errors": 0,
+      "identitySetUnchanged": true,
+      "checkedAtUtc": "2026-10-26T07:22:17.371046+00:00"
+    },
+    "staticEntrypointArchives": 28
+  },
+  "unverified": [
+    "Legendary dependency installation",
+    "Epic login",
+    "game listing",
+    "game downloads or launch",
+    "RSS feed",
+    "Steam shortcut mutation",
+    "optional websocket operations",
+    "deployed headset HTTP endpoint",
+    "worn VR"
+  ],
+  "status": "partial"
+}

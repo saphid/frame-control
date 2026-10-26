@@ -138,6 +138,31 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_installed_script_entrypoints_execute_without_zip_exec_bits(self):
+        data, _ = archive(extra=('Example/scripts/start.py',
+                                 b'#!/bin/sh\nprintf "Framey script: %s\\n" "$1"\n'))
+        result = self.apply('install', data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        script = self.folder / 'scripts/start.py'
+        self.assertTrue(script.stat().st_mode & 0o100)
+        self.assertFalse(script.stat().st_mode & 0o6111 & ~0o100)
+        ran = subprocess.run([str(script), 'ready'], text=True, capture_output=True, timeout=5)
+        self.assertEqual(ran.returncode, 0, ran.stderr)
+        self.assertEqual(ran.stdout, 'Framey script: ready\n')
+        self.assertFalse((self.folder / 'plugin.json').stat().st_mode & 0o111)
+        self.assertFalse((self.folder / 'dist/index.js').stat().st_mode & 0o111)
+
+    def test_declared_executable_is_owner_only_without_privilege_bits(self):
+        info = zipfile.ZipInfo('Example/bin/entrypoint')
+        info.create_system = 3
+        info.external_attr = 0o104777 << 16
+        data, _ = archive(extra=(info, b'entrypoint payload'))
+        result = self.apply('install', data)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        executable = self.folder / 'bin/entrypoint'
+        self.assertEqual(executable.stat().st_mode & 0o6111, 0o100)
+        self.assertEqual(executable.read_bytes(), b'entrypoint payload')
+
     def test_remove_while_service_is_stopped_does_not_restart_it(self):
         data, _ = archive()
         self.assertEqual(self.apply('install', data).returncode, 0)
