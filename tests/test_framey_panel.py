@@ -27,7 +27,7 @@ class Panel(unittest.TestCase):
                 def fake_ssh(command, stdin, **_):
                     self.assertEqual(command, 'python3 -')
                     compile(stdin, '<Steam read>', 'exec')
-                    self.assertIn(expression, stdin)
+                    self.assertIn(expression.replace('\n', r'\n'), stdin)
                     self.assertNotIn('__FRAMEY_STEAM_READ__', stdin)
                     return '{"result":"actual read"}'
                 self.assertEqual(framey_panel.read_steam(fake_ssh,81,method)['result'], 'actual read')
@@ -44,7 +44,8 @@ class Panel(unittest.TestCase):
             closed=[]
             page=SimpleNamespace(eval=lambda _:value,sock=SimpleNamespace(close=lambda:closed.append(True)))
             fake_module=SimpleNamespace(Page=lambda:page)
-            script=framey_panel.STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__',repr('safe()'))
+            script=framey_panel.STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__',repr('safe()')).replace(
+                '__FRAMEY_STEAM_LIMIT__',str(256*1024))
             with patch.dict(sys.modules, {'frame_steam':fake_module}), patch('builtins.print') as output:
                 if oversized:
                     with self.assertRaisesRegex(ValueError,'too large'):exec(script,{})
@@ -52,6 +53,45 @@ class Panel(unittest.TestCase):
                     exec(script,{})
                     self.assertEqual(json.loads(output.call_args.args[0]),{'result':'AU'})
             self.assertEqual(closed,[True])
+
+    def test_library_snapshot_copies_only_bounded_scalar_fields(self):
+        expression = framey_panel.STEAM_READS['GetLibrarySnapshot']
+        script = '''const assert=require('node:assert/strict');
+const app={appid:10,display_name:'Game',sort_as:'game',app_type:1,gameid:'10',
+minutes_playtime_forever:60,minutes_playtime_last_two_weeks:20,rt_last_time_played:123,
+owner_account_id:'PRIVATE',per_client_data:{path:'PRIVATE'}};
+global.window=global;global.appStore={allApps:[app]};
+global.App={m_CurrentUser:{strSteamID:'76561198000000001',strAccountBalance:'PRIVATE'}};
+global.collectionStore={allGamesCollection:{allApps:[app]}};
+const value=eval(EXPRESSION);
+assert.deepEqual(value,{apps:[[10,'Game','game',1,'10',60,20,123]],gameIds:[10],steamId:'76561198000000001'});
+appStore.allApps=Array(10001).fill(app);
+assert.throws(()=>eval(EXPRESSION),/snapshot limit/);
+appStore=undefined;
+assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
+'''.replace('EXPRESSION',json.dumps(expression))
+        result=subprocess.run(['node','-e',script],capture_output=True,text=True,timeout=10)
+        self.assertEqual(result.returncode,0,result.stderr)
+
+    def test_library_sized_plugin_arguments_remain_bounded(self):
+        # Shotty sends appid/name pairs at startup; a normal library exceeds 8K.
+        args=[{'allapps':[[id,'Game '+str(id)] for id in range(7000)]}]
+        self.assertGreater(len(json.dumps(args)),128*1024)
+        def fake_ssh(command, stdin, **_):
+            import ast
+            self.assertEqual(command,'python3 -')
+            compile(stdin,'<large method>','exec')
+            assignment=next(n for n in ast.parse(stdin).body if isinstance(n,ast.Assign) and
+                any(isinstance(t,ast.Name) and t.id=='payload' for t in n.targets))
+            self.assertEqual(json.loads(ast.literal_eval(assignment.value.args[0]))['args'],args)
+            return '{"result":null}'
+        with patch.object(framey_panel.frame_decky,'status',return_value={
+                'plugins':[{'storeId':53,'name':'Shotty'}]}):
+            self.assertEqual(framey_panel.call_method(fake_ssh,
+                53,'set_id_map_fronend',args,True),{'result':None})
+        with self.assertRaisesRegex(framey_panel.PanelError,'too large'):
+            framey_panel.call_method(lambda *a,**k:self.fail('Unexpected SSH'),
+                53,'set_id_map_fronend',[{'allapps':'x'*(256*1024)}],True)
 
     def test_steam_reads_have_the_headset_service_boundary(self):
         with patch.object(server,'HEADSET_RUNTIME',False), patch.dict(server.os.environ,{'FRAME_E2E_CONTAINER':'0'}):
@@ -150,7 +190,11 @@ class Panel(unittest.TestCase):
     def test_legacy_keyword_rpc_is_scoped_and_validated(self):
         import shlex
         def fake_ssh(command, stdin=None, **_):
-            payload = json.loads(shlex.split(command)[2])
+            import ast
+            self.assertEqual(command,'python3 -')
+            assignment=next(node for node in ast.parse(stdin).body if isinstance(node,ast.Assign) and
+                any(isinstance(target,ast.Name) and target.id=='payload' for target in node.targets))
+            payload=json.loads(ast.literal_eval(assignment.value.args[0]))
             self.assertEqual(payload, {'name':'Legacy', 'method':'read_setting',
                                       'args':[{'key':'mode'}], 'legacy':True})
             self.assertIn('loader/call_legacy_plugin_method', stdin)
@@ -186,8 +230,9 @@ class Panel(unittest.TestCase):
 
     def test_backend_method_is_scoped_to_store_receipt(self):
         def fake_ssh(command, stdin=None, **_):
-            self.assertIn('python3 - ', command)
-            self.assertEqual(stdin, framey_panel.METHOD_SCRIPT)
+            self.assertEqual(command, 'python3 -')
+            compile(stdin, '<remote method>', 'exec')
+            self.assertNotIn('__FRAMEY_METHOD_PAYLOAD__',stdin)
             return json.dumps({'result':{'theme':'dark'}})
         with patch.object(framey_panel.frame_decky, 'status', return_value={
             'plugins':[{'storeId':14,'name':'ProtonDB Badges'}]}):
@@ -195,7 +240,7 @@ class Panel(unittest.TestCase):
                              {'result':{'theme':'dark'}})
             with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,15,'get_setting',[])
             with self.assertRaises(framey_panel.PanelError): framey_panel.call_method(fake_ssh,14,'x;alert(1)',[])
-        compile(framey_panel.METHOD_SCRIPT, '<remote method>', 'exec')
+        compile(framey_panel.METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__',repr('{}')), '<remote method>', 'exec')
 
     def test_headset_bundle_contains_runtime_and_licenses(self):
         packed = frame_headset.bundle()

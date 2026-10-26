@@ -81,7 +81,7 @@ METHOD_SCRIPT = r'''
 import json, pathlib, sys
 sys.path.insert(0, str(pathlib.Path.home()/'.local/share/frame-control/headset/bundle/ui'))
 from frame_steam import Page
-payload = json.loads(sys.argv[1])
+payload = json.loads(__FRAMEY_METHOD_PAYLOAD__)
 route = 'loader/call_legacy_plugin_method' if payload.get('legacy') else 'loader/call_plugin_method'
 arguments = [payload['name'], payload['method'], *payload['args']]
 expression = "(async()=>{if(!window.DeckyBackend)throw Error('Decky frontend is unavailable in Steam CEF');return await DeckyBackend.call(" + ','.join(json.dumps(x) for x in [route, *arguments]) + ')})()'
@@ -96,7 +96,7 @@ def call_method(ssh, plugin_id, method, args, legacy=False):
         raise PanelError('Choose an installed Decky store plugin')
     if not isinstance(method, str) or not METHOD.fullmatch(method):
         raise PanelError('Invalid plugin method')
-    if not isinstance(args, list) or len(args) > 8 or len(json.dumps(args)) > 8192:
+    if not isinstance(args, list) or len(args) > 8 or len(json.dumps(args).encode('utf-8')) > 256*1024:
         raise PanelError('Plugin method arguments are too large')
     if type(legacy) is not bool or (legacy and (len(args) != 1 or not isinstance(args[0], dict))):
         raise PanelError('Legacy plugin methods need one keyword argument object')
@@ -104,8 +104,10 @@ def call_method(ssh, plugin_id, method, args, legacy=False):
     if len(found) != 1:
         raise PanelError('The plugin is not managed by the Frame Control Decky store')
     payload = {'name':found[0]['name'], 'method':method, 'args':args, 'legacy':legacy}
-    return json.loads(ssh('python3 - ' + shlex.quote(json.dumps(payload)),
-                          stdin=METHOD_SCRIPT, timeout=25))
+    # Library-sized arguments can exceed the OS limit for a single SSH command
+    # argument. Send them as a quoted Python literal on stdin instead.
+    script = METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__', repr(json.dumps(payload)))
+    return json.loads(ssh('python3 -', stdin=script, timeout=25))
 
 
 # Only parameterless read APIs. Never resolve a plugin-supplied property path
@@ -114,6 +116,19 @@ STEAM_READS = {
     'GetIPCountry': 'SteamClient.User.GetIPCountry()',
     'GetInstallFolders': 'SteamClient.InstallFolder.GetInstallFolders()',
     'GetSystemInfo': 'SteamClient.System.GetSystemInfo()',
+    # Copy selected scalar fields, never Steam objects, methods, credentials or
+    # paths. Only the current public Steam ID is needed for per-user plugin data.
+    # Compact rows keep even a large library inside the response budget.
+    'GetLibrarySnapshot': r'''(()=>{
+        if (!window.appStore?.allApps || !window.collectionStore?.allGamesCollection?.allApps)
+            throw Error('Steam library is unavailable');
+        const apps = Array.from(appStore.allApps);
+        if (apps.length > 10000) throw Error('Steam library exceeds the Framey snapshot limit');
+        return {apps:apps.map(a=>[a.appid,a.display_name,a.sort_as,a.app_type,String(a.gameid),
+            a.minutes_playtime_forever,a.minutes_playtime_last_two_weeks,a.rt_last_time_played]),
+            gameIds:Array.from(collectionStore.allGamesCollection.allApps,a=>a.appid),
+            steamId:window.App?.m_CurrentUser?.strSteamID || null};
+    })()''',
 }
 STEAM_READ_SCRIPT = r'''
 import json, pathlib, sys
@@ -122,7 +137,7 @@ from frame_steam import Page
 page = Page()
 try:
     encoded = json.dumps({'result':page.eval(__FRAMEY_STEAM_READ__)})
-    if len(encoded.encode('utf-8')) > 256*1024:
+    if len(encoded.encode('utf-8')) > __FRAMEY_STEAM_LIMIT__:
         raise ValueError('Steam read response is too large')
     print(encoded)
 finally: page.sock.close()
@@ -139,7 +154,8 @@ def read_steam(ssh, plugin_id, method):
     if len(found) != 1:
         raise PanelError('The plugin is not managed by the Frame Control Decky store')
     expression = '(async()=>await ' + STEAM_READS[method] + ')()'
-    script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression))
+    script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
+        '__FRAMEY_STEAM_LIMIT__', str(2*1024*1024 if method == 'GetLibrarySnapshot' else 256*1024))
     return json.loads(ssh('python3 -', stdin=script, timeout=25))
 
 
