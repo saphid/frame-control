@@ -74,9 +74,14 @@ class OfficialBundles(unittest.TestCase):
                     (folder / '.frame-control-store.json').write_text(json.dumps({'storeId': plugin['id']}))
                     with patch.object(framey_panel, 'PLUGINS', plugins):
                         page = framey_panel.panel(plugin['id']).decode()
-                    encoded = re.search(r'<script id="framey-bundle" type="application/json">([^<]+)</script>', page)
+                    encoded = re.search(r'<script id="framey-bundle" type="application/json"[^>]*>([^<]+)</script>', page)
                     self.assertIsNotNone(encoded)
                     self.assertEqual(base64.b64decode(encoded.group(1)), (folder / 'dist/index.js').read_bytes())
+                    if plugin['id'] == 135:
+                        self.assertIn('data-module="/framey/module/135/index.js"', page)
+                        with patch.object(framey_panel, 'PLUGINS', plugins):
+                            self.assertEqual(framey_panel.local_module(135, 'chunks/pluginApi-B8sV7970.js'),
+                                             (folder/'dist/chunks/pluginApi-B8sV7970.js').read_bytes())
 
 
 if __name__ == '__main__':
