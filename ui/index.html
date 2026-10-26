@@ -2189,6 +2189,7 @@ $('extensionClose').onclick = () => {
   $('extensionFrame').removeAttribute('src');
   $('extensionPanel').hidden = true;
 };
+function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyInfo = null;
 let deckyCatalog = [];
 async function loadDecky() {
@@ -2200,7 +2201,7 @@ async function loadDecky() {
     const managedList=$('deckyManagedList');managedList.replaceChildren();
     for(const plugin of d.plugins||[]){if(!plugin.storeId)continue;
       const row=document.createElement('div');row.className='hint';
-      const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''}`;
+      const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''} · ${deckyCompatibilityText(plugin)}`;
       const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove plugin';
       remove.disabled=!d.managed||!$('deckyAck').checked;
       remove.onclick=()=>changeDeckyPlugin('remove',{id:plugin.storeId,name:plugin.name});
@@ -2226,8 +2227,9 @@ function showDeckyStore() {
     const description = document.createElement('span'); description.textContent = ` ${plugin.description}`;
     const entry = installed.find(p => p.storeId === plugin.id);
     const unmanaged = installed.some(p => p.name === plugin.name && p.storeId !== plugin.id);
-    const reason = plugin.root ? 'Needs root; not supported by the Frame user service.' : unmanaged ? 'Existing plugin is not managed by Frame Control.' : '';
+    const reason = plugin.root ? 'Needs root; not supported by the Frame user service.' : plugin.compatibility?.blockInstall ? plugin.compatibility.reason : unmanaged ? 'Existing plugin is not managed by Frame Control.' : '';
     row.append(title, description);
+    const compatibility=document.createElement('p');compatibility.textContent=deckyCompatibilityText(plugin);row.append(compatibility);
     if (reason) { const note=document.createElement('small'); note.textContent=` ${reason}`; row.append(note); }
     else {
       const button=document.createElement('button'); button.className='small';

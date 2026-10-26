@@ -1,0 +1,64 @@
+"""A compatibility claim must never transfer to a different published archive."""
+import sandbox  # noqa: F401
+import json
+from pathlib import Path
+import sys
+import subprocess
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'ui'))
+import framey_compatibility as compatibility
+import frame_decky_store
+import frame_decky
+
+
+class Compatibility(unittest.TestCase):
+    def test_table_matches_store_data_and_complete_browser_and_fake_evidence(self):
+        root = Path(__file__).resolve().parents[1]
+        subprocess.run([sys.executable, str(root/'scripts/framey-compatibility-doc.py'), '--check'], check=True)
+        records = json.loads(compatibility.DATA.read_text())['plugins']
+        self.assertEqual(len({p['id'] for p in records}), len(records))
+        for record in records:
+            self.assertEqual(record['browser']['id'], record['id'])
+            self.assertEqual(record['fakeFrame']['sha256'], record['sha256'])
+            self.assertIn(record['status'], ('works', 'partial', 'broken', 'na'))
+
+    def test_claims_require_exact_id_version_and_digest(self):
+        records = json.loads(compatibility.DATA.read_text())['plugins']
+        for plugin in records:
+            with self.subTest(plugin=plugin['name']):
+                expected = compatibility.lookup(plugin['id'], plugin['sha256'], plugin['version'])
+                self.assertEqual(expected['status'], plugin['status'])
+                for plugin_id, digest, version in (
+                    (plugin['id'], '0'*64, plugin['version']),
+                    (plugin['id'], plugin['sha256'], plugin['version']+'-new'),
+                    (99999, plugin['sha256'], plugin['version']),
+                ):
+                    result = compatibility.lookup(plugin_id, digest, version)
+                    self.assertEqual(result['status'], 'unverified')
+                    self.assertFalse(result['blockInstall'])
+
+    def test_installed_receipt_uses_its_digest_not_current_store_version(self):
+        record = json.loads(compatibility.DATA.read_text())['plugins'][0]
+        installed = {'plugins': [{'storeId': record['id'], 'version': record['version'],
+                                 'sha256': record['sha256']},
+                                {'storeId': record['id'], 'version': record['version'], 'sha256': '0'*64}]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))
+        self.assertEqual(result['plugins'][0]['compatibility']['status'], record['status'])
+        self.assertEqual(result['plugins'][1]['compatibility']['status'], 'unverified')
+
+    def test_hardware_block_precedes_any_download_or_ssh_mutation(self):
+        with patch.object(frame_decky, 'status', return_value={'managed': True, 'running': True, 'plugins': []}), \
+             patch.object(frame_decky_store, 'catalog', return_value=[{'id': 42, 'name': 'Hardware only',
+                 'sha256': 'a'*64, 'root': False, 'compatibility': {'blockInstall': True, 'reason': 'Not supported on Frame'}}]), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen') as download:
+            def no_ssh(*a, **k):
+                self.fail('must not mutate headset for known hardware blocker')
+            with self.assertRaisesRegex(ValueError, 'Not supported on Frame'):
+                frame_decky_store.change(no_ssh, 'install', 42)
+            download.assert_not_called()
+
+    def test_missing_audit_data_is_unverified(self):
+        with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
+            self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')

@@ -55,7 +55,8 @@
           "*.html",
           "*.js",
           "*.css",
-          "telemetry.json"
+          "telemetry.json",
+          "framey-compatibility.json"
         ]
       },
       {
