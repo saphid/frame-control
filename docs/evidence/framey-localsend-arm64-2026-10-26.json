@@ -1,0 +1,97 @@
+{
+  "checkedAtUtc": "2026-10-26",
+  "plugin": {
+    "id": 125,
+    "name": "Decky Localsend",
+    "officialArchiveStatus": "x86_64; blocked; no substitutions or safeguard changes"
+  },
+  "source": {
+    "url": "https://github.com/MoYoez/LocalSend-Go",
+    "revision": "66edc509a28b9f877e7374504892dcbc653a4da4",
+    "license": "MIT",
+    "licenseUrl": "https://github.com/MoYoez/LocalSend-Go/blob/66edc509a28b9f877e7374504892dcbc653a4da4/LICENSE",
+    "pluginLicense": "BSD-3-Clause; distinct from the MIT helper",
+    "officialElfBuildInfo": "Go 1.25.7, CGO_ENABLED=0, GOARCH=amd64; no embedded VCS revision. Exact source correspondence unproven."
+  },
+  "build": {
+    "toolchain": "go1.25.7",
+    "environment": {
+      "GOTOOLCHAIN": "go1.25.7",
+      "CGO_ENABLED": "0",
+      "GOOS": "linux",
+      "GOARCH": "arm64"
+    },
+    "command": "go build -trimpath -o localsend-core .",
+    "elfMachine": 183,
+    "architecture": "aarch64",
+    "staticallyLinked": true,
+    "sha256": "e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9",
+    "rebuildSha256Matches": true
+  },
+  "realFrame": {
+    "os": "Frame OS 0.5.6 ARM64",
+    "sharedLockOwner": "kp0z857q58-live-steam-reads-20261026",
+    "helpExitCode": 0,
+    "officialBackendFlagsAllRecognized": true,
+    "helpFlags": [
+      "-doNotMakeSessionFolder",
+      "-log",
+      "-scanTimeout",
+      "-skipNotify",
+      "-useAlias",
+      "-useAutoSave",
+      "-useAutoSaveFromFavorites",
+      "-useConfigPath",
+      "-useDefaultUploadFolder",
+      "-useDownload",
+      "-useHttp",
+      "-useMultcastAddress",
+      "-useMultcastPort",
+      "-usePin",
+      "-useReferNetworkInterface",
+      "-useWebOutPath"
+    ],
+    "runtimeExitCode": 0,
+    "isolation": "unshare -Urn; loopback and private veth pair only; no external interface/default route",
+    "receiving": "-useAutoSave=false and -useAutoSaveFromFavorites=false; no upload/transfer requests",
+    "notifications": "-skipNotify",
+    "readOnlyRequest": "GET http://127.0.0.1:53317/api/localsend/v2/info",
+    "result": {
+      "ok": true,
+      "protocolVersion": "2.0",
+      "deviceType": "headless",
+      "responseKeys": [
+        "alias",
+        "deviceModel",
+        "deviceType",
+        "download",
+        "fingerprint",
+        "version"
+      ],
+      "aliasMatches": true
+    },
+    "cleanup": {
+      "helperExited": true,
+      "filesCreated": [
+        "config.yaml",
+        "helper.log"
+      ]
+    },
+    "privateDirectoryAbsent": true,
+    "servicesInstalledOrStarted": false,
+    "powerChanges": false,
+    "sharedLockReleasedAfterTests": true,
+    "independentReacquireAudit": "Deferred: another job had acquired the shared lock; it was left untouched. The helper process exited and TemporaryDirectory removal completed within the original locked probe."
+  },
+  "failedProbe": {
+    "interface": "loopback only",
+    "result": "Upstream rejects lo as a discovery interface and exits. Repeated with a veth pair wholly inside the private namespace; no source changes."
+  },
+  "unverified": [
+    "Exact source correspondence to shipped official ELF",
+    "Unmodified official Python backend invoking this ARM64 artifact",
+    "HTTPS, discovery on real network, pairing and file transfers",
+    "Framey frontend/proxy protocol integration",
+    "Worn VR/controller/keyboard"
+  ]
+}
