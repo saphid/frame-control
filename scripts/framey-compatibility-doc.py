@@ -81,9 +81,11 @@ def render(data):
         '[Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), '
         '[Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and '
         '[legacy MusicControl](evidence/framey-legacy-2026-10-25.md). '
-        'A [Music Control 1.1.7 backend follow-up](evidence/framey-music-control-bound-methods-2026-10-26.md) '
-        'repairs exact-archive bound-method calls and verifies transport/volume command dispatch against an isolated dbus-send fixture. '
-        'A real MPRIS player and actual ARM64 Decky backend remain unverified.', '',
+        'A [shared Music Control runtime follow-up](evidence/framey-mpris-runtime-2026-10-26.md) corrects the earlier bound-method fixture error: actual Decky uses the legacy class calling convention, so explicit-self calls must stay. '
+        'Exact managed installs also restore the system library path for D-Bus subprocesses, repairing a real Frame OS libtinfo/glibc failure in MusicControl 1.1.6. '
+        'Both official entries pass transport/seek/volume, Info and reopen in local Chromium with actual Decky 3.3.0 amd64 and a private silent MPRIS service. '
+        'Actual ARM64 Decky on the Frame passes read-only empty-player discovery for both. Existing copies need remove/reinstall or an explicit managed update. '
+        'Actual media playback on ARM64, artwork and worn VR remain unverified; both stay partial.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',

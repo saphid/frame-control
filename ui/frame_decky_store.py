@@ -228,26 +228,23 @@ try:
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
-            # Music Control 1.1.7 passes `self` to its own bound methods.
-            # Python has already bound that argument, so even read-only player
-            # discovery raises TypeError. Repair only the SHA-pinned official
-            # source, and fail the transaction if its expected calls change.
-            if int(plugin_id)==111 and digest=='3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9' and folder=='MusicControl':
+            # These legacy backends launch system dbus-send (1.1.6 via /bin/sh).
+            # Decky's PyInstaller LD_LIBRARY_PATH selects bundled libtinfo built
+            # against newer glibc than Frame OS. Restore its saved system path
+            # only in the copied subprocess environment; retain legacy self calls.
+            music_digests={
+                12:'246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62',
+                111:'3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9',
+            }
+            if digest==music_digests.get(int(plugin_id)) and folder=='MusicControl':
                 main=unpacked/'main.py'
                 source=main.read_text(encoding='utf-8')
-                fixes={
-                    'self._get_dbus_env(self)':('self._get_dbus_env()',10),
-                    'self._sp_player_dbus(self,':('self._sp_player_dbus(',7),
-                    'self._sp_dbus_set(self,':('self._sp_dbus_set(',1),
-                    'self.sp_get_volume(self)':('self.sp_get_volume()',2),
-                    'self.sp_set_volume(self,':('self.sp_set_volume(',2),
-                }
-                for old,(new,count) in fixes.items():
-                    if source.count(old)!=count:
-                        raise RuntimeError('Music Control compatibility source changed')
-                    source=source.replace(old,new)
+                old='        env = os.environ.copy()\n'
+                if source.count(old)!=1:
+                    raise RuntimeError('Music Control compatibility source changed')
+                source=source.replace(old,old+'        env["LD_LIBRARY_PATH"] = env.get("LD_LIBRARY_PATH_ORIG", "")\n')
                 main.write_text(source,encoding='utf-8')
-                compat_shims.append('music-control-bound-methods')
+                compat_shims.append('music-control-system-dbus-env')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
