@@ -177,6 +177,16 @@ try:
                 seen.add(f.filename)
             stage.mkdir(mode=0o700)
             z.extractall(stage)
+            # zipfile drops execute bits. Legacy plugins also publish shebang
+            # entrypoints as 0644 because Decky's installer chmods recursively.
+            # Grant only owner execute for scripts or declared executables;
+            # never restore archive privilege/write bits or mark other data executable.
+            for member in files:
+                if member.is_dir(): continue
+                entry=stage/member.filename
+                with entry.open('rb') as source: script=source.read(2)==b'#!'
+                if script or (member.external_attr>>16)&0o111:
+                    entry.chmod(entry.stat().st_mode|0o100)
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             # Recheck under the transaction lock. Another store operation may

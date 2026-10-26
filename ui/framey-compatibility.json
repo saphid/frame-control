@@ -6517,13 +6517,15 @@
         "https://github.com/ebenbruyns/junkstore",
         "https://github.com/ebenbruyns/junkstore.git"
       ],
-      "status": "broken",
-      "reason": "Local CSS lookup fixes the loading view crash. Actual Decky 3.3.0 amd64 startup/static InitActions return a script execution/JSON error; the published scripts are not executable after extraction. Store install/login/game launch and ARM64 remain unverified.",
+      "status": "partial",
+      "reason": "Executable script extraction repaired. Official Decky 3.3.0 ARM64 static menu/backend calls and local Chromium Games/Epic navigation, back and reopen pass. About still fails on missing installed-app metadata; Legendary is absent. Dependency install, login, game operations, RSS and worn VR remain unverified. Existing installs need update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Linux backend",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 84,
@@ -6555,6 +6557,25 @@
         "sha256": "f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "localBackend": {
+        "runtime": "Decky 3.3.0 amd64",
+        "evidence": "docs/evidence/framey-script-entrypoints-2026-10-26.json",
+        "before": "init and InitActions return inner Type:Error",
+        "after": "init Type:Success; InitActions Type:ActionSet/MainMenu"
+      },
+      "realFrame": {
+        "runtime": "Decky 3.3.0 ARM64",
+        "evidence": "docs/evidence/framey-script-entrypoints-2026-10-26.json",
+        "staticActions": [
+          "JunkStoreActions/GetContent",
+          "JunkStoreActions/GetEpicActions",
+          "MainMenu/GetContent",
+          "MainMenu/JunkStoreInit",
+          "init/InitActions"
+        ],
+        "browser": "main menu; Games/Epic static tab; back; close/reopen",
+        "remainingFailure": "About: Cannot read properties of undefined (reading 'installed'); detached app overview lacks local_per_client_data.installed"
       }
     },
     {
