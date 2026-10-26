@@ -4,6 +4,11 @@ Runs on your computer through the `frame` SSH alias (or FRAME_ALIAS), with
 Frame Control's own modules, and records what happened with the headset's
 BUILD_ID in tests/smoke/results/<time>-<BUILD_ID>.json (git-ignored):
 
+Before any status read or title change, it atomically owns /tmp/frame-test.lock
+on the Frame and checks SteamVR standby, proximity and battery read-only. A
+busy lock, awake headset or battery below 20% stops the run. Only this run's
+lock is released, including after test failures.
+
 - properties.json from Valve's devkit service names the login user;
 - status (ui/frame_status.py) reads the build, battery and storage;
 - three tiny titles (tests/smoke/tiny_programs.py: ARM64 and x86-64 static
@@ -28,6 +33,7 @@ import argparse
 import json
 import os
 import platform
+import secrets
 import shlex
 import subprocess
 import sys
@@ -50,6 +56,60 @@ import stop_processes  # noqa: E402
 
 RESULTS = Path(os.environ.get('FRAME_SMOKE_RESULTS') or HERE / 'results')
 PREFIX = 'fc_smoke_'
+LOCK = '/tmp/frame-test.lock'
+
+
+def remote(command, *, input=None):
+    """Use a bounded SSH call for shared-lock operations."""
+    return subprocess.run(['ssh', '-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8', ALIAS, command],
+                          input=input, capture_output=True, text=True, timeout=20)
+
+
+def acquire_lock(token):
+    """Atomically reserve the Frame before reading its state or changing titles."""
+    command = (f'mkdir {LOCK} && {{ printf %s {shlex.quote(token)} > {LOCK}/owner || '
+               f'{{ rmdir {LOCK}; exit 1; }}; }}')
+    return remote(command).returncode == 0
+
+
+def release_lock(token):
+    """Never remove a lock if its owner changed."""
+    command = (f'test "$(cat {LOCK}/owner)" = {shlex.quote(token)} && '
+               f'rm {LOCK}/owner && rmdir {LOCK}')
+    return remote(command).returncode == 0
+
+
+PREFLIGHT = r'''
+import json, pathlib, subprocess
+r = subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd', '--stats'],
+                   capture_output=True, text=True, timeout=8)
+try: activity = json.loads(r.stdout)[0]['activity_level'] if r.returncode == 0 else None
+except (ValueError, KeyError, IndexError, TypeError): activity = None
+proximity = []
+for path in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
+    try: proximity.append(float(path.read_text().strip()))
+    except (OSError, ValueError): pass
+battery = []
+for path in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
+    try:
+        if (path.parent/'type').read_text().strip() == 'Battery':
+            battery.append(int(path.read_text().strip()))
+    except (OSError, ValueError): pass
+print(json.dumps({'activity': activity, 'proximity': proximity, 'battery': battery}))
+'''
+
+
+def preflight():
+    result = remote('python3 -', input=PREFLIGHT)
+    if result.returncode:
+        raise RuntimeError('Locked SteamVR and battery preflight failed: ' + result.stderr.strip())
+    state = json.loads(result.stdout)
+    if state.get('activity') != 3:
+        raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
+    battery = state.get('battery')
+    if not battery or min(battery) < 20:
+        raise RuntimeError('Frame battery is unavailable or below the smoke threshold')
+    return state
 
 
 def stop_titles(ids):
@@ -308,17 +368,8 @@ def pair(folder):
         print(f'    removed the smoke key from authorized_keys ({dropped} line(s))', flush=True)
 
 
-def main():
-    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    ap.add_argument('--pair', action='store_true', help='also pair through the devkit service (needs you in the headset)')
-    args = ap.parse_args()
-
-    r = subprocess.run(['ssh', '-o', 'ConnectTimeout=5', '-o', 'BatchMode=yes', ALIAS, 'true'],
-                       capture_output=True, text=True)
-    if r.returncode != 0:
-        print(f'{ALIAS} is not reachable over SSH: {r.stderr.strip()}', file=sys.stderr)
-        return 2
-
+def run_smoke(args, before):
+    """Run only after the shared lock and read-only preflight succeeded."""
     smoke = Smoke()
     started = time.strftime('%Y-%m-%dT%H:%M:%SZ', time.gmtime())
     release = os_release()
@@ -347,11 +398,44 @@ def main():
     passed = sum(s['ok'] for s in smoke.steps)
     RESULTS.mkdir(exist_ok=True)
     out = RESULTS / f"{started.replace(':', '')}-{build}.json"
-    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'os_release': release, 'paired': args.pair,
+    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'preflight': before,
+                               'os_release': release, 'paired': args.pair,
                                'passed': passed, 'failed': len(smoke.steps) - passed,
                                'devkit_utils_there_before': had_utils, 'steps': smoke.steps}, indent=1))
     print(f'==> {passed}/{len(smoke.steps)} steps passed on build {build}; results in {out}')
     return 0 if passed == len(smoke.steps) else 1
+
+
+def main():
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument('--pair', action='store_true', help='also pair through the devkit service (needs you in the headset)')
+    args = ap.parse_args()
+    token = 'frame-smoke-' + secrets.token_hex(10)
+    try:
+        locked = acquire_lock(token)
+    except (OSError, subprocess.TimeoutExpired):
+        locked = False
+    if not locked:
+        print('Shared Frame lock busy or unreachable; no headset status read or smoke run.', file=sys.stderr)
+        return 2
+    result = 1
+    try:
+        try:
+            before = preflight()
+            print('Locked read-only preflight: ' + json.dumps(before), flush=True)
+            result = run_smoke(args, before)
+        except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as failure:
+            print(str(failure), file=sys.stderr)
+            result = 2
+    finally:
+        try:
+            released = release_lock(token)
+        except (OSError, subprocess.TimeoutExpired):
+            released = False
+        if not released:
+            print('ERROR: could not release owned Frame lock.', file=sys.stderr)
+            result = 1
+    return result
 
 
 if __name__ == '__main__':
