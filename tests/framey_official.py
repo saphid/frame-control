@@ -17,6 +17,8 @@ PLUGINS = (
      'folder': 'hltb-for-deck', 'sha256': 'bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558'},
     {'id': 36, 'name': 'SteamGridDB', 'version': '1.8.1', 'api_version': 1,
      'folder': 'decky-steamgriddb', 'sha256': 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'},
+    {'id': 135, 'name': 'Deck Shelves', 'version': '2.0.0', 'api_version': 1,
+     'folder': 'Deck-Shelves', 'sha256': 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'},
 )
 
 # This archive has a legacy IIFE frontend with no manifest API version.

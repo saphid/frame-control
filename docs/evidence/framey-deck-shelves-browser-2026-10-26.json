@@ -1,0 +1,32 @@
+{
+  "dateUtc": "2026-10-26",
+  "plugin": {
+    "storeId": 135,
+    "name": "Deck Shelves",
+    "version": "2.0.0",
+    "sha256": "b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91"
+  },
+  "mode": "opaque allow-scripts iframe in local Chromium, exact archived frontend, backend and network denied",
+  "baselineError": "relative JavaScript chunk imports cannot resolve from a blob URL",
+  "result": {
+    "initializerReady": true,
+    "error": null,
+    "moduleResponses200": 9,
+    "settingsVisible": [
+      "Enable shelves on Home",
+      "Create default shelves",
+      "Behavior",
+      "Shelves"
+    ],
+    "attemptedBackendMethods": ["get_settings"],
+    "backendMethodsExecuted": [],
+    "steamLibraryRead": "denied by audit",
+    "pluginNetwork": "denied by audit"
+  },
+  "limits": [
+    "No Steam Home shelf injection or settings write was verified",
+    "No official backend executed",
+    "No real Frame or worn VR interaction occurred",
+    "Settings visibility alone does not prove the plugin works"
+  ]
+}

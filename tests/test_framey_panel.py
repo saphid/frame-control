@@ -187,6 +187,26 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         with self.assertRaises(FileNotFoundError):
             framey_panel.panel(14)
 
+    def test_chunked_frontend_serves_only_owned_javascript(self):
+        (self.folder/'dist/index.js').write_text(
+            "import './chunks/view.js'; export default () => ({content: 'OK'});")
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const title = "Settings";')
+        page = framey_panel.panel(14).decode()
+        self.assertIn('data-module="/framey/module/14/index.js"', page)
+        self.assertEqual(framey_panel.local_module(14, 'chunks/view.js'),
+                         b'export const title = "Settings";')
+        for name in ('../plugin.json', 'chunks/../../plugin.json',
+                     'chunks/view.js.map', 'other.js', 'chunks/%2e%2e/view.js'):
+            with self.subTest(name=name), self.assertRaises(FileNotFoundError):
+                framey_panel.local_module(14, name)
+        (chunks/'linked.js').symlink_to(chunks/'view.js')
+        with self.assertRaises(FileNotFoundError):
+            framey_panel.local_module(14, 'chunks/linked.js')
+        with self.assertRaises(FileNotFoundError):
+            framey_panel.local_module(15, 'chunks/view.js')
+
     def test_legacy_keyword_rpc_is_scoped_and_validated(self):
         import shlex
         def fake_ssh(command, stdin=None, **_):
@@ -272,6 +292,15 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         self.assertIn('blob:', headers['Content-Security-Policy'])
         self.assertIn(b'framey-bundle', body)
         self.assertEqual(get('/framey/panel/15')[0], 404)
+
+        (self.folder/'dist/chunks').mkdir()
+        (self.folder/'dist/chunks/view.js').write_text('export const value = 1;')
+        status, headers, body = get('/framey/module/14/chunks/view.js')
+        self.assertEqual(status, 200)
+        self.assertEqual(headers['Access-Control-Allow-Origin'], 'null')
+        self.assertEqual(body, b'export const value = 1;')
+        self.assertEqual(get('/framey/module/14/chunks/../plugin.json')[0], 404)
+        self.assertEqual(get('/framey/module/15/chunks/view.js')[0], 404)
 
 
 if __name__ == '__main__':

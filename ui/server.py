@@ -3691,6 +3691,16 @@ class Handler(BaseHTTPRequestHandler):
                     self.send_bytes(framey_panel.panel(plugin_id), 'text/html; charset=utf-8', framey=True)
                 except (ValueError, FileNotFoundError, OSError):
                     self.send_json({'error':'Framey panel unavailable'}, 404)
+            elif path.startswith('/framey/module/'):
+                try:
+                    plugin_id, name = path.removeprefix('/framey/module/').split('/', 1)
+                    module = framey_panel.local_module(int(plugin_id), name)
+                    # The plugin iframe has an opaque origin; only its module
+                    # imports need cross-origin access to these public JS files.
+                    self.send_bytes(module, 'text/javascript; charset=utf-8', framey=True,
+                                    headers=[('Access-Control-Allow-Origin', 'null')])
+                except (ValueError, FileNotFoundError, OSError):
+                    self.send_json({'error':'Framey module unavailable'}, 404)
             elif path.startswith('/framey-runtime/'):
                 files = {'react.js':'vendor/react-18.3.1.min.js',
                          'react-dom.js':'vendor/react-dom-18.3.1.min.js',
