@@ -16,8 +16,10 @@ pixels. Review/redact them before committing or sharing. JSON reports have
 screenshot hashes and no UI access keys.
 
 The runner acquires `/tmp/frame-test.lock` by atomic `mkdir`, writes a random
-owner, then reads battery and SteamVR state. A foreign lock prevents sensor
-reads, wake, installation and input. Unknown battery or below 20% aborts.
+owner, then reads battery, proximity and SteamVR state. A foreign lock prevents
+sensor reads, wake, installation and input. Unknown battery or below 20% aborts.
+`--wake` and `--exercise` also require SteamVR activity 3 (standby); awake or
+unknown activity exits before power changes, service installation or input.
 Battery is read again before release. The default check never wakes or
 installs anything; it returns nonzero when the panel is absent/hidden.
 
@@ -58,9 +60,12 @@ CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,
 not proof of a physical controller or the SteamVR virtual keyboard.
 
 SteamVR can leave a recreated panel hidden with a stale focus request. The
-exercise retries once by removing and reapplying `STEAM_GAME` on its own test
+exercise waits briefly for the new overlay, then retries once by removing and
+reapplying `STEAM_GAME` on its own test
 browser window, then requests focus again. It never retags another application.
-The report records whether this recovery was needed. Registration, dashboard
+If the overlay stays hidden, it records a small read-only registration/service
+diagnostic and stops before synthetic input. The report records whether this
+recovery was needed. Registration, dashboard
 visibility, actual panel visibility, and pixel capture are separate checks.
 A visible docked panel can report `IsDashboardVisible=false` and
 `IsActiveDashboardOverlay=false`. A zero-sized main texture or failed image

@@ -66,12 +66,16 @@ finally: lib.VR_ShutdownInternal()
 battery=[]
 for p in pathlib.Path('/sys/class/power_supply').glob('*/capacity'):
     if (p.parent/'type').read_text().strip()=='Battery': battery.append(int(p.read_text()))
+proximity=[]
+for p in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
+    try: proximity.append(float(p.read_text().strip()))
+    except (OSError,ValueError): pass
 def cmd(*args):
     p=subprocess.run(args,capture_output=True,text=True,timeout=8)
     if p.returncode: raise RuntimeError(p.stderr or p.stdout)
     return p.stdout.strip()
 vr='/opt/steamvr/bin/linuxarm64/vrcmd'
-print(json.dumps({'battery':battery,'dashboardVisible':dashboard,'stats':json.loads(cmd(vr,'--stats')),
+print(json.dumps({'battery':battery,'proximity':proximity,'dashboardVisible':dashboard,'stats':json.loads(cmd(vr,'--stats')),
  'overlays':cmd(vr,'--overlays'),
  'pause':cmd(vr,'--settings-bool','power.pauseCompositorOnStandby'),
  'timeout':cmd(vr,'--settings-float','power.turnOffScreensTimeout')}))
@@ -92,6 +96,33 @@ import json
 vr=Overlay()
 try: print(json.dumps({'state':vr.snapshot(),'imageRead':vr.image_hash()}))
 finally: vr.close()
+'''
+
+
+def wait_overlay(remote, attempts=8):
+    """Give SteamVR a bounded moment to expose its newly registered panel."""
+    for attempt in range(attempts):
+        snapshot = remote.python(diagnostic_source())
+        if snapshot['state']['visible']:
+            return snapshot
+        if attempt < attempts - 1:
+            time.sleep(1)
+    return snapshot
+
+
+HIDDEN_OVERLAY_DIAGNOSTIC = '''
+import json,pathlib,subprocess
+key='valve.steam.desktopgame.2001947813'
+p=subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--overlays'],
+                 capture_output=True,text=True,timeout=8)
+lines=[line.strip() for line in p.stdout.splitlines() if "'"+key+"'" in line]
+service=subprocess.run(['systemctl','--user','is-active','frame-control-headset.service'],
+                       capture_output=True,text=True,timeout=8)
+state=pathlib.Path.home()/'.local/share/frame-control/headset/state.json'
+try: window=json.loads(state.read_text()).get('window')
+except (OSError,ValueError): window=None
+print(json.dumps({'overlayLines':lines[:2], 'overlayCommandExit':p.returncode,
+                  'serviceActive':service.stdout.strip()=='active', 'windowRegistered':bool(window)}))
 '''
 
 
@@ -152,6 +183,11 @@ def main(argv=None):
         if not before['battery'] or min(before['battery']) < 20:
             raise RuntimeError('Battery unknown or below 20%')
         if args.wake or args.exercise:
+            stats = before.get('stats')
+            if (not isinstance(stats, list) or not stats or
+                    not isinstance(stats[0], dict) or stats[0].get('activity_level') != 3):
+                raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
+        if args.wake or args.exercise:
             # Independent systemd timer restores power even if the controller is
             # killed or SSH disappears. It retains the test lock for recovery.
             recovery = '/tmp/' + token + '-restore.py'
@@ -202,7 +238,7 @@ print(json.dumps({'created':True}))
             remote(VRCMD + ' --handlewakeup')
             remote(VRCMD + ' --showdashboard ' + KEY)
             time.sleep(2)
-        report['overlay'] = remote.python(diagnostic_source())
+        report['overlay'] = wait_overlay(remote) if args.wake or args.exercise else remote.python(diagnostic_source())
         if args.exercise and not report['overlay']['state']['visible']:
             report['retaggedTestWindow'] = True
             remote.python('''
@@ -217,7 +253,13 @@ subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--showdashboard','valve.ste
 time.sleep(2)
 print('{}')
 ''')
-            report['overlay'] = remote.python(diagnostic_source())
+            report['overlay'] = wait_overlay(remote)
+        if args.exercise and not report['overlay']['state']['visible']:
+            try:
+                report['hiddenOverlay'] = remote.python(HIDDEN_OVERLAY_DIAGNOSTIC)
+            except Exception as exc:
+                report['hiddenOverlayError'] = str(exc)
+            raise RuntimeError('Frame Control overlay stayed hidden after focus retry; no input sent')
         if args.wake or args.exercise:
             shot = remote.python((ROOT/'ui/frame_vrshot.py').read_text(), timeout=20)['path']
             try:
