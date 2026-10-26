@@ -209,6 +209,100 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            # Simple Timer 1.0.0 has annotation-only task state, orphaned
+            # replacement tasks and canceled deadlines that resume on restart.
+            # Preserve its API1 instance convention and upstream license.
+            if int(plugin_id)==96 and digest=='973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312' and folder=='simple-timer':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                start='    async def start_timer('; end='    async def load_recents('
+                if source.count(start)!=1 or source.count(end)!=1: raise RuntimeError('Simple Timer compatibility source changed')
+                a=source.index(start); b=source.index(end,a)
+                source=source[:a]+"""    async def _stop_timer(self):
+        # Call only under timer_lock. Joining prevents a replaced task from
+        # updating the new timer or sending a stale completion notification.
+        task, self.timer_task = self.timer_task, None
+        if task is not None and task is not asyncio.current_task():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    async def start_timer(self, seconds: int):
+        async with self.timer_lock:
+            await self._stop_timer()
+            recent = await self.settings_getSetting(settings_key_recent_timers, [])
+            await self.settings_setSetting(settings_key_recent_timers, [seconds] + recent[:4])
+            deadline = time.time() + seconds
+            await self.settings_setSetting(settings_key_timer_end, deadline)
+            await self.settings_commit()
+            self.seconds_remaining = seconds
+            self.timer_task = self.loop.create_task(self.timer_handler(datetime.fromtimestamp(deadline)))
+            await self.load_recents()
+            await self.load_remaining_seconds()
+
+    async def timer_handler(self, timer_end: datetime):
+        while True:
+            remaining = timer_end.timestamp() - time.time()
+            if remaining <= 0:
+                break
+            await asyncio.sleep(min(5, remaining))
+            self.seconds_remaining = max(0, timer_end.timestamp() - time.time())
+            await self.load_remaining_seconds()
+        async with self.timer_lock:
+            if self.timer_task is not asyncio.current_task():
+                return
+            self.timer_task = None
+            self.seconds_remaining = 0
+            await self.settings_setSetting(settings_key_timer_end, None)
+            await self.settings_commit()
+            await self.load_remaining_seconds()
+            subtle = await self.settings_getSetting(settings_key_subtle_mode, False)
+            if remaining <= -10:
+                await decky.emit("simple_timer_event", "Your timer has expired!", True)
+            else:
+                await decky.emit("simple_timer_event", "Your session has ended!", subtle)
+
+    async def cancel_timer(self):
+        async with self.timer_lock:
+            await self._stop_timer()
+            self.seconds_remaining = 0
+            await self.settings_setSetting(settings_key_timer_end, None)
+            await self.settings_commit()
+            await self.load_remaining_seconds()
+
+"""+source[b:]
+                start='    async def _main('; end='    async def _uninstall('
+                if source.count(start)!=1 or source.count(end)!=1: raise RuntimeError('Simple Timer compatibility source changed')
+                a=source.index(start); b=source.index(end,a)
+                source=source[:a]+"""    async def _main(self):
+        self.loop = asyncio.get_running_loop()
+        self.timer_task = None
+        self.timer_lock = asyncio.Lock()
+        self.seconds_remaining = 0
+        await self.settings_read()
+        deadline = await self.settings_getSetting(settings_key_timer_end, None)
+        if deadline is not None:
+            self.seconds_remaining = max(0, deadline - time.time())
+            if self.seconds_remaining > 0:
+                # Resume the exact deadline without adding another recent timer.
+                self.timer_task = self.loop.create_task(self.timer_handler(datetime.fromtimestamp(deadline)))
+            else:
+                await self.cancel_timer()
+        await self.load_recents()
+        await self.load_subtle_mode()
+        decky.logger.info("Simple Timer has been initialised.")
+
+    async def _unload(self):
+        async with self.timer_lock:
+            # Backend unload is a pause; only explicit cancel clears the deadline.
+            await self._stop_timer()
+        decky.logger.info("Simple Timer has been unloaded.")
+
+"""+source[b:]
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('simple-timer-lifecycle')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's

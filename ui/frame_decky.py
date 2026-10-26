@@ -40,7 +40,9 @@ def plugins(folder):
                               'author': str(data.get('author', ''))[:80],
                               'storeId': owned.get('storeId') if isinstance(owned.get('storeId'), int) else None,
                               'version': str(owned.get('version', ''))[:40],
-                              'sha256': str(owned.get('sha256', ''))[:64]})
+                              'sha256': str(owned.get('sha256', ''))[:64],
+                              'compatShims': [s[:100] for s in owned.get('compatShims', []) if isinstance(s, str)][:16]
+                                  if isinstance(owned.get('compatShims'), list) else []})
             except (ValueError, OSError, UnicodeError): pass
     return found
 os_release = {}
@@ -166,7 +168,8 @@ def status(ssh):
     result = json.loads(ssh('python3 -', stdin=PROBE, timeout=15))
     for plugin in result.get('plugins', []):
         plugin['compatibility'] = framey_compatibility.lookup(
-            plugin.get('storeId'), plugin.get('sha256'), plugin.get('version'))
+            plugin.get('storeId'), plugin.get('sha256'), plugin.get('version'),
+            installed_shims=plugin.get('compatShims', []))
     return result
 
 

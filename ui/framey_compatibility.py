@@ -12,7 +12,7 @@ def _records(path):
     return json.loads(path.read_text())['plugins']
 
 
-def lookup(plugin_id, digest, version):
+def lookup(plugin_id, digest, version, installed_shims=None):
     unknown = {'status': 'unverified', 'reason': 'This exact store version has not been audited on Frame.',
                'verification': [], 'blockInstall': False}
     if type(plugin_id) is not int or not isinstance(digest, str) or not isinstance(version, str):
@@ -23,6 +23,14 @@ def lookup(plugin_id, digest, version):
         if len(matches) != 1:
             return unknown
         record = matches[0]
-        return {key: record[key] for key in ('status', 'reason', 'verification', 'blockInstall')}
+        result = {key: record[key] for key in ('status', 'reason', 'verification', 'blockInstall')}
+        required = record.get('requiredShims', [])
+        if result['status'] in ('works', 'partial') and required and installed_shims is not None and (
+                not isinstance(installed_shims, list) or
+                any(shim not in installed_shims for shim in required)):
+            result['status'] = 'partial'
+            result['reason'] = ('Update or reinstall this managed plugin to add its missing Frame compatibility fix. '
+                                + result['reason'])
+        return result
     except (OSError, ValueError, KeyError, TypeError):
         return unknown
