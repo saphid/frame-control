@@ -11,6 +11,7 @@ import io
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
+import re
 import sys
 from unittest.mock import patch
 import zipfile
@@ -40,6 +41,27 @@ def render_panel(record, data):
     with patch.object(framey_panel, '_owned_dist', return_value=(None, bundle, record['sha256'])):
         return framey_panel.panel(record['id']).replace(
             b'<script id="framey-bundle"', PRELUDE.encode()+b'<script id="framey-bundle"')
+
+
+def read_module_asset(path, records, cache):
+    """Serve the same receipt-bound module URL shape as the installed panel."""
+    prefix = '/framey/module/'
+    if not path.startswith(prefix):
+        raise ValueError('Invalid module path')
+    parts = path[len(prefix):].split('/', 2)
+    if len(parts) != 3 or not re.fullmatch(r'[1-9][0-9]*', parts[0]):
+        raise ValueError('Invalid plugin ID')
+    plugin_id, receipt, name = parts
+    if not framey_panel.RECEIPT.fullmatch(receipt) or not framey_panel.MODULE_PATH.fullmatch(name):
+        raise ValueError('Invalid module receipt or path')
+    record = records[int(plugin_id)]
+    if receipt != record['sha256']:
+        raise ValueError('Plugin receipt changed')
+    data = (cache/(receipt+'.zip')).read_bytes()
+    if hashlib.sha256(data).hexdigest() != receipt:
+        raise ValueError('Archive hash mismatch')
+    with zipfile.ZipFile(io.BytesIO(data)) as archive:
+        return archive.read(record['folder']+'/dist/'+name)
 
 PAGE = '''<!doctype html><meta charset=utf-8><title>Framey catalog frontend audit</title>
 <h1>Framey catalog frontend audit</h1>
@@ -134,15 +156,7 @@ def main():
                     return
             elif path.startswith('/framey/module/'):
                 try:
-                    plugin_id, name = path.removeprefix('/framey/module/').split('/', 1)
-                    if not framey_panel.MODULE_PATH.fullmatch(name):
-                        raise ValueError('Invalid module path')
-                    record = records[int(plugin_id)]
-                    data = (args.cache/(record['sha256']+'.zip')).read_bytes()
-                    if hashlib.sha256(data).hexdigest() != record['sha256']:
-                        raise ValueError('Archive hash mismatch')
-                    with zipfile.ZipFile(io.BytesIO(data)) as archive:
-                        body = archive.read(record['folder']+'/dist/'+name)
+                    body = read_module_asset(path, records, args.cache)
                     content_type = 'text/javascript; charset=utf-8'
                     module_asset = True
                 except (KeyError, ValueError, OSError, zipfile.BadZipFile):
