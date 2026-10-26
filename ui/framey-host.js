@@ -192,12 +192,19 @@
     mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
       value, placeholder, disabled:!!disabled, onChange:e=>{if(!disabled)onChange?.(e);}}));
-  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue,
+  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
-    showValue && R.createElement('span', null, String(value) + valueSuffix));
+    editableValue ? R.createElement('span', null,
+      R.createElement('input', {type:'number', value, min, max, step, disabled:!!disabled,
+        'aria-label':typeof label==='string'?`${label} value`:'Slider value',
+        style:{width:'7ch'}, onChange:e=>{
+          const raw=e.target.value, next=Number(raw);
+          if(!disabled && raw.trim()!=='' && e.target.validity?.valid!==false &&
+              Number.isFinite(next) && next>=Number(min) && next<=Number(max)) onChange?.(next);
+        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');

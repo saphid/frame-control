@@ -1,0 +1,677 @@
+{
+  "schemaVersion": 1,
+  "timeUtc": "2026-10-26T01:30:56.939937+00:00",
+  "baseCommit": "442b5ec",
+  "hostChange": "SliderField editableValue numeric input",
+  "verification": "local Chromium + real Decky 3.3.0 amd64 container; no real Frame/worn VR",
+  "decky": {
+    "tag": "v3.3.0",
+    "name": "PluginLoader",
+    "digest": "sha256:e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181"
+  },
+  "audioVersions": {
+    "pipewire": "1.4.2",
+    "wireplumber": "0.5.8",
+    "pactl": "17.0"
+  },
+  "plugins": [
+    {
+      "id": 38,
+      "name": "Volume Mixer",
+      "version": "1.2.1-1",
+      "sha256": "11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3",
+      "folder": "VolumeMixer-decky"
+    },
+    {
+      "id": 58,
+      "name": "Volume Boost",
+      "version": "0.0.7",
+      "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc",
+      "folder": "volume-boost"
+    },
+    {
+      "id": 144,
+      "name": "Mixer",
+      "version": "0.1.0",
+      "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106",
+      "folder": "decky-volume-mixer"
+    }
+  ],
+  "isolation": {
+    "network": "none",
+    "devices": "none",
+    "hostAudioSockets": "none",
+    "audio": "private PipeWire/Pulse null sink; two silent streams; WirePlumber policy-only"
+  },
+  "fixtureBoundaries": [
+    "Outer headset status/installed-plugin responses were fixture-shaped. Actual ui/headset.html, React 18.3.1, opaque allow-scripts iframe and unmodified official bundles ran in Chromium.",
+    "The relay used Decky 3.3.0 official websocket RPC routes directly inside the isolated container; Steam CEF and the production SSH/CDP method transport were not part of this audio run.",
+    "Actual published amd64 Decky binary and official unmodified Python backends executed. No ARM64 or real Frame audio claim.",
+    "Previous full-catalog fake-Frame evidence tests archive/install/remove transport only; its backends remain stubbed."
+  ],
+  "sharedHeadsetLock": {
+    "acquired": false,
+    "owner": "delightvr-r4-a56d43b4c0",
+    "headsetReadsOrChanges": false
+  },
+  "audioBefore": {
+    "sinks": [
+      {
+        "index": 24,
+        "name": "framey-silent-test",
+        "channels": {
+          "front-left": "45%",
+          "front-right": "50%"
+        }
+      }
+    ],
+    "streams": [
+      {
+        "index": 45,
+        "name": "FrameySilent0",
+        "channels": {
+          "front-left": "100%",
+          "front-right": "100%"
+        }
+      },
+      {
+        "index": 46,
+        "name": "FrameySilent1",
+        "channels": {
+          "front-left": "100%",
+          "front-right": "100%"
+        }
+      }
+    ]
+  },
+  "mutatingCalls": [
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 75,
+          "channel": "both"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "75%",
+              "front-right": "75%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 74,
+          "channel": "both"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "74%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 73,
+          "channel": "both"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "73%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 75,
+          "channel": "right"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "75%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 74,
+          "channel": "right"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "method": "set_input_volume",
+      "args": [
+        {
+          "index": 46,
+          "volume": 0.5
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "50%",
+              "front-right": "50%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 38,
+      "method": "set_input_volume",
+      "args": [
+        {
+          "index": 46,
+          "volume": 0.45
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "45%",
+              "front-right": "45%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 144,
+      "method": "set_volume",
+      "args": [
+        41,
+        37
+      ],
+      "result": true,
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "37%",
+              "front-right": "37%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 144,
+      "method": "set_volume",
+      "args": [
+        41,
+        38
+      ],
+      "result": true,
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "73%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "38%",
+              "front-right": "38%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 42,
+          "channel": "left"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "42%",
+              "front-right": "74%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "38%",
+              "front-right": "38%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 58,
+      "method": "set_volume_state",
+      "args": [
+        {
+          "value": 42,
+          "channel": "right"
+        }
+      ],
+      "result": {
+        "result": true,
+        "success": true
+      },
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "42%",
+              "front-right": "42%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "38%",
+              "front-right": "38%"
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": 144,
+      "method": "save_settings",
+      "args": [
+        {
+          "filters": [
+            "FrameySilent0"
+          ],
+          "boostLimit": 0
+        }
+      ],
+      "result": true
+    },
+    {
+      "id": 144,
+      "method": "set_volume",
+      "args": [
+        41,
+        39
+      ],
+      "result": true,
+      "independentAudioReadback": {
+        "sinks": [
+          {
+            "index": 24,
+            "name": "framey-silent-test",
+            "channels": {
+              "front-left": "42%",
+              "front-right": "42%"
+            }
+          }
+        ],
+        "streams": [
+          {
+            "index": 45,
+            "name": "FrameySilent0",
+            "channels": {
+              "front-left": "100%",
+              "front-right": "100%"
+            }
+          },
+          {
+            "index": 46,
+            "name": "FrameySilent1",
+            "channels": {
+              "front-left": "39%",
+              "front-right": "39%"
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "checks": {
+    "volumeMixer38": "Discovery, slider click and ArrowDown: only FrameySilent1 changed 100\u219250\u219245%; FrameySilent0 stayed100%.",
+    "volumeBoost58": "Sync both channels 75\u219274\u219273%; unsynced right 75\u219274% preserved left73%; reopen restored unchecked sync and73/74. Numeric left42 preserved right74; re-sync set right42 and disabled both right inputs.",
+    "mixer144": "Numeric37\u219238\u219239 changed FrameySilent1 only; server readbacks37/38/39%. Invalid101 and off-step37.5 produced no set_volume RPC. Filter FrameySilent0 saved with boostLimit0, survived actual Decky shutdown/restart and reopened showing only FrameySilent1 at38%.",
+    "invalidNumericBrowserMessages": {
+      "inputs": [
+        "101",
+        "37.5",
+        "39"
+      ],
+      "setVolumeMessages": [
+        {
+          "method": "set_volume",
+          "args": [
+            41,
+            39
+          ]
+        }
+      ]
+    },
+    "notRun": [
+      "boost above100%",
+      "Bluetooth playback commands",
+      "reset_volumes",
+      "physical headset audio",
+      "worn VR",
+      "VR keyboard/controller input"
+    ]
+  },
+  "pipewireConfig": "context.properties = { core.daemon = true core.name = framey-audio }\ncontext.spa-libs = { audio.convert.* = audioconvert/libspa-audioconvert support.* = support/libspa-support }\ncontext.modules = [\n { name = libpipewire-module-protocol-native }\n { name = libpipewire-module-access }\n { name = libpipewire-module-spa-node-factory }\n { name = libpipewire-module-client-node }\n { name = libpipewire-module-client-device }\n { name = libpipewire-module-adapter }\n { name = libpipewire-module-metadata }\n { name = libpipewire-module-link-factory }\n { name = libpipewire-module-session-manager }\n]\ncontext.objects = [\n\n { factory = spa-node-factory args = { factory.name = support.node.driver node.name = Dummy-Driver node.group = pipewire.dummy priority.driver = 20000 } }\n { factory = adapter args = { factory.name = support.null-audio-sink node.name = framey-silent-test node.description = \"Framey Silent Test\" media.class = Audio/Sink audio.position = [ FL FR ] } }\n]",
+  "remaining": "All three remain partial until real ARM64 Frame dependencies and audio-session mapping are verified under the shared lock.",
+  "cleanup": {
+    "testContainerRemoved": true,
+    "browserRelayStopped": true,
+    "headsetUntouched": true,
+    "testServicesOnHeadset": false
+  },
+  "catalogRefresh": {
+    "checkedAtUtc": "2026-10-26T01:34:07.257386+00:00",
+    "plugins": 116,
+    "idsVersionsDigestsUnchanged": true
+  },
+  "regression": {
+    "serverTests": {
+      "count": 1612,
+      "skipped": 16,
+      "result": "OK"
+    },
+    "siteTests": {
+      "passed": 2,
+      "failed": 0
+    },
+    "focusedFrameyTests": 38,
+    "officialFrontendAudit": {
+      "attempted": 116,
+      "ready": 98,
+      "failed": 18,
+      "readyStateChanges": [],
+      "initializerOnly": true,
+      "backendAndNetworkDenied": true
+    }
+  }
+}

@@ -67,6 +67,24 @@ readyInput.props.onChange({target:{value:'New'}});assert.equal(entered,'New');
 let speed=0;
 const readySlider=nodes(window.DFL.SliderField({label:'Speed',value:2,onChange:v=>{speed=v;}}),'input')[0];
 readySlider.props.onChange({target:{value:'4'}});assert.equal(speed,4);
+// Official Volume Boost and Mixer request editableValue for precise volume entry.
+const numericSlider=nodes(window.DFL.SliderField({label:'Volume',value:0.4,min:0,max:1,step:0.05,
+  editableValue:true,onChange:v=>{speed=v;}}),'input');
+assert.equal(numericSlider[0].props.type,'range');
+assert.equal(numericSlider[1].props.type,'number');
+assert.equal(numericSlider[1].props['aria-label'],'Volume value');
+assert.equal(numericSlider[1].props.step,0.05);
+numericSlider[1].props.onChange({target:{value:'0.65',validity:{valid:true}}});
+assert.equal(speed,0.65);
+for(const value of ['', ' ', 'NaN', 'Infinity', '-0.05', '1.05'])
+  numericSlider[1].props.onChange({target:{value,validity:{valid:true}}});
+numericSlider[1].props.onChange({target:{value:'0.63',validity:{valid:false}}});
+assert.equal(speed,0.65,'Invalid drafts must not reach a backend');
+const disabledNumber=nodes(window.DFL.SliderField({label:'Volume',value:40,editableValue:true,
+  disabled:true,onChange:()=>changed++}),'input')[1];
+assert.equal(disabledNumber.props.disabled,true);
+disabledNumber.props.onChange({target:{value:'50',validity:{valid:true}}});
+assert.equal(changed,0);
 let selected;
 const readyDropdown=nodes(window.DFL.Dropdown({rgOptions:options,selectedOption:'fast',
   onChange:option=>{selected=option;}}),'select')[0];
