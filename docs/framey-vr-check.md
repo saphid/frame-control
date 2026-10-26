@@ -59,6 +59,10 @@ pointer over it, then attempts OpenVR smooth and discrete scroll events. It
 reports region geometry, trusted pointer events, wheel events and `scrollTop`.
 No wheel event or offset change means this synthetic injection path remains
 unverified; it does not establish whether a physical controller can scroll.
+The exercise then clicks the visible **Scroll plugin down/up** buttons through
+the same native OpenVR pointer transport and requires the test region to move
+down and return to the top. This proves the button path only; it does not
+identify a physical controller or repair native wheel delivery.
 Temporary controls exercise the shipped
 `DFL.SliderField` and `DFL.TextField`; their values remain UI-only. Text uses
 CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,

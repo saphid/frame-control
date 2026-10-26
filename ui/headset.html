@@ -53,7 +53,8 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <label>Show <select id="deckyStoreFilter"><option value="all">All plugins</option><option value="compatible">No known install blocker</option><option value="installed">Installed plugins</option></select></label></div>
   <p id="deckyStoreSummary" role="status" aria-live="polite"></p><div id="deckyStoreList" class="stack"></div>
   <div class="row" style="margin-top:14px"><button id="deckyStorePrevious" class="secondary">Previous</button><span id="deckyStorePage"></span><button id="deckyStoreNext" class="secondary">Next</button></div></div>
-<div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button></div>
+<div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button>
+  <button id="frameyScrollUp" class="secondary">Scroll plugin up</button><button id="frameyScrollDown" class="secondary">Scroll plugin down</button></div>
   <p id="frameyCompatibility"></p>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
@@ -251,6 +252,12 @@ function closeFrameyEvents(){
 function closeFrameyPanel(){closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
   byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;}
 byId('frameyClose').onclick=closeFrameyPanel;
+function scrollFramey(direction){
+  if(activeFrameyId===null||!frameySession||!['up','down'].includes(direction))return;
+  byId('frameyFrame').contentWindow?.postMessage({type:'framey:scroll',session:frameySession,direction},'*');
+}
+byId('frameyScrollUp').onclick=()=>scrollFramey('up');
+byId('frameyScrollDown').onclick=()=>scrollFramey('down');
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
@@ -271,6 +278,12 @@ function frameyCacheSave(id,entries){
 window.addEventListener('message',async event=>{
   if(activeFrameyId===null||event.source!==byId('frameyFrame').contentWindow)return;
   const req=event.data;if(!req||typeof req!=='object')return;
+  if(req.type==='framey:scroll:result'&&req.session===frameySession){
+    if(['up','down'].includes(req.direction)&&typeof req.moved==='boolean')
+      byId('frameyPanelStatus').textContent=req.moved?'Scrolled plugin '+req.direction:
+        'No more plugin content in that direction';
+    return;
+  }
   if(req.type==='framey:cache:init'&&req.session===frameySession){
     event.source.postMessage({type:'framey:cache:seed',session:frameySession,
       entries:frameyCacheRead(activeFrameyId)},'*');return;

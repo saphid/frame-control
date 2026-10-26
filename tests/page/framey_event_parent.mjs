@@ -69,7 +69,6 @@ vm.runInContext('openFrameyPanel(96,"Timer")',context);
 const priorReplies=replies.length;
 requests.at(-1).resolve({ok:true,json:async()=>({result:'AU'})});
 await staleRead;assert.equal(replies.length,priorReplies);
-
 // Running reads are tied to the current iframe and session, with no method path.
 session=vm.runInContext('frameySession',context);
 const running={type:'framey:running',id:20,session,args:[0]};
@@ -96,3 +95,19 @@ await finalRunning;
 await send({type:'framey:running:close',session});
 assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
 assert.equal(requests.at(-1).body.active,false);
+
+const scrollSession=vm.runInContext('frameySession',context);
+el('frameyScrollDown').onclick();
+assert.equal(replies.at(-1).type,'framey:scroll');
+assert.equal(replies.at(-1).session,scrollSession);
+assert.equal(replies.at(-1).direction,'down');
+await send({type:'framey:scroll:result',session:'old',direction:'down',moved:true});
+assert.equal(el('frameyPanelStatus').textContent,'Loading plugin panel…');
+await send({type:'framey:scroll:result',session:scrollSession,direction:'down',moved:true});
+assert.equal(el('frameyPanelStatus').textContent,'Scrolled plugin down');
+await send({type:'framey:scroll:result',session:scrollSession,direction:'down',moved:false});
+assert.equal(el('frameyPanelStatus').textContent,'No more plugin content in that direction');
+el('frameyClose').onclick();
+const replyCount=replies.length;
+el('frameyScrollUp').onclick();
+assert.equal(replies.length,replyCount);

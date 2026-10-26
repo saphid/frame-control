@@ -71,10 +71,26 @@ def exercise(profile, plugin_id, folder):
         if not hit:
             raise RuntimeError('Native click hit another element: ' + str(panel.eval('({tag:__vrLastTarget?.tagName,text:__vrLastTarget?.textContent?.slice(0,100)})')))
 
+    def click_parent(selector):
+        parent.eval(f'document.querySelector({json.dumps(selector)}).scrollIntoView({{block:"center"}})')
+        time.sleep(.3)
+        pos = parent.eval(f'''(()=>{{let r=document.querySelector({json.dumps(selector)}).getBoundingClientRect();
+          return {{x:r.x+r.width/2,y:r.y+r.height/2,w:innerWidth,h:innerHeight}}}})()''')
+        sx, sy = vr.snapshot()['input']['scale']
+        x, y = pos['x'] * sx / pos['w'], sy - pos['y'] * sy / pos['h']
+        count = parent.eval('window.__vrParentClickCount')
+        vr.post_mouse(300, x, y)
+        vr.post_mouse(301, x, y, 1)
+        vr.post_mouse(302, x, y, 1)
+        wait(lambda:parent.eval('window.__vrParentClickCount'), lambda n:n > count, seconds=3)
+        if not parent.eval(f'!!window.__vrParentLastTarget?.closest({json.dumps(selector)})'):
+            raise RuntimeError('Native click missed parent control ' + selector)
+
     try:
         parent.eval(f'(async()=>{{await refreshDecky();openFrameyPanel({plugin_id},"Framey VR Check");return true}})()')
         wait(lambda:parent.eval('byId("frameyPanelStatus").innerText'), lambda s:s == 'Plugin panel ready')
         panel = connect_panel()
+        parent.eval('window.__vrParentClickCount=0;addEventListener("pointerup",e=>{window.__vrParentClickCount++;window.__vrParentLastTarget=e.target;});true')
         initial = wait(text, lambda s:'Saved setting: off' in s or 'Could not read setting:' in s)
         if 'Could not read setting:' in initial: raise RuntimeError(initial)
         result['initialText'] = initial
@@ -149,6 +165,13 @@ def exercise(profile, plugin_id, folder):
         result['scrollAfter'] = result['scrollAttempts'][-1]['offset']
         result['scrollEvents'] = panel.eval('__vrWheelEvents')
         result['nativeScrollMoved'] = result['scrollAfter'] != result['scrollBefore']
+        click_parent('#frameyScrollDown')
+        result['buttonScrollAfterDown'] = wait(
+            lambda:panel.eval('document.getElementById("vr-scroll-probe").scrollTop'), lambda n:n > 0)
+        click_parent('#frameyScrollUp')
+        result['buttonScrollAfterUp'] = wait(
+            lambda:panel.eval('document.getElementById("vr-scroll-probe").scrollTop'), lambda n:n == 0)
+        result['buttonScrollMoved'] = result['buttonScrollAfterDown'] > 0 and result['buttonScrollAfterUp'] == 0
         panel.eval('document.getElementById("vr-scroll-probe").remove()')
         panel.eval('document.getElementById("vr-controls").remove()')
         # Scroll saved status into the visible iframe for compositor evidence.
@@ -156,7 +179,7 @@ def exercise(profile, plugin_id, folder):
         result['finalOverlay'] = vr.snapshot()
         result['passed'] = (result['trustedOverlayPointer'] and result['diskSetting'] == {'enabled':True}
                             and result['reopenedChecked'] and result['sliderValue'] != '10'
-                            and result['textValue'] == 'framey-ci')
+                            and result['textValue'] == 'framey-ci' and result['buttonScrollMoved'])
         return result
     except Exception as exc:
         result['error'] = str(exc)

@@ -21,7 +21,8 @@ const window={React,ReactDOM:{createRoot:node=>{
 const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
-  navigator:{language:'en'}, parent,DOMException,addEventListener:(type,handler)=>listeners.push({type,handler}),
+  navigator:{language:'en'}, parent,DOMException,getComputedStyle:node=>({overflowY:node.overflowY||'visible'}),
+  addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
 // Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
@@ -371,6 +372,35 @@ assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);
 
 // Event subscription is acknowledged before a method that immediately emits.
 const onMessage=listeners.find(x=>x.type==='message').handler;
+// The headset's two scroll buttons target the last trusted pointer's nested
+// scroll region, with a document fallback after that region is removed.
+const documentScroll={scrollTop:0,clientHeight:500,scrollHeight:900,isConnected:true,overflowY:'auto'};
+const nestedScroll={scrollTop:0,clientHeight:160,scrollHeight:716,isConnected:true,
+  overflowY:'scroll',parentElement:documentScroll};
+const child={scrollTop:0,clientHeight:0,scrollHeight:0,parentElement:nestedScroll};
+context.document.scrollingElement=documentScroll;
+const pointerMove=listeners.find(x=>x.type==='pointermove').handler;
+pointerMove({isTrusted:true,target:child});
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'down'}});
+assert.equal(nestedScroll.scrollTop,120);
+assert.equal(messages.at(-1).moved,true);
+pointerMove({isTrusted:false,target:documentScroll});
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'up'}});
+assert.equal(nestedScroll.scrollTop,0,'Untrusted movement cannot retarget scroll');
+nestedScroll.scrollTop=550;
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'down'}});
+assert.equal(nestedScroll.scrollTop,556,'Scroll stops at the content end');
+assert.equal(messages.at(-1).moved,true);
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'down'}});
+assert.equal(messages.at(-1).moved,false);
+const scrollReplies=messages.length;
+onMessage({source:parent,data:{type:'framey:scroll',session:'stale',direction:'up'}});
+onMessage({source:{},data:{type:'framey:scroll',session:'',direction:'up'}});
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'sideways'}});
+assert.equal(messages.length,scrollReplies);
+nestedScroll.isConnected=false;
+onMessage({source:parent,data:{type:'framey:scroll',session:'',direction:'down'}});
+assert.equal(documentScroll.scrollTop,375);
 const eventValues=[];
 const callback=(...args)=>eventValues.push(args);
 assert.equal(api.addEventListener('timer:tick',callback),callback);
