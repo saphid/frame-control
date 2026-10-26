@@ -93,9 +93,11 @@ class Overlay:
         event = Event(kind, 0xFFFFFFFF, 0, Data(mouse=Mouse(x, y, button)))
         C.CFUNCTYPE(None, C.c_uint64, C.POINTER(Event))(view[2])(self.handle, C.byref(event))
 
-    def post_scroll(self, xdelta, ydelta):
+    def post_scroll(self, xdelta, ydelta, kind=309):
+        if kind not in (305, 309):
+            raise ValueError('Only OpenVR discrete and smooth scroll events are allowed')
         view = self.interface(b'FnTable:IVROverlayView_003')
-        event = Event(309, 0xFFFFFFFF, 0, Data(scroll=Scroll(xdelta, ydelta, 0, 1)))
+        event = Event(kind, 0xFFFFFFFF, 0, Data(scroll=Scroll(xdelta, ydelta, 0, 1)))
         C.CFUNCTYPE(None, C.c_uint64, C.POINTER(Event))(view[2])(self.handle, C.byref(event))
 
     def image_hash(self):

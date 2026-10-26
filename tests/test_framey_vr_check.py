@@ -105,6 +105,9 @@ class Safety(unittest.TestCase):
         overlay = importlib.util.module_from_spec(overlay_spec); overlay_spec.loader.exec_module(overlay)
         self.assertEqual(ctypes.sizeof(overlay.Event), 60)
         self.assertEqual(overlay.Event.data.offset, 12)
+        self.assertEqual(ctypes.sizeof(overlay.Scroll), 16)
+        with self.assertRaises(ValueError):
+            object.__new__(overlay.Overlay).post_scroll(0, -3, 308)
         original = check.frame_headset.bundle()
         patched = check.debug_bundle(original, '/tmp/owned-profile')
         import tarfile
