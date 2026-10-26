@@ -82,5 +82,18 @@
     "Plugin backend settings/deal lookups",
     "Steam page patches and live library context",
     "Worn VR/controller/keyboard"
-  ]
+  ],
+  "catalogRefresh": {
+    "source": "https://plugins.deckbrew.xyz/plugins",
+    "checkedAtUtc": "2026-10-26T00:44:00Z",
+    "visiblePlugins": 116,
+    "idVersionDigestChanges": 0
+  },
+  "localRegressionAudit": {
+    "exactArchivedFrontends": 116,
+    "ready": 98,
+    "failed": 18,
+    "initializationRegressions": 0,
+    "pluginBackendAndNetworkActions": "denied, including live Steam read APIs"
+  }
 }
