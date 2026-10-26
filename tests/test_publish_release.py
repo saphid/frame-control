@@ -124,6 +124,8 @@ class PublishRelease(unittest.TestCase):
 
     def test_refuses_failed_e2e_or_cancelled_installer_before_mutation(self):
         for gates in ({"bad_job": "e2e", "bad_job_conclusion": "failure"},
+                      {"bad_job": "decky-runtime (ubuntu-24.04-arm)",
+                       "bad_job_conclusion": "failure"},
                       {"bad_job": "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
                        "bad_job_conclusion": "cancelled"}):
             p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
@@ -134,7 +136,8 @@ class PublishRelease(unittest.TestCase):
 
     def test_refuses_missing_or_nonexact_gate_results(self):
         for gates in ({"omit_job": "e2e"}, {"main_sha": "c" * 40},
-                      {"release_conclusion": "failure"}, {"release_status": "in_progress"}):
+                      {"decky_conclusion": "failure"}, {"release_conclusion": "failure"},
+                      {"release_status": "in_progress"}):
             p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
             self.assertNotEqual(p.returncode, 0)
             self.assertIn("release gate failed", p.stderr)

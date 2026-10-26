@@ -61,6 +61,7 @@ release_jobs = ("draft", "checksums",
                 "build (ubuntu-latest, dist:linux, app/dist/*.AppImage app/dist/*.deb)",
                 "build (macos-15-intel, dist:mac:x64, app/dist/*.dmg app/dist/*.zip)",
                 "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)")
+decky_jobs = ("decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)")
 
 
 def answer(response, fallback):
@@ -87,17 +88,17 @@ elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
     path, _, query = endpoint.partition("?")
     workflow = path.split("/")[5]
     branch = parse_qs(query).get("branch", [""])[0]
-    is_main = workflow == "checks.yml"
-    run_id = 501 if is_main else 502
+    is_main = workflow != "release.yml"
+    run_id = {"checks.yml": 501, "release.yml": 502, "decky-runtime.yml": 503}[workflow]
     run = {"id": run_id, "head_sha": gate.get("main_sha" if is_main else "release_sha", commit),
            "head_branch": branch, "event": "push", "run_attempt": 1,
-           "status": gate.get("main_status" if is_main else "release_status", "completed"),
-           "conclusion": gate.get("main_conclusion" if is_main else "release_conclusion", "success"),
+           "status": gate.get("decky_status" if run_id == 503 else ("main_status" if is_main else "release_status"), "completed"),
+           "conclusion": gate.get("decky_conclusion" if run_id == 503 else ("main_conclusion" if is_main else "release_conclusion"), "success"),
            "html_url": "https://github.com/saphid/frame-control/actions/runs/%s" % run_id}
     print(json.dumps({"workflow_runs": [run]}))
 elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
     run_id = endpoint[len(repo + "actions/runs/"):].split("/")[0]
-    names = main_jobs if run_id == "501" else release_jobs
+    names = {"501": main_jobs, "502": release_jobs, "503": decky_jobs}[run_id]
     names = [name for name in names if name != gate.get("omit_job")]
     jobs = [{"name": name, "status": "completed",
              "conclusion": gate.get("bad_job_conclusion", "success") if name == gate.get("bad_job") else "success"}

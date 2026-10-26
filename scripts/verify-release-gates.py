@@ -25,6 +25,7 @@ RELEASE_JOBS = {
     "build (macos-15-intel, dist:mac:x64, app/dist/*.dmg app/dist/*.zip)",
     "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
 }
+DECKY_JOBS = {"decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)"}
 
 
 class GateError(Exception):
@@ -93,6 +94,7 @@ def main(tag):
         raise GateError("expected a version tag beginning with v")
     sha = tag_commit(tag)
     successful_jobs(exact_run("checks.yml", "main", sha, "push"), MAIN_JOBS)
+    successful_jobs(exact_run("decky-runtime.yml", "main", sha, "push"), DECKY_JOBS)
     successful_jobs(exact_run("release.yml", tag, sha, "push"), RELEASE_JOBS)
     print(f"exact release commit: {sha}")
 

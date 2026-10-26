@@ -38,7 +38,8 @@ count. So a build reaches people only when you publish it, after testing it.
    release verification, independent package checks, and all four tagged
    installer builds have passed. Hold the release if any gate is failed,
    cancelled, skipped, still running, or unverified. The publisher also reads
-   the exact commit's GitHub CI and tagged build job records and refuses to
+   the exact commit's GitHub CI, native Decky runtime gate, and tagged build
+   job records and refuses to
    publish unless every required job succeeded; it cannot prove physical
    headset or installer behavior on its own.
 
@@ -48,7 +49,8 @@ count. So a build reaches people only when you publish it, after testing it.
    ```
 
    The script checks that the tag is on GitHub, that exact-commit main CI
-   (including e2e) and the tagged release workflow are green with no failed,
+   (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
+   release workflow are green with no failed,
    cancelled, skipped or running jobs, and that all ten installers
    are attached, each with the SHA-256 digest GitHub records. It also checks
    that the draft does not begin with a `WITHDRAWN` notice, so the preserved
