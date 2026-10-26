@@ -99,6 +99,17 @@ finally: vr.close()
 '''
 
 
+def wait_overlay(remote, attempts=8):
+    """Give SteamVR a bounded moment to expose its newly registered panel."""
+    for attempt in range(attempts):
+        snapshot = remote.python(diagnostic_source())
+        if snapshot['state']['visible']:
+            return snapshot
+        if attempt < attempts - 1:
+            time.sleep(1)
+    return snapshot
+
+
 HIDDEN_OVERLAY_DIAGNOSTIC = '''
 import json,pathlib,subprocess
 key='valve.steam.desktopgame.2001947813'
@@ -227,7 +238,7 @@ print(json.dumps({'created':True}))
             remote(VRCMD + ' --handlewakeup')
             remote(VRCMD + ' --showdashboard ' + KEY)
             time.sleep(2)
-        report['overlay'] = remote.python(diagnostic_source())
+        report['overlay'] = wait_overlay(remote) if args.wake or args.exercise else remote.python(diagnostic_source())
         if args.exercise and not report['overlay']['state']['visible']:
             report['retaggedTestWindow'] = True
             remote.python('''
@@ -242,7 +253,7 @@ subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd','--showdashboard','valve.ste
 time.sleep(2)
 print('{}')
 ''')
-            report['overlay'] = remote.python(diagnostic_source())
+            report['overlay'] = wait_overlay(remote)
         if args.exercise and not report['overlay']['state']['visible']:
             try:
                 report['hiddenOverlay'] = remote.python(HIDDEN_OVERLAY_DIAGNOSTIC)

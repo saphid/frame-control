@@ -42,3 +42,9 @@ The intermittent hidden-overlay condition remains a reliability limit. The
 runner now records a small read-only diagnostic and refuses to send synthetic
 input if the overlay stays hidden after its focus retry. A successful Chromium
 panel alone is not treated as VR visibility.
+
+At 02:07 UTC, a fourth combined-head run with a bounded overlay wait passed
+without a focus retry. The sample setting/input and stereo checks passed; power
+settings were restored, the recovery timer was removed, and the owned lock was
+released. This single pass does not prove that the wait eliminates intermittent
+hidden overlays. Battery changed from 100% to 99% during the run.

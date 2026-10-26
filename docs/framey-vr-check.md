@@ -60,7 +60,8 @@ CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,
 not proof of a physical controller or the SteamVR virtual keyboard.
 
 SteamVR can leave a recreated panel hidden with a stale focus request. The
-exercise retries once by removing and reapplying `STEAM_GAME` on its own test
+exercise waits briefly for the new overlay, then retries once by removing and
+reapplying `STEAM_GAME` on its own test
 browser window, then requests focus again. It never retags another application.
 If the overlay stays hidden, it records a small read-only registration/service
 diagnostic and stops before synthetic input. The report records whether this

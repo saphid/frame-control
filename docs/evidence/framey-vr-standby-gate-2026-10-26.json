@@ -97,6 +97,24 @@
       ],
       "powerRestored": true,
       "lockReleased": true
+    },
+    {
+      "timeUtc": "2026-10-26T02:07:28.654641+00:00",
+      "head": "db079eec9f64a865fca8a1a51b5304e071596383",
+      "localChange": "bounded overlay wait on this PR branch",
+      "passed": true,
+      "overlayVisible": true,
+      "inputPassed": true,
+      "reason": null,
+      "retaggedTestWindow": false,
+      "batteryBefore": [
+        100
+      ],
+      "batteryAfter": [
+        99
+      ],
+      "powerRestored": true,
+      "lockReleased": true
     }
   ]
 }

@@ -15,6 +15,24 @@ spec.loader.exec_module(check)
 
 
 class Safety(unittest.TestCase):
+    def test_overlay_wait_is_bounded_and_stops_when_visible(self):
+        from unittest.mock import Mock
+        remote = Mock()
+        remote.python.side_effect = [{'state':{'visible':False}},
+                                     {'state':{'visible':False}},
+                                     {'state':{'visible':True}}]
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertTrue(check.wait_overlay(remote)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
+        remote.python.reset_mock(side_effect=True)
+        remote.python.return_value = {'state':{'visible':False}}
+        with patch.object(check.time, 'sleep') as sleep:
+            self.assertFalse(check.wait_overlay(remote, attempts=3)['state']['visible'])
+        self.assertEqual(remote.python.call_count, 3)
+        self.assertEqual(sleep.call_count, 2)
+
     def test_foreign_lock_prevents_sensor_reads_and_cleanup(self):
         with tempfile.TemporaryDirectory() as folder, patch.object(check, 'Remote') as factory:
             remote = factory.return_value
