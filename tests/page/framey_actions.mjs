@@ -7,7 +7,8 @@ const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__s
 assert.notEqual(testSource,source);
 const states=[];
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
-  useState:value=>[value,next=>states.push(next)], useEffect(){},isValidElement:value=>!!value?.type};
+  useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
+  useEffect(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
@@ -98,13 +99,27 @@ const plugin={content:{type:'content'},settings:{type:'settings'},titleView:{typ
     {label:'invalid'},...Array.from({length:9},(_,i)=>({label:`Action ${i}`,onClick:()=>{}}))]};
 const tree=window.__surface({plugin});
 const buttons=nodes(tree,'button');
-assert.equal(buttons.length,9); // Panel, Settings, and seven valid actions inside the first eight entries.
+assert.equal(buttons.length,10); // Panel, Settings, and eight valid actions after filtering.
 assert.equal(nodes(tree,'nav')[0].props['aria-label'],'Plugin views');
 assert.equal(nodes(tree,'section')[0].props['aria-label'],'Plugin quick actions');
 assert.equal(nodes(tree,'header').length,1);
 await buttons[2].props.onClick();
 assert.equal(called,1);
 assert.deepEqual(states.slice(-3),[0,'Refresh data…','Fresh',null].slice(-3));
+let actionCount=0, settleAction;
+const guarded=window.__surface({plugin:{content:{type:'content'},frameyQuickActions:[{
+  label:'Save setting',onClick:()=>{actionCount++;return new Promise((resolve,reject)=>{
+    settleAction={resolve,reject};});}}]}});
+const saveButton=nodes(guarded,'button')[0];
+const firstSave=saveButton.props.onClick();
+await saveButton.props.onClick(); // React has not rendered disabled state yet.
+assert.equal(actionCount,1,'rapid second tap must not repeat a backend mutation');
+settleAction.reject(Error('offline'));
+await firstSave;
+const retrySave=saveButton.props.onClick();
+assert.equal(actionCount,2,'a failed action must release the synchronous lock');
+settleAction.resolve('Saved');
+await retrySave;
 const settingsOnly=window.__surface({plugin:{settings:{type:'settings'}}});
 assert.equal(nodes(settingsOnly,'nav').length,0);
 assert.equal(nodes(settingsOnly,'settings').length,1);

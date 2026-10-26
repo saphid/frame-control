@@ -482,18 +482,22 @@
     const [route, setRoute] = R.useState(currentRoute);
     R.useEffect(() => {routeListeners.add(setRoute); return () => routeListeners.delete(setRoute);}, []);
     const [running, setRunning] = R.useState(null);
+    const runningRef = R.useRef(false);
     const [message, setMessage] = R.useState('');
-    const actions = Array.isArray(plugin.frameyQuickActions) ? plugin.frameyQuickActions.slice(0, 8)
+    const actions = Array.isArray(plugin.frameyQuickActions) ? plugin.frameyQuickActions
       .filter(action => action && typeof action.label === 'string' && action.label.length <= 80 &&
-        typeof action.onClick === 'function') : [];
+        typeof action.onClick === 'function').slice(0, 8) : [];
     async function runAction(action, index) {
-      if (running !== null) return;
+      // React state may not render between two controller clicks. Lock before
+      // awaiting a backend action so one tap cannot start a second mutation.
+      if (runningRef.current) return;
+      runningRef.current = true;
       setRunning(index); setMessage(`${action.label}…`);
       try {
         const result = await action.onClick();
         setMessage(typeof result === 'string' && result.length < 200 ? result : `${action.label} done`);
       } catch (failure) { setMessage(`${action.label} failed: ${failure.message || failure}`); }
-      finally { setRunning(null); }
+      finally { runningRef.current = false; setRunning(null); }
     }
     return R.createElement(R.Fragment, null,
       plugin.titleView && R.createElement('header', null, plugin.titleView),

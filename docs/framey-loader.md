@@ -201,7 +201,9 @@ an optional `settings` React element under a **Settings** tab and an optional
 Framey shows tabs only when both views exist. For one-tap headset controls, return
 `frameyQuickActions: [{label: 'Refresh data', onClick: refreshData}]` from the
 plugin initializer. Framey displays up to eight actions and reports a pending,
-success, or failure state. These descriptor fields are Framey additions; Decky
+success, or failure state. It ignores extra taps while an action is pending,
+and a failed action can be retried. Invalid action descriptors do not count
+toward the eight-action limit. These descriptor fields are Framey additions; Decky
 ignores them. Use a plugin backend method through `@decky/api` for work needing
 persistent state, and keep a quick action safe to repeat.
 See the [Decky API compatibility table](frame-plugin-author.md#framey-decky-api-compatibility)
