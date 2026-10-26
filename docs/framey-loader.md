@@ -173,7 +173,7 @@ The Decky and headset service manual removal commands are in
 ## Fast worn-headset check
 
 With an already installed Framey plugin and someone wearing the headset, run
-`python3 scripts/framey-worn-check.py` from a paired computer. The script
+`python3 scripts/framey-worn-check.py --worn-confirmed` from a paired computer. The script
 atomically acquires `/tmp/frame-test.lock` before reading battery or SteamVR
 activity. If another job owns the lock, it makes no sensor reads. It releases
 its own lock without starting the interaction when the headset is in standby.
@@ -186,3 +186,14 @@ color count, then removes the private temporary image from both devices.
 Pixel variety alone cannot prove the UI text was legible; a person must still
 confirm the view in the headset. The script does not install or remove a plugin,
 alter Steam settings, or wake the headset.
+
+
+## Unattended VR checks
+
+The [unattended check](framey-vr-check.md) can wake, inspect and capture the
+real compositor, send OpenVR mouse input, and exercise a temporary sample
+against live Decky with restoration and shared-lock protection. Its
+[device evidence](evidence/framey-vr-2026-10-25/README.md) distinguishes these
+checks from physical controller and wearer validation. A trusted pointer event
+and active-headset telemetry are both reproducible without wearing the Frame;
+they must not be labelled as physical controller proof.

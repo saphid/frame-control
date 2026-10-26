@@ -44,9 +44,9 @@ For a new plugin, follow the [Frame plugin and extension guide](frame-plugin-aut
 
 ### Which of these plugins can open a Framey panel?
 
-The separate Framey panel accepts a Frame Control store install when its
-`plugin.json` declares API v1 or v2 and it has a modern Decky frontend bundle
-in `dist/index.js`. A backend load does not bypass this frontend check. We downloaded the 11 versions above
+The separate Framey panel accepts a Frame Control store install with a supported
+API v1/v2 frontend or a legacy Decky IIFE frontend in `dist/index.js`.
+A backend load does not bypass this frontend check. We downloaded the 11 versions above
 again on 25 October 2026 and matched every ZIP's SHA-256 to the official store
 catalogue. All 11 had a frontend bundle, but their manifests differed:
 
@@ -54,15 +54,26 @@ catalogue. All 11 had a frontend bundle, but their manifests differed:
 | --- | --- | --- |
 | API v2 | ProtonDB Badges 1.3.4 | Eligible; settings rendered in local Chromium. No worn VR check. |
 | API v1 | Bluetooth 3.1.1, HLTB for Deck 2.0.12, SteamGridDB 1.8.1, Storage Cleaner 1.4.0, Wine Cellar 0.2.1, MagicPods 2.0.21 | Storage Cleaner rendered its empty-data panel in local Chromium. HLTB started and built a settings view in a local host test; its Steam game page patches have no target. Other panels remain untested. Wine Cellar and MagicPods fail the ARM64 archive check. None has a worn VR result. |
-| No `api_version` field | CSS Loader 2.1.3, Animation Changer 1.3.2, Audio Loader 1.6.1, PowerTools 2.0.3 | Framey refuses these frontends. Audio Loader and PowerTools also request root. |
+| No `api_version` field | CSS Loader 2.1.3, Animation Changer 1.3.2, Audio Loader 1.6.1, PowerTools 2.0.3 | CSS Loader's legacy IIFE passes the Framey panel packaging check; its theme UI remains untested. Animation Changer's panel remains untested. Audio Loader and PowerTools request root and are blocked. |
 
 The [archive audit record](evidence/framey-official-archive-audit-2026-10-25.json)
 has each store ID, exact version, SHA-256, manifest field, and bundle check.
 The archive audit itself is static PC inspection. Later local host and fake
-Frame tests cover the Storage Cleaner and HLTB cases noted above; none shows
+Frame tests cover the Storage Cleaner, HLTB, CSS Loader and SteamGridDB cases noted above; none shows
 that a plugin is visible or usable in the headset. The earlier real Frame backend checks in the table above
 remain the only device evidence for these versions. A new store version needs a
 new check because its manifest and binaries can change.
+
+Pinned CSS Loader 2.1.3 and SteamGridDB 1.8.1 archives now pass the fake Frame
+managed install/remove flow. CSS Loader's `plugin.json` has no `api_version` and
+its older IIFE bundle passes the Framey packaging check added in
+[#261](https://github.com/saphid/frame-control/pull/261). The fixture does not
+render its theme controls. SteamGridDB declares API v1 and its bundle passes Framey's packaging
+check, but it looks up Steam library modules while loading and patches game
+context menus. Those modules and menus do not exist in Framey's isolated
+iframe, so its artwork picker cannot be called a usable VR panel. Framey does
+not apply its Steam library changes. These checks did not run CSS themes or
+modify game artwork on the real Frame.
 
 The new store transaction was also exercised on the same real Frame:
 **managed loader install → ProtonDB Badges 1.3.4 store install → status →

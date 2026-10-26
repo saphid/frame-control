@@ -15,7 +15,7 @@ EXAMPLE = Path(__file__).resolve().parents[1] / 'examples/framey-settings/main.p
 
 def backend(settings_dir):
     decky = types.ModuleType('decky')
-    decky.decky_SETTINGS_DIR = settings_dir
+    decky.DECKY_PLUGIN_SETTINGS_DIR = settings_dir
     spec = importlib.util.spec_from_file_location('framey_sample', EXAMPLE)
     module = importlib.util.module_from_spec(spec)
     with patch.dict(sys.modules, {'decky': decky}):

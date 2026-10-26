@@ -8,7 +8,7 @@ import decky
 
 def settings_file():
     # Decky provides this per-plugin path through its official Python module.
-    return Path(decky.decky_SETTINGS_DIR) / 'settings.json'
+    return Path(decky.DECKY_PLUGIN_SETTINGS_DIR) / 'settings.json'
 
 
 class Plugin:

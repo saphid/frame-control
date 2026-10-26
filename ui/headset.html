@@ -199,7 +199,7 @@ function openFrameyPanel(id,name){
   byId('frameyCompatibility').textContent=compatibilityText(installed);
   activeFrameyId=id;frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
   byId('frameyPanelStatus').textContent='Loading plugin panel…';
-  byId('frameyFrame').src=`/framey/panel/${id}#${frameySession}`;
+  byId('frameyFrame').src=`/framey/panel/${id}?session=${encodeURIComponent(frameySession)}#${frameySession}`;
   byId('frameyPanel').hidden=false;byId('frameyPanel').scrollIntoView();
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
     byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
