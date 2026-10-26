@@ -28,7 +28,7 @@
   "limits": [
     "No Steam Home shelf injection or settings write was verified",
     "No official backend executed",
-    "No real Frame or worn VR interaction occurred",
+    "No official Deck Shelves interaction occurred on the real Frame or in worn VR",
     "Settings visibility alone does not prove the plugin works"
   ],
   "realFrameGate": {
