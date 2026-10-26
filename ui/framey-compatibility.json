@@ -3185,12 +3185,13 @@
         "https://github.com/tailscale-dev/deck-tailscale"
       ],
       "status": "partial",
-      "reason": "Settings render locally after the SuspensefulImage fallback. Tailscale daemon/state, connection and exit-node changes unverified; bundled localhost QR asset remains unavailable. No network settings were changed.",
+      "reason": "Settings render locally after the SuspensefulImage fallback. On the real Frame, exact official read-only backend status calls returned live state, exit-node and device entries when ~/.local/bin was in PATH; a transient user unit found the CLI with the proposed managed-service PATH. Live Framey Decky RPC, connection/exit-node changes and worn VR remain unverified; the bundled localhost QR asset is unavailable. No network settings were changed.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame read-only backend"
       ],
       "browser": {
         "id": 43,

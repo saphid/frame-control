@@ -123,6 +123,12 @@ try:
             next_binary.write_bytes(data)
             os.replace(next_binary, binary)
             binary.chmod(0o700)
+            # The Frame's user-installed tools (including its Tailscale CLI)
+            # live here, while the systemd user manager omits this directory.
+            # Keep standard system paths for plugins that invoke OS tools.
+            plugin_path = ':'.join((str(home / '.local/bin'), '/usr/local/sbin',
+                                    '/usr/local/bin', '/usr/sbin', '/usr/bin',
+                                    '/sbin', '/bin'))
             text = ('[Unit]\nDescription=Decky Loader (Frame Control experimental user install)\n'
               'After=default.target\n[Service]\nType=simple\nRestart=on-failure\n'
               'RestartSec=5\nExecStart='+str(binary)+'\n'
@@ -130,6 +136,7 @@ try:
               'Environment=PRIVILEGED_PATH='+str(base)+'\n'
               'Environment=CHOWN_PLUGIN_PATH=0\nEnvironment=LIVE_RELOAD=0\n'
               'Environment=USE_CEF_CLOSE_WORKAROUND=0\nEnvironment=KEEP_SYSTEMD_SERVICE=1\n'
+              'Environment=PATH='+plugin_path+'\n'
               '[Install]\nWantedBy=default.target\n')
             service.write_text(text)
             receipt.write_text(json.dumps({'managedBy':'Frame Control','version':version,'sha256':digest})+'\n')
