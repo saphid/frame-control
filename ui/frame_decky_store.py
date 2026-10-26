@@ -208,6 +208,26 @@ try:
                     entry.chmod(entry.stat().st_mode|0o100)
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
+            compat_shims=[]
+            # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
+            # official ZIP omits click and Decky's bundled Python lacks it.
+            # Supply the Linux function only inside this exact plugin's
+            # py_modules path; other plugins keep their original imports.
+            if int(plugin_id)==53 and digest=='ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe' and folder=='Shotty':
+                compat=unpacked/'py_modules/click.py'
+                if compat.exists(): raise RuntimeError('Shotty compatibility module collides with archive')
+                compat.parent.mkdir(parents=True,exist_ok=True)
+                compat.write_text(
+                    '"""Frame Control Linux compatibility for Shotty 0.1.0."""\n'
+                    'import os\n'
+                    'def get_app_dir(app_name, roaming=True, force_posix=False):\n'
+                    '    if not isinstance(app_name, str) or not app_name:\n'
+                    '        raise ValueError("app_name must be a nonempty string")\n'
+                    '    base = os.environ.get("XDG_CONFIG_HOME")\n'
+                    '    if not base or not os.path.isabs(base):\n'
+                    '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
+                    '    return os.path.join(base, app_name)\n',encoding='utf-8')
+                compat_shims.append('shotty-click-app-dir')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
@@ -221,7 +241,9 @@ try:
                     if isinstance(peer_data,dict) and peer_data.get('name')==proposed_name:
                         raise RuntimeError('A different plugin with this name is already installed')
                 except (OSError,ValueError,UnicodeError): continue
-            (unpacked/marker).write_text(json.dumps({'storeId':int(plugin_id),'sha256':digest,'version':version})+'\n')
+            record={'storeId':int(plugin_id),'sha256':digest,'version':version}
+            if compat_shims: record['compatShims']=compat_shims
+            (unpacked/marker).write_text(json.dumps(record)+'\n')
     # Stop even a failed unit before removal to cancel any pending auto-restart.
     if running or action=='remove': service('stop','frame-control-decky.service')
     try:
