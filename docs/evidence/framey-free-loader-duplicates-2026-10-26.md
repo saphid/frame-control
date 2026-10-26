@@ -20,6 +20,9 @@ Synthetic tests reject changed duplicate payloads and non-execute mode changes.
   installed and removed its `free-loader` folder and receipt; cleanup left no
   plugin folder. The focused store suite passed 21/21 tests, including a
   duplicate-member install/remove and permission readback.
+- After merging current main, the full local Python suite passed **1,637
+  tests, 16 skipped**. The generated compatibility document check and
+  whitespace check passed.
 - The pinned official fake-Frame HTTP/SSH install/remove test passed with this
   archive alongside the other pinned fixtures. It ran in a uniquely named
   disposable Compose project; its containers, network and volumes were removed.
