@@ -60,7 +60,7 @@ def render(data):
         'to render Deck Settings game selection, Steamback\'s empty save panel and PlayTime statistics/settings. '
         'Steamback and PlayTime used actual Decky 3.3.0 amd64 backends in an isolated container; their ARM64 backends and automatic game hooks remain unverified. '
         'Shotty\'s frontend now starts, but its published backend fails on missing `click`; it stays broken. '
-        'Other official backends remain unexecuted. '
+        'A [local module lookup follow-up](evidence/framey-module-lookup-2026-10-26.md) supplies a finite registry of Framey-local controls and CSS. TabMaster QAM/docs now render; Steam library-tab editing remains unavailable. Junk-Store loading/error views render, but its real backend cannot execute the extracted startup script, so it stays broken. SteamGridDB still requires Steam context-menu internals and DeckSP still fails its published MobX fallback. TabMaster/Junk-Store ran in actual isolated amd64 Decky; no ARM64 or worn-VR result is claimed. Beyond the documented checks, official backends remain unexecuted. '
         'The separate VR job proves Frame Control/sample compositor rendering, not any official plugin. '
         'No worn-VR official-plugin result is claimed. '
         'A [local UI follow-up](evidence/framey-ui-fallbacks-2026-10-26.json) rendered Pause Games and Tailscale Control settings '

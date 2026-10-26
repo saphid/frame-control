@@ -70,6 +70,15 @@ countdown, completion toast and persisted recents/subtle mode worked. Simple
 Timer remains partial: its own expired-timer startup raises a missing
 `timer_task` error, sound/suspend are unsupported, and worn VR was not checked.
 
+DFL module and class lookup searches a finite registry of Framey's own controls,
+CSS maps and an explicitly unsupported optional UI-audio player. It follows DFL's
+module/export filter and mapping contracts; unknown Steam modules return
+`undefined`, and unknown module mappings are empty. Returned IDs describe local
+Framey exports, not Steam webpack IDs. Sound playback throws an unsupported
+error, and Steam audio stores, function-source signatures and global patches are
+not fabricated. The [module lookup checks](evidence/framey-module-lookup-2026-10-26.md)
+record the resulting TabMaster documentation support and remaining blockers.
+
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
