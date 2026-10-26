@@ -4182,8 +4182,12 @@ def main():
         LINK.start()
         if not PRIVATE:  # one worker per user, in the app's server
             threading.Thread(target=autosync.run, args=(_stop_sync,), daemon=True).start()
+    def request_shutdown(*_):
+        # shutdown() must run outside the serve_forever thread. Do not raise
+        # from SIGTERM: the app can send it after stdin EOF has begun cleanup.
+        threading.Thread(target=httpd.shutdown, daemon=True).start()
     if not frame_host.WINDOWS:
-        signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt))
+        signal.signal(signal.SIGTERM, request_shutdown)
     if args.exit_on_eof:
         def watch_stdin():
             # os.read, not sys.stdin.buffer.read: a buffered read holds stdin's lock,
@@ -4191,7 +4195,7 @@ def main():
             # when it can't take that lock back from this thread.
             while os.read(0, 4096):
                 pass
-            threading.Thread(target=httpd.shutdown, daemon=True).start()
+            request_shutdown()
         threading.Thread(target=watch_stdin, daemon=True).start()
     try:
         # The real port, which --port 0 leaves to the system (the iPhone app reads it from here).
@@ -4200,8 +4204,7 @@ def main():
     except KeyboardInterrupt:
         pass
     finally:
-        # The app both closes stdin and sends SIGTERM on quit; a second signal
-        # mid-cleanup would abort it and leave the SSH master running.
+        # Cleanup is already underway; later stop signals need no more workers.
         if not frame_host.WINDOWS:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
         _power.shutdown()

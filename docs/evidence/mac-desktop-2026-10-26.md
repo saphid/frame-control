@@ -5,6 +5,10 @@ Host: **MacBook Air (MacBookAir9,1), Intel Core i3 1.1 GHz, macOS 15.7.7
 server with display/automation restrictions. No Apple Silicon runtime result
 is inferred from this test.
 
+**Follow-up:** the official v0.4.39 Intel installer later launched on this Air.
+See the [released-build test](mac-v0439-2026-10-26.md); the results below remain
+the earlier ARM64 failure and separate candidate test.
+
 ## Released installers: verified, installed, cannot run on Intel
 
 GitHub's latest release was v0.4.35 at the start; v0.4.36 became latest during
