@@ -586,6 +586,15 @@ def framey_method_action(body):
         raise Failure(str(exc), 400) from exc
 
 
+def framey_steam_action(body):
+    if not HEADSET_RUNTIME and os.environ.get('FRAME_E2E_CONTAINER') != '1':
+        raise Failure('Decky plugin panels run in the headset service', 400)
+    try:
+        return framey_panel.read_steam(ssh, body.get('id'), body.get('method'))
+    except framey_panel.PanelError as exc:
+        raise Failure(str(exc), 400) from exc
+
+
 def framey_events_action(body):
     if not HEADSET_RUNTIME and os.environ.get('FRAME_E2E_CONTAINER') != '1':
         raise Failure('Decky plugin panels run in the headset service', 400)
@@ -3462,6 +3471,7 @@ POST = {
     "/api/decky": decky,
     "/api/decky/plugin": decky_plugin,
     "/api/framey/method": framey_method_action,
+    "/api/framey/steam": framey_steam_action,
     "/api/framey/events": framey_events_action,
     "/api/framey/check": framey_check_action,
     "/api/headset": headset_action,

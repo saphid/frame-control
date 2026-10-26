@@ -99,6 +99,17 @@ listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:
 assert.equal(await reply,'dark');
 await assert.rejects(api.call('x;alert(1)'),/Invalid backend method/);
 
+// These APIs use a separate, parameterless allowlisted read bridge.
+for(const [namespace,method,result] of [['User','GetIPCountry','AU'],
+  ['InstallFolder','GetInstallFolders',[{vecApps:[]}]],['System','GetSystemInfo',{sOSName:'Frame OS'}]]){
+  const pendingRead=window.SteamClient[namespace][method]();
+  const request=messages.at(-1);assert.equal(request.type,'framey:steam');assert.equal(request.method,method);
+  assert.equal(request.args.length,0);
+  listeners.find(x=>x.type==='message').handler({source:parent,data:{type:'framey:reply',id:request.id,result}});
+  assert.equal(await pendingRead,result);
+}
+assert.equal(window.SteamClient.System.ShutdownPC,undefined);
+
 const toast=api.toaster.toast({title:'Saved',body:'Mode updated',duration:4000});
 const toastNode=elements.get('framey-toasts').children[0];
 assert.equal(toastNode.attributes.role,'status');

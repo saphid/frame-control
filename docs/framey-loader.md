@@ -124,6 +124,17 @@ verifies Pause Games and Tailscale Control settings in local Chromium; their
 primary backend actions remain unverified. PlayTime still requires Steam's
 real app store and game observers.
 
+Three parameterless SteamClient reads use Steam's actual CEF context:
+`User.GetIPCountry`, `InstallFolder.GetInstallFolders` and `System.GetSystemInfo`.
+The authenticated headset-only endpoint checks that the plugin is installed,
+selects an expression from a fixed allowlist, and caps replies at 256 KiB.
+The iframe cannot supply a Steam property path or executable source, and replies
+are discarded if the panel session changed. Unsupported APIs remain unavailable.
+[Locked Frame checks](evidence/framey-steam-reads-2026-10-26.json) verified all
+three reads and IsThereAnyDeal's country dropdown in local Chromium. Its backend
+settings/deal calls stayed denied; Deck Settings still needs real Steam library
+context. A deployed headset HTTP endpoint and worn-VR behavior remain unverified.
+
 The fake Frame integration test now writes a Decky setting through Framey's
 scoped backend endpoint, reads it in a new CEF request, updates the plugin,
 then checks it again. It also confirms removal blocks method calls and a

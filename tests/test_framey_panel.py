@@ -20,6 +20,46 @@ import server
 
 
 class Panel(unittest.TestCase):
+    def test_steam_reads_are_allowlisted_and_installed_only(self):
+        with patch.object(framey_panel.frame_decky, 'status', return_value={
+                'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck'}]}):
+            for method, expression in framey_panel.STEAM_READS.items():
+                def fake_ssh(command, stdin, **_):
+                    self.assertEqual(command, 'python3 -')
+                    compile(stdin, '<Steam read>', 'exec')
+                    self.assertIn(expression, stdin)
+                    self.assertNotIn('__FRAMEY_STEAM_READ__', stdin)
+                    return '{"result":"actual read"}'
+                self.assertEqual(framey_panel.read_steam(fake_ssh,81,method)['result'], 'actual read')
+            for plugin_id, method in [(True,'GetIPCountry'), (0,'GetIPCountry'),
+                    (82,'GetIPCountry'), (81,'ShutdownPC'), (81,'User.GetIPCountry'),
+                    (81,[]), (81,'GetIPCountry();alert(1)')]:
+                with self.subTest(plugin_id=plugin_id, method=method):
+                    with self.assertRaises(framey_panel.PanelError):
+                        framey_panel.read_steam(lambda *a,**k:self.fail('Unexpected SSH'),plugin_id,method)
+
+    def test_steam_read_response_limit_and_socket_cleanup(self):
+        from types import SimpleNamespace
+        for value, oversized in [('AU',False), ('x'*(256*1024),True)]:
+            closed=[]
+            page=SimpleNamespace(eval=lambda _:value,sock=SimpleNamespace(close=lambda:closed.append(True)))
+            fake_module=SimpleNamespace(Page=lambda:page)
+            script=framey_panel.STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__',repr('safe()'))
+            with patch.dict(sys.modules, {'frame_steam':fake_module}), patch('builtins.print') as output:
+                if oversized:
+                    with self.assertRaisesRegex(ValueError,'too large'):exec(script,{})
+                else:
+                    exec(script,{})
+                    self.assertEqual(json.loads(output.call_args.args[0]),{'result':'AU'})
+            self.assertEqual(closed,[True])
+
+    def test_steam_reads_have_the_headset_service_boundary(self):
+        with patch.object(server,'HEADSET_RUNTIME',False), patch.dict(server.os.environ,{'FRAME_E2E_CONTAINER':'0'}):
+            with self.assertRaises(server.Failure):server.framey_steam_action({'id':81,'method':'GetIPCountry'})
+        with patch.object(server,'HEADSET_RUNTIME',True), patch.object(framey_panel,'read_steam',return_value={'result':'AU'}) as read:
+            self.assertEqual(server.framey_steam_action({'id':81,'method':'GetIPCountry'}),{'result':'AU'})
+            read.assert_called_once_with(server.ssh,81,'GetIPCountry')
+
     def test_decky_event_queue_scope_bounds_expiry_and_reconnect(self):
         for name in ('framey_events.mjs', 'framey_event_parent.mjs'):
             with self.subTest(script=name):

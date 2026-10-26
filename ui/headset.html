@@ -260,9 +260,12 @@ window.addEventListener('message',async event=>{
       event.source.postMessage(reply,'*');
     return;
   }
-  if(req.type!=='framey:call'||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
+  if(!['framey:call','framey:steam'].includes(req.type)||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
+  const steamRead=req.type==='framey:steam';
+  if(steamRead&&(req.args.length!==0||!['GetIPCountry','GetInstallFolders','GetSystemInfo'].includes(req.method)))return;
   const pluginId=activeFrameyId,session=frameySession,reply={type:'framey:reply',id:req.id};
-  try{const data=await api('/api/framey/method',{id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
+  try{const data=await api(steamRead?'/api/framey/steam':'/api/framey/method',
+    {id:pluginId,method:req.method,args:req.args,legacy:req.legacy===true});reply.result=data.result;}
   catch(error){reply.error=error.message;}
   if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)event.source.postMessage(reply,'*');
 });

@@ -45,6 +45,7 @@ addEventListener('message',event=>{
   if(data.type==='framey:error')active.error=String(data.message).slice(0,500);
   if(data.type==='framey:ready')active.ready=true;
   if(data.type==='framey:events')event.source.postMessage({type:'framey:reply',id:data.id,result:{events:[],cursor:0}},'*');
+  if(data.type==='framey:steam')event.source.postMessage({type:'framey:reply',id:data.id,error:'Read-only compatibility audit: live Steam API blocked'},'*');
   if(data.type==='framey:call'){
     if(!active.methods.includes(data.method))active.methods.push(data.method);
     event.source.postMessage({type:'framey:reply',id:data.id,error:'Read-only compatibility audit: backend method blocked'},'*');}
