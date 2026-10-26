@@ -72,6 +72,7 @@ def render(data):
         'A [read-only Steam bridge follow-up](evidence/framey-steam-reads-2026-10-26.json) verified actual Frame country, '
         'install folders and system information, plus IsThereAnyDeal\'s country dropdown in local Chromium. '
         'The installed-plugin status was fixture-shaped in that relay; plugin backends stayed denied and the deployed headset HTTP endpoint remains unverified. '
+        'A [Web Browser frontend follow-up](evidence/framey-web-browser-2026-10-26.md) verified its exact archive now initializes with an inert null Steam React-root lookup. Its GamepadUI CDP/browser backend path remains unavailable, so it stays broken. '
         'Earlier focused checks cover [ProtonDB](evidence/framey-browser-2026-10-25.md), '
         '[Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), '
         '[Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and '

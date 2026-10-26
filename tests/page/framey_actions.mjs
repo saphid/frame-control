@@ -24,6 +24,9 @@ const context=vm.createContext({window,document:{getElementById:id=>{
   navigator:{language:'en'}, parent,DOMException,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(testSource,context);
+// No Steam React tree exists inside the isolated Framey iframe.
+assert.equal(window.DFL.getReactRoot({}),null);
+assert.equal(window.DFL.findInReactTree(window.DFL.getReactRoot(null),()=>true),null);
 // Official @decky/rollup bundles use the automatic JSX runtime, including keyed lists.
 const jsx=window.SP_JSX.jsx('p',{id:'message',children:'Saved'},'message-key');
 assert.equal(jsx.type,'p');
