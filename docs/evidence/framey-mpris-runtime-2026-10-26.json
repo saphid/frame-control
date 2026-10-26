@@ -1,0 +1,807 @@
+{
+  "timeUtc": "2026-10-26T21:15:13.918421+00:00",
+  "plugins": [
+    {
+      "id": 12,
+      "name": "MusicControl",
+      "version": "1.1.6",
+      "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
+      "backend": "Python",
+      "frontendApi": "legacy"
+    },
+    {
+      "id": 111,
+      "name": "Music Control",
+      "version": "1.1.7",
+      "sha256": "3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9",
+      "backend": "Python",
+      "frontendApi": "legacy"
+    }
+  ],
+  "regressions": {
+    "removedBoundMethodShim": {
+      "result": "Plugin._get_dbus_env() missing 1 required positional argument: 'self'",
+      "success": false
+    },
+    "realFrameSubprocessDiagnostic": {
+      "uid": 1000,
+      "ldLibrary": "<Decky PyInstaller extraction directory>",
+      "results": [
+        {
+          "shell": false,
+          "code": 0,
+          "hasArray": true,
+          "stderr": ""
+        },
+        {
+          "shell": true,
+          "code": 1,
+          "hasArray": false,
+          "stderr": "/bin/sh: /usr/lib/libc.so.6: version `GLIBC_2.42' not found (required by <Decky PyInstaller extraction directory>/libtinfo.so.6)\n"
+        }
+      ]
+    }
+  },
+  "realFrame": {
+    "scope": "real Frame ARM64 Decky3.3; only discovery and selected-player read, no player controls",
+    "runtime": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "before": {
+      "arch": "aarch64",
+      "uid": 1000,
+      "decky": "failed",
+      "panel": "inactive",
+      "artLinkPresent": false,
+      "imagesParentPresent": true,
+      "battery": [
+        100
+      ]
+    },
+    "installs": [
+      {
+        "id": 12,
+        "receipt": {
+          "storeId": 12,
+          "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
+          "version": "1.1.6",
+          "compatShims": [
+            "music-control-system-dbus-env"
+          ]
+        }
+      },
+      {
+        "id": 111,
+        "receipt": {
+          "storeId": 111,
+          "sha256": "3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9",
+          "version": "1.1.7",
+          "compatShims": [
+            "music-control-system-dbus-env"
+          ]
+        }
+      }
+    ],
+    "calls": [
+      {
+        "id": 12,
+        "method": "sp_list_media_players",
+        "success": true,
+        "playerCount": 0
+      },
+      {
+        "id": 12,
+        "method": "sp_get_media_player",
+        "response": {
+          "result": "org.mpris.MediaPlayer2.spotify",
+          "success": true
+        }
+      },
+      {
+        "id": 111,
+        "method": "sp_list_media_players",
+        "success": true,
+        "playerCount": 0
+      },
+      {
+        "id": 111,
+        "method": "sp_get_media_player",
+        "response": {
+          "result": "org.mpris.MediaPlayer2.spotify",
+          "success": true
+        }
+      }
+    ],
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "artLinkAbsent": true
+    },
+    "after": {
+      "arch": "aarch64",
+      "uid": 1000,
+      "decky": "failed",
+      "panel": "inactive",
+      "artLinkPresent": false,
+      "imagesParentPresent": true,
+      "battery": [
+        100
+      ]
+    },
+    "lockReleased": true
+  },
+  "isolatedRuntime": {
+    "version": "v3.3.0",
+    "architecture": "amd64",
+    "sha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "isolation": "Docker network none; no host audio/D-Bus/home/device mounts; dropped capabilities; private dbus-daemon and silent synthetic MPRIS service; archives and scripts read-only"
+  },
+  "backendFixtureChecks": [
+    {
+      "id": 12,
+      "version": "1.1.6",
+      "calls": [
+        {
+          "method": "sp_list_media_players",
+          "kwargs": {},
+          "response": {
+            "result": "org.mpris.MediaPlayer2.FrameySilent",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_media_player",
+          "kwargs": {
+            "player": "org.mpris.MediaPlayer2.FrameySilent"
+          },
+          "response": {
+            "result": null,
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_media_player",
+          "kwargs": {},
+          "response": {
+            "result": "org.mpris.MediaPlayer2.FrameySilent",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_identity",
+          "kwargs": {
+            "orgPath": "org.mpris.MediaPlayer2.FrameySilent"
+          },
+          "response": {
+            "result": "Player",
+            "success": true
+          }
+        },
+        {
+          "method": "get_meta_data",
+          "kwargs": {},
+          "response": {
+            "result": "trackid|/org/framey/TestTrack/1\nlength|180000000\ntitle|Silent Test Track\nartist|Fixture Artist\nalbum|Framey Test Album\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Paused",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "12000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_can_seek",
+          "kwargs": {},
+          "response": {
+            "result": "true",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_volume",
+          "kwargs": {},
+          "response": {
+            "result": "0.4",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_test_volume_control",
+          "kwargs": {},
+          "response": {
+            "result": "true",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_play",
+          "kwargs": {},
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Playing",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_pause",
+          "kwargs": {},
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Paused",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_next",
+          "kwargs": {},
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_previous",
+          "kwargs": {},
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_seek",
+          "kwargs": {
+            "amount": 2000000
+          },
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "14000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_position",
+          "kwargs": {
+            "position": 45000000,
+            "trackid": "/org/framey/TestTrack/1"
+          },
+          "response": {
+            "result": "",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "45000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_volume",
+          "kwargs": {
+            "volume": 0.25
+          },
+          "response": {
+            "result": "method return time=1793049278.417118 sender=:1.0 -> destination=:1.19 serial=20 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_volume",
+          "kwargs": {},
+          "response": {
+            "result": "0.25",
+            "success": true
+          }
+        }
+      ],
+      "independentFixtureState": {
+        "PlaybackStatus": "Paused",
+        "Position": 45000000,
+        "Volume": 0.25,
+        "next": 1,
+        "previous": 1,
+        "writes": [
+          [
+            "PlayPause"
+          ],
+          [
+            "Pause"
+          ],
+          [
+            "Next"
+          ],
+          [
+            "Previous"
+          ],
+          [
+            "Seek",
+            2000000
+          ],
+          [
+            "SetPosition",
+            45000000
+          ],
+          [
+            "Volume",
+            0.25
+          ]
+        ]
+      }
+    },
+    {
+      "id": 111,
+      "version": "1.1.7",
+      "calls": [
+        {
+          "method": "sp_list_media_players",
+          "kwargs": {},
+          "response": {
+            "result": "org.mpris.MediaPlayer2.FrameySilent",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_media_player",
+          "kwargs": {
+            "player": "org.mpris.MediaPlayer2.FrameySilent"
+          },
+          "response": {
+            "result": null,
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_media_player",
+          "kwargs": {},
+          "response": {
+            "result": "org.mpris.MediaPlayer2.FrameySilent",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_identity",
+          "kwargs": {
+            "orgPath": "org.mpris.MediaPlayer2.FrameySilent"
+          },
+          "response": {
+            "result": "Player",
+            "success": true
+          }
+        },
+        {
+          "method": "get_meta_data",
+          "kwargs": {},
+          "response": {
+            "result": "trackid|/org/framey/TestTrack/1\nlength|180000000\ntitle|Silent Test Track\nartist|Fixture Artist\nalbum|Framey Test Album",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Paused",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "12000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_can_seek",
+          "kwargs": {},
+          "response": {
+            "result": "true",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_volume",
+          "kwargs": {},
+          "response": {
+            "result": "0.4",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_test_volume_control",
+          "kwargs": {},
+          "response": {
+            "result": "true",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_play",
+          "kwargs": {},
+          "response": {
+            "result": "method return time=1793049473.137015 sender=:1.0 -> destination=:1.12 serial=13 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Playing",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_pause",
+          "kwargs": {},
+          "response": {
+            "result": "method return time=1793049473.340963 sender=:1.0 -> destination=:1.14 serial=15 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_status",
+          "kwargs": {},
+          "response": {
+            "result": "Paused",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_next",
+          "kwargs": {},
+          "response": {
+            "result": "method return time=1793049473.547273 sender=:1.0 -> destination=:1.16 serial=17 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_previous",
+          "kwargs": {},
+          "response": {
+            "result": "method return time=1793049473.649558 sender=:1.0 -> destination=:1.17 serial=18 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_seek",
+          "kwargs": {
+            "amount": 2000000
+          },
+          "response": {
+            "result": "method return time=1793049473.752790 sender=:1.0 -> destination=:1.18 serial=19 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "14000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_position",
+          "kwargs": {
+            "position": 45000000,
+            "trackid": "/org/framey/TestTrack/1"
+          },
+          "response": {
+            "result": "method return time=1793049473.965468 sender=:1.0 -> destination=:1.20 serial=21 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_track_progress",
+          "kwargs": {},
+          "response": {
+            "result": "45000000",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_set_volume",
+          "kwargs": {
+            "volume": 0.25
+          },
+          "response": {
+            "result": "method return time=1793049474.175137 sender=:1.0 -> destination=:1.22 serial=23 reply_serial=2\n",
+            "success": true
+          }
+        },
+        {
+          "method": "sp_get_volume",
+          "kwargs": {},
+          "response": {
+            "result": "0.25",
+            "success": true
+          }
+        }
+      ],
+      "independentFixtureState": {
+        "PlaybackStatus": "Paused",
+        "Position": 45000000,
+        "Volume": 0.25,
+        "next": 1,
+        "previous": 1,
+        "writes": [
+          [
+            "Volume",
+            0.01
+          ],
+          [
+            "Volume",
+            0.4
+          ],
+          [
+            "PlayPause"
+          ],
+          [
+            "Pause"
+          ],
+          [
+            "Next"
+          ],
+          [
+            "Previous"
+          ],
+          [
+            "Seek",
+            2000000
+          ],
+          [
+            "SetPosition",
+            45000000
+          ],
+          [
+            "Volume",
+            0.25
+          ]
+        ]
+      }
+    }
+  ],
+  "browserChecks": [
+    {
+      "id": 12,
+      "scope": "opaque local Chromium + real amd64 Decky3.3 + private silent MPRIS",
+      "checks": [
+        {
+          "rendered": "Music Control\nCurrently Playing\nSilent Test Track\nFixture Artist\nPlayback Volume\nPlayer\nInfo"
+        },
+        {
+          "clickedButton": 0,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 1,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 2,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 1,
+          "independentReadback": {
+            "PlaybackStatus": "Playing",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 1,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "slider": 0,
+          "value": 0.5,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "slider": 1,
+          "value": 60,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.6,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "infoRoute": "Music Control\nBack to plugin\nMusicControl\nInfoUsageTroubleshooting\nMusicControl allows you to control any media playback that is currently running that implements the MPRIS dbus interface.\nExamples of application that are supported:\nSpotify\nCider\nChrome / Firefox\nStrawberry\nOnly the flatpak versions of these applications have been tested, and not all of them might support the full feature set, so it is recommended to use the discover store to install the applications."
+        },
+        {
+          "reopened": "Music Control\nCurrently Playing\nSilent Test Track\nFixture Artist\nPlayer\nInfo",
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.6,
+            "next": 2,
+            "previous": 2
+          }
+        }
+      ]
+    },
+    {
+      "id": 111,
+      "scope": "opaque local Chromium + real amd64 Decky3.3 + private silent MPRIS",
+      "checks": [
+        {
+          "rendered": "Music Control\nCurrently Playing\nSilent Test Track\nFixture Artist\nPlayback Volume\nPlayer\nInfo"
+        },
+        {
+          "clickedButton": 0,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 1,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 2,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 1,
+          "independentReadback": {
+            "PlaybackStatus": "Playing",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "clickedButton": 1,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 45000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "slider": 0,
+          "value": 0.5,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.25,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "slider": 1,
+          "value": 60,
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.6,
+            "next": 2,
+            "previous": 2
+          }
+        },
+        {
+          "infoRoute": "Music Control\nBack to plugin\nMusicControl\nInfoUsageTroubleshooting\nMusicControl allows you to control any media playback that is currently running that implements the MPRIS dbus interface.\nExamples of application that are supported:\nSpotify\nCider\nChrome / Firefox\nStrawberry\nOnly the flatpak versions of these applications have been tested, and not all of them might support the full feature set, so it is recommended to use the discover store to install the applications."
+        },
+        {
+          "reopened": "Music Control\nCurrently Playing\nSilent Test Track\nFixture Artist\nPlayer\nInfo",
+          "independentReadback": {
+            "PlaybackStatus": "Paused",
+            "Position": 90000000,
+            "Volume": 0.6,
+            "next": 2,
+            "previous": 2
+          }
+        }
+      ]
+    }
+  ],
+  "limitations": [
+    "Real Frame had no running MPRIS players. No real media transport or volume writes ran.",
+    "The private fixture emits no audio and does not prove playback in a supported media app.",
+    "Album art, physical controller, VR keyboard and worn VR were not tested.",
+    "Both upstream backends truncate multiword Identity to its final word.",
+    "Music Control 1.1.7 automatically probes player volume by writing 0.01 and restoring it; this ran only against the private fixture.",
+    "Existing installed copies require remove/reinstall or an explicit managed update."
+  ],
+  "validation": {
+    "pythonSuite": {
+      "run": 1639,
+      "skipped": 16,
+      "passed": true
+    },
+    "fakeFrame": {
+      "total": 116,
+      "results": {
+        "blocked": 55,
+        "installed-removed": 61
+      },
+      "backendExecution": false
+    },
+    "currentStore": {
+      "checkedAtUtc": "2026-10-26T21:17:39.609721+00:00",
+      "plugins": 116,
+      "allPinnedDigestsUnchanged": true
+    },
+    "independentCleanupAudit": "MPRIS_CLEANUP_AUDIT_PASS: shared lock, test services/runtime directories and owned cache link absent",
+    "pinnedHttpSshFlow": {
+      "command": "scripts/e2e.sh test_framey",
+      "passed": 2,
+      "seconds": 32.59,
+      "scope": "pinned official archive receipt assertions and sample install/update/remove safeguards"
+    }
+  }
+}

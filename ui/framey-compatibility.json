@@ -474,12 +474,14 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Legacy media controls initialize; player discovery and playback are unverified.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 + MPRIS fixture",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 12,
@@ -506,7 +508,7 @@
         "folder": "MusicControl"
       },
       "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "hardware": "User-session MPRIS player and dbus-send required; no Deck-specific hardware.",
       "uiSurfaces": [
         "local/Steam routes"
       ],
@@ -515,7 +517,9 @@
         "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 13,
@@ -927,7 +931,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -935,7 +939,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -9582,13 +9586,15 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Exact official backend bound-method calls are repaired in managed installs. An isolated fake dbus-send target accepted player discovery, transport and volume commands after the patch; real MPRIS players, actual Decky ARM64, album art and worn VR remain unverified.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Python backend"
+        "isolated Python backend",
+        "isolated Decky 3.3.0 + MPRIS fixture",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 111,
@@ -9615,7 +9621,7 @@
         "folder": "MusicControl"
       },
       "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "hardware": "User-session MPRIS player and dbus-send required; no Deck-specific hardware.",
       "uiSurfaces": [
         "local/Steam routes"
       ],
@@ -9625,8 +9631,8 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
-      "compatShim": "music-control-bound-methods",
-      "evidence": "docs/evidence/framey-music-control-bound-methods-2026-10-26.md"
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 112,
