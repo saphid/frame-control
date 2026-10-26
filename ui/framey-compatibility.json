@@ -12068,12 +12068,13 @@
         "https://github.com/sponsors/santojon"
       ],
       "status": "partial",
-      "reason": "The exact chunked frontend now initializes and renders Deck Shelves settings in an opaque local Chromium panel. Backend calls were denied; Home-screen shelf injection has no verified Steam UI target in Framey. Settings writes, real backend behavior and worn VR are unverified.",
+      "reason": "The exact chunked frontend renders settings in opaque local Chromium. The official Python backend saved a shelf and returned it after reopen with a stub Decky module and temporary settings directory. Actual Decky RPC, real Frame settings, Steam Home shelf injection and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Python backend"
       ],
       "browser": {
         "id": 135,
@@ -12108,6 +12109,13 @@
         "mode": "exact archive in opaque local Chromium; backend and network denied",
         "frontendReady": true,
         "settingsRendered": true
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-deck-shelves-browser-2026-10-26.md",
+        "mode": "exact archive Python with stub Decky module and temporary settings directory",
+        "defaultSettingsRead": true,
+        "shelfSaveReopen": true,
+        "actualDeckyRpc": false
       }
     },
     {

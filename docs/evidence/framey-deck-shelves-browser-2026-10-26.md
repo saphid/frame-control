@@ -4,7 +4,17 @@ The exact official Deck Shelves 2.0.0 archive (store ID 135, SHA-256 `b566280ad3
 
 Framey now serves JavaScript files from the managed plugin's `dist` directory using hierarchical module URLs. Its opaque `allow-scripts` iframe still has no Frame UI key. Local Chromium received HTTP 200 for the entry and eight chunks, reported the initializer ready, and rendered the settings panel with “Enable shelves on Home,” “Create default shelves,” “Behavior,” and “Shelves.” The browser audit denied the attempted `get_settings` backend call, Steam library read and plugin network access. No backend method executed.
 
-The catalog moves this exact version from broken to **partial** for visible local settings only. The plugin's main feature injects shelves into Steam Home; Framey has no verified Steam Home patch target. Settings writes, official backend behavior, real Frame module serving, wearer-visible VR, and physical controller input remain unverified. The [compatibility table](../framey-compatibility.md) and store views retain these limits.
+The catalog moves this exact version from broken to **partial** for visible local settings. The plugin's main feature injects shelves into Steam Home; Framey has no verified Steam Home patch target. Actual Decky RPC, real Frame settings, wearer-visible VR, and physical controller input remain unverified. The [compatibility table](../framey-compatibility.md) and store views retain these limits.
+
+## Isolated official backend settings check
+
+I verified the same archive digest before loading its unchanged `Deck-Shelves/main.py` in local Python. A stub `decky` module supplied only a logger; `DECKY_PLUGIN_SETTINGS_DIR` and `DECKY_HOME` pointed inside a temporary directory. No Decky service, headset, Steam API, or network call was involved. Calling `_main`, `get_settings`, and `set_settings` returned the default disabled state, saved one shelf named `Local Test`, and returned that shelf from a fresh `Plugin` instance. The temporary directory was removed after the check.
+
+```json
+{"archiveSha256":"b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91","defaultEnabled":false,"defaultShelves":0,"saveResult":true,"reopenedEnabled":true,"reopenedShelfTitle":"Local Test","settingsFileExists":true}
+```
+
+This proves only the archive's Python settings logic under those local conditions. It does not prove that Decky 3.3.0 can dispatch these methods on the ARM64 Frame, that the opaque panel can save settings through the production bridge, or that a shelf appears on Steam Home or in VR.
 
 ## Exact source real Frame gates
 
