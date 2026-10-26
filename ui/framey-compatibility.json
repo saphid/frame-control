@@ -11886,9 +11886,9 @@
       "archiveBytes": 862269,
       "api": 1,
       "flags": [],
-      "modernBridge": false,
+      "modernBridge": true,
       "frontend": true,
-      "frontendApi": "unknown",
+      "frontendApi": "1",
       "pythonFiles": [
         "Deck-Shelves/main.py"
       ],
@@ -11916,8 +11916,8 @@
         "https://github.com/santojon/Deck-Shelves.git",
         "https://github.com/sponsors/santojon"
       ],
-      "status": "broken",
-      "reason": "Frontend audit failed: Failed to resolve module specifier \"./chunks/pluginApi-B8sV7970.js\". Invalid relative url or base scheme isn't hierarchical..",
+      "status": "partial",
+      "reason": "The exact chunked frontend now initializes and renders Deck Shelves settings in an opaque local Chromium panel. Backend calls were denied; Home-screen shelf injection has no verified Steam UI target in Framey. Settings writes, real backend behavior and worn VR are unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11951,6 +11951,12 @@
         "sha256": "b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "chunkedFollowUp": {
+        "evidence": "docs/evidence/framey-deck-shelves-browser-2026-10-26.md",
+        "mode": "exact archive in opaque local Chromium; backend and network denied",
+        "frontendReady": true,
+        "settingsRendered": true
       }
     },
     {
