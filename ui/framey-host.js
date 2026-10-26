@@ -393,7 +393,7 @@
   const showModal = element => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
-    const modal = {id:++modalId, previousFocus:document.activeElement};
+    const modal = {id:++modalId, previousFocus:document.activeElement, source:element};
     const Close = () => {
       const index=modals.indexOf(modal);
       if (index < 0) return;
@@ -408,7 +408,9 @@
     };
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
-      element?.props?.closeModal?.(); Close();
+      const callback=modal.source?.props?.closeModal;
+      if (callback !== modal.dismiss) callback?.();
+      Close();
     };
     modal.element = R.isValidElement(element) ? R.cloneElement(element, {closeModal:modal.dismiss}) : element;
     modals.push(modal);
@@ -416,8 +418,10 @@
     setTimeout(()=>{if(modals.at(-1)===modal) modal.node?.focus();},0);
     return {Close, ClosedPromise, Update:next=>{
       if (!modals.includes(modal)) return;
-      // Decky's Update replaces the element without injecting new callbacks.
-      modal.element=next; renderModals();
+      // Keep replacement dialogs dismissible inside this isolated host too.
+      modal.source=next;
+      modal.element=R.isValidElement(next) ? R.cloneElement(next, {closeModal:modal.dismiss}) : next;
+      renderModals();
     }};
   };
   // These are Framey's own styles and components, never Steam's webpack cache.

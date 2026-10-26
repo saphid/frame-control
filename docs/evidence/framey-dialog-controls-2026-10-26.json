@@ -301,5 +301,11 @@
       "initializationRegressionsAgainstPriorContextReplay": [],
       "scope": "Synthetic library/running replay; backend and network denied, initialization only"
     }
+  },
+  "reviewFollowUp": {
+    "checkedAtUtc": "2026-10-26T10:10:05.650676+00:00",
+    "change": "Update reinjects the scoped close callback into replacement React dialogs and uses the replacement close callback.",
+    "verification": "Node regression: updated ConfirmModal OK and Cancel, with and without custom close callbacks; ClosedPromise resolves; original callback not retained; repeated Close/Update inert. Regression reproduced before the fix.",
+    "limits": "No additional local Chromium or real Frame check for this small follow-up; prior runtime evidence applies to initial dialog and workflow paths."
   }
 }

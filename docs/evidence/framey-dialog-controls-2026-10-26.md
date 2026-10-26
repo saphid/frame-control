@@ -73,6 +73,13 @@ scoped handles, descriptions, disabled buttons, Cancel, Escape, Tab wrapping,
 Close/ClosedPromise/Update and pointer/Enter/Space activation. These programmatic
 DOM checks do not verify physical input devices.
 
+Review follow-up: Update also injects the scoped close callback into replacement
+dialogs. Node regression contracts update to ConfirmModal and exercise both OK
+and Cancel, with and without a plugin close callback, then await ClosedPromise.
+They verify that the replacement's callback runs once and the original callback
+is not retained. This extends the local host's Update behavior so replacements
+remain dismissible; this follow-up was not rerun in Chromium or on the headset.
+
 ## Cleanup and remaining limits
 
 Removed both private service units, bases and uploaded archives; reloaded the

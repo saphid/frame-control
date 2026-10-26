@@ -421,6 +421,22 @@ assert.equal(nodes(alert,'button').length,1);
 const escapeModal=window.DFL.showModal(React.createElement('p',{onCancel:()=>cancelled++}));
 listeners.find(listener=>listener.type==='keydown').handler({key:'Escape',preventDefault(){}});
 await escapeModal.ClosedPromise;assert.equal(cancelled,2);assert.equal(modalRoot.value,null);
+// Updated confirmations retain scoped dismissal and use the replacement's callback.
+for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
+  let oldCloses=0, updatedCloses=0, updatedActions=0;
+  const updated=window.DFL.showModal(React.createElement('p',{closeModal:()=>oldCloses++}));
+  updated.Update(React.createElement(window.DFL.ConfirmModal,{
+    strTitle:'Updated confirmation',onOK:()=>updatedActions++,onCancel:()=>updatedActions++,
+    ...(withCallback ? {closeModal:()=>updatedCloses++} : {})}));
+  const updatedElement=modalRoot.value.at(-1).children.at(-1);
+  nodes(updatedElement.type(updatedElement.props),'button')[actionIndex].props.onClick();
+  assert.equal(modalRoot.value,null,'Updated OK/Cancel must close its own dialog');
+  await updated.ClosedPromise;
+  assert.equal(updatedActions,1);assert.equal(updatedCloses,Number(withCallback));assert.equal(oldCloses,0);
+  updated.Close();updatedElement.props.closeModal();
+  updated.Update(React.createElement('p',null,'Already closed'));
+  assert.equal(updatedCloses,Number(withCallback));assert.equal(modalRoot.value,null);
+}
 
 let selectedMenuItem=0;
 window.DFL.MenuItem({onSelected:()=>selectedMenuItem++}).props.onClick({});
