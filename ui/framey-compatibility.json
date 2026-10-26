@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "checkedAtUtc": "2026-10-25T23:19:48.854504+00:00",
+  "checkedAtUtc": "2026-10-26T06:10:58.537029+00:00",
   "source": "https://plugins.deckbrew.xyz/plugins",
   "hostCommit": "779f9c5",
   "method": "Exact SHA-256 verified archives. All frontends attempted in opaque-iframe Chromium for 1.2 s with backend calls and network denied; ready means initializer only. Backend calls were denied in the baseline browser audit. Scoped live backend follow-ups are recorded separately in docs/framey-compatibility.md.",
@@ -4055,8 +4055,8 @@
         "https://github.com/saumya-banthia/volume-boost",
         "https://github.com/saumya-banthia/volume-boost.git"
       ],
-      "status": "partial",
-      "reason": "Real Decky 3.3.0 ARM64 default-sink reads match independent Frame pactl channel volumes; controls render locally. Sliders/numeric writes passed on an isolated amd64 virtual sink only. Real default-sink writes, boost above 100%, audible output and worn VR unverified.",
+      "status": "works",
+      "reason": "Default-sink controls pass in local Chromium through real Decky 3.3.0 ARM64: linked slider/keyboard and numeric writes, separate channels, re-link and reopen, with independent Pulse readback including 125%/150% while muted. Exact original volume/mute restored. Audible output, Bluetooth sinks and worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
