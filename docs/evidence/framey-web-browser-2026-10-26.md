@@ -28,3 +28,21 @@ performed for this change. The catalog retains **broken** for this digest; its
 reason and focused observation now distinguish successful initialization from
 the unresolved core browser dependency. The full 116-plugin browser baseline
 still refers to its earlier host commit; this is a one-plugin follow-up.
+
+## Unworn Framey regression gate
+
+The exact code commit `d5e62f643d462b7070f27c2c47b11b4aa9982094` ran
+`scripts/framey-vr-check.py --exercise` under its own shared-lock owner at
+07:26 UTC. Preflight found SteamVR activity 3 (standby), proximity 6.25 and
+battery 100%. The real Decky sample setting saved `enabled=true`, survived a
+fresh iframe, and the quick action read the saved value. A trusted synthetic
+OpenVR pointer, slider value 50, CDP text entry after focus and changed stereo
+compositor hashes passed. The mirror capture SHA-256 was
+`4f0d977fab7c144a3490b12ebefddacf3126db585057eb022006ffdf844a7498`.
+The command exited 0 with `passed=true`; original power settings (`false` and
+`5.000000`) were read back, battery ended at 99%, the recovery timer was
+removed, cleanup errors were empty and only its own lock was released. The
+private full report is `/tmp/framey-web-browser-vr-d5e62f6/result.json` on the
+test host. This verifies the sample-panel regression path, not the official
+Web Browser plugin or a worn headset. Synthetic native scroll still did not
+move.
