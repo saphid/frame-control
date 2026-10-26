@@ -175,6 +175,19 @@ try:
             z.extractall(stage)
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
+            # Recheck under the transaction lock. Another store operation may
+            # have installed a colliding name while this archive downloaded.
+            proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
+            for peer in base.iterdir():
+                if peer==target or peer.is_symlink() or not peer.is_dir(): continue
+                manifest=peer/'plugin.json'
+                if manifest.is_symlink() or not manifest.is_file(): continue
+                try:
+                    if manifest.stat().st_size>16384: continue
+                    peer_data=json.loads(manifest.read_text())
+                    if isinstance(peer_data,dict) and peer_data.get('name')==proposed_name:
+                        raise RuntimeError('A different plugin with this name is already installed')
+                except (OSError,ValueError,UnicodeError): continue
             (unpacked/marker).write_text(json.dumps({'storeId':int(plugin_id),'sha256':digest,'version':version})+'\n')
     # Stop even a failed unit before removal to cancel any pending auto-restart.
     if running or action=='remove': service('stop','frame-control-decky.service')
@@ -228,9 +241,12 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             raise ValueError('Root plugins are not supported by the Frame user service')
         if plugin.get('compatibility', {}).get('blockInstall'):
             raise ValueError(plugin['compatibility']['reason'])
-        existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']]
-        if action == 'install' and existing_name:
-            raise ValueError('A plugin with this name is already installed')
+        # Decky routes backend calls by plugin name. A store update may rename
+        # its plugin, so check names for updates as well as fresh installs.
+        existing_name = [p for p in state['plugins'] if p.get('name') == plugin['name']
+                         and (action == 'install' or p.get('storeId') != plugin_id)]
+        if existing_name:
+            raise ValueError('A different plugin with this name is already installed')
         if action == 'update' and len(installed) != 1:
             raise ValueError('Only an installed Frame Control store plugin can be updated')
     data = None
