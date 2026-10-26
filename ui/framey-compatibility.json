@@ -2990,14 +2990,15 @@
         "https://github.com/ldo/dbussy",
         "https://github.com/mk-fg/python-pulse-control"
       ],
-      "status": "partial",
-      "reason": "Local Chromium discovers and changes a private silent stream through the actual Decky 3.3.0 Linux backend, with independent Pulse readback. Frame ARM64 libraries/audio session and Bluetooth playback controls remain unverified.",
+      "status": "works",
+      "reason": "Per-app stream discovery and slider/keyboard volume changes pass in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session, with independent Pulse readback of a silent test stream. Bluetooth playback, audible output and worn-VR controls unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Linux backend"
+        "isolated Linux backend",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 38,
@@ -4030,13 +4031,14 @@
         "https://github.com/saumya-banthia/volume-boost.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium sync/separate sliders, numeric volume entry and cache reopen pass through the actual Decky 3.3.0 backend on a private virtual stereo sink. Frame pactl/default sink, boost above 100% and physical audio remain unverified.",
+      "reason": "Real Decky 3.3.0 ARM64 default-sink reads match independent Frame pactl channel volumes; controls render locally. Sliders/numeric writes passed on an isolated amd64 virtual sink only. Real default-sink writes, boost above 100%, audible output and worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Linux backend"
+        "isolated Linux backend",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 58,
@@ -13272,14 +13274,15 @@
         "https://github.com/allmazz/decky-volume-mixer",
         "https://github.com/allmazz/decky-volume-mixer.git"
       ],
-      "status": "partial",
-      "reason": "Local Chromium numeric stream volume and filter save/reopen pass through the actual Decky 3.3.0 Linux backend; filters survive its restart. Frame pw-dump/wpctl, real audio session and worn VR remain unverified.",
+      "status": "works",
+      "reason": "Per-app discovery and numeric volume changes pass in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session, independently read back on a silent test stream. Filters persist on amd64; ARM64 filter persistence, Reset, internal audio nodes, audible output and worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Linux backend"
+        "isolated Linux backend",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 144,

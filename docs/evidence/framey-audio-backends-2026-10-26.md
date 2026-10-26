@@ -1,5 +1,9 @@
 # Official audio plugins: local real-backend checks
 
+Historical amd64 run. The [later ARM64 Frame check](framey-audio-arm64-2026-10-26.md)
+supersedes the ARM64 gaps and follow-up plan below; it promotes the two per-app
+mixers to works for their verified scope. Volume Boost remains partial.
+
 Volume Mixer 1.2.1-1 (38), Volume Boost 0.0.7 (58) and Mixer 0.1.0 (144)
 passed useful audio controls in local Chromium with their **unmodified official
 Python backends running in actual Decky 3.3.0**. All three remain **partial**:

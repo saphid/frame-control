@@ -1,0 +1,384 @@
+{
+  "schemaVersion": 1,
+  "timeUtc": "2026-10-26T04:05:15.145624+00:00",
+  "baseCommit": "56bde24",
+  "frameOS": "0.5.6",
+  "decky": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+  },
+  "scope": "Local Chromium opaque Framey panels, production SSH/CDP bridge and actual unmodified official backends in ARM64 Decky; real user audio session, silent test stream only; no worn VR",
+  "plugins": [
+    {
+      "id": 38,
+      "name": "Volume Mixer",
+      "version": "1.2.1-1",
+      "sha256": "11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3"
+    },
+    {
+      "id": 58,
+      "name": "Volume Boost",
+      "version": "0.0.7",
+      "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc"
+    },
+    {
+      "id": 144,
+      "name": "Mixer",
+      "version": "0.1.0",
+      "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106"
+    }
+  ],
+  "readOnlySession": {
+    "timeUtc": "2026-10-26T04:03:54.509107+00:00",
+    "before": {
+      "battery": [
+        100
+      ],
+      "uid": 1000,
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "volumeMixerLogExists": false,
+      "defaultSinkVolume": {
+        "code": 0,
+        "stdout": "Volume: front-left: 0 /   0% / -inf dB,   front-right: 0 /   0% / -inf dB\n        balance 0.00\n",
+        "stderr": ""
+      },
+      "pactlInfoExit": 0,
+      "pwDumpExit": 0
+    },
+    "after": {
+      "battery": [
+        100
+      ],
+      "uid": 1000,
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "volumeMixerLogExists": false,
+      "defaultSinkVolume": {
+        "code": 0,
+        "stdout": "Volume: front-left: 0 /   0% / -inf dB,   front-right: 0 /   0% / -inf dB\n        balance 0.00\n",
+        "stderr": ""
+      },
+      "pactlInfoExit": 0,
+      "pwDumpExit": 0
+    },
+    "calls": [
+      {
+        "id": 38,
+        "method": "get_sink_inputs",
+        "args": [
+          {}
+        ],
+        "legacy": true,
+        "version": "1.2.1-1",
+        "sha256": "11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3",
+        "result": {
+          "success": true,
+          "streamCount": 1,
+          "volumes": [
+            1
+          ]
+        }
+      },
+      {
+        "id": 58,
+        "method": "get_volume_state",
+        "args": [
+          {
+            "channel": "left"
+          }
+        ],
+        "legacy": true,
+        "version": "0.0.7",
+        "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc",
+        "result": {
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        }
+      },
+      {
+        "id": 58,
+        "method": "get_volume_state",
+        "args": [
+          {
+            "channel": "right"
+          }
+        ],
+        "legacy": true,
+        "version": "0.0.7",
+        "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc",
+        "result": {
+          "result": {
+            "result": 0,
+            "success": true
+          }
+        }
+      },
+      {
+        "id": 144,
+        "method": "get_settings",
+        "args": [],
+        "legacy": false,
+        "version": "0.1.0",
+        "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106",
+        "result": {
+          "result": {
+            "filters": [],
+            "boostLimit": 0
+          }
+        }
+      },
+      {
+        "id": 144,
+        "method": "get_playbacks",
+        "args": [],
+        "legacy": false,
+        "version": "0.1.0",
+        "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106",
+        "result": {
+          "count": 6,
+          "internalAudioNodeCount": 5,
+          "steamStreamCount": 1
+        }
+      }
+    ],
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "fixedLogAbsent": true
+    },
+    "lockReleased": true
+  },
+  "liveSilentStream": {
+    "before": {
+      "battery": [
+        100
+      ],
+      "uid": 1000,
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "volumeMixerLogExists": false,
+      "defaultSinkVolume": {
+        "code": 0,
+        "stdout": "Volume: front-left: 0 /   0% / -inf dB,   front-right: 0 /   0% / -inf dB\n        balance 0.00\n",
+        "stderr": ""
+      },
+      "pactlInfoExit": 0,
+      "pwDumpExit": 0
+    },
+    "after": {
+      "battery": [
+        100
+      ],
+      "uid": 1000,
+      "arch": "aarch64",
+      "decky": "failed",
+      "panel": "inactive",
+      "volumeMixerLogExists": false,
+      "defaultSinkVolume": {
+        "code": 0,
+        "stdout": "Volume: front-left: 0 /   0% / -inf dB,   front-right: 0 /   0% / -inf dB\n        balance 0.00\n",
+        "stderr": ""
+      },
+      "pactlInfoExit": 0,
+      "pwDumpExit": 0
+    },
+    "source": "paplay --raw --format=s16le --rate=48000 --channels=2 --client-name=FrameySilentARM64 --stream-name=\"Framey ARM64 silent verification\" /dev/zero",
+    "writes": [
+      {
+        "id": 38,
+        "method": "set_input_volume",
+        "args": [
+          {
+            "index": 31400,
+            "volume": 0.5
+          }
+        ],
+        "result": {
+          "result": true,
+          "success": true
+        },
+        "independentReadback": [
+          {
+            "index": 31400,
+            "name": "FrameySilentARM64",
+            "volume": {
+              "front-left": {
+                "value": 32768,
+                "value_percent": "50%",
+                "db": "-18.06 dB"
+              },
+              "front-right": {
+                "value": 32768,
+                "value_percent": "50%",
+                "db": "-18.06 dB"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 38,
+        "method": "set_input_volume",
+        "args": [
+          {
+            "index": 31400,
+            "volume": 0.45
+          }
+        ],
+        "result": {
+          "result": true,
+          "success": true
+        },
+        "independentReadback": [
+          {
+            "index": 31400,
+            "name": "FrameySilentARM64",
+            "volume": {
+              "front-left": {
+                "value": 29491,
+                "value_percent": "45%",
+                "db": "-20.81 dB"
+              },
+              "front-right": {
+                "value": 29491,
+                "value_percent": "45%",
+                "db": "-20.81 dB"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 144,
+        "method": "set_volume",
+        "args": [
+          199,
+          37
+        ],
+        "result": true,
+        "independentReadback": [
+          {
+            "index": 31400,
+            "name": "FrameySilentARM64",
+            "volume": {
+              "front-left": {
+                "value": 24248,
+                "value_percent": "37%",
+                "db": "-25.91 dB"
+              },
+              "front-right": {
+                "value": 24248,
+                "value_percent": "37%",
+                "db": "-25.91 dB"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "id": 144,
+        "method": "set_volume",
+        "args": [
+          199,
+          38
+        ],
+        "result": true,
+        "independentReadback": [
+          {
+            "index": 31400,
+            "name": "FrameySilentARM64",
+            "volume": {
+              "front-left": {
+                "value": 24904,
+                "value_percent": "38%",
+                "db": "-25.21 dB"
+              },
+              "front-right": {
+                "value": 24904,
+                "value_percent": "38%",
+                "db": "-25.21 dB"
+              }
+            }
+          }
+        ]
+      }
+    ],
+    "volumeMixerReopen": {
+      "id": 38,
+      "method": "get_sink_inputs",
+      "args": [
+        {}
+      ],
+      "result": {
+        "result": [
+          {
+            "name": "FrameySilentARM64",
+            "index": 31400,
+            "volume": 0.3800048828125
+          }
+        ],
+        "success": true
+      }
+    },
+    "mixerReadAfterChange": {
+      "id": 144,
+      "method": "get_playbacks",
+      "args": [],
+      "result": [
+        {
+          "id": 199,
+          "name": "FrameySilentARM64",
+          "mediaName": "Framey ARM64 silent verification",
+          "volume": 38
+        }
+      ]
+    },
+    "volumeBoostReads": [
+      {
+        "id": 58,
+        "method": "get_volume_state",
+        "args": [
+          {
+            "channel": "left"
+          }
+        ],
+        "result": {
+          "result": 0,
+          "success": true
+        }
+      }
+    ],
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "fixedLogAbsent": true
+    },
+    "lockReleased": true
+  },
+  "independentCleanupAudit": {
+    "testPathsAbsent": true,
+    "units": {
+      "framey-audio-kp0z857q58-32363fd7": "MainPID=0\nLoadState=not-found\nActiveState=inactive",
+      "framey-audio-kp0z857q58-c08f3f5d": "MainPID=0\nLoadState=not-found\nActiveState=inactive",
+      "framey-audio-kp0z857q58-c08f3f5d-silence": "MainPID=0\nLoadState=not-found\nActiveState=inactive"
+    },
+    "silentStreamsAbsent": true
+  },
+  "limitations": [
+    "Physical audible output, default-sink writes, boost above 100%, Bluetooth playback controls and worn VR unverified.",
+    "Mixer also exposes internal Frame PipeWire nodes and Reset; neither was changed or invoked.",
+    "Private Decky/installed-plugin outer status fixture; real RPC used production framey_panel.call_method over SSH and live Steam CEF, not a deployed headset HTTP endpoint test.",
+    "Mixer filter save/restart was verified on amd64 in the earlier evidence, not repeated on ARM64."
+  ],
+  "catalogRefresh": {
+    "timeUtc": "2026-10-26T04:11:59.449535+00:00",
+    "visibleCount": 116,
+    "idsVersionsDigestsUnchanged": true
+  }
+}
