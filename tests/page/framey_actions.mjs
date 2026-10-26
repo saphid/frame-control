@@ -12,7 +12,11 @@ class Element {constructor(){this.children=[];this.textContent='';this.attribute
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
 const elements=new Map();
-const window={React,ReactDOM:{createRoot:()=>({render(){}})},addEventListener(){}};
+const roots=new Map();
+const window={React,ReactDOM:{createRoot:node=>{
+  const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
+  roots.set(node,root);return root;
+}},addEventListener(){}};
 const listeners=[];const messages=[];const parent={postMessage:message=>messages.push(message)};
 const context=vm.createContext({window,document:{getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);},createElement:()=>new Element()},
@@ -101,6 +105,31 @@ assert.equal(toastNode.attributes.role,'status');
 assert.equal(toastNode.children[0].textContent,'Saved');
 assert.equal(toastNode.children[1].textContent,'Mode updated');
 toast.dismiss();assert.equal(toastNode.removed,true);
+// Decky's toast fields are ReactNode values. Keep JSX in the panel instead of
+// showing "[object Object]", and release their React roots on dismissal.
+const heading=React.createElement('em',null,'Saved');
+const detail=React.createElement('span',null,'Mode updated');
+const icon=React.createElement('svg',null);
+const rich=api.toaster.toast({title:heading,body:[detail,' again'],icon,
+  subtext:'Open settings',showToast:true});
+const richNode=elements.get('framey-toasts').children[1];
+assert.equal(roots.get(richNode.children[0]).value,icon);
+assert.equal(roots.get(richNode.children[1]).value,heading);
+assert.deepEqual(Array.from(roots.get(richNode.children[2]).value),[detail,' again']);
+assert.equal(richNode.children[3].textContent,'Open settings');
+rich.dismiss();rich.dismiss();
+assert.equal(richNode.removed,true);
+for(const node of richNode.children.slice(0,3))assert.equal(roots.get(node).unmounted,true);
+let opened=0;
+const actionable=api.toaster.toast({title:'Open',onClick:()=>opened++});
+const actionNode=elements.get('framey-toasts').children[2];
+actionNode.children.at(-1).onclick();
+assert.equal(opened,1);
+assert.equal(actionNode.removed,true);
+actionable.dismiss();
+const hidden=api.toaster.toast({title:heading,showToast:false});
+assert.equal(elements.get('framey-toasts').children.length,3);
+hidden.dismiss();
 
 function LocalRoute(){return React.createElement('p',null,'Route content');}
 const undo=api.routerHook.addRoute('/plugin/details',LocalRoute);
