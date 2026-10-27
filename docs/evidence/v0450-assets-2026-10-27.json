@@ -1,0 +1,76 @@
+{
+  "tag": "v0.4.50",
+  "releaseId": 424993367,
+  "tagNameAtAudit": "v0.4.50",
+  "draftAtAudit": true,
+  "sha256sumsSha256": "85383104a8f08f49ffde24ac867f9c2ead41951e602600a9d22d58bc19bf06f5",
+  "assets": [
+    {
+      "name": "Frame-Control-mac-arm64.dmg",
+      "size": 173090558,
+      "sha256": "d402924394725bac2b28bef17c7945e2f7e4c3093227eace78a42ed80e864be9",
+      "udifTrailer": "ok"
+    },
+    {
+      "name": "Frame-Control-mac-arm64.zip",
+      "size": 172911785,
+      "sha256": "2583937fefdc315706018c1bf794b916726ee55b461e321c3334df21245a110d",
+      "zipCrc": "ok",
+      "members": 1666,
+      "bundleVersion": "0.4.50"
+    },
+    {
+      "name": "Frame-Control-mac-x64.dmg",
+      "size": 180139223,
+      "sha256": "2128c14b15dd1a2a59790c43d42640a25185562056796a3437910d6f88f996c8",
+      "udifTrailer": "ok"
+    },
+    {
+      "name": "Frame-Control-mac-x64.zip",
+      "size": 179998207,
+      "sha256": "ed684023ff087d6741e88d4ca4f8a47e67bec07255fc73fbd18a6bcaa42d14fe",
+      "zipCrc": "ok",
+      "members": 1662,
+      "bundleVersion": "0.4.50"
+    },
+    {
+      "name": "Frame-Control-Setup-x64.exe",
+      "size": 147348168,
+      "sha256": "7c46fcc759cefb9060e1dc2fce39682f6dad306f3666805f77ce707e16ef3e2c",
+      "peMachine": 332
+    },
+    {
+      "name": "Frame-Control-win-x64.zip",
+      "size": 194302082,
+      "sha256": "57e71304bae96dc8aab6b845a64c27ac428931d02bb41ae60b33b19fcd11193f",
+      "zipCrc": "ok",
+      "members": 1510
+    },
+    {
+      "name": "Frame-Control-linux-x86_64.AppImage",
+      "size": 175453095,
+      "sha256": "d2196b9a50d0777203e60721dd19c6edbb5c18a7639148f0a496d420e231b053",
+      "elfMachine": 62
+    },
+    {
+      "name": "Frame-Control-linux-arm64.AppImage",
+      "size": 167036625,
+      "sha256": "49370f9c27931bf6c28676d627dc34553550b544ab38b7f4be8e8f6dbc9b7c4b",
+      "elfMachine": 183
+    },
+    {
+      "name": "Frame-Control-linux-amd64.deb",
+      "size": 142209572,
+      "sha256": "430d057f234557f5f9dbb3e2cff3469829d041d0d7be191e70e6ef7de6663256",
+      "debVersion": "0.4.50",
+      "architecture": "amd64"
+    },
+    {
+      "name": "Frame-Control-linux-arm64.deb",
+      "size": 129291236,
+      "sha256": "6403f8caafcdd5832415547e146ce3886cf7358e0c3a8898f4ee6e9a0a7b05ea",
+      "debVersion": "0.4.50",
+      "architecture": "arm64"
+    }
+  ]
+}
