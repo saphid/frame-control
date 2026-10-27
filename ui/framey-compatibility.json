@@ -6996,13 +6996,14 @@
         "https://github.com/Seraphli/decky-spy",
         "https://github.com/Seraphli/decky-spy.git"
       ],
-      "status": "partial",
-      "reason": "Initializer succeeds; account tokens and external service integration were not exercised.",
+      "status": "works",
+      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
       "blockInstall": false,
       "verification": [
         "static archive",
+        "fake-Frame",
         "local browser",
-        "fake-Frame"
+        "real Frame SSH"
       ],
       "browser": {
         "id": 89,
@@ -7022,8 +7023,8 @@
         "accepted": true,
         "folder": "decky-spy"
       },
-      "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "backend": "Python; managed psutil 7.2.2 stable-ABI native amd64/ARM64 dependency",
+      "hardware": "Read-only Linux /proc and network-interface metrics; Frame battery read by power_supply type=Battery. No Deck-specific hardware writes.",
       "uiSurfaces": [
         "toasts"
       ],
@@ -7037,7 +7038,18 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-deckyspy-2026-10-26.json",
+        "mode": "actual Decky 3.3.0 ARM64 with private removable service under shared lock; local opaque Chromium through trusted SSH RPC pipe",
+        "compatShims": [
+          "deckyspy-psutil-and-battery"
+        ],
+        "existingInstallRequires": "explicit managed update or reinstall"
+      },
+      "requiredShims": [
+        "deckyspy-psutil-and-battery"
+      ]
     },
     {
       "id": 90,

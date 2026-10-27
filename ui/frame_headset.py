@@ -163,7 +163,10 @@ def bundle():
             for path in sorted(folder.rglob('*')):
                 if not path.is_file() or path.is_symlink() or '__pycache__' in path.parts:
                     continue
-                if path.suffix not in ('.py', '.html', '.js', '.css', '.json', '.sh', '.gz', '.zst', '.so', '.txt', '.md') and path.name not in ('ssh',):
+                native_dependency = path.relative_to(ROOT).as_posix() in (
+                    'ui/vendor/psutil-7.2.2/aarch64.whl', 'ui/vendor/psutil-7.2.2/x86_64.whl')
+                if (path.suffix not in ('.py', '.html', '.js', '.css', '.json', '.sh', '.gz', '.zst', '.so', '.txt', '.md')
+                        and path.name != 'ssh' and not native_dependency):
                     continue
                 data = path.read_bytes()
                 info = tarfile.TarInfo(path.relative_to(ROOT).as_posix())

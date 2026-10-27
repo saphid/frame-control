@@ -578,7 +578,9 @@ uncovered shim names. The runtime job verifies the managed receipt, loader
 plugin discovery, and a successful backend call; a discovery listing alone
 could conceal a crashed backend process.
 
-Current cases cover both Music Control entries and Shotty. Music Control uses
+Current cases cover both Music Control entries, Shotty and DeckySpy. DeckySpy
+verifies native psutil import plus read-only CPU, memory, uptime, battery and
+network metrics through actual legacy RPC calls. Music Control uses
 the private silent MPRIS fixture to check discovery, metadata, play/pause,
 next/previous, seek and volume, with independent service-state readbacks.
 Shotty checks backend import, rescuer state and empty screenshot aggregation

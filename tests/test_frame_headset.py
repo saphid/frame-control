@@ -29,6 +29,8 @@ class HeadsetBundle(unittest.TestCase):
         for filename in ('aarch64.gz', 'x86_64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):
             self.assertIn('ui/vendor/deckyfileserver-1.2.0/'+filename, names)
         self.assertIn('scripts/build-framey-fileserver.py', names)
+        for name in ('aarch64.whl', 'x86_64.whl', 'LICENSE.txt'):
+            self.assertIn('ui/vendor/psutil-7.2.2/'+name, names)
         self.assertFalse(any('\\' in name for name in names))
         self.assertFalse(any('__pycache__' in name for name in names))
 

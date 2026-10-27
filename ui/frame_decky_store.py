@@ -9,6 +9,7 @@ import hashlib
 import io
 import json
 import os
+from pathlib import Path
 import re
 import secrets
 import urllib.request
@@ -147,25 +148,43 @@ def archive_info(data, expected_hash, expected_name):
         return folder
 
 
+DECKYSPY_DIGEST = '2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7'
+PSUTIL_DIGESTS = {
+    'x86_64': '076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+    'aarch64': 'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+}
+
+
 def apply_script(plugin_id, digest):
-    """Deliver offline native assets only to the exact managed adaptation."""
-    if plugin_id != 60 or digest != FILESERVER_DIGEST:
+    """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 60 and digest == FILESERVER_DIGEST:
+        assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
+        payloads = {}
+        for arch, expected in FILESERVER_BINARIES.items():
+            packed = (assets/f'{arch}.gz').read_bytes()
+            data = gzip.decompress(packed)
+            if hashlib.sha256(data).hexdigest() != expected:
+                raise ValueError('Bundled DeckyFileServer SHA-256 mismatch')
+            payloads[arch] = base64.b64encode(packed).decode('ascii')
+        # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
+        return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
+                +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+    if plugin_id != 89 or digest != DECKYSPY_DIGEST:
         return APPLY
-    assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
-    payloads = {}
-    for arch, expected in FILESERVER_BINARIES.items():
-        packed = (assets/f'{arch}.gz').read_bytes()
-        data = gzip.decompress(packed)
+    wheels = {}
+    for arch, expected in PSUTIL_DIGESTS.items():
+        data = (Path(__file__).parent/'vendor/psutil-7.2.2'/f'{arch}.whl').read_bytes()
         if hashlib.sha256(data).hexdigest() != expected:
-            raise ValueError('Bundled DeckyFileServer SHA-256 mismatch')
-        payloads[arch] = base64.b64encode(packed).decode('ascii')
-    # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
-    return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
-            +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+            raise ValueError('Bundled psutil dependency SHA-256 mismatch')
+        wheels[arch] = base64.b64encode(data).decode('ascii')
+    # stdin is Python source, never shell arguments or a shared remote temp file.
+    battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
+    return ('FRAMEY_BACKEND_WHEELS = '+repr(wheels)+'\n'
+            +'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'+APPLY)
 
 
 APPLY = r'''
-import base64,fcntl,gzip,hashlib,json,os,pathlib,platform,shutil,subprocess,sys,zipfile
+import base64,fcntl,gzip,hashlib,io,json,os,pathlib,platform,shutil,subprocess,sys,zipfile
 action,token,plugin_id,digest,folder,version,expected_installed = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
@@ -418,6 +437,51 @@ try:
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
+            # DeckySpy's official archive omits its required psutil dependency.
+            # The BSD wheels are packaged offline by Frame Control and selected
+            # for the native loader; no pip, network or system path changes.
+            if int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy':
+                arch=platform.machine()
+                pins={
+                    'x86_64':'076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+                    'aarch64':'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+                }
+                encoded=globals().get('FRAMEY_BACKEND_WHEELS',{}).get(arch)
+                if arch not in pins or not encoded:
+                    raise RuntimeError('Missing native psutil dependency for DeckySpy')
+                wheel_data=base64.b64decode(encoded,validate=True)
+                if hashlib.sha256(wheel_data).hexdigest()!=pins[arch]:
+                    raise RuntimeError('DeckySpy psutil dependency SHA-256 mismatch')
+                modules=unpacked/'py_modules'
+                for name in ('psutil','psutil-7.2.2.dist-info'):
+                    if (modules/name).exists(): raise RuntimeError('DeckySpy dependency collides with archive')
+                with zipfile.ZipFile(io.BytesIO(wheel_data)) as wheel:
+                    for member in wheel.infolist():
+                        path=pathlib.PurePosixPath(member.filename)
+                        if (path.is_absolute() or '..' in path.parts or not path.parts or
+                            path.parts[0] not in ('psutil','psutil-7.2.2.dist-info')):
+                            raise RuntimeError('Unsafe psutil dependency member')
+                        if member.is_dir(): continue
+                        payload=wheel.read(member)
+                        if payload[:4]==b'\x7fELF' and int.from_bytes(payload[18:20],'little')!=({'x86_64':62,'aarch64':183}[arch]):
+                            raise RuntimeError('Incorrect psutil native architecture')
+                        dest=modules/member.filename
+                        dest.parent.mkdir(parents=True,exist_ok=True)
+                        dest.write_bytes(payload)
+                        dest.chmod(0o600)
+                compat=modules/'framey_battery.py'
+                if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
+                battery_source=globals().get('FRAMEY_BACKEND_BATTERY_SOURCE')
+                if not isinstance(battery_source,str) or not battery_source:
+                    raise RuntimeError('Missing DeckySpy battery compatibility source')
+                compat.write_text(battery_source,encoding='utf-8')
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                old='        battery = psutil.sensors_battery()\n'
+                if source.count(old)!=1: raise RuntimeError('DeckySpy battery source changed')
+                source=source.replace(old,'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('deckyspy-psutil-and-battery')
             # These legacy backends launch system dbus-send (1.1.6 via /bin/sh).
             # Decky's PyInstaller LD_LIBRARY_PATH selects bundled libtinfo built
             # against newer glibc than Frame OS. Restore its saved system path
