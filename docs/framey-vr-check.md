@@ -61,8 +61,10 @@ No wheel event or offset change means this synthetic injection path remains
 unverified; it does not establish whether a physical controller can scroll.
 The exercise then clicks the visible **Scroll plugin down/up** buttons through
 the same native OpenVR pointer transport and requires the test region to move
-down and return to the top. This proves the button path only; it does not
-identify a physical controller or repair native wheel delivery.
+down and return to the top. It also holds each button through that transport,
+requires Down to move farther than a single click, and requires Up to return
+to the top. These prove the synthetic button paths only; they do not identify
+a physical controller or repair native wheel delivery.
 Temporary controls exercise the shipped
 `DFL.SliderField` and `DFL.TextField`; their values remain UI-only. Text uses
 CDP `Input.insertText` after OpenVR pointer focus. This is synthetic input,
@@ -119,7 +121,9 @@ the same-plugin navigation regression without a headset.
 3. **1:15–2:15:** Use the controller to open Settings, return to Panel, invoke
    **Read saved setting**, close/reopen the plugin, and confirm the value
    remains. Try controller scroll, a slider and a harmless text field in an
-   installed compatible plugin; check SteamVR's actual keyboard and Back.
+   installed compatible plugin. Hold **Scroll plugin down** and then **Scroll
+   plugin up** with the controller; record continuous movement separately from
+   native thumbstick or wheel scrolling. Check SteamVR's actual keyboard and Back.
 4. **2:15–3:00:** Restore the original sample setting. Switch away and back,
    close/reopen the Frame Control panel, and confirm controller input still
    works. Record comfort/legibility, controller model, any haptic behavior,

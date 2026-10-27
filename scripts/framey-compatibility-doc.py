@@ -50,7 +50,7 @@ def render(data):
         'record exactly what ran. A [2026-10-26 follow-up](evidence/framey-events-backend-2026-10-26.json) '
         'verified default Notebook drawing/save/reopen across a real backend restart and Simple Timer start/cancel, '
         'countdown/completion events, a visible toast and persisted recents/subtle mode. '
-        'Only private test settings were written. Simple Timer remains partial because its own expired-timer startup '
+        'Only private test settings were written. That initial pass left Simple Timer partial because its own expired-timer startup '
         'raises a missing `timer_task` error; sound/suspend are unsupported. '
         'A [local audio follow-up](evidence/framey-audio-backends-2026-10-26.md) exercised Volume Mixer, Volume Boost and Mixer '
         'through real Decky 3.3.0 amd64 backends on private silent virtual audio targets. Sliders, numeric volume entry, '
@@ -90,7 +90,14 @@ def render(data):
         'Its actual Decky 3.3.0 ARM64 backend passed read-only metrics under the shared lock, with memory independently matched to /proc/meminfo. '
         'Local opaque Chromium used that live ARM64 backend to render CPU, memory, battery, processes and interfaces, display a silent warning toast and save/reopen a private refresh setting. '
         'DeckySpy qualifies as works for system monitoring while its panel is open. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified. '
-        'Cleanup and an independent removal audit passed; battery stayed 100 → 100 and original service states were preserved. Existing copies need update/reinstall.', '',
+        'Cleanup and an independent removal audit passed; battery stayed 100 → 100 and original service states were preserved. Existing copies need update/reinstall. '
+        'A [Simple Timer lifecycle follow-up](evidence/framey-simple-timer-2026-10-26.md) repairs fresh/expired startup cancellation, '
+        'canceled deadlines that resumed and replaced tasks that still notified. Exact managed installs retain the API1 instance convention. '
+        'Published Decky 3.3.0 discovery/RPC/events verify cancel, replacement, completion and active/canceled/expired restarts in isolation; '
+        'the real ARM64 Frame repeats those lifecycle checks under the shared lock. Local Chromium with that live backend verifies '
+        'Begin/Cancel, countdown and a silent completion toast. Simple Timer qualifies as works for silent in-panel session timers. '
+        'Update/reinstall is required; old receipts stay partial. Sound/suspend are unsupported, closed-panel alerts and worn VR unverified. '
+        'The private service, files, test listeners and processes were removed; independent cleanup audit passed and battery stayed 99 → 99.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',

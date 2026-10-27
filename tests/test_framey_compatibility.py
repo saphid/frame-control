@@ -70,6 +70,16 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(result[1]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
+    def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
+        installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),
+                                  dict(storeId=96, version=plugin['version'], sha256=plugin['sha256'],
+                                       compatShims=['simple-timer-lifecycle'])]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
+        self.assertEqual(result[0]['compatibility']['status'], 'partial')
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertEqual(result[1]['compatibility']['status'], 'works')
+
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
             self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')

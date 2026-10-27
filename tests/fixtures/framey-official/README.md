@@ -1,13 +1,14 @@
 # Pinned Decky store test archives
 
 These are unmodified ZIPs downloaded from the official Decky store CDN on
-2026-10-25, except `111.zip` downloaded on 2026-10-26. Each ZIP includes its
+2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26. Each ZIP includes its
 upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `96.zip` | Simple Timer | 1.0.0 | `973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312` |
 | `7.zip` | CSS Loader | 2.1.3 | `99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231` |
 | `12.zip` | MusicControl | 1.1.6 | `246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62` |
 | `111.zip` | Music Control | 1.1.7 | `3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9` |
@@ -19,7 +20,7 @@ from a local fixture so CI does not depend on the store being online.
 | `36.zip` | SteamGridDB | 1.8.1 | `e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0` |
 | `135.zip` | Deck Shelves | 2.0.0 | `b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91` |
 
-The matching source projects are
+The matching source projects include [Simple Timer](https://github.com/decktools-xyz/simple-timer) and
 [CSS Loader](https://github.com/suchmememanyskill/SDH-CssLoader),
 [MusicControl](https://github.com/nikurasu/MusicControl),
 [Music Control](https://github.com/martinpl/music-control),
@@ -41,3 +42,9 @@ Bluetooth result and limits are in
 Deck Shelves' chunked frontend renders its settings in local Chromium with
 backend/network calls denied. Its Steam Home shelves cannot be verified in the
 isolated VR panel; no worn-headset test is claimed.
+
+Simple Timer also runs through actual published Decky 3.3.0 discovery, instance
+RPC and events in the native isolated runtime gate. Cancel/replace/completion and
+active/canceled/expired backend restarts are regression checks; the unmodified
+archive must reproduce its historical lifecycle errors. Only private silent
+timers/settings are used. The upstream BSD license stays unchanged.

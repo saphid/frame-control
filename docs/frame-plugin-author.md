@@ -63,7 +63,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
-| Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Plugins may still use ordinary CSS overflow containers. | Parent/iframe message tests; physical controller scroll remains unverified |
+| Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers, progress bars | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
 | `SteamUIStore` / `DFL.Router.RunningApps`, `MainRunningApp` | Bounded detached Steam CEF reads while the panel is open; refresh about every two seconds; no MobX observation. Failed reads clear stale context. | Locked real Frame empty-list reads; nonempty local Chromium fixtures. Real running-game selection unverified. |
 | `GameSessions.RegisterForAppLifetimeNotifications` | Actual Steam callbacks, bounded queue and disposable `.unregister()` handle; no events inferred from snapshot changes; lease cleanup after lost panels | Real Frame registration/poll/close; launch/exit, retry, expiry and duplicate tests use explicit fixtures. Real game transitions unverified. |
@@ -74,10 +74,13 @@ none of these frontend controls has passed a worn-headset check yet.
 | API v1/v2 `addEventListener` / `removeEventListener` | Plugin-scoped real backend events while panel is open; bounded queue, about one-second polling, subscription expiry | Real ARM64 Simple Timer countdown, start/cancel and completion toast via local Chromium; scope/bounds/reconnect tests. No closed-panel notifications. |
 | `toaster.toast` | Visible toast inside the plugin panel; plain text or React nodes for title, body, icon, logo and subtext; `dismiss` and optional `onClick` | Host unit test; no Steam system notification or worn VR check |
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
+| `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
 | `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
-| `findModuleChild`, `Navigation.CloseSideMenus` | Steam module lookup returns `null`; close returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 entry point and shallow settings view in local host test. Steam library patch and live HLTB search remain unverified. |
+| `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
+| `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
+| `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
 
@@ -88,6 +91,17 @@ Optional route segments must be at the end. Framey accepts local path segments
 only; query strings, external URLs, Steam library routes and duplicate parameter
 names are rejected. Removing an active route returns to the plugin panel.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
+Treat module lookup results as Framey-local exports. Do not depend on Steam
+webpack IDs, function-source signatures, or Steam-only CSS class names; a
+lookup that works in the Steam Deck QAM can still return `undefined` here.
+Use a local control or a visible unsupported message when it does. For a
+confirmation, call `showModal` with a `ConfirmModal` and keep any irreversible
+operation behind its OK action. `Focusable.onActivate` accepts pointer and
+Enter/Space input in Framey, but only a worn-headset test can establish how a
+physical controller reaches it. See the
+[module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
+[dialog control evidence](evidence/framey-dialog-controls-2026-10-26.md) for
+the exact tested official versions.
 An API v1 manifest does not guarantee a working Framey panel. Test the exact
 store archive and do not assume SteamClient app details, library patches, or
 destructive actions work in VR. The

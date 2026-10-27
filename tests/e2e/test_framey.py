@@ -185,6 +185,9 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 96:
+                    self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'works')
                 if plugin['id'] == 135:
                     chunk = 'chunks/pluginApi-B8sV7970.js'
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:

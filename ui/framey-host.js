@@ -190,7 +190,7 @@
     parent.postMessage({type:'framey:events:close', session:cacheSession}, '*');
   });
   addEventListener('pointerup', event => {
-    if (event.isTrusted) parent.postMessage({type:'framey:input'}, '*');
+    if (event.isTrusted) parent.postMessage({type:'framey:input', session:cacheSession}, '*');
   }, {passive:true});
   addEventListener('pointermove', event => {
     if (event.isTrusted) lastScrollTarget = scrollTarget(event.target);
@@ -829,10 +829,11 @@
       if (!plugin?.content && !plugin?.settings) throw Error('The Decky plugin has no panel to display');
       window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null,
         R.createElement(PluginSurface, {plugin})));
-      parent.postMessage({type:'framey:ready'}, '*');
+      parent.postMessage({type:'framey:ready', session:cacheSession}, '*');
     } catch (failure) {
       error.textContent = `This Decky panel is not compatible with Framey: ${failure.message}`;
-      parent.postMessage({type:'framey:error', message:failure.message}, '*');
+      parent.postMessage({type:'framey:error', session:cacheSession,
+        message:failure.message}, '*');
     }
   }
   start();
