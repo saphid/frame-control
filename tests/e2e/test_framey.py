@@ -107,9 +107,16 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual((catalogue[0]['version'], catalogue[0]['sha256']), ('1.0.0', HASHES[0]))
         status, _, _ = api('POST', '/api/decky/plugin', {'action':'install','id':999})
         self.assertEqual(status, 400)  # Third-party code needs explicit acknowledgement.
-        job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'install','id':999,'acknowledged':True}))
+        request = {'action':'install','id':999,'acknowledged':True,
+                   'requestId':'0123456789abcdef' * 2}
+        started = ok('POST', '/api/decky/plugin', request)
+        self.assertEqual(ok('POST', '/api/decky/plugin', request)['job'], started['job'])
+        status, conflict, _ = api('POST', '/api/decky/plugin', {**request, 'id':998})
+        self.assertEqual(status, 409)
+        self.assertIn('already used', conflict['error'])
+        job = finished(started)
         self.assertFalse(job.get('error'), job)
+        self.assertEqual(ok('POST', '/api/decky/plugin', request)['job'], started['job'])
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.0.0')
         self.assertIn('Sample 1.0.0', ssh('cat ~/.local/share/frame-control/decky/plugins/sample-panel/dist/index.js'))
         receipt = HASHES[0]

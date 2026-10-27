@@ -203,12 +203,14 @@ the managed service is stopped; it does not restart the service.
 
 Install, Update, and Remove show the current job stage in the headset panel.
 The store verifies each downloaded archive and the headset applies it with a
-rollback if Decky cannot start. The panel remembers the current job ID for this
-browser session, so **Check result** can resume polling after a navigation or
-temporary connection error. After a polling error, Install, Update, and Remove
+rollback if Decky cannot start. The panel saves a random request ID before
+submitting a change. The server uses that ID as the job ID and returns the
+same job for a repeated, identical request while its result is retained;
+reusing the ID for a different change is rejected. **Check result** can resume
+polling even if the POST response is lost. After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
-If Chromium denies session storage, the open panel keeps the accepted job ID in
+If Chromium denies session storage, the open panel keeps the request ID in
 memory and **Check result** still works after a connection error. A page reload
 loses that memory fallback; wait for the old job to finish and refresh installed
 status before starting another change.
@@ -216,9 +218,10 @@ Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh
-the store and review the new version before retrying. If Frame Control restarts, it cannot recover the old
-job result. The panel clears that job ID and asks you to refresh the installed
-list before making another change.
+the store and review the new version before retrying. Job results live in server
+memory for one hour after completion. If Frame Control restarts, or the request
+never reached it, the panel cannot recover the result. It clears that ID and
+asks you to refresh the installed list before making another change.
 
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
