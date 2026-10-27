@@ -82,7 +82,7 @@ def main():
             loader = Path(temp)/'PluginLoader'
             loader.write_bytes(data)
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
-            probes = [(case['id'], False) for case in cases] + [(111, True)]
+            probes = [(case['id'], None) for case in cases] + [(111, '--reproduce-bound-method-regression'), (60, '--reproduce-fileserver-empty-flag-regression')]
             for plugin_id, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',
@@ -94,7 +94,7 @@ def main():
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     tag, str(plugin_id)]
                 if negative:
-                    command.append('--reproduce-bound-method-regression')
+                    command.append(negative)
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, timeout=120)
                     if result.returncode:

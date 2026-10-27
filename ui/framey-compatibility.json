@@ -4332,13 +4332,15 @@
         "https://github.com/SteamDeckHomebrew/decky-plugin-template.git",
         "https://github.com/grimkor/DeckyFileServer"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Managed install supplies a native ARM64 helper and removes the exact archive's unnecessary root request. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. Frontend address/picker limitations remain; use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified.",
+      "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Decky 3.3.0 amd64",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 60,
@@ -4357,7 +4359,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Native file-server backend needs ARM64 dependencies; root requirement also blocks the user service.",
+      "nativePort": "GPL-3.0 helper rebuilt offline for ARM64 with vendored corresponding source. Actual Frame user service passes HTTPS listing/download of a private public fixture; uploads disabled. Exact managed digest only; other native/root archives remain blocked (docs/evidence/framey-fileserver-arm64-2026-10-27.md).",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 60,
@@ -4365,6 +4367,15 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "requiredShims": [
+        "deckyfileserver-user-native"
+      ],
+      "managedNative": {
+        "shim": "deckyfileserver-user-native",
+        "helperSha256": "86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a",
+        "sourceCommit": "dcf3f3ce5104d05811fa8c156c4f58632b84b313",
+        "verification": "Real Decky discovery/public RPC and private read-only HTTPS fixture; docs/evidence/framey-fileserver-arm64-2026-10-27.md"
       }
     },
     {

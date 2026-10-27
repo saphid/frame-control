@@ -1,5 +1,22 @@
 [
-  {"id": 12, "shim": "music-control-system-dbus-env", "probe": "mpris"},
-  {"id": 111, "shim": "music-control-system-dbus-env", "probe": "mpris"},
-  {"id": 53, "shim": "shotty-click-app-dir", "probe": "screenshots"}
+  {
+    "id": 12,
+    "shim": "music-control-system-dbus-env",
+    "probe": "mpris"
+  },
+  {
+    "id": 111,
+    "shim": "music-control-system-dbus-env",
+    "probe": "mpris"
+  },
+  {
+    "id": 53,
+    "shim": "shotty-click-app-dir",
+    "probe": "screenshots"
+  },
+  {
+    "id": 60,
+    "shim": "deckyfileserver-user-native",
+    "probe": "fileserver"
+  }
 ]

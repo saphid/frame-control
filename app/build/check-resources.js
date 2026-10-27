@@ -13,6 +13,13 @@ const path = require("path");
 
 const REQUIRED = [
   "ui/server.py",
+  "ui/vendor/deckyfileserver-1.2.0/aarch64.gz",
+  "ui/vendor/deckyfileserver-1.2.0/x86_64.gz",
+  "ui/vendor/deckyfileserver-1.2.0/source.tar.gz",
+  "ui/vendor/deckyfileserver-1.2.0/LICENSE.txt",
+  "ui/vendor/deckyfileserver-1.2.0/GO-LICENSE.txt",
+  "ui/vendor/deckyfileserver-1.2.0/README.md",
+  "scripts/build-framey-fileserver.py",
   "ui/frame_power.py",
   "ui/frame_status.py",
   "scripts/frame_power_sample.py",

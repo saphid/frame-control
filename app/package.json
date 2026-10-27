@@ -61,6 +61,11 @@
         ]
       },
       {
+        "from": "../ui/vendor/deckyfileserver-1.2.0",
+        "to": "ui/vendor/deckyfileserver-1.2.0",
+        "filter": ["*.gz", "*.txt", "README.md"]
+      },
+      {
         "from": "../ui/apk_sources",
         "to": "ui/apk_sources",
         "filter": [
@@ -75,7 +80,8 @@
           "*.sh",
           "obs-headset-source.py",
           "frame_power_sample.py",
-          "frame_power_report.py"
+          "frame_power_report.py",
+          "build-framey-fileserver.py"
         ]
       },
       {

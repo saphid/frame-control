@@ -3,6 +3,8 @@
 Only Frame Control owned plugin folders can be updated or removed. The store
 digest validates transport, not plugin trust; store plugins run as the user.
 """
+import base64
+import gzip
 import hashlib
 import io
 import json
@@ -11,6 +13,7 @@ import re
 import secrets
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import frame_decky
 import framey_compatibility
@@ -23,6 +26,13 @@ MAX_ZIP = 50 * 1024 * 1024
 MAX_UNPACKED = 150 * 1024 * 1024
 SAFE_FOLDER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\Z')
 SHA = re.compile(r'[0-9a-f]{64}\Z')
+FILESERVER_DIGEST = '7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0'
+FILESERVER_BINARIES = {
+    'x86_64': '5e90efd1bf5163bef1686045f4714ad0e4fd0f54edb037fce8cdb06c58177bcb',
+    'aarch64': '86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a',
+}
+FILESERVER_ORIGINAL = 'd9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9'
+
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
 
@@ -68,6 +78,8 @@ def catalog():
         counts[item['id']] = counts.get(item['id'], 0) + 1
     unique = [item for item in result if counts[item['id']] == 1]
     for item in unique:
+        if item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST:
+            item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
 
@@ -86,6 +98,8 @@ def archive_info(data, expected_hash, expected_name):
         folder = manifests[0].split('/')[0]
         if not SAFE_FOLDER.fullmatch(folder):
             raise ValueError('Invalid plugin folder')
+        fileserver = (expected_hash == FILESERVER_DIGEST and expected_name == 'DeckyFileServer'
+                      and folder == 'DeckyFileServer')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -115,7 +129,9 @@ def archive_info(data, expected_hash, expected_name):
             with archive.open(entry) as source:
                 header = source.read(20)
             if header[:4] == b'\x7fELF' and int.from_bytes(header[18:20], 'little') != 183:
-                raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
+                if not (fileserver and name == 'DeckyFileServer/bin/backend'
+                        and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL):
+                    raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
         manifest = json.loads(archive.read(manifests[0]))
@@ -126,13 +142,30 @@ def archive_info(data, expected_hash, expected_name):
         flags = manifest.get('flags', [])
         if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
             raise ValueError('Invalid plugin flags')
-        if 'root' in flags or '_root' in flags:
+        if ('root' in flags or '_root' in flags) and not fileserver:
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         return folder
 
 
+def apply_script(plugin_id, digest):
+    """Deliver offline native assets only to the exact managed adaptation."""
+    if plugin_id != 60 or digest != FILESERVER_DIGEST:
+        return APPLY
+    assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
+    payloads = {}
+    for arch, expected in FILESERVER_BINARIES.items():
+        packed = (assets/f'{arch}.gz').read_bytes()
+        data = gzip.decompress(packed)
+        if hashlib.sha256(data).hexdigest() != expected:
+            raise ValueError('Bundled DeckyFileServer SHA-256 mismatch')
+        payloads[arch] = base64.b64encode(packed).decode('ascii')
+    # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
+    return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
+            +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+
+
 APPLY = r'''
-import fcntl,hashlib,json,os,pathlib,shutil,subprocess,sys,zipfile
+import base64,fcntl,gzip,hashlib,json,os,pathlib,platform,shutil,subprocess,sys,zipfile
 action,token,plugin_id,digest,folder,version,expected_installed = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
@@ -174,6 +207,14 @@ try:
             files=z.infolist()
             if not files or len(files)>3000 or sum(f.file_size for f in files)>150*1024*1024:
                 raise RuntimeError('Plugin archive too large')
+            fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
+            manifest=json.loads(z.read(folder+'/plugin.json'))
+            if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
+            flags=manifest.get('flags',[])
+            if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):
+                raise RuntimeError('Invalid plugin flags')
+            if ('root' in flags or '_root' in flags) and not fileserver:
+                raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
             for f in files:
                 parts=f.filename.split('/')
@@ -194,6 +235,13 @@ try:
                         z.read(prior)!=z.read(f)):
                         raise RuntimeError('Unsafe plugin archive')
                 else: seen[f.filename]=f
+                if not f.is_dir():
+                    with z.open(f) as source: header=source.read(20)
+                    if header[:4]==b'\x7fELF' and int.from_bytes(header[18:20],'little')!=183:
+                        if not (fileserver and f.filename==folder+'/bin/backend' and
+                                hashlib.sha256(z.read(f)).hexdigest()=='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9'):
+                            raise RuntimeError('Plugin contains a non-ARM64 Linux binary')
+                    if header[:2]==b'MZ': raise RuntimeError('Plugin contains a Windows binary')
             stage.mkdir(mode=0o700)
             z.extractall(stage)
             # zipfile drops execute bits. Legacy plugins also publish shebang
@@ -209,6 +257,54 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            # GPL source and reproducible build recipe ship with Frame Control.
+            # The exact official helper is x86_64; this plugin needs no root.
+            if int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer':
+                helper=unpacked/'bin/backend'
+                source=unpacked/'main.py'
+                if hashlib.sha256(helper.read_bytes()).hexdigest()!='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9':
+                    raise RuntimeError('DeckyFileServer original helper mismatch')
+                if hashlib.sha256(source.read_bytes()).hexdigest()!='4fb60745c083465d198d84e1abb0afdb59695d9eec3c873b0b35247676af05c3':
+                    raise RuntimeError('DeckyFileServer Python source mismatch')
+                arch=platform.machine()
+                machine={'aarch64':183,'x86_64':62}.get(arch)
+                hashes=globals().get('FRAMEY_FILESERVER_HASHES',{})
+                packed=globals().get('FRAMEY_FILESERVER_BINARIES',{}).get(arch)
+                if not machine or not packed: raise RuntimeError('Missing native DeckyFileServer helper')
+                native=gzip.decompress(base64.b64decode(packed,validate=True))
+                if (hashlib.sha256(native).hexdigest()!=hashes.get(arch) or native[:4]!=b'\x7fELF'
+                    or int.from_bytes(native[18:20],'little')!=machine):
+                    raise RuntimeError('DeckyFileServer native helper mismatch')
+                helper.write_bytes(native)
+                helper.chmod(0o700)
+                manifest_path=unpacked/'plugin.json'
+                manifest=json.loads(manifest_path.read_text())
+                if manifest.get('name')!='DeckyFileServer' or manifest.get('api_version')!=1 or manifest.get('flags')!=['_root']:
+                    raise RuntimeError('DeckyFileServer manifest mismatch')
+                manifest['flags']=[]
+                manifest['publish']['tags']=[tag for tag in manifest['publish']['tags'] if tag not in ('root','_root')]
+                manifest_path.write_text(json.dumps(manifest)+'\n')
+                text=source.read_text()
+                # Go flag parsing stops at an empty positional argument. Filter
+                # omitted boolean flags so -disablethumbnails actually takes effect.
+                text=text.replace('                    ],\n                    stdout=PIPE,',
+                                  '                    ] if arg],\n                    stdout=PIPE,')
+                text=text.replace('                    [\n                        f"{decky.DECKY_PLUGIN_DIR}',
+                                  '                    [arg for arg in [\n                        f"{decky.DECKY_PLUGIN_DIR}')
+                # Hostname DNS is not guaranteed on Frame OS. A UDP connect
+                # selects the kernel source address without sending any packet.
+                text=text.replace('        return socket.gethostbyname(socket.gethostname())',
+                    '        try:\n            return socket.gethostbyname(socket.gethostname())\n'
+                    '        except OSError:\n            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:\n'
+                    '                try:\n                    probe.connect(("192.0.2.1", 9))\n'
+                    '                    return probe.getsockname()[0]\n'
+                    '                except OSError:\n                    return "127.0.0.1"')
+                # Configure thumbnail policy before launching the helper.
+                old='            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])\n            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])'
+                new='            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])\n            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])'
+                if old not in text: raise RuntimeError('DeckyFileServer start configuration changed')
+                source.write_text(text.replace(old,new))
+                compat_shims.append('deckyfileserver-user-native')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's
@@ -343,7 +439,7 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             ssh('umask 077; cat > ' + remote, stdin=data, text=False, timeout=120)
         report({'install':'Installing', 'update':'Updating', 'remove':'Removing'}[action] + ' plugin on Frame', 80)
         return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]} {expected_installed}',
-                              stdin=APPLY, timeout=90))
+                              stdin=apply_script(plugin_id, plugin["sha256"]), timeout=90))
     finally:
         if data is not None:
             try: ssh('rm -f ' + remote, timeout=10)
