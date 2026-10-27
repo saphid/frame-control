@@ -6,6 +6,8 @@ ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
     {'id': 60, 'name': 'DeckyFileServer', 'version': '1.2.0', 'api_version': 1,
      'folder': 'DeckyFileServer', 'sha256': '7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0'},
+    {'id': 96, 'name': 'Simple Timer', 'version': '1.0.0', 'api_version': 1,
+     'folder': 'simple-timer', 'sha256': '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312'},
     {'id': 12, 'name': 'MusicControl', 'version': '1.1.6', 'api_version': 'legacy', 'folder': 'MusicControl', 'sha256': '246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62'},
     {'id': 111, 'name': 'Music Control', 'version': '1.1.7', 'api_version': 'legacy',
      'folder': 'MusicControl', 'sha256': '3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9'},

@@ -70,9 +70,13 @@ The [26 October live checks](evidence/framey-events-backend-2026-10-26.json)
 used the actual official Notebook and Simple Timer Python backends in a private
 removable ARM64 Decky service. Notebook's default notebook saved a pointer stroke
 and loaded it after a backend restart. Simple Timer's start/cancel controls,
-countdown, completion toast and persisted recents/subtle mode worked. Simple
-Timer remains partial: its own expired-timer startup raises a missing
-`timer_task` error, sound/suspend are unsupported, and worn VR was not checked.
+countdown, completion toast and persisted recents/subtle mode worked. The
+[Simple Timer lifecycle repair](evidence/framey-simple-timer-2026-10-26.md) now
+fixes cancellation, replacement and active/canceled/expired backend restarts,
+verified through actual Decky 3.3.0 on amd64 and the ARM64 Frame. Managed
+update/reinstall is required. Silent in-panel session timers qualify as works;
+sound/suspend are unsupported, alerts require an open panel, and worn VR remains
+unverified.
 
 DFL module and class lookup searches a finite registry of Framey's own controls,
 CSS maps and an explicitly unsupported optional UI-audio player. It follows DFL's

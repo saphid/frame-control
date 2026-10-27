@@ -14,6 +14,12 @@ action calls the backend, so it reads the persisted setting rather than a
 browser cache. A missing, damaged, or old non-boolean value reads as the
 caller's default;
 the next save atomically replaces the sample's settings file.
+The current file is `{"schema": 1, "enabled": true|false}`. An unversioned
+`{"enabled": true|false}` file from the first sample release still reads, and
+the next save writes schema 1. A file with another explicit schema returns a
+visible read or save error and remains untouched, so downgrading the sample
+cannot erase settings written by a newer version. Add a deliberate migration
+for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
 event is ignored; after the request settles, a new change can be saved.

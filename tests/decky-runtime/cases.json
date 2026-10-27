@@ -15,6 +15,11 @@
     "probe": "screenshots"
   },
   {
+    "id": 96,
+    "shim": "simple-timer-lifecycle",
+    "probe": "timer-lifecycle"
+  },
+  {
     "id": 60,
     "shim": "deckyfileserver-user-native",
     "probe": "fileserver"

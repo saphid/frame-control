@@ -13,6 +13,8 @@ import subprocess
 import sys
 import time
 import urllib.request
+import zipfile
+import io
 
 import websockets
 from websockets.exceptions import WebSocketException
@@ -60,6 +62,7 @@ def main():
     parser.add_argument('id', type=int)
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
+    parser.add_argument('--reproduce-timer-regression', action='store_true')
     args = parser.parse_args()
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
     record = next(p for p in PLUGINS if p['id'] == args.id)
@@ -86,7 +89,12 @@ def main():
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
-    assert receipt['compatShims'] == [case['shim']], receipt
+    if not args.reproduce_timer_regression:
+        assert receipt['compatShims'] == [case['shim']], receipt
+    else:
+        assert record['id'] == 96
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -179,6 +187,28 @@ def main():
                 report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
                     if args.reproduce_fileserver_empty_flag_regression else
                     'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+            elif case['probe'] == 'timer-lifecycle':
+                from timer_lifecycle import probe
+
+                def restart(settings=None):
+                    nonlocal backend
+                    os.killpg(backend.pid, signal.SIGTERM)
+                    backend.wait(timeout=8)
+                    if settings is not None:
+                        path = base/'settings'/record['folder']/'settings.json'
+                        assert path.exists(), path
+                        path.write_text(json.dumps(settings))
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                               start_new_session=True)
+                    processes.append(backend)
+                    until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                    until_ready(lambda: rpc('loader/call_plugin_method', record['name'],
+                        'settings_getSetting', 'subtle_mode', False), 'restarted instance RPC')
+
+                report['lifecycle'] = probe(record['name'], restart, home/'runtime.log',
+                                            args.reproduce_timer_regression)
+                report['result'] = ('upstream timer lifecycle regressions reproduced' if args.reproduce_timer_regression
+                    else 'discovery, cancel, replace, completion and persistent restart passed')
             elif args.reproduce_bound_method_regression:
                 response = rpc('loader/call_legacy_plugin_method', record['name'], 'sp_list_media_players', {})
                 assert response['success'] is False and 'self' in response['result'], response
