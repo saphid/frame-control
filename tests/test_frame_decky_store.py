@@ -212,6 +212,62 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         compile((plugin/'main.py').read_text(), str(plugin/'main.py'), 'exec')
         self.assertIn('if arg]', (plugin/'main.py').read_text())
+
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux helper architecture')
+    def test_exact_localsend_gets_verified_native_helper_and_preserves_source(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        plugin = next(p for p in PLUGINS if p['id'] == 125)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=125, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+        self.assertEqual(json.loads((folder/'plugin.json').read_text())['flags'], [])
+        expected = (frame_decky_store.LOCALSEND_AARCH64 if platform.machine() == 'aarch64'
+                    else frame_decky_store.LOCALSEND_ORIGINAL)
+        self.assertEqual(hashlib.sha256((folder/'bin/localsend-core').read_bytes()).hexdigest(), expected)
+        self.assertEqual((folder/'bin/localsend-core').stat().st_mode & 0o777, 0o700)
+        with zipfile.ZipFile(io.BytesIO(data)) as source:
+            for name in ('main.py', 'LICENSE'):
+                self.assertEqual((folder/name).read_bytes(), source.read(plugin['folder']+'/'+name))
+        result = self.apply('remove', plugin_id=125, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    def test_localsend_exception_does_not_accept_another_archive_or_corrupt_helper(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 125)
+        with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as source:
+            stream = io.BytesIO()
+            with zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as target:
+                for entry in source.infolist():
+                    target.writestr(entry, source.read(entry))
+                target.writestr(plugin['folder']+'/changed.txt', b'new version')
+        changed = stream.getvalue()
+        with self.assertRaisesRegex(ValueError, 'non-ARM64'):
+            frame_decky_store.archive_info(changed, hashlib.sha256(changed).hexdigest(), plugin['name'])
+        self.assertEqual(frame_decky_store.apply_script(125, '0'*64), frame_decky_store.APPLY)
+        with patch.object(frame_decky_store, 'LOCALSEND_AARCH64', '0'*64):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(125, frame_decky_store.LOCALSEND_DIGEST)
+
+    def test_localsend_arm64_transaction_checks_written_helper(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 125)
+        # The local x86 host only writes the ELF; native ARM execution is gated
+        # separately by the published Decky runtime runner.
+        with patch.object(frame_decky_store, 'APPLY',
+                          "import platform\nplatform.machine=lambda:'aarch64'\n"+frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=125,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        helper = self.folder.parent/plugin['folder']/'bin/localsend-core'
+        self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
+                         frame_decky_store.LOCALSEND_AARCH64)
+        self.assertEqual(int.from_bytes(helper.read_bytes()[18:20], 'little'), 183)
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):
         from framey_official import PLUGINS, archive as official_archive

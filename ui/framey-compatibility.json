@@ -11142,13 +11142,15 @@
         "https://github.com/moyoez/decky-localsend",
         "https://github.com/moyoez/decky-localsend.git"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Exact managed 0.4.5 archive replaces its x86 helper with a pinned ARM64 build; local backend settings/status and a private x86 transfer are the verified scope. ARM64 transfer, discovery on Frame, Steam routes and worn VR remain unverified.",
+      "blockInstall": false,
       "verification": [
-        "static archive",
-        "local browser",
-        "fake-Frame"
+        "exact archive and source hashes",
+        "local Chromium initial panel",
+        "host managed transaction",
+        "fake Frame managed install/remove",
+        "private x86 backend transfer"
       ],
       "browser": {
         "id": 125,
@@ -11174,7 +11176,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Official 0.4.5 ZIP main.py matches plugin tag v0.45 byte for byte; its pinned LocalSend-Go ad28b8e9 source reproduces the official x86 helper byte for byte with Go 1.25.7 and a static ARM64 helper twice (SHA-256 e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae). Earlier build from a later source revision answered protocol 2.0 info on real Frame in an isolated namespace. The official x86 backend/proxy passed a marker transfer in a private no-route namespace. The exact-source ARM64 helper has not run on Frame; actual Decky discovery, ARM64 transfer, frontend and managed adaptation remain unverified. Official ZIP stays x86_64 and blocked (docs/evidence/framey-localsend-source-match-2026-10-27.md).",
+      "nativePort": "Exact official x86 helper is reproducible from pinned MIT source; the managed installer replaces only the exact 0.4.5 digest with SHA-256 e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae on ARM64. The Frame rechecks original Python/helper bytes, replacement digest and ELF machine; x86 keeps the original helper. Local official x86 backend/proxy private marker transfer passed; native published Decky ARM64 discovery/RPC and real Frame private transfer are release gates for this change. Steam routes, network discovery, user-facing transfer and worn VR are unverified (docs/evidence/framey-localsend-managed-2026-10-27.md).",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -11186,6 +11188,15 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core."
+      },
+      "requiredShims": [
+        "localsend-digest-native"
+      ],
+      "managedNative": {
+        "shim": "localsend-digest-native",
+        "helperSha256": "e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae",
+        "sourceCommit": "ad28b8e9440e17e44b4735a6c4aa0512009cf333",
+        "verification": "Host transaction and fake Frame managed install/remove; local original x86 backend private marker transfer. Published Decky ARM64 runtime and real Frame transfer pending (docs/evidence/framey-localsend-managed-2026-10-27.md)."
       }
     },
     {

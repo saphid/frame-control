@@ -210,6 +210,13 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
                                      frame_decky_store.FILESERVER_BINARIES[arch])
+                if plugin['id'] == 125:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+                    arch = ssh('uname -m').strip()
+                    self.assertEqual(ssh(f'sha256sum {installed}/bin/localsend-core').split()[0],
+                                     frame_decky_store.LOCALSEND_AARCH64 if arch == 'aarch64'
+                                     else frame_decky_store.LOCALSEND_ORIGINAL)
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
