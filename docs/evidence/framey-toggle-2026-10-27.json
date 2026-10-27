@@ -282,5 +282,27 @@
     "Automatic pausing/suspend",
     "Physical controller/keyboard",
     "Worn VR"
-  ]
+  ],
+  "affectedSnapshot": "Initial independent verification before merging main b963937; DeckyFileServer is partial in the merged catalog.",
+  "mergeValidation": {
+    "mainCommit": "b963937",
+    "catalog": {
+      "works": 6,
+      "partial": 51,
+      "broken": 48,
+      "na": 11
+    },
+    "python": {
+      "ran": 1663,
+      "skipped": 16,
+      "result": "OK"
+    },
+    "publishedDeckyRuntime": {
+      "version": "v3.3.0",
+      "architecture": "x86_64",
+      "probes": 10,
+      "result": "All passed, including Pause Games and DeckyFileServer positive/negative cases"
+    },
+    "hardwareRerun": false
+  }
 }

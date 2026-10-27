@@ -84,7 +84,8 @@ def main():
             loader.write_bytes(data)
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], None) for case in cases] + [
-                (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression')]
+                (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
+                (60, '--reproduce-fileserver-empty-flag-regression')]
             for plugin_id, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',

@@ -7,6 +7,8 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import socket
+import ssl
 import subprocess
 import sys
 import time
@@ -59,6 +61,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
+    parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     args = parser.parse_args()
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
@@ -95,6 +98,11 @@ def main():
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
+    assert '_root' not in manifest.get('flags', []), manifest
+    if args.reproduce_fileserver_empty_flag_regression:
+        assert record['id'] == 60
+        source = plugin/'main.py'
+        source.write_text(source.read_text().replace('[arg for arg in [', '[').replace('] if arg],', '],'))
     if args.reproduce_bound_method_regression:
         assert record['id'] == 111
         source = (plugin/'main.py').read_text()
@@ -139,7 +147,47 @@ def main():
                 report['calls'].append({'method': method, 'result': response['result']})
                 return response['result']
 
-            if case['probe'] == 'toggle-settings':
+            def current(method, *values):
+                response = rpc('loader/call_plugin_method', record['name'], method, *values)
+                report['calls'].append({'method': method, 'result': response})
+                return response
+
+            if case['probe'] == 'fileserver':
+                assert until_ready(lambda: current('get_port') == 8000, 'default port')
+                assert current('get_directory') == str(home)
+                assert current('get_server_running') is False
+                fixture = home/'public-fixture'
+                fixture.mkdir()
+                marker = b'Framey public read-only fixture\n'
+                (fixture/'marker.txt').write_bytes(marker)
+                # A thumbnail-compatible file must remain a normal link when disabled.
+                (fixture/'image.png').write_bytes(b'public placeholder; thumbnails disabled')
+                with socket.socket() as listener:
+                    listener.bind(('127.0.0.1', 0))
+                    port = listener.getsockname()[1]
+                status = current('set_status', {'directory': str(fixture), 'port': port, 'timeout': 1,
+                    'allow_uploads': False, 'disable_thumbnails': True, 'server_running': True})
+                assert status['server_running'] and not status['allow_uploads'] and status['disable_thumbnails'], status
+                context = ssl._create_unverified_context()  # Upstream ships its public self-signed test cert.
+                url = f'https://127.0.0.1:{port}'
+                def fetch(path):
+                    return urllib.request.urlopen(url+path, context=context, timeout=3).read()
+                listing = until_ready(lambda: fetch('/files/'), 'private file server')
+                assert b'marker.txt' in listing and b'image.png' in listing, listing
+                assert (b'/preview/files/image.png' in listing) == args.reproduce_fileserver_empty_flag_regression, listing
+                assert fetch('/files/marker.txt') == marker
+                try:
+                    fetch('/upload')
+                    raise AssertionError('uploads must be disabled')
+                except urllib.error.HTTPError as error:
+                    assert error.code == 401, error.code
+                assert current('set_server_running', False) is False
+                assert current('get_server_running') is False
+                assert current('get_history') == [str(fixture)]
+                report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
+                    if args.reproduce_fileserver_empty_flag_regression else
+                    'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+            elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
                     report['calls'].append({'method': method, 'result': result})

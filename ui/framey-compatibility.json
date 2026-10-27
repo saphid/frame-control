@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -942,7 +942,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -950,7 +950,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -4348,13 +4348,15 @@
         "https://github.com/SteamDeckHomebrew/decky-plugin-template.git",
         "https://github.com/grimkor/DeckyFileServer"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend. Shared Toggle value rendering is repaired; other listed blockers remain.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Managed install supplies a native ARM64 helper and removes the exact archive's unnecessary root request. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. Frontend address/picker limitations remain; use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Shared Toggle value rendering is repaired; other listed blockers remain.",
+      "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Decky 3.3.0 amd64",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 60,
@@ -4373,7 +4375,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Native file-server backend needs ARM64 dependencies; root requirement also blocks the user service.",
+      "nativePort": "GPL-3.0 helper rebuilt offline for ARM64 with vendored corresponding source. Actual Frame user service passes HTTPS listing/download of a private public fixture; uploads disabled. Exact managed digest only; other native/root archives remain blocked (docs/evidence/framey-fileserver-arm64-2026-10-27.md).",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 60,
@@ -4381,6 +4383,15 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "requiredShims": [
+        "deckyfileserver-user-native"
+      ],
+      "managedNative": {
+        "shim": "deckyfileserver-user-native",
+        "helperSha256": "86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a",
+        "sourceCommit": "dcf3f3ce5104d05811fa8c156c4f58632b84b313",
+        "verification": "Real Decky discovery/public RPC and private read-only HTTPS fixture; docs/evidence/framey-fileserver-arm64-2026-10-27.md"
       },
       "toggleContract": {
         "verified": "local browser control fixture; official Pause Games callback regression",
@@ -9640,7 +9651,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",

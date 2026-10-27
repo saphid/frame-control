@@ -4,7 +4,7 @@ Snapshot: 2026-10-26T06:10:58.537029+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 6 · Partial: 50 · Broken: 49 · N/A: 11.**
+**Works: 6 · Partial: 51 · Broken: 48 · N/A: 11.**
 
 - **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.
@@ -72,7 +72,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 56: MangoPeel 0.0.7 | 1 / 2 | partial | Initializer succeeds; gamescope/MangoHud actions and backend are unverified. | static archive, local browser, fake-Frame |
 | 58: Volume Boost 0.0.7 | legacy / legacy | works | Default-sink controls pass in local Chromium through real Decky 3.3.0 ARM64: linked slider/keyboard and numeric writes, separate channels, re-link and reopen, with independent Pulse readback including 125%/150% while muted. Exact original volume/mute restored. Audible output, Bluetooth sinks and worn VR unverified. | static archive, local browser, fake-Frame, isolated Linux backend, real Frame SSH |
 | 59: Web Browser 1.4.3 | legacy / legacy | broken | The exact frontend now initializes with a null Steam React-root lookup. The browser itself still requires Steam GamepadUI CDP injection and a backend WebSocket unavailable in Framey; no working browser tab was verified. | static archive, local browser, fake-Frame, focused local browser |
-| 60: DeckyFileServer 1.2.0 | 1 / 2 | broken | Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend. Shared Toggle value rendering is repaired; other listed blockers remain. | static archive, local browser, fake-Frame |
+| 60: DeckyFileServer 1.2.0 | 1 / 2 | partial | Managed install supplies a native ARM64 helper and removes the exact archive's unnecessary root request. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. Frontend address/picker limitations remain; use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Shared Toggle value rendering is repaired; other listed blockers remain. | static archive, local browser, fake-Frame, real Decky 3.3.0 amd64, real Frame SSH |
 | 61: TabMaster 2.15.1 | 1 / 2 | partial | Local Chromium rendered the QAM and navigable Overview/Filters documentation with an actual Decky 3.3.0 amd64 backend. Library-tab editing remains unavailable: Steam login/library patches and MobX reactions have no target. ARM64 and worn VR unverified. | static archive, local browser, fake-Frame |
 | 62: TS3 QuickAccess 1.2.0 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: ts3-qs4sd/bin/ts3-qs4sd.so. | static archive, local browser, fake-Frame |
 | 63: Free Loader 1.6.0 | 1 / 2 | partial | The exact archive's duplicate names contain identical bytes and differ only in execute bits; the guarded installer now accepts them, and a private local install/remove transaction passed. The current opaque Chromium host renders Free Games but cannot load deals with backend/network denied. Exact official Python settings and empty local-deals methods passed in a no-network container with a Decky stub. Real Decky, feed refresh, notifications and worn VR remain unverified. | static archive, local browser, fake-Frame pinned install/remove, local exact-archive transaction, isolated Python backend |
@@ -279,7 +279,9 @@ DFL includes exports imported through decky-frontend-lib / @decky/ui. Steam stor
 
 ## Native payload portability
 
-All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. The three Windows DLLs belong to Decky-Framegen. The installer still rejects these archives. Apart from the explicitly described LocalSend experiment, ARM64 builds were not attempted: the constraints below remain unresolved.
+All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. The three Windows DLLs belong to Decky-Framegen. Except for the exact managed DeckyFileServer adaptation below, the installer still rejects these archives. Apart from LocalSend and DeckyFileServer, ARM64 builds were not attempted: the constraints below remain unresolved.
+
+A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. Hostname-DNS failures and empty optional arguments are repaired. Decky 3.3.0 still exposes `decky.HOME`; that call is unchanged. The plugin moves from broken to partial: its frontend advertises HTTP/steamdeck URLs and needs a Steam folder picker. Use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR remain unverified.
 
 [LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) covers a reproducible MIT helper build and its isolated real-Frame protocol 2.0 info response. The official x86 archive remains blocked; full plugin integration and file transfers are unverified.
 
@@ -293,7 +295,7 @@ All published Linux native payloads in this snapshot are x86_64; no published aa
 | Controller Tools | bin/backend | Native backend needs an ARM64 build and controller/HID dependencies; its direct websocket also bypasses the Framey bridge. |
 | DeckMTP | bin/umtprd | umtprd needs ARM64 libusb/MTP dependencies and USB gadget permissions; root user-service blocker remains. |
 | Decky Cloud Save | bin/rclone | An ARM64 rclone artifact and safe package policy are needed; the official 60,776,600-byte x86_64 member fails archive validation. No cloud writes were run (docs/evidence/framey-native-port-blockers-2026-10-26.md). |
-| DeckyFileServer | bin/backend | Native file-server backend needs ARM64 dependencies; root requirement also blocks the user service. |
+| DeckyFileServer | bin/backend | GPL-3.0 helper rebuilt offline for ARM64 with vendored corresponding source. Actual Frame user service passes HTTPS listing/download of a private public fixture; uploads disabled. Exact managed digest only; other native/root archives remain blocked (docs/evidence/framey-fileserver-arm64-2026-10-27.md). |
 | TS3 QuickAccess | bin/ts3-qs4sd.so | TeamSpeak client plugin must match an ARM64 TeamSpeak client and SDK ABI, not merely rebuild the .so. |
 | Syncthing | bin/decky-syncthing-watchdog | The watchdog needs an ARM64 build, plus a supported Syncthing runtime/package and safe path validation. |
 | Wine Cellar | bin/backend | Native backend needs an ARM64 build; direct websocket and Wine runtime assumptions also need integration. |

@@ -65,6 +65,16 @@ and panel states were preserved. Battery stayed 100 → 100 during the successfu
 run; no power setting changed.
 
 No plugin gains a works claim. Real process control, other importer backends,
-physical input and worn VR remain unverified. Catalog totals on this branch
-remain **6 works / 50 partial / 49 broken / 11 N/A**; the separately pending
-DeckyFileServer ARM64 PR is not included in these totals.
+physical input and worn VR remain unverified. The original independent branch
+had **6 works / 50 partial / 49 broken / 11 N/A**. After merging main's landed
+DeckyFileServer ARM64 support, current totals are **6 works / 51 partial /
+48 broken / 11 N/A**. Its managed-native receipt guard and both runtime probes
+are preserved; its former Toggle display limitation is removed from the current
+catalog reason. The initial verification counts above describe the original
+branch; combined validation is recorded below.
+
+Combined merge validation against main `b963937`: full Python suite passes
+1,663 tests with 16 skips; all ten actual published Decky 3.3.0 native amd64
+probes pass, including Pause Games settings and DeckyFileServer positive/negative
+cases. Generated documentation matches the merged catalog. No hardware rerun
+was needed for these fixture/catalog conflicts.
