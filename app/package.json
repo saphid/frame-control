@@ -61,6 +61,11 @@
         ]
       },
       {
+        "from": "../ui/vendor/psutil-7.2.2",
+        "to": "ui/vendor/psutil-7.2.2",
+        "filter": ["*.whl", "LICENSE.txt", "README.md"]
+      },
+      {
         "from": "../ui/apk_sources",
         "to": "ui/apk_sources",
         "filter": [

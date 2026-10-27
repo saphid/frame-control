@@ -129,7 +129,7 @@ class StoreTransaction(unittest.TestCase):
         digest = hashlib.sha256(data or b'').hexdigest()
         try:
             return subprocess.run([sys.executable, '-', action, token, str(plugin_id), digest, folder, version, expected],
-                                  input=frame_decky_store.APPLY, text=True, capture_output=True,
+                                  input=frame_decky_store.apply_script(plugin_id, digest), text=True, capture_output=True,
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
@@ -161,6 +161,40 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        plugin = next(p for p in PLUGINS if p['id'] == 89)
+        result = self.apply('install', official_archive(plugin), plugin_id=89,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        receipt = json.loads((folder / '.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])
+        modules = folder / 'py_modules'
+        native = (modules / 'psutil/_psutil_linux.abi3.so').read_bytes()
+        self.assertEqual(native[:4], b'\x7fELF')
+        self.assertEqual(int.from_bytes(native[18:20], 'little'),
+                         {'x86_64': 62, 'aarch64': 183}[platform.machine()])
+        self.assertIn('BSD 3-Clause', (modules / 'psutil-7.2.2.dist-info/LICENSE').read_text())
+        result = self.apply('remove', plugin_id=89, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_deckyspy_missing_or_corrupt_payload_leaves_no_installed_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 89)
+        for prefix, error in [('', 'Missing native psutil'),
+                              ("FRAMEY_BACKEND_WHEELS = {'x86_64':'AAAA','aarch64':'AAAA'}\n",
+                               'SHA-256 mismatch')]:
+            with patch.object(frame_decky_store, 'apply_script', return_value=prefix+frame_decky_store.APPLY):
+                result = self.apply('install', official_archive(plugin), plugin_id=89,
+                                    folder=plugin['folder'], version=plugin['version'])
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn(error, result.stderr)
+            self.assertFalse((self.folder.parent / plugin['folder']).exists())
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 96)

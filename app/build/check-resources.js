@@ -13,6 +13,9 @@ const path = require("path");
 
 const REQUIRED = [
   "ui/server.py",
+  "ui/vendor/psutil-7.2.2/aarch64.whl",
+  "ui/vendor/psutil-7.2.2/x86_64.whl",
+  "ui/vendor/psutil-7.2.2/LICENSE.txt",
   "ui/frame_power.py",
   "ui/frame_status.py",
   "scripts/frame_power_sample.py",

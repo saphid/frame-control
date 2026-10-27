@@ -4,6 +4,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
+    {'id': 89, 'name': 'DeckySpy', 'version': '0.6.7', 'api_version': 'legacy',
+     'folder': 'decky-spy', 'sha256': '2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7'},
     {'id': 96, 'name': 'Simple Timer', 'version': '1.0.0', 'api_version': 1,
      'folder': 'simple-timer', 'sha256': '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312'},
     {'id': 12, 'name': 'MusicControl', 'version': '1.1.6', 'api_version': 'legacy', 'folder': 'MusicControl', 'sha256': '246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62'},

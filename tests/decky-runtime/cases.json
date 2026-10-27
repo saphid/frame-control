@@ -15,6 +15,11 @@
     "probe": "screenshots"
   },
   {
+    "id": 89,
+    "shim": "deckyspy-psutil-and-battery",
+    "probe": "system-monitor"
+  },
+  {
     "id": 96,
     "shim": "simple-timer-lifecycle",
     "probe": "timer-lifecycle"
