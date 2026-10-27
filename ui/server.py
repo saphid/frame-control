@@ -345,11 +345,16 @@ def backfill_art(apps=(), titles=(), meant=None):
     return True
 
 
-def _new_job_locked(label, **fields):
+def _prune_jobs_locked():
     now = time.time()
     for j in [j for j, v in _jobs.items() if v["done"] and now - v["time"] > JOB_TTL]:
         del _jobs[j]
-    job = secrets.token_hex(8)
+
+
+def _new_job_locked(label, job_id=None, **fields):
+    _prune_jobs_locked()
+    now = time.time()
+    job = job_id or secrets.token_hex(8)
     _jobs[job] = {"label": label, "done": False, "error": None, "message": None, "result": None, "time": now, **fields}
     return job
 
@@ -376,10 +381,18 @@ def _run_job(job, label, work, progress):
             _jobs[job].update(fields, done=True, time=time.time())
 
 
-def start_job(label, work, progress=False):
+def start_job(label, work, progress=False, *, request_id=None, request=None):
     """Run work() in the background. It returns a dict with a "message"."""
     with _jobs_lock:
-        job = _new_job_locked(label)
+        if request_id is not None:
+            _prune_jobs_locked()
+            existing = _jobs.get(request_id)
+            if existing:
+                if existing.get('_request') != request:
+                    raise Failure('This plugin request ID was already used for a different change', 409)
+                return {"message": f"{label}…", "job": request_id}
+        job = _new_job_locked(label, job_id=request_id,
+                              **({'_request': request} if request_id is not None else {}))
     busy_thread(_run_job, job, label, work, progress).start()
     return {"message": f"{label}…", "job": job}
 
@@ -462,7 +475,7 @@ def queue_action(body):
 def job_status(query):
     with _jobs_lock:
         job = _jobs.get((parse_qs(query).get("id") or [""])[0])
-        snapshot = job and {k: v for k, v in job.items() if k != "time"}
+        snapshot = job and {k: v for k, v in job.items() if k not in ("time", "_request")}
     if not snapshot:
         raise Failure("no such job (the app may have restarted)", 404)
     return snapshot
@@ -572,9 +585,15 @@ def decky_plugin(body):
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
+    request_id = body.get('requestId')
+    if request_id is not None and (not isinstance(request_id, str) or
+                                   not re.fullmatch(r'[0-9a-f]{32}', request_id)):
+        raise Failure('Invalid plugin request ID', 400)
+    device = LINK.active_device()['id'] if LINK else FRAME
     return start_job('Decky plugin ' + action,
                      lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
-                                                            reviewed_hash=reviewed_hash), progress=True)
+                                                            reviewed_hash=reviewed_hash), progress=True,
+                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash))
 
 
 def framey_method_action(body):

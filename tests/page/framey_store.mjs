@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
@@ -17,6 +18,7 @@ const document = {getElementById(id) {if(!elements.has(id)) elements.set(id,new 
   createElement() {return new Element();}, hidden:false};
 const session = new Map();
 const ctx = vm.createContext({document, location:{hash:'',pathname:'/'},
+  crypto:webcrypto,
   sessionStorage:{getItem:key=>session.get(key)||'',setItem:(key,value)=>session.set(key,value),removeItem:key=>session.delete(key)},
   history:{replaceState(){}}, confirm:()=>true,
   window:{addEventListener(){}}, setInterval(){}, setTimeout(){},
@@ -60,6 +62,45 @@ assert.equal(el('deckyJobStatus').textContent,'Installed Plugin 2');
 assert.equal(el('deckyJobProgress').value,100);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+
+// If the server accepts the POST but its response is lost, the panel already
+// has the ID needed to find the job. It must not offer a second install.
+let lostJobId, lostPosts=0;
+ctx.mockApi=async (path,body) => {
+  if(path==='/api/decky/plugin'){
+    lostPosts++; lostJobId=body.requestId;
+    assert.match(lostJobId,/^[0-9a-f]{32}$/);
+    throw Error('POST response lost');
+  }
+  if(path.startsWith('/api/job')){
+    assert.equal(new URL(path,'http://localhost').searchParams.get('id'),lostJobId);
+    return {done:true,message:'Recovered install'};
+  }
+  if(path==='/api/decky')return {managed:true,running:true,plugins:[]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(JSON.parse(session.get('frameyPluginJob')).job,lostJobId);
+assert.equal(el('deckyJobCheck').hidden,false);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(lostPosts,1);
+await vm.runInContext('checkDeckyJob()',ctx);
+assert.equal(el('deckyJobStatus').textContent,'Recovered install');
+assert.equal(session.has('frameyPluginJob'),false);
+
+// A definite validation rejection never reserved a job on the server.
+ctx.mockApi=async path => {
+  if(path==='/api/decky/plugin'){
+    const error=Error('Invalid reviewed store version');error.status=400;throw error;
+  }
+  if(path==='/api/decky')return {managed:true,running:true,plugins:[]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"bad"})',ctx);
+assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(el('deckyJobCheck').hidden,true);
 
 // A stopped Decky service must still offer recovery by removing its owned plugin.
 ctx.mockApi=async path => path==='/api/decky' ?
@@ -149,7 +190,7 @@ ctx.mockApi=async path => {
 };
 vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('checkDeckyJob()',ctx);
-assert.match(el('deckyJobStatus').textContent,/app restarted and lost this job result/);
+assert.match(el('deckyJobStatus').textContent,/server has no record of this request/);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
 assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
