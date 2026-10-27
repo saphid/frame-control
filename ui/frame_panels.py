@@ -137,7 +137,16 @@ class Handler(BaseHTTPRequestHandler):
             return self.reply(403, {'error': 'Forbidden'})
         try:
             size = int(self.headers.get('Content-Length', '0'))
-            if not 0 < size <= 1024:
+            if size > 1024:
+                # Windows can reset a connection closed with an unread POST
+                # body before the client receives our 400 response. Drain only
+                # a bounded rejected body; never buffer an unbounded payload.
+                if size <= 64 * 1024:
+                    self.rfile.read(size)
+                else:
+                    self.close_connection = True
+                raise ValueError('Invalid request size')
+            if size <= 0:
                 raise ValueError('Invalid request size')
             body = json.loads(self.rfile.read(size))
             if not isinstance(body, dict):
