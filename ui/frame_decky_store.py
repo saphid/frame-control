@@ -33,6 +33,10 @@ FILESERVER_BINARIES = {
     'aarch64': '86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a',
 }
 FILESERVER_ORIGINAL = 'd9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9'
+LOCALSEND_DIGEST = 'e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7'
+LOCALSEND_ORIGINAL = 'd448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843'
+LOCALSEND_MAIN = 'db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8ad'
+LOCALSEND_AARCH64 = 'e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -101,6 +105,8 @@ def archive_info(data, expected_hash, expected_name):
             raise ValueError('Invalid plugin folder')
         fileserver = (expected_hash == FILESERVER_DIGEST and expected_name == 'DeckyFileServer'
                       and folder == 'DeckyFileServer')
+        localsend = (expected_hash == LOCALSEND_DIGEST and expected_name == 'Decky Localsend'
+                     and folder == 'decky-localsend')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -130,8 +136,10 @@ def archive_info(data, expected_hash, expected_name):
             with archive.open(entry) as source:
                 header = source.read(20)
             if header[:4] == b'\x7fELF' and int.from_bytes(header[18:20], 'little') != 183:
-                if not (fileserver and name == 'DeckyFileServer/bin/backend'
-                        and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL):
+                if not ((fileserver and name == 'DeckyFileServer/bin/backend'
+                         and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL)
+                        or (localsend and name == 'decky-localsend/bin/localsend-core'
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == LOCALSEND_ORIGINAL)):
                     raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
@@ -145,6 +153,8 @@ def archive_info(data, expected_hash, expected_name):
             raise ValueError('Invalid plugin flags')
         if ('root' in flags or '_root' in flags) and not fileserver:
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
+        if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
+            raise ValueError('LocalSend Python source differs from the pinned archive')
         return folder
 
 
@@ -157,6 +167,12 @@ PSUTIL_DIGESTS = {
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 125 and digest == LOCALSEND_DIGEST:
+        packed = (Path(__file__).parent/'vendor/localsend-0.4.5/aarch64.gz').read_bytes()
+        data = gzip.decompress(packed)
+        if hashlib.sha256(data).hexdigest() != LOCALSEND_AARCH64:
+            raise ValueError('Bundled LocalSend ARM64 helper SHA-256 mismatch')
+        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'+APPLY)
     if plugin_id == 60 and digest == FILESERVER_DIGEST:
         assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
         payloads = {}
@@ -227,6 +243,7 @@ try:
             if not files or len(files)>3000 or sum(f.file_size for f in files)>150*1024*1024:
                 raise RuntimeError('Plugin archive too large')
             fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
+            localsend=(int(plugin_id)==125 and digest=='e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7' and folder=='decky-localsend')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
@@ -257,8 +274,10 @@ try:
                 if not f.is_dir():
                     with z.open(f) as source: header=source.read(20)
                     if header[:4]==b'\x7fELF' and int.from_bytes(header[18:20],'little')!=183:
-                        if not (fileserver and f.filename==folder+'/bin/backend' and
-                                hashlib.sha256(z.read(f)).hexdigest()=='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9'):
+                        if not ((fileserver and f.filename==folder+'/bin/backend' and
+                                 hashlib.sha256(z.read(f)).hexdigest()=='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9')
+                                or (localsend and f.filename==folder+'/bin/localsend-core' and
+                                    hashlib.sha256(z.read(f)).hexdigest()=='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')):
                             raise RuntimeError('Plugin contains a non-ARM64 Linux binary')
                     if header[:2]==b'MZ': raise RuntimeError('Plugin contains a Windows binary')
             stage.mkdir(mode=0o700)
@@ -276,6 +295,28 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if localsend:
+                helper=unpacked/'bin/localsend-core'
+                source=unpacked/'main.py'
+                if hashlib.sha256(helper.read_bytes()).hexdigest()!='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843':
+                    raise RuntimeError('LocalSend original helper mismatch')
+                if hashlib.sha256(source.read_bytes()).hexdigest()!='db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8ad':
+                    raise RuntimeError('LocalSend Python source mismatch')
+                if manifest.get('name')!='Decky Localsend' or manifest.get('api_version')!=1 or manifest.get('flags')!=[]:
+                    raise RuntimeError('LocalSend manifest mismatch')
+                arch=platform.machine()
+                if arch=='aarch64':
+                    packed=globals().get('FRAMEY_LOCALSEND_AARCH64')
+                    if not isinstance(packed,str): raise RuntimeError('Missing LocalSend ARM64 helper')
+                    native=gzip.decompress(base64.b64decode(packed,validate=True))
+                    if (hashlib.sha256(native).hexdigest()!='e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
+                        or native[:4]!=b'\x7fELF' or int.from_bytes(native[18:20],'little')!=183):
+                        raise RuntimeError('LocalSend ARM64 helper mismatch')
+                    helper.write_bytes(native)
+                elif arch!='x86_64':
+                    raise RuntimeError('Unsupported LocalSend helper architecture')
+                helper.chmod(0o700)
+                compat_shims.append('localsend-digest-native')
             # GPL source and reproducible build recipe ship with Frame Control.
             # The exact official helper is x86_64; this plugin needs no root.
             if int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer':

@@ -2,7 +2,7 @@
 
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
-2026-10-27; `13.zip` was added from the digest-verified audit cache on 2026-10-27.
+2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -11,6 +11,7 @@ from a local fixture so CI does not depend on the store being online.
 | --- | --- | --- | --- |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
+| `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `96.zip` | Simple Timer | 1.0.0 | `973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312` |
 | `7.zip` | CSS Loader | 2.1.3 | `99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231` |
 | `12.zip` | MusicControl | 1.1.6 | `246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62` |
@@ -61,3 +62,8 @@ native helper replacement. HTTPS listing/download use only public markers in a
 private directory; uploads remain disabled. The exact source build, GPL licenses
 and reproducible recipe are in [the native assets](../../../ui/vendor/deckyfileserver-1.2.0/README.md).
 The original empty optional-argument bug is reproduced by a negative runtime case.
+Decky Localsend's exact original x86 backend/proxy passed an isolated private
+marker transfer outside Decky. The native Decky gate checks discovery and
+read-only backend status/configuration with its network helper stopped. The
+managed ARM64 helper and transfer remain separately gated; the fixture does
+not prove worn VR or a transfer on Frame.

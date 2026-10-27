@@ -123,7 +123,7 @@ def render(data):
             p['backend']+('; '+', '.join(native) if native else ''),p['hardware']]))+' |')
     lines += ['', '## Native payload portability', '',
         'All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. '
-        'The three Windows DLLs belong to Decky-Framegen. Except for the exact managed DeckyFileServer adaptation below, the installer still rejects these archives. '
+        'The three Windows DLLs belong to Decky-Framegen. Except for the exact managed DeckyFileServer and Decky Localsend adaptations below, the installer still rejects these archives. '
         'Apart from LocalSend and DeckyFileServer, ARM64 builds were not attempted: the constraints below remain unresolved.', '',
         'A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. '
         'Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. '
@@ -133,8 +133,11 @@ def render(data):
         'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
         '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
         'now identifies the official helper source and a reproducible ARM64 build from that revision. '
-        'The exact official x86 backend passed one local private-namespace transfer. '
-        'The official x86 archive remains blocked on Frame; ARM64 transfer and full plugin integration are unverified.', '',
+        'The exact official x86 backend passed one local private-namespace transfer, and the rebuilt ARM64 helper passed one locked real-Frame private marker transfer. '
+        'Published Decky 3.3.0 AMD64/ARM64 runtime checks discovered the adapted plugin and read its stopped status and configuration. '
+        'Only the exact managed 0.4.5 archive can replace its x86 helper on Frame. '
+        'The actual managed Decky service on Frame, user-facing transfer, local discovery and worn VR remain unverified '
+        '([managed adaptation evidence](evidence/framey-localsend-managed-2026-10-27.md)).', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:

@@ -309,6 +309,12 @@ class Renderer(unittest.TestCase):
         resources = {r['from']: r.get('filter', ['**/*']) for r in config['build']['extraResources']}
         self.assertIn('*.js', resources['../ui'])
         self.assertIn('*.js', resources['../frame/android'])
+        self.assertIn('*.gz', resources['../ui/vendor/localsend-0.4.5'])
+        self.assertIn('*.txt', resources['../ui/vendor/localsend-0.4.5'])
+        self.assertIn('build-framey-localsend.py', resources['../scripts'])
+        checker = (ROOT / 'app/build/check-resources.js').read_text()
+        for name in ('aarch64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):
+            self.assertIn(f'ui/vendor/localsend-0.4.5/{name}', checker)
 
 
 class SteamGridDB(unittest.TestCase):

@@ -33,5 +33,10 @@
     "id": 60,
     "shim": "deckyfileserver-user-native",
     "probe": "fileserver"
+  },
+  {
+    "id": 125,
+    "shim": "localsend-digest-native",
+    "probe": "localsend"
   }
 ]

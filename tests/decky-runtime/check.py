@@ -152,7 +152,22 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'fileserver':
+            if case['probe'] == 'localsend':
+                helper = plugin/'bin/localsend-core'
+                expected = ('e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
+                            if __import__('platform').machine() == 'aarch64'
+                            else 'd448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')
+                assert hashlib.sha256(helper.read_bytes()).hexdigest() == expected
+                status = current('get_backend_status')
+                assert status == {'running': False, 'url': 'https://127.0.0.1:53317'}, status
+                settings = current('get_backend_config')
+                assert settings['use_https'] and not settings['auto_save'], settings
+                assert settings['network_interface'] == '*', settings
+                assert settings['download_folder'].startswith(str(base)), settings
+                stopped = current('proxy_get', '/api/localsend/v2/info')
+                assert stopped['status'] == 503 and stopped['data']['error'] == 'Backend not running', stopped
+                report['result'] = 'published Decky discovery and public read-only settings/status RPC passed; network helper remained stopped'
+            elif case['probe'] == 'fileserver':
                 assert until_ready(lambda: current('get_port') == 8000, 'default port')
                 assert current('get_directory') == str(home)
                 assert current('get_server_running') is False
