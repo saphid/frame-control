@@ -1,0 +1,42 @@
+[
+  {
+    "id": 13,
+    "shim": null,
+    "probe": "toggle-settings"
+  },
+  {
+    "id": 12,
+    "shim": "music-control-system-dbus-env",
+    "probe": "mpris"
+  },
+  {
+    "id": 111,
+    "shim": "music-control-system-dbus-env",
+    "probe": "mpris"
+  },
+  {
+    "id": 53,
+    "shim": "shotty-click-app-dir",
+    "probe": "screenshots"
+  },
+  {
+    "id": 89,
+    "shim": "deckyspy-psutil-and-battery",
+    "probe": "system-monitor"
+  },
+  {
+    "id": 96,
+    "shim": "simple-timer-lifecycle",
+    "probe": "timer-lifecycle"
+  },
+  {
+    "id": 60,
+    "shim": "deckyfileserver-user-native",
+    "probe": "fileserver"
+  },
+  {
+    "id": 125,
+    "shim": "localsend-digest-native",
+    "probe": "localsend"
+  }
+]

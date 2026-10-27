@@ -50,7 +50,7 @@ def render(data):
         'record exactly what ran. A [2026-10-26 follow-up](evidence/framey-events-backend-2026-10-26.json) '
         'verified default Notebook drawing/save/reopen across a real backend restart and Simple Timer start/cancel, '
         'countdown/completion events, a visible toast and persisted recents/subtle mode. '
-        'Only private test settings were written. Simple Timer remains partial because its own expired-timer startup '
+        'Only private test settings were written. That initial pass left Simple Timer partial because its own expired-timer startup '
         'raises a missing `timer_task` error; sound/suspend are unsupported. '
         'A [local audio follow-up](evidence/framey-audio-backends-2026-10-26.md) exercised Volume Mixer, Volume Boost and Mixer '
         'through real Decky 3.3.0 amd64 backends on private silent virtual audio targets. Sliders, numeric volume entry, '
@@ -81,9 +81,28 @@ def render(data):
         '[Steam Status/cache](evidence/framey-cache-browser-2026-10-25.md), '
         '[Storage Cleaner](evidence/framey-api-v1-browser-2026-10-25.md), and '
         '[legacy MusicControl](evidence/framey-legacy-2026-10-25.md). '
-        'A [Music Control 1.1.7 backend follow-up](evidence/framey-music-control-bound-methods-2026-10-26.md) '
-        'repairs exact-archive bound-method calls and verifies transport/volume command dispatch against an isolated dbus-send fixture. '
-        'A real MPRIS player and actual ARM64 Decky backend remain unverified.', '',
+        'A [shared Music Control runtime follow-up](evidence/framey-mpris-runtime-2026-10-26.md) corrects the earlier bound-method fixture error: actual Decky uses the legacy class calling convention, so explicit-self calls must stay. '
+        'Exact managed installs also restore the system library path for D-Bus subprocesses, repairing a real Frame OS libtinfo/glibc failure in MusicControl 1.1.6. '
+        'Both official entries pass transport/seek/volume, Info and reopen in local Chromium with actual Decky 3.3.0 amd64 and a private silent MPRIS service. '
+        'Actual ARM64 Decky on the Frame passes read-only empty-player discovery for both. Existing copies need remove/reinstall or an explicit managed update. '
+        'Actual media playback on ARM64, artwork and worn VR remain unverified; both stay partial. '
+        'A [DeckySpy follow-up](evidence/framey-deckyspy-2026-10-26.md) repairs its omitted psutil dependency with pinned BSD stable-ABI amd64/ARM64 wheels and a plugin-local Frame battery-name fallback. '
+        'Its actual Decky 3.3.0 ARM64 backend passed read-only metrics under the shared lock, with memory independently matched to /proc/meminfo. '
+        'Local opaque Chromium used that live ARM64 backend to render CPU, memory, battery, processes and interfaces, display a silent warning toast and save/reopen a private refresh setting. '
+        'DeckySpy qualifies as works for system monitoring while its panel is open. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified. '
+        'Cleanup and an independent removal audit passed; battery stayed 100 → 100 and original service states were preserved. Existing copies need update/reinstall. '
+        'A [Simple Timer lifecycle follow-up](evidence/framey-simple-timer-2026-10-26.md) repairs fresh/expired startup cancellation, '
+        'canceled deadlines that resumed and replaced tasks that still notified. Exact managed installs retain the API1 instance convention. '
+        'Published Decky 3.3.0 discovery/RPC/events verify cancel, replacement, completion and active/canceled/expired restarts in isolation; '
+        'the real ARM64 Frame repeats those lifecycle checks under the shared lock. Local Chromium with that live backend verifies '
+        'Begin/Cancel, countdown and a silent completion toast. Simple Timer qualifies as works for silent in-panel session timers. '
+        'Update/reinstall is required; old receipts stay partial. Sound/suspend are unsupported, closed-panel alerts and worn VR unverified. '
+        'The private service, files, test listeners and processes were removed; independent cleanup audit passed and battery stayed 99 → 99. '
+        'A [shared Toggle follow-up](evidence/framey-toggle-2026-10-27.md) separates standalone Toggle.value from ToggleField.checked. '
+        'Nine official archives consume this API; their remaining blockers and status labels are preserved. '
+        'Local opaque Chromium controls and the exact Pause Games frontend callback pass. Actual published Decky 3.3.0 discovery and '
+        'private settings/exclusion-list persistence pass on amd64 and the ARM64 Frame through the normal CEF bridge. '
+        'Process control and worn VR remain unverified; independent cleanup audit passed.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',
@@ -104,11 +123,21 @@ def render(data):
             p['backend']+('; '+', '.join(native) if native else ''),p['hardware']]))+' |')
     lines += ['', '## Native payload portability', '',
         'All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. '
-        'The three Windows DLLs belong to Decky-Framegen. The installer still rejects these archives. '
-        'Apart from the explicitly described LocalSend experiment, ARM64 builds were not attempted: the constraints below remain unresolved.', '',
+        'The three Windows DLLs belong to Decky-Framegen. Except for the exact managed DeckyFileServer and Decky Localsend adaptations below, the installer still rejects these archives. '
+        'Apart from LocalSend and DeckyFileServer, ARM64 builds were not attempted: the constraints below remain unresolved.', '',
+        'A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. '
+        'Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. '
+        'Hostname-DNS failures and empty optional arguments are repaired. Decky 3.3.0 still exposes `decky.HOME`; that call is unchanged. '
+        'The plugin moves from broken to partial: its frontend advertises HTTP/steamdeck URLs and needs a Steam folder picker. Use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR remain unverified.', '',
         '[LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) '
-        'covers a reproducible MIT helper build and its isolated real-Frame protocol 2.0 info response. '
-        'The official x86 archive remains blocked; full plugin integration and file transfers are unverified.', '',
+        'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
+        '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
+        'now identifies the official helper source and a reproducible ARM64 build from that revision. '
+        'The exact official x86 backend passed one local private-namespace transfer, and the rebuilt ARM64 helper passed one locked real-Frame private marker transfer. '
+        'Published Decky 3.3.0 AMD64/ARM64 runtime checks discovered the adapted plugin and read its stopped status and configuration. '
+        'Only the exact managed 0.4.5 archive can replace its x86 helper on Frame. '
+        'The actual managed Decky service on Frame, user-facing transfer, local discovery and worn VR remain unverified '
+        '([managed adaptation evidence](evidence/framey-localsend-managed-2026-10-27.md)).', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:

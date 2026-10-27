@@ -55,6 +55,7 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <div class="row" style="margin-top:14px"><button id="deckyStorePrevious" class="secondary">Previous</button><span id="deckyStorePage"></span><button id="deckyStoreNext" class="secondary">Next</button></div></div>
 <div id="frameyPanel" hidden><div class="row" style="margin-top:16px"><strong id="frameyTitle"></strong><button id="frameyClose" class="secondary">Close plugin panel</button>
   <button id="frameyScrollUp" class="secondary">Scroll plugin up</button><button id="frameyScrollDown" class="secondary">Scroll plugin down</button></div>
+  <p><small>Hold a scroll button to keep moving through plugin content.</small></p>
   <p id="frameyCompatibility"></p>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
@@ -64,14 +65,15 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
 <div id="extensionPanel" hidden><div class="row" style="margin-top:16px"><strong id="extensionTitle"></strong><button id="extensionClose" class="secondary">Close extension</button></div>
   <iframe id="extensionFrame" title="Frame Control extension" sandbox="allow-scripts" referrerpolicy="no-referrer"></iframe></div>
 <script>
-const key=location.hash.slice(1)||sessionStorage.getItem('frameHeadsetKey')||'';
-if(key)sessionStorage.setItem('frameHeadsetKey',key);
+const key=location.hash.slice(1)||(()=>{try{return sessionStorage.getItem('frameHeadsetKey')||'';}catch(_){return '';}})();
+if(key)try{sessionStorage.setItem('frameHeadsetKey',key);}catch(_){}
 history.replaceState(null,'',location.pathname);
 const byId=id=>document.getElementById(id);
 let latestStatus=null, activeExtension=null, recordBusy=false;
 async function api(path,body){const response=await fetch(path,{method:body?'POST':'GET',
   headers:{'X-Frame-UI':key,'Content-Type':'application/json'},body:body?JSON.stringify(body):undefined});
-  const data=await response.json();if(!response.ok)throw Error(data.error||'Frame request failed');return data;}
+  const data=await response.json();if(!response.ok){const error=Error(data.error||'Frame request failed');
+    error.status=response.status;throw error;}return data;}
 async function refresh(){try{const status=latestStatus=await api('/api/status');
   byId('battery').textContent=status.battery?.percent==null?'Unavailable':`${status.battery.percent}%`;
   const free=status.disk?.home?.free;
@@ -106,7 +108,24 @@ async function refreshGames(){const list=byId('games');try{const data=await api(
     row.append(name,quit);list.append(row);}if(!data.running.length)list.textContent='No games are running.';
   }catch(error){list.textContent=error.message;}}
 function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
-function deckyJobPending(){return !!sessionStorage.getItem('frameyPluginJob');}
+// Some Chromium profiles deny sessionStorage. Keep the reserved request ID in
+// memory so this open panel can still reconnect if the POST response is lost.
+let deckyPendingJob=null;
+function savedDeckyJob(){
+  if(deckyPendingJob)return deckyPendingJob;
+  try{return JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){return null;}
+}
+function rememberDeckyJob(job){
+  deckyPendingJob=job;
+  try{sessionStorage.setItem('frameyPluginJob',JSON.stringify(job));}catch(_){}
+}
+function clearDeckyJob(){
+  deckyPendingJob=null;
+  try{sessionStorage.removeItem('frameyPluginJob');}catch(_){}
+}
+function deckyJobPending(){return !!savedDeckyJob();}
+function newDeckyRequestId(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),
+  byte=>byte.toString(16).padStart(2,'0')).join('');}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
@@ -174,7 +193,7 @@ function deckyJobView(title,message,percent,failed=false){
   byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
   byId('deckyJobStatus').textContent=message;
   const bar=byId('deckyJobProgress');if(Number.isFinite(percent))bar.value=percent;else bar.removeAttribute('value');
-  byId('deckyJobCheck').hidden=!failed||!sessionStorage.getItem('frameyPluginJob');
+  byId('deckyJobCheck').hidden=!failed||!deckyJobPending();
 }
 async function followDeckyJob(job,action,name){
   for(let n=0;n<180;n++){
@@ -182,12 +201,12 @@ async function followDeckyJob(job,action,name){
     try{progress=await api(`/api/job?id=${encodeURIComponent(job)}`);}
     catch(error){
       if(/no such job/i.test(error.message)){
-        sessionStorage.removeItem('frameyPluginJob');
-        throw Error('The app restarted and lost this job result. Refresh installed plugins to see what changed.');
+        clearDeckyJob();
+        throw Error('The server has no record of this request. It may not have arrived, or the app may have restarted. Refresh installed plugins before trying again.');
       }
       throw error;
     }
-    if(progress.done){if(progress.error){sessionStorage.removeItem('frameyPluginJob');throw Error(progress.error);}
+    if(progress.done){if(progress.error){clearDeckyJob();throw Error(progress.error);}
       deckyJobView(`${action} ${name}`,progress.message||`${action} complete`,100);return;}
     deckyJobView(`${action} ${name}`,progress.stage||'Waiting for Frame…',progress.percent);
     await new Promise(resolve=>setTimeout(resolve,1000));
@@ -207,27 +226,31 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
   if(panelClosed)closeFrameyPanel();
   deckyJobView(`${action} ${plugin.name}`,
     panelClosed?'Starting… Old plugin panel closed until the change finishes.':'Starting…',0);
+  const requestId=newDeckyRequestId();
+  rememberDeckyJob({job:requestId,action,name:plugin.name});
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
-    sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true});
+    sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true,requestId});
     if(!started.job)throw Error('The server did not return a job ID');
-    sessionStorage.setItem('frameyPluginJob',JSON.stringify({job:started.job,action,name:plugin.name}));
+    rememberDeckyJob({job:started.job,action,name:plugin.name});
     await followDeckyJob(started.job,action,plugin.name);
-    sessionStorage.removeItem('frameyPluginJob');
+    clearDeckyJob();
     if(panelNote)byId('deckyJobStatus').textContent+=panelNote;
-  }catch(error){deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}${panelNote}`,null,true);}
+  }catch(error){if(error.status>=400&&error.status<500)clearDeckyJob();
+    deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}${panelNote}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}
 }
-async function checkDeckyJob(){let saved;try{saved=JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){saved=null;}
+async function checkDeckyJob(){const saved=savedDeckyJob();
   if(deckyBusy)return;
-  if(!saved||typeof saved.job!=='string'){sessionStorage.removeItem('frameyPluginJob');showDeckyStore();return;}
+  if(!saved||typeof saved.job!=='string'){clearDeckyJob();showDeckyStore();return;}
   deckyBusy=true;byId('deckyJobCheck').hidden=true;
-  try{await followDeckyJob(saved.job,saved.action,saved.name);sessionStorage.removeItem('frameyPluginJob');}
+  try{await followDeckyJob(saved.job,saved.action,saved.name);clearDeckyJob();}
   catch(error){deckyJobView(`${saved.action} ${saved.name}`,`Error: ${error.message}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}}
 byId('deckyJobCheck').onclick=checkDeckyJob;
 function openFrameyPanel(id,name){
   if(deckyBusy||deckyJobPending()||!deckyState?.running)return;
   const installed=(deckyState?.plugins||[]).find(p=>p.storeId===id);if(!installed)return;
+  stopFrameyScrollHold();
   byId('frameyCompatibility').textContent=compatibilityText(installed);
   closeFrameyEvents();
   activeFrameyId=id;activeFrameyReceipt={sha256:installed.sha256,version:installed.version};
@@ -249,15 +272,52 @@ function closeFrameyEvents(){
       session:frameySession,events:[],cursor:0}).catch(()=>{});
   frameyEventsActive=false;
 }
-function closeFrameyPanel(){closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
+function closeFrameyPanel(){stopFrameyScrollHold();closeFrameyEvents();activeFrameyId=null;activeFrameyReceipt=null;frameySession=null;
   byId('frameyFrame').removeAttribute('src');byId('frameyPanel').hidden=true;}
 byId('frameyClose').onclick=closeFrameyPanel;
 function scrollFramey(direction){
-  if(activeFrameyId===null||!frameySession||!['up','down'].includes(direction))return;
-  byId('frameyFrame').contentWindow?.postMessage({type:'framey:scroll',session:frameySession,direction},'*');
+  if(activeFrameyId===null||!frameySession||!['up','down'].includes(direction))return false;
+  const target=byId('frameyFrame').contentWindow;if(!target)return false;
+  target.postMessage({type:'framey:scroll',session:frameySession,direction},'*');
+  return true;
 }
-byId('frameyScrollUp').onclick=()=>scrollFramey('up');
-byId('frameyScrollDown').onclick=()=>scrollFramey('down');
+let frameyScrollHold=null;
+function stopFrameyScrollHold(){
+  if(!frameyScrollHold)return;
+  clearTimeout(frameyScrollHold.delay);
+  clearInterval(frameyScrollHold.repeat);
+  frameyScrollHold=null;
+}
+function bindFrameyScroll(id,direction){
+  const button=byId(id);
+  button.onpointerdown=event=>{
+    if(event.button!==0||event.isPrimary===false)return;
+    stopFrameyScrollHold();
+    if(!scrollFramey(direction))return;
+    const hold={button,direction,pointerId:event.pointerId,delay:null,repeat:null};
+    frameyScrollHold=hold;
+    hold.delay=setTimeout(()=>{
+      if(frameyScrollHold!==hold)return;
+      hold.repeat=setInterval(()=>{
+        if(frameyScrollHold!==hold)return;
+        if(!scrollFramey(direction))stopFrameyScrollHold();
+      },180);
+    },400);
+  };
+  const stop=event=>{
+    if(frameyScrollHold?.button===button&&frameyScrollHold.pointerId===event.pointerId)
+      stopFrameyScrollHold();
+  };
+  button.onpointerup=stop;
+  button.onpointercancel=stop;
+  button.onpointerleave=stop;
+  // Pointerdown already sent one step. Keyboard activation emits a click with
+  // detail 0; direct onclick calls from older tests also mean one step.
+  button.onclick=event=>{if(!event||event.detail===0)scrollFramey(direction);};
+}
+bindFrameyScroll('frameyScrollUp','up');
+bindFrameyScroll('frameyScrollDown','down');
+window.addEventListener('blur',stopFrameyScrollHold);
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
   try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
@@ -282,6 +342,7 @@ window.addEventListener('message',async event=>{
     if(['up','down'].includes(req.direction)&&typeof req.moved==='boolean')
       byId('frameyPanelStatus').textContent=req.moved?'Scrolled plugin '+req.direction:
         'No more plugin content in that direction';
+    if(req.moved===false&&frameyScrollHold?.direction===req.direction)stopFrameyScrollHold();
     return;
   }
   if(req.type==='framey:cache:init'&&req.session===frameySession){
@@ -292,10 +353,12 @@ window.addEventListener('message',async event=>{
     if(req.session===frameySession)frameyCacheSave(activeFrameyId,req.entries);
     return;
   }
-  if(req.type==='framey:ready'){byId('frameyPanelStatus').textContent='Plugin panel ready';
+  if(req.type==='framey:ready'&&req.session===frameySession){byId('frameyPanelStatus').textContent='Plugin panel ready';
     api('/api/framey/check',{kind:'panel',pluginId:activeFrameyId}).catch(()=>{});return;}
-  if(req.type==='framey:input'){api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
-  if(req.type==='framey:error'){byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
+  if(req.type==='framey:input'&&req.session===frameySession){
+    api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
+  if(req.type==='framey:error'&&req.session===frameySession){
+    byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
   if(req.type==='framey:running:close'){
     if(req.session===frameySession&&frameyRunningActive){
       frameyRunningActive=false;

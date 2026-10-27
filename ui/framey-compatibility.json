@@ -183,7 +183,7 @@
         "https://github.com/suchmememanyskill/SDH-CssLoader.git"
       ],
       "status": "partial",
-      "reason": "Panel initialization succeeds; CSS themes patch Steam UI and cannot theme the isolated VR shell.",
+      "reason": "Panel initialization succeeds; CSS themes patch Steam UI and cannot theme the isolated VR shell. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -238,6 +238,11 @@
         "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -474,12 +479,14 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Legacy media controls initialize; player discovery and playback are unverified.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 + MPRIS fixture",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 12,
@@ -506,7 +513,7 @@
         "folder": "MusicControl"
       },
       "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "hardware": "User-session MPRIS player and dbus-send required; no Deck-specific hardware.",
       "uiSurfaces": [
         "local/Steam routes"
       ],
@@ -515,7 +522,9 @@
         "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 13,
@@ -580,12 +589,13 @@
         "https://github.com/wynn1212/SDH-PauseGames.git"
       ],
       "status": "partial",
-      "reason": "Settings and running-game list initialize in local Chromium with an explicit synthetic game; live Frame empty-list reads and lifetime registration/cleanup passed. Process pause/resume, automatic pausing and suspend integration remain unverified/unsupported; backend writes were denied.",
+      "reason": "Settings and a synthetic running-game list render locally. Actual Decky 3.3.0 discovery, private settings writes/readback and exclusion-list persistence pass on amd64 and ARM64 Frame; standalone Toggle now honors its value prop. Live empty-list/lifetime checks passed earlier. Real process pause/resume, automatic pausing, suspend integration and worn VR remain unverified/unsupported.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 13,
@@ -618,6 +628,11 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": true
       }
     },
     {
@@ -927,7 +942,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -935,7 +950,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -1958,7 +1973,7 @@
         "https://github.com/jurassicplayer/decky-autoflatpaks.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -2000,6 +2015,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -4328,13 +4348,15 @@
         "https://github.com/SteamDeckHomebrew/decky-plugin-template.git",
         "https://github.com/grimkor/DeckyFileServer"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Managed install supplies a native ARM64 helper and removes the exact archive's unnecessary root request. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. Frontend address/picker limitations remain; use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Shared Toggle value rendering is repaired; other listed blockers remain.",
+      "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Decky 3.3.0 amd64",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 60,
@@ -4353,7 +4375,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Native file-server backend needs ARM64 dependencies; root requirement also blocks the user service.",
+      "nativePort": "GPL-3.0 helper rebuilt offline for ARM64 with vendored corresponding source. Actual Frame user service passes HTTPS listing/download of a private public fixture; uploads disabled. Exact managed digest only; other native/root archives remain blocked (docs/evidence/framey-fileserver-arm64-2026-10-27.md).",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 60,
@@ -4361,6 +4383,20 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "requiredShims": [
+        "deckyfileserver-user-native"
+      ],
+      "managedNative": {
+        "shim": "deckyfileserver-user-native",
+        "helperSha256": "86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a",
+        "sourceCommit": "dcf3f3ce5104d05811fa8c156c4f58632b84b313",
+        "verification": "Real Decky discovery/public RPC and private read-only HTTPS fixture; docs/evidence/framey-fileserver-arm64-2026-10-27.md"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -4787,7 +4823,7 @@
         "https://github.com/theCapypara/steamdeck-decky-syncthing.git"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog.",
+      "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -4828,6 +4864,11 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog."
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -6981,13 +7022,14 @@
         "https://github.com/Seraphli/decky-spy",
         "https://github.com/Seraphli/decky-spy.git"
       ],
-      "status": "partial",
-      "reason": "Initializer succeeds; account tokens and external service integration were not exercised.",
+      "status": "works",
+      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
       "blockInstall": false,
       "verification": [
         "static archive",
+        "fake-Frame",
         "local browser",
-        "fake-Frame"
+        "real Frame SSH"
       ],
       "browser": {
         "id": 89,
@@ -7007,8 +7049,8 @@
         "accepted": true,
         "folder": "decky-spy"
       },
-      "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "backend": "Python; managed psutil 7.2.2 stable-ABI native amd64/ARM64 dependency",
+      "hardware": "Read-only Linux /proc and network-interface metrics; Frame battery read by power_supply type=Battery. No Deck-specific hardware writes.",
       "uiSurfaces": [
         "toasts"
       ],
@@ -7022,7 +7064,18 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-deckyspy-2026-10-26.json",
+        "mode": "actual Decky 3.3.0 ARM64 with private removable service under shared lock; local opaque Chromium through trusted SSH RPC pipe",
+        "compatShims": [
+          "deckyspy-psutil-and-battery"
+        ],
+        "existingInstallRequires": "explicit managed update or reinstall"
+      },
+      "requiredShims": [
+        "deckyspy-psutil-and-battery"
+      ]
     },
     {
       "id": 90,
@@ -7608,8 +7661,8 @@
         "https://github.com/decktools-xyz/simple-timer",
         "https://github.com/decktools-xyz/simple-timer.git"
       ],
-      "status": "partial",
-      "reason": "Live start/cancel, countdown events, completion toast, persisted recents/subtle mode verified in Chromium with real ARM64 Decky. Upstream expired-timer restart raises missing timer_task. Audio/suspend unsupported; alerts require an open panel; worn VR unverified.",
+      "status": "works",
+      "reason": "Verified for silent in-panel session timers: Chromium Begin/Cancel/countdown/toast with real ARM64 Decky 3.3.0; repaired cancel, replace, completion and active/canceled/expired restarts pass actual loader RPC/events. Update/reinstall required. Sound and suspend unsupported; alerts require an open panel; worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7657,6 +7710,22 @@
           "subscriptionsAfterPanelClose": 0
         },
         "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
+      },
+      "requiredShims": [
+        "simple-timer-lifecycle"
+      ],
+      "lifecycle": {
+        "evidence": "docs/evidence/framey-simple-timer-2026-10-26.md",
+        "actualDeckyVersion": "3.3.0",
+        "instanceApi": 1,
+        "backendRestarts": [
+          "active",
+          "canceled",
+          "expired"
+        ],
+        "realFrame": true,
+        "localBrowser": true,
+        "fakeFrame": true
       }
     },
     {
@@ -9582,13 +9651,15 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Exact official backend bound-method calls are repaired in managed installs. An isolated fake dbus-send target accepted player discovery, transport and volume commands after the patch; real MPRIS players, actual Decky ARM64, album art and worn VR remain unverified.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Python backend"
+        "isolated Python backend",
+        "isolated Decky 3.3.0 + MPRIS fixture",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 111,
@@ -9615,7 +9686,7 @@
         "folder": "MusicControl"
       },
       "backend": "Python",
-      "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
+      "hardware": "User-session MPRIS player and dbus-send required; no Deck-specific hardware.",
       "uiSurfaces": [
         "local/Steam routes"
       ],
@@ -9625,8 +9696,8 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
-      "compatShim": "music-control-bound-methods",
-      "evidence": "docs/evidence/framey-music-control-bound-methods-2026-10-26.md"
+      "compatShim": "music-control-system-dbus-env",
+      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
     },
     {
       "id": 112,
@@ -9796,7 +9867,7 @@
         "https://github.com/xXJSONDeruloXx/lsfg-vk"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; runtime LSFG/Windows DLL downloads and Vulkan integration are not ARM64-validated.",
+      "reason": "Initializer succeeds; runtime LSFG/Windows DLL downloads and Vulkan integration are not ARM64-validated. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -9845,6 +9916,11 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -10166,7 +10242,7 @@
         "https://github.com/wtlnetwork/muon.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -10210,6 +10286,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -11061,13 +11142,17 @@
         "https://github.com/moyoez/decky-localsend",
         "https://github.com/moyoez/decky-localsend.git"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Exact managed 0.4.5 archive replaces its x86 helper with a pinned ARM64 build. Published Decky 3.3.0 ARM64 stopped status/configuration RPCs and a private real-Frame ARM64 helper marker transfer passed. The managed service, user-facing discovery/transfer, Steam routes and worn VR remain unverified.",
+      "blockInstall": false,
       "verification": [
-        "static archive",
-        "local browser",
-        "fake-Frame"
+        "exact archive and source hashes",
+        "local Chromium initial panel",
+        "host managed transaction",
+        "fake Frame managed install/remove",
+        "private x86 backend transfer",
+        "published Decky 3.3.0 AMD64/ARM64 stopped status/configuration RPCs",
+        "private real Frame ARM64 helper marker transfer"
       ],
       "browser": {
         "id": 125,
@@ -11093,7 +11178,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "MIT LocalSend-Go 66edc509a28b9f877e7374504892dcbc653a4da4 reproducibly cross-built with Go 1.25.7/CGO_ENABLED=0 for ARM64; SHA-256 e79238f6051ce34f172f765ae918d3d902b819e27377989a55e5b1eba10e46f9. Help/official backend CLI flags and protocol 2.0 info endpoint passed on real Frame in an isolated network namespace. No file transfer or full plugin/CEF integration tested; exact source match to shipped helper unproven. Official ZIP stays x86_64 and blocked.",
+      "nativePort": "Exact official x86 helper is reproducible from pinned MIT source; the managed installer replaces only the exact 0.4.5 digest with SHA-256 e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae on ARM64. The Frame rechecks original Python/helper bytes, replacement digest and ELF machine; x86 keeps the original helper. Local official x86 backend/proxy and real Frame rebuilt ARM64 helper each passed one private marker transfer. Published Decky 3.3.0 AMD64/ARM64 discovery and stopped status/configuration RPCs passed. The actual managed Decky service on Frame, network discovery, user-facing transfer, Steam routes and worn VR remain unverified (docs/evidence/framey-localsend-managed-2026-10-27.md).",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -11105,6 +11190,15 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-localsend/bin/localsend-core."
+      },
+      "requiredShims": [
+        "localsend-digest-native"
+      ],
+      "managedNative": {
+        "shim": "localsend-digest-native",
+        "helperSha256": "e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae",
+        "sourceCommit": "ad28b8e9440e17e44b4735a6c4aa0512009cf333",
+        "verification": "Host transaction and fake Frame managed install/remove; local original x86 backend private marker transfer. Published Decky ARM64 runtime and real Frame transfer pending (docs/evidence/framey-localsend-managed-2026-10-27.md)."
       }
     },
     {
@@ -11193,7 +11287,7 @@
         "https://github.com/casey/just"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object.",
+      "reason": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -11227,6 +11321,11 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object."
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -11511,7 +11610,7 @@
         "https://github.com/tikh-iv/ShadowDeck.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -11549,6 +11648,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {

@@ -14,9 +14,20 @@ action calls the backend, so it reads the persisted setting rather than a
 browser cache. A missing, damaged, or old non-boolean value reads as the
 caller's default;
 the next save atomically replaces the sample's settings file.
+The current file is `{"schema": 1, "enabled": true|false}`. An unversioned
+`{"enabled": true|false}` file from the first sample release still reads, and
+the next save writes schema 1. A file with another explicit schema returns a
+visible read or save error and remains untouched, so downgrading the sample
+cannot erase settings written by a newer version. Add a deliberate migration
+for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
 event is ignored; after the request settles, a new change can be saved.
+**Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
+it without a backend call; **Reset** saves `false` through the same guarded
+write path as the toggle. This is a safe example of putting a settings change
+behind an explicit confirmation in Framey. It has not been tried with a
+physical controller in a worn headset.
 
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,
@@ -48,7 +59,8 @@ plugin directory does not enable its VR panel.
 Run `python3 -m unittest discover -s tests -p test_framey_sample.py` from the
 repository root. It checks backend persistence and evaluates the built bundle
 against Framey's actual host script, including the quick action's scoped
-backend call and local route registration/navigation. The fake Frame store flow is exercised by
+backend call, modal cancel/confirm behavior, and local route
+registration/navigation. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 

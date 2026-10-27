@@ -107,9 +107,16 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual((catalogue[0]['version'], catalogue[0]['sha256']), ('1.0.0', HASHES[0]))
         status, _, _ = api('POST', '/api/decky/plugin', {'action':'install','id':999})
         self.assertEqual(status, 400)  # Third-party code needs explicit acknowledgement.
-        job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'install','id':999,'acknowledged':True}))
+        request = {'action':'install','id':999,'acknowledged':True,
+                   'requestId':'0123456789abcdef' * 2}
+        started = ok('POST', '/api/decky/plugin', request)
+        self.assertEqual(ok('POST', '/api/decky/plugin', request)['job'], started['job'])
+        status, conflict, _ = api('POST', '/api/decky/plugin', {**request, 'id':998})
+        self.assertEqual(status, 409)
+        self.assertIn('already used', conflict['error'])
+        job = finished(started)
         self.assertFalse(job.get('error'), job)
+        self.assertEqual(ok('POST', '/api/decky/plugin', request)['job'], started['job'])
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.0.0')
         self.assertIn('Sample 1.0.0', ssh('cat ~/.local/share/frame-control/decky/plugins/sample-panel/dist/index.js'))
         receipt = HASHES[0]
@@ -185,6 +192,9 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 96:
+                    self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'works')
                 if plugin['id'] == 135:
                     chunk = 'chunks/pluginApi-B8sV7970.js'
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
@@ -192,13 +202,32 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(
                         ssh(f'sha256sum {installed}/dist/{chunk}').split()[0],
                         hashlib.sha256(expected_chunk).hexdigest())
+                if plugin['id'] == 60:
+                    self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['deckyfileserver-user-native'])
+                    import frame_decky_store
+                    arch = ssh('uname -m').strip()
+                    self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
+                                     frame_decky_store.FILESERVER_BINARIES[arch])
+                if plugin['id'] == 125:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+                    arch = ssh('uname -m').strip()
+                    self.assertEqual(ssh(f'sha256sum {installed}/bin/localsend-core').split()[0],
+                                     frame_decky_store.LOCALSEND_AARCH64 if arch == 'aarch64'
+                                     else frame_decky_store.LOCALSEND_ORIGINAL)
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir'])
-                if plugin['id'] == 111:
+                if plugin['id'] == 89:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['music-control-bound-methods'])
+                    self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])
+                    self.assertEqual(ssh(f'test -f {installed}/py_modules/psutil/_psutil_linux.abi3.so && test -f {installed}/py_modules/framey_battery.py && echo yes').strip(), 'yes')
+                if plugin['id'] in (12, 111):
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env'])
                 job = finished(ok('POST', '/api/decky/plugin',
                                   {'action':'remove','id':plugin['id'],'acknowledged':True}))
                 self.assertFalse(job.get('error'), job)

@@ -3,14 +3,18 @@
 Only Frame Control owned plugin folders can be updated or removed. The store
 digest validates transport, not plugin trust; store plugins run as the user.
 """
+import base64
+import gzip
 import hashlib
 import io
 import json
 import os
+from pathlib import Path
 import re
 import secrets
 import urllib.request
 import zipfile
+from pathlib import Path
 
 import frame_decky
 import framey_compatibility
@@ -23,6 +27,17 @@ MAX_ZIP = 50 * 1024 * 1024
 MAX_UNPACKED = 150 * 1024 * 1024
 SAFE_FOLDER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,99}\Z')
 SHA = re.compile(r'[0-9a-f]{64}\Z')
+FILESERVER_DIGEST = '7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0'
+FILESERVER_BINARIES = {
+    'x86_64': '5e90efd1bf5163bef1686045f4714ad0e4fd0f54edb037fce8cdb06c58177bcb',
+    'aarch64': '86b80021ebd62ed619eba065757c1122defa5a74b2c045aa44a0c6b4403a508a',
+}
+FILESERVER_ORIGINAL = 'd9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9'
+LOCALSEND_DIGEST = 'e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7'
+LOCALSEND_ORIGINAL = 'd448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843'
+LOCALSEND_MAIN = 'db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8ad'
+LOCALSEND_AARCH64 = 'e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
+
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
 
@@ -68,6 +83,8 @@ def catalog():
         counts[item['id']] = counts.get(item['id'], 0) + 1
     unique = [item for item in result if counts[item['id']] == 1]
     for item in unique:
+        if item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST:
+            item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
 
@@ -86,6 +103,10 @@ def archive_info(data, expected_hash, expected_name):
         folder = manifests[0].split('/')[0]
         if not SAFE_FOLDER.fullmatch(folder):
             raise ValueError('Invalid plugin folder')
+        fileserver = (expected_hash == FILESERVER_DIGEST and expected_name == 'DeckyFileServer'
+                      and folder == 'DeckyFileServer')
+        localsend = (expected_hash == LOCALSEND_DIGEST and expected_name == 'Decky Localsend'
+                     and folder == 'decky-localsend')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -115,7 +136,11 @@ def archive_info(data, expected_hash, expected_name):
             with archive.open(entry) as source:
                 header = source.read(20)
             if header[:4] == b'\x7fELF' and int.from_bytes(header[18:20], 'little') != 183:
-                raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
+                if not ((fileserver and name == 'DeckyFileServer/bin/backend'
+                         and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL)
+                        or (localsend and name == 'decky-localsend/bin/localsend-core'
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == LOCALSEND_ORIGINAL)):
+                    raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
         manifest = json.loads(archive.read(manifests[0]))
@@ -126,13 +151,56 @@ def archive_info(data, expected_hash, expected_name):
         flags = manifest.get('flags', [])
         if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
             raise ValueError('Invalid plugin flags')
-        if 'root' in flags or '_root' in flags:
+        if ('root' in flags or '_root' in flags) and not fileserver:
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
+        if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
+            raise ValueError('LocalSend Python source differs from the pinned archive')
         return folder
 
 
+DECKYSPY_DIGEST = '2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7'
+PSUTIL_DIGESTS = {
+    'x86_64': '076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+    'aarch64': 'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+}
+
+
+def apply_script(plugin_id, digest):
+    """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 125 and digest == LOCALSEND_DIGEST:
+        packed = (Path(__file__).parent/'vendor/localsend-0.4.5/aarch64.gz').read_bytes()
+        data = gzip.decompress(packed)
+        if hashlib.sha256(data).hexdigest() != LOCALSEND_AARCH64:
+            raise ValueError('Bundled LocalSend ARM64 helper SHA-256 mismatch')
+        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'+APPLY)
+    if plugin_id == 60 and digest == FILESERVER_DIGEST:
+        assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
+        payloads = {}
+        for arch, expected in FILESERVER_BINARIES.items():
+            packed = (assets/f'{arch}.gz').read_bytes()
+            data = gzip.decompress(packed)
+            if hashlib.sha256(data).hexdigest() != expected:
+                raise ValueError('Bundled DeckyFileServer SHA-256 mismatch')
+            payloads[arch] = base64.b64encode(packed).decode('ascii')
+        # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
+        return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
+                +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+    if plugin_id != 89 or digest != DECKYSPY_DIGEST:
+        return APPLY
+    wheels = {}
+    for arch, expected in PSUTIL_DIGESTS.items():
+        data = (Path(__file__).parent/'vendor/psutil-7.2.2'/f'{arch}.whl').read_bytes()
+        if hashlib.sha256(data).hexdigest() != expected:
+            raise ValueError('Bundled psutil dependency SHA-256 mismatch')
+        wheels[arch] = base64.b64encode(data).decode('ascii')
+    # stdin is Python source, never shell arguments or a shared remote temp file.
+    battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
+    return ('FRAMEY_BACKEND_WHEELS = '+repr(wheels)+'\n'
+            +'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'+APPLY)
+
+
 APPLY = r'''
-import fcntl,hashlib,json,os,pathlib,shutil,subprocess,sys,zipfile
+import base64,fcntl,gzip,hashlib,io,json,os,pathlib,platform,shutil,subprocess,sys,zipfile
 action,token,plugin_id,digest,folder,version,expected_installed = sys.argv[1:]
 base=pathlib.Path.home()/'.local/share/frame-control/decky/plugins'
 unit=pathlib.Path.home()/'.config/systemd/user/frame-control-decky.service'
@@ -174,6 +242,15 @@ try:
             files=z.infolist()
             if not files or len(files)>3000 or sum(f.file_size for f in files)>150*1024*1024:
                 raise RuntimeError('Plugin archive too large')
+            fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
+            localsend=(int(plugin_id)==125 and digest=='e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7' and folder=='decky-localsend')
+            manifest=json.loads(z.read(folder+'/plugin.json'))
+            if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
+            flags=manifest.get('flags',[])
+            if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):
+                raise RuntimeError('Invalid plugin flags')
+            if ('root' in flags or '_root' in flags) and not fileserver:
+                raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
             for f in files:
                 parts=f.filename.split('/')
@@ -194,6 +271,15 @@ try:
                         z.read(prior)!=z.read(f)):
                         raise RuntimeError('Unsafe plugin archive')
                 else: seen[f.filename]=f
+                if not f.is_dir():
+                    with z.open(f) as source: header=source.read(20)
+                    if header[:4]==b'\x7fELF' and int.from_bytes(header[18:20],'little')!=183:
+                        if not ((fileserver and f.filename==folder+'/bin/backend' and
+                                 hashlib.sha256(z.read(f)).hexdigest()=='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9')
+                                or (localsend and f.filename==folder+'/bin/localsend-core' and
+                                    hashlib.sha256(z.read(f)).hexdigest()=='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')):
+                            raise RuntimeError('Plugin contains a non-ARM64 Linux binary')
+                    if header[:2]==b'MZ': raise RuntimeError('Plugin contains a Windows binary')
             stage.mkdir(mode=0o700)
             z.extractall(stage)
             # zipfile drops execute bits. Legacy plugins also publish shebang
@@ -209,6 +295,170 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if localsend:
+                helper=unpacked/'bin/localsend-core'
+                source=unpacked/'main.py'
+                if hashlib.sha256(helper.read_bytes()).hexdigest()!='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843':
+                    raise RuntimeError('LocalSend original helper mismatch')
+                if hashlib.sha256(source.read_bytes()).hexdigest()!='db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8ad':
+                    raise RuntimeError('LocalSend Python source mismatch')
+                if manifest.get('name')!='Decky Localsend' or manifest.get('api_version')!=1 or manifest.get('flags')!=[]:
+                    raise RuntimeError('LocalSend manifest mismatch')
+                arch=platform.machine()
+                if arch=='aarch64':
+                    packed=globals().get('FRAMEY_LOCALSEND_AARCH64')
+                    if not isinstance(packed,str): raise RuntimeError('Missing LocalSend ARM64 helper')
+                    native=gzip.decompress(base64.b64decode(packed,validate=True))
+                    if (hashlib.sha256(native).hexdigest()!='e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
+                        or native[:4]!=b'\x7fELF' or int.from_bytes(native[18:20],'little')!=183):
+                        raise RuntimeError('LocalSend ARM64 helper mismatch')
+                    helper.write_bytes(native)
+                elif arch!='x86_64':
+                    raise RuntimeError('Unsupported LocalSend helper architecture')
+                helper.chmod(0o700)
+                compat_shims.append('localsend-digest-native')
+            # GPL source and reproducible build recipe ship with Frame Control.
+            # The exact official helper is x86_64; this plugin needs no root.
+            if int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer':
+                helper=unpacked/'bin/backend'
+                source=unpacked/'main.py'
+                if hashlib.sha256(helper.read_bytes()).hexdigest()!='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9':
+                    raise RuntimeError('DeckyFileServer original helper mismatch')
+                if hashlib.sha256(source.read_bytes()).hexdigest()!='4fb60745c083465d198d84e1abb0afdb59695d9eec3c873b0b35247676af05c3':
+                    raise RuntimeError('DeckyFileServer Python source mismatch')
+                arch=platform.machine()
+                machine={'aarch64':183,'x86_64':62}.get(arch)
+                hashes=globals().get('FRAMEY_FILESERVER_HASHES',{})
+                packed=globals().get('FRAMEY_FILESERVER_BINARIES',{}).get(arch)
+                if not machine or not packed: raise RuntimeError('Missing native DeckyFileServer helper')
+                native=gzip.decompress(base64.b64decode(packed,validate=True))
+                if (hashlib.sha256(native).hexdigest()!=hashes.get(arch) or native[:4]!=b'\x7fELF'
+                    or int.from_bytes(native[18:20],'little')!=machine):
+                    raise RuntimeError('DeckyFileServer native helper mismatch')
+                helper.write_bytes(native)
+                helper.chmod(0o700)
+                manifest_path=unpacked/'plugin.json'
+                manifest=json.loads(manifest_path.read_text())
+                if manifest.get('name')!='DeckyFileServer' or manifest.get('api_version')!=1 or manifest.get('flags')!=['_root']:
+                    raise RuntimeError('DeckyFileServer manifest mismatch')
+                manifest['flags']=[]
+                manifest['publish']['tags']=[tag for tag in manifest['publish']['tags'] if tag not in ('root','_root')]
+                manifest_path.write_text(json.dumps(manifest)+'\n')
+                text=source.read_text()
+                # Go flag parsing stops at an empty positional argument. Filter
+                # omitted boolean flags so -disablethumbnails actually takes effect.
+                text=text.replace('                    ],\n                    stdout=PIPE,',
+                                  '                    ] if arg],\n                    stdout=PIPE,')
+                text=text.replace('                    [\n                        f"{decky.DECKY_PLUGIN_DIR}',
+                                  '                    [arg for arg in [\n                        f"{decky.DECKY_PLUGIN_DIR}')
+                # Hostname DNS is not guaranteed on Frame OS. A UDP connect
+                # selects the kernel source address without sending any packet.
+                text=text.replace('        return socket.gethostbyname(socket.gethostname())',
+                    '        try:\n            return socket.gethostbyname(socket.gethostname())\n'
+                    '        except OSError:\n            with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as probe:\n'
+                    '                try:\n                    probe.connect(("192.0.2.1", 9))\n'
+                    '                    return probe.getsockname()[0]\n'
+                    '                except OSError:\n                    return "127.0.0.1"')
+                # Configure thumbnail policy before launching the helper.
+                old='            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])\n            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])'
+                new='            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])\n            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])'
+                if old not in text: raise RuntimeError('DeckyFileServer start configuration changed')
+                source.write_text(text.replace(old,new))
+                compat_shims.append('deckyfileserver-user-native')
+            # Simple Timer 1.0.0 has annotation-only task state, orphaned
+            # replacement tasks and canceled deadlines that resume on restart.
+            # Preserve its API1 instance convention and upstream license.
+            if int(plugin_id)==96 and digest=='973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312' and folder=='simple-timer':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                start='    async def start_timer('; end='    async def load_recents('
+                if source.count(start)!=1 or source.count(end)!=1: raise RuntimeError('Simple Timer compatibility source changed')
+                a=source.index(start); b=source.index(end,a)
+                source=source[:a]+"""    async def _stop_timer(self):
+        # Call only under timer_lock. Joining prevents a replaced task from
+        # updating the new timer or sending a stale completion notification.
+        task, self.timer_task = self.timer_task, None
+        if task is not None and task is not asyncio.current_task():
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+
+    async def start_timer(self, seconds: int):
+        async with self.timer_lock:
+            await self._stop_timer()
+            recent = await self.settings_getSetting(settings_key_recent_timers, [])
+            await self.settings_setSetting(settings_key_recent_timers, [seconds] + recent[:4])
+            deadline = time.time() + seconds
+            await self.settings_setSetting(settings_key_timer_end, deadline)
+            await self.settings_commit()
+            self.seconds_remaining = seconds
+            self.timer_task = self.loop.create_task(self.timer_handler(datetime.fromtimestamp(deadline)))
+            await self.load_recents()
+            await self.load_remaining_seconds()
+
+    async def timer_handler(self, timer_end: datetime):
+        while True:
+            remaining = timer_end.timestamp() - time.time()
+            if remaining <= 0:
+                break
+            await asyncio.sleep(min(5, remaining))
+            self.seconds_remaining = max(0, timer_end.timestamp() - time.time())
+            await self.load_remaining_seconds()
+        async with self.timer_lock:
+            if self.timer_task is not asyncio.current_task():
+                return
+            self.timer_task = None
+            self.seconds_remaining = 0
+            await self.settings_setSetting(settings_key_timer_end, None)
+            await self.settings_commit()
+            await self.load_remaining_seconds()
+            subtle = await self.settings_getSetting(settings_key_subtle_mode, False)
+            if remaining <= -10:
+                await decky.emit("simple_timer_event", "Your timer has expired!", True)
+            else:
+                await decky.emit("simple_timer_event", "Your session has ended!", subtle)
+
+    async def cancel_timer(self):
+        async with self.timer_lock:
+            await self._stop_timer()
+            self.seconds_remaining = 0
+            await self.settings_setSetting(settings_key_timer_end, None)
+            await self.settings_commit()
+            await self.load_remaining_seconds()
+
+"""+source[b:]
+                start='    async def _main('; end='    async def _uninstall('
+                if source.count(start)!=1 or source.count(end)!=1: raise RuntimeError('Simple Timer compatibility source changed')
+                a=source.index(start); b=source.index(end,a)
+                source=source[:a]+"""    async def _main(self):
+        self.loop = asyncio.get_running_loop()
+        self.timer_task = None
+        self.timer_lock = asyncio.Lock()
+        self.seconds_remaining = 0
+        await self.settings_read()
+        deadline = await self.settings_getSetting(settings_key_timer_end, None)
+        if deadline is not None:
+            self.seconds_remaining = max(0, deadline - time.time())
+            if self.seconds_remaining > 0:
+                # Resume the exact deadline without adding another recent timer.
+                self.timer_task = self.loop.create_task(self.timer_handler(datetime.fromtimestamp(deadline)))
+            else:
+                await self.cancel_timer()
+        await self.load_recents()
+        await self.load_subtle_mode()
+        decky.logger.info("Simple Timer has been initialised.")
+
+    async def _unload(self):
+        async with self.timer_lock:
+            # Backend unload is a pause; only explicit cancel clears the deadline.
+            await self._stop_timer()
+        decky.logger.info("Simple Timer has been unloaded.")
+
+"""+source[b:]
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('simple-timer-lifecycle')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's
@@ -228,26 +478,68 @@ try:
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
-            # Music Control 1.1.7 passes `self` to its own bound methods.
-            # Python has already bound that argument, so even read-only player
-            # discovery raises TypeError. Repair only the SHA-pinned official
-            # source, and fail the transaction if its expected calls change.
-            if int(plugin_id)==111 and digest=='3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9' and folder=='MusicControl':
+            # DeckySpy's official archive omits its required psutil dependency.
+            # The BSD wheels are packaged offline by Frame Control and selected
+            # for the native loader; no pip, network or system path changes.
+            if int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy':
+                arch=platform.machine()
+                pins={
+                    'x86_64':'076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
+                    'aarch64':'b0726cecd84f9474419d67252add4ac0cd9811b04d61123054b9fb6f57df6e9e',
+                }
+                encoded=globals().get('FRAMEY_BACKEND_WHEELS',{}).get(arch)
+                if arch not in pins or not encoded:
+                    raise RuntimeError('Missing native psutil dependency for DeckySpy')
+                wheel_data=base64.b64decode(encoded,validate=True)
+                if hashlib.sha256(wheel_data).hexdigest()!=pins[arch]:
+                    raise RuntimeError('DeckySpy psutil dependency SHA-256 mismatch')
+                modules=unpacked/'py_modules'
+                for name in ('psutil','psutil-7.2.2.dist-info'):
+                    if (modules/name).exists(): raise RuntimeError('DeckySpy dependency collides with archive')
+                with zipfile.ZipFile(io.BytesIO(wheel_data)) as wheel:
+                    for member in wheel.infolist():
+                        path=pathlib.PurePosixPath(member.filename)
+                        if (path.is_absolute() or '..' in path.parts or not path.parts or
+                            path.parts[0] not in ('psutil','psutil-7.2.2.dist-info')):
+                            raise RuntimeError('Unsafe psutil dependency member')
+                        if member.is_dir(): continue
+                        payload=wheel.read(member)
+                        if payload[:4]==b'\x7fELF' and int.from_bytes(payload[18:20],'little')!=({'x86_64':62,'aarch64':183}[arch]):
+                            raise RuntimeError('Incorrect psutil native architecture')
+                        dest=modules/member.filename
+                        dest.parent.mkdir(parents=True,exist_ok=True)
+                        dest.write_bytes(payload)
+                        dest.chmod(0o600)
+                compat=modules/'framey_battery.py'
+                if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
+                battery_source=globals().get('FRAMEY_BACKEND_BATTERY_SOURCE')
+                if not isinstance(battery_source,str) or not battery_source:
+                    raise RuntimeError('Missing DeckySpy battery compatibility source')
+                compat.write_text(battery_source,encoding='utf-8')
                 main=unpacked/'main.py'
                 source=main.read_text(encoding='utf-8')
-                fixes={
-                    'self._get_dbus_env(self)':('self._get_dbus_env()',10),
-                    'self._sp_player_dbus(self,':('self._sp_player_dbus(',7),
-                    'self._sp_dbus_set(self,':('self._sp_dbus_set(',1),
-                    'self.sp_get_volume(self)':('self.sp_get_volume()',2),
-                    'self.sp_set_volume(self,':('self.sp_set_volume(',2),
-                }
-                for old,(new,count) in fixes.items():
-                    if source.count(old)!=count:
-                        raise RuntimeError('Music Control compatibility source changed')
-                    source=source.replace(old,new)
+                old='        battery = psutil.sensors_battery()\n'
+                if source.count(old)!=1: raise RuntimeError('DeckySpy battery source changed')
+                source=source.replace(old,'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
                 main.write_text(source,encoding='utf-8')
-                compat_shims.append('music-control-bound-methods')
+                compat_shims.append('deckyspy-psutil-and-battery')
+            # These legacy backends launch system dbus-send (1.1.6 via /bin/sh).
+            # Decky's PyInstaller LD_LIBRARY_PATH selects bundled libtinfo built
+            # against newer glibc than Frame OS. Restore its saved system path
+            # only in the copied subprocess environment; retain legacy self calls.
+            music_digests={
+                12:'246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62',
+                111:'3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9',
+            }
+            if digest==music_digests.get(int(plugin_id)) and folder=='MusicControl':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                old='        env = os.environ.copy()\n'
+                if source.count(old)!=1:
+                    raise RuntimeError('Music Control compatibility source changed')
+                source=source.replace(old,old+'        env["LD_LIBRARY_PATH"] = env.get("LD_LIBRARY_PATH_ORIG", "")\n')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('music-control-system-dbus-env')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
@@ -346,7 +638,7 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
             ssh('umask 077; cat > ' + remote, stdin=data, text=False, timeout=120)
         report({'install':'Installing', 'update':'Updating', 'remove':'Removing'}[action] + ' plugin on Frame', 80)
         return json.loads(ssh(f'python3 - {action} {token} {plugin_id} {plugin["sha256"]} {folder} {plugin["version"]} {expected_installed}',
-                              stdin=APPLY, timeout=90))
+                              stdin=apply_script(plugin_id, plugin["sha256"]), timeout=90))
     finally:
         if data is not None:
             try: ssh('rm -f ' + remote, timeout=10)

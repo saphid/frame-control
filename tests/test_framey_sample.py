@@ -1,6 +1,7 @@
 """The author example stores settings as a normal Decky user plugin."""
 import asyncio
 import importlib.util
+import json
 from pathlib import Path
 import subprocess
 import sys
@@ -36,7 +37,8 @@ class SamplePlugin(unittest.TestCase):
             self.assertTrue(asyncio.run(first.set_setting('enabled', True)))
             second = backend(folder)
             self.assertTrue(asyncio.run(second.get_setting('enabled', False)))
-            self.assertTrue((Path(folder) / 'settings.json').is_file())
+            self.assertEqual(json.loads((Path(folder) / 'settings.json').read_text()),
+                             {'schema': 1, 'enabled': True})
 
     def test_backend_rejects_unknown_keys_and_non_boolean_values(self):
         with tempfile.TemporaryDirectory() as folder:
@@ -55,6 +57,43 @@ class SamplePlugin(unittest.TestCase):
                     self.assertFalse(asyncio.run(plugin.get_setting('enabled', False)))
                     self.assertTrue(asyncio.run(plugin.get_setting('enabled', True)))
             self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
+            self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+
+    def test_legacy_boolean_survives_restart_and_migrates_on_save(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            path.write_text('{"enabled": true}\n')
+            self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+            self.assertEqual(json.loads(path.read_text()), {'enabled': True},
+                             'Reading must not rewrite a user setting')
+            self.assertTrue(asyncio.run(backend(folder).set_setting('enabled', False)))
+            self.assertEqual(json.loads(path.read_text()), {'schema': 1, 'enabled': False})
+            self.assertFalse(asyncio.run(backend(folder).get_setting('enabled', True)))
+
+    def test_newer_schema_is_preserved_on_read_and_save(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            original = '{"schema": 2, "enabled": true, "future": "keep"}\n'
+            path.write_text(original)
+            plugin = backend(folder)
+            with self.assertRaisesRegex(ValueError, 'unsupported sample version'):
+                asyncio.run(plugin.get_setting('enabled', False))
+            with self.assertRaisesRegex(ValueError, 'unsupported sample version'):
+                asyncio.run(plugin.set_setting('enabled', False))
+            self.assertEqual(path.read_text(), original)
+            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+
+    def test_failed_atomic_replace_keeps_previous_setting(self):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / 'settings.json'
+            plugin = backend(folder)
+            self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
+            previous = path.read_bytes()
+            with patch('os.replace', side_effect=OSError('storage unavailable')):
+                with self.assertRaisesRegex(OSError, 'storage unavailable'):
+                    asyncio.run(plugin.set_setting('enabled', False))
+            self.assertEqual(path.read_bytes(), previous)
+            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
             self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
 
 

@@ -1,7 +1,7 @@
 {
   "name": "frame-control",
   "productName": "Frame Control",
-  "version": "0.4.48",
+  "version": "0.4.51",
   "description": "Desktop app for managing a Valve Steam Frame over SSH",
   "private": true,
   "main": "main.js",
@@ -61,6 +61,21 @@
         ]
       },
       {
+        "from": "../ui/vendor/deckyfileserver-1.2.0",
+        "to": "ui/vendor/deckyfileserver-1.2.0",
+        "filter": ["*.gz", "*.txt", "README.md"]
+      },
+      {
+        "from": "../ui/vendor/localsend-0.4.5",
+        "to": "ui/vendor/localsend-0.4.5",
+        "filter": ["*.gz", "*.txt", "README.md"]
+      },
+      {
+        "from": "../ui/vendor/psutil-7.2.2",
+        "to": "ui/vendor/psutil-7.2.2",
+        "filter": ["*.whl", "LICENSE.txt", "README.md"]
+      },
+      {
         "from": "../ui/apk_sources",
         "to": "ui/apk_sources",
         "filter": [
@@ -75,7 +90,9 @@
           "*.sh",
           "obs-headset-source.py",
           "frame_power_sample.py",
-          "frame_power_report.py"
+          "frame_power_report.py",
+          "build-framey-fileserver.py",
+          "build-framey-localsend.py"
         ]
       },
       {

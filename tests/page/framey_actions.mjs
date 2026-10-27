@@ -46,6 +46,22 @@ const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,typ
   [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
 // Disabled controls stay inert even if a caller invokes their handlers directly.
 let changed=0;
+// DFL.Toggle is a standalone value-controlled input. ToggleField uses checked.
+const toggleChanges=[];
+for(const value of [true,false]) {
+  const input=nodes(window.DFL.Toggle({value,onChange:v=>toggleChanges.push(v)}),'input')[0];
+  assert.equal(input.props.checked,value,'Toggle must render its value prop');
+  input.props.onChange({target:{checked:!value}});
+}
+assert.deepEqual(toggleChanges,[false,true]);
+const disabledToggle=nodes(window.DFL.Toggle({value:true,disabled:true,
+  onChange:()=>changed++}),'input')[0];
+assert.equal(disabledToggle.props.checked,true);
+assert.equal(disabledToggle.props.disabled,true);
+disabledToggle.props.onChange({target:{checked:false}});
+assert.equal(changed,0);
+const fieldToggle=nodes(window.DFL.ToggleField({checked:true,value:false}),'input')[0];
+assert.equal(fieldToggle.props.checked,true,'ToggleField must retain its checked contract');
 const toggle=nodes(window.DFL.ToggleField({label:'Enabled',checked:true,disabled:true,
   onChange:()=>changed++}),'input')[0];
 const options=[{label:'Modes',options:[{label:'Slow',data:'slow'},{label:'Fast',data:'fast'}]}];
@@ -253,6 +269,14 @@ nodes(tabs,'button')[2].props.onClick();
 assert.deepEqual(tabChanges,['one']);
 assert.equal(window.DFL.Spinner({}).props.role,'status');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
+assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
+  'an indeterminate progress element must omit its value');
+assert.equal(window.DFL.ProgressBarItem({nProgress:35}).props.value,35);
+const progressInfo=window.DFL.ProgressBarWithInfo({indeterminate:true,
+  sOperationText:'Downloading plugin'});
+assert.equal(nodes(progressInfo,'progress')[0].props.value,undefined);
+assert.equal(nodes(progressInfo,'small')[0].props.role,'status');
+assert.equal(nodes(progressInfo,'small')[0].children[0],'Downloading plugin');
 assert.equal(window.DFL.joinClassNames('one',null,'two'),'one two');
 let eventCount=0;
 const unsubscribe=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(()=>eventCount++);
@@ -464,11 +488,47 @@ assert.equal(window.DFL.useParams().view,'art');
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art/extra'),false);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123?admin=1'),false);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game//art'),false);
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,'123');
+assert.equal(window.DFL.useParams().view,undefined,'Back returns to the previous local page');
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,undefined,'A second Back returns to the plugin root');
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art'),true);
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().view,undefined,'Navigating to the same page did not add a history entry');
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,undefined);
 assert.throws(()=>api.routerHook.addRoute('/plugin/:id/:id',GameRoute));
 assert.throws(()=>api.routerHook.addRoute('/plugin/:id?/art',GameRoute));
+api.routerHook.addRoute('/plugin/other',LocalRoute);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/other'),true);
 removeGame();
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'Back skips a route that the plugin unregistered');
 assert.equal(window.DFL.useParams().appid,undefined);
 assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);
+api.routerHook.removeRoute('/plugin/other');
+api.routerHook.addRoute('/plugin/first',LocalRoute);
+api.routerHook.addRoute('/plugin/second',LocalRoute);
+for(let index=0;index<40;index++)
+  assert.equal(window.DFL.Navigation.Navigate(index%2 ? '/plugin/first' : '/plugin/second'),true);
+for(let index=0;index<32;index++)window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,1);
+window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'local route history is bounded and falls back to the plugin root');
+window.DFL.Navigation.Navigate('/plugin/first');
+window.DFL.Navigation.Navigate('/plugin/second');
+window.DFL.Navigation.CloseSideMenus();
+window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'CloseSideMenus clears the local route history');
+api.routerHook.removeRoute('/plugin/first');
+api.routerHook.removeRoute('/plugin/second');
 
 // Event subscription is acknowledged before a method that immediately emits.
 const onMessage=listeners.find(x=>x.type==='message').handler;

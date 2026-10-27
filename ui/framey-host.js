@@ -56,6 +56,7 @@
   const pending = new Map();
   const routes = new Map();
   const routeListeners = new Set();
+  const routeHistory = [];
   let currentRoute = null;
   let currentParams = {};
   let nextId = 0;
@@ -190,7 +191,7 @@
     parent.postMessage({type:'framey:events:close', session:cacheSession}, '*');
   });
   addEventListener('pointerup', event => {
-    if (event.isTrusted) parent.postMessage({type:'framey:input'}, '*');
+    if (event.isTrusted) parent.postMessage({type:'framey:input', session:cacheSession}, '*');
   }, {passive:true});
   addEventListener('pointermove', event => {
     if (event.isTrusted) lastScrollTarget = scrollTarget(event.target);
@@ -219,6 +220,11 @@
   };
   const Field = ({label, description, children}) => R.createElement('label', null,
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
+  // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
+  // standalone control separate so persisted true settings render correctly.
+  const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
+    type:'checkbox', checked:!!value, disabled:!!disabled,
+    onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
@@ -278,8 +284,10 @@
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
       tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
         id:page.route || String(index), title:page.title, content:page.content}))}));
-  const ProgressBar = ({nProgress=0, value, max=100}) => R.createElement('progress', {
-    value:Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
+    value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
+    ProgressBar(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
   const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
@@ -368,14 +376,30 @@
     }
     return null;
   }
-  function navigate(path) {
-    if (path !== null && !localPath(path)) return false;
-    const match = path === null ? null : activeRoute(path);
-    if (path !== null && !match) return false;
+  function showRoute(path, match) {
     currentRoute = path;
     currentParams = match?.params || {};
     for (const listener of routeListeners) listener(path);
     return true;
+  }
+  function navigate(path) {
+    if (path !== null && !localPath(path)) return false;
+    const match = path === null ? null : activeRoute(path);
+    if (path !== null && !match) return false;
+    if (path === null) routeHistory.length = 0;
+    else if (path !== currentRoute) {
+      routeHistory.push(currentRoute);
+      if (routeHistory.length > 32) routeHistory.shift();
+    }
+    return showRoute(path, match);
+  }
+  function navigateBack() {
+    while (routeHistory.length) {
+      const previous = routeHistory.pop();
+      const match = previous === null ? null : activeRoute(previous);
+      if (previous === null || match) return showRoute(previous, match);
+    }
+    return navigate(null);
   }
   const routerHook = {
     addRoute(path, component) {
@@ -476,7 +500,7 @@
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
-    Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
+    Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
@@ -484,14 +508,14 @@
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
     ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
-    ProgressBar, ProgressBarWithInfo:ProgressBar,
+    ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
     quickAccessControlsClasses:{}, mainMenuAppRunningClasses:{}, libraryAssetImageClasses:{},
     joinClassNames:(...names)=>names.filter(Boolean).join(' '),
     sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
-    Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null), CloseSideMenus:()=>navigate(null),
+    Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
@@ -829,10 +853,11 @@
       if (!plugin?.content && !plugin?.settings) throw Error('The Decky plugin has no panel to display');
       window.ReactDOM.createRoot(root).render(R.createElement(PanelBoundary, null,
         R.createElement(PluginSurface, {plugin})));
-      parent.postMessage({type:'framey:ready'}, '*');
+      parent.postMessage({type:'framey:ready', session:cacheSession}, '*');
     } catch (failure) {
       error.textContent = `This Decky panel is not compatible with Framey: ${failure.message}`;
-      parent.postMessage({type:'framey:error', message:failure.message}, '*');
+      parent.postMessage({type:'framey:error', session:cacheSession,
+        message:failure.message}, '*');
     }
   }
   start();

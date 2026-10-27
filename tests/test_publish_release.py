@@ -37,12 +37,14 @@ def draft(tag_name="untagged-c6ddfed7f75d67db2e99", name="Frame Control 9.8.7", 
 
 
 class PublishRelease(unittest.TestCase):
-    def run_script(self, releases, *args, tags="v9.8.7"):
+    def run_script(self, releases, *args, tags="v9.8.7", gates=None):
         d = Path(tempfile.mkdtemp())
         (d / "releases.json").write_text(json.dumps(releases))
+        (d / "gates.json").write_text(json.dumps(gates or {}))
         env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
-                   FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"))
+                   FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
+                   FAKEGH_GATES=str(d / "gates.json"))
         p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
@@ -119,6 +121,47 @@ class PublishRelease(unittest.TestCase):
         self.assertIn('"page": "https://github.com/saphid/frame-control/releases/tag/v9.8.7"', p.stdout)
         self.assertIsNone(upload)
         self.assertTrue(all("-X" not in c for c in log))
+
+    def test_refuses_failed_e2e_or_cancelled_installer_before_mutation(self):
+        for gates in ({"bad_job": "e2e", "bad_job_conclusion": "failure"},
+                      {"bad_job": "decky-runtime (ubuntu-24.04-arm)",
+                       "bad_job_conclusion": "failure"},
+                      {"bad_job": "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
+                       "bad_job_conclusion": "cancelled"}):
+            p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+            self.assertNotEqual(p.returncode, 0)
+            self.assertIn("release gate failed", p.stderr)
+            self.assertIsNone(upload)
+            self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_a_prior_cancelled_installer_after_successful_rerun(self):
+        gates = {"release_attempts": 2,
+                 "prior_bad_job": "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
+                 "prior_bad_job_conclusion": "cancelled"}
+        p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("attempt 1", p.stderr)
+        self.assertIn("cancelled", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_missing_or_nonexact_gate_results(self):
+        for gates in ({"omit_job": "e2e"}, {"main_sha": "c" * 40},
+                      {"decky_conclusion": "failure"}, {"release_conclusion": "failure"},
+                      {"release_status": "in_progress"}):
+            p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+            self.assertNotEqual(p.returncode, 0)
+            self.assertIn("release gate failed", p.stderr)
+            self.assertIsNone(upload)
+            self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_a_withdrawn_release_even_when_ci_is_green(self):
+        rel = dict(draft(), body="> **WITHDRAWN 26 October 2026.** Do not install.\n\n# Notes")
+        p, log, upload = self.run_script([rel], "v9.8.7")
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("marked WITHDRAWN", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
 
 
 if __name__ == "__main__":

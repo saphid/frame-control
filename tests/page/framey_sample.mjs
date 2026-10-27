@@ -8,6 +8,7 @@ const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js'
 assert.match(bundle,/SP_JSX\.jsx/);
 const React={Fragment:Symbol('fragment'),Component:class {},
   createElement:(type,props,...children)=>({type,props:props||{},children}),
+  cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,()=>{}],useRef:value=>({current:value}),
   useEffect(){},isValidElement:value=>!!value?.type};
 class Element {
@@ -20,13 +21,15 @@ const elements=new Map(), roots=new Map();
 const document={getElementById:id=>{
   if(!elements.has(id))elements.set(id,new Element());return elements.get(id);
 },createElement:()=>new Element()};
-const window={React,ReactDOM:{createRoot:node=>{
+const window={React,location:{hash:'#sample-session'},ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;},unmount(){this.unmounted=true;}};
   roots.set(node,root);return root;
 }},addEventListener(){}};
 const listeners=[];
 const calls=[];
+const messages=[];
 const parent={postMessage(message){
+  messages.push(message);
   if(message.type!=='framey:call')return;
   calls.push(message);
   listeners.find(x=>x.type==='message').handler({source:parent,
@@ -36,6 +39,12 @@ const context=vm.createContext({window,document,
   navigator:{language:'en'},parent,addEventListener:(type,handler)=>listeners.push({type,handler}),
   setTimeout:()=>1,clearTimeout(){}});
 vm.runInContext(host,context);
+const pointerup=listeners.find(listener=>listener.type==='pointerup').handler;
+pointerup({isTrusted:false});
+assert.equal(messages.some(message=>message.type==='framey:input'),false);
+pointerup({isTrusted:true});
+assert.equal(messages.at(-1).type,'framey:input');
+assert.equal(messages.at(-1).session,'sample-session');
 Object.assign(context,{SP_REACT:window.SP_REACT,SP_JSX:window.SP_JSX,DFL:window.DFL});
 vm.runInContext(bundle.replace(/export \{ index as default \};/, 'window.sample = index;'),context);
 const plugin=window.sample();
@@ -71,6 +80,28 @@ toggle.props.onChange(false);
 await new Promise(resolve=>setImmediate(resolve));
 assert.equal(calls.filter(call=>call.method==='set_setting').length,2,
   'a completed save must release the sample setting lock');
+// The sample reset is a real Framey modal: Cancel cannot write, OK writes the
+// sample setting only after explicit confirmation.
+const reset=content.children[0][2].children[0];
+const setCalls=()=>calls.filter(call=>call.method==='set_setting');
+const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+reset.props.onClick();
+reset.props.onClick();
+assert.equal(roots.get(elements.get('framey-modal')).value.length,1,
+  'a rapid second tap must not stack reset dialogs');
+assert.equal(dialog().props.strTitle,'Reset example setting?');
+let rendered=dialog().type(dialog().props);
+rendered.children.find(child=>child?.children?.[0]==='Keep setting').props.onClick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(setCalls().length,2,'cancel leaves the saved value untouched');
+assert.equal(roots.get(elements.get('framey-modal')).value,null);
+reset.props.onClick();
+rendered=dialog().type(dialog().props);
+rendered.children.find(child=>child?.children?.[0]==='Reset').props.onClick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(setCalls().length,3);
+assert.deepEqual(Array.from(setCalls().at(-1).args),['enabled',false]);
+assert.equal(roots.get(elements.get('framey-modal')).value,null);
 assert.equal(window.DFL.Navigation.Navigate('/framey-sample/details/saved-setting'),true);
 assert.equal(window.DFL.useParams().topic,'saved-setting');
 assert.equal(window.DFL.Navigation.Navigate('/library/home'),false);
