@@ -188,6 +188,12 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertIn('Root', result.stderr)
 
+    def test_corrupt_fileserver_offline_helper_is_rejected(self):
+        with patch.object(frame_decky_store, 'FILESERVER_BINARIES', {'x86_64': '0'*64}):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(60, frame_decky_store.FILESERVER_DIGEST)
+        self.assertEqual(frame_decky_store.apply_script(60, '0'*64), frame_decky_store.APPLY)
+
     def test_exact_fileserver_gets_native_user_helper(self):
         from framey_official import PLUGINS, archive as official_archive
         import platform

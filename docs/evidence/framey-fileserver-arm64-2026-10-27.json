@@ -114,5 +114,6 @@
       "bytes": 13893780
     }
   ],
-  "startupRetries": "Two private test-adapter failures (CEF reload, script syntax) and one overly early LAN readiness assertion preceded the successful run. Each run removed its private service/base/upload and released the lock; battery stayed 100."
+  "startupRetries": "Two private test-adapter failures (CEF reload, script syntax) and one overly early LAN readiness assertion preceded the successful run. Each run removed its private service/base/upload and released the lock; battery stayed 100.",
+  "rebuildMatchedBothAssets": true
 }
