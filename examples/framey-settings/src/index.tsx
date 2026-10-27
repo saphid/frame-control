@@ -1,5 +1,5 @@
 import {callable, definePlugin, routerHook, toaster} from '@decky/api';
-import {ButtonItem, Navigation, PanelSection, PanelSectionRow, ToggleField, useParams} from '@decky/ui';
+import {ButtonItem, ConfirmModal, Navigation, PanelSection, PanelSectionRow, ToggleField, showModal, useParams} from '@decky/ui';
 import {useEffect, useRef, useState} from 'react';
 
 const getSetting = callable<[key: string, fallback: boolean], boolean>('get_setting');
@@ -10,6 +10,7 @@ function Content() {
   const [busy, setBusy] = useState(true);
   const [message, setMessage] = useState('Loading setting…');
   const pending = useRef(false);
+  const resetModalOpen = useRef(false);
 
   async function refresh() {
     if (pending.current) return;
@@ -49,12 +50,23 @@ function Content() {
     }
   }
 
+  function confirmReset() {
+    if (pending.current || resetModalOpen.current) return;
+    const dialog = showModal(<ConfirmModal strTitle="Reset example setting?"
+      strDescription="This changes only the sample plugin's saved setting."
+      strOKButtonText="Reset" strCancelButtonText="Keep setting"
+      onOK={() => {void change(false);}} />);
+    resetModalOpen.current = true;
+    void dialog.ClosedPromise.then(() => {resetModalOpen.current = false;});
+  }
+
   return <PanelSection title="Framey settings sample">
     <PanelSectionRow>
       <ToggleField label="Example setting" description="Stored by the Decky Python backend"
         checked={enabled} disabled={busy} onChange={(value: boolean) => {void change(value);}} />
     </PanelSectionRow>
     <PanelSectionRow><ButtonItem disabled={busy} onClick={() => {void refresh();}}>Reload saved setting</ButtonItem></PanelSectionRow>
+    <PanelSectionRow><ButtonItem disabled={busy} onClick={confirmReset}>Reset example setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><ButtonItem onClick={() => Navigation.Navigate('/framey-sample/details/saved-setting')}>About this setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><p role="status">{message}</p></PanelSectionRow>
   </PanelSection>;

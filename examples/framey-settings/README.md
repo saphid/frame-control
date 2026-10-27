@@ -23,6 +23,11 @@ for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
 event is ignored; after the request settles, a new change can be saved.
+**Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
+it without a backend call; **Reset** saves `false` through the same guarded
+write path as the toggle. This is a safe example of putting a settings change
+behind an explicit confirmation in Framey. It has not been tried with a
+physical controller in a worn headset.
 
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,
@@ -54,7 +59,8 @@ plugin directory does not enable its VR panel.
 Run `python3 -m unittest discover -s tests -p test_framey_sample.py` from the
 repository root. It checks backend persistence and evaluates the built bundle
 against Framey's actual host script, including the quick action's scoped
-backend call and local route registration/navigation. The fake Frame store flow is exercised by
+backend call, modal cancel/confirm behavior, and local route
+registration/navigation. The fake Frame store flow is exercised by
 the repository's e2e suite. No worn-headset visibility or controller-input test
 has passed for this sample yet.
 

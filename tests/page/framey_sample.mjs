@@ -8,6 +8,7 @@ const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js'
 assert.match(bundle,/SP_JSX\.jsx/);
 const React={Fragment:Symbol('fragment'),Component:class {},
   createElement:(type,props,...children)=>({type,props:props||{},children}),
+  cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,()=>{}],useRef:value=>({current:value}),
   useEffect(){},isValidElement:value=>!!value?.type};
 class Element {
@@ -71,6 +72,28 @@ toggle.props.onChange(false);
 await new Promise(resolve=>setImmediate(resolve));
 assert.equal(calls.filter(call=>call.method==='set_setting').length,2,
   'a completed save must release the sample setting lock');
+// The sample reset is a real Framey modal: Cancel cannot write, OK writes the
+// sample setting only after explicit confirmation.
+const reset=content.children[0][2].children[0];
+const setCalls=()=>calls.filter(call=>call.method==='set_setting');
+const dialog=()=>roots.get(elements.get('framey-modal')).value[0].children[1];
+reset.props.onClick();
+reset.props.onClick();
+assert.equal(roots.get(elements.get('framey-modal')).value.length,1,
+  'a rapid second tap must not stack reset dialogs');
+assert.equal(dialog().props.strTitle,'Reset example setting?');
+let rendered=dialog().type(dialog().props);
+rendered.children.find(child=>child?.children?.[0]==='Keep setting').props.onClick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(setCalls().length,2,'cancel leaves the saved value untouched');
+assert.equal(roots.get(elements.get('framey-modal')).value,null);
+reset.props.onClick();
+rendered=dialog().type(dialog().props);
+rendered.children.find(child=>child?.children?.[0]==='Reset').props.onClick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(setCalls().length,3);
+assert.deepEqual(Array.from(setCalls().at(-1).args),['enabled',false]);
+assert.equal(roots.get(elements.get('framey-modal')).value,null);
 assert.equal(window.DFL.Navigation.Navigate('/framey-sample/details/saved-setting'),true);
 assert.equal(window.DFL.useParams().topic,'saved-setting');
 assert.equal(window.DFL.Navigation.Navigate('/library/home'),false);
