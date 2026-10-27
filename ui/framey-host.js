@@ -219,6 +219,11 @@
   };
   const Field = ({label, description, children}) => R.createElement('label', null,
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
+  // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
+  // standalone control separate so persisted true settings render correctly.
+  const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
+    type:'checkbox', checked:!!value, disabled:!!disabled,
+    onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
@@ -476,7 +481,7 @@
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
-    Toggle: ToggleField, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
+    Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),

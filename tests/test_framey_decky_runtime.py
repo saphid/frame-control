@@ -19,7 +19,7 @@ class RuntimeCoverage(unittest.TestCase):
         self.assertEqual(len(cases), len({case['id'] for case in cases}))
         for case in cases:
             self.assertIn(case['id'], official)
-            self.assertIn(case['probe'], ('mpris', 'screenshots', 'system-monitor', 'timer-lifecycle'))
+            self.assertIn(case['probe'], ('mpris', 'screenshots', 'system-monitor', 'timer-lifecycle', 'toggle-settings'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store

@@ -1,0 +1,286 @@
+{
+  "date": "2026-10-27",
+  "scope": "Shared standalone Toggle value prop; no plugin-wide status promotion",
+  "affected": [
+    {
+      "id": 7,
+      "name": "CSS Loader",
+      "version": "2.1.3",
+      "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231",
+      "status": "partial"
+    },
+    {
+      "id": 13,
+      "name": "Pause Games",
+      "version": "1.0.3",
+      "sha256": "4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62",
+      "status": "partial"
+    },
+    {
+      "id": 32,
+      "name": "AutoFlatpaks",
+      "version": "1.6.8",
+      "sha256": "344fce82cfb4800caccb4d6c0ec46e1ad6c9594a622d5baa0bb31286baf2d1a5",
+      "status": "broken"
+    },
+    {
+      "id": 60,
+      "name": "DeckyFileServer",
+      "version": "1.2.0",
+      "sha256": "7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0",
+      "status": "broken"
+    },
+    {
+      "id": 64,
+      "name": "Syncthing",
+      "version": "0.2.7",
+      "sha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+      "status": "broken"
+    },
+    {
+      "id": 113,
+      "name": "Decky LSFG-VK",
+      "version": "0.12.2",
+      "sha256": "ec59fc8aceb4e1abe2066b3a0707ed6313cabc4421b7c17765397903e2f8fd26",
+      "status": "partial"
+    },
+    {
+      "id": 116,
+      "name": "Muon",
+      "version": "0.2.1",
+      "sha256": "a7659c79b74110476cc4458cb10530cdcb2539fa11bc8c759038a080eaa81049",
+      "status": "broken"
+    },
+    {
+      "id": 126,
+      "name": "Launch Options",
+      "version": "1.9.2",
+      "sha256": "381ac8b915402176cf768d1ccc1bc29a6b82ea9255675f0a30c0c81ea5427225",
+      "status": "broken"
+    },
+    {
+      "id": 129,
+      "name": "ShadowDeck",
+      "version": "1.1.11",
+      "sha256": "2b97b769a49ac2a45f546090fc96d07e09e146020104d708a0efdad990687f8b",
+      "status": "broken"
+    }
+  ],
+  "browser": {
+    "passed": true,
+    "opaqueOrigin": "null",
+    "checks": [
+      "saved true renders checked",
+      "standalone Toggle has no empty field wrapper",
+      "native click writes boolean false and rerenders",
+      "second click writes boolean true",
+      "external false update renders unchecked",
+      "external true update renders checked",
+      "disabled Toggle stays inert",
+      "ToggleField checked contract preserved"
+    ]
+  },
+  "publishedDeckyRuntime": {
+    "version": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "totalProbes": 8,
+    "pauseGames": {
+      "id": 13,
+      "name": "Pause Games",
+      "version": "1.0.3",
+      "sha256": "4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62",
+      "shim": null,
+      "calls": [
+        {
+          "method": "load_settings",
+          "result": {}
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true
+          }
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": false
+          }
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true
+          }
+        },
+        {
+          "method": "add_no_auto_pause_set",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true,
+            "noAutoPauseSet": [
+              424242
+            ]
+          }
+        },
+        {
+          "method": "remove_no_auto_pause_set",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true,
+            "noAutoPauseSet": []
+          }
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Pause Games",
+          "version": "1.0.3",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "result": "discovery and Toggle-backed private settings persistence passed; no process actions"
+    }
+  },
+  "realFrame": {
+    "timeUtc": "2026-10-27T01:10:45.197435+00:00",
+    "architecture": "aarch64",
+    "runtime": {
+      "version": "v3.3.0",
+      "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+    },
+    "backend": {
+      "passed": true,
+      "discovered": [
+        {
+          "name": "Pause Games",
+          "version": "1.0.3",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "privateSettingsPersisted": true,
+      "calls": [
+        {
+          "method": "load_settings",
+          "result": {}
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true
+          }
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": false
+          }
+        },
+        {
+          "method": "save_setting",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true,
+            "pauseBeforeSuspend": false,
+            "overlayPause": false,
+            "noAutoPauseSet": []
+          }
+        },
+        {
+          "method": "add_no_auto_pause_set",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true,
+            "pauseBeforeSuspend": false,
+            "overlayPause": false,
+            "noAutoPauseSet": [
+              424242
+            ]
+          }
+        },
+        {
+          "method": "remove_no_auto_pause_set",
+          "result": null
+        },
+        {
+          "method": "load_settings",
+          "result": {
+            "autoPause": true,
+            "pauseBeforeSuspend": false,
+            "overlayPause": false,
+            "noAutoPauseSet": []
+          }
+        }
+      ]
+    },
+    "batteryBefore": [
+      100
+    ],
+    "batteryAfter": [
+      100
+    ],
+    "originalServiceStatesPreserved": true,
+    "cleanup": {
+      "baseAbsent": true,
+      "unitAbsent": true,
+      "archiveAbsent": true
+    },
+    "lockReleased": true,
+    "independentCleanupAudit": {
+      "passed": true,
+      "privateBasesUnitsUploadsAbsent": true,
+      "privateUnitsNotLoaded": true
+    }
+  },
+  "fakeFrame": {
+    "blocked": 55,
+    "installed-removed": 61
+  },
+  "python": {
+    "ran": 1659,
+    "skipped": 16,
+    "result": "OK"
+  },
+  "unverified": [
+    "Other importer plugin backends",
+    "Process pause/resume",
+    "Automatic pausing/suspend",
+    "Physical controller/keyboard",
+    "Worn VR"
+  ]
+}

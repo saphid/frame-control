@@ -40,7 +40,8 @@ def check_coverage():
                 raise ValueError('Managed shims must declare a literal name for runtime test coverage')
             shims.add(node.args[0].value)
     cases = json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
-    if shims != {case['shim'] for case in cases}:
+    # Frontend-only compatibility probes need no archive/backend adaptation.
+    if shims != {case['shim'] for case in cases if case['shim'] is not None}:
         raise ValueError('Every managed shim needs an actual Decky runtime case')
     return cases
 

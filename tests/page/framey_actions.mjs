@@ -46,6 +46,22 @@ const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,typ
   [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
 // Disabled controls stay inert even if a caller invokes their handlers directly.
 let changed=0;
+// DFL.Toggle is a standalone value-controlled input. ToggleField uses checked.
+const toggleChanges=[];
+for(const value of [true,false]) {
+  const input=nodes(window.DFL.Toggle({value,onChange:v=>toggleChanges.push(v)}),'input')[0];
+  assert.equal(input.props.checked,value,'Toggle must render its value prop');
+  input.props.onChange({target:{checked:!value}});
+}
+assert.deepEqual(toggleChanges,[false,true]);
+const disabledToggle=nodes(window.DFL.Toggle({value:true,disabled:true,
+  onChange:()=>changed++}),'input')[0];
+assert.equal(disabledToggle.props.checked,true);
+assert.equal(disabledToggle.props.disabled,true);
+disabledToggle.props.onChange({target:{checked:false}});
+assert.equal(changed,0);
+const fieldToggle=nodes(window.DFL.ToggleField({checked:true,value:false}),'input')[0];
+assert.equal(fieldToggle.props.checked,true,'ToggleField must retain its checked contract');
 const toggle=nodes(window.DFL.ToggleField({label:'Enabled',checked:true,disabled:true,
   onChange:()=>changed++}),'input')[0];
 const options=[{label:'Modes',options:[{label:'Slow',data:'slow'},{label:'Fast',data:'fast'}]}];

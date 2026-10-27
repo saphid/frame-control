@@ -183,7 +183,7 @@
         "https://github.com/suchmememanyskill/SDH-CssLoader.git"
       ],
       "status": "partial",
-      "reason": "Panel initialization succeeds; CSS themes patch Steam UI and cannot theme the isolated VR shell.",
+      "reason": "Panel initialization succeeds; CSS themes patch Steam UI and cannot theme the isolated VR shell. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -238,6 +238,11 @@
         "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -474,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -584,12 +589,13 @@
         "https://github.com/wynn1212/SDH-PauseGames.git"
       ],
       "status": "partial",
-      "reason": "Settings and running-game list initialize in local Chromium with an explicit synthetic game; live Frame empty-list reads and lifetime registration/cleanup passed. Process pause/resume, automatic pausing and suspend integration remain unverified/unsupported; backend writes were denied.",
+      "reason": "Settings and a synthetic running-game list render locally. Actual Decky 3.3.0 discovery, private settings writes/readback and exclusion-list persistence pass on amd64 and ARM64 Frame; standalone Toggle now honors its value prop. Live empty-list/lifetime checks passed earlier. Real process pause/resume, automatic pausing, suspend integration and worn VR remain unverified/unsupported.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame SSH"
       ],
       "browser": {
         "id": 13,
@@ -622,6 +628,11 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": true
       }
     },
     {
@@ -931,7 +942,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -939,7 +950,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -1962,7 +1973,7 @@
         "https://github.com/jurassicplayer/decky-autoflatpaks.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -2004,6 +2015,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -4333,7 +4349,7 @@
         "https://github.com/grimkor/DeckyFileServer"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend.",
+      "reason": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -4365,6 +4381,11 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: DeckyFileServer/bin/backend",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -4791,7 +4812,7 @@
         "https://github.com/theCapypara/steamdeck-decky-syncthing.git"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog.",
+      "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -4832,6 +4853,11 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog."
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -9614,7 +9640,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -9830,7 +9856,7 @@
         "https://github.com/xXJSONDeruloXx/lsfg-vk"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; runtime LSFG/Windows DLL downloads and Vulkan integration are not ARM64-validated.",
+      "reason": "Initializer succeeds; runtime LSFG/Windows DLL downloads and Vulkan integration are not ARM64-validated. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -9879,6 +9905,11 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -10200,7 +10231,7 @@
         "https://github.com/wtlnetwork/muon.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -10244,6 +10275,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -11227,7 +11263,7 @@
         "https://github.com/casey/just"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object.",
+      "reason": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -11261,6 +11297,11 @@
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello",
         "result": "blocked",
         "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object."
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {
@@ -11545,7 +11586,7 @@
         "https://github.com/tikh-iv/ShadowDeck.git"
       ],
       "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
+      "reason": "This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -11583,6 +11624,11 @@
         "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
         "result": "blocked",
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      "toggleContract": {
+        "verified": "local browser control fixture; official Pause Games callback regression",
+        "evidence": "docs/evidence/framey-toggle-2026-10-27.md",
+        "backendVerified": false
       }
     },
     {

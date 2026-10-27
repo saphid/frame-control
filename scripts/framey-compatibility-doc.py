@@ -97,7 +97,12 @@ def render(data):
         'the real ARM64 Frame repeats those lifecycle checks under the shared lock. Local Chromium with that live backend verifies '
         'Begin/Cancel, countdown and a silent completion toast. Simple Timer qualifies as works for silent in-panel session timers. '
         'Update/reinstall is required; old receipts stay partial. Sound/suspend are unsupported, closed-panel alerts and worn VR unverified. '
-        'The private service, files, test listeners and processes were removed; independent cleanup audit passed and battery stayed 99 → 99.', '',
+        'The private service, files, test listeners and processes were removed; independent cleanup audit passed and battery stayed 99 → 99. '
+        'A [shared Toggle follow-up](evidence/framey-toggle-2026-10-27.md) separates standalone Toggle.value from ToggleField.checked. '
+        'Nine official archives consume this API; their remaining blockers and status labels are preserved. '
+        'Local opaque Chromium controls and the exact Pause Games frontend callback pass. Actual published Decky 3.3.0 discovery and '
+        'private settings/exclusion-list persistence pass on amd64 and the ARM64 Frame through the normal CEF bridge. '
+        'Process control and worn VR remain unverified; independent cleanup audit passed.', '',
         '## Every current plugin', '',
         'The API column shows manifest / actual bundled frontend API. Many manifests say v1 while their bundle connects API2. '
         'Missing manifest API is labelled legacy; an unrecognized bundle is unknown. Globals and hardware are static signals, not exhaustive dependencies.', '',
