@@ -65,6 +65,15 @@ class ArchiveTests(unittest.TestCase):
                           return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertEqual([(p['id'], p['root']) for p in frame_decky_store.catalog()], [(42, True)])
 
+    def test_only_exact_fileserver_adaptation_clears_store_root(self):
+        records = [{'id': 60, 'name': 'DeckyFileServer', 'tags': ['root'],
+                    'versions': [{'name': '1.2.0', 'hash': frame_decky_store.FILESERVER_DIGEST}]}]
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertFalse(frame_decky_store.catalog()[0]['root'])
+        records[0]['versions'][0]['hash'] = 'a'*64
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertTrue(frame_decky_store.catalog()[0]['root'])
+
     def test_accepts_hashed_non_root_archive(self):
         data, digest = archive()
         self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
@@ -161,6 +170,48 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_modified_fileserver_archive_does_not_inherit_exception(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        original = official_archive(record)
+        with zipfile.ZipFile(io.BytesIO(original)) as source:
+            stream = io.BytesIO()
+            with zipfile.ZipFile(stream, 'w', zipfile.ZIP_DEFLATED) as target:
+                for entry in source.infolist():
+                    target.writestr(entry, source.read(entry))
+                target.writestr(record['folder']+'/changed.txt', b'new version')
+        data = stream.getvalue()
+        with self.assertRaisesRegex(ValueError, 'non-ARM64'):
+            frame_decky_store.archive_info(data, hashlib.sha256(data).hexdigest(), record['name'])
+        result = self.apply('install', data, plugin_id=60, folder=record['folder'], version=record['version'])
+        # Remote defence rejects root even when the desktop validation is bypassed.
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Root', result.stderr)
+
+    def test_corrupt_fileserver_offline_helper_is_rejected(self):
+        with patch.object(frame_decky_store, 'FILESERVER_BINARIES', {'x86_64': '0'*64}):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(60, frame_decky_store.FILESERVER_DIGEST)
+        self.assertEqual(frame_decky_store.apply_script(60, '0'*64), frame_decky_store.APPLY)
+
+    def test_exact_fileserver_gets_native_user_helper(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        if platform.machine() not in frame_decky_store.FILESERVER_BINARIES:
+            self.skipTest('native Linux helper architecture')
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=60, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plugin = self.folder.parent/record['folder']
+        self.assertEqual(json.loads((plugin/'plugin.json').read_text())['flags'], [])
+        self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'], ['deckyfileserver-user-native'])
+        helper = plugin/'bin/backend'
+        self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), frame_decky_store.FILESERVER_BINARIES[platform.machine()])
+        self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
+        compile((plugin/'main.py').read_text(), str(plugin/'main.py'), 'exec')
+        self.assertIn('if arg]', (plugin/'main.py').read_text())
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):
         from framey_official import PLUGINS, archive as official_archive
