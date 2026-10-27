@@ -77,19 +77,25 @@ def successful_jobs(run, required):
     attempt = run.get("run_attempt")
     if not isinstance(attempt, int) or attempt < 1:
         raise GateError(f"run {run['id']} has no valid attempt number")
-    data = api(f"actions/runs/{run['id']}/attempts/{attempt}/jobs?per_page=100")
-    jobs = data.get("jobs") or []
-    if data.get("total_count") != len(jobs):
-        raise GateError(f"run {run['id']} has more jobs than the gate inspected")
-    names = [job.get("name") for job in jobs]
-    if len(names) != len(set(names)) or not required.issubset(names):
+    latest_jobs = None
+    for number in range(1, attempt + 1):
+        data = api(f"actions/runs/{run['id']}/attempts/{number}/jobs?per_page=100")
+        jobs = data.get("jobs") or []
+        if data.get("total_count") != len(jobs):
+            raise GateError(f"run {run['id']} attempt {number} has more jobs than the gate inspected")
+        names = [job.get("name") for job in jobs]
+        if not jobs or len(names) != len(set(names)):
+            raise GateError(f"run {run['id']} attempt {number} has missing or duplicate jobs")
+        bad = [f"{job.get('name')}: {job.get('status')}/{job.get('conclusion')}"
+               for job in jobs if job.get("status") != "completed" or job.get("conclusion") != "success"]
+        if bad:
+            raise GateError(f"run {run['id']} attempt {number} has unfinished, failed, cancelled, or skipped jobs: {bad}")
+        latest_jobs = jobs
+    names = [job.get("name") for job in latest_jobs]
+    if not required.issubset(names):
         missing = sorted(required.difference(names))
-        raise GateError(f"run {run['id']} has missing or duplicate jobs: {missing}")
-    bad = [f"{job.get('name')}: {job.get('status')}/{job.get('conclusion')}"
-           for job in jobs if job.get("status") != "completed" or job.get("conclusion") != "success"]
-    if bad:
-        raise GateError(f"run {run['id']} has unfinished, failed, cancelled, or skipped jobs: {bad}")
-    print(f"gate passed: {run.get('html_url')} ({len(jobs)} jobs)")
+        raise GateError(f"run {run['id']} has missing jobs in its latest attempt: {missing}")
+    print(f"gate passed: {run.get('html_url')} ({len(latest_jobs)} jobs, {attempt} attempts)")
 
 
 def main(tag):

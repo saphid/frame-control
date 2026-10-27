@@ -134,6 +134,17 @@ class PublishRelease(unittest.TestCase):
             self.assertIsNone(upload)
             self.assertFalse(any("-X" in call for call in log))
 
+    def test_refuses_a_prior_cancelled_installer_after_successful_rerun(self):
+        gates = {"release_attempts": 2,
+                 "prior_bad_job": "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
+                 "prior_bad_job_conclusion": "cancelled"}
+        p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("attempt 1", p.stderr)
+        self.assertIn("cancelled", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
+
     def test_refuses_missing_or_nonexact_gate_results(self):
         for gates in ({"omit_job": "e2e"}, {"main_sha": "c" * 40},
                       {"decky_conclusion": "failure"}, {"release_conclusion": "failure"},
