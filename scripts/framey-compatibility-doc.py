@@ -133,7 +133,8 @@ def render(data):
         'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
         '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
         'now identifies the official helper source and a reproducible ARM64 build from that revision. '
-        'The official x86 archive remains blocked; full plugin integration and file transfers are unverified.', '',
+        'The exact official x86 backend passed one local private-namespace transfer. '
+        'The official x86 archive remains blocked on Frame; ARM64 transfer and full plugin integration are unverified.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:

@@ -34,9 +34,22 @@ released. This is **not** a worn visual or controller result.
 The unmodified plugin backend's `_main` starts a fixed-path Unix notification
 socket but does not start the Go network service. Its explicit `start_backend`
 method starts the helper with a default all-interface setting, HTTPS and
-auto-save disabled. A safe runtime test must isolate that service and use only
-private fixtures. Before a managed ARM64 adaptation, verify actual Decky
-backend discovery/RPC, the frontend, and a private transfer; package the
-source, license and exact helper digest. The official x86_64 archive remains
-blocked until that work passes. Worn VR and physical controller use remain
-unverified.
+auto-save disabled. A local follow-up ran that exact Python backend with the
+official x86_64 helper in a disposable user/network namespace. A veth pair
+provided only documentation-range private addresses and there was no default
+route. A private Decky module stub supplied task-owned settings, runtime,
+plugin and log directories; its notification socket was moved into that
+directory. The backend's `start_backend`, `proxy_get` info request and
+`proxy_post` prepare/upload methods passed. One 42-byte public marker
+arrived in the private upload directory with independent SHA-256
+`346373ca56ec52c3f47b8d41de2a6a8479d8ad10d2891ff3b0dc7ea9c3892a39`.
+The backend stopped, its process and private directory were absent, and the
+global notification socket was untouched. This verifies the upstream x86
+backend/proxy/transfer contract locally, **not** Decky 3.3.0 discovery, ARM64
+transfer, an installed Frame plugin or real-network transfer.
+
+Before a managed ARM64 adaptation, verify actual Decky backend discovery/RPC,
+the frontend and a private transfer with the exact-source ARM64 helper;
+package the source, license and exact helper digest. The official x86_64
+archive remains blocked until that work passes. Worn VR and physical
+controller use remain unverified.

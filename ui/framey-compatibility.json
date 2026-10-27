@@ -11174,7 +11174,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Official 0.4.5 ZIP main.py matches plugin tag v0.45 byte for byte; its pinned LocalSend-Go ad28b8e9 source reproduces the official x86 helper byte for byte with Go 1.25.7 and a static ARM64 helper twice (SHA-256 e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae). Earlier build from a later source revision answered protocol 2.0 info on real Frame in an isolated namespace. The exact-source ARM64 helper has not run on Frame; actual Decky backend/frontend, private transfer and managed adaptation remain unverified. Official ZIP stays x86_64 and blocked (docs/evidence/framey-localsend-source-match-2026-10-27.md).",
+      "nativePort": "Official 0.4.5 ZIP main.py matches plugin tag v0.45 byte for byte; its pinned LocalSend-Go ad28b8e9 source reproduces the official x86 helper byte for byte with Go 1.25.7 and a static ARM64 helper twice (SHA-256 e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae). Earlier build from a later source revision answered protocol 2.0 info on real Frame in an isolated namespace. The official x86 backend/proxy passed a marker transfer in a private no-route namespace. The exact-source ARM64 helper has not run on Frame; actual Decky discovery, ARM64 transfer, frontend and managed adaptation remain unverified. Official ZIP stays x86_64 and blocked (docs/evidence/framey-localsend-source-match-2026-10-27.md).",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
