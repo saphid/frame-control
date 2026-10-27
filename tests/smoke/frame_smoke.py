@@ -6,8 +6,9 @@ BUILD_ID in tests/smoke/results/<time>-<BUILD_ID>.json (git-ignored):
 
 Before any status read or title change, it atomically owns /tmp/frame-test.lock
 on the Frame and checks SteamVR standby, proximity and battery read-only. A
-busy lock, awake headset or battery below 20% stops the run. Only this run's
-lock is released, including after test failures.
+busy lock, awake headset, missing or active-range proximity reading, or battery
+below 20% stops the run. Only this run's lock is released, including after
+test failures.
 
 - properties.json from Valve's devkit service names the login user;
 - status (ui/frame_status.py) reads the build, battery and storage;
@@ -107,6 +108,11 @@ def preflight():
     state = json.loads(result.stdout)
     if state.get('activity') != 3:
         raise RuntimeError('Frame is awake or SteamVR activity is unknown; active session untouched')
+    proximity = state.get('proximity')
+    if (not isinstance(proximity, list) or not proximity or
+            any(not isinstance(value, (int, float)) or isinstance(value, bool) or
+                value < 0 or value > 10 for value in proximity)):
+        raise RuntimeError('Frame proximity is active or unknown; active session untouched')
     battery = state.get('battery')
     if not battery or min(battery) < 20:
         raise RuntimeError('Frame battery is unavailable or below the smoke threshold')

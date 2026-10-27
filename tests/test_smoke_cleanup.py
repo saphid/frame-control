@@ -95,6 +95,19 @@ class RealProcesses(unittest.TestCase):
 
 
 class Safety(unittest.TestCase):
+    def test_locked_preflight_rejects_active_or_unknown_proximity_before_titles(self):
+        for proximity in ([], [88.0625], [4.6875, 88.0625], [None]):
+            with self.subTest(proximity=proximity), mock.patch.object(
+                    frame_smoke, 'remote', return_value=mock.Mock(
+                        returncode=0, stdout=json.dumps({
+                            'activity': 3, 'proximity': proximity, 'battery': [72]}))):
+                with self.assertRaisesRegex(RuntimeError, 'proximity is active or unknown'):
+                    frame_smoke.preflight()
+        with mock.patch.object(frame_smoke, 'remote', return_value=mock.Mock(
+                returncode=0, stdout=json.dumps({
+                    'activity': 3, 'proximity': [4.6875], 'battery': [72]}))):
+            self.assertEqual(frame_smoke.preflight()['proximity'], [4.6875])
+
     def test_missing_x86_runtime_skips_launch_but_still_removes_title(self):
         smoke = frame_smoke.Smoke()
         gid = 'fc_smoke_x86_64'
