@@ -253,6 +253,14 @@ nodes(tabs,'button')[2].props.onClick();
 assert.deepEqual(tabChanges,['one']);
 assert.equal(window.DFL.Spinner({}).props.role,'status');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
+assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
+  'an indeterminate progress element must omit its value');
+assert.equal(window.DFL.ProgressBarItem({nProgress:35}).props.value,35);
+const progressInfo=window.DFL.ProgressBarWithInfo({indeterminate:true,
+  sOperationText:'Downloading plugin'});
+assert.equal(nodes(progressInfo,'progress')[0].props.value,undefined);
+assert.equal(nodes(progressInfo,'small')[0].props.role,'status');
+assert.equal(nodes(progressInfo,'small')[0].children[0],'Downloading plugin');
 assert.equal(window.DFL.joinClassNames('one',null,'two'),'one two');
 let eventCount=0;
 const unsubscribe=window.SteamClient.GameSessions.RegisterForAppLifetimeNotifications(()=>eventCount++);

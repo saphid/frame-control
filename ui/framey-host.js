@@ -279,8 +279,10 @@
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
       tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
         id:page.route || String(index), title:page.title, content:page.content}))}));
-  const ProgressBar = ({nProgress=0, value, max=100}) => R.createElement('progress', {
-    value:Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
+    value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
+    ProgressBar(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
   const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
@@ -501,7 +503,7 @@
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
     ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
-    ProgressBar, ProgressBarWithInfo:ProgressBar,
+    ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
     quickAccessControlsClasses:{}, mainMenuAppRunningClasses:{}, libraryAssetImageClasses:{},
