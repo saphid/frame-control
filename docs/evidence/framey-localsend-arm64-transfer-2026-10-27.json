@@ -1,0 +1,42 @@
+{
+  "helperSha256": "e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae",
+  "lockAcquired": true,
+  "action": "private_network_marker_only",
+  "before": {
+    "activity": 3,
+    "proximity": [
+      4.6875
+    ],
+    "battery": [
+      72
+    ],
+    "services": {
+      "frame-control-decky.service": "inactive",
+      "frame-control-headset.service": "inactive"
+    }
+  },
+  "transfer": {
+    "result": "private_arm64_transfer_passed",
+    "protocolVersion": "2.0",
+    "markerBytes": 38,
+    "markerSha256": "3e724efac20a4a600a93f7bdddd469b8287a6aaa2b7b433d838d8ef23e1a9c2c",
+    "network": "private-veth-no-default-route",
+    "helperSha256": "e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae"
+  },
+  "after": {
+    "activity": 3,
+    "proximity": [
+      4.6875
+    ],
+    "battery": [
+      72
+    ],
+    "services": {
+      "frame-control-decky.service": "inactive",
+      "frame-control-headset.service": "inactive"
+    }
+  },
+  "result": "private_arm64_transfer_passed",
+  "ownedDirectoryAbsent": true,
+  "ownLockReleased": true
+}
