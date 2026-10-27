@@ -464,11 +464,47 @@ assert.equal(window.DFL.useParams().view,'art');
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art/extra'),false);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123?admin=1'),false);
 assert.equal(window.DFL.Navigation.Navigate('/plugin/game//art'),false);
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,'123');
+assert.equal(window.DFL.useParams().view,undefined,'Back returns to the previous local page');
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,undefined,'A second Back returns to the plugin root');
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123/art'),true);
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().view,undefined,'Navigating to the same page did not add a history entry');
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(window.DFL.useParams().appid,undefined);
 assert.throws(()=>api.routerHook.addRoute('/plugin/:id/:id',GameRoute));
 assert.throws(()=>api.routerHook.addRoute('/plugin/:id?/art',GameRoute));
+api.routerHook.addRoute('/plugin/other',LocalRoute);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/game/123'),true);
+assert.equal(window.DFL.Navigation.Navigate('/plugin/other'),true);
 removeGame();
+assert.equal(window.DFL.Navigation.NavigateBack(),true);
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'Back skips a route that the plugin unregistered');
 assert.equal(window.DFL.useParams().appid,undefined);
 assert.equal(nodes(window.__surface({plugin}),GameRoute).length,0);
+api.routerHook.removeRoute('/plugin/other');
+api.routerHook.addRoute('/plugin/first',LocalRoute);
+api.routerHook.addRoute('/plugin/second',LocalRoute);
+for(let index=0;index<40;index++)
+  assert.equal(window.DFL.Navigation.Navigate(index%2 ? '/plugin/first' : '/plugin/second'),true);
+for(let index=0;index<32;index++)window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,1);
+window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'local route history is bounded and falls back to the plugin root');
+window.DFL.Navigation.Navigate('/plugin/first');
+window.DFL.Navigation.Navigate('/plugin/second');
+window.DFL.Navigation.CloseSideMenus();
+window.DFL.Navigation.NavigateBack();
+assert.equal(nodes(window.__surface({plugin}),LocalRoute).length,0,
+  'CloseSideMenus clears the local route history');
+api.routerHook.removeRoute('/plugin/first');
+api.routerHook.removeRoute('/plugin/second');
 
 // Event subscription is acknowledged before a method that immediately emits.
 const onMessage=listeners.find(x=>x.type==='message').handler;
