@@ -63,6 +63,12 @@ was changed. An independent SSH audit confirms base/unit/upload absent,
 `MainPID=0`, `LoadState=not-found` and lock absent. Chromium and the local relay
 were closed. No worn-VR claim is made.
 
+The final branch, including merged DeckySpy and Simple Timer, passes **1,662
+Python tests (16 skipped)**, all **9** published Decky 3.3.0 amd64 probes, **46**
+app tests and pinned fake-Frame install/remove. Both helper rebuilds match byte
+for byte. The combined headset bundle is 12,485,251 bytes, below its existing
+32 MiB limit, and includes both native dependencies plus GPL source/licenses.
+
 ## Remaining limitations
 
 The official frontend advertises **HTTP** and a **steamdeck** hostname even

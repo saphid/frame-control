@@ -115,5 +115,14 @@
     }
   ],
   "startupRetries": "Two private test-adapter failures (CEF reload, script syntax) and one overly early LAN readiness assertion preceded the successful run. Each run removed its private service/base/upload and released the lock; battery stayed 100.",
-  "rebuildMatchedBothAssets": true
+  "rebuildMatchedBothAssets": true,
+  "automatedChecks": {
+    "pythonTests": 1662,
+    "pythonSkipped": 16,
+    "nodeAppTests": 46,
+    "publishedDecky330NativeAmd64Probes": 9,
+    "fakeFramePinnedInstallRemove": "passed",
+    "combinedDesktopResources": "passed",
+    "combinedHeadsetBundleBytes": 12485251
+  }
 }
