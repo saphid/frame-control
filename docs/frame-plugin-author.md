@@ -76,7 +76,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. | Parent/iframe round-trip and reopen in the local host test; real headset persistence remains unverified. |
 | `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
-| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values | Host unit test; VR navigation unverified |
+| `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
@@ -90,6 +90,9 @@ Frame Control store; only paths registered by that same plugin can navigate.
 Optional route segments must be at the end. Framey accepts local path segments
 only; query strings, external URLs, Steam library routes and duplicate parameter
 names are rejected. Removing an active route returns to the plugin panel.
+`Navigation.NavigateBack()` returns to the preceding local page, then the
+plugin root. `Navigation.CloseSideMenus()` returns directly to the root and
+clears that panel's history. Neither operation navigates Steam's own UI.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 Treat module lookup results as Framey-local exports. Do not depend on Steam
 webpack IDs, function-source signatures, or Steam-only CSS class names; a

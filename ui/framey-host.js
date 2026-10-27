@@ -56,6 +56,7 @@
   const pending = new Map();
   const routes = new Map();
   const routeListeners = new Set();
+  const routeHistory = [];
   let currentRoute = null;
   let currentParams = {};
   let nextId = 0;
@@ -368,14 +369,30 @@
     }
     return null;
   }
-  function navigate(path) {
-    if (path !== null && !localPath(path)) return false;
-    const match = path === null ? null : activeRoute(path);
-    if (path !== null && !match) return false;
+  function showRoute(path, match) {
     currentRoute = path;
     currentParams = match?.params || {};
     for (const listener of routeListeners) listener(path);
     return true;
+  }
+  function navigate(path) {
+    if (path !== null && !localPath(path)) return false;
+    const match = path === null ? null : activeRoute(path);
+    if (path !== null && !match) return false;
+    if (path === null) routeHistory.length = 0;
+    else if (path !== currentRoute) {
+      routeHistory.push(currentRoute);
+      if (routeHistory.length > 32) routeHistory.shift();
+    }
+    return showRoute(path, match);
+  }
+  function navigateBack() {
+    while (routeHistory.length) {
+      const previous = routeHistory.pop();
+      const match = previous === null ? null : activeRoute(previous);
+      if (previous === null || match) return showRoute(previous, match);
+    }
+    return navigate(null);
   }
   const routerHook = {
     addRoute(path, component) {
@@ -491,7 +508,7 @@
     joinClassNames:(...names)=>names.filter(Boolean).join(' '),
     sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
-    Navigation: {Navigate:navigate, NavigateBack:()=>navigate(null), CloseSideMenus:()=>navigate(null),
+    Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal, showContextMenu:showModal,
     // Steam app, library, and store patches have no target inside this panel.
