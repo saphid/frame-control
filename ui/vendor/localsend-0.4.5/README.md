@@ -35,6 +35,9 @@ Only the exact official ZIP can use this managed adaptation. The Frame
 transaction checks its original x86 helper and Python backend hashes,
 checks the replacement ARM64 SHA-256 and ELF machine locally and again on the
 headset, then records a managed receipt. Other native archives remain blocked.
-The official x86 backend passed a single private-namespace marker transfer;
-actual Decky ARM64 discovery, helper transfer, headset UI and worn use require
-their own evidence before any compatibility promotion or release.
+The official x86 backend and the rebuilt ARM64 helper each passed a single
+private no-route marker transfer. Published Decky 3.3.0 AMD64/ARM64 runtime
+checks discovered the plugin and read its stopped status and configuration.
+The actual managed Decky service on Frame, user-facing transfer, headset UI
+and worn use remain unverified. See
+`docs/evidence/framey-localsend-managed-2026-10-27.md` and its linked result.

@@ -38,6 +38,9 @@ does not download modules or run a compiler.
 - The original x86 backend and helper completed one private no-route marker
   transfer outside Decky. This does not prove the managed ARM64 binary or
   actual Decky service.
+- The published Decky 3.3.0 AMD64 and ARM64 runtime gate discovered the
+  adapted plugin and returned its stopped status and safe configuration through
+  public RPCs. Its helper remained stopped during that gate.
 - A locked real Frame probe ran the rebuilt ARM64 helper with SHA-256
   `e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae`
   in a private network namespace with no default route. Its LocalSend 2.0
@@ -47,12 +50,10 @@ does not download modules or run a compiler.
   services stayed inactive. The owned helper/process/files and shared lock
   were removed. [Machine-readable result](framey-localsend-arm64-transfer-2026-10-27.json).
 
-The published Decky 3.3.0 native AMD64 and ARM64 discovery/status/configuration
-gate and a useful frontend workflow still need verification before this
-candidate can merge or ship. The ARM64 marker test exercised the helper in
-isolation, not the actual Decky plugin service, local discovery, user-facing
-transfer, or installation on the headset. No worn visibility or physical
-controller claim follows from this candidate.
+A useful frontend workflow still needs verification. The ARM64 marker test
+exercised the helper in isolation, not the actual Decky plugin service, local
+discovery, user-facing transfer, or installation on the headset. No worn
+visibility or physical-controller claim follows from this candidate.
 
 The proposed catalog status is **partial** for exact managed archive
 installation and settings/status. Steam routes, local discovery, user-facing
