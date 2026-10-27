@@ -133,9 +133,11 @@ def render(data):
         'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
         '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
         'now identifies the official helper source and a reproducible ARM64 build from that revision. '
-        'The exact official x86 backend passed one local private-namespace transfer. '
+        'The exact official x86 backend passed one local private-namespace transfer, and the rebuilt ARM64 helper passed one locked real-Frame private marker transfer. '
+        'Published Decky 3.3.0 AMD64/ARM64 runtime checks discovered the adapted plugin and read its stopped status and configuration. '
         'Only the exact managed 0.4.5 archive can replace its x86 helper on Frame. '
-        'ARM64 transfer and full plugin integration are unverified.', '',
+        'The actual managed Decky service on Frame, user-facing transfer, local discovery and worn VR remain unverified '
+        '([managed adaptation evidence](evidence/framey-localsend-managed-2026-10-27.md)).', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:
