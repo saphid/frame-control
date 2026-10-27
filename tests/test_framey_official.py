@@ -21,6 +21,16 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 
 class OfficialBundles(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_pause_games_toggle_renders_saved_value_and_dispatches_settings_only(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 13)
+        with zipfile.ZipFile(io.BytesIO(archive(plugin))) as bundle, tempfile.TemporaryDirectory() as root:
+            frontend = Path(root)/'index.js'
+            frontend.write_bytes(bundle.read(plugin['folder']+'/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_toggle.mjs'), str(frontend)],
+                                    capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_legacy_css_loader_store_archive_has_unversioned_frontend(self):
         plugin = LEGACY_PLUGINS[0]
         data = archive(plugin)

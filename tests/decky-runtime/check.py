@@ -90,7 +90,7 @@ def main():
     plugin = base/'plugins'/record['folder']
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
     if not args.reproduce_timer_regression:
-        assert receipt['compatShims'] == [case['shim']], receipt
+        assert receipt.get('compatShims', []) == ([case['shim']] if case['shim'] else []), receipt
     else:
         assert record['id'] == 96
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -187,6 +187,24 @@ def main():
                 report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
                     if args.reproduce_fileserver_empty_flag_regression else
                     'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+            elif case['probe'] == 'toggle-settings':
+                def call(method, *values):
+                    result = rpc('loader/call_plugin_method', record['name'], method, *values)
+                    report['calls'].append({'method': method, 'result': result})
+                    return result
+
+                assert call('load_settings') == {}
+                # Settings only. Never call pause/resume/kill or signal a process.
+                for value in (True, False, True):
+                    call('save_setting', 'autoPause', value)
+                    assert call('load_settings')['autoPause'] is value
+                call('add_no_auto_pause_set', 424242)
+                assert call('load_settings')['noAutoPauseSet'] == [424242]
+                call('remove_no_auto_pause_set', 424242)
+                assert call('load_settings')['noAutoPauseSet'] == []
+                settings = json.loads((base/'settings'/record['folder']/'settings.json').read_text())
+                assert settings['autoPause'] is True and settings['noAutoPauseSet'] == []
+                report['result'] = 'discovery and Toggle-backed private settings persistence passed; no process actions'
             elif case['probe'] == 'timer-lifecycle':
                 from timer_lifecycle import probe
 

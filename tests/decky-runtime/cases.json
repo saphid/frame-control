@@ -1,5 +1,10 @@
 [
   {
+    "id": 13,
+    "shim": null,
+    "probe": "toggle-settings"
+  },
+  {
     "id": 12,
     "shim": "music-control-system-dbus-env",
     "probe": "mpris"
