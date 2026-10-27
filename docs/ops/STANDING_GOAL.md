@@ -1,8 +1,9 @@
-# Frame Control standing goal and takeover handoff
+# Frame Control standing goal and historical recovery handoff
 
 Owner: Alex. This records the 27 October 2026 AEDT recovery handoff; status
-checks below use UTC. It does not grant authority to publish a release or to
-start a second coordinator.
+checks below use UTC. Alex subsequently authorized the existing coordinator to
+continue the roadmap and publish releases when every gate passes. This document
+does not authorize a second coordinator to run concurrently.
 
 ## Alex's top priority
 
@@ -13,10 +14,10 @@ shipping; a version number or an uploaded artifact is not proof of readiness.
 
 ## Standing roadmap
 
-Roadmap round 2: test gaps, fixes and next features. The existing owner is T3
-job `mppkd9qczt` on lxso2. Preserve that job and its work. The recovery task did
-not send it messages, change its thread, or start replacement coding/release
-work. A human must settle ownership before a takeover starts.
+Continue official Decky compatibility, test gaps, fixes and useful features.
+The existing owner is T3 job `mppkd9qczt` on lxso2. Preserve its work and avoid
+competing coordinator or release jobs. Verify its current state before any
+takeover; this historical handoff is not a takeover instruction.
 
 ## Mandatory release gates
 
@@ -30,8 +31,31 @@ work. A human must settle ownership before a takeover starts.
 - Keep main green. Resolve required failures before merging or releasing.
 - Preserve evidence linking the release tag/commit, successful workflow run,
   installer assets/checksums, e2e results and real-device verification.
-- Use `scripts/publish-release.sh --dry-run TAG` for inspection. A real publish
-  or tag needs its own authorized release task; this handoff does not authorize it.
+- Use `scripts/publish-release.sh --dry-run TAG` before publishing. Alex's
+  standing full-auto instruction authorizes the existing coordinator to tag and
+  publish after every gate passes. Stop for secrets, money, destructive Git
+  actions or wiping the headset; never bypass a failed release gate.
+
+## Current release state, checked 27 October 2026 at 05:15 UTC
+
+- The latest public release is
+  [v0.4.51](https://github.com/saphid/frame-control/releases/tag/v0.4.51),
+  published at 05:10:05 UTC from main commit
+  `4da7220660ba345bc46cdb525b6c512bc6a9d8bd`.
+- [Exact-commit checks](https://github.com/saphid/frame-control/actions/runs/40451752952),
+  [native Decky runtime](https://github.com/saphid/frame-control/actions/runs/40451752953),
+  and the [tagged installer release](https://github.com/saphid/frame-control/actions/runs/40452627862)
+  succeeded. The tag release built Linux, Windows, Intel Mac and Apple Silicon
+  Mac installers and checksums. The published update manifest reports 0.4.51.
+- The locked candidate smoke passed 12 checks, skipped one optional x86_64
+  launch, and failed none. SteamVR was in standby; worn display and physical
+  controller use remain unverified. The hourly shared-lock worn check remains
+  enabled. See [candidate evidence](../evidence/v0451-candidate-2026-10-27.md)
+  and [release evidence PR #365](https://github.com/saphid/frame-control/pull/365)
+  for the exact asset audit and publication record.
+- Main matched the release commit and its checks were green at this check.
+  Revalidate before another merge or release. Disk capacity on lxso2 remains
+  critical; do not delete pre-existing data to make space without Alex's OK.
 
 ## Incident snapshot supplied by Alex
 
@@ -56,7 +80,8 @@ Checked 26 October 2026 around 21:58 UTC:
 - [#337](https://github.com/saphid/frame-control/pull/337) is merged; lxso1's
   clean main was fast-forwarded to
   `1ddb6278b8ae0a98ecc79a181bba4d3cc67a52b6`.
-- [#338](https://github.com/saphid/frame-control/pull/338) remains open.
+- [#338](https://github.com/saphid/frame-control/pull/338) was open at that
+  time; it has since merged.
 - lxso2 T3 recovered at **21:42:54 UTC**; port 3773/local HTTP and existing
   HTTPS returned 200 by 21:43:58 UTC. Root disk capacity remains critical;
   recovery is not a capacity fix.
@@ -65,7 +90,7 @@ Checked 26 October 2026 around 21:58 UTC:
   under the owner's incident authorization. Disk critical alerts use the
   existing fleet Prometheus/watchdog pipeline.
 
-## lxso1 readiness
+## Historical lxso1 readiness
 
 Main checkout: `/home/saphid/projects/steam-frame` (GitHub repository
 `saphid/frame-control`). Shell default Node may be older; use
@@ -106,14 +131,16 @@ Main was clean and matched origin/main on the final 21:59 UTC fetch.
    Verify remote releases, PR states and workflow conclusions again.
 2. Check lxso2 health and disk headroom. Disk-full recovery requires capacity
    decisions; do not delete protected data or alter T3 state databases.
-3. Have Alex settle coordinator ownership. Preserve uncommitted changes and
-   active worktrees; do not run competing coordinator/release jobs.
+3. Confirm that the existing coordinator is no longer active and that the
+   takeover is authorized by the current instructions. Preserve uncommitted
+   changes and active worktrees; do not run competing coordinator/release jobs.
 4. Fetch origin and inspect local status before updating main. Resume the
    roadmap from recorded gaps and existing PRs, not from assumptions about
    what an interrupted worker completed.
 5. Work on an isolated branch and use PRs. Validate the actual candidate
    commit with every release gate above; record hardware/platform blockers.
-6. Publish only under an explicit release task after all required gates pass.
+6. Publish only after all required gates pass under Alex's current full-auto
+   instruction or a newer explicit instruction.
 
 The lxso1 five-minute `fleet-t3-lxso2-health.timer` only checks and alerts; it
 does not start takeover threads. Automatic stand-in launch is not configured
