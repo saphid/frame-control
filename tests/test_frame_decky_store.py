@@ -161,6 +161,37 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 96)
+        result = self.apply('install', official_archive(plugin), plugin_id=96,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text())['compatShims'],
+                         ['simple-timer-lifecycle'])
+        self.assertEqual(json.loads((folder / 'plugin.json').read_text())['api_version'], 1)
+        with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as original:
+            self.assertEqual((folder / 'LICENSE').read_bytes(), original.read('simple-timer/LICENSE'))
+        # Backend behavior is verified separately by the real Decky lifecycle gate.
+        result = self.apply('remove', plugin_id=96, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    def test_changed_simple_timer_digest_does_not_get_pinned_repair(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 96)
+        data = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(data, 'a') as changed:
+            original_main = changed.read('simple-timer/main.py')
+            changed.writestr('simple-timer/new-version.txt', 'unrecognized new payload')
+        result = self.apply('install', data.getvalue(), plugin_id=96,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        self.assertEqual((folder / 'main.py').read_bytes(), original_main)
+        self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text()).get('compatShims', []), [])
+
     def test_exact_shotty_archive_gets_isolated_click_import(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 53)

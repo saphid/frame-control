@@ -1,0 +1,119 @@
+{
+  "timeUtc": "2026-10-26T23:23:16.239735+00:00",
+  "plugin": {
+    "id": 96,
+    "version": "1.0.0",
+    "sha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312"
+  },
+  "scope": "Silent private timer settings/events only; local Chromium with actual Frame ARM64 backend. No sound, physical power actions or worn VR.",
+  "runtime": {
+    "version": "v3.3.0",
+    "sha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6"
+  },
+  "realFrameLifecycle": {
+    "lifecycle": {
+      "freshCancel": true,
+      "replacementSuppressesOldCompletion": true,
+      "completionClearsEnd": true,
+      "activeRestartPreservesDeadlineAndRecents": true,
+      "canceledRestartIdle": true,
+      "expiredRestartIdle": true
+    },
+    "actualDecky330": true
+  },
+  "browser": {
+    "uiBegin300": true,
+    "uiCancel": true,
+    "liveCountdown": true,
+    "completionToast": true,
+    "subtleMode": true
+  },
+  "iframeSandbox": "allow-scripts allow-popups; no allow-same-origin",
+  "isolatedNativeAmd64": [
+    {
+      "discovered": [
+        {
+          "name": "Simple Timer",
+          "version": "1.0.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "lifecycle": {
+        "freshCancel": true,
+        "replacementSuppressesOldCompletion": true,
+        "completionClearsEnd": true,
+        "lateExpiryEmitsWithoutSelfCancel": true,
+        "activeRestartPreservesDeadlineAndRecents": true,
+        "canceledRestartIdle": true,
+        "expiredRestartIdle": true
+      },
+      "result": "discovery, cancel, replace, completion and persistent restart passed"
+    },
+    {
+      "discovered": [
+        {
+          "name": "Simple Timer",
+          "version": "1.0.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "lifecycle": {
+        "freshCancelError": {
+          "type": -1,
+          "id": 2,
+          "error": {
+            "name": "Exception",
+            "message": "'Plugin' object has no attribute 'timer_task'",
+            "traceback": "Traceback (most recent call last):\n  File \"decky_loader/wsrouter.py\", line 70, in _call_route\n  File \"decky_loader/loader.py\", line 232, in handle_plugin_method_call\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: 'Plugin' object has no attribute 'timer_task'\n"
+          }
+        },
+        "cancelRetainsEnd": true,
+        "replacedTimerStillFires": true,
+        "expiredRestartError": true
+      },
+      "result": "upstream timer lifecycle regressions reproduced"
+    }
+  ],
+  "fakeFrame": "Pinned official archive installed and removed through real HTTP/SSH harness; backend execution stubbed.",
+  "before": {
+    "arch": "aarch64",
+    "decky": "failed",
+    "panel": "inactive",
+    "battery": [
+      99
+    ]
+  },
+  "after": {
+    "arch": "aarch64",
+    "decky": "failed",
+    "panel": "inactive",
+    "battery": [
+      99
+    ]
+  },
+  "cleanup": {
+    "baseAbsent": true,
+    "unitAbsent": true,
+    "sharedLockAbsent": true,
+    "service": "MainPID=0\nLoadState=not-found\nActiveState=inactive",
+    "testProcesses": []
+  },
+  "lockReleased": true,
+  "limits": [
+    "Sound and suspend unsupported",
+    "No alert delivery while Framey panel is closed",
+    "Worn VR, controller and keyboard unverified",
+    "UI recents after asynchronous reopen not asserted; persisted recents verified through actual backend restart"
+  ],
+  "localValidation": {
+    "pythonTestsRun": 1648,
+    "pythonSkipped": 16,
+    "pythonResult": "OK",
+    "actualDeckyNativeAmd64Cases": 6,
+    "fakeFramePinnedInstallRemove": "PASS",
+    "officialStoreEntriesRefreshed": 116,
+    "officialStoreDigestsChanged": 0
+  }
+}
