@@ -130,8 +130,11 @@ def render(data):
         'Hostname-DNS failures and empty optional arguments are repaired. Decky 3.3.0 still exposes `decky.HOME`; that call is unchanged. '
         'The plugin moves from broken to partial: its frontend advertises HTTP/steamdeck URLs and needs a Steam folder picker. Use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR remain unverified.', '',
         '[LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) '
-        'covers a reproducible MIT helper build and its isolated real-Frame protocol 2.0 info response. '
-        'The official x86 archive remains blocked; full plugin integration and file transfers are unverified.', '',
+        'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
+        '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
+        'now identifies the official helper source and a reproducible ARM64 build from that revision. '
+        'The exact official x86 backend passed one local private-namespace transfer. '
+        'The official x86 archive remains blocked on Frame; ARM64 transfer and full plugin integration are unverified.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:
