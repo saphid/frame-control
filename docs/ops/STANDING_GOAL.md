@@ -51,8 +51,8 @@ takeover; this historical handoff is not a takeover instruction.
   launch, and failed none. SteamVR was in standby; worn display and physical
   controller use remain unverified. The hourly shared-lock worn check remains
   enabled. See [candidate evidence](../evidence/v0451-candidate-2026-10-27.md)
-  and [release evidence PR #365](https://github.com/saphid/frame-control/pull/365)
-  for the exact asset audit and publication record.
+  and [release evidence](../evidence/v0451-release-2026-10-27.md) for the exact
+  asset audit and publication record.
 - Main matched the release commit and its checks were green at this check.
   Revalidate before another merge or release. Disk capacity on lxso2 remains
   critical; do not delete pre-existing data to make space without Alex's OK.
@@ -96,7 +96,8 @@ Main checkout: `/home/saphid/projects/steam-frame` (GitHub repository
 `saphid/frame-control`). Shell default Node may be older; use
 `~/.nvm/versions/node/v24.22.1/bin` first in PATH for Node 24 CI commands.
 Python 3.9.25 and 3.13.14 were installed through uv for the CI matrix; system
-Python 3.12.3 already existed. Current workflows require no Rust/Go toolchain.
+Python 3.12.3 already existed. Workflows at that time required no Rust/Go
+toolchain.
 
 Readiness commands, per-gate logs and exact-commit JSON results live at
 `/tmp/frame-control-readiness-20261027/` on lxso1. These are local readiness
@@ -147,5 +148,6 @@ does not start takeover threads. Automatic stand-in launch is not configured
 or proven by this recovery deployment. It would need supported gateway
 capability and authorized credentials; do not copy or mint gateway secrets.
 
-An identical local handoff copy is maintained at
-`/home/saphid/frame-control-handoff/STANDING_GOAL.md` on lxso1.
+The original handoff copy was placed at
+`/home/saphid/frame-control-handoff/STANDING_GOAL.md` on lxso1. This repository
+document may be newer.
