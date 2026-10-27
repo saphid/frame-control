@@ -204,6 +204,10 @@ browser session, so **Check result** can resume polling after a navigation or
 temporary connection error. After a polling error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
+If Chromium denies session storage, the open panel keeps the accepted job ID in
+memory and **Check result** still works after a connection error. A page reload
+loses that memory fallback; wait for the old job to finish and refresh installed
+status before starting another change.
 Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
