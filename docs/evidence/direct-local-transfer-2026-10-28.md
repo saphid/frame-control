@@ -23,8 +23,7 @@ browser upload. Loopback tests confirm the browser cannot call the direct
 route, reject a mismatched selected headset with HTTP 409, and accept the
 matching desktop request with HTTP 200. Unit tests reject missing, relative,
 directory, hidden and empty source paths before any SSH. The full Python
-suite passed **1,688 tests, 16 skipped** before adding the desktop-only
-guard and route test; targeted tests passed afterward. Hosted CI is a
+suite on the final branch passed **1,690 tests, 16 skipped**. Hosted CI is a
 separate merge gate.
 
 An actual 26.5 GB transfer from USB media to a Frame, end-to-end throughput,
