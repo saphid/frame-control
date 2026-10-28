@@ -4706,7 +4706,7 @@
         "https://github.com/jwhitlow45/free-loader.git"
       ],
       "status": "partial",
-      "reason": "The exact archive's byte-identical duplicate ZIP members pass guarded install/remove. Actual Decky 3.3.0 in a private network-isolated container discovers the plugin, reads default settings and empty local deals, and retains a settings change after restart. Live deal-feed refresh, notifications, Steam store integration, real Frame ARM64 service and worn VR remain unverified; no feed request was made.",
+      "reason": "The exact archive's byte-identical duplicate ZIP members pass guarded install/remove. Actual Decky 3.3.0 in private network-isolated amd64 and ARM64 containers discovers the plugin, reads default settings and empty local deals, and retains a settings change after restart. Live deal-feed refresh, notifications, Steam store integration, real Frame ARM64 service and worn VR remain unverified; no feed request was made.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4714,7 +4714,7 @@
         "fake-Frame pinned install/remove",
         "local exact-archive transaction",
         "isolated Python backend",
-        "isolated Linux backend"
+        "isolated Decky 3.3.0 amd64/ARM64 backend"
       ],
       "browser": {
         "id": 63,
@@ -5181,7 +5181,7 @@
         "https://github.com/safijari/steam-deck-battery-tracker.git"
       ],
       "status": "partial",
-      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 amd64 recorded Frame-shaped private battery samples and returned history/power data. A locked real Frame read verified the required sysfs fields, not the managed plugin. Live ARM64 recording, long-term battery history, foreground-app labeling, panel controls and worn VR remain unverified; existing copies need update or reinstall.",
+      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers recorded Frame-shaped private battery samples and returned history/per-app power. A locked real Frame read verified the required sysfs fields, not the managed plugin. Real Frame ARM64 recording, long-term history, foreground-app labeling, panel controls and worn VR remain unverified; existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
         "battery-tracker-user-supply"
@@ -5190,7 +5190,7 @@
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky amd64 backend",
+        "isolated Decky 3.3.0 amd64/ARM64 backend",
         "real Frame read-only sysfs"
       ],
       "browser": {
@@ -9978,7 +9978,7 @@
         "https://github.com/SteamDeckHomebrew/decky-loader"
       ],
       "status": "partial",
-      "reason": "Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 amd64 in network isolation loads the backend and records a network sample; private settings and read-only RPCs pass. External ping/DNS, real Frame ARM64, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall.",
+      "reason": "Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers loads the backend and records a private network sample; settings and read-only RPCs pass. External ping/DNS, real Frame ARM64 backend, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
         "network-sentinel-user-psutil"
@@ -9987,7 +9987,7 @@
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky amd64 backend"
+        "isolated Decky 3.3.0 amd64/ARM64 backend"
       ],
       "browser": {
         "id": 114,
