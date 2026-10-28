@@ -508,7 +508,10 @@ class ArtworkSettings(unittest.TestCase):
                         time.sleep(0.05)
                 key = {"X-Frame-UI": "1", "Content-Type": "application/json"}
                 self.assertEqual(request("GET", "/api/settings/artwork")[0], 403)
-                self.assertEqual(request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc"})[0], 403)
+                # The missing-key guard runs before reading a body. Leaving an
+                # unread body on Windows can reset this test connection before
+                # http.client receives the 403 response.
+                self.assertEqual(request("POST", "/api/settings/artwork")[0], 403)
                 status, payload = request("GET", "/api/settings/artwork", headers=key)
                 self.assertEqual((status, json.loads(payload)["steamgriddb_configured"]), (200, False))
                 status, payload = request("POST", "/api/settings/artwork", {"steamgriddb_api_key": "abc_1"}, key)
