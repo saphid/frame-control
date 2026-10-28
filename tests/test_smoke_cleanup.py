@@ -134,7 +134,7 @@ class Safety(unittest.TestCase):
         launch.assert_called_once_with(gid)
         remove.assert_called_once_with(gid)
 
-    def test_optional_runtime_skip_is_counted_separately_in_saved_result(self):
+    def test_optional_runtime_skip_fails_gate_and_is_counted_in_saved_result(self):
         with tempfile.TemporaryDirectory() as root:
             output = Path(root) / 'results'
             folder = Path(root) / 'titles'
@@ -156,7 +156,7 @@ class Safety(unittest.TestCase):
                  mock.patch.object(frame_smoke, 'title_cycle', side_effect=cycle), \
                  mock.patch.object(frame_smoke.tempfile, 'mkdtemp', return_value=str(folder)):
                 self.assertEqual(frame_smoke.run_smoke(mock.Mock(pair=False),
-                                 {'activity': 3, 'proximity': [], 'battery': [100]}), 0)
+                                 {'activity': 3, 'proximity': [], 'battery': [100]}), 1)
             result = json.loads(next(output.glob('*-fake.json')).read_text())
             self.assertEqual((result['passed'], result['skipped'], result['failed']), (6, 1, 0))
             self.assertEqual(next(s for s in result['steps'] if s['step'] == 'x86_64: launch')
