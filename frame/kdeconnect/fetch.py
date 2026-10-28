@@ -7,8 +7,11 @@ ios/scripts/make_frame_bundle.py runs this; app/build/fetch-deps.js does the sam
 in Node. Usage: python3 frame/kdeconnect/fetch.py
 """
 import hashlib
+import http.client
 import json
 import sys
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 
@@ -24,6 +27,25 @@ def sha256(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def download_verified(url, expected_sha256):
+    for attempt in range(3):
+        try:
+            with urllib.request.urlopen(url, timeout=120) as response:
+                data = response.read()
+        except (OSError, http.client.HTTPException) as error:
+            # GitHub release downloads occasionally close during connection or
+            # transfer. Retry those failures, but fail fast on permanent HTTP errors.
+            if isinstance(error, urllib.error.HTTPError) and error.code not in (408, 429) and error.code < 500:
+                raise
+            if attempt == 2:
+                raise
+            time.sleep(attempt + 1)
+            continue
+        if sha256(data) != expected_sha256:
+            raise SystemExit(f"checksum mismatch for {url}: {sha256(data)}")
+        return data
+
+
 def fetch():
     m = manifest()
     PACKAGES.mkdir(exist_ok=True)
@@ -32,10 +54,7 @@ def fetch():
         if path.is_file() and sha256(path.read_bytes()) == p["sha256"]:
             continue
         url = m["release"] + p["file"]
-        with urllib.request.urlopen(url, timeout=120) as r:
-            data = r.read()
-        if sha256(data) != p["sha256"]:
-            raise SystemExit(f"checksum mismatch for {url}: {sha256(data)}")
+        data = download_verified(url, p["sha256"])
         tmp = path.with_suffix(".part")
         tmp.write_bytes(data)
         tmp.replace(path)
