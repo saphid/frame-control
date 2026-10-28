@@ -28,8 +28,8 @@ rechecked around deletion; shared Proton services are never stopped by name.
 
 Usage: python3 tests/smoke/frame_smoke.py [--pair]     (or scripts/frame-smoke.sh)
 Env:   FRAME_ALIAS (default frame), FRAME_SMOKE_RESULTS (default tests/smoke/results)
-Exit status: 0 no step failed (optional runtime may skip a launch), 1 a step
-failed, 2 the headset isn't reachable.
+Exit status: 0 every step passed, 1 a step failed or was skipped, 2 the
+headset isn't reachable. A skipped launch is not a release smoke pass.
 """
 import argparse
 import json
@@ -425,7 +425,7 @@ def run_smoke(args, before):
                                'passed': passed, 'skipped': skipped, 'failed': failed,
                                'devkit_utils_there_before': had_utils, 'steps': smoke.steps}, indent=1))
     print(f'==> {passed} passed, {skipped} skipped, {failed} failed on build {build}; results in {out}')
-    return 0 if failed == 0 else 1
+    return 0 if failed == 0 and skipped == 0 else 1
 
 
 def main():
