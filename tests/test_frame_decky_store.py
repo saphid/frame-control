@@ -360,6 +360,7 @@ class StoreTransaction(unittest.TestCase):
         with sqlite3.connect(runtime / 'battery.db') as db:
             self.assertEqual(db.execute('select capacity from battery').fetchall(), [(89,)])
 
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_network_sentinel_is_user_scoped_and_digest_guarded(self):
         from framey_official import PLUGINS, archive as official_archive
         import platform
