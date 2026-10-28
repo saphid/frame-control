@@ -1672,7 +1672,7 @@
         "https://github.com/jurassicplayer/decky-autosuspend.git"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: Cannot read properties of null (reading '6').",
+      "reason": "Frontend audit failed: Cannot read properties of null (reading '6'). The exact frontend also contains SteamOS suspend and shutdown paths; threshold behavior and safe Frame operation are unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -5854,7 +5854,7 @@
         "https://github.com/jurassicplayer/decky-autosuspend"
       ],
       "status": "broken",
-      "reason": "Frontend audit failed: Cannot convert undefined or null to object.",
+      "reason": "Frontend audit failed: Cannot convert undefined or null to object. Its primary trainer workflow uses a Steam game context menu and launch-option writes, with no target in the isolated Framey panel; no trainer launch was verified.",
       "blockInstall": false,
       "verification": [
         "static archive",
