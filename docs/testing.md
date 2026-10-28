@@ -233,8 +233,9 @@ before (if it was, it stays, synced to this checkout as Frame Control always
 does). A cleanup that fails counts as a failed step. Results go to
 `tests/smoke/results/<time>-<BUILD_ID>.json` (not committed) with a summary on
 screen. The summary counts passed, skipped and failed steps separately. It
-exits 0 when no step failed (including a skipped optional runtime), 1 if a step
-failed, or 2 if the headset isn't reachable.
+exits 0 only when every step passed, 1 if a step failed or was skipped, or 2 if
+the headset isn't reachable. A skipped x86-64 launch blocks a release smoke
+gate even though it remains separately labeled in the result.
 
 Smoke process cleanup runs before and after title removal and during the
 initial/final leftover sweeps. It targets only the reserved `fc_smoke_arm64`,
