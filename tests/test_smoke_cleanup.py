@@ -95,6 +95,18 @@ class RealProcesses(unittest.TestCase):
 
 
 class Safety(unittest.TestCase):
+    def test_source_revision_records_clean_checkout_and_rejects_invalid_head(self):
+        head = 'a' * 40
+        with mock.patch.object(frame_smoke.subprocess, 'run', side_effect=[
+                mock.Mock(stdout=head + '\n'), mock.Mock(stdout='')]):
+            self.assertEqual(frame_smoke.source_revision(), {'commit': head, 'clean': True})
+        with mock.patch.object(frame_smoke.subprocess, 'run', side_effect=[
+                mock.Mock(stdout=head + '\n'), mock.Mock(stdout=' M tests/smoke/frame_smoke.py\n')]):
+            self.assertEqual(frame_smoke.source_revision(), {'commit': head, 'clean': False})
+        with mock.patch.object(frame_smoke.subprocess, 'run', side_effect=[
+                mock.Mock(stdout='not-a-commit\n'), mock.Mock(stdout='')]):
+            self.assertEqual(frame_smoke.source_revision(), {'commit': None, 'clean': False})
+
     def test_locked_preflight_rejects_active_or_unknown_proximity_before_titles(self):
         for proximity in ([], [88.0625], [4.6875, 88.0625], [None]):
             with self.subTest(proximity=proximity), mock.patch.object(
@@ -147,6 +159,8 @@ class Safety(unittest.TestCase):
                 else:
                     smoke.step(f'{kind}: launch', lambda: {'outcome': 'running'})
             with mock.patch.object(frame_smoke, 'RESULTS', output), \
+                 mock.patch.object(frame_smoke, 'source_revision', return_value={
+                     'commit': 'a' * 40, 'clean': True}), \
                  mock.patch.object(frame_smoke, 'os_release', return_value={
                      'BUILD_ID': 'fake', 'VERSION_ID': 'fake', 'VARIANT_ID': 'fake'}), \
                  mock.patch.object(frame_smoke, 'ssh', return_value='yes'), \
@@ -155,10 +169,14 @@ class Safety(unittest.TestCase):
                  mock.patch.object(frame_smoke, 'status', return_value={}), \
                  mock.patch.object(frame_smoke, 'title_cycle', side_effect=cycle), \
                  mock.patch.object(frame_smoke.tempfile, 'mkdtemp', return_value=str(folder)):
-                self.assertEqual(frame_smoke.run_smoke(mock.Mock(pair=False),
-                                 {'activity': 3, 'proximity': [], 'battery': [100]}), 1)
+                code, saved_path = frame_smoke.run_smoke(mock.Mock(pair=False),
+                                 {'activity': 3, 'proximity': [], 'battery': [100]})
+                self.assertEqual(code, 1)
             result = json.loads(next(output.glob('*-fake.json')).read_text())
+            self.assertEqual(saved_path.parent, output)
             self.assertEqual((result['passed'], result['skipped'], result['failed']), (6, 1, 0))
+            self.assertEqual(result['source'], {'commit': 'a' * 40, 'clean': True})
+            self.assertFalse(result['lock_released'])
             self.assertEqual(next(s for s in result['steps'] if s['step'] == 'x86_64: launch')
                              ['detail']['outcome'], 'runtime missing')
 
@@ -207,13 +225,27 @@ class Safety(unittest.TestCase):
                 mock.patch.object(frame_smoke, 'cleanup', side_effect=RuntimeError('cannot stop')), \
                 mock.patch.object(frame_smoke, 'title_cycle') as cycle, \
                 mock.patch('builtins.print'):
-            self.assertEqual(frame_smoke.run_smoke(mock.Mock(pair=False),
-                             {'activity':3,'proximity':[],'battery':[100]}), 1)
+            code, _ = frame_smoke.run_smoke(mock.Mock(pair=False),
+                             {'activity':3,'proximity':[],'battery':[100]})
+            self.assertEqual(code, 1)
             cycle.assert_not_called()
             self.assertEqual(len(list(Path(folder).glob('*-fake.json'))), 1)
 
 
 class SharedSmokeLock(unittest.TestCase):
+    def test_result_marks_release_only_after_owned_lock_is_removed(self):
+        with tempfile.TemporaryDirectory() as folder:
+            result_path = Path(folder) / 'smoke.json'
+            for released in (False, True):
+                result_path.write_text('{"lock_released": false}')
+                with mock.patch.object(frame_smoke.sys, 'argv', ['frame_smoke.py']), \
+                     mock.patch.object(frame_smoke, 'acquire_lock', return_value=True), \
+                     mock.patch.object(frame_smoke, 'preflight', return_value={}), \
+                     mock.patch.object(frame_smoke, 'run_smoke', return_value=(0, result_path)), \
+                     mock.patch.object(frame_smoke, 'release_lock', return_value=released):
+                    self.assertEqual(frame_smoke.main(), 0 if released else 1)
+                self.assertIs(json.loads(result_path.read_text())['lock_released'], released)
+
     def test_busy_lock_prevents_any_status_read_or_title_change(self):
         with mock.patch.object(frame_smoke.sys, 'argv', ['frame_smoke.py']), \
              mock.patch.object(frame_smoke, 'acquire_lock', return_value=False), \

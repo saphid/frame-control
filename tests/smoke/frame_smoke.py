@@ -35,6 +35,7 @@ import argparse
 import json
 import os
 import platform
+import re
 import secrets
 import shlex
 import subprocess
@@ -59,6 +60,20 @@ import stop_processes  # noqa: E402
 RESULTS = Path(os.environ.get('FRAME_SMOKE_RESULTS') or HERE / 'results')
 PREFIX = 'fc_smoke_'
 LOCK = '/tmp/frame-test.lock'
+
+
+def source_revision():
+    """Record which checkout produced the smoke result for release review."""
+    try:
+        head = subprocess.run(['git', '-C', str(ROOT), 'rev-parse', 'HEAD'],
+                              capture_output=True, text=True, timeout=10, check=True).stdout.strip()
+        status = subprocess.run(['git', '-C', str(ROOT), 'status', '--porcelain'],
+                                capture_output=True, text=True, timeout=10, check=True).stdout
+    except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
+        return {'commit': None, 'clean': False}
+    if not isinstance(head, str) or not re.fullmatch(r'[0-9a-f]{40}', head):
+        return {'commit': None, 'clean': False}
+    return {'commit': head, 'clean': not bool(status.strip())}
 
 
 def remote(command, *, input=None):
@@ -420,12 +435,14 @@ def run_smoke(args, before):
     failed = len(smoke.steps) - passed - skipped
     RESULTS.mkdir(exist_ok=True)
     out = RESULTS / f"{started.replace(':', '')}-{build}.json"
-    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'preflight': before,
+    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'source': source_revision(),
+                               'preflight': before,
                                'os_release': release, 'paired': args.pair,
                                'passed': passed, 'skipped': skipped, 'failed': failed,
+                               'lock_released': False,
                                'devkit_utils_there_before': had_utils, 'steps': smoke.steps}, indent=1))
     print(f'==> {passed} passed, {skipped} skipped, {failed} failed on build {build}; results in {out}')
-    return 0 if failed == 0 and skipped == 0 else 1
+    return (0 if failed == 0 and skipped == 0 else 1), out
 
 
 def main():
@@ -440,12 +457,12 @@ def main():
     if not locked:
         print('Shared Frame lock busy or unreachable; no headset status read or smoke run.', file=sys.stderr)
         return 2
-    result = 1
+    result, output = 1, None
     try:
         try:
             before = preflight()
             print('Locked read-only preflight: ' + json.dumps(before), flush=True)
-            result = run_smoke(args, before)
+            result, output = run_smoke(args, before)
         except (OSError, ValueError, RuntimeError, subprocess.TimeoutExpired) as failure:
             print(str(failure), file=sys.stderr)
             result = 2
@@ -457,6 +474,14 @@ def main():
         if not released:
             print('ERROR: could not release owned Frame lock.', file=sys.stderr)
             result = 1
+        elif output is not None:
+            try:
+                saved = json.loads(output.read_text())
+                saved['lock_released'] = True
+                output.write_text(json.dumps(saved, indent=1))
+            except (OSError, ValueError) as failure:
+                print(f'ERROR: could not record Frame lock release: {failure}', file=sys.stderr)
+                result = 1
     return result
 
 
