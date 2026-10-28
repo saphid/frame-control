@@ -20,10 +20,12 @@ Offline checks use a mocked 27 GiB file size without allocating that space.
 They verify the direct server copy path, a timeout longer than one hour, the
 page's desktop-versus-browser choice, and early rejection of an oversized
 browser upload. Loopback tests confirm the browser cannot call the direct
-route; unit tests reject missing, relative, directory, hidden and empty
-source paths before any SSH. The full Python suite passed **1,688 tests,
-16 skipped** before adding the desktop-only guard; hosted CI is a separate
-merge gate.
+route, reject a mismatched selected headset with HTTP 409, and accept the
+matching desktop request with HTTP 200. Unit tests reject missing, relative,
+directory, hidden and empty source paths before any SSH. The full Python
+suite passed **1,688 tests, 16 skipped** before adding the desktop-only
+guard and route test; targeted tests passed afterward. Hosted CI is a
+separate merge gate.
 
 An actual 26.5 GB transfer from USB media to a Frame, end-to-end throughput,
 resume after interruption and free-space behavior remain unverified. No real

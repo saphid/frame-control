@@ -1,10 +1,13 @@
 """Large desktop file copies use the selected local path, not an 8 GiB HTTP upload."""
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
+import http.client
+import json
 import os
 import stat
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from types import SimpleNamespace
@@ -15,6 +18,38 @@ import server
 
 
 class LargeTransfer(unittest.TestCase):
+    def test_desktop_http_copy_stays_on_selected_headset(self):
+        with tempfile.TemporaryDirectory() as tmp, server.LoopbackServer(("127.0.0.1", 0), server.Handler) as httpd:
+            source = Path(tmp) / "usb-file.bin"
+            source.write_bytes(b"a small stand-in for a large file")
+            worker = threading.Thread(target=httpd.serve_forever, daemon=True)
+            worker.start()
+            link = mock.Mock()
+            link.active_device.return_value = {"id": "frame-a"}
+            body = json.dumps({"action": "copy-local", "path": str(source)})
+
+            def copy(device):
+                conn = http.client.HTTPConnection("127.0.0.1", httpd.server_port, timeout=5)
+                try:
+                    conn.request("POST", "/api/transfer", body, {"X-Frame-UI": server.UI_KEY,
+                                 "X-Frame-Device": device, "Content-Type": "application/json"})
+                    response = conn.getresponse()
+                    return response.status, json.loads(response.read())
+                finally:
+                    conn.close()
+
+            try:
+                with mock.patch.dict(os.environ, {"FRAME_CONTROL_APP": "1"}), \
+                     mock.patch.object(server, "LINK", link), \
+                     mock.patch.object(server, "push_file", return_value="Sent usb-file.bin to ~/Downloads/") as push:
+                    self.assertEqual(copy("frame-b")[0], 409)
+                    push.assert_not_called()
+                    self.assertEqual(copy("frame-a"), (200, {"message": "Sent usb-file.bin to ~/Downloads/"}))
+                    push.assert_called_once_with(source)
+            finally:
+                httpd.shutdown()
+                worker.join(timeout=5)
+
     def test_27_gib_local_file_reaches_direct_copy(self):
         source = Path(os.path.abspath("large-file.bin"))
         size = 27 * 1024 ** 3
