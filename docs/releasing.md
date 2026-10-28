@@ -27,8 +27,22 @@ count. So a build reaches people only when you publish it, after testing it.
    temporary profile. This CI test does not test a physical display, FUSE mount
    or a headset.
 
-2. Download the draft's installers and test them. An installed copy of the
-   previous version won't offer the draft, so install it directly.
+2. Independently download and inspect the draft's installers on an x86_64
+   Linux host with `gh`, `dpkg-deb` and `xvfb-run` installed:
+
+   ```sh
+   scripts/audit-release-assets.py v0.4.0 \
+     --report /tmp/frame-v0.4.0-assets.json --launch-x86-appimage
+   ```
+
+   The command downloads each of the ten installers by asset ID, verifies its
+   size and SHA-256 against GitHub metadata, matches the downloaded
+   `SHA256SUMS` byte for byte, checks package formats and versions, and starts
+   the x86_64 AppImage with a temporary profile and isolated Xvfb display. It
+   writes the report only after all checks pass. This does not prove that the
+   Mac or Windows installers launch on physical machines. Test those packages
+   separately when the required machines are available. An installed copy of
+   the previous version won't offer the draft, so install it directly.
 
 3. Write the release notes on the draft. The update banner links to them.
 
