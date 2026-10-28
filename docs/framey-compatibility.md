@@ -4,7 +4,7 @@ Snapshot: 2026-10-26T06:10:58.537029+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 6 · Partial: 53 · Broken: 46 · N/A: 11.**
+**Works: 6 · Partial: 54 · Broken: 45 · N/A: 11.**
 
 - **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.
@@ -30,6 +30,8 @@ A [Free Loader duplicate-entry follow-up](evidence/framey-free-loader-duplicates
 A [2026-10-28 static action-limit review](evidence/framey-static-action-limits-2026-10-28.md) hash-checked the exact AutoSuspend and CheatDeck archives. AutoSuspend contains Steam suspend/shutdown paths, and CheatDeck's advertised trainer flow needs a Steam game context menu and launch-option writes. Neither plugin was executed; both retain their broken labels.
 
 A [Network Sentinel user-service check](evidence/framey-network-sentinel-2026-10-28.md) adapts only the exact 1.0.4 digest. In isolated actual Decky 3.3.0 amd64, the pinned plugin-local psutil wheel, private settings RPC and one monitoring-loop sample pass. External ping/DNS, Frame ARM64, panel controls and worn VR remain unverified; this is partial compatibility.
+
+A [Battery Tracker user-service check](evidence/framey-battery-tracker-2026-10-28.md) adapts only the exact 0.2.0 digest. A locked read-only Frame probe confirmed a Battery-type supply with the required fields; actual Decky 3.3.0 amd64 recorded private Frame-shaped samples and returned history/per-app power. The managed plugin has not run on the real Frame, and panel controls and worn VR remain unverified; this is partial compatibility.
 
 The current published digests are pinned in the JSON; if the store changed, retain/download those exact archives for reproduction. Audit downloads permit larger ZIPs for inspection; production installer limits remain 50 MiB ZIP / 150 MiB unpacked / 30 MiB per member.
 
@@ -83,7 +85,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 64: Syncthing 0.2.7 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog. Shared Toggle value rendering is repaired; other listed blockers remain. | static archive, local browser, fake-Frame |
 | 65: Decky Terminal 0.5.3 | 1 / 2 | partial | Local routes initialize after parameter-route support; no shell commands were run. | static archive, local browser, fake-Frame |
 | 66: PlayTime 3.2.5 | 1 / 2 | partial | Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. Running snapshots are now exposed, but its private MobX observation is unsupported; automatic recording and ARM64 backend remain unverified. | static archive, local browser, fake-Frame, real Frame SSH |
-| 67: Battery Tracker 0.2.0 | legacy / legacy | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |
+| 67: Battery Tracker 0.2.0 | legacy / legacy | partial | Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 amd64 recorded Frame-shaped private battery samples and returned history/power data. A locked real Frame read verified the required sysfs fields, not the managed plugin. Live ARM64 recording, long-term battery history, foreground-app labeling, panel controls and worn VR remain unverified; existing copies need update or reinstall. | static archive, local browser, fake-Frame, isolated Decky amd64 backend, real Frame read-only sysfs |
 | 68: Wine Cellar 0.2.1 | 1 / 2 | broken | Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend. Frontend audit failed: Audit blocks WebSocket. | static archive, local browser, fake-Frame |
 | 70: MicroSDeck 0.11.2 | legacy / 2 | broken | Plugin contains a non-ARM64 Linux binary: MicroSDeck/bin/backend. | static archive, local browser, fake-Frame |
 | 72: ScreenshotUploader 0.0.3 | legacy / legacy | partial | Initializer succeeds; screenshot upload requires external credentials/network and was not run. | static archive, local browser, fake-Frame |
