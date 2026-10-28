@@ -7,6 +7,7 @@ import base64
 import copy
 import http.client
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -189,6 +190,8 @@ class Probe(unittest.TestCase):
         finally:
             wireless._lock.release()
 
+    @unittest.skipIf(os.environ.get('FRAME_SKIP_WINDOWS_WIRELESS_LIVE') == '1',
+                     'dedicated wireless-windows CI job owns the live inventory')
     @unittest.skipUnless(wireless.frame_host.WINDOWS, 'Live read-only Windows inventory runs on Windows CI')
     def test_live_windows_inventory(self):
         r = wireless.diagnose()
