@@ -1,6 +1,7 @@
 const assert = require('node:assert/strict');
+const { EventEmitter } = require('node:events');
 const test = require('node:test');
-const { fetchWithRetry } = require('../build/fetch-retry');
+const { get, fetchWithRetry } = require('../build/fetch-retry');
 
 test('installer fetch recovers a dropped connection without hiding final failure', async () => {
   let calls = 0;
@@ -41,5 +42,35 @@ test('installer fetch retries a transient HTTP response', async () => {
     return Buffer.from('pinned bytes');
   }, 'https://example.invalid/package', async () => {});
   assert.equal(bytes.toString(), 'pinned bytes');
+  assert.equal(calls, 2);
+});
+
+test('installer fetch retries a response aborted after headers and partial bytes', async () => {
+  let calls = 0;
+  const transport = {
+    get(_url, _options, callback) {
+      const request = new EventEmitter();
+      queueMicrotask(() => {
+        const response = new EventEmitter();
+        response.statusCode = 200;
+        response.headers = {};
+        callback(response);
+        if (++calls === 1) {
+          response.emit('data', Buffer.from('partial'));
+          response.emit('aborted');
+        } else {
+          response.emit('data', Buffer.from('complete'));
+          response.emit('end');
+        }
+      });
+      return request;
+    },
+  };
+  const bytes = await fetchWithRetry(
+    (url) => get(url, 5, transport),
+    'https://example.invalid/package',
+    async () => {},
+  );
+  assert.equal(bytes.toString(), 'complete');
   assert.equal(calls, 2);
 });

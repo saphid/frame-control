@@ -7,10 +7,9 @@
 //   node build/fetch-deps.js mac arm64 x64 | win x64 | linux x64 arm64
 const crypto = require("crypto");
 const fs = require("fs");
-const https = require("https");
 const path = require("path");
 const { execFileSync } = require("child_process");
-const { fetchWithRetry } = require("./fetch-retry");
+const { get, fetchWithRetry } = require("./fetch-retry");
 
 const PY = "3.12.14+20260924";
 const PY_URL = (triple) => "https://github.com/astral-sh/python-build-standalone/releases/download/"
@@ -46,30 +45,6 @@ const PRUNE = [
   ...["test", "idlelib", "tkinter", "turtledemo", "ensurepip", "lib2to3", "site-packages/pip", "pydoc_data", "venv"]
     .flatMap((d) => [`lib/python3.12/${d}`, `Lib/${d}`]),
 ];
-
-function get(url, redirects = 5) {
-  return new Promise((resolve, reject) => {
-    https.get(url, { timeout: 60000 }, (res) => {
-      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
-        res.resume();
-        if (!redirects) return reject(new Error(`${url}: too many redirects`));
-        let next;
-        try { next = new URL(res.headers.location, url).href; }
-        catch { return reject(new Error(`${url}: bad redirect ${res.headers.location}`)); }
-        return resolve(get(next, redirects - 1));
-      }
-      if (res.statusCode !== 200) {
-        res.resume();
-        const error = new Error(`${url}: HTTP ${res.statusCode}`);
-        error.statusCode = res.statusCode;
-        return reject(error);
-      }
-      const chunks = [];
-      res.on("data", (c) => chunks.push(c));
-      res.on("end", () => resolve(Buffer.concat(chunks)));
-    }).on("timeout", function () { this.destroy(new Error(`${url}: timed out`)); }).on("error", reject);
-  });
-}
 
 async function download(url, sha256, file) {
   const data = await fetchWithRetry(get, url);
