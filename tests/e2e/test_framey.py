@@ -9,7 +9,7 @@ import subprocess
 import threading
 import zipfile
 
-from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
+from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, reset, ssh
 import frame_decky_store
 from framey_official import LEGACY_PLUGINS, PLUGINS as PANEL_PLUGINS, archive as official_archive
 
@@ -99,6 +99,13 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         copy = subprocess.run(['ssh','frame','cat > ~/.local/share/frame-control/headset/bundle/ui/frame_steam.py'],
                               input=source, capture_output=True, timeout=20)
         self.assertEqual(copy.returncode, 0, copy.stderr)
+
+    def test_fake_frame_reset_clears_managed_decky_state(self):
+        ssh('mkdir -p ~/.local/share/frame-control/decky/plugins/test-leftover ~/.config/systemd/user')
+        ssh('touch ~/.config/systemd/user/frame-control-decky.service')
+        reset()
+        self.assertEqual(ssh('test -e ~/.local/share/frame-control/decky && echo yes || echo no').strip(), 'no')
+        self.assertEqual(ssh('test -e ~/.config/systemd/user/frame-control-decky.service && echo yes || echo no').strip(), 'no')
 
     def test_store_install_update_remove_and_guards(self):
         self.backend()
