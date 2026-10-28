@@ -215,7 +215,10 @@ acquires the shared `/tmp/frame-test.lock` with a unique owner token. It reads
 SteamVR activity, proximity and battery while locked. An awake headset, unknown
 activity, battery below 20%, or a busy lock stops the run without installing
 anything. It releases only its own lock after cleanup. The JSON result includes
-the read-only preflight for completed smoke runs.
+the read-only preflight and the source checkout's commit and clean/dirty state.
+For a release, run it from a clean checkout of the exact release commit;
+`scripts/verify-frame-smoke-result.py` rejects a different or dirty checkout,
+missing steps, skipped or failed launches, and an unconfirmed lock release.
 
 It checks `properties.json` and the status, then installs, launches and
 removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`

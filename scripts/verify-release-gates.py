@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
-"""Refuse publication unless the exact tag commit and tagged installers passed CI.
+"""Refuse publication unless CI, tagged installers, and exact Frame smoke passed.
 
 This checks GitHub's current run and job records, not a prior PR's check marks.
-The real Frame smoke and independent package checks remain release-procedure
+Independent package checks and release verification remain release-procedure
 gates documented in docs/releasing.md.
 """
 import json
 import subprocess
 import sys
+from pathlib import Path
 from urllib.parse import quote
 
 
@@ -98,18 +99,26 @@ def successful_jobs(run, required):
     print(f"gate passed: {run.get('html_url')} ({len(latest_jobs)} jobs, {attempt} attempts)")
 
 
-def main(tag):
+def main(tag, smoke_result):
     if not tag.startswith("v") or not tag[1:]:
         raise GateError("expected a version tag beginning with v")
+    if not smoke_result:
+        raise GateError("FRAME_SMOKE_RESULT is required for the locked real Frame smoke gate")
     sha = tag_commit(tag)
     successful_jobs(exact_run("checks.yml", "main", sha, "push"), MAIN_JOBS)
     successful_jobs(exact_run("decky-runtime.yml", "main", sha, "push"), DECKY_JOBS)
     successful_jobs(exact_run("release.yml", tag, sha, "push"), RELEASE_JOBS)
+    command = [sys.executable, str(Path(__file__).with_name("verify-frame-smoke-result.py")),
+               smoke_result, sha]
+    checked = subprocess.run(command, text=True, capture_output=True, check=False)
+    if checked.returncode:
+        raise GateError(checked.stderr.strip() or "Frame smoke result verification failed")
+    print(checked.stdout.strip())
     print(f"exact release commit: {sha}")
 
 
 if __name__ == "__main__":
     try:
-        main(sys.argv[1])
+        main(sys.argv[1], sys.argv[2] if len(sys.argv) > 2 else None)
     except (IndexError, GateError) as error:
         sys.exit(f"release gate failed: {error}")

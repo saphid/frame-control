@@ -3,7 +3,7 @@
 # (docs/releasing.md). Checks every installer is attached with a SHA-256
 # digest first, since the app's updater refuses assets without one, then
 # attaches update.json, the manifest the updater reads.
-# Usage: scripts/publish-release.sh [--dry-run] v0.4.0
+# Usage: FRAME_SMOKE_RESULT=/path/to/result.json scripts/publish-release.sh [--dry-run] v0.4.0
 #
 # Everything goes through the REST API (gh api), not `gh release view/edit`:
 # those look a draft up by its tag, and a draft can show tag_name
@@ -34,7 +34,7 @@ gh api "repos/$repo/git/ref/tags/$tag" >/dev/null 2>&1 \
 # A complete asset list is insufficient: a cancelled installer build can leave
 # old uploaded bytes behind. Check the exact tagged commit's main/e2e jobs and
 # the latest exact-tag release attempt before any release mutation.
-python3 "$(dirname "$0")/verify-release-gates.py" "$tag"
+python3 "$(dirname "$0")/verify-release-gates.py" "$tag" "${FRAME_SMOKE_RESULT:-}"
 
 # Every release, drafts included, one JSON object per line.
 gh api --paginate "repos/$repo/releases?per_page=100" --jq '.[]' > "$tmp/releases"
