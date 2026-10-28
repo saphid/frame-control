@@ -10,6 +10,7 @@ const fs = require("fs");
 const https = require("https");
 const path = require("path");
 const { execFileSync } = require("child_process");
+const { fetchWithRetry } = require("./fetch-retry");
 
 const PY = "3.12.14+20260924";
 const PY_URL = (triple) => "https://github.com/astral-sh/python-build-standalone/releases/download/"
@@ -57,7 +58,12 @@ function get(url, redirects = 5) {
         catch { return reject(new Error(`${url}: bad redirect ${res.headers.location}`)); }
         return resolve(get(next, redirects - 1));
       }
-      if (res.statusCode !== 200) return reject(new Error(`${url}: HTTP ${res.statusCode}`));
+      if (res.statusCode !== 200) {
+        res.resume();
+        const error = new Error(`${url}: HTTP ${res.statusCode}`);
+        error.statusCode = res.statusCode;
+        return reject(error);
+      }
       const chunks = [];
       res.on("data", (c) => chunks.push(c));
       res.on("end", () => resolve(Buffer.concat(chunks)));
@@ -66,7 +72,7 @@ function get(url, redirects = 5) {
 }
 
 async function download(url, sha256, file) {
-  const data = await get(url);
+  const data = await fetchWithRetry(get, url);
   const sum = crypto.createHash("sha256").update(data).digest("hex");
   if (sum !== sha256) throw new Error(`checksum mismatch for ${url}: ${sum}`);
   fs.writeFileSync(file, data);
