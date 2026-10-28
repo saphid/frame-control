@@ -41,6 +41,7 @@ def render(data):
         '```', '',
         'Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.', '',
         'A [Free Loader duplicate-entry follow-up](evidence/framey-free-loader-duplicates-2026-10-26.md) accepts only byte-identical duplicate ZIP members whose modes differ at most in execute bits. The exact archive passed private local and focused fake-Frame install/remove; its frontend rendered in opaque Chromium and isolated Python settings/empty-deals reads passed with a Decky stub. The earlier full 116-plugin fake-Frame audit blocked this archive before the fix. Actual Decky, feed updates and worn VR remain unverified.', '',
+        'A [2026-10-28 static action-limit review](evidence/framey-static-action-limits-2026-10-28.md) hash-checked the exact AutoSuspend and CheatDeck archives. AutoSuspend contains Steam suspend/shutdown paths, and CheatDeck\'s advertised trainer flow needs a Steam game context menu and launch-option writes. Neither plugin was executed; both retain their broken labels.', '',
         'The current published digests are pinned in the JSON; if the store changed, retain/download those exact archives for reproduction. '
         'Audit downloads permit larger ZIPs for inspection; production installer limits remain 50 MiB ZIP / 150 MiB unpacked / 30 MiB per member.', '',
         'After the VR job released the shared lock, this audit acquired it and used a private temporary Decky 3.3.0 ARM64 user service. '
