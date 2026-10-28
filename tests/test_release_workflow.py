@@ -22,6 +22,7 @@ WORKFLOW = ROOT / ".github" / "workflows" / "release.yml"
 FAKEGH = ROOT / "tests" / "fakegh"
 STEP = "- name: Create the draft release"
 UPLOAD_STEP = "- name: Upload to the release"
+OUTPUTS_STEP = "- name: Check installer outputs before upload"
 
 
 def step_script(step=STEP):
@@ -114,6 +115,28 @@ class DraftStep(unittest.TestCase):
         self.assertIn("tag v9.8.7 isn't on GitHub", p.stderr)
         self.assertEqual(self.posts(log), [])
         self.assertEqual(self.patches(log), [])
+
+
+@unittest.skipUnless(os.name != "nt" and shutil.which("bash"),
+                     "needs a POSIX bash; Actions uses Git Bash on Windows")
+class InstallerOutputsStep(unittest.TestCase):
+    def run_step(self, files):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            for name in files:
+                (root / name).write_bytes(b"installer")
+            script = step_script(OUTPUTS_STEP).replace("${{ matrix.files }}", "*.dmg *.zip")
+            return subprocess.run(["bash", "--noprofile", "--norc", "-eo", "pipefail", "-c", script],
+                                  cwd=root, capture_output=True, text=True, timeout=10)
+
+    def test_requires_each_advertised_installer_type(self):
+        result = self.run_step(["Frame-Control-mac.dmg"])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("missing installer output matching *.zip", result.stderr)
+
+    def test_accepts_all_advertised_installer_types(self):
+        result = self.run_step(["Frame-Control-mac.dmg", "Frame-Control-mac.zip"])
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 @unittest.skipUnless(os.name != "nt" and shutil.which("bash") and shutil.which("jq"),

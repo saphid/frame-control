@@ -113,6 +113,18 @@ jobs:
         run: npm ci && npm run ${{ matrix.script }}
         env:
           CSC_IDENTITY_AUTO_DISCOVERY: "false"
+      - name: Check installer outputs before upload
+        shell: bash
+        run: |
+          # Every platform must produce each advertised file type. An artifact
+          # upload can otherwise succeed with just one file from the path list.
+          read -r -a patterns <<< '${{ matrix.files }}'
+          for pattern in "${patterns[@]}"; do
+            if ! compgen -G "$pattern" >/dev/null; then
+              echo "missing installer output matching $pattern" >&2
+              exit 1
+            fi
+          done
       - name: Check the Mac bundle matches its runner
         if: runner.os == 'macOS'
         shell: bash
@@ -189,7 +201,7 @@ jobs:
             app/dist/*.zip
             app/dist/*.AppImage
             app/dist/*.deb
-          if-no-files-found: ignore
+          if-no-files-found: error
 
   checksums:
     needs: build
