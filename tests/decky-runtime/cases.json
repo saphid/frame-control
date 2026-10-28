@@ -15,6 +15,11 @@
     "probe": "toggle-settings"
   },
   {
+    "id": 63,
+    "shim": null,
+    "probe": "free-loader"
+  },
+  {
     "id": 12,
     "shim": "music-control-system-dbus-env",
     "probe": "mpris"
