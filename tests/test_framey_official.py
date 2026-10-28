@@ -84,7 +84,7 @@ class OfficialBundles(unittest.TestCase):
                     folder = plugins / plugin['folder']
                     (folder / '.frame-control-store.json').write_text(json.dumps({
                         'storeId': plugin['id'], 'sha256': plugin['sha256']}))
-                    if plugin['id'] in (60, 114):
+                    if plugin['id'] in (60, 67, 114):
                         # This renderer fixture extracts the original root ZIP.
                         # Transaction and Decky tests cover managed adaptation;
                         # an unadapted root copy must fail here.

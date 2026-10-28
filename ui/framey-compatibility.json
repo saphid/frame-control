@@ -5176,13 +5176,18 @@
         "https://github.com/safijari/steam-deck-battery-tracker",
         "https://github.com/safijari/steam-deck-battery-tracker.git"
       ],
-      "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 amd64 recorded Frame-shaped private battery samples and returned history/power data. A locked real Frame read verified the required sysfs fields, not the managed plugin. Live ARM64 recording, long-term battery history, foreground-app labeling, panel controls and worn VR remain unverified; existing copies need update or reinstall.",
+      "blockInstall": false,
+      "requiredShims": [
+        "battery-tracker-user-supply"
+      ],
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky amd64 backend",
+        "real Frame read-only sysfs"
       ],
       "browser": {
         "id": 67,
@@ -5206,8 +5211,8 @@
       },
       "archiveValidation": {
         "id": 67,
-        "accepted": false,
-        "reason": "This plugin needs root and is not supported by the Frame user service"
+        "accepted": true,
+        "reason": "Exact digest-scoped user-service adaptation"
       },
       "backend": "Python",
       "hardware": "/sys/class/power_supply/BAT1/capacity; /sys/class/power_supply/BAT1/current_now; /sys/class/power_supply/BAT1/status; /sys/class/power_supply/BAT1/voltage_now",
@@ -5217,9 +5222,8 @@
       "fakeFrame": {
         "id": 67,
         "sha256": "91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94",
-        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
-        "result": "blocked",
-        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
       }
     },
     {
