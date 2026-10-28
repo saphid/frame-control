@@ -10,6 +10,7 @@ import threading
 import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, ssh
+import frame_decky_store
 from framey_official import LEGACY_PLUGINS, PLUGINS as PANEL_PLUGINS, archive as official_archive
 
 OFFICIAL_PLUGINS = PANEL_PLUGINS + LEGACY_PLUGINS
@@ -190,6 +191,9 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 installed = f"~/.local/share/frame-control/decky/plugins/{plugin['folder']}"
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
+                if plugin['id'] == 60:
+                    # The pinned managed bundle rewrites the two incorrect addresses.
+                    expected = '05819ddd0ee9c3ce7eeb184977a2f7905d7c8f5cfaec8bdff837d7935985a0e7'
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
                 if plugin['id'] == 96:
@@ -205,8 +209,8 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 if plugin['id'] == 60:
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['deckyfileserver-user-native'])
-                    import frame_decky_store
+                    self.assertEqual(receipt['compatShims'],
+                                     ['deckyfileserver-user-native', 'deckyfileserver-https-address'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
                                      frame_decky_store.FILESERVER_BINARIES[arch])

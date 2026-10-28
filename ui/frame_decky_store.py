@@ -385,7 +385,38 @@ try:
                 new='            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])\n            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])'
                 if old not in text: raise RuntimeError('DeckyFileServer start configuration changed')
                 source.write_text(text.replace(old,new))
+                # The helper always calls ListenAndServeTLS. The published panel
+                # prints HTTP when uploads are disabled and hard-codes a Deck
+                # hostname that the Frame does not provide. Keep only the
+                # actual address returned by this backend.
+                frontend=unpacked/'dist/index.js'
+                original=frontend.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='791015d8b3f234fad89ce422b09fb32bbad05e7c867d501706cfbcf9f7c6187f':
+                    raise RuntimeError('DeckyFileServer frontend source changed')
+                bundle=original.decode('utf-8')
+                old_url="""            window.SP_REACT.createElement(DFL.Field, { inlineWrap: "shift-children-below", label: "Server Address", bottomSeparator: "none" },
+                "http",
+                state.allow_uploads ? "s" : "",
+                "://steamdeck:",
+                state.port),
+            window.SP_REACT.createElement(DFL.Field, { inlineWrap: "shift-children-below" },
+                "http",
+                state.allow_uploads ? "s" : "",
+                "://",
+                state.ip_address,
+                ":",
+                state.port),
+"""
+                new_url="""            window.SP_REACT.createElement(DFL.Field, { inlineWrap: "shift-children-below", label: "Server Address", bottomSeparator: "none" },
+                "https://",
+                state.ip_address,
+                ":",
+                state.port),
+"""
+                if bundle.count(old_url)!=1: raise RuntimeError('DeckyFileServer address UI changed')
+                frontend.write_text(bundle.replace(old_url,new_url),encoding='utf-8')
                 compat_shims.append('deckyfileserver-user-native')
+                compat_shims.append('deckyfileserver-https-address')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.

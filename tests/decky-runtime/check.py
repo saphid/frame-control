@@ -90,7 +90,8 @@ def main():
     plugin = base/'plugins'/record['folder']
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
     if not args.reproduce_timer_regression:
-        assert receipt.get('compatShims', []) == ([case['shim']] if case['shim'] else []), receipt
+        expected_shims = ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])
+        assert receipt.get('compatShims', []) == expected_shims, receipt
     else:
         assert record['id'] == 96
         with zipfile.ZipFile(io.BytesIO(data)) as original:

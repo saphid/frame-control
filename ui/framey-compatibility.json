@@ -4349,7 +4349,7 @@
         "https://github.com/grimkor/DeckyFileServer"
       ],
       "status": "partial",
-      "reason": "Managed install supplies a native ARM64 helper and removes the exact archive's unnecessary root request. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. Frontend address/picker limitations remain; use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Shared Toggle value rendering is repaired; other listed blockers remain.",
+      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The Steam folder picker remains unavailable; use a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the address fix.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4385,7 +4385,8 @@
         "reason": "ValueError: Root plugins are not supported by the Frame user service"
       },
       "requiredShims": [
-        "deckyfileserver-user-native"
+        "deckyfileserver-user-native",
+        "deckyfileserver-https-address"
       ],
       "managedNative": {
         "shim": "deckyfileserver-user-native",

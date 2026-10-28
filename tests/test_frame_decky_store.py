@@ -228,12 +228,16 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         plugin = self.folder.parent/record['folder']
         self.assertEqual(json.loads((plugin/'plugin.json').read_text())['flags'], [])
-        self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'], ['deckyfileserver-user-native'])
+        self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'],
+                         ['deckyfileserver-user-native', 'deckyfileserver-https-address'])
         helper = plugin/'bin/backend'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), frame_decky_store.FILESERVER_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         compile((plugin/'main.py').read_text(), str(plugin/'main.py'), 'exec')
         self.assertIn('if arg]', (plugin/'main.py').read_text())
+        rendered = subprocess.run(['node', str(Path(__file__).parent/'page/framey_fileserver_url.mjs'),
+                                   str(plugin/'dist/index.js')], capture_output=True, text=True, timeout=20)
+        self.assertEqual(rendered.returncode, 0, rendered.stderr)
 
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux helper architecture')
     def test_exact_localsend_gets_verified_native_helper_and_preserves_source(self):

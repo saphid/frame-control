@@ -47,7 +47,10 @@
   {
     "id": 60,
     "shim": "deckyfileserver-user-native",
-    "probe": "fileserver"
+    "probe": "fileserver",
+    "additionalShims": [
+      "deckyfileserver-https-address"
+    ]
   },
   {
     "id": 125,

@@ -41,7 +41,8 @@ def check_coverage():
             shims.add(node.args[0].value)
     cases = json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
     # Frontend-only compatibility probes need no archive/backend adaptation.
-    if shims != {case['shim'] for case in cases if case['shim'] is not None}:
+    covered = {shim for case in cases for shim in ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])}
+    if shims != covered:
         raise ValueError('Every managed shim needs an actual Decky runtime case')
     return cases
 
