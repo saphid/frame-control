@@ -59,6 +59,8 @@ count. So a build reaches people only when you publish it, after testing it.
    installer digests. It attaches
    `update.json` (the version, the notes, the release page and each
    installer's digest), then publishes the release and marks it latest. It
+   refuses an already published release before replacing its live update
+   manifest; use a new tested release for changes after publication. It
    uses only the REST API: `gh release view` can't find a draft whose
    `tag_name` still reads `untagged-…`, and GraphQL is often rate-limited.
    Such a draft is found by its exact title (`Frame Control 0.4.0`, or that

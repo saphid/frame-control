@@ -56,7 +56,7 @@ if len(hits) != 1:
     sys.exit("found %s for %s; expected one draft" % (why, tag))
 r = hits[0]
 if not r.get("draft"):
-    print("note: %s is already published; refreshing update.json and marking it latest" % tag, file=sys.stderr)
+    sys.exit("not publishing: %s is already published; leave its live update manifest intact" % tag)
 json.dump(r, sys.stdout)
 EOF
 id=$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1]))["id"])' "$tmp/release.json")
