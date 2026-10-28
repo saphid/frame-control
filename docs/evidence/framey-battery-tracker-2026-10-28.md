@@ -9,3 +9,13 @@ Under a unique owner token on `/tmp/frame-test.lock`, a **read-only** real Frame
 In network/device-isolated, unprivileged **actual Decky 3.3.0 amd64**, the exact adapted archive was discovered. A private Frame-shaped supply fixture produced history and per-app power through public legacy RPC. The complete native regression runner, including existing negative controls, passed. Local managed install/remove tests and the exact-source/manifest guard passed. CI's native ARM64 and fake Frame e2e jobs remain required before merge.
 
 This supports **partial** compatibility. The official frontend initialized in the earlier opaque Chromium audit with backend calls denied; it has not been tested with these live samples. Actual managed recording on Frame ARM64, long-term history, foreground-app attribution, panel controls, and worn VR remain unverified. Existing copies need update or reinstall.
+
+## Hosted ARM64 follow-up
+
+The [main native Decky run](https://github.com/saphid/frame-control/actions/runs/40776292569)
+on `dad5f78a02dd477a689689865cd4ef4205b87e22` passed the exact Battery
+Tracker case on native amd64 **and ARM64** runners. Both logs report `PASS 67`
+for discovery, Frame-shaped private battery samples, history and per-app power
+through actual Decky 3.3.0 RPC. These were disposable fixture supplies inside
+isolated containers. The managed plugin still has not recorded a real Frame
+battery sample; the remaining limits above still apply.

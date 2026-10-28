@@ -23,3 +23,13 @@ notification delivery, real Frame ARM64 service, rendered deal cards, worn VR
 or controller interaction. The earlier opaque Chromium check had denied backend
 and network calls, so it could not establish that deal cards render with live
 data. No headset was touched for this check.
+
+## Hosted ARM64 follow-up
+
+The [main native Decky run](https://github.com/saphid/frame-control/actions/runs/40776292569)
+on `dad5f78a02dd477a689689865cd4ef4205b87e22` passed the exact Free Loader
+case on native amd64 **and ARM64** runners. Both logs report `PASS 63` for
+discovery, default settings, empty local deals, private setting write/read and
+restart persistence. The runners used separate network and device isolated
+containers; no feed was fetched and no real Frame service was started. The
+remaining partial-compatibility limits above still apply.
