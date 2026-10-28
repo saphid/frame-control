@@ -6322,7 +6322,7 @@
         "https://github.com/JtdeGraaf/IsThereAnyDeal-DeckyPlugin.git"
       ],
       "status": "partial",
-      "reason": "Country settings render and select the real Frame Steam country through the read-only bridge. Settings writes, deal lookups and Steam page integration remain unverified; plugin backend calls were denied.",
+      "reason": "Country settings render and select the real Frame Steam country through the read-only bridge. The published frontend attempts deal lookups with an embedded upstream API key and a Steam store CDP tab; neither was exercised in Framey. Settings writes and Steam page integration remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -10546,7 +10546,7 @@
         "https://github.com/astrand/xclip"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-clipboard/bin/xclip.",
+      "reason": "The exact archive is blocked by its x86-64 xclip binary and root request. Its published backend defaults to auto-starting an unauthenticated clipboard GET/POST API on 0.0.0.0:8765; this was inspected statically and never run on Frame.",
       "blockInstall": true,
       "verification": [
         "static archive",
