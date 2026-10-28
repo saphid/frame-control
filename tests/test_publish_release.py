@@ -38,15 +38,35 @@ def draft(tag_name="untagged-c6ddfed7f75d67db2e99", name="Frame Control 9.8.7", 
 
 class PublishRelease(unittest.TestCase):
     def run_script(self, releases, *args, tags="v9.8.7", gates=None,
-                   corrupt_manifest_readback=False):
+                   corrupt_manifest_readback=False, smoke=None):
         d = Path(tempfile.mkdtemp())
         (d / "releases.json").write_text(json.dumps(releases))
         (d / "gates.json").write_text(json.dumps(gates or {}))
+        steps = ["cleanup: leftovers from earlier runs", "devkit service: properties.json",
+                 "status", "cleanup: everything this run installed"] + [
+                     f"{kind}: {action}" for kind in ("arm64", "x86_64", "exe")
+                     for action in ("install", "launch", "remove")]
+        clean_smoke = {"source": {"commit": "a" * 40, "clean": True},
+                       "lock_released": True,
+                       "steps": [{"step": name, "ok": True} for name in steps],
+                       "passed": len(steps), "skipped": 0, "failed": 0,
+                       "preflight": {"activity": 3, "proximity": [2.3125], "battery": [100]}}
+        if smoke == "skipped":
+            clean_smoke["steps"][0].update(ok=False, skipped=True)
+            clean_smoke.update(passed=len(steps) - 1, skipped=1)
+        elif smoke == "unreleased":
+            clean_smoke["lock_released"] = False
+        if smoke is not False:
+            (d / "smoke.json").write_text(json.dumps(
+                clean_smoke if smoke is None or isinstance(smoke, str) else smoke))
         env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
                    FAKEGH_GATES=str(d / "gates.json"),
                    FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0")
+        env.pop("FRAME_SMOKE_RESULT", None)
+        if smoke is not False:
+            env["FRAME_SMOKE_RESULT"] = str(d / "smoke.json")
         p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
@@ -155,6 +175,18 @@ class PublishRelease(unittest.TestCase):
             self.assertIn("release gate failed", p.stderr)
             self.assertIsNone(upload)
             self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_missing_or_skipped_frame_smoke_before_mutation(self):
+        for smoke in (False,
+                      {"source": {"commit": "b" * 40, "clean": True}},
+                      {"source": {"commit": "a" * 40, "clean": False}},
+                      "skipped", "unreleased"):
+            with self.subTest(smoke=smoke):
+                p, log, upload = self.run_script([draft()], "v9.8.7", smoke=smoke)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn("release gate failed", p.stderr)
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
 
     def test_refuses_a_prior_cancelled_installer_after_successful_rerun(self):
         gates = {"release_attempts": 2,

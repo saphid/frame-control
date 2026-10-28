@@ -57,12 +57,13 @@ count. So a build reaches people only when you publish it, after testing it.
    publish unless every required job succeeded; it cannot prove physical
    headset or installer behavior on its own.
 
-   Check the saved smoke result against the exact tag commit. The result must
-   come from a clean checkout, include every title launch and cleanup step,
-   and record successful release of its owned headset lock:
+   Supply the saved smoke result to the publisher. Both its dry run and publish
+   command reject a result from another or dirty commit, incomplete title or
+   cleanup steps, a skip or failure, or an unconfirmed headset lock release:
 
    ```sh
-   python3 scripts/verify-frame-smoke-result.py /path/to/smoke-result.json \
+   export FRAME_SMOKE_RESULT=/path/to/smoke-result.json
+   python3 scripts/verify-frame-smoke-result.py "$FRAME_SMOKE_RESULT" \
      "$(git rev-parse 'v0.4.0^{commit}')"
    ```
 
