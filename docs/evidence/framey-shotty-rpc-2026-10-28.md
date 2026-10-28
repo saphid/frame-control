@@ -19,7 +19,9 @@ also matched its source bytes. Empty aggregation and `was_rescued=false` still
 passed. The runner removed its owned containers and image; no headset or user
 screenshot was accessed.
 
-This checks the real Decky RPC and same-filesystem copy path with synthetic
-files. Native ARM64 CI, Steam's live screenshot notification, cross-filesystem
-copies, the continuous rescuer, real Frame installation, wearer-visible VR and
-physical controller use remain unverified. Shotty remains **partial**.
+This local run checks the real Decky RPC and same-filesystem copy path with
+synthetic files on amd64. The PR's hosted native ARM64 gate must pass before
+merge; this local result alone does not establish ARM64 behavior. Steam's live
+screenshot notification, cross-filesystem copies, the continuous rescuer, real
+Frame installation, wearer-visible VR and physical controller use remain
+unverified. Shotty remains **partial**.
