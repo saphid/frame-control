@@ -267,6 +267,17 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(self.request("GET", "/api/titles/job?token=nope", headers={"X-Frame-UI": "1"})[0], 404)
         self.assertEqual(self.request("POST", "/api/titles", {"action": "list"})[0], 403)
 
+    def test_direct_local_transfer_is_desktop_only(self):
+        status, payload = self.post("/api/transfer", {"action": "copy-local", "path": "/tmp/a.bin"})
+        self.assertEqual(status, 403, payload)
+
+    def test_oversized_browser_upload_rejected_without_reading_body(self):
+        status, _, payload = self.request("POST", "/api/upload", b"",
+                                          {"X-Frame-UI": "1", "X-Filename": "large.bin",
+                                           "Content-Length": str(27 * 1024 ** 3)})
+        self.assertEqual(status, 413, payload)
+        self.assertIn(b"limited to 8 GiB", payload)
+
     def test_web_install_needs_the_app_page(self):
         # A website can only open frame-control:// links; it can't call these itself.
         link = {"url": "https://cdn.example.com/game.apk"}
@@ -573,6 +584,10 @@ class PageScripts(unittest.TestCase):
     def test_meta_library_rows_render(self):
         """tests/page/meta_rows.mjs runs the real Meta library row rendering from index.html."""
         r = subprocess.run(["node", str(ROOT / "tests" / "page" / "meta_rows.mjs")], capture_output=True, text=True)
+        self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
+
+    def test_large_local_file_uses_direct_copy(self):
+        r = subprocess.run(["node", str(ROOT / "tests" / "page" / "large_transfer.mjs")], capture_output=True, text=True)
         self.assertEqual(r.returncode, 0, r.stdout + r.stderr)
 
 

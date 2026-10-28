@@ -28,6 +28,7 @@ import shutil
 import signal
 import socket
 import socketserver
+import stat
 import subprocess
 import sys
 import tempfile
@@ -3494,8 +3495,27 @@ def power_action(body):
             raise Failure(str(exc), 409) from exc
 
 
+def transfer_local(body):
+    """Copy a desktop-selected file without a second, size-limited HTTP upload to /tmp."""
+    if os.environ.get("FRAME_CONTROL_APP") != "1":
+        raise Failure("Direct file copy needs the Frame Control desktop app", 403)
+    if body.get("action") != "copy-local" or not isinstance(body.get("path"), str):
+        raise Failure("Choose a file on this computer", 400)
+    path = Path(body["path"])
+    if not path.is_absolute() or not path.name or path.name.startswith("."):
+        raise Failure("Choose a regular file with a visible name", 400)
+    try:
+        info = path.stat()
+    except OSError:
+        raise Failure("That file is no longer available on this computer", 400) from None
+    if not stat.S_ISREG(info.st_mode) or info.st_size <= 0:
+        raise Failure("Choose a nonempty regular file", 400)
+    return {"message": push_file(path)}
+
+
 POST = {
     "/api/steam-pipewire": steam_pipewire_action,
+    "/api/transfer": transfer_local,
     "/api/power": power_action,
     "/api/android/backup": android_backup, "/api/backup": backup_action,
     "/api/decky": decky,
@@ -3611,6 +3631,12 @@ def _next_chunk(chunks, timeout):
 def push_file(path, dest="Downloads/"):
     """Copy a file to the Frame (as scripts/push.sh): rsync where both ends have it, else scp."""
     name = Path(path).name
+    # A large file can legitimately take more than an hour over Wi-Fi. Keep a
+    # finite deadline, but allow roughly one MiB/s plus startup time.
+    try:
+        timeout = max(3600, min(24 * 3600, int(Path(path).stat().st_size / (1 << 20)) + 600))
+    except OSError:
+        raise Failure(f"{name} is no longer available on this computer", 400) from None
     try:
         # Not on Windows: a Windows rsync (cwRsync, MSYS2) wouldn't take our POSIX -e quoting.
         if not frame_host.WINDOWS and shutil.which("rsync") and ssh("command -v rsync >/dev/null && echo yes || true").strip() == "yes":
@@ -3618,7 +3644,7 @@ def push_file(path, dest="Downloads/"):
         else:
             # Modern scp uses SFTP, so the remote path isn't parsed by a shell.
             cmd = ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
-        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=3600)
+        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
@@ -4070,8 +4096,10 @@ class Handler(BaseHTTPRequestHandler):
         length = int(self.headers.get("Content-Length") or 0)
         if not name or name.startswith("."):
             raise Failure("missing filename", 400)
-        if length <= 0 or length > MAX_UPLOAD:
-            raise Failure("empty or too-large upload", 400)
+        if length <= 0:
+            raise Failure("empty upload", 400)
+        if length > MAX_UPLOAD:
+            raise Failure("Browser uploads are limited to 8 GiB; use the desktop app to copy larger files", 413)
         if mode in ("apk", "apkinfo") and not name.lower().endswith(".apk"):
             raise Failure("APK install needs a .apk file", 400)
         backup = None
