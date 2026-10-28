@@ -74,6 +74,15 @@ class ArchiveTests(unittest.TestCase):
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertTrue(frame_decky_store.catalog()[0]['root'])
 
+    def test_only_exact_network_sentinel_adaptation_clears_store_root(self):
+        records = [{'id': 114, 'name': 'Network Sentinel', 'tags': ['_root'],
+                    'versions': [{'name': '1.0.4', 'hash': frame_decky_store.NETWORK_SENTINEL_DIGEST}]}]
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertFalse(frame_decky_store.catalog()[0]['root'])
+        records[0]['versions'][0]['hash'] = 'a'*64
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertTrue(frame_decky_store.catalog()[0]['root'])
+
     def test_accepts_hashed_non_root_archive(self):
         data, digest = archive()
         self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
@@ -268,6 +277,44 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
                          frame_decky_store.LOCALSEND_AARCH64)
         self.assertEqual(int.from_bytes(helper.read_bytes()[18:20], 'little'), 183)
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_exact_network_sentinel_is_user_scoped_and_digest_guarded(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        record = next(p for p in PLUGINS if p['id'] == 114)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=114,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / record['folder']
+        receipt = json.loads((folder / '.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil'])
+        self.assertEqual(json.loads((folder / 'plugin.json').read_text())['flags'], ['debug'])
+        source = (folder / 'main.py').read_text()
+        self.assertNotIn('decky.DECKY_SETTINGS_DIR', source)
+        self.assertIn('decky.DECKY_PLUGIN_SETTINGS_DIR', source)
+        self.assertIn("            jitter = 0\n            cmd = ['ping'", source)
+        compile(source, str(folder / 'main.py'), 'exec')
+        native = (folder / 'py_modules/psutil/_psutil_linux.abi3.so').read_bytes()
+        self.assertEqual(int.from_bytes(native[18:20], 'little'),
+                         {'x86_64': 62, 'aarch64': 183}[platform.machine()])
+        self.assertIn('BSD 3-Clause', (folder / 'py_modules/psutil-7.2.2.dist-info/LICENSE').read_text())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder / 'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
+        self.assertEqual(self.apply('remove', plugin_id=114, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as archive:
+            archive.writestr(record['folder']+'/changed.txt', 'changed')
+        altered = changed.getvalue()
+        with self.assertRaisesRegex(ValueError, 'root'):
+            frame_decky_store.archive_info(altered, hashlib.sha256(altered).hexdigest(), record['name'])
+        result = self.apply('install', altered, plugin_id=114,
+                            folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(folder.exists())
+
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):
         from framey_official import PLUGINS, archive as official_archive

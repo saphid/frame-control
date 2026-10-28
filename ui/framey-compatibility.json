@@ -9969,13 +9969,17 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib",
         "https://github.com/SteamDeckHomebrew/decky-loader"
       ],
-      "status": "broken",
-      "reason": "This plugin needs root and is not supported by the Frame user service.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 amd64 in network isolation loads the backend and records a network sample; private settings and read-only RPCs pass. External ping/DNS, real Frame ARM64, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall.",
+      "blockInstall": false,
+      "requiredShims": [
+        "network-sentinel-user-psutil"
+      ],
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky amd64 backend"
       ],
       "browser": {
         "id": 114,
@@ -10014,8 +10018,8 @@
       },
       "archiveValidation": {
         "id": 114,
-        "accepted": false,
-        "reason": "This plugin needs root and is not supported by the Frame user service"
+        "accepted": true,
+        "reason": "Exact digest-scoped user-service adaptation"
       },
       "backend": "Python",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
@@ -10025,9 +10029,8 @@
       "fakeFrame": {
         "id": 114,
         "sha256": "d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5",
-        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
-        "result": "blocked",
-        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
       }
     },
     {

@@ -4,7 +4,7 @@ Snapshot: 2026-10-26T06:10:58.537029+00:00; 116 current visible official plugins
 
 This table and both store views use [`ui/framey-compatibility.json`](../ui/framey-compatibility.json). Results apply only to the exact store ID, version and SHA-256. A changed digest/version is **unverified**. Regenerate this document with `python3 scripts/framey-compatibility-doc.py`; use `--check` in review.
 
-**Works: 6 · Partial: 52 · Broken: 47 · N/A: 11.**
+**Works: 6 · Partial: 53 · Broken: 46 · N/A: 11.**
 
 - **Works** requires verified useful plugin behavior with its real backend. Read the reason for the verified scope and remaining limits; it does not imply worn-VR verification.
 - **Partial** means only a subset or a local fixture scope was verified, often just frontend/settings initialization. The remaining backend/device functionality is unverified; read the reason for the exact scope.
@@ -28,6 +28,8 @@ Open the browser audit URL in local Chromium, run `runAudit()` and inspect/downl
 A [Free Loader duplicate-entry follow-up](evidence/framey-free-loader-duplicates-2026-10-26.md) accepts only byte-identical duplicate ZIP members whose modes differ at most in execute bits. The exact archive passed private local and focused fake-Frame install/remove; its frontend rendered in opaque Chromium and isolated Python settings/empty-deals reads passed with a Decky stub. The earlier full 116-plugin fake-Frame audit blocked this archive before the fix. Actual Decky, feed updates and worn VR remain unverified.
 
 A [2026-10-28 static action-limit review](evidence/framey-static-action-limits-2026-10-28.md) hash-checked the exact AutoSuspend and CheatDeck archives. AutoSuspend contains Steam suspend/shutdown paths, and CheatDeck's advertised trainer flow needs a Steam game context menu and launch-option writes. Neither plugin was executed; both retain their broken labels.
+
+A [Network Sentinel user-service check](evidence/framey-network-sentinel-2026-10-28.md) adapts only the exact 1.0.4 digest. In isolated actual Decky 3.3.0 amd64, the pinned plugin-local psutil wheel, private settings RPC and one monitoring-loop sample pass. External ping/DNS, Frame ARM64, panel controls and worn VR remain unverified; this is partial compatibility.
 
 The current published digests are pinned in the JSON; if the store changed, retain/download those exact archives for reproduction. Audit downloads permit larger ZIPs for inspection; production installer limits remain 50 MiB ZIP / 150 MiB unpacked / 30 MiB per member.
 
@@ -124,7 +126,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 111: Music Control 1.1.7 | legacy / legacy | partial | Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply. | static archive, local browser, fake-Frame, isolated Python backend, isolated Decky 3.3.0 + MPRIS fixture, real Frame SSH |
 | 112: Better Keyboard 0.3.4 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. Frontend audit failed: window.SteamClient.UI.GetUIMode is not a function. | static archive, local browser, fake-Frame |
 | 113: Decky LSFG-VK 0.12.2 | 1 / 2 | partial | Initializer succeeds; runtime LSFG/Windows DLL downloads and Vulkan integration are not ARM64-validated. Shared Toggle value rendering is repaired; other listed blockers remain. | static archive, local browser, fake-Frame |
-| 114: Network Sentinel 1.0.4 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |
+| 114: Network Sentinel 1.0.4 | 1 / 2 | partial | Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 amd64 in network isolation loads the backend and records a network sample; private settings and read-only RPCs pass. External ping/DNS, real Frame ARM64, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall. | static archive, local browser, fake-Frame, isolated Decky amd64 backend |
 | 115: Decky Clash 1.3.0 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. | static archive, local browser, fake-Frame |
 | 116: Muon 0.2.1 | 1 / 2 | broken | This plugin needs root and is not supported by the Frame user service. Shared Toggle value rendering is repaired; other listed blockers remain. | static archive, local browser, fake-Frame |
 | 117: DeckyParty File Manager 1.0.0 | legacy / legacy | partial | Initializer succeeds; privileged file operations and backend are unverified. No file changes were run. | static archive, local browser, fake-Frame |
