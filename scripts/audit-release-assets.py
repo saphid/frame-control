@@ -111,6 +111,38 @@ def download_asset(asset, path):
     return digest
 
 
+def validate_update_manifest(path, release):
+    """Check the bytes running copies read against the published release."""
+    try:
+        manifest = json.loads(path.read_text(encoding="utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as error:
+        raise AuditError(f"update.json is not valid UTF-8 JSON: {error}") from error
+    if not isinstance(manifest, dict):
+        raise AuditError("update.json is not an object")
+    tag = release.get("tag_name")
+    if not isinstance(tag, str) or not re.fullmatch(r"v\d+\.\d+\.\d+", tag):
+        raise AuditError("published release has an invalid tag")
+    if manifest.get("version") != tag[1:]:
+        raise AuditError("update.json version differs from the release tag")
+    page = f"https://github.com/{REPO}/releases/tag/{tag}"
+    if manifest.get("page") != page:
+        raise AuditError("update.json release page differs from the tag page")
+    if manifest.get("notes") != (release.get("body") or "")[:4000]:
+        raise AuditError("update.json notes differ from the release notes")
+    expected = {asset["name"]: {key: asset[key] for key in ("name", "size", "digest")}
+                for asset in release["assets"] if asset["name"] in INSTALLERS}
+    assets = manifest.get("assets")
+    if not isinstance(assets, list) or len(assets) != len(expected):
+        raise AuditError("update.json has an incomplete installer list")
+    names = [asset.get("name") for asset in assets if isinstance(asset, dict)]
+    if (len(names) != len(assets) or not all(isinstance(name, str) for name in names)
+            or len(names) != len(set(names))):
+        raise AuditError("update.json has invalid or duplicate installer entries")
+    if {asset["name"]: asset for asset in assets} != expected:
+        raise AuditError("update.json installers differ from the release assets")
+    return {"version": manifest["version"], "installers": len(assets)}
+
+
 def inspect_package(path, name, version):
     if name.endswith(".zip"):
         with zipfile.ZipFile(path) as archive:
@@ -190,6 +222,12 @@ def audit(tag, report_path, launch_x86_appimage=False):
         sums_hash = download_asset(by_name["SHA256SUMS"], sums_path)
         if sums_path.read_bytes() != expected_sums:
             raise AuditError("SHA256SUMS bytes differ from the ten GitHub asset digests")
+        manifest_detail = None
+        if not release.get("draft"):
+            manifest_path = scratch / "update.json"
+            manifest_digest = download_asset(by_name["update.json"], manifest_path)
+            manifest_detail = validate_update_manifest(manifest_path, release)
+            manifest_detail["sha256"] = manifest_digest
         rows = []
         for name in INSTALLERS:
             path = scratch / name
@@ -210,7 +248,8 @@ def audit(tag, report_path, launch_x86_appimage=False):
             print(f"verified {name}", flush=True)
     report = {"tag": tag, "releaseId": release["id"],
               "tagNameAtAudit": release.get("tag_name"), "draftAtAudit": release.get("draft"),
-              "sha256sumsSha256": sums_hash, "assets": rows}
+              "sha256sumsSha256": sums_hash, "updateManifest": manifest_detail,
+              "assets": rows}
     with report_path.open("x", encoding="utf-8") as output:
         json.dump(report, output, indent=2)
         output.write("\n")

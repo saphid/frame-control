@@ -84,6 +84,12 @@ count. So a build reaches people only when you publish it, after testing it.
    seconds after starting, then every 6 hours, and anyone can use **Check for
    Updates…** (the app menu on macOS, the Help menu elsewhere).
 
+   After publication, rerun `audit-release-assets.py` with a new report path.
+   For a published release it also downloads `update.json`, verifies its
+   GitHub SHA-256, and checks that the offered version, release page, notes,
+   installer names, sizes, and digests match that release. This checks the
+   updater channel's published bytes, which the draft audit cannot inspect.
+
 To pull a bad release, mark the previous one as latest
 (`gh release edit v0.3.9 --latest`) or turn the bad one back into a draft.
 Copies that already updated stay on it. Nothing downgrades them.
