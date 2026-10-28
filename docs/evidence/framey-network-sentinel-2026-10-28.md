@@ -9,3 +9,13 @@ The managed install checks the complete archive digest, manifest and Python sour
 Local transaction tests installed and removed the exact archive, checked the native wheel and unmodified license, and rejected an altered archive. In network/device-isolated, unprivileged **actual Decky 3.3.0 amd64**, the managed plugin was discovered, imported native psutil, returned default and updated settings, reported empty history and bandwidth, started its monitoring loop, produced a history sample with quality and bandwidth fields, then stopped. The full native regression runner also passed its other cases, including FileServer and negative controls. The first run's existing large FileServer install timed out at 15 seconds under host load; its bounded timeout is now 30 seconds and the complete rerun passed. No external network call succeeded in the isolated container. Native ARM64 and fake Frame install/remove are CI gates for this change; neither is claimed by this local evidence.
 
 The preexisting local Chromium audit initialized the exact frontend with backend calls denied. It did not prove a functioning panel. External latency/DNS, Wi-Fi scans, actual Frame ARM64 runtime, frontend controls, and worn VR remain unverified. This is a **partial** compatibility result, not a full monitoring or headset-usability claim. No real Frame, normal service, power value, or physical network setting was touched in this check.
+
+## Hosted ARM64 follow-up
+
+The [main native Decky run](https://github.com/saphid/frame-control/actions/runs/40776292569)
+on `dad5f78a02dd477a689689865cd4ef4205b87e22` passed the exact Network
+Sentinel case on native amd64 **and ARM64** runners. Both logs report `PASS 114`
+for discovery, native psutil import, private settings and one isolated
+monitoring-loop sample through actual Decky 3.3.0 RPC. The containers had no
+external network or Frame device access. Real Frame monitoring, external
+latency/DNS, panel controls and worn VR remain unverified.
