@@ -358,7 +358,22 @@ def main():
                 assert case['probe'] == 'screenshots'
                 assert legacy('was_rescued') is False
                 assert legacy('aggregate_all', allapps=[]) == 0
-                report['result'] = 'discovery, backend import and empty screenshot aggregation passed'
+                screenshots = home/'.local/share/Steam/userdata/9001/760/remote/4242/screenshots'
+                screenshots.mkdir(parents=True)
+                marker = b'Framey private screenshot fixture\n'
+                (screenshots/'selected.jpg').write_bytes(marker)
+                legacy('set_id_map_fronend', allapps=[[4242, 'Private Game']])
+                assert legacy('copy_screenshot', app_id=4242,
+                              url='https://localhost/selected.jpg') is True
+                copied = home/'Pictures/Screenshots/Private Game/selected.jpg'
+                assert copied.read_bytes() == marker
+                assert (home/'Pictures/Screenshots/most_recent.jpg').read_bytes() == marker
+                (screenshots/'historical.jpg').write_bytes(b'Framey historical fixture\n')
+                assert legacy('aggregate_all', allapps=[[4242, 'Private Game']]) == 1
+                assert (copied.parent/'historical.jpg').read_bytes() == b'Framey historical fixture\n'
+                assert legacy('was_rescued') is False
+                report['result'] = ('discovery, backend import, empty aggregation, private screenshot '
+                                    'copy and historical aggregation passed')
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()
