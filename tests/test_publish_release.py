@@ -76,6 +76,16 @@ class PublishRelease(unittest.TestCase):
         self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
         self.assertEqual(next(c for c in log if "PATCH" in c)[3], "repos/saphid/frame-control/releases/2")
 
+    def test_already_published_release_keeps_its_live_update_manifest(self):
+        old = {"id": 7, "name": "update.json", "size": 100,
+               "digest": "sha256:" + "a" * 64}
+        rel = dict(draft(tag_name="v9.8.7", assets=draft()["assets"] + [old]), draft=False)
+        p, log, upload = self.run_script([rel], "v9.8.7")
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("already published", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
+
     def test_refuses_missing_or_unhashed_installers(self):
         assets = draft()["assets"][1:]
         assets[0] = dict(assets[0], digest=None)
