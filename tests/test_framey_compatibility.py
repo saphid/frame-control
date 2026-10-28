@@ -80,6 +80,16 @@ class Compatibility(unittest.TestCase):
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertEqual(result[1]['compatibility']['status'], 'works')
 
+    def test_fileserver_old_copy_requires_https_address_update(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
+        old = dict(storeId=60, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['deckyfileserver-user-native'])
+        updated = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
             self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')

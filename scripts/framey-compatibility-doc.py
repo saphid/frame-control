@@ -131,7 +131,7 @@ def render(data):
         'A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. '
         'Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. '
         'Hostname-DNS failures and empty optional arguments are repaired. Decky 3.3.0 still exposes `decky.HOME`; that call is unchanged. '
-        'The plugin moves from broken to partial: its frontend advertises HTTP/steamdeck URLs and needs a Steam folder picker. Use HTTPS and a preconfigured directory. Uploads, generated thumbnails and worn VR remain unverified.', '',
+        'The plugin remains partial. A [frontend URL follow-up](evidence/framey-fileserver-url-2026-10-28.md) changes only the exact managed bundle to display the backend-returned IP with HTTPS, matching the helper. Existing managed copies need update or reinstall. The Steam folder picker is still unavailable; use a preconfigured directory. Uploads, generated thumbnails and worn VR remain unverified.', '',
         '[LocalSend ARM64 build/runtime evidence](evidence/framey-localsend-arm64-2026-10-26.md) '
         'covers an isolated real-Frame protocol 2.0 info response from an earlier helper build. '
         '[Exact official source matching](evidence/framey-localsend-source-match-2026-10-27.md) '
