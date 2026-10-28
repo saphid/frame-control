@@ -77,6 +77,11 @@ jobs:
       - name: OBS lifecycle tests
         run: node app/test/obs-source.test.js
       - name: Server tests
+        # The dedicated wireless-windows job runs the live inventory on a fresh
+        # Windows runner; do not repeat it after the full server suite has
+        # consumed this runner's probe budget.
+        env:
+          FRAME_SKIP_WINDOWS_WIRELESS_LIVE: "1"
         run: python -m unittest discover -s tests -v
 
   # Fast, PC-only Windows query validation, without capture libraries or a headset.
