@@ -119,6 +119,13 @@ def main():
     env.update(UNPRIVILEGED_PATH=str(base), PRIVILEGED_PATH=str(base), CHOWN_PLUGIN_PATH='0',
                LIVE_RELOAD='0', USE_CEF_CLOSE_WORKAROUND='0', KEEP_SYSTEMD_SERVICE='1',
                DBUS_SESSION_BUS_ADDRESS='unix:path=/run/user/1100/bus')
+    if case['probe'] == 'battery-tracker':
+        supply = home/'battery-supply'/'max1720x_bat_7-36'
+        supply.mkdir(parents=True)
+        for name, value in {'type':'Battery', 'capacity':'89', 'status':'Charging',
+                            'voltage_now':'8746718', 'current_now':'1030625'}.items():
+            (supply/name).write_text(value+'\n')
+        env['FRAMEY_BATTERY_ROOT'] = str(supply.parent)
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
@@ -152,7 +159,21 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'network-sentinel':
+            if case['probe'] == 'battery-tracker':
+                empty_or_first = legacy('get_recent_data', lookback=2)
+                assert isinstance(empty_or_first['x'], list) and isinstance(empty_or_first['cap'], list)
+                assert isinstance(empty_or_first['power_data'], list)
+                initial = until_ready(lambda: legacy('get_recent_data', lookback=2)['cap'], 'private first battery sample')
+                assert initial[-1] == .89, initial
+                assert legacy('set_app', app='Framey private') is True
+                (supply/'status').write_text('Discharging\n')
+                sample = until_ready(lambda: next((row for row in legacy('get_recent_data', lookback=2)['power_data']
+                    if row['name']=='Framey private'), None), 'private discharging battery sample')
+                assert sample['average_power'] > 0, sample
+                history = legacy('get_recent_data', lookback=2)
+                assert len(history['x']) == len(history['cap']) >= 2, history
+                report['result'] = 'discovery, Frame-shaped private battery samples, history and per-app power passed; real managed Frame backend unverified'
+            elif case['probe'] == 'network-sentinel':
                 assert current('get_settings')['auto_monitor'] is False
                 assert current('get_network_history') == []
                 assert current('get_live_ping') == 0

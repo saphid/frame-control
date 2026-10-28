@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `114.zip` on 2026-10-28.
+and `67.zip` and `114.zip` on 2026-10-28.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -14,6 +14,7 @@ from a local fixture so CI does not depend on the store being online.
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
 | `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `114.zip` | Network Sentinel | 1.0.4 | `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5` |
+| `67.zip` | Battery Tracker | 0.2.0 | `91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94` |
 | `96.zip` | Simple Timer | 1.0.0 | `973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312` |
 | `7.zip` | CSS Loader | 2.1.3 | `99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231` |
 | `12.zip` | MusicControl | 1.1.6 | `246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62` |
@@ -63,6 +64,10 @@ Network Sentinel runs through the same isolated native Decky gate. Its exact
 archive gets plugin-local psutil and a user-service manifest; the probe checks
 discovery, private settings and one monitoring-loop sample without external
 network access. It does not verify real network latency or worn VR.
+Battery Tracker's exact archive also has a user-service adaptation. The native
+Decky gate checks discovery, empty history, Frame-shaped private battery
+samples and per-app power aggregation. The real Frame probe checked only the
+readable Battery-type sysfs fields; the plugin itself did not run there.
 DeckyFileServer also runs through actual Decky 3.3.0 discovery/API1 RPC with a
 native helper replacement. HTTPS listing/download use only public markers in a
 private directory; uploads remain disabled. The exact source build, GPL licenses

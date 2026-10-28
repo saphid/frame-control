@@ -1,14 +1,18 @@
 """Official Decky store transport and owned plugin transaction."""
 import sandbox  # noqa: F401
 import hashlib
+import asyncio
+import importlib.util
 import io
 import json
+import logging
 import os
 from pathlib import Path
 import secrets
 import subprocess
 import sys
 import tempfile
+import types
 import unittest
 from unittest.mock import patch
 import warnings
@@ -77,6 +81,15 @@ class ArchiveTests(unittest.TestCase):
     def test_only_exact_network_sentinel_adaptation_clears_store_root(self):
         records = [{'id': 114, 'name': 'Network Sentinel', 'tags': ['_root'],
                     'versions': [{'name': '1.0.4', 'hash': frame_decky_store.NETWORK_SENTINEL_DIGEST}]}]
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertFalse(frame_decky_store.catalog()[0]['root'])
+        records[0]['versions'][0]['hash'] = 'a'*64
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertTrue(frame_decky_store.catalog()[0]['root'])
+
+    def test_only_exact_battery_tracker_adaptation_clears_store_root(self):
+        records = [{'id': 67, 'name': 'Battery Tracker', 'tags': ['_root'],
+                    'versions': [{'name': '0.2.0', 'hash': frame_decky_store.BATTERY_TRACKER_DIGEST}]}]
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertFalse(frame_decky_store.catalog()[0]['root'])
         records[0]['versions'][0]['hash'] = 'a'*64
@@ -277,6 +290,76 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
                          frame_decky_store.LOCALSEND_AARCH64)
         self.assertEqual(int.from_bytes(helper.read_bytes()[18:20], 'little'), 183)
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_exact_battery_tracker_uses_user_battery_supply_and_preserves_license(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 67)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=67,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / record['folder']
+        receipt = json.loads((folder / '.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['battery-tracker-user-supply'])
+        self.assertEqual(json.loads((folder / 'plugin.json').read_text())['flags'], [])
+        source = (folder / 'main.py').read_text()
+        self.assertNotIn('/sys/class/power_supply/BAT1/', source)
+        self.assertIn("root / 'BAT1'", source)
+        compile(source, str(folder / 'main.py'), 'exec')
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder / 'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
+        self.assertEqual(self.apply('remove', plugin_id=67, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as archive:
+            archive.writestr(record['folder']+'/changed.txt', 'changed')
+        altered = changed.getvalue()
+        with self.assertRaisesRegex(ValueError, 'root'):
+            frame_decky_store.archive_info(altered, hashlib.sha256(altered).hexdigest(), record['name'])
+        result = self.apply('install', altered, plugin_id=67,
+                            folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertFalse(folder.exists())
+
+    def test_adapted_battery_tracker_empty_history_and_unload_flush(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 67)
+        result = self.apply('install', official_archive(record), plugin_id=67,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / record['folder']
+        runtime = Path(self.tmp.name) / 'battery-runtime'
+        runtime.mkdir()
+        supply = Path(self.tmp.name) / 'battery-supply' / 'frame-battery'
+        supply.mkdir(parents=True)
+        for name, value in {'type': 'Battery', 'capacity': '89', 'status': 'Charging',
+                            'voltage_now': '8746718', 'current_now': '1030625'}.items():
+            (supply / name).write_text(value + '\n')
+        decky = types.ModuleType('decky_plugin')
+        decky.logger = logging.getLogger('battery-tracker-test')
+        decky.DECKY_PLUGIN_RUNTIME_DIR = str(runtime)
+        with patch.dict(sys.modules, {'decky_plugin': decky}), patch.dict(os.environ, {'FRAMEY_BATTERY_ROOT': str(supply.parent)}):
+            spec = importlib.util.spec_from_file_location('framey_battery_tracker_test', folder / 'main.py')
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+
+            async def exercise():
+                plugin = module.Plugin()
+                await plugin._main()
+                self.assertEqual(await plugin.get_recent_data(), {'x': [], 'cap': [], 'power_data': []})
+                # The first sample is still pending when Decky unloads the plugin.
+                await asyncio.sleep(0)
+                self.assertEqual(len(plugin._pending_samples), 1)
+                self.assertEqual((await plugin.get_recent_data())['cap'], [.89])
+                await plugin._unload()
+                self.assertEqual(plugin._pending_samples, [])
+
+            asyncio.run(exercise())
+        import sqlite3
+        with sqlite3.connect(runtime / 'battery.db') as db:
+            self.assertEqual(db.execute('select capacity from battery').fetchall(), [(89,)])
+
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_network_sentinel_is_user_scoped_and_digest_guarded(self):
         from framey_official import PLUGINS, archive as official_archive

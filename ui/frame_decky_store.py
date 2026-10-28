@@ -39,6 +39,8 @@ LOCALSEND_MAIN = 'db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8
 LOCALSEND_AARCH64 = 'e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
 NETWORK_SENTINEL_DIGEST = 'd3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5'
 NETWORK_SENTINEL_MAIN = '2baa390cb66dc267e8f04e61ba1edc43af75115ad5e453d308f6bf26ed70b6b9'
+BATTERY_TRACKER_DIGEST = '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94'
+BATTERY_TRACKER_MAIN = '2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -86,7 +88,8 @@ def catalog():
     unique = [item for item in result if counts[item['id']] == 1]
     for item in unique:
         if ((item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST)
-            or (item['id'] == 114 and item['name'] == 'Network Sentinel' and item['sha256'] == NETWORK_SENTINEL_DIGEST)):
+            or (item['id'] == 114 and item['name'] == 'Network Sentinel' and item['sha256'] == NETWORK_SENTINEL_DIGEST)
+            or (item['id'] == 67 and item['name'] == 'Battery Tracker' and item['sha256'] == BATTERY_TRACKER_DIGEST)):
             item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
@@ -112,6 +115,8 @@ def archive_info(data, expected_hash, expected_name):
                      and folder == 'decky-localsend')
         network_sentinel = (expected_hash == NETWORK_SENTINEL_DIGEST and expected_name == 'Network Sentinel'
                             and folder == 'network-sentinel')
+        battery_tracker = (expected_hash == BATTERY_TRACKER_DIGEST and expected_name == 'Battery Tracker'
+                           and folder == 'steam-deck-battery-tracker')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -156,13 +161,16 @@ def archive_info(data, expected_hash, expected_name):
         flags = manifest.get('flags', [])
         if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
             raise ValueError('Invalid plugin flags')
-        if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel):
+        if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker):
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
             raise ValueError('LocalSend Python source differs from the pinned archive')
         if network_sentinel and (flags != ['debug', '_root'] or manifest.get('api_version') != 1
                                  or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != NETWORK_SENTINEL_MAIN):
             raise ValueError('Network Sentinel manifest or source differs from the pinned archive')
+        if battery_tracker and (flags != ['_root'] or 'api_version' in manifest
+                                or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != BATTERY_TRACKER_MAIN):
+            raise ValueError('Battery Tracker manifest or source differs from the pinned archive')
         return folder
 
 
@@ -256,12 +264,13 @@ try:
             fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
             localsend=(int(plugin_id)==125 and digest=='e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7' and folder=='decky-localsend')
             network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
+            battery_tracker=(int(plugin_id)==67 and digest=='91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94' and folder=='steam-deck-battery-tracker')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
             if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):
                 raise RuntimeError('Invalid plugin flags')
-            if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel):
+            if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker):
                 raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
             for f in files:
@@ -544,6 +553,101 @@ try:
                                       '    async def _migration(self):\n        # Managed user service does not move legacy Decky paths.\n        return\n')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('network-sentinel-user-psutil')
+            if battery_tracker:
+                manifest_path=unpacked/'plugin.json'
+                manifest=json.loads(manifest_path.read_text())
+                main=unpacked/'main.py'
+                if (manifest.get('name')!='Battery Tracker' or manifest.get('flags')!=['_root']
+                    or 'api_version' in manifest or
+                    hashlib.sha256(main.read_bytes()).hexdigest()!='2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725'):
+                    raise RuntimeError('Battery Tracker manifest or source changed')
+                manifest['flags']=[]
+                manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+                source=main.read_text(encoding='utf-8')
+                split_start=source.index('def split_by_app(data):\n')
+                split_end=source.index('\n\nclass Plugin:',split_start)
+                source=source[:split_start]+"""def _framey_battery_path():
+    # A normal user can read Frame's Battery-type supply; BAT1 remains first
+    # on Steam Deck. The override is for a private, networkless runtime fixture.
+    root = Path(os.environ.get('FRAMEY_BATTERY_ROOT', '/sys/class/power_supply'))
+    if not root.is_absolute():
+        raise ValueError('Battery supply root must be absolute')
+    for candidate in [root / 'BAT1', *sorted(root.iterdir())]:
+        try:
+            if ((candidate / 'type').read_text().strip() == 'Battery' and
+                all((candidate / field).is_file() for field in
+                    ('capacity', 'status', 'voltage_now', 'current_now'))):
+                return candidate
+        except OSError:
+            pass
+    raise FileNotFoundError('No readable Battery-type power supply')
+
+
+def split_by_app(data):
+    if not data:
+        return []
+    groups = []
+    start = 0
+    app = data[0][4]
+    for index, row in enumerate(data[1:], 1):
+        if row[4] != app:
+            groups.append((start, index, app))
+            start, app = index, row[4]
+    groups.append((start, len(data), app))
+    return groups
+"""+source[split_end:]
+                old='            self.app = "Unknown"\n'
+                if source.count(old)!=1: raise RuntimeError('Battery Tracker startup source changed')
+                source=source.replace(old,old+'            self._pending_samples = []\n')
+                unload_start=source.index('    async def _unload(self):\n')
+                unload_end=source.index('    async def set_app(',unload_start)
+                source=source[:unload_start]+"""    async def _unload(self):
+        task = getattr(self, '_recorder_task', None)
+        if task:
+            task.cancel()
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        pending = getattr(self, '_pending_samples', [])
+        if pending:
+            self.cursor.executemany('insert into battery values (?, ?, ?, ?, ?)', pending)
+            self.con.commit()
+            pending.clear()
+        if hasattr(self, 'con'):
+            self.con.close()
+
+"""+source[unload_end:]
+                old='            ).fetchall()\n'
+                if source.count(old)!=2: raise RuntimeError('Battery Tracker query source changed')
+                query='            data = self.cursor.execute(\n                "select * from battery where time > " + str(int(start_time))\n            ).fetchall()\n'
+                if source.count(query)!=1: raise RuntimeError('Battery Tracker history source changed')
+                source=source.replace(query,query+'            data.extend(row for row in self._pending_samples if row[0] > start_time)\n')
+                recorder_start=source.index('    async def recorder(self):\n')
+                source=source[:recorder_start]+"""    async def recorder(self):
+        battery = _framey_battery_path()
+        decky_plugin.logger.info('recorder started')
+        while True:
+            try:
+                volt = int((battery / 'voltage_now').read_text().strip())
+                curr = int((battery / 'current_now').read_text().strip())
+                cap = int((battery / 'capacity').read_text().strip())
+                status = (battery / 'status').read_text().strip()
+                state = -1 if status == 'Discharging' else 1 if status == 'Charging' else 0
+                power = int(volt * curr * 10.0**-11)
+                self._pending_samples.append((int(time.time()), cap, state, power, self.app))
+                if len(self._pending_samples) > 10:
+                    self.cursor.executemany('insert into battery values (?, ?, ?, ?, ?)', self._pending_samples)
+                    self.con.commit()
+                    self._pending_samples.clear()
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                decky_plugin.logger.exception('recorder')
+            await asyncio.sleep(5)
+"""
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('battery-tracker-user-supply')
             if deckyspy:
                 compat=modules/'framey_battery.py'
                 if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
