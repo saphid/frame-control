@@ -72,7 +72,9 @@ count. So a build reaches people only when you publish it, after testing it.
    that the uploaded `SHA256SUMS` digest matches a fresh list of those ten
    installer digests. It attaches
    `update.json` (the version, the notes, the release page and each
-   installer's digest), then publishes the release and marks it latest. It
+   installer's digest), verifies the uploaded asset's SHA-256 and downloads
+   its bytes for an exact readback before publishing the release and marking
+   it latest. It
    refuses an already published release before replacing its live update
    manifest; use a new tested release for changes after publication. It
    uses only the REST API: `gh release view` can't find a draft whose

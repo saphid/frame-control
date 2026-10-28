@@ -37,14 +37,16 @@ def draft(tag_name="untagged-c6ddfed7f75d67db2e99", name="Frame Control 9.8.7", 
 
 
 class PublishRelease(unittest.TestCase):
-    def run_script(self, releases, *args, tags="v9.8.7", gates=None):
+    def run_script(self, releases, *args, tags="v9.8.7", gates=None,
+                   corrupt_manifest_readback=False):
         d = Path(tempfile.mkdtemp())
         (d / "releases.json").write_text(json.dumps(releases))
         (d / "gates.json").write_text(json.dumps(gates or {}))
         env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
-                   FAKEGH_GATES=str(d / "gates.json"))
+                   FAKEGH_GATES=str(d / "gates.json"),
+                   FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0")
         p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
@@ -60,10 +62,20 @@ class PublishRelease(unittest.TestCase):
         self.assertEqual(sorted(a["name"] for a in upload["assets"]), sorted(INSTALLERS))
         self.assertIn(["api", "-X", "DELETE", "repos/saphid/frame-control/releases/assets/7"], log)
         patch = next(c for c in log if "PATCH" in c)
+        readback = next(c for c in log if any("releases/assets/901" in arg for arg in c))
+        self.assertLess(log.index(readback), log.index(patch))
         self.assertEqual(patch[3], "repos/saphid/frame-control/releases/42")
         for f in ("tag_name=v9.8.7", "draft=false", "prerelease=false", "make_latest=true"):
             self.assertIn(f, patch)
         self.assertTrue(all(c[0] == "api" for c in log))  # never `gh release ...` (GraphQL)
+
+    def test_refuses_mismatched_manifest_readback_before_publication(self):
+        p, log, upload = self.run_script([draft()], "v9.8.7",
+                                         corrupt_manifest_readback=True)
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("downloaded update.json differs", p.stderr)
+        self.assertIsNotNone(upload)
+        self.assertFalse(any("PATCH" in call for call in log))
 
     def test_an_untagged_draft_may_carry_a_subtitle(self):
         p, log, upload = self.run_script([draft(name="Frame Control 9.8.7: faster")], "v9.8.7")

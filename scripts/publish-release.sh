@@ -139,7 +139,23 @@ for asset in $old; do
   gh api -X DELETE "repos/$repo/releases/assets/$asset" >/dev/null
 done
 gh api -X POST "https://uploads.github.com/repos/$repo/releases/$id/assets?name=update.json" \
-  -H "Content-Type: application/json" --input "$tmp/update.json" >/dev/null
+  -H "Content-Type: application/json" --input "$tmp/update.json" > "$tmp/uploaded-manifest.json"
+asset_id=$(python3 - "$tmp/uploaded-manifest.json" "$tmp/update.json" <<'EOF'
+import hashlib, json, pathlib, sys
+asset = json.load(open(sys.argv[1], encoding="utf-8"))
+body = pathlib.Path(sys.argv[2]).read_bytes()
+digest = "sha256:" + hashlib.sha256(body).hexdigest()
+if (asset.get("name") != "update.json" or not isinstance(asset.get("id"), int)
+        or asset["id"] <= 0 or asset.get("size") != len(body)
+        or asset.get("digest") != digest):
+    sys.exit("not publishing: uploaded update.json metadata differs from its source bytes")
+print(asset["id"])
+EOF
+)
+gh api -H "Accept: application/octet-stream" "repos/$repo/releases/assets/$asset_id" > "$tmp/update-readback.json"
+cmp -s "$tmp/update.json" "$tmp/update-readback.json" || {
+  echo "not publishing: downloaded update.json differs from its source bytes" >&2; exit 1;
+}
 echo "ok       update.json"
 
 gh api -X PATCH "repos/$repo/releases/$id" -f tag_name="$tag" -f body="$(cat "$tmp/release-body.txt")" -F draft=false -F prerelease=false \

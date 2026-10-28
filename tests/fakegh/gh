@@ -9,6 +9,7 @@ $FAKEGH_NEW_ID (default 9001) without adding it to the listing, like GitHub's li
 lagging a fresh draft. With jq installed, --jq filters a response the way gh does
 (raw strings, compact JSON)."""
 import json
+import hashlib
 import os
 import shutil
 import subprocess
@@ -120,10 +121,17 @@ elif method == "POST" and endpoint == repo + "releases":
     answer(new, json.dumps(new))
 elif method == "DELETE" and endpoint.startswith(repo + "releases/assets/"):
     pass
+elif method == "GET" and endpoint == repo + "releases/assets/901":
+    data = open(os.environ["FAKEGH_UPLOAD"], "rb").read()
+    if os.environ.get("FAKEGH_CORRUPT_MANIFEST_READBACK") == "1":
+        data += b" "
+    sys.stdout.buffer.write(data)
 elif method == "POST" and endpoint.startswith("https://uploads.github.com/" + repo + "releases/"):
-    with open(inp) as src, open(os.environ["FAKEGH_UPLOAD"], "w") as dst:
-        dst.write(src.read())
-    print("{}")
+    data = open(inp, "rb").read()
+    with open(os.environ["FAKEGH_UPLOAD"], "wb") as dst:
+        dst.write(data)
+    print(json.dumps({"id": 901, "name": "update.json", "size": len(data),
+                      "digest": "sha256:" + hashlib.sha256(data).hexdigest()}))
 elif method == "PATCH" and endpoint.startswith(repo + "releases/"):
     rid = endpoint[len(repo + "releases/"):]
     if not rid.isdigit():  # what GitHub said to v0.4.2's PATCH of releases/ (an empty id)
