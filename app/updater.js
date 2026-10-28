@@ -181,7 +181,6 @@ old="$stage/old.app"
 if mv "$app" "$old"; then
   if mv "$new" "$app"; then rm -rf "$old"; else mv "$old" "$app"; fi
 fi
-xattr -dr com.apple.quarantine "$app" 2>/dev/null
 rm -rf "$stage"
 open "$app"
 `;
