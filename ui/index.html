@@ -1686,6 +1686,7 @@
         <option value="vr">VR app</option>
       </select>
       <div class="progress" id="prog"><i></i></div>
+      <div class="hint">The desktop app copies files from this computer directly, including files larger than 8 GiB. Browser uploads are limited to 8 GiB.</div>
       <div class="hint">Clipboard text, both ways, is in <a href="#pad">Type on the headset</a>.</div>
     </section>
 
@@ -3843,6 +3844,7 @@ window.addEventListener("drop", e => {
 function upload(file, mode, dev = window.connDevice, backupToken = null, progress = () => {}, signal = null) {
   return new Promise((resolve, reject) => {
     if (signal?.aborted) return reject(new Error("Import cancelled"));
+    if (file.size > 8 * 1024 ** 3) return reject(new Error("Browser uploads are limited to 8 GiB; use the desktop app to copy larger files"));
     const xhr = new XMLHttpRequest();
     const abort = () => xhr.abort();
     const cleanup = () => signal?.removeEventListener("abort", abort);
@@ -3874,6 +3876,9 @@ function upload(file, mode, dev = window.connDevice, backupToken = null, progres
     signal?.addEventListener("abort", abort, {once:true});
     xhr.send(file);
   });
+}
+function copyToDownloads(file, path, dev) {
+  return path ? api("/api/transfer", { action: "copy-local", path }, dev) : upload(file, "push", dev);
 }
 async function refreshMedia(selectId) {
   const data = await api("/api/media", { action: "list" });
@@ -4001,7 +4006,7 @@ async function sendFilesOne(files, dirs, dev) {
     if (TITLE_EXT.test(f.name)) { await sideload(f, path); continue; }
     const apk = f.name.toLowerCase().endsWith(".apk");
     if (apk) await importAndroidFiles([f], dev);
-    else await act(`Copy ${f.name} to ~/Downloads`, () => upload(f, "push", dev));
+    else await act(`Copy ${f.name} to ~/Downloads`, () => copyToDownloads(f, path, dev));
   }
   $("fileInput").value = "";
   refresh();
@@ -4137,7 +4142,7 @@ async function sideloadOne(file, path, isDir = false, dev = window.connDevice) {
   catch (e) {
     log(`${file.name}: ${e.message}`, "e");
     if (canPush && confirm(`${file.name}: ${e.message}\n\nCopy it to ~/Downloads instead?`))
-      await act(`Copy ${file.name} to ~/Downloads`, () => upload(file, "push", dev));
+      await act(`Copy ${file.name} to ~/Downloads`, () => copyToDownloads(file, path, dev));
     return;
   }
   // Its own fresh list, so the dialog can say whether this replaces an installed title.
@@ -4146,7 +4151,7 @@ async function sideloadOne(file, path, isDir = false, dev = window.connDevice) {
   const choice = await confirmTitle(r.plan, canPush, installed);
   if (choice === "push") {
     api("/api/titles", { action: "discard", token: r.token }).catch(() => {});
-    await act(`Copy ${file.name} to ~/Downloads`, () => upload(file, "push", dev));
+    await act(`Copy ${file.name} to ~/Downloads`, () => copyToDownloads(file, path, dev));
     return;
   }
   if (!choice) { api("/api/titles", { action: "discard", token: r.token }).catch(() => {}); return; }
