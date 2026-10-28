@@ -33,7 +33,7 @@ gh api "repos/$repo/git/ref/tags/$tag" >/dev/null 2>&1 \
 
 # A complete asset list is insufficient: a cancelled installer build can leave
 # old uploaded bytes behind. Check the exact tagged commit's main/e2e jobs and
-# the latest exact-tag release attempt before any release mutation.
+# every exact-tag push run and attempt before any release mutation.
 python3 "$(dirname "$0")/verify-release-gates.py" "$tag" "${FRAME_SMOKE_RESULT:-}"
 
 # Every release, drafts included, one JSON object per line.

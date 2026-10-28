@@ -199,6 +199,30 @@ class PublishRelease(unittest.TestCase):
         self.assertIsNone(upload)
         self.assertFalse(any("-X" in call for call in log))
 
+    def test_refuses_bad_installer_in_separate_prior_tag_run(self):
+        for run_conclusion, job_conclusion, expected in (
+                ("failure", "cancelled", "failure"),
+                ("success", "skipped", "skipped")):
+            with self.subTest(run_conclusion=run_conclusion, job_conclusion=job_conclusion):
+                gates = {"prior_release_run_bad_job":
+                         "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
+                         "prior_release_run_conclusion": run_conclusion,
+                         "prior_release_run_bad_conclusion": job_conclusion}
+                p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn("run 500", p.stderr)
+                self.assertIn(expected, p.stderr)
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_incomplete_tag_run_list(self):
+        p, log, upload = self.run_script([draft()], "v9.8.7",
+                                         gates={"release_run_list_incomplete": True})
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn("incomplete", p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any("-X" in call for call in log))
+
     def test_refuses_missing_or_nonexact_gate_results(self):
         for gates in ({"omit_job": "e2e"}, {"main_sha": "c" * 40},
                       {"decky_conclusion": "failure"}, {"release_conclusion": "failure"},

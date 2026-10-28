@@ -96,15 +96,26 @@ elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
            "status": gate.get("decky_status" if run_id == 503 else ("main_status" if is_main else "release_status"), "completed"),
            "conclusion": gate.get("decky_conclusion" if run_id == 503 else ("main_conclusion" if is_main else "release_conclusion"), "success"),
            "html_url": "https://github.com/saphid/frame-control/actions/runs/%s" % run_id}
-    print(json.dumps({"workflow_runs": [run]}))
+    runs = [run]
+    if run_id == 502 and gate.get("prior_release_run_bad_job"):
+        runs.append(dict(run, id=500, run_attempt=1, status="completed",
+                         conclusion=gate.get("prior_release_run_conclusion", "failure"),
+                         html_url="https://github.com/saphid/frame-control/actions/runs/500"))
+    if run_id == 502 and gate.get("release_run_list_incomplete"):
+        print(json.dumps({"total_count": len(runs) + 1, "workflow_runs": runs}))
+    else:
+        print(json.dumps({"total_count": len(runs), "workflow_runs": runs}))
 elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
     parts = endpoint[len(repo + "actions/runs/"):].split("/")
     run_id = parts[0]
     attempt = int(parts[2])
-    names = {"501": main_jobs, "502": release_jobs, "503": decky_jobs}[run_id]
+    names = {"500": release_jobs, "501": main_jobs, "502": release_jobs,
+             "503": decky_jobs}[run_id]
     names = [name for name in names if name != gate.get("omit_job")]
     jobs = [{"name": name, "status": "completed",
-             "conclusion": (gate.get("prior_bad_job_conclusion", "failure")
+             "conclusion": (gate.get("prior_release_run_bad_conclusion", "cancelled")
+                            if run_id == "500" and name == gate.get("prior_release_run_bad_job")
+                            else gate.get("prior_bad_job_conclusion", "failure")
                             if run_id == "502" and attempt == 1 and name == gate.get("prior_bad_job")
                             else gate.get("bad_job_conclusion", "success") if name == gate.get("bad_job")
                             else "success")}
