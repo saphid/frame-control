@@ -240,6 +240,30 @@ def main():
                 report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
                     if args.reproduce_fileserver_empty_flag_regression else
                     'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+            elif case['probe'] == 'free-loader':
+                settings = current('settings_read')
+                assert settings['notify_on_free_games'] is True, settings
+                assert settings['larger_text'] is False, settings
+                assert current('read_deals') == {}
+                # This plugin commits defaults on startup and writes an empty
+                # deals cache on first read. Both paths are private to this
+                # disposable container; no feed, notification or store call.
+                settings_dir = base/'settings'/record['folder']
+                assert (settings_dir/'settings.json').is_file()
+                assert (settings_dir/'deal_db.json').is_file()
+                current('settings_setSetting', 'larger_text', True)
+                assert current('settings_read')['larger_text'] is True
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert until_ready(lambda: current('settings_read')['larger_text'],
+                                   'private Free Loader setting after restart') is True
+                assert current('read_deals') == {}
+                report['result'] = ('discovery, default settings, empty local deals, '
+                    'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)

@@ -4703,14 +4703,15 @@
         "https://github.com/jwhitlow45/free-loader.git"
       ],
       "status": "partial",
-      "reason": "The exact archive's duplicate names contain identical bytes and differ only in execute bits; the guarded installer now accepts them, and a private local install/remove transaction passed. The current opaque Chromium host renders Free Games but cannot load deals with backend/network denied. Exact official Python settings and empty local-deals methods passed in a no-network container with a Decky stub. Real Decky, feed refresh, notifications and worn VR remain unverified.",
+      "reason": "The exact archive's byte-identical duplicate ZIP members pass guarded install/remove. Actual Decky 3.3.0 in a private network-isolated container discovers the plugin, reads default settings and empty local deals, and retains a settings change after restart. Live deal-feed refresh, notifications, Steam store integration, real Frame ARM64 service and worn VR remain unverified; no feed request was made.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame pinned install/remove",
         "local exact-archive transaction",
-        "isolated Python backend"
+        "isolated Python backend",
+        "isolated Linux backend"
       ],
       "browser": {
         "id": 63,
