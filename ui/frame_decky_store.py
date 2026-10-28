@@ -37,6 +37,8 @@ LOCALSEND_DIGEST = 'e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0
 LOCALSEND_ORIGINAL = 'd448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843'
 LOCALSEND_MAIN = 'db03f9201fe50b75dea99a7a05b54ec3f352d1bdfe174115b0e569154198d8ad'
 LOCALSEND_AARCH64 = 'e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
+NETWORK_SENTINEL_DIGEST = 'd3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5'
+NETWORK_SENTINEL_MAIN = '2baa390cb66dc267e8f04e61ba1edc43af75115ad5e453d308f6bf26ed70b6b9'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -83,7 +85,8 @@ def catalog():
         counts[item['id']] = counts.get(item['id'], 0) + 1
     unique = [item for item in result if counts[item['id']] == 1]
     for item in unique:
-        if item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST:
+        if ((item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST)
+            or (item['id'] == 114 and item['name'] == 'Network Sentinel' and item['sha256'] == NETWORK_SENTINEL_DIGEST)):
             item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
@@ -107,6 +110,8 @@ def archive_info(data, expected_hash, expected_name):
                       and folder == 'DeckyFileServer')
         localsend = (expected_hash == LOCALSEND_DIGEST and expected_name == 'Decky Localsend'
                      and folder == 'decky-localsend')
+        network_sentinel = (expected_hash == NETWORK_SENTINEL_DIGEST and expected_name == 'Network Sentinel'
+                            and folder == 'network-sentinel')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -151,10 +156,13 @@ def archive_info(data, expected_hash, expected_name):
         flags = manifest.get('flags', [])
         if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
             raise ValueError('Invalid plugin flags')
-        if ('root' in flags or '_root' in flags) and not fileserver:
+        if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel):
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
             raise ValueError('LocalSend Python source differs from the pinned archive')
+        if network_sentinel and (flags != ['debug', '_root'] or manifest.get('api_version') != 1
+                                 or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != NETWORK_SENTINEL_MAIN):
+            raise ValueError('Network Sentinel manifest or source differs from the pinned archive')
         return folder
 
 
@@ -185,7 +193,8 @@ def apply_script(plugin_id, digest):
         # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
         return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
                 +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
-    if plugin_id != 89 or digest != DECKYSPY_DIGEST:
+    if not ((plugin_id == 89 and digest == DECKYSPY_DIGEST)
+            or (plugin_id == 114 and digest == NETWORK_SENTINEL_DIGEST)):
         return APPLY
     wheels = {}
     for arch, expected in PSUTIL_DIGESTS.items():
@@ -194,9 +203,11 @@ def apply_script(plugin_id, digest):
             raise ValueError('Bundled psutil dependency SHA-256 mismatch')
         wheels[arch] = base64.b64encode(data).decode('ascii')
     # stdin is Python source, never shell arguments or a shared remote temp file.
-    battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
-    return ('FRAMEY_BACKEND_WHEELS = '+repr(wheels)+'\n'
-            +'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'+APPLY)
+    source = 'FRAMEY_BACKEND_WHEELS = '+repr(wheels)+'\n'
+    if plugin_id == 89:
+        battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
+        source += 'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'
+    return source+APPLY
 
 
 APPLY = r'''
@@ -244,12 +255,13 @@ try:
                 raise RuntimeError('Plugin archive too large')
             fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
             localsend=(int(plugin_id)==125 and digest=='e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7' and folder=='decky-localsend')
+            network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
             if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):
                 raise RuntimeError('Invalid plugin flags')
-            if ('root' in flags or '_root' in flags) and not fileserver:
+            if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel):
                 raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
             for f in files:
@@ -478,10 +490,10 @@ try:
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
-            # DeckySpy's official archive omits its required psutil dependency.
-            # The BSD wheels are packaged offline by Frame Control and selected
-            # for the native loader; no pip, network or system path changes.
-            if int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy':
+            # Both exact official archives omit psutil. Install the pinned BSD
+            # native wheel in the plugin folder only; never use pip or system paths.
+            deckyspy=(int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy')
+            if deckyspy or network_sentinel:
                 arch=platform.machine()
                 pins={
                     'x86_64':'076a2d2f923fd4821644f5ba89f059523da90dc9014e85f8e45a5774ca5bc6f9',
@@ -489,13 +501,13 @@ try:
                 }
                 encoded=globals().get('FRAMEY_BACKEND_WHEELS',{}).get(arch)
                 if arch not in pins or not encoded:
-                    raise RuntimeError('Missing native psutil dependency for DeckySpy')
+                    raise RuntimeError('Missing native psutil dependency')
                 wheel_data=base64.b64decode(encoded,validate=True)
                 if hashlib.sha256(wheel_data).hexdigest()!=pins[arch]:
-                    raise RuntimeError('DeckySpy psutil dependency SHA-256 mismatch')
+                    raise RuntimeError('Native psutil dependency SHA-256 mismatch')
                 modules=unpacked/'py_modules'
                 for name in ('psutil','psutil-7.2.2.dist-info'):
-                    if (modules/name).exists(): raise RuntimeError('DeckySpy dependency collides with archive')
+                    if (modules/name).exists(): raise RuntimeError('Native psutil dependency collides with archive')
                 with zipfile.ZipFile(io.BytesIO(wheel_data)) as wheel:
                     for member in wheel.infolist():
                         path=pathlib.PurePosixPath(member.filename)
@@ -510,6 +522,29 @@ try:
                         dest.parent.mkdir(parents=True,exist_ok=True)
                         dest.write_bytes(payload)
                         dest.chmod(0o600)
+            if network_sentinel:
+                manifest_path=unpacked/'plugin.json'
+                manifest=json.loads(manifest_path.read_text())
+                main=unpacked/'main.py'
+                if (manifest.get('name')!='Network Sentinel' or manifest.get('api_version')!=1
+                    or manifest.get('flags')!=['debug','_root'] or
+                    hashlib.sha256(main.read_bytes()).hexdigest()!='2baa390cb66dc267e8f04e61ba1edc43af75115ad5e453d308f6bf26ed70b6b9'):
+                    raise RuntimeError('Network Sentinel manifest or source changed')
+                manifest['flags']=['debug']
+                manifest_path.write_text(json.dumps(manifest),encoding='utf-8')
+                source=main.read_text(encoding='utf-8')
+                old='decky.DECKY_SETTINGS_DIR'
+                ping='            cmd = [\'ping\', \'-c\', str(count), \'-W\', \'2\', host]\n'
+                if (source.count(old)!=2 or source.count('    async def _migration(self):')!=1
+                    or source.count(ping)!=1):
+                    raise RuntimeError('Network Sentinel settings or migration source changed')
+                source=source.replace(old,'decky.DECKY_PLUGIN_SETTINGS_DIR')
+                source=source.replace(ping,'            jitter = 0\n'+ping)
+                source=source.replace('    async def _migration(self):',
+                                      '    async def _migration(self):\n        # Managed user service does not move legacy Decky paths.\n        return\n')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('network-sentinel-user-psutil')
+            if deckyspy:
                 compat=modules/'framey_battery.py'
                 if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
                 battery_source=globals().get('FRAMEY_BACKEND_BATTERY_SOURCE')

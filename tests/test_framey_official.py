@@ -84,10 +84,10 @@ class OfficialBundles(unittest.TestCase):
                     folder = plugins / plugin['folder']
                     (folder / '.frame-control-store.json').write_text(json.dumps({
                         'storeId': plugin['id'], 'sha256': plugin['sha256']}))
-                    if plugin['id'] == 60:
-                        # This renderer fixture extracts the original ZIP. The
-                        # real managed adaptation is covered by transaction and
-                        # published Decky tests; an unadapted root copy must fail.
+                    if plugin['id'] in (60, 114):
+                        # This renderer fixture extracts the original root ZIP.
+                        # Transaction and Decky tests cover managed adaptation;
+                        # an unadapted root copy must fail here.
                         with patch.object(framey_panel, 'PLUGINS', plugins), self.assertRaises(FileNotFoundError):
                             framey_panel.panel(plugin['id'])
                         manifest['flags'] = []

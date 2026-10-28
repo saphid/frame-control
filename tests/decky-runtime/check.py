@@ -85,7 +85,7 @@ def main():
     Path('/tmp/frame-control-decky-plugin-runtime-test').write_bytes(data)
     install = subprocess.run([sys.executable, '-', 'install', 'runtime-test', str(record['id']),
         record['sha256'], record['folder'], record['version'], '-'], input=frame_decky_store.apply_script(record['id'], record['sha256']),
-        capture_output=True, text=True, env=env, timeout=15)
+        capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
@@ -152,7 +152,24 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'localsend':
+            if case['probe'] == 'network-sentinel':
+                assert current('get_settings')['auto_monitor'] is False
+                assert current('get_network_history') == []
+                assert current('get_live_ping') == 0
+                assert current('get_bandwidth_stats') == {'download_bps': 0, 'upload_bps': 0}
+                assert current('update_settings', {'show_bandwidth': False}) is True
+                assert current('get_settings')['show_bandwidth'] is False
+                connection = current('get_connection_info')
+                assert isinstance(connection.get('hostname', connection.get('error')), str), connection
+                status = current('get_network_status')
+                assert status['quality']['quality'] == 'disconnected', status
+                assert status['quality']['jitter'] == 0, status
+                assert current('start_monitoring') is True
+                history = until_ready(lambda: current('get_network_history'), 'isolated network sample')
+                assert 'bandwidth' in history[0] and 'quality' in history[0], history
+                assert current('stop_monitoring') is True
+                report['result'] = 'discovery, native psutil, private settings and isolated monitoring loop passed; external latency/DNS and live Frame unverified'
+            elif case['probe'] == 'localsend':
                 helper = plugin/'bin/localsend-core'
                 expected = ('e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'
                             if __import__('platform').machine() == 'aarch64'

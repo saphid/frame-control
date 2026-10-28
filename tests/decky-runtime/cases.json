@@ -1,5 +1,10 @@
 [
   {
+    "id": 114,
+    "shim": "network-sentinel-user-psutil",
+    "probe": "network-sentinel"
+  },
+  {
     "id": 13,
     "shim": null,
     "probe": "toggle-settings"
