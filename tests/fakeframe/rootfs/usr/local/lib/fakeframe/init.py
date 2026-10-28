@@ -304,6 +304,8 @@ def clean_home():
             pass
     for pattern in (fs.DEVKIT_GAMES + '/*', fs.DEVKIT_GAMES + '/.[!.]*', HOME + '/devkit-utils',
                     HOME + '/.devkit-utils.frame-control', HOME + '/Applications', HOME + '/Downloads/*',
+                    HOME + '/.local/share/frame-control',
+                    HOME + '/.config/systemd/user/frame-control-decky.service',
                     fs.STEAM_ROOT + '/steamapps/compatdata', fs.STEAM_ROOT + '/steamapps/shadercache',
                     fs.STEAM_ROOT + '/logs', '/var/log/fakeframe/devkit-*', '/var/log/fakeframe/shortcut-*'):
         for p in glob.glob(pattern):
