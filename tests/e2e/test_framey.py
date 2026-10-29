@@ -239,6 +239,10 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                if plugin['id'] == 79:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
                 if plugin['id'] == 89:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])

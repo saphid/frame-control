@@ -276,6 +276,26 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 
+    def test_exact_notifications_uses_private_decky_logging(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 79)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=79,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
+        main = (folder/'main.py').read_text()
+        crypto = (folder/'py_modules/connector/crypto.py').read_text()
+        self.assertNotIn('filename="/tmp/notifications.log"', main)
+        self.assertNotIn('=== ENVIRON ===', crypto)
+        self.assertNotIn('clear_env.items()', crypto)
+        result = self.apply('remove', plugin_id=79, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
     def test_exact_storage_cleaner_deletes_only_private_cache_fixture(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 50)

@@ -45,6 +45,9 @@ RADIYO_DIGEST = '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec4
 RADIYO_MAIN = '868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e'
 SUGGESTME_DIGEST = '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4'
 SUGGESTME_MAIN = '9c141daf754302698d3e3e9ced70e36e9a4beb0b04f794fb66e7e45bd3b8d6e3'
+NOTIFICATIONS_DIGEST = '3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312'
+NOTIFICATIONS_MAIN = '16e246a0a7950451c2a833f11ce5ce48e8ae2e2679348d03cad6870d36011004'
+NOTIFICATIONS_CRYPTO = 'b424d5ff2b7be09a0a31d844f86368802c15bc38b627b0812fe5ba29d11b72bf'
 STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
 
@@ -183,6 +186,10 @@ def archive_info(data, expected_hash, expected_name):
         if (expected_hash == SUGGESTME_DIGEST and expected_name == 'SuggestMe' and folder == 'SuggestMe-decky-plugin'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != SUGGESTME_MAIN):
             raise ValueError('SuggestMe source differs from the pinned archive')
+        if expected_hash == NOTIFICATIONS_DIGEST and expected_name == 'Decky Notifications' and folder == 'decky-notifications':
+            if (hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != NOTIFICATIONS_MAIN
+                    or hashlib.sha256(archive.read(folder+'/py_modules/connector/crypto.py')).hexdigest() != NOTIFICATIONS_CRYPTO):
+                raise ValueError('Decky Notifications source differs from the pinned archive')
         if (expected_hash == STORAGE_CLEANER_DIGEST and expected_name == 'Storage Cleaner'
                 and folder == 'decky-storage-cleaner'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != STORAGE_CLEANER_MAIN):
@@ -755,6 +762,27 @@ def split_by_app(data):
                 if data.count(old)!=1: raise RuntimeError('SuggestMe TLS source changed')
                 main.write_bytes(data.replace(old,new))
                 compat_shims.append('suggestme-verified-tls')
+            # The exact Decky Notifications archive writes a shared /tmp log
+            # and dumps every environment variable if openssl fails.
+            # Use Decky's captured stderr and keep credentials out of logs.
+            if int(plugin_id)==79 and digest=='3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312' and folder=='decky-notifications':
+                main=unpacked/'main.py'
+                crypto=unpacked/'py_modules/connector/crypto.py'
+                main_data=main.read_bytes()
+                crypto_data=crypto.read_bytes()
+                if (hashlib.sha256(main_data).hexdigest()!='16e246a0a7950451c2a833f11ce5ce48e8ae2e2679348d03cad6870d36011004'
+                        or hashlib.sha256(crypto_data).hexdigest()!='b424d5ff2b7be09a0a31d844f86368802c15bc38b627b0812fe5ba29d11b72bf'):
+                    raise RuntimeError('Decky Notifications source differs from pinned archive')
+                old=b'logging.basicConfig(filename="/tmp/notifications.log", level=logging.INFO,'
+                new=b'logging.basicConfig(level=logging.INFO,'
+                env_dump=(b'        logger.error("=== ENVIRON ===")\r\n'
+                          b'        for k, v in clear_env.items():\r\n'
+                          b'            logger.error(f"{k}: {v}")\r\n')
+                if main_data.count(old)!=1 or crypto_data.count(env_dump)!=1:
+                    raise RuntimeError('Decky Notifications logging source changed')
+                main.write_bytes(main_data.replace(old,new))
+                crypto.write_bytes(crypto_data.replace(env_dump,b''))
+                compat_shims.append('notifications-private-logs')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.

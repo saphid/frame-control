@@ -9,6 +9,7 @@ from pathlib import Path
 import shutil
 import signal
 import socket
+import sqlite3
 import ssl
 import subprocess
 import sys
@@ -315,6 +316,35 @@ def main():
                 assert restored['label'] == 'Framey private', restored
                 report['result'] = ('published Decky discovery, empty library and private preset restart passed; '
                     'network recommendations, actual Steam library, Frame and VR unverified')
+            elif case['probe'] == 'notifications-private':
+                assert not Path('/tmp/notifications.log').exists()
+                assert 'filename="/tmp/notifications.log"' not in (plugin/'main.py').read_text()
+                assert '=== ENVIRON ===' not in (plugin/'py_modules/connector/crypto.py').read_text()
+                fingerprint = until_ready(lambda: legacy('local_fingerprint'), 'private certificate fingerprint')
+                assert len(fingerprint) == 64 and all(c in '0123456789abcdef' for c in fingerprint), fingerprint
+                assert legacy('device_list') == []
+                assert legacy('notification_list') == []
+                assert legacy('get_event') is None
+                dbs = list(base.rglob('db.sqlite3'))
+                assert len(dbs) == 1, dbs
+                with sqlite3.connect(dbs[0]) as connection:
+                    connection.execute('INSERT INTO notification(id,title,body,appName,silent,requestReplyId,time) '
+                        'VALUES (?,?,?,?,?,?,?)', ('private-1','Private title','Private body','Fixture',1,'',1))
+                notifications = legacy('notification_list')
+                assert len(notifications) == 1 and notifications[0]['title'] == 'Private title', notifications
+                assert legacy('notifications_clear') is None
+                assert legacy('notification_list') == []
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert until_ready(lambda: legacy('local_fingerprint'), 'persisted fingerprint') == fingerprint
+                assert legacy('notification_list') == []
+                assert not Path('/tmp/notifications.log').exists()
+                report['result'] = ('discovery, private certificate, empty device list and synthetic notification '
+                    'read/clear/restart passed; pairing, live notifications, Frame and VR unverified')
             elif case['probe'] == 'radio-local':
                 # Exercise HTTP behavior and prove managed RadiYo rejects a
                 # self-signed HTTPS endpoint. No station or audio opens.
