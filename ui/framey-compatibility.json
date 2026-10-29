@@ -6139,7 +6139,7 @@
         "https://github.com/Firemoon777/decky-notifications.git"
       ],
       "status": "partial",
-      "reason": "The exact managed install routes backend logs through Decky instead of shared /tmp and removes an environment dump on certificate failure. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the plugin, generated a private certificate, returned an empty device list, and read/cleared a synthetic notification across a restart. Existing managed copies need Update or reinstall for the logging fix. Actual phone pairing, LAN delivery, real Frame ARM64 backend, panel notification display and worn VR remain unverified.",
+      "reason": "The exact managed install routes backend logs through Decky instead of shared /tmp and removes an environment dump on certificate failure. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the plugin, generated a private certificate, returned an empty device list, and read/cleared a synthetic notification across a restart. Its exact frontend displays a synthetic trusted device and notification in opaque local Chromium. Existing managed copies need Update or reinstall for the logging fix. Actual phone pairing, LAN delivery, real Frame ARM64 backend, live panel delivery and worn VR remain unverified.",
       "blockInstall": false,
       "requiredShims": [
         "notifications-private-logs"
