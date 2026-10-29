@@ -4364,13 +4364,13 @@
         "https://github.com/grimkor/DeckyFileServer"
       ],
       "status": "partial",
-      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The Steam folder picker remains unavailable; use a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the address fix.",
+      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Isolated Decky 3.3.0 amd64 and ARM64 pass private HTTPS listing/download, thumbnail policy and stop. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The Steam folder picker remains unavailable; use a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the address fix.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Decky 3.3.0 amd64",
+        "isolated Decky 3.3.0 amd64 and ARM64 backend",
         "real Frame SSH"
       ],
       "browser": {
@@ -8896,13 +8896,13 @@
         "https://github.com/GedasFX/decky-cloud-save"
       ],
       "status": "partial",
-      "reason": "Exact official backend discovers under Decky 3.3.0 amd64; default get_config and a private setting read/write survive a loader restart. The isolated browser baseline still stops at its denied get_config call. Cloud login, rclone download/sync (including ARM64), process signals, real Frame and VR are unverified. The published updater names an amd64 rclone download, so no ARM64 sync claim follows.",
+      "reason": "Exact official backend discovers under isolated Decky 3.3.0 amd64 and ARM64; default get_config and a private setting read/write survive a loader restart. The isolated browser baseline still stops at its denied get_config call. Cloud login, rclone download/sync (including ARM64), process signals, real Frame and VR are unverified. The published updater names an amd64 rclone download, so no ARM64 sync claim follows.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "native Decky amd64 configuration"
+        "isolated Decky 3.3.0 amd64 and ARM64 configuration"
       ],
       "browser": {
         "id": 104,
@@ -11897,7 +11897,7 @@
         "https://github.com/lemossilva/suggestme-decky-plugin.git"
       ],
       "status": "partial",
-      "reason": "The exact managed install keeps certificate and hostname verification when SuggestMe's certifi context fails. Published Decky 3.3.0 amd64 discovered the backend, returned empty-library defaults and kept a private filter preset after restart. Existing managed copies need update or reinstall; older copies may disable TLS verification on certifi failure. Real Steam library recommendations, credentials, external requests, ARM64 Frame backend and worn VR remain unverified.",
+      "reason": "The exact managed install keeps certificate and hostname verification when SuggestMe's certifi context fails. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the backend, returned empty-library defaults and kept a private filter preset after restart. Existing managed copies need update or reinstall; older copies may disable TLS verification on certifi failure. Real Steam library recommendations, credentials, external requests, ARM64 Frame backend and worn VR remain unverified.",
       "blockInstall": false,
       "requiredShims": [
         "suggestme-verified-tls"
@@ -11906,7 +11906,7 @@
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky 3.3.0 amd64 backend"
+        "isolated Decky 3.3.0 amd64 and ARM64 backend"
       ],
       "browser": {
         "id": 132,
