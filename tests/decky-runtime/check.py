@@ -396,6 +396,14 @@ def main():
                 assert not whole.exists()
                 report['result'] = ('published Decky discovery, private size/list and selected/whole fixture deletion passed; '
                     'real Steam caches, Frame and VR unverified')
+            elif case['probe'] == 'steamback-empty':
+                # This is an isolated private home with no real Steam saves.
+                # Never call do_backup or do_restore from the runtime suite.
+                assert legacy('set_account_id', id_num=424242) is None
+                assert legacy('get_saveinfos') == []
+                assert legacy('find_supported', game_infos=[]) == []
+                report['result'] = ('published Decky discovery, private account setup and empty save-list/support reads passed; '
+                    'real Steam saves, backups, restore, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
