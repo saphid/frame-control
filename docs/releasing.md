@@ -50,6 +50,10 @@ count. So a build reaches people only when you publish it, after testing it.
 
 4. Publish:
 
+   Run the publisher from a clean checkout of the exact release tag commit.
+   Both its dry run and publish command reject a different commit, tracked or
+   untracked local changes, or a package version that differs from the tag.
+
    Confirm the exact tag commit's main CI and e2e, the locked real Frame smoke,
    release verification, independent package checks, and all four tagged
    installer builds have passed. Hold the release if any gate is failed,

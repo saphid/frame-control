@@ -16,13 +16,11 @@ dry=""
 [ "${1:-}" = "--dry-run" ] && { dry=1; shift; }
 tag="${1:?usage: $0 [--dry-run] vX.Y.Z}"
 repo=saphid/frame-control
+checkout=$(CDPATH= cd "$(dirname "$0")/.." && pwd -P)
 expected="Frame-Control-mac-arm64.dmg Frame-Control-mac-arm64.zip Frame-Control-mac-x64.dmg Frame-Control-mac-x64.zip Frame-Control-Setup-x64.exe
 Frame-Control-win-x64.zip Frame-Control-linux-x86_64.AppImage Frame-Control-linux-arm64.AppImage
 Frame-Control-linux-amd64.deb Frame-Control-linux-arm64.deb"
 page="https://github.com/$repo/releases/tag/$tag"
-
-version=$(sed -n 's/.*"version": *"\([^"]*\)".*/\1/p' "$(dirname "$0")/../app/package.json")
-[ "v$version" = "$tag" ] || echo "note: app/package.json here says $version (the release was built from the tag)"
 
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
@@ -35,7 +33,28 @@ gh api "repos/$repo/git/ref/tags/$tag" >/dev/null 2>&1 \
 # A complete asset list is insufficient: a cancelled installer build can leave
 # old uploaded bytes behind. Check the exact tagged commit's main/e2e jobs and
 # every exact-tag push run and attempt before any release mutation.
-python3 "$(dirname "$0")/verify-release-gates.py" "$tag" "${FRAME_SMOKE_RESULT:-}"
+gate_output=$(python3 "$(dirname "$0")/verify-release-gates.py" "$tag" "${FRAME_SMOKE_RESULT:-}")
+printf '%s\n' "$gate_output"
+release_commit=$(printf '%s\n' "$gate_output" | sed -n 's/^exact release commit: \([0-9a-f]\{40\}\)$/\1/p')
+[ -n "$release_commit" ] || { echo "not publishing: release gate did not report an exact commit" >&2; exit 1; }
+local_commit=$(git -C "$checkout" rev-parse --verify HEAD) || {
+  echo "not publishing: publisher is not running from a git checkout" >&2; exit 1;
+}
+[ "$local_commit" = "$release_commit" ] || {
+  echo "not publishing: local checkout $local_commit differs from release commit $release_commit" >&2; exit 1;
+}
+local_status=$(git -C "$checkout" status --porcelain --untracked-files=normal) || {
+  echo "not publishing: could not inspect local release checkout" >&2; exit 1;
+}
+[ -z "$local_status" ] || {
+  echo "not publishing: local release checkout has uncommitted or untracked files" >&2; exit 1;
+}
+version=$(git -C "$checkout" show HEAD:app/package.json | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])') || {
+  echo "not publishing: could not read the release commit package version" >&2; exit 1;
+}
+[ "v$version" = "$tag" ] || {
+  echo "not publishing: release commit package version $version differs from $tag" >&2; exit 1;
+}
 
 # Every release, drafts included, one JSON object per line.
 gh api --paginate "repos/$repo/releases?per_page=100" --jq '.[]' > "$tmp/releases"

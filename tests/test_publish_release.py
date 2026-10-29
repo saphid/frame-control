@@ -9,13 +9,13 @@ import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
 import hashlib
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "publish-release.sh"
 FAKEGH = ROOT / "tests" / "fakegh"
 INSTALLERS = ["Frame-Control-mac-arm64.dmg", "Frame-Control-mac-arm64.zip",
               "Frame-Control-mac-x64.dmg", "Frame-Control-mac-x64.zip", "Frame-Control-Setup-x64.exe",
@@ -66,15 +66,38 @@ def asset_audit(release, tag="v9.8.7"):
 
 class PublishRelease(unittest.TestCase):
     def run_script(self, releases, *args, tags="v9.8.7", gates=None,
-                   corrupt_manifest_readback=False, smoke=None, audit=None):
+                   corrupt_manifest_readback=False, smoke=None, audit=None,
+                   local_head=None, local_dirty=False, local_status_fail=False,
+                   local_version="9.8.7"):
         d = Path(tempfile.mkdtemp())
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        checkout = d / "checkout"
+        scripts = checkout / "scripts"
+        scripts.mkdir(parents=True)
+        for name in ("publish-release.sh", "verify-release-gates.py",
+                     "verify-frame-smoke-result.py", "release-checksums.py",
+                     "verify-release-asset-audit.py", "release-safety-note.md"):
+            shutil.copy2(ROOT / "scripts" / name, scripts / name)
+        app = checkout / "app"
+        app.mkdir()
+        (app / "package.json").write_text(json.dumps({"version": local_version}))
+        subprocess.run(["git", "-C", str(checkout), "init", "-q"], check=True)
+        subprocess.run(["git", "-C", str(checkout), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(checkout), "-c", "user.name=Release Test",
+                        "-c", "user.email=release-test@example.invalid", "commit", "-qm", "fixture"], check=True)
+        commit = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+        tag_commit = local_head or commit
+        if local_dirty:
+            (checkout / "owned-test-file").write_text("dirty")
+        if local_status_fail:
+            (checkout / ".git" / "index").write_bytes(b"invalid index")
         (d / "releases.json").write_text(json.dumps(releases))
-        (d / "gates.json").write_text(json.dumps(gates or {}))
+        (d / "gates.json").write_text(json.dumps({"tag_commit": tag_commit, **(gates or {})}))
         steps = ["cleanup: leftovers from earlier runs", "devkit service: properties.json",
                  "status", "cleanup: everything this run installed"] + [
                      f"{kind}: {action}" for kind in ("arm64", "x86_64", "exe")
                      for action in ("install", "launch", "remove")]
-        clean_smoke = {"source": {"commit": "a" * 40, "clean": True},
+        clean_smoke = {"source": {"commit": tag_commit, "clean": True},
                        "lock_released": True,
                        "steps": [{"step": name, "ok": True} for name in steps],
                        "passed": len(steps), "skipped": 0, "failed": 0,
@@ -104,7 +127,8 @@ class PublishRelease(unittest.TestCase):
             env['RELEASE_ASSET_AUDIT'] = str(d / 'asset-audit.json')
         else:
             env.pop('RELEASE_ASSET_AUDIT', None)
-        p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
+        p = subprocess.run(["sh", str(scripts / "publish-release.sh"), *args],
+                           env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
         return p, log, upload
@@ -200,6 +224,18 @@ class PublishRelease(unittest.TestCase):
         self.assertIn('"page": "https://github.com/saphid/frame-control/releases/tag/v9.8.7"', p.stdout)
         self.assertIsNone(upload)
         self.assertTrue(all("-X" not in c for c in log))
+
+    def test_refuses_wrong_dirty_or_misversioned_local_checkout(self):
+        for kwargs, message in (({'local_head': 'b' * 40}, 'differs from release commit'),
+                                ({'local_dirty': True}, 'uncommitted or untracked'),
+                                ({'local_status_fail': True}, 'could not inspect local release checkout'),
+                                ({'local_version': '9.8.8'}, 'package version')):
+            with self.subTest(kwargs=kwargs):
+                p, log, upload = self.run_script([draft()], 'v9.8.7', **kwargs)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn(message, p.stderr)
+                self.assertIsNone(upload)
+                self.assertFalse(any('-X' in call for call in log))
 
     def test_refuses_failed_e2e_or_cancelled_installer_before_mutation(self):
         for gates in ({"bad_job": "e2e", "bad_job_conclusion": "failure"},
