@@ -3,6 +3,21 @@
 The confidence labels are the same as in [ssh.md](ssh.md). Everything here
 depends on SSH working through the `frame` alias from `scripts/connect.sh`.
 
+## Send to Frame in Frame Control
+
+In the **desktop app**, **Tools → Send to Frame** copies a selected local file
+directly over SSH to `~/Downloads/` on the Frame. This includes files larger
+than 8 GiB, such as a file on a mounted USB drive, provided the app can read
+the file and the Frame has room for it. The app requires a nonempty regular
+file with a visible name. This direct-copy route shipped in v0.4.53
+([PR #377](https://github.com/saphid/frame-control/pull/377)).
+
+In a **browser**, Send to Frame uploads through the local server and has an
+8 GiB limit. Use the desktop app or `scripts/push.sh` for a larger file. The
+direct-copy route has offline tests with a mocked 27 GiB file size; a physical
+26.5 GB transfer from external media to a Frame has **not** been verified.
+See the [current support matrix](current-support-matrix.md) for the test limit.
+
 ## Options
 
 | Option | Command | Confidence | Notes |
