@@ -114,8 +114,8 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 <iframe id=panel sandbox="allow-scripts" style="width:1100px;height:740px"></iframe>
 <script>
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
-const batteryFixture=BATTERY_FIXTURE;
-window.batteryFixtureCalls=[];
+const batteryFixture=BATTERY_FIXTURE, notificationsFixture=NOTIFICATIONS_FIXTURE;
+window.batteryFixtureCalls=[];window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
 window.results=[];let active=null,running=false;
 addEventListener('message',event=>{
   if(event.source!==panel.contentWindow||!active)return;
@@ -142,6 +142,18 @@ addEventListener('message',event=>{
         data.method==='set_app'?{success:true,result:true}:null;
       event.source.postMessage({type:'framey:reply',id:data.id,
         ...(result?{result}:{error:'Private Battery Tracker fixture rejects backend method'})},'*');
+    }else if(notificationsFixture&&active.id===79&&data.legacy){
+      if(window.notificationsFixtureCalls.length<30)window.notificationsFixtureCalls.push(data.method);
+      const fixtures={
+        device_list:[{deviceId:'fixture-phone',name:'Private test phone',type:'phone',is_trusted:1}],
+        notification_list:[{id:'fixture-note',title:'Private test alert',body:'Local fixture body',
+          appName:'Framey fixture',silent:true,icon:null}],
+        get_event:null};
+      if(!Object.hasOwn(fixtures,data.method)&&window.notificationsFixtureDenied.length<20)
+        window.notificationsFixtureDenied.push(data.method);
+      event.source.postMessage({type:'framey:reply',id:data.id,
+        ...(Object.hasOwn(fixtures,data.method)?{result:{success:true,result:fixtures[data.method]}}:
+          {error:'Private Decky Notifications fixture rejects backend method'})},'*');
     }else event.source.postMessage({type:'framey:reply',id:data.id,
       error:'Read-only compatibility audit: backend method blocked'},'*');}
   if(data.type==='framey:cache:init')event.source.postMessage({type:'framey:cache:seed',session:data.session,entries:{}},'*');
@@ -159,7 +171,7 @@ window.runAudit=async(ids,settleMs=1200)=>{
     if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);
-    if(!batteryFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
+    if(!batteryFixture&&!notificationsFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
 };
@@ -178,12 +190,15 @@ def main():
                         help='Replay only plugin 118 with bounded in-memory Cloudflare responses')
     parser.add_argument('--battery-tracker-fixture', action='store_true',
                         help='Replay only plugin 67 with private in-memory battery history')
+    parser.add_argument('--decky-notifications-fixture', action='store_true',
+                        help='Replay only plugin 79 with private in-memory notification and device data')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
                         help='Optional detached running-app JSON; replay only, not live Steam/backend evidence')
     args = parser.parse_args()
-    if args.speed_test_mock and args.battery_tracker_fixture:
+    if sum((args.speed_test_mock, args.battery_tracker_fixture,
+            args.decky_notifications_fixture)) > 1:
         parser.error('Choose one frontend fixture')
     plugins = json.loads(args.catalog.read_text())['plugins']
     if args.speed_test_mock:
@@ -195,6 +210,11 @@ def main():
         if (len(plugins) != 1 or plugins[0]['sha256'] !=
                 '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94'):
             parser.error('Battery Tracker 0.2.0 fixture requires its pinned archive digest')
+    if args.decky_notifications_fixture:
+        plugins = [plugin for plugin in plugins if plugin['id'] == 79]
+        if (len(plugins) != 1 or plugins[0]['sha256'] !=
+                '3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312'):
+            parser.error('Decky Notifications 1.0.1 fixture requires its pinned archive digest')
     records = {p['id']: p for p in plugins}
     library = None
     if args.library_snapshot:
@@ -227,7 +247,11 @@ def main():
                 if args.battery_tracker_fixture:
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Battery Tracker uses private in-memory history; CSP blocks network. The panel stays open for slider checks.')
+                if args.decky_notifications_fixture:
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Decky Notifications uses private in-memory data; CSP blocks network and backend writes. The panel stays open for display checks.')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
+                page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
                 body = page.replace(
                     'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).replace(
                     'RUNNING_DATA', json.dumps(running).replace('<', '\\u003c')).encode()

@@ -60,7 +60,7 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
         page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
         for old, new in [('CATALOG_DATA', '[{"id":67,"name":"Battery Tracker"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
-                         ('BATTERY_FIXTURE', 'true')]:
+                         ('BATTERY_FIXTURE', 'true'), ('NOTIFICATIONS_FIXTURE', 'false')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -99,6 +99,51 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
     {method:'get_recent_data',lookback:8},
     {method:'delete_all',lookback:null},
   ]);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=page_script,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
+    def test_decky_notifications_fixture_denies_trust_and_clear(self):
+        page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
+        for old, new in [('CATALOG_DATA', '[{"id":79,"name":"Decky Notifications"}]'),
+                         ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
+                         ('BATTERY_FIXTURE', 'false'), ('NOTIFICATIONS_FIXTURE', 'true')]:
+            page_script = page_script.replace(old, new)
+        script = r'''
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const messages=[],handlers={};
+const context={panel:{src:'',contentWindow:{postMessage:data=>messages.push(data)}},
+  run:{disabled:false},download:{},progress:{textContent:''},
+  addEventListener:(type,handler)=>{handlers[type]=handler},
+  setTimeout:callback=>{callback();return 1},
+  URL,Blob,Number,Promise,JSON,Error,Object};
+context.window=context;
+vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
+(async()=>{
+  await context.runAudit([79],1200);
+  assert.equal(context.panel.src,'/panel/79');
+  function call(method,legacy=true){
+    messages.length=0;
+    handlers.message({source:context.panel.contentWindow,
+      data:{type:'framey:call',id:1,method,args:[{}],legacy}});
+    return messages.at(-1);
+  }
+  assert.equal(call('device_list').result.result[0].name,'Private test phone');
+  assert.equal(call('notification_list').result.result[0].body,'Local fixture body');
+  assert.equal(call('get_event').result.result,null);
+  for(const method of ['trust_device','notifications_clear','unknown']){
+    assert.match(call(method).error,/rejects backend method/,method);
+  }
+  assert.match(call('notification_list',false).error,/backend method blocked/);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.notificationsFixtureCalls)),
+    ['device_list','notification_list','get_event','trust_device','notifications_clear','unknown']);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.notificationsFixtureDenied)),
+    ['trust_device','notifications_clear','unknown']);
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''
         result = subprocess.run(['node', '-e', script], input=page_script,
