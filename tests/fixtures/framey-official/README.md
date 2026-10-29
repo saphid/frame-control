@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `79.zip`, `104.zip` and `132.zip` were added on 2026-10-29.
+and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `79.zip`, `104.zip`, `118.zip` and `132.zip` were added on 2026-10-29.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -16,6 +16,7 @@ from a local fixture so CI does not depend on the store being online.
 | `79.zip` | Decky Notifications | 1.0.1 | `3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312` |
 | `104.zip` | Game Sync | 1.0.4 | `65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd` |
 | `132.zip` | SuggestMe | 1.5.3 | `248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4` |
+| `118.zip` | Speed Test | 1.0.2 | `8b1ee429aece9330b83ea3fc2e7e27d007ac61a737169f20bda3f1a19ab95508` |
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
 | `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `114.zip` | Network Sentinel | 1.0.4 | `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5` |
@@ -54,6 +55,14 @@ Bluetooth result and limits are in
 Deck Shelves' chunked frontend renders its settings in local Chromium with
 backend/network calls denied. Its Steam Home shelves cannot be verified in the
 isolated VR panel; no worn-headset test is claimed.
+
+Speed Test's exact frontend can be replayed with `scripts/framey-audit-browser.py
+--speed-test-mock` and its pinned ZIP. This opt-in mode replaces only the
+Cloudflare trace/download/upload fetches with bounded in-memory responses.
+The page CSP still denies external connections. Local Chromium completed an
+automatic test and a Retest click; the displayed speeds are fixture artifacts,
+not a measurement of internet access or worn VR usability. See
+[the evidence](../../../docs/evidence/framey-speedtest-mock-2026-10-29.md).
 
 Simple Timer also runs through actual published Decky 3.3.0 discovery, instance
 RPC and events in the native isolated runtime gate. Cancel/replace/completion and

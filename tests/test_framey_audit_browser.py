@@ -5,6 +5,8 @@ import hashlib
 import importlib.util
 import io
 from pathlib import Path
+import shutil
+import subprocess
 import tempfile
 import unittest
 import zipfile
@@ -17,6 +19,42 @@ spec.loader.exec_module(audit)
 
 
 class ReceiptBoundAudit(unittest.TestCase):
+    def test_speed_test_replay_is_opt_in_and_network_denied(self):
+        default = audit.audit_prelude()
+        self.assertIn("window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));", default)
+        self.assertNotIn('speed.cloudflare.com', default)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the mock fetch check')
+    def test_speed_test_replay_accepts_only_bounded_fixture_requests(self):
+        script = r'''
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const window={};
+vm.runInNewContext(fs.readFileSync(0,'utf8'),
+  {window,URL,Response,DOMException,Uint8Array,setTimeout,Error,Number,Math,Promise});
+(async()=>{
+  assert.equal(await (await window.fetch('https://speed.cloudflare.com/cdn-cgi/trace')).text(),
+    'colo=SYD\\n');
+  const response=await window.fetch('https://speed.cloudflare.com/__down?bytes=999999999');
+  assert.equal((await response.arrayBuffer()).byteLength,100000);
+  assert.equal(await (await window.fetch('https://speed.cloudflare.com/__up',
+    {method:'POST'})).text(),'ok');
+  for(const [url,options] of [
+    ['https://speed.cloudflare.com.evil/__down?bytes=10',{}],
+    ['https://speed.cloudflare.com/unknown',{}],
+    ['https://speed.cloudflare.com/__up',{method:'GET'}],
+    ['https://example.com/__down?bytes=10',{}]]){
+    await assert.rejects(window.fetch(url,options));
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(window.__speedTestMock)),
+    {trace:1,down:1,up:1,other:4});
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=audit.SPEED_TEST_FETCH,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_digest_checked_archive_renders_without_installed_plugin(self):
         bundle = b"import './chunks/frontend.js';"
         stream = io.BytesIO()
@@ -32,6 +70,8 @@ class ReceiptBoundAudit(unittest.TestCase):
         self.assertIn(b'const report=(kind,message)', page)
         with self.assertRaisesRegex(ValueError, 'hash mismatch'):
             audit.render_panel({**record, 'sha256':'0'*64}, data)
+        with self.assertRaisesRegex(ValueError, 'requires plugin 118'):
+            audit.render_panel(record, data, speed_test_mock=True)
 
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)

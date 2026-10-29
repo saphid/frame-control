@@ -10437,7 +10437,7 @@
         "https://github.com/user-attachments/assets"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; automatic bandwidth tests were blocked by the audit network policy.",
+      "reason": "Exact frontend completes and reruns a speed-test flow with bounded in-memory Cloudflare responses in local Chromium; real bandwidth, headset UI and controller input remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",

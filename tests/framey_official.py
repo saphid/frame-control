@@ -4,6 +4,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
+    {'id': 118, 'name': 'Speed Test', 'version': '1.0.2', 'api_version': 1,
+     'folder': 'decky-speed-test', 'sha256': '8b1ee429aece9330b83ea3fc2e7e27d007ac61a737169f20bda3f1a19ab95508'},
     {'id': 28, 'name': 'Emuchievements', 'version': '2.0.5', 'api_version': 'legacy',
      'folder': 'Emuchievements', 'sha256': '98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89'},
     {'id': 67, 'name': 'Battery Tracker', 'version': '0.2.0', 'api_version': 'legacy',
