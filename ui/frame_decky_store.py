@@ -502,9 +502,14 @@ def _framey_backup(path):
         raise
 
 async def _framey_delete_prefix(self, appid, do_backup):
-    game = next((g for g in self.games if g["appid"] == str(appid)), None)
-    if game is None:
+    matches = [g for g in self.games if g["appid"] == str(appid)]
+    if not matches:
         return False, "Prefix not found in cache; refresh the list"
+    # The official frontend sends an app ID, not an exact library/row path.
+    # Never guess which row the user selected when that ID is ambiguous.
+    if len(matches) != 1:
+        return False, "Ambiguous prefix app ID in multiple rows; no prefix changed"
+    game = matches[0]
     try:
         path = _framey_prefix(game)
         if do_backup:

@@ -41,7 +41,7 @@ def render(data):
         '```', '',
         'Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.', '',
         'A [Games Prefix Manager follow-up](evidence/framey-prefix-manager-2026-10-29.md) enables only the exact managed 1.0.1 archive as a user-service plugin. '
-        'It reads the actual user home and current Steam library format, bounds prefix deletion, preserves separate backups and reports refused actions in the panel. '
+        'It reads the actual user home and current Steam library format, bounds prefix deletion, preserves separate backups and reports refused actions in the panel. App IDs appearing in multiple rows are refused without backup or deletion. '
         'Published Decky 3.3.0 x86_64 and local Chromium verify only disposable prefix backups/deletions; a locked real ARM64 Frame service verifies discovery and read-only listing. '
         'Automatic orphan cleanup is disabled; unmatched prefixes are labeled Unidentified because non-Steam shortcut coverage is incomplete. Actual Decky RPC fixtures preserve a second user’s prefix with malformed or unreadable shortcuts. Symlink prefixes and backups containing symlinks or special files are refused. Real prefix changes, complete non-Steam names and worn VR remain unverified, so the plugin is partial. '
         'An independent cleanup audit passed and battery stayed 100 → 100. A fresh store read on 2026-10-29 confirmed all 116 catalog version/digest records unchanged.', '',

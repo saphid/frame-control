@@ -238,6 +238,26 @@ def main():
                     cleanup_refused()
                 finally:
                     shortcuts[1].chmod(0o600)
+                # The published panel sends only the clicked row's app ID.
+                # With duplicate IDs it cannot identify a library: fail closed
+                # for either backup choice, even when selecting the second row.
+                duplicate_first = prefix(steam, 4545)
+                duplicate_second = prefix(secondary, 4545)
+                second_marker = b'Different second-library save fixture\n'
+                (duplicate_second/'save.dat').write_bytes(second_marker)
+                duplicate_rows = [g for g in legacy('get_games') if g['appid'] == '4545']
+                assert len(duplicate_rows) == 2 and len({g['prefix_path'] for g in duplicate_rows}) == 2
+                for backup in (False, True):
+                    result = legacy('delete_prefix', appid=duplicate_rows[1]['appid'], do_backup=backup)
+                    assert result == [False, 'Ambiguous prefix app ID in multiple rows; no prefix changed'], result
+                    assert (duplicate_first/'save.dat').read_bytes() == marker
+                    assert (duplicate_second/'save.dat').read_bytes() == second_marker
+                    assert not (home/'Documents/PrefixBackups').exists()
+                # Removing one fixture and refreshing restores an exact match.
+                shutil.rmtree(duplicate_first)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='4545', do_backup=False) == [True, 'Success']
+                assert not duplicate_second.exists()
                 outside = home/'outside-marker'
                 outside.mkdir()
                 (outside/'keep.dat').write_bytes(marker)
@@ -281,10 +301,11 @@ def main():
                 report['independentState'] = {'backupBytesMatch': True, 'oldBackupPreserved': True,
                     'outsideMarkerPreserved': True, 'symlinkAndTraversalRejected': True,
                     'privatePrefixesRemoved': True, 'bulkCleanupAlwaysRefused': True,
-                    'secondUserPrefixPreserved': True, 'malformedAndUnreadableShortcutsPreserved': True}
+                    'secondUserPrefixPreserved': True, 'malformedAndUnreadableShortcutsPreserved': True,
+                    'ambiguousLibraryPrefixesPreserved': True}
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
-                    'and symlink/traversal refusals passed; no real saves or VR')
+                    'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
             elif case['probe'] == 'steam-status-readonly':
                 # Only read private defaults. The public CM-list and 100 MB
                 # download diagnostics must never run in this runtime probe.

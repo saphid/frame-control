@@ -22,7 +22,9 @@ prefix paths against current library compatdata roots before deletion.
 Prefix or compatdata symlinks are refused. Backups refuse nested symlinks and
 special files, and use separate filenames rather than overwrite older backups.
 A failed backup preserves the prefix. The panel reports backend refusals and
-RPC errors through its toaster. Removal remains the normal managed operation.
+RPC errors through its toaster. Because the published panel identifies a row
+only by app ID, IDs appearing in multiple cached rows are rejected without
+creating a backup or deleting any prefix. Removal remains the normal managed operation.
 
 Automatic orphan cleanup is **disabled**, including direct RPC and stale cached
 lists. The upstream non-Steam parser reads only the first Steam user's shortcut
@@ -66,7 +68,15 @@ because unmatched prefixes were incorrectly labeled Orphan. A second
 backup for the same app ID preserves the first. Traversal, a root symlink, nested backup symlink and replaced compatdata symlink are refused;
 independent marker readbacks confirm unrelated data survives. The new case is
 also included in the repository's native ARM64 CI gate; its result must be
-checked separately before a green handoff.
+checked separately before a green handoff. The earlier cleanup repair passed
+all 12 hosted checks at `3406610`, including native AMD64 and ARM64.
+
+The duplicate-ID fixture creates different save markers for the same app ID
+in two libraries. Sending the second row's ID refuses both backup modes and
+preserves both markers without creating a backup. The fixture reproduced
+the earlier wrong-prefix deletion (`[true, "Success"]`) before the guard.
+After removing one disposable duplicate and refreshing, explicitly selected
+deletion works again.
 
 ```sh
 python3 scripts/framey-test-decky-runtime.py --case 130 --output /tmp/prefix-runtime.json
@@ -85,6 +95,9 @@ network was denied. Passed:
   warning; refuse a direct bulk-cleanup RPC and preserve the unidentified prefix.
 - Display a symlink backup refusal and retain the affected prefix.
 - Reopen the modal and observe the backend's remaining list.
+- Select the second of two same-app-ID library rows, verify the ambiguity
+  refusal for both backup modes, and independently read back both save markers
+  and the unchanged backup count.
 - Independently read the ZIP backup and verify its marker bytes; preserve
   the unidentified prefix, unrelated prefix and outside marker.
 
