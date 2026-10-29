@@ -21,5 +21,14 @@ empty device and notification lists, synthetic notification read/clear, and
 fingerprint persistence after restart. The runner removed its owned container
 and image. The private JSON report has SHA-256
 `f7f9acc3e6ca404868d9541c837cd3bd51d0a77ba8912bafc239144407cb2eae`.
-Pairing, live notifications, Frame use, and worn VR remain
-unverified. Hosted exact-head CI must pass before merge.
+The [exact-head PR #415 checks](https://github.com/saphid/frame-control/pull/415/checks)
+passed, including the published Decky 3.3.0 native
+[amd64](https://github.com/saphid/frame-control/actions/runs/40837628439/job/123326050682)
+and [ARM64](https://github.com/saphid/frame-control/actions/runs/40837628439/job/123326051077)
+cases. The same complete native workflow passed on merged main commit
+`488720a4c0b4f5cb4f8fffad4a07ec9ffdb2883c` after PR #414 brought the
+repair into its branch. The workflow runs every case in
+`tests/decky-runtime/cases.json`, including Notifications ID 79, on both
+architectures. These isolated container results support the catalog's amd64
+and ARM64 backend verification label. Pairing, live notifications, use on the
+real Frame, and worn VR remain unverified.
