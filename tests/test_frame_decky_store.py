@@ -225,6 +225,9 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete'])
         source = (folder/'main.py').read_text(encoding='utf-8')
         self.assertNotIn('await shutil.rmtree', source)
+        frontend = subprocess.run(['node', str(Path(__file__).parent/'page/framey_storage_cleaner.mjs'),
+                                   str(folder/'dist/index.js')], capture_output=True, text=True, timeout=10)
+        self.assertEqual(frontend.returncode, 0, frontend.stderr)
         steamapps = Path(self.tmp.name)/'.steam/steam/steamapps'
         selected = steamapps/'shadercache/424242'
         selected.mkdir(parents=True)

@@ -198,6 +198,9 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 installed = f"~/.local/share/frame-control/decky/plugins/{plugin['folder']}"
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
+                if plugin['id'] == 50:
+                    # The pinned managed bundle awaits selected delete RPCs.
+                    expected = '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125'
                 if plugin['id'] == 60:
                     # The pinned managed bundle rewrites the two incorrect addresses.
                     expected = '05819ddd0ee9c3ce7eeb184977a2f7905d7c8f5cfaec8bdff837d7935985a0e7'

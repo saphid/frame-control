@@ -239,6 +239,7 @@ archive=pathlib.Path('/tmp/frame-control-decky-plugin-'+token)
 stage=base/('.frame-control-stage-'+token)
 backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
+STORAGE_CLEANER_FRONTEND='8252cfcd2182546f715cc0e4116a887fcf40af1b8b9d132bd1761c8b9ff46fdb'
 transaction_lock=None
 def owned():
     if target.is_symlink() or not target.is_dir(): return False
@@ -765,6 +766,16 @@ def split_by_app(data):
         shutil.rmtree(target)"""
                 if data.count(old)!=1: raise RuntimeError('Storage Cleaner delete source changed')
                 main.write_bytes(data.replace(old,new))
+                frontend=unpacked/'dist/index.js'
+                bundle=frontend.read_bytes()
+                if hashlib.sha256(bundle).hexdigest()!=STORAGE_CLEANER_FRONTEND:
+                    raise RuntimeError('Storage Cleaner frontend differs from pinned archive')
+                old_frontend=b"""            appidArr.forEach(async (appid) => await call("delete_cache", `${cacheDirName}/${appid}`));"""
+                new_frontend=b"""            for (const appid of appidArr) {
+                await call("delete_cache", `${cacheDirName}/${appid}`);
+            }"""
+                if bundle.count(old_frontend)!=1: raise RuntimeError('Storage Cleaner selected delete source changed')
+                frontend.write_bytes(bundle.replace(old_frontend,new_frontend))
                 compat_shims.append('storage-cleaner-bounded-delete')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
