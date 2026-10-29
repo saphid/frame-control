@@ -11,7 +11,7 @@ import zipfile
 
 from harness import FrameTestCase, ROOT, Server, api, finished, ok, require, reset, ssh
 import frame_decky_store
-from framey_official import LEGACY_PLUGINS, PLUGINS as PANEL_PLUGINS, archive as official_archive
+from framey_official import LEGACY_PLUGINS, MANAGED_FRONTENDS, PLUGINS as PANEL_PLUGINS, archive as official_archive
 
 OFFICIAL_PLUGINS = PANEL_PLUGINS + LEGACY_PLUGINS
 
@@ -198,17 +198,16 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 installed = f"~/.local/share/frame-control/decky/plugins/{plugin['folder']}"
                 with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                     expected = hashlib.sha256(bundle.read(plugin['folder']+'/dist/index.js')).hexdigest()
-                if plugin['id'] == 50:
-                    # The pinned managed bundle awaits selected delete RPCs.
-                    expected = '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125'
-                if plugin['id'] == 60:
-                    # The pinned managed bundle repairs the address and directory control.
-                    expected = '34968b88fc828708680c1b82d774e76e8e11b5413222b9c508c10e1b7c375c78'
+                expected = MANAGED_FRONTENDS.get(plugin['id'], expected)
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
+                if plugin['id'] == 130:
+                    self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
+                    self.assertEqual(found[0]['compatShims'], ['prefix-manager-user-paths'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
                 if plugin['id'] == 135:
                     chunk = 'chunks/pluginApi-B8sV7970.js'
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:

@@ -173,7 +173,140 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'steam-status-readonly':
+            if case['probe'] == 'prefix-manager':
+                # Only tmpfs fixtures exist here: never a host Steam prefix.
+                assert manifest.get('flags') == [] and 'api_version' not in manifest
+                assert legacy('get_games') == []
+                steam = home/'.local/share/Steam'
+                secondary = home/'Private Library'
+                marker = b'Private prefix save fixture\n'
+
+                def prefix(library, appid, installed=False):
+                    apps = library/'steamapps'
+                    path = apps/'compatdata'/str(appid)
+                    path.mkdir(parents=True)
+                    (path/'save.dat').write_bytes(marker)
+                    (path/'empty').mkdir()
+                    if installed:
+                        (apps/f'appmanifest_{appid}.acf').write_text(
+                            f'"AppState" {{ "appid" "{appid}" "name" "Private Game" "installdir" "Private" }}')
+                    return path
+
+                installed = prefix(secondary, 4242, True)
+                unidentified = prefix(steam, 4343)
+                (steam/'steamapps/libraryfolders.vdf').write_text(
+                    f'"libraryfolders" {{ "0" {{ "path" "{steam}" }} "1" {{ "path" "{secondary}" }} }}')
+                rows = legacy('get_games')
+                assert {(g['appid'], g['type']) for g in rows} == {('4242', 'Steam'), ('4343', 'Unidentified')}, rows
+                # The pinned shortcut parser reads only the first Steam user
+                # and silently accepts parse failures. Never infer that an
+                # unmatched prefix is unused, even with no shortcut files.
+                refusal = [0, 'Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use']
+
+                def cleanup_refused():
+                    for backup in (False, True):
+                        assert legacy('cleanup_orphans', do_backup=backup) == refusal
+                        assert (unidentified/'save.dat').read_bytes() == marker
+                    assert not (home/'Documents/PrefixBackups').exists()
+
+                cleanup_refused()
+                shortcuts = [steam/f'userdata/{user}/config/shortcuts.vdf' for user in (100, 200)]
+                for path in shortcuts:
+                    path.parent.mkdir(parents=True)
+                empty_shortcuts = b'\x00shortcuts\x00\x08\x08'
+                valid_shortcuts = (b'\x00shortcuts\x00\x000\x00\x02appid\x00' + (4343).to_bytes(4, 'little')
+                    + b'\x01AppName\x00Private shortcut\x00\x08\x08\x08')
+                shortcuts[0].write_bytes(empty_shortcuts)
+                shortcuts[1].write_bytes(valid_shortcuts)
+                rows = legacy('get_games')
+                assert all(g['type'] != 'Orphan' for g in rows), rows
+                assert next(g for g in rows if g['appid'] == '4343')['type'] == 'Unidentified'
+                cleanup_refused()
+                # Corrupt either user, and change metadata after discovery.
+                for index in (0, 1):
+                    shortcuts[0].write_bytes(empty_shortcuts)
+                    shortcuts[1].write_bytes(valid_shortcuts)
+                    legacy('get_games')
+                    shortcuts[index].write_bytes(b'\x00shortcuts\x00\x000\x00\x02appid\x00\x01')
+                    cleanup_refused()
+                    assert all(g['type'] != 'Orphan' for g in legacy('get_games'))
+                    cleanup_refused()
+                shortcuts[1].write_bytes(valid_shortcuts)
+                shortcuts[1].chmod(0)
+                try:
+                    assert all(g['type'] != 'Orphan' for g in legacy('get_games'))
+                    cleanup_refused()
+                finally:
+                    shortcuts[1].chmod(0o600)
+                # The published panel sends only the clicked row's app ID.
+                # With duplicate IDs it cannot identify a library: fail closed
+                # for either backup choice, even when selecting the second row.
+                duplicate_first = prefix(steam, 4545)
+                duplicate_second = prefix(secondary, 4545)
+                second_marker = b'Different second-library save fixture\n'
+                (duplicate_second/'save.dat').write_bytes(second_marker)
+                duplicate_rows = [g for g in legacy('get_games') if g['appid'] == '4545']
+                assert len(duplicate_rows) == 2 and len({g['prefix_path'] for g in duplicate_rows}) == 2
+                for backup in (False, True):
+                    result = legacy('delete_prefix', appid=duplicate_rows[1]['appid'], do_backup=backup)
+                    assert result == [False, 'Ambiguous prefix app ID in multiple rows; no prefix changed'], result
+                    assert (duplicate_first/'save.dat').read_bytes() == marker
+                    assert (duplicate_second/'save.dat').read_bytes() == second_marker
+                    assert not (home/'Documents/PrefixBackups').exists()
+                # Removing one fixture and refreshing restores an exact match.
+                shutil.rmtree(duplicate_first)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='4545', do_backup=False) == [True, 'Success']
+                assert not duplicate_second.exists()
+                outside = home/'outside-marker'
+                outside.mkdir()
+                (outside/'keep.dat').write_bytes(marker)
+                link = installed.parent/'4444'
+                link.symlink_to(outside, target_is_directory=True)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='../outside-marker', do_backup=False)[0] is False
+                assert legacy('delete_prefix', appid='4444', do_backup=False)[0] is False
+                assert (outside/'keep.dat').read_bytes() == marker and link.is_symlink()
+                link.unlink()
+                # Backups must not silently read through nested symlinks.
+                (installed/'linked.dat').symlink_to(outside/'keep.dat')
+                assert legacy('delete_prefix', appid='4242', do_backup=True)[0] is False
+                assert (installed/'save.dat').read_bytes() == marker
+                assert not list((home/'Documents/PrefixBackups').glob('*.zip'))
+                (installed/'linked.dat').unlink()
+                # A Steam root replaced by a link after discovery stays blocked.
+                installed.parent.rename(installed.parent.with_name('held-compatdata'))
+                installed.parent.symlink_to(installed.parent.with_name('held-compatdata'), target_is_directory=True)
+                assert legacy('delete_prefix', appid='4242', do_backup=False)[0] is False
+                installed.parent.unlink()
+                installed.parent.with_name('held-compatdata').rename(installed.parent)
+                assert legacy('delete_prefix', appid='4242', do_backup=True) == [True, 'Success']
+                assert not installed.exists()
+                backups = list((home/'Documents/PrefixBackups').glob('4242-*.zip'))
+                assert len(backups) == 1
+                with zipfile.ZipFile(backups[0]) as saved:
+                    assert saved.read('save.dat') == marker and 'empty/' in saved.namelist()
+                # Reusing an app ID creates another backup, preserving the first.
+                prefix(steam, 4242, True)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='4242', do_backup=True) == [True, 'Success']
+                assert len(list(backups[0].parent.glob('4242-*.zip'))) == 2
+                legacy('get_games')
+                assert legacy('cleanup_orphans', do_backup=False) == refusal
+                assert (unidentified/'save.dat').read_bytes() == marker
+                # Explicit user selection remains separate from bulk cleanup.
+                assert legacy('delete_prefix', appid='4343', do_backup=False) == [True, 'Success']
+                assert not unidentified.exists() and (outside/'keep.dat').read_bytes() == marker
+                assert legacy('get_games') == []
+                report['independentState'] = {'backupBytesMatch': True, 'oldBackupPreserved': True,
+                    'outsideMarkerPreserved': True, 'symlinkAndTraversalRejected': True,
+                    'privatePrefixesRemoved': True, 'bulkCleanupAlwaysRefused': True,
+                    'secondUserPrefixPreserved': True, 'malformedAndUnreadableShortcutsPreserved': True,
+                    'ambiguousLibraryPrefixesPreserved': True}
+                report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
+                    'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
+                    'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'steam-status-readonly':
                 # Only read private defaults. The public CM-list and 100 MB
                 # download diagnostics must never run in this runtime probe.
                 source = (plugin/'main.py').read_text()

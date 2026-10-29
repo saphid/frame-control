@@ -13,6 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 from harness import FrameTestCase, ROOT, Server, finished, ok, require, ssh
 import frame_decky_store
+from framey_official import MANAGED_FRONTENDS
 
 require()
 
@@ -109,7 +110,7 @@ u=h/'.config/systemd/user/frame-control-decky.service';u.parent.mkdir(parents=Tr
                     with zipfile.ZipFile(io.BytesIO(data)) as archive:
                         entry = folder+'/dist/index.js'
                         if entry in archive.namelist():
-                            expected = hashlib.sha256(archive.read(entry)).hexdigest()
+                            expected = MANAGED_FRONTENDS.get(plugin['id'], hashlib.sha256(archive.read(entry)).hexdigest())
                             self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                     found = next(p for p in ok('GET', '/api/decky')['plugins'] if p['storeId'] == plugin['id'])
                     self.assertEqual((found['version'], found['sha256']), (plugin['version'], plugin['sha256']))

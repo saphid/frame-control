@@ -70,6 +70,14 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(result[1]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
+    def test_old_prefix_manager_copy_requires_user_service_adaptation(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 130)
+        old = dict(storeId=130, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['prefix-manager-user-paths'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+
     def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
         installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),

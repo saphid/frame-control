@@ -57,6 +57,8 @@ EMU_BINARIES = {
 }
 STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
+PREFIX_MANAGER_DIGEST = 'ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'
+PREFIX_MANAGER_MAIN = '2cead9898de712fa32fe8a217b8b5be6b043927ada28667fe696191429589896'
 WINE_CELLAR_DIGEST = '7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8'
 WINE_CELLAR_ORIGINAL = '7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe'
 WINE_CELLAR_MAIN = '87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6be97'
@@ -111,7 +113,8 @@ def catalog():
     for item in unique:
         if ((item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST)
             or (item['id'] == 114 and item['name'] == 'Network Sentinel' and item['sha256'] == NETWORK_SENTINEL_DIGEST)
-            or (item['id'] == 67 and item['name'] == 'Battery Tracker' and item['sha256'] == BATTERY_TRACKER_DIGEST)):
+            or (item['id'] == 67 and item['name'] == 'Battery Tracker' and item['sha256'] == BATTERY_TRACKER_DIGEST)
+            or (item['id'] == 130 and item['name'] == 'Games Prefix Manager' and item['sha256'] == PREFIX_MANAGER_DIGEST)):
             item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
@@ -145,6 +148,8 @@ def archive_info(data, expected_hash, expected_name):
                             and folder == 'network-sentinel')
         battery_tracker = (expected_hash == BATTERY_TRACKER_DIGEST and expected_name == 'Battery Tracker'
                            and folder == 'steam-deck-battery-tracker')
+        prefix_manager = (expected_hash == PREFIX_MANAGER_DIGEST and expected_name == 'Games Prefix Manager'
+                          and folder == 'GamesPrefixManager')
         wine_cellar = (expected_hash == WINE_CELLAR_DIGEST and expected_name == 'Wine Cellar'
                        and folder == 'decky-wine-cellar')
         seen = {}
@@ -195,7 +200,7 @@ def archive_info(data, expected_hash, expected_name):
         flags = manifest.get('flags', [])
         if not isinstance(flags, list) or not all(isinstance(flag, str) for flag in flags):
             raise ValueError('Invalid plugin flags')
-        if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker):
+        if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker or prefix_manager):
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
             raise ValueError('LocalSend Python source differs from the pinned archive')
@@ -207,6 +212,9 @@ def archive_info(data, expected_hash, expected_name):
         if battery_tracker and (flags != ['_root'] or 'api_version' in manifest
                                 or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != BATTERY_TRACKER_MAIN):
             raise ValueError('Battery Tracker manifest or source differs from the pinned archive')
+        if prefix_manager and (flags != ['root'] or 'api_version' in manifest
+                               or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != PREFIX_MANAGER_MAIN):
+            raise ValueError('Games Prefix Manager manifest or source differs from the pinned archive')
         if (expected_hash == RADIYO_DIGEST and expected_name == 'RadiYo!' and folder == 'radiyo-steam-deck'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != RADIYO_MAIN):
             raise ValueError('RadiYo source differs from the pinned archive')
@@ -344,13 +352,14 @@ try:
             emuchievements=(int(plugin_id)==28 and digest=='98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89' and folder=='Emuchievements')
             network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
             battery_tracker=(int(plugin_id)==67 and digest=='91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94' and folder=='steam-deck-battery-tracker')
+            prefix_manager=(int(plugin_id)==130 and digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473' and folder=='GamesPrefixManager')
             wine_cellar=(int(plugin_id)==68 and digest=='7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8' and folder=='decky-wine-cellar')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
             if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):
                 raise RuntimeError('Invalid plugin flags')
-            if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker):
+            if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker or prefix_manager):
                 raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
             for f in files:
@@ -400,6 +409,171 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if prefix_manager:
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if (manifest.get('name')!='Games Prefix Manager' or flags!=['root']
+                        or 'api_version' in manifest
+                        or hashlib.sha256(data).hexdigest()!='2cead9898de712fa32fe8a217b8b5be6b043927ada28667fe696191429589896'):
+                    raise RuntimeError('Games Prefix Manager manifest or source differs from pinned archive')
+                # Keep the published legacy calling convention. All reads and
+                # writes run as Decky's user; no root or Steam process changes.
+                adaptation=br"""
+
+# Frame Control adaptation for the exact official 1.0.1 archive.
+import decky
+import pathlib
+import stat
+import tempfile
+import zipfile
+
+DECK_HOME = decky.DECKY_USER_HOME
+BACKUP_DIR = os.path.join(DECK_HOME, "Documents", "PrefixBackups")
+
+def get_steam_library_folders():
+    internal = pathlib.Path(DECK_HOME) / ".local/share/Steam"
+    candidates = [internal]
+    media = pathlib.Path("/run/media") / decky.DECKY_USER
+    if media.is_dir():
+        candidates.extend(media.iterdir())
+    vdf = internal / "steamapps/libraryfolders.vdf"
+    if vdf.is_file():
+        # Current Steam uses nested entries with a path key, rather than the
+        # obsolete numeric-key/string-value format in the published plugin.
+        for value in re.findall(r'"path"\s+"((?:\\.|[^"\\])*)"', vdf.read_text(errors="replace")):
+            candidates.append(pathlib.Path(value.replace('\\\\', '\\').replace('\\"', '"')))
+    result = []
+    for candidate in candidates:
+        if candidate.is_absolute() and candidate.is_dir():
+            resolved = str(candidate.resolve())
+            if resolved not in result:
+                result.append(resolved)
+    return result
+
+async def _framey_get_games(self):
+    SIZE_CACHE.clear()
+    steam = parse_steam_games()
+    # The published shortcut parser reads only one user and swallows errors.
+    # Missing metadata is never evidence that a prefix is unused. Do not use
+    # that parser or expose the scanner's unproven "Orphan" classification.
+    unidentified = find_orphans({g["appid"] for g in steam})
+    for game in unidentified:
+        game["name"] = "Unidentified prefix (may still be in use)"
+        game["type"] = "Unidentified"
+    self.games = steam + unidentified
+    return self.games
+
+def _framey_prefix(game):
+    appid = str(game["appid"])
+    if not appid.isascii() or not appid.isdecimal():
+        raise ValueError("Invalid prefix app ID")
+    path = pathlib.Path(game["prefix_path"])
+    roots = [(pathlib.Path(lib) / "steamapps/compatdata").resolve()
+             for lib in get_steam_library_folders()]
+    if (not path.is_absolute() or path.name != appid or path.parent.resolve() not in roots
+            or path.parent.is_symlink() or path.parent.parent.is_symlink()
+            or path.is_symlink() or not path.is_dir()):
+        raise ValueError("Prefix must be a regular directory in a current Steam library; symlinks are unsupported")
+    return path
+
+def _framey_backup(path):
+    destination = pathlib.Path(BACKUP_DIR)
+    destination.mkdir(parents=True, exist_ok=True)
+    # Refuse an accidental backup loop and refuse symlinks/special files so a
+    # backup cannot read files outside the selected prefix. Failure keeps it.
+    if destination.resolve().is_relative_to(path.resolve()):
+        raise ValueError("Backup directory is inside the selected prefix")
+    members = []
+    for root, dirs, files in os.walk(path, followlinks=False):
+        for name in dirs + files:
+            member = pathlib.Path(root) / name
+            mode = member.lstat().st_mode
+            if not (stat.S_ISDIR(mode) or stat.S_ISREG(mode)):
+                raise ValueError("Prefix backup does not support symlinks or special files")
+            members.append(member)
+    fd, name = tempfile.mkstemp(prefix=path.name+"-", suffix=".zip", dir=destination)
+    try:
+        with os.fdopen(fd, "wb") as output:
+            with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_DEFLATED) as bundle:
+                for member in members:
+                    bundle.write(member, member.relative_to(path))
+    except BaseException:
+        os.unlink(name)
+        raise
+
+async def _framey_delete_prefix(self, appid, do_backup):
+    matches = [g for g in self.games if g["appid"] == str(appid)]
+    if not matches:
+        return False, "Prefix not found in cache; refresh the list"
+    # The official frontend sends an app ID, not an exact library/row path.
+    # Never guess which row the user selected when that ID is ambiguous.
+    if len(matches) != 1:
+        return False, "Ambiguous prefix app ID in multiple rows; no prefix changed"
+    game = matches[0]
+    try:
+        path = _framey_prefix(game)
+        if do_backup:
+            _framey_backup(path)
+        # Revalidate after the backup; never follow a changed root symlink.
+        shutil.rmtree(_framey_prefix(game))
+        SIZE_CACHE.clear()
+        self.games = [g for g in self.games if g["appid"] != str(appid)]
+        return True, "Success"
+    except (OSError, ValueError) as error:
+        return False, str(error)
+
+async def _framey_cleanup_orphans(self, do_backup):
+    # Refuse even direct RPC or stale cached rows. Do not create backups or
+    # delete anything until complete non-Steam shortcut coverage is proven.
+    return 0, "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+
+Plugin.get_games = _framey_get_games
+Plugin.delete_prefix = _framey_delete_prefix
+Plugin.cleanup_orphans = _framey_cleanup_orphans
+"""
+                main.write_bytes(data+adaptation)
+                frontend=unpacked/'dist/index.js'
+                bundle=frontend.read_bytes()
+                if hashlib.sha256(bundle).hexdigest()!='2812dfe99594f64d76f7978961844bbd8431356ac649763a4a10bfdf23205ca5':
+                    raise RuntimeError('Games Prefix Manager frontend differs from pinned archive')
+                helper=b"""    const frameyPrefixAction = async (serverAPI, method, args) => {
+        try {
+            const response = await serverAPI.callPluginMethod(method, args);
+            if (response?.success === false) throw Error(String(response.result));
+            const result = response?.result ?? response;
+            if (!Array.isArray(result) || result.length !== 2) throw Error('Invalid backend reply');
+            if (result[0] === false || (method === 'cleanup_orphans' &&
+                    !['Success', 'No orphans found'].includes(result[1]))) throw Error(String(result[1]));
+            return true;
+        } catch (error) {
+            serverAPI.toaster.toast({title: 'Prefix action stopped', body: String(error.message || error)});
+            return false;
+        }
+    };
+
+"""
+                for method,count in ((b'delete_prefix',2),(b'cleanup_orphans',1)):
+                    old=b'await serverAPI.callPluginMethod("'+method+b'", {'
+                    if bundle.count(old)!=count: raise RuntimeError('Games Prefix Manager action source changed')
+                    bundle=bundle.replace(old,b'await frameyPrefixAction(serverAPI, "'+method+b'", {')
+                replacements=(
+                    (b'onClick: handleCleanupOrphans, disabled: loading',
+                     b'onClick: handleCleanupOrphans, disabled: true'),
+                    (b'"Clean Orphans"', b'"Orphan Cleanup Unavailable"'),
+                    (b' Scan for all game prefixes and orphans.',
+                     b' Scan Steam and unidentified prefixes. Unidentified prefixes may still be in use.'),
+                    (b' Automatically find and delete prefixes for uninstalled games.',
+                     b' Disabled on Frame: non-Steam shortcut coverage is incomplete. Unidentified prefixes may still be in use.'),
+                )
+                for old,new in replacements:
+                    if bundle.count(old)!=1: raise RuntimeError('Games Prefix Manager cleanup source changed')
+                    bundle=bundle.replace(old,new)
+                anchor=b'    const ConfirmModal = '
+                if bundle.count(anchor)!=1: raise RuntimeError('Games Prefix Manager modal source changed')
+                frontend.write_bytes(bundle.replace(anchor,helper+anchor))
+                manifest['flags']=[]
+                (unpacked/'plugin.json').write_text(json.dumps(manifest))
+                compat_shims.append('prefix-manager-user-paths')
             if wine_cellar:
                 helper=unpacked/'bin/backend'
                 source=unpacked/'main.py'
