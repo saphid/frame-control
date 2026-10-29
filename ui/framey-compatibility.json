@@ -3829,13 +3829,14 @@
         "https://github.com/yt-dlp/yt-dlp"
       ],
       "status": "partial",
-      "reason": "An inert local component lets the exact frontend render its Settings view in opaque Chromium. The unmodified official backend passes published Decky 3.3.0 discovery and a private setting saved across loader restart in an isolated x86_64 container. Steam game-page theme injection has no verified target in Framey; music search, playback, downloads, real Frame backend and worn VR remain unverified.",
+      "reason": "An inert local component lets the exact frontend render its Settings view in opaque Chromium. A private in-memory panel replay verifies mute, volume and yt-dlp setting calls across iframe reopen. Separately, the unmodified official backend passes published Decky 3.3.0 discovery and a private setting saved across loader restart in an isolated x86_64 container. The panel was not connected to that backend. Steam game-page theme injection has no verified target in Framey; music search, playback, downloads, real Frame backend and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky 3.3.0 x86_64 backend"
+        "isolated Decky 3.3.0 x86_64 backend",
+        "local browser settings fixture"
       ],
       "browser": {
         "id": 52,
@@ -3874,6 +3875,10 @@
       "backendFollowUp": {
         "evidence": "docs/evidence/framey-game-theme-music-native-2026-10-29.md",
         "mode": "exact official archive in isolated published Decky 3.3.0 x86_64; private setting saved across restart; no network or media actions"
+      },
+      "settingsFollowUp": {
+        "evidence": "docs/evidence/framey-game-theme-music-settings-2026-10-29.md",
+        "mode": "exact official frontend in opaque local Chromium; in-memory settings get/set and iframe reopen; no official backend or network"
       }
     },
     {
