@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
 
 # A newer push to the same pull request supersedes a run still in progress.
 concurrency:
