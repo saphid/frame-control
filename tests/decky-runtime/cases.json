@@ -20,6 +20,11 @@
     "probe": "radio-local"
   },
   {
+    "id": 135,
+    "shim": null,
+    "probe": "shelves-settings"
+  },
+  {
     "id": 104,
     "shim": null,
     "probe": "game-sync-config"

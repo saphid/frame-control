@@ -12196,13 +12196,13 @@
         "https://github.com/sponsors/santojon"
       ],
       "status": "partial",
-      "reason": "The exact chunked frontend renders settings in opaque local Chromium. The official Python backend saved a shelf and returned it after reopen with a stub Decky module and temporary settings directory. Actual Decky RPC, real Frame settings, Steam Home shelf injection and worn VR remain unverified.",
+      "reason": "The exact chunked frontend renders settings in opaque local Chromium. The official Python backend now passes published Decky 3.3.0 x86_64 discovery, private shelf settings save/readback and persistence after a loader restart in a network-isolated container. Steam Home shelf injection has no verified target in the isolated panel; real Frame ARM64 settings, worn VR and physical controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Python backend"
+        "isolated Decky 3.3.0 x86_64 backend"
       ],
       "browser": {
         "id": 135,

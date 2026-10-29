@@ -331,6 +331,29 @@ def main():
                     worker.join(timeout=3)
                 report['result'] = ('actual Decky discovery and local station fetch/redirect passed; '
                     'external radio, HTTPS, audio playback, Frame and VR unverified')
+            elif case['probe'] == 'shelves-settings':
+                # Private configuration only. Never register a Steam Home
+                # patch, import a user's settings, or touch their library.
+                defaults = current('get_settings')
+                assert defaults['enabled'] is False and defaults['shelves'] == [], defaults
+                shelf = {'id': 'framey-private-shelf', 'title': 'Private Test',
+                         'source': {'type': 'tab', 'tab': 'all'}, 'limit': 4}
+                assert current('set_settings', {'enabled': False, 'shelves': [shelf]}) is True
+                saved = current('get_settings')
+                assert len(saved['shelves']) == 1 and saved['shelves'][0]['title'] == 'Private Test', saved
+                state = base/'settings'/record['folder']/'settings.json'
+                assert json.loads(state.read_text())['state']['shelves'][0]['id'] == shelf['id']
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                restored = until_ready(lambda: current('get_settings')['shelves'],
+                                       'private shelf after restart')
+                assert restored[0]['id'] == shelf['id'] and restored[0]['title'] == shelf['title'], restored
+                report['result'] = ('published Decky discovery, private shelf settings and restart persistence passed; '
+                    'Steam Home injection, real Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
