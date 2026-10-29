@@ -19,7 +19,16 @@ Decky's public legacy RPC, the exact backend discovered the save, backed up
 The test independently read the backup, undo and source bytes at each step.
 The runner removed its owned container and image after the test.
 
-This proves a bounded private save round trip in published Decky on x86_64.
-ARM64 execution of this expanded case, automatic backup triggers, real Steam
-saves, the managed backend on Frame and worn VR remain unverified here.
-Steamback remains **partial**.
+The [hosted Decky runtime run](https://github.com/saphid/frame-control/actions/runs/40818938231)
+passed the same case on native
+[x86_64](https://github.com/saphid/frame-control/actions/runs/40818938231/job/123266572425)
+and [ARM64](https://github.com/saphid/frame-control/actions/runs/40818938231/job/123266572719)
+at code head `70702b36b66dbee2e6aedaca8c6c85ab6969ad45`. The downloaded reports
+record the private byte checks and have SHA-256
+`51fa8f8c3f0a486fe6a68adc2ba761a996935748c1208649cfd280a81938e275`
+(x86_64) and `890c5a4a561ff272d30dc19cf1f146bb449ea71b67026f3e4b2f3c900c3efc75`
+(ARM64).
+
+This proves a bounded private save round trip in published Decky on both
+architectures. Automatic backup triggers, real Steam saves, the managed
+backend on Frame and worn VR remain unverified. Steamback remains **partial**.
