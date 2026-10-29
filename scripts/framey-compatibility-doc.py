@@ -127,8 +127,8 @@ def render(data):
             p['backend']+('; '+', '.join(native) if native else ''),p['hardware']]))+' |')
     lines += ['', '## Native payload portability', '',
         'All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. '
-        'The three Windows DLLs belong to Decky-Framegen. Except for the exact managed DeckyFileServer and Decky Localsend adaptations below, the installer still rejects these archives. '
-        'Apart from LocalSend and DeckyFileServer, ARM64 builds were not attempted: the constraints below remain unresolved.', '',
+        'The three Windows DLLs belong to Decky-Framegen. Only the exact managed DeckyFileServer, Decky Localsend and Emuchievements adaptations below can replace their published x86 helpers; other x86 archives remain blocked. '
+        'The native compatibility constraints below remain specific to each plugin.', '',
         'A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. '
         'Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. '
         'Hostname-DNS failures and empty optional arguments are repaired. Decky 3.3.0 still exposes `decky.HOME`; that call is unchanged. '
@@ -142,6 +142,12 @@ def render(data):
         'Only the exact managed 0.4.5 archive can replace its x86 helper on Frame. '
         'The actual managed Decky service on Frame, user-facing transfer, local discovery and worn VR remain unverified '
         '([managed adaptation evidence](evidence/framey-localsend-managed-2026-10-27.md)).', '',
+        '[Emuchievements managed helper evidence](evidence/framey-emuchievements-managed-2026-10-29.md) '
+        'records the pinned upstream source, bounded archive extraction, no-shell Python invocation and byte-for-byte offline rebuilds for amd64 and ARM64. '
+        'Published Decky 3.3.0 on amd64 and ARM64 discovered the exact managed plugin and hashed private synthetic direct and ZIP ROMs while rejecting hostile archives. '
+        'The exact ARM64 helper separately hashed private synthetic direct and ZIP ROMs under the real Frame shared lock without waking the headset or changing services. '
+        'Only the exact managed 2.0.5 archive can receive the replacement; old installed copies still have the x86 helper and remain broken until update or reinstall. '
+        'Real ROM formats, RetroAchievements login, Steam UI integration, real Frame managed backend, and worn VR remain unverified.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:

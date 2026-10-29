@@ -163,7 +163,53 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'battery-tracker':
+            if case['probe'] == 'emuchievements-private-hash':
+                # Synthetic files live only in this networkless, disposable
+                # container. Do not read a user's ROMs or log in to RA.
+                content = b'Framey private synthetic ROM fixture\n' * 3
+                fixture = home/'private.rom'
+                fixture.write_bytes(content)
+                expected = hashlib.md5(content).hexdigest()
+                assert legacy('hash', path=str(fixture)) == expected
+                packed = home/'private.zip'
+                with zipfile.ZipFile(packed, 'w') as container:
+                    container.writestr('private.rom', content)
+                assert legacy('hash', path=str(packed)) == expected
+                # A path that looks like shell syntax must reach the helper
+                # literally; the managed backend never runs a shell.
+                literal = home/'$(touch should-not-exist).rom'
+                literal.write_bytes(content)
+                assert legacy('hash', path=str(literal)) == expected
+                assert not (home/'should-not-exist').exists()
+                for member, kind in (('../escape.rom', 'traversal'),
+                                     ('/tmp/escape.rom', 'absolute')):
+                    malicious = home/f'{kind}.zip'
+                    with zipfile.ZipFile(malicious, 'w') as container:
+                        container.writestr(member, content)
+                    try:
+                        legacy('hash', path=str(malicious))
+                        raise AssertionError(f'{kind} archive was accepted')
+                    except AssertionError as error:
+                        assert 'ROM hash helper failed' in str(error), error
+                link_archive = home/'link.zip'
+                with zipfile.ZipFile(link_archive, 'w') as container:
+                    entry = zipfile.ZipInfo('link.rom')
+                    entry.create_system = 3
+                    entry.external_attr = 0o120777 << 16
+                    container.writestr(entry, 'target.rom')
+                try:
+                    legacy('hash', path=str(link_archive))
+                    raise AssertionError('symlink archive was accepted')
+                except AssertionError as error:
+                    assert 'ROM hash helper failed' in str(error), error
+                assert not list(Path('/tmp').glob('framey-hash-*'))
+                assert not (home/'escape.rom').exists()
+                assert not Path('/tmp/escape.rom').exists()
+                assert (plugin/'bin/hash').read_bytes()[:4] == b'\x7fELF'
+                report['result'] = ('published Decky discovery, direct and archived synthetic ROM hashes, '
+                                    'literal path and hostile archive rejection passed; real ROMs, login, '
+                                    'Steam UI, Frame and VR unverified')
+            elif case['probe'] == 'battery-tracker':
                 empty_or_first = legacy('get_recent_data', lookback=2)
                 assert isinstance(empty_or_first['x'], list) and isinstance(empty_or_first['cap'], list)
                 assert isinstance(empty_or_first['power_data'], list)

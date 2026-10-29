@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `79.zip`, `104.zip` and `132.zip` were added on 2026-10-29.
+and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `79.zip`, `104.zip` and `132.zip` were added on 2026-10-29.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -12,6 +12,7 @@ from a local fixture so CI does not depend on the store being online.
 | --- | --- | --- | --- |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
 | `24.zip` | RadiYo! | 1.3 | `647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43` |
+| `28.zip` | Emuchievements | 2.0.5 | `98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89` |
 | `79.zip` | Decky Notifications | 1.0.1 | `3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312` |
 | `104.zip` | Game Sync | 1.0.4 | `65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd` |
 | `132.zip` | SuggestMe | 1.5.3 | `248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4` |

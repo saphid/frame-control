@@ -48,6 +48,14 @@ SUGGESTME_MAIN = '9c141daf754302698d3e3e9ced70e36e9a4beb0b04f794fb66e7e45bd3b8d6
 NOTIFICATIONS_DIGEST = '3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312'
 NOTIFICATIONS_MAIN = '16e246a0a7950451c2a833f11ce5ce48e8ae2e2679348d03cad6870d36011004'
 NOTIFICATIONS_CRYPTO = 'b424d5ff2b7be09a0a31d844f86368802c15bc38b627b0812fe5ba29d11b72bf'
+EMU_DIGEST = '98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89'
+EMU_ORIGINAL_MAIN = 'd4e72f136c94e48919575937ec4190f28864cc259eb111ef47f0df99f5912645'
+EMU_ORIGINAL_HELPER = '19de50ce746e5a312495e9c1cf5daad5ef37ad021a98c5af2c5922fec392e51e'
+EMU_MANAGED_MAIN = '2a99670f10d43008af66d760aaab51f4c44b1ff2e8de73627df38b1bd30cdb90'
+EMU_BINARIES = {
+    'x86_64': '7a3430fa47d2321b93e0a9d1346c70ea920ae4d6f0766c04d5044122fed25e07',
+    'aarch64': 'c492ed3b3ea3bdacbd5d530958c455a0d6928e8c51ae28a739b616ce164874b6',
+}
 STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
 
@@ -122,6 +130,8 @@ def archive_info(data, expected_hash, expected_name):
                       and folder == 'DeckyFileServer')
         localsend = (expected_hash == LOCALSEND_DIGEST and expected_name == 'Decky Localsend'
                      and folder == 'decky-localsend')
+        emuchievements = (expected_hash == EMU_DIGEST and expected_name == 'Emuchievements'
+                          and folder == 'Emuchievements')
         network_sentinel = (expected_hash == NETWORK_SENTINEL_DIGEST and expected_name == 'Network Sentinel'
                             and folder == 'network-sentinel')
         battery_tracker = (expected_hash == BATTERY_TRACKER_DIGEST and expected_name == 'Battery Tracker'
@@ -158,7 +168,9 @@ def archive_info(data, expected_hash, expected_name):
                 if not ((fileserver and name == 'DeckyFileServer/bin/backend'
                          and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL)
                         or (localsend and name == 'decky-localsend/bin/localsend-core'
-                            and hashlib.sha256(archive.read(entry)).hexdigest() == LOCALSEND_ORIGINAL)):
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == LOCALSEND_ORIGINAL)
+                        or (emuchievements and name == 'Emuchievements/bin/hash'
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == EMU_ORIGINAL_HELPER)):
                     raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
@@ -174,6 +186,8 @@ def archive_info(data, expected_hash, expected_name):
             raise ValueError('This plugin needs root and is not supported by the Frame user service')
         if localsend and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != LOCALSEND_MAIN:
             raise ValueError('LocalSend Python source differs from the pinned archive')
+        if emuchievements and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != EMU_ORIGINAL_MAIN:
+            raise ValueError('Emuchievements Python source differs from the pinned archive')
         if network_sentinel and (flags != ['debug', '_root'] or manifest.get('api_version') != 1
                                  or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != NETWORK_SENTINEL_MAIN):
             raise ValueError('Network Sentinel manifest or source differs from the pinned archive')
@@ -206,6 +220,19 @@ PSUTIL_DIGESTS = {
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 28 and digest == EMU_DIGEST:
+        assets = Path(__file__).parent/'vendor/emuchievements-2.0.5'
+        payloads = {}
+        for arch, expected in EMU_BINARIES.items():
+            packed = (assets/f'{arch}.gz').read_bytes()
+            if hashlib.sha256(gzip.decompress(packed)).hexdigest() != expected:
+                raise ValueError('Bundled Emuchievements helper SHA-256 mismatch')
+            payloads[arch] = base64.b64encode(packed).decode('ascii')
+        main = (assets/'main.py.gz').read_bytes()
+        if hashlib.sha256(gzip.decompress(main)).hexdigest() != EMU_MANAGED_MAIN:
+            raise ValueError('Bundled Emuchievements Python SHA-256 mismatch')
+        return ('FRAMEY_EMU_BINARIES = '+repr(payloads)+'\n'
+                +'FRAMEY_EMU_MAIN = '+repr(base64.b64encode(main).decode('ascii'))+'\n'+APPLY)
     if plugin_id == 125 and digest == LOCALSEND_DIGEST:
         packed = (Path(__file__).parent/'vendor/localsend-0.4.5/aarch64.gz').read_bytes()
         data = gzip.decompress(packed)
@@ -287,6 +314,7 @@ try:
                 raise RuntimeError('Plugin archive too large')
             fileserver=(int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer')
             localsend=(int(plugin_id)==125 and digest=='e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7' and folder=='decky-localsend')
+            emuchievements=(int(plugin_id)==28 and digest=='98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89' and folder=='Emuchievements')
             network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
             battery_tracker=(int(plugin_id)==67 and digest=='91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94' and folder=='steam-deck-battery-tracker')
             manifest=json.loads(z.read(folder+'/plugin.json'))
@@ -322,7 +350,9 @@ try:
                         if not ((fileserver and f.filename==folder+'/bin/backend' and
                                  hashlib.sha256(z.read(f)).hexdigest()=='d9eab8559c87c01736188bc676f3b4b44dee47cf952b6e571c770d1ea61733e9')
                                 or (localsend and f.filename==folder+'/bin/localsend-core' and
-                                    hashlib.sha256(z.read(f)).hexdigest()=='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')):
+                                    hashlib.sha256(z.read(f)).hexdigest()=='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')
+                                or (emuchievements and f.filename==folder+'/bin/hash' and
+                                    hashlib.sha256(z.read(f)).hexdigest()=='19de50ce746e5a312495e9c1cf5daad5ef37ad021a98c5af2c5922fec392e51e')):
                             raise RuntimeError('Plugin contains a non-ARM64 Linux binary')
                     if header[:2]==b'MZ': raise RuntimeError('Plugin contains a Windows binary')
             stage.mkdir(mode=0o700)
@@ -340,6 +370,36 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if emuchievements:
+                helper=unpacked/'bin/hash'
+                source=unpacked/'main.py'
+                if manifest.get('name')!='Emuchievements' or manifest.get('flags')!=[]:
+                    raise RuntimeError('Emuchievements manifest mismatch')
+                if hashlib.sha256(helper.read_bytes()).hexdigest()!='19de50ce746e5a312495e9c1cf5daad5ef37ad021a98c5af2c5922fec392e51e':
+                    raise RuntimeError('Emuchievements original helper mismatch')
+                if hashlib.sha256(source.read_bytes()).hexdigest()!='d4e72f136c94e48919575937ec4190f28864cc259eb111ef47f0df99f5912645':
+                    raise RuntimeError('Emuchievements original Python mismatch')
+                arch=platform.machine()
+                expected={
+                    'x86_64':'7a3430fa47d2321b93e0a9d1346c70ea920ae4d6f0766c04d5044122fed25e07',
+                    'aarch64':'c492ed3b3ea3bdacbd5d530958c455a0d6928e8c51ae28a739b616ce164874b6',
+                }.get(arch)
+                machine={'x86_64':62,'aarch64':183}.get(arch)
+                packed=globals().get('FRAMEY_EMU_BINARIES',{}).get(arch)
+                main_packed=globals().get('FRAMEY_EMU_MAIN')
+                if not expected or not isinstance(packed,str) or not isinstance(main_packed,str):
+                    raise RuntimeError('Missing Emuchievements native assets')
+                native=gzip.decompress(base64.b64decode(packed,validate=True))
+                managed=gzip.decompress(base64.b64decode(main_packed,validate=True))
+                if (hashlib.sha256(native).hexdigest()!=expected or native[:4]!=b'\x7fELF'
+                        or int.from_bytes(native[18:20],'little')!=machine):
+                    raise RuntimeError('Emuchievements native helper mismatch')
+                if hashlib.sha256(managed).hexdigest()!='2a99670f10d43008af66d760aaab51f4c44b1ff2e8de73627df38b1bd30cdb90':
+                    raise RuntimeError('Emuchievements managed Python mismatch')
+                helper.write_bytes(native)
+                helper.chmod(0o700)
+                source.write_bytes(managed)
+                compat_shims.append('emuchievements-safe-arm64')
             if localsend:
                 helper=unpacked/'bin/localsend-core'
                 source=unpacked/'main.py'
