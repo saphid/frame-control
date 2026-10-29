@@ -4,12 +4,15 @@ These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
 and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `52.zip`, `79.zip`, `93.zip`, `104.zip`, `118.zip` and `132.zip` were added on 2026-10-29.
+`130.zip` was added from the same digest-verified cache on 2026-10-29; a fresh
+official store read confirmed all 116 catalog version/digest records unchanged.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
 | `24.zip` | RadiYo! | 1.3 | `647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43` |
 | `28.zip` | Emuchievements | 2.0.5 | `98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89` |
@@ -36,6 +39,7 @@ from a local fixture so CI does not depend on the store being online.
 | `135.zip` | Deck Shelves | 2.0.0 | `b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91` |
 
 The matching source projects include [Simple Timer](https://github.com/decktools-xyz/simple-timer) and
+[Games Prefix Manager](https://github.com/Saad-Alareqi/GamesPrefixManager),
 [CSS Loader](https://github.com/suchmememanyskill/SDH-CssLoader),
 [MusicControl](https://github.com/nikurasu/MusicControl),
 [Music Control](https://github.com/martinpl/music-control),
@@ -100,6 +104,15 @@ Storage Cleaner runs through the published Decky loader with only disposable
 cache markers: size/list, selected-app delete and whole-directory delete pass.
 The managed copy rejects traversal and symlink delete paths. No real game or
 Steam cache is deleted.
+Games Prefix Manager runs through published Decky 3.3.0 legacy discovery and
+RPC in the same network/device-isolated containers. Its managed copy removes
+the root flag, selects the actual user's home and modern Steam library paths,
+and checks prefix paths before deletion. Synthetic backups are independently
+read back; repeat backups preserve earlier copies. Prefix symlinks, a replaced
+compatdata symlink, traversal and backups containing symlinks are refused.
+The managed panel reports refusals instead of silently refreshing. Only
+private disposable prefixes are changed. See
+[the scoped evidence](../../../docs/evidence/framey-prefix-manager-2026-10-29.md).
 Game Sync runs through actual published Decky 3.3.0 instance RPC in the same
 isolation. Only default configuration and a private setting surviving restart
 are checked. No rclone, cloud sync, process signal, Frame backend or VR action

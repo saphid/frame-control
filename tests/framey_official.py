@@ -3,7 +3,16 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
+# Golden bytes after the exact managed frontend transformations. The full
+# fake-Frame transport audit must not expect the original ZIP bytes here.
+MANAGED_FRONTENDS = {
+    50: '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125',
+    60: '34968b88fc828708680c1b82d774e76e8e11b5413222b9c508c10e1b7c375c78',
+    130: 'fabc041ea94ae7433421e35df3bd2eee72cb6d6d2c9b4515333cc3233556b85b',
+}
 PLUGINS = (
+    {'id': 130, 'name': 'Games Prefix Manager', 'version': '1.0.1', 'api_version': 'legacy',
+     'folder': 'GamesPrefixManager', 'sha256': 'ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'},
     {'id': 93, 'name': 'Deck Settings', 'version': '1.2.6', 'api_version': 1,
      'folder': 'decky-game-settings', 'sha256': '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132'},
     {'id': 52, 'name': 'Game Theme Music', 'version': '1.7.1-1', 'api_version': 1,

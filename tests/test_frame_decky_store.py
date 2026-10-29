@@ -10,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 import secrets
+import shutil
 import ssl
 import subprocess
 import sys
@@ -93,6 +94,15 @@ class ArchiveTests(unittest.TestCase):
     def test_only_exact_battery_tracker_adaptation_clears_store_root(self):
         records = [{'id': 67, 'name': 'Battery Tracker', 'tags': ['_root'],
                     'versions': [{'name': '0.2.0', 'hash': frame_decky_store.BATTERY_TRACKER_DIGEST}]}]
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertFalse(frame_decky_store.catalog()[0]['root'])
+        records[0]['versions'][0]['hash'] = 'a'*64
+        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
+            self.assertTrue(frame_decky_store.catalog()[0]['root'])
+
+    def test_only_exact_prefix_manager_adaptation_clears_store_root(self):
+        records = [{'id': 130, 'name': 'Games Prefix Manager', 'tags': ['root'],
+                    'versions': [{'name': '1.0.1', 'hash': frame_decky_store.PREFIX_MANAGER_DIGEST}]}]
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertFalse(frame_decky_store.catalog()[0]['root'])
         records[0]['versions'][0]['hash'] = 'a'*64
@@ -216,6 +226,38 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove')
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
+
+    def test_prefix_manager_is_user_scoped_with_legacy_api_and_original_license(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 130)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=130, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        manifest = json.loads((folder/'plugin.json').read_text())
+        self.assertEqual(manifest['flags'], [])
+        self.assertNotIn('api_version', manifest)
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['prefix-manager-user-paths'])
+        compile((folder/'main.py').read_bytes(), str(folder/'main.py'), 'exec')
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
+        if shutil.which('node'):
+            frontend = subprocess.run(['node', str(Path(__file__).parent/'page/framey_prefix_manager.mjs'),
+                                       str(folder/'dist/index.js')], capture_output=True, text=True, timeout=10)
+            self.assertEqual(frontend.returncode, 0, frontend.stderr)
+        self.assertEqual(self.apply('remove', plugin_id=130, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/unrecognized.txt', 'changed')
+        altered = changed.getvalue()
+        with self.assertRaisesRegex(ValueError, 'root'):
+            frame_decky_store.archive_info(altered, hashlib.sha256(altered).hexdigest(), record['name'])
+        rejected = self.apply('install', altered, plugin_id=130, folder=record['folder'], version=record['version'])
+        self.assertNotEqual(rejected.returncode, 0)
+        self.assertFalse(folder.exists())
 
     def test_exact_steamback_duplicate_archive_installs_and_removes(self):
         from framey_official import PLUGINS, archive as official_archive

@@ -1,5 +1,10 @@
 [
   {
+    "id": 130,
+    "shim": "prefix-manager-user-paths",
+    "probe": "prefix-manager"
+  },
+  {
     "id": 52,
     "shim": null,
     "probe": "theme-music-settings"

@@ -164,7 +164,74 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'steam-status-readonly':
+            if case['probe'] == 'prefix-manager':
+                # Only tmpfs fixtures exist here: never a host Steam prefix.
+                assert manifest.get('flags') == [] and 'api_version' not in manifest
+                assert legacy('get_games') == []
+                steam = home/'.local/share/Steam'
+                secondary = home/'Private Library'
+                marker = b'Private prefix save fixture\n'
+
+                def prefix(library, appid, installed=False):
+                    apps = library/'steamapps'
+                    path = apps/'compatdata'/str(appid)
+                    path.mkdir(parents=True)
+                    (path/'save.dat').write_bytes(marker)
+                    (path/'empty').mkdir()
+                    if installed:
+                        (apps/f'appmanifest_{appid}.acf').write_text(
+                            f'"AppState" {{ "appid" "{appid}" "name" "Private Game" "installdir" "Private" }}')
+                    return path
+
+                installed = prefix(steam, 4242, True)
+                orphan = prefix(secondary, 4343)
+                (steam/'steamapps/libraryfolders.vdf').write_text(
+                    f'"libraryfolders" {{ "0" {{ "path" "{steam}" }} "1" {{ "path" "{secondary}" }} }}')
+                rows = legacy('get_games')
+                assert {(g['appid'], g['type']) for g in rows} == {('4242', 'Steam'), ('4343', 'Orphan')}, rows
+                outside = home/'outside-marker'
+                outside.mkdir()
+                (outside/'keep.dat').write_bytes(marker)
+                link = installed.parent/'4444'
+                link.symlink_to(outside, target_is_directory=True)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='../outside-marker', do_backup=False)[0] is False
+                assert legacy('delete_prefix', appid='4444', do_backup=False)[0] is False
+                assert (outside/'keep.dat').read_bytes() == marker and link.is_symlink()
+                link.unlink()
+                # Backups must not silently read through nested symlinks.
+                (installed/'linked.dat').symlink_to(outside/'keep.dat')
+                assert legacy('delete_prefix', appid='4242', do_backup=True)[0] is False
+                assert (installed/'save.dat').read_bytes() == marker
+                assert not list((home/'Documents/PrefixBackups').glob('*.zip'))
+                (installed/'linked.dat').unlink()
+                # A Steam root replaced by a link after discovery stays blocked.
+                installed.parent.rename(installed.parent.with_name('held-compatdata'))
+                installed.parent.symlink_to(installed.parent.with_name('held-compatdata'), target_is_directory=True)
+                assert legacy('delete_prefix', appid='4242', do_backup=False)[0] is False
+                installed.parent.unlink()
+                installed.parent.with_name('held-compatdata').rename(installed.parent)
+                assert legacy('delete_prefix', appid='4242', do_backup=True) == [True, 'Success']
+                assert not installed.exists()
+                backups = list((home/'Documents/PrefixBackups').glob('4242-*.zip'))
+                assert len(backups) == 1
+                with zipfile.ZipFile(backups[0]) as saved:
+                    assert saved.read('save.dat') == marker and 'empty/' in saved.namelist()
+                # Reusing an app ID creates another backup, preserving the first.
+                prefix(steam, 4242, True)
+                legacy('get_games')
+                assert legacy('delete_prefix', appid='4242', do_backup=True) == [True, 'Success']
+                assert len(list(backups[0].parent.glob('4242-*.zip'))) == 2
+                legacy('get_games')
+                assert legacy('cleanup_orphans', do_backup=False) == [1, 'Success']
+                assert not orphan.exists() and (outside/'keep.dat').read_bytes() == marker
+                assert legacy('get_games') == []
+                report['independentState'] = {'backupBytesMatch': True, 'oldBackupPreserved': True,
+                    'outsideMarkerPreserved': True, 'symlinkAndTraversalRejected': True,
+                    'privatePrefixesRemoved': True}
+                report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
+                    'private backup/delete/orphan cleanup and symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'steam-status-readonly':
                 # Only read private defaults. The public CM-list and 100 MB
                 # download diagnostics must never run in this runtime probe.
                 source = (plugin/'main.py').read_text()
