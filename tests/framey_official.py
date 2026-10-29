@@ -12,6 +12,8 @@ PLUGINS = (
      'folder': 'SDH-PauseGames', 'sha256': '4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62'},
     {'id': 24, 'name': 'RadiYo!', 'version': '1.3', 'api_version': 'legacy',
      'folder': 'radiyo-steam-deck', 'sha256': '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'},
+    {'id': 132, 'name': 'SuggestMe', 'version': '1.5.3', 'api_version': 1,
+     'folder': 'SuggestMe-decky-plugin', 'sha256': '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4'},
     {'id': 104, 'name': 'Game Sync', 'version': '1.0.4', 'api_version': 1,
      'folder': 'SDH-GameSync', 'sha256': '65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd'},
     {'id': 60, 'name': 'DeckyFileServer', 'version': '1.2.0', 'api_version': 1,

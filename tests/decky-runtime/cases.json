@@ -20,6 +20,11 @@
     "probe": "radio-local"
   },
   {
+    "id": 132,
+    "shim": "suggestme-verified-tls",
+    "probe": "suggestme-private"
+  },
+  {
     "id": 135,
     "shim": null,
     "probe": "shelves-settings"
