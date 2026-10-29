@@ -26,6 +26,10 @@ count. So a build reaches people only when you publish it, after testing it.
    check disables telemetry and update requests, and keeps extraction in its
    temporary profile. This CI test does not test a physical display, FUSE mount
    or a headset.
+   Each Mac build also mounts its DMG and extracts its ZIP, then checks the
+   packaged app version, runner architecture and bundled resources against the
+   unpacked build. This checks the delivered packages, but does not launch
+   them on a physical Mac.
 
 2. Independently download and inspect the draft's installers on an x86_64
    Linux host with `gh`, `dpkg-deb` and `xvfb-run` installed:
