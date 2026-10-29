@@ -3716,13 +3716,13 @@
         "https://github.com/mcarlucci/decky-storage-cleaner.git"
       ],
       "status": "partial",
-      "reason": "The empty-data panel renders locally. Exact managed 1.4.0 installs repair the backend delete-then-TypeError bug, bound paths to shadercache/compatdata or numeric app-ID children, and await selected-delete RPCs. Published Decky 3.3.0 x86_64 RPC passes private size/list and selected/whole fixture deletion in a network-isolated container; Node verifies selected RPC completion and failure; the local host modal waits and shows rejected actions. Real Steam cache deletion, Frame ARM64 backend, visual confirmation flow and worn VR remain unverified; older copies need Update.",
+      "reason": "The empty-data panel renders locally. Exact managed 1.4.0 installs repair the backend delete-then-TypeError bug, bound paths to shadercache/compatdata or numeric app-ID children, and await selected-delete RPCs. Published Decky 3.3.0 x86_64 and ARM64 RPCs pass private size/list and selected/whole fixture deletion in network-isolated containers; Node verifies selected RPC completion and failure; the local host modal waits and shows rejected actions. Real Steam cache deletion, the managed backend on Frame, visual confirmation flow and worn VR remain unverified; older copies need Update.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky 3.3.0 x86_64 backend",
+        "isolated Decky 3.3.0 x86_64 and ARM64 backends",
         "local Node callback test"
       ],
       "browser": {

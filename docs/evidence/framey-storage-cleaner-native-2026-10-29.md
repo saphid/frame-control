@@ -41,3 +41,28 @@ The deletion fixture does not prove real Steam cache cleanup or recovery.
 Real Frame ARM64 backend, frontend confirmation flow, worn VR and physical
 controller behavior remain unverified. Storage Cleaner stays **partial**;
 the compatibility counts do not change.
+
+## Exact-main hosted ARM64 follow-up
+
+The [Decky runtime workflow](https://github.com/saphid/frame-control/actions/runs/40814288178)
+completed successfully on main commit
+`2ab9725a844cb043926bfb4cab706858d109ee2a`. Its
+[x86_64 job](https://github.com/saphid/frame-control/actions/runs/40814288178/job/123251622045)
+and [ARM64 job](https://github.com/saphid/frame-control/actions/runs/40814288178/job/123251622336)
+each discovered the same exact managed archive in published Decky 3.3.0 with
+the `storage-cleaner-bounded-delete` adaptation.
+
+Each job created only a private cache fixture inside its disposable,
+network-isolated container. The plugin returned 29 bytes for
+`shadercache/424242`, listed that one app-ID directory, deleted that selected
+directory, then returned 29 bytes for and deleted a whole private
+`compatdata` fixture. The test asserted that the selected directory was gone
+while its parent remained, and that the whole `compatdata` directory was gone.
+The downloaded x86_64 and ARM64 JSON reports have SHA-256
+`e15e9769e2c1c71e9d9492266dc6996dfd0ff16320dd394e68b9a7674f56b61f`
+and `796b21a1f84ffcf5dc7eb0bedead2d22a4b138b424c54ed3547857917d71be67`,
+respectively.
+
+This extends the native runtime evidence to ARM64 in CI. No real Steam cache
+was deleted. The managed backend on the Frame, its visual confirmation flow
+and worn VR remain unverified; this does not change the partial label.
