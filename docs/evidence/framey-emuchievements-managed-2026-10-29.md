@@ -43,8 +43,11 @@ released the lock. No service, power setting, Steam title, input or headset
 wake was changed. Standby means no worn test was possible. This proves only
 direct helper execution on the Frame, not the installed Decky backend path.
 
-Hosted native ARM64 Decky, fake Frame e2e, and exact-head checks are required
-before this change may merge. Real ROM formats, RetroAchievements login,
+The [hosted native Decky run](https://github.com/saphid/frame-control/actions/runs/40832805434)
+passed actual published Decky 3.3.0 discovery and private synthetic hash RPC
+probes on amd64 and ARM64 at commit `2e7a88e70313c43ef0b37dba2034748869983904`.
+Hosted fake Frame e2e and the remaining exact-head checks must still pass
+before merge. Real ROM formats, RetroAchievements login,
 Steam page integration, real Frame managed backend execution, and worn VR are
 unverified. The compatibility status is **partial** for the verified private
 synthetic hash operation. An old managed copy retains the unsupported x86

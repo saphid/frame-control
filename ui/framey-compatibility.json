@@ -1779,7 +1779,7 @@
         "https://github.com/EmuDeck/Emuchievements.git"
       ],
       "status": "partial",
-      "reason": "The exact managed 2.0.5 archive installs a source-matched, safety-patched ARM64 hash helper. Published Decky 3.3.0 discovery and private synthetic direct/ZIP ROM hashing passed on amd64; the native helper separately hashed both fixtures on the real Frame. ARM64 native CI is required. Update or reinstall for this helper. Real ROM formats, RetroAchievements login, Steam page integration, managed backend execution on Frame and worn VR remain unverified.",
+      "reason": "The exact managed 2.0.5 archive installs a source-matched, safety-patched ARM64 hash helper. Published Decky 3.3.0 discovery and private synthetic direct/ZIP ROM hashing passed on amd64 and ARM64; the native helper separately hashed both fixtures on the real Frame. Update or reinstall for this helper. Real ROM formats, RetroAchievements login, Steam page integration, managed backend execution on Frame and worn VR remain unverified.",
       "blockInstall": false,
       "requiredShims": [
         "emuchievements-safe-arm64"
@@ -1789,7 +1789,7 @@
         "static archive",
         "local browser",
         "host transaction",
-        "actual Decky 3.3.0 amd64 synthetic hash",
+        "actual Decky 3.3.0 amd64/ARM64 synthetic hash",
         "real Frame native helper synthetic hash",
         "fake-Frame managed install/remove"
       ],
@@ -1813,7 +1813,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "The pinned upstream source had unsafe archive extraction and cleanup (docs/evidence/framey-native-port-blockers-2026-10-26.md). The exact managed archive replaces the x86 helper and Python call with source-matched, safety-patched builds; both architectures rebuild byte for byte offline. Published Decky 3.3.0 amd64 private synthetic direct/ZIP ROM hashing and hostile archive rejection pass. The exact ARM64 helper separately hashed both fixtures on the real Frame under the shared lock (docs/evidence/framey-emuchievements-managed-2026-10-29.md). ARM64 native CI, real Frame managed backend, real ROM formats, login, Steam UI and worn VR remain unverified.",
+      "nativePort": "The pinned upstream source had unsafe archive extraction and cleanup (docs/evidence/framey-native-port-blockers-2026-10-26.md). The exact managed archive replaces the x86 helper and Python call with source-matched, safety-patched builds; both architectures rebuild byte for byte offline. Published Decky 3.3.0 native amd64/ARM64 private synthetic direct/ZIP ROM hashing and hostile archive rejection pass. The exact ARM64 helper separately hashed both fixtures on the real Frame under the shared lock (docs/evidence/framey-emuchievements-managed-2026-10-29.md). Real Frame managed backend, real ROM formats, login, Steam UI and worn VR remain unverified.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
