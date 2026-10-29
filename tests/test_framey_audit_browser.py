@@ -61,7 +61,7 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
         for old, new in [('CATALOG_DATA', '[{"id":67,"name":"Battery Tracker"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'true'), ('NETWORK_FIXTURE', 'false'),
-                         ('NOTIFICATIONS_FIXTURE', 'false')]:
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -112,7 +112,7 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
         for old, new in [('CATALOG_DATA', '[{"id":114,"name":"Network Sentinel"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'true'),
-                         ('NOTIFICATIONS_FIXTURE', 'false')]:
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -158,7 +158,7 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
         for old, new in [('CATALOG_DATA', '[{"id":79,"name":"Decky Notifications"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'false'),
-                         ('NOTIFICATIONS_FIXTURE', 'true')]:
+                         ('NOTIFICATIONS_FIXTURE', 'true'), ('THEME_MUSIC_FIXTURE', 'false')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -192,6 +192,56 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
     ['device_list','notification_list','get_event','trust_device','notifications_clear','unknown']);
   assert.deepEqual(JSON.parse(JSON.stringify(context.notificationsFixtureDenied)),
     ['trust_device','notifications_clear','unknown']);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=page_script,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
+    def test_theme_music_fixture_saves_only_private_settings(self):
+        page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
+        for old, new in [('CATALOG_DATA', '[{"id":52,"name":"Game Theme Music"}]'),
+                         ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
+                         ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'false'),
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'true')]:
+            page_script = page_script.replace(old, new)
+        script = r'''
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const messages=[],handlers={};
+const context={panel:{src:'',contentWindow:{postMessage:data=>messages.push(data)}},
+  run:{disabled:false},download:{},progress:{textContent:''},
+  addEventListener:(type,handler)=>{handlers[type]=handler},
+  setTimeout:callback=>{callback();return 1},
+  URL,Blob,Number,Promise,JSON,Error,Object,Array,structuredClone};
+context.window=context;
+vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
+(async()=>{
+  await context.runAudit([52],1200);
+  assert.equal(context.panel.src,'/panel/52');
+  function call(method,args,legacy=false){
+    messages.length=0;
+    handlers.message({source:context.panel.contentWindow,
+      data:{type:'framey:call',id:1,method,args,legacy}});
+    return messages.at(-1);
+  }
+  const initial={defaultMuted:false,useYtDlp:false,downloadAudio:false,
+    invidiousInstance:'https://inv.tux.pizza',volume:1};
+  assert.deepEqual(call('get_setting',['settings',initial]).result,initial);
+  const changed={...initial,volume:0.4,defaultMuted:true};
+  assert.equal(call('set_setting',['settings',changed]).result,null);
+  changed.volume=0.9; // Fixture must retain a detached copy.
+  assert.equal(call('get_setting',['settings',initial]).result.volume,0.4);
+  for(const [method,args,legacy] of [
+    ['set_setting',['settings',{...initial,volume:2}],false],
+    ['set_setting',['other',initial],false],
+    ['get_setting',['settings',initial],true],
+    ['download_audio',[],false],
+    ['search',[],false]])
+    assert.match(call(method,args,legacy).error,/blocked|rejects backend method/);
+  assert.equal(context.themeMusicFixtureState.volume,0.4);
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''
         result = subprocess.run(['node', '-e', script], input=page_script,
