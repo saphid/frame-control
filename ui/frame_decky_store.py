@@ -113,8 +113,12 @@ def catalog():
 
 
 def archive_info(data, expected_hash, expected_name):
-    if not 1024 < len(data) <= MAX_ZIP or hashlib.sha256(data).hexdigest() != expected_hash:
-        raise ValueError('Plugin archive size or SHA-256 did not match the store')
+    if len(data) <= 1024:
+        raise ValueError('Plugin archive is too small')
+    if len(data) > MAX_ZIP:
+        raise ValueError(f'Plugin archive exceeds the {MAX_ZIP // (1024 * 1024)} MiB download limit')
+    if hashlib.sha256(data).hexdigest() != expected_hash:
+        raise ValueError('Plugin archive SHA-256 did not match the store')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         files = archive.infolist()
         if not files or len(files) > 3000 or sum(f.file_size for f in files) > MAX_UNPACKED:

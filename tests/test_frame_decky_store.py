@@ -105,6 +105,12 @@ class ArchiveTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, 'SHA-256'):
             frame_decky_store.archive_info(data, '0' * 64, 'Example')
 
+    def test_archive_size_limit_has_a_distinct_error(self):
+        data, digest = archive()
+        with patch.object(frame_decky_store, 'MAX_ZIP', len(data) - 1):
+            with self.assertRaisesRegex(ValueError, 'download limit'):
+                frame_decky_store.archive_info(data, digest, 'Example')
+
     def test_rejects_root_x86_and_escape(self):
         for data in (archive(flags=['root'])[0],
                      archive(extra=('Example/bin/helper', b'\x7fELF' + b'\x00' * 14 + (62).to_bytes(2, 'little')))[0],
