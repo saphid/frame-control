@@ -68,6 +68,10 @@ and redirect, and rejects a self-signed loopback HTTPS endpoint from both
 methods. The certificate and private key under `tests/decky-runtime/fixtures`
 are public test fixtures; they grant no trusted access. External radio, trusted
 HTTPS and audio playback remain unverified.
+Storage Cleaner runs through the published Decky loader with only disposable
+cache markers: size/list, selected-app delete and whole-directory delete pass.
+The managed copy rejects traversal and symlink delete paths. No real game or
+Steam cache is deleted.
 Game Sync runs through actual published Decky 3.3.0 instance RPC in the same
 isolation. Only default configuration and a private setting surviving restart
 are checked. No rclone, cloud sync, process signal, Frame backend or VR action

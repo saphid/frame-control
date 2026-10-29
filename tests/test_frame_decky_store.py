@@ -212,6 +212,46 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 
+    def test_exact_storage_cleaner_deletes_only_private_cache_fixture(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 50)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=50,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete'])
+        source = (folder/'main.py').read_text(encoding='utf-8')
+        self.assertNotIn('await shutil.rmtree', source)
+        steamapps = Path(self.tmp.name)/'.steam/steam/steamapps'
+        selected = steamapps/'shadercache/424242'
+        selected.mkdir(parents=True)
+        (selected/'marker').write_text('private fixture')
+        outside = Path(self.tmp.name)/'outside'
+        outside.mkdir()
+        (outside/'marker').write_text('must survive')
+        namespace = {'__name__': 'storage_cleaner_fixture'}
+        fake_decky = types.SimpleNamespace(DECKY_USER_HOME=self.tmp.name,
+                                           DECKY_PLUGIN_DIR=str(folder))
+        with patch.dict(sys.modules, {'decky': fake_decky}):
+            exec(compile(source, str(folder/'main.py'), 'exec'), namespace)
+        plugin_class = namespace['Plugin']
+        for name in ('../outside', 'shadercache/../outside', 'compatdata/../../outside',
+                     'shadercache/not-an-app', '/tmp/outside'):
+            with self.subTest(name=name), self.assertRaisesRegex(ValueError, 'Invalid cache path'):
+                asyncio.run(plugin_class.delete_cache(name))
+        (steamapps/'compatdata').symlink_to(outside, target_is_directory=True)
+        with self.assertRaisesRegex(ValueError, 'symbolic link'):
+            asyncio.run(plugin_class.delete_cache('compatdata'))
+        self.assertTrue((outside/'marker').is_file())
+        self.assertIsNone(asyncio.run(plugin_class.delete_cache('shadercache/424242')))
+        self.assertFalse(selected.exists())
+        self.assertTrue((outside/'marker').is_file())
+        result = self.apply('remove', plugin_id=50, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_modified_fileserver_archive_does_not_inherit_exception(self):
         from framey_official import PLUGINS, archive as official_archive
         record = next(p for p in PLUGINS if p['id'] == 60)

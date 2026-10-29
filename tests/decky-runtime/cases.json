@@ -25,6 +25,11 @@
     "probe": "shelves-settings"
   },
   {
+    "id": 50,
+    "shim": "storage-cleaner-bounded-delete",
+    "probe": "storage-cleaner"
+  },
+  {
     "id": 104,
     "shim": null,
     "probe": "game-sync-config"

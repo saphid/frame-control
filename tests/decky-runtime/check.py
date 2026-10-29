@@ -373,6 +373,29 @@ def main():
                 assert restored[0]['id'] == shelf['id'] and restored[0]['title'] == shelf['title'], restored
                 report['result'] = ('published Decky discovery, private shelf settings and restart persistence passed; '
                     'Steam Home injection, real Frame and VR unverified')
+            elif case['probe'] == 'storage-cleaner':
+                # The only deletion is an owned marker under this disposable
+                # container's private Steam fixture, never a real game cache.
+                apps = home/'.steam/steam/steamapps'
+                selected = apps/'shadercache/424242'
+                selected.mkdir(parents=True)
+                marker = b'Framey private cache fixture\n'
+                (selected/'marker').write_bytes(marker)
+                assert current('get_size', 'shadercache/424242') == len(marker)
+                rows = json.loads(current('list_games_with_temp_data', 'shadercache'))
+                assert rows == [{'appid': '424242', 'size': len(marker),
+                                 'size_readable': f'{len(marker)}.0 B'}], rows
+                assert current('delete_cache', 'shadercache/424242') is None
+                assert not selected.exists()
+                assert apps.joinpath('shadercache').is_dir()
+                whole = apps/'compatdata'
+                whole.mkdir()
+                (whole/'marker').write_bytes(marker)
+                assert current('get_size', 'compatdata') == len(marker)
+                assert current('delete_cache', 'compatdata') is None
+                assert not whole.exists()
+                report['result'] = ('published Decky discovery, private size/list and selected/whole fixture deletion passed; '
+                    'real Steam caches, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)

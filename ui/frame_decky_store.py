@@ -43,6 +43,8 @@ BATTERY_TRACKER_DIGEST = '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed
 BATTERY_TRACKER_MAIN = '2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725'
 RADIYO_DIGEST = '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'
 RADIYO_MAIN = '868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e'
+STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
+STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -176,6 +178,10 @@ def archive_info(data, expected_hash, expected_name):
         if (expected_hash == RADIYO_DIGEST and expected_name == 'RadiYo!' and folder == 'radiyo-steam-deck'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != RADIYO_MAIN):
             raise ValueError('RadiYo source differs from the pinned archive')
+        if (expected_hash == STORAGE_CLEANER_DIGEST and expected_name == 'Storage Cleaner'
+                and folder == 'decky-storage-cleaner'
+                and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != STORAGE_CLEANER_MAIN):
+            raise ValueError('Storage Cleaner source differs from the pinned archive')
         return folder
 
 
@@ -730,6 +736,36 @@ def split_by_app(data):
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+            # The exact published backend awaits synchronous shutil.rmtree:
+            # it deletes the cache then reports TypeError. Restrict deletion
+            # to the two directories selected by its UI and their numeric app IDs.
+            if int(plugin_id)==50 and digest=='1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591' and folder=='decky-storage-cleaner':
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if hashlib.sha256(data).hexdigest()!='6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f':
+                    raise RuntimeError('Storage Cleaner source differs from pinned archive')
+                old=b"    @classmethod\n    async def delete_cache(cls, dirName):\n        await shutil.rmtree(homeDir + '/.steam/steam/steamapps/' + dirName)"
+                new=b"""    @classmethod
+    async def delete_cache(cls, dirName):
+        if not isinstance(dirName, str):
+            raise ValueError('Invalid cache path')
+        parts = dirName.split('/')
+        if (len(parts) not in (1, 2) or parts[0] not in ('shadercache', 'compatdata')
+                or (len(parts) == 2 and (not parts[1].isascii() or not parts[1].isdecimal()))):
+            raise ValueError('Invalid cache path')
+        root = os.path.realpath(os.path.join(homeDir, '.steam', 'steam', 'steamapps'))
+        target = os.path.join(root, *parts)
+        cursor = root
+        for part in parts:
+            cursor = os.path.join(cursor, part)
+            if os.path.islink(cursor):
+                raise ValueError('Cache path is a symbolic link')
+        if os.path.commonpath((root, os.path.realpath(target))) != root:
+            raise ValueError('Cache path escapes Steam apps')
+        shutil.rmtree(target)"""
+                if data.count(old)!=1: raise RuntimeError('Storage Cleaner delete source changed')
+                main.write_bytes(data.replace(old,new))
+                compat_shims.append('storage-cleaner-bounded-delete')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')
