@@ -3403,14 +3403,14 @@
         "https://github.com/geeksville/steamback.git"
       ],
       "status": "partial",
-      "reason": "Panel opens using the real Frame current-user/library snapshot. The exact archive's byte-identical duplicate ZIP members now pass guarded managed install/remove locally; the original fake-Frame baseline recorded an older host rejection. Private account setup, empty save-list and empty supported-game reads pass through published Decky 3.3.0 x86_64 in a network-isolated container. ARM64 backend, real saves, supported-save discovery, automatic backups and restore remain unverified; no backup or restore ran.",
+      "reason": "Panel opens using the real Frame current-user/library snapshot. The exact archive's byte-identical duplicate ZIP members now pass guarded managed install/remove locally; the original fake-Frame baseline recorded an older host rejection. Private account setup, empty save-list and empty supported-game reads pass through published Decky 3.3.0 x86_64 and ARM64 in network-isolated containers. Real saves, nonempty supported-game discovery, automatic backups, restore, the managed backend on Frame and worn VR remain unverified; no backup or restore ran.",
       "blockInstall": true,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame baseline",
         "focused managed install/remove",
-        "isolated Decky 3.3.0 x86_64 backend",
+        "isolated Decky 3.3.0 x86_64 and ARM64 backends",
         "real Frame SSH"
       ],
       "browser": {
