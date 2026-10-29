@@ -21,6 +21,16 @@ the previous error. The 41 store transaction tests passed, including guard
 checks for traversal and symlink paths, install receipt, and remove. The
 container and image were removed. No real Frame lock or device was used.
 
+The bundled frontend also used `forEach(async ...)` for selected app IDs, so
+its confirmation callback completed before those deletion RPCs. A follow-up
+managed adaptation for the same pinned archive and frontend digest
+`8252cfcd2182546f715cc0e4116a887fcf40af1b8b9d132bd1761c8b9ff46fdb`
+awaits each selected deletion in order. A Node test runs the installed bundle's
+actual `clearDataCache` function with private deferred RPCs: the promise stays
+pending until all selected calls complete, stops on a rejected call, and still
+handles whole-directory deletion. This is a callback completion check, not a
+visual confirmation or real cache deletion check.
+
 The deletion fixture does not prove real Steam cache cleanup or recovery.
 Real Frame ARM64 backend, frontend confirmation flow, worn VR and physical
 controller behavior remain unverified. Storage Cleaner stays **partial**;
