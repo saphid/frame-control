@@ -7830,7 +7830,7 @@
         "https://github.com/xXJSONDeruloXx/OptiScaler-Bleeding-Edge"
       ],
       "status": "broken",
-      "reason": "Plugin archive size or SHA-256 did not match the store.",
+      "reason": "The exact official 75,140,408-byte ZIP matches its published SHA-256 but exceeds Framey's 50 MiB managed download limit. Installation stays blocked; its OptiScaler and Proton game modifications are unverified on Frame.",
       "blockInstall": true,
       "verification": [
         "static archive",
