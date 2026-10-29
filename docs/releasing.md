@@ -39,8 +39,10 @@ count. So a build reaches people only when you publish it, after testing it.
    size and SHA-256 against GitHub metadata, matches the downloaded
    `SHA256SUMS` byte for byte, checks package formats and versions, and starts
    the x86_64 AppImage with a temporary profile and isolated Xvfb display. It
-   writes the report only after all checks pass. This does not prove that the
-   Mac or Windows installers launch on physical machines. Test those packages
+   writes the report only after all checks pass. Keep that report for the
+   publisher; it must match the same draft, all ten current asset digests,
+   package checks and the isolated x86 AppImage launch. This does not prove
+   that the Mac or Windows installers launch on physical machines. Test those packages
    separately when the required machines are available. An installed copy of
    the previous version won't offer the draft, so install it directly.
 
@@ -63,6 +65,7 @@ count. So a build reaches people only when you publish it, after testing it.
 
    ```sh
    export FRAME_SMOKE_RESULT=/path/to/smoke-result.json
+   export RELEASE_ASSET_AUDIT=/path/to/asset-audit.json
    python3 scripts/verify-frame-smoke-result.py "$FRAME_SMOKE_RESULT" \
      "$(git rev-parse 'v0.4.0^{commit}')"
    ```
@@ -76,7 +79,9 @@ count. So a build reaches people only when you publish it, after testing it.
    (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
    release workflow are green with no failed, cancelled, skipped or running
    jobs in any exact-tag push run or attempt, and that all ten installers are
-   attached, each with the SHA-256 digest GitHub records. It also checks
+   attached, each with the SHA-256 digest GitHub records. It checks the saved
+   independent installer report against the current draft and requires its
+   package checks and isolated x86 AppImage launch. It also checks
    that the draft does not begin with a `WITHDRAWN` notice, so the preserved
    v0.4.48 draft cannot accidentally be offered again. It checks
    that the uploaded `SHA256SUMS` digest matches a fresh list of those ten

@@ -36,9 +36,37 @@ def draft(tag_name="untagged-c6ddfed7f75d67db2e99", name="Frame Control 9.8.7", 
             "assets": assets}
 
 
+def asset_audit(release, tag="v9.8.7"):
+    rows = []
+    for asset in release['assets']:
+        name = asset['name']
+        if name not in INSTALLERS:
+            continue
+        row = {'name': name, 'size': asset['size'], 'sha256': asset['digest'][7:] if asset['digest'] else ''}
+        if name.endswith('.dmg'):
+            row['udifTrailer'] = 'ok'
+        elif name.endswith('.zip'):
+            row.update(zipCrc='ok', members=1)
+            if '-mac-' in name:
+                row['bundleVersion'] = tag[1:]
+        elif name.endswith('.exe'):
+            row['peMachine'] = 0x8664
+        elif name.endswith('.AppImage'):
+            row['elfMachine'] = 183 if 'arm64' in name else 62
+            if 'x86_64' in name:
+                row['appimageLaunch'] = 'HTTP 200; FrameControl/1; server stopped'
+        elif name.endswith('.deb'):
+            row.update(debVersion=tag[1:], architecture='arm64' if 'arm64' in name else 'amd64')
+        rows.append(row)
+    sums = next((asset['digest'] for asset in release['assets'] if asset['name'] == 'SHA256SUMS'), '')
+    return {'tag': tag, 'releaseId': release['id'], 'tagNameAtAudit': release['tag_name'],
+            'draftAtAudit': True, 'sha256sumsSha256': sums[7:], 'updateManifest': None,
+            'assets': rows}
+
+
 class PublishRelease(unittest.TestCase):
     def run_script(self, releases, *args, tags="v9.8.7", gates=None,
-                   corrupt_manifest_readback=False, smoke=None):
+                   corrupt_manifest_readback=False, smoke=None, audit=None):
         d = Path(tempfile.mkdtemp())
         (d / "releases.json").write_text(json.dumps(releases))
         (d / "gates.json").write_text(json.dumps(gates or {}))
@@ -59,6 +87,11 @@ class PublishRelease(unittest.TestCase):
         if smoke is not False:
             (d / "smoke.json").write_text(json.dumps(
                 clean_smoke if smoke is None or isinstance(smoke, str) else smoke))
+        matching = next((r for r in releases if r.get('tag_name') == tags), None)
+        matching = matching or next((r for r in releases if r.get('name', '').startswith('Frame Control 9.8.7')), None)
+        if audit is not False and matching:
+            (d / 'asset-audit.json').write_text(json.dumps(
+                asset_audit(matching, tags) if audit is None else audit))
         env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
@@ -67,6 +100,10 @@ class PublishRelease(unittest.TestCase):
         env.pop("FRAME_SMOKE_RESULT", None)
         if smoke is not False:
             env["FRAME_SMOKE_RESULT"] = str(d / "smoke.json")
+        if audit is not False:
+            env['RELEASE_ASSET_AUDIT'] = str(d / 'asset-audit.json')
+        else:
+            env.pop('RELEASE_ASSET_AUDIT', None)
         p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
@@ -187,6 +224,34 @@ class PublishRelease(unittest.TestCase):
                 self.assertIn("release gate failed", p.stderr)
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
+
+    def test_refuses_missing_or_stale_independent_asset_audit(self):
+        good = asset_audit(draft())
+        cases = [False,
+                 dict(good, releaseId=999),
+                 dict(good, sha256sumsSha256='0' * 64),
+                 dict(good, assets=good['assets'][:-1])]
+        changed = json.loads(json.dumps(good))
+        changed['assets'][0]['sha256'] = 'f' * 64
+        cases.append(changed)
+        changed = json.loads(json.dumps(good))
+        next(row for row in changed['assets'] if row['name'].endswith('x86_64.AppImage')).pop('appimageLaunch')
+        cases.append(changed)
+        for audit in cases:
+            with self.subTest(audit=audit):
+                p, log, upload = self.run_script([draft()], 'v9.8.7', audit=audit)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIsNone(upload)
+                self.assertFalse(any('-X' in call for call in log))
+
+    def test_refuses_unexpected_draft_asset_outside_the_audit(self):
+        extra = {'id': 300, 'name': 'unreviewed-installer.exe', 'size': 123,
+                 'digest': 'sha256:' + 'f' * 64}
+        p, log, upload = self.run_script([draft(assets=draft()['assets'] + [extra])], 'v9.8.7')
+        self.assertNotEqual(p.returncode, 0)
+        self.assertIn('outside the audited installer set', p.stderr)
+        self.assertIsNone(upload)
+        self.assertFalse(any('-X' in call for call in log))
 
     def test_refuses_a_prior_cancelled_installer_after_successful_rerun(self):
         gates = {"release_attempts": 2,
