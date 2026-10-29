@@ -106,6 +106,12 @@ Battery Tracker's exact archive also has a user-service adaptation. The native
 Decky gate checks discovery, empty history, Frame-shaped private battery
 samples and per-app power aggregation. The real Frame probe checked only the
 readable Battery-type sysfs fields; the plugin itself did not run there.
+The opt-in `--battery-tracker-fixture` browser audit supplies a private
+legacy-RPC history sample to this exact frontend with external network blocked.
+Its recent-use panel, average-power row and lookback slider render; changing
+the slider sends a bounded history request. This is synthetic UI evidence,
+not live Frame recording or worn VR evidence. See
+[the panel evidence](../../../docs/evidence/framey-battery-panel-fixture-2026-10-29.md).
 DeckyFileServer also runs through actual Decky 3.3.0 discovery/API1 RPC with a
 native helper replacement. HTTPS listing/download use only public markers in a
 private directory; uploads remain disabled. The exact source build, GPL licenses
