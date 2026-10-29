@@ -267,6 +267,27 @@ def main():
                 assert current('read_deals') == {}
                 report['result'] = ('discovery, default settings, empty local deals, '
                     'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
+            elif case['probe'] == 'game-sync-config':
+                # Exercise only private settings. This plugin also exposes
+                # rclone cloud sync and arbitrary process signals; neither
+                # belongs in a passive compatibility probe.
+                settings = current('get_config')
+                assert settings['sync_on_game_start'] is False, settings
+                assert settings['sync_on_game_stop'] is False, settings
+                assert settings['capture_upload'] is False, settings
+                assert settings['advanced_mode'] is False, settings
+                assert current('set_config', 'advanced_mode', True) is None
+                assert current('get_config')['advanced_mode'] is True
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert until_ready(lambda: current('get_config')['advanced_mode'],
+                                   'private Game Sync setting after restart') is True
+                report['result'] = ('discovery, default config and private setting restart persistence passed; '
+                    'rclone, cloud authentication, sync, process signals, real Frame and VR unverified')
             elif case['probe'] == 'radio-local':
                 # The published backend accepts arbitrary URLs and disables
                 # HTTPS verification. Exercise only a loopback fixture inside

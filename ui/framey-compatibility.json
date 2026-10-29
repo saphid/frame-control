@@ -8880,12 +8880,13 @@
         "https://github.com/GedasFX/decky-cloud-save"
       ],
       "status": "partial",
-      "reason": "Backend get_config is intentionally rejected by the audit before initialization completes; actual backend compatibility is unknown.",
+      "reason": "Exact official backend discovers under Decky 3.3.0 amd64; default get_config and a private setting read/write survive a loader restart. The isolated browser baseline still stops at its denied get_config call. Cloud login, rclone download/sync (including ARM64), process signals, real Frame and VR are unverified. The published updater names an amd64 rclone download, so no ARM64 sync claim follows.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native Decky amd64 configuration"
       ],
       "browser": {
         "id": 104,
