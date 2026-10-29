@@ -48,6 +48,20 @@ ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
 plugin folder when you finish. See the current [compatibility table](decky-frame.md).
 
+Before publishing, check your local ZIP with Frame Control's installer rules:
+
+```sh
+python3 scripts/framey-check-archive.py path/to/plugin.zip --name 'Exact Decky store name'
+```
+
+The checker reads only that local ZIP. `installerAccepted` means its structure,
+size, flags and included binaries pass the same archive validator used by the
+managed store. `panelCandidate` means the basic frontend entry and API version
+can be admitted to Framey's panel. Neither result proves that the published
+store digest matches this ZIP, Decky discovers its backend, or its UI works in
+VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
+complete pack-and-check command.
+
 ## Framey Decky API compatibility
 
 Framey hosts a plugin's frontend in an isolated iframe in the Frame Control
