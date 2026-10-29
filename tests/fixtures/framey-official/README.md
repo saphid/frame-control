@@ -106,6 +106,10 @@ Network Sentinel runs through the same isolated native Decky gate. Its exact
 archive gets plugin-local psutil and a user-service manifest; the probe checks
 discovery, private settings and one monitoring-loop sample without external
 network access. It does not verify real network latency or worn VR.
+The opt-in `--network-sentinel-fixture` browser audit supplies bounded
+synthetic read-only replies to this exact frontend. Its status, empty History
+and Settings views render locally; see
+[`framey-network-sentinel-panel-fixture-2026-10-29.md`](../../../docs/evidence/framey-network-sentinel-panel-fixture-2026-10-29.md).
 Battery Tracker's exact archive also has a user-service adaptation. The native
 Decky gate checks discovery, empty history, Frame-shaped private battery
 samples and per-app power aggregation. The real Frame probe checked only the
