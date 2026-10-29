@@ -4364,7 +4364,7 @@
         "https://github.com/grimkor/DeckyFileServer"
       ],
       "status": "partial",
-      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Isolated Decky 3.3.0 amd64 and ARM64 pass private HTTPS listing/download, thumbnail policy and stop. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The Steam folder picker remains unavailable; use a preconfigured directory. Uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the address fix.",
+      "reason": "Managed install supplies a native ARM64 helper, removes the exact archive's unnecessary root request, and displays the backend-returned IP with HTTPS. Isolated Decky 3.3.0 amd64 and ARM64 pass private HTTPS listing/download, thumbnail policy and stop. Real Decky 3.3.0 on Frame passes private read-only HTTPS listing/download and upload denial. The exact managed panel offers a typed directory path alongside saved history; a local Node component test verifies its submit callback, while the Steam folder picker remains unavailable. Live directory entry, uploads, generated thumbnails and worn VR are unverified. Existing managed copies need update or reinstall for the panel changes.",
       "blockInstall": false,
       "verification": [
         "static archive",

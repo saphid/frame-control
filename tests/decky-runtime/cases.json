@@ -89,7 +89,8 @@
     "shim": "deckyfileserver-user-native",
     "probe": "fileserver",
     "additionalShims": [
-      "deckyfileserver-https-address"
+      "deckyfileserver-https-address",
+      "deckyfileserver-directory-entry"
     ]
   },
   {
