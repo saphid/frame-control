@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `67.zip` and `114.zip` on 2026-10-28.
+and `67.zip` and `114.zip` on 2026-10-28. `24.zip` was added on 2026-10-29.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -11,6 +11,7 @@ from a local fixture so CI does not depend on the store being online.
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
+| `24.zip` | RadiYo! | 1.3 | `647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43` |
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
 | `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `114.zip` | Network Sentinel | 1.0.4 | `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5` |
@@ -60,6 +61,9 @@ Pause Games runs through actual published Decky 3.3.0 discovery and instance RPC
 for private settings and a synthetic exclusion list. No process-control method
 is called. The official frontend's standalone Toggle component separately
 checks saved true/false state and matching settings callbacks; effects are inert.
+RadiYo! runs through actual published Decky 3.3.0 legacy RPC in a network-isolated
+container. Only loopback station fetch, custom-station fetch and redirect are
+tested. External radio, HTTPS and audio playback remain unverified.
 Network Sentinel runs through the same isolated native Decky gate. Its exact
 archive gets plugin-local psutil and a user-service manifest; the probe checks
 discovery, private settings and one monitoring-loop sample without external

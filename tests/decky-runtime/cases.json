@@ -15,6 +15,11 @@
     "probe": "toggle-settings"
   },
   {
+    "id": 24,
+    "shim": null,
+    "probe": "radio-local"
+  },
+  {
     "id": 63,
     "shim": null,
     "probe": "free-loader"
