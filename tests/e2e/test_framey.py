@@ -202,8 +202,8 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     # The pinned managed bundle awaits selected delete RPCs.
                     expected = '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125'
                 if plugin['id'] == 60:
-                    # The pinned managed bundle rewrites the two incorrect addresses.
-                    expected = '05819ddd0ee9c3ce7eeb184977a2f7905d7c8f5cfaec8bdff837d7935985a0e7'
+                    # The pinned managed bundle repairs the address and directory control.
+                    expected = '34968b88fc828708680c1b82d774e76e8e11b5413222b9c508c10e1b7c375c78'
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
                 if plugin['id'] == 96:
@@ -220,7 +220,8 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'],
-                                     ['deckyfileserver-user-native', 'deckyfileserver-https-address'])
+                                     ['deckyfileserver-user-native', 'deckyfileserver-https-address',
+                                      'deckyfileserver-directory-entry'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
                                      frame_decky_store.FILESERVER_BINARIES[arch])
