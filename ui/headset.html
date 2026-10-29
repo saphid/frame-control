@@ -111,6 +111,14 @@ function compatibilityText(plugin){const c=plugin.compatibility;return c ? `${c.
 // Some Chromium profiles deny sessionStorage. Keep the reserved request ID in
 // memory so this open panel can still reconnect if the POST response is lost.
 let deckyPendingJob=null;
+let deckyUnknownResult=false;
+try{deckyUnknownResult=sessionStorage.getItem('frameyPluginUnknown')==='1';}catch(_){}
+function markDeckyUnknown(){deckyUnknownResult=true;
+  try{sessionStorage.setItem('frameyPluginUnknown','1');}catch(_){}
+}
+function clearDeckyUnknown(){deckyUnknownResult=false;
+  try{sessionStorage.removeItem('frameyPluginUnknown');}catch(_){}
+}
 function savedDeckyJob(){
   if(deckyPendingJob)return deckyPendingJob;
   try{return JSON.parse(sessionStorage.getItem('frameyPluginJob')||'null');}catch(_){return null;}
@@ -123,15 +131,22 @@ function clearDeckyJob(){
   deckyPendingJob=null;
   try{sessionStorage.removeItem('frameyPluginJob');}catch(_){}
 }
-function deckyJobPending(){return !!savedDeckyJob();}
+function deckyJobPending(){return !!savedDeckyJob()||deckyUnknownResult;}
 function newDeckyRequestId(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),
   byte=>byte.toString(16).padStart(2,'0')).join('');}
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
-async function refreshDecky(){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
+async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
   if(request!==deckyStatusRequest)return;
+  if(reviewUnknown&&(!Array.isArray(state.plugins)||typeof state.running!=='boolean'))
+    throw Error('Installed plugin status is incomplete');
+  const reviewedUnknown=reviewUnknown&&deckyUnknownResult;
+  if(reviewUnknown)clearDeckyUnknown();
   deckyState=state;
+  if(reviewedUnknown){byId('deckyJobTitle').textContent='Previous plugin change';
+    byId('deckyJobStatus').textContent='Installed plugins refreshed. Review the list before another change.';
+    byId('deckyJobProgress').hidden=true;}
   const active=(state.plugins||[]).find(p=>p.storeId===activeFrameyId);
   const panelStale=activeFrameyId!==null&&(!state.running||!active||
     active.sha256!==activeFrameyReceipt?.sha256||active.version!==activeFrameyReceipt?.version);
@@ -140,6 +155,7 @@ async function refreshDecky(){const request=++deckyStatusRequest;try{const state
     deckyState.managed?'Decky is stopped. You can remove a managed plugin to recover, then start Decky from Frame Control on your computer.':
     'Decky is not running. Install it from Frame Control on your computer.';
   if(panelStale)byId('deckyState').textContent+=' The old plugin panel was closed; reopen it after refreshing.';
+  if(deckyUnknownResult)byId('deckyState').textContent+=' A previous plugin change has an unknown result. Press Refresh plugins to review installed status before another change.';
   const list=byId('deckyInstalled');list.replaceChildren();
   for(const plugin of deckyState.plugins||[]){const row=document.createElement('div');row.className='block';
     const name=document.createElement('strong');name.textContent=`${plugin.name} ${plugin.version||''}`;row.append(name);
@@ -192,8 +208,9 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
 function deckyJobView(title,message,percent,failed=false){
   byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
   byId('deckyJobStatus').textContent=message;
-  const bar=byId('deckyJobProgress');if(Number.isFinite(percent))bar.value=percent;else bar.removeAttribute('value');
-  byId('deckyJobCheck').hidden=!failed||!deckyJobPending();
+  const bar=byId('deckyJobProgress');bar.hidden=false;
+  if(Number.isFinite(percent))bar.value=percent;else bar.removeAttribute('value');
+  byId('deckyJobCheck').hidden=!failed||!savedDeckyJob();
 }
 async function followDeckyJob(job,action,name){
   for(let n=0;n<180;n++){
@@ -202,6 +219,7 @@ async function followDeckyJob(job,action,name){
     catch(error){
       if(/no such job/i.test(error.message)){
         clearDeckyJob();
+        markDeckyUnknown();
         throw Error('The server has no record of this request. It may not have arrived, or the app may have restarted. Refresh installed plugins before trying again.');
       }
       throw error;
@@ -214,6 +232,8 @@ async function followDeckyJob(job,action,name){
   throw Error('Still working. Use Check result to reconnect to this job.');
 }
 async function deckyChange(action,plugin){if(deckyBusy)return;
+  if(deckyUnknownResult){deckyJobView('Unknown plugin change',
+    'Refresh plugins to review installed status before starting another change.',null);return;}
   if(deckyJobPending()){
     deckyJobView('Previous plugin change','Check result before starting another plugin change.',null,true);
     return;
@@ -435,7 +455,7 @@ byId('statusScreenClose').onclick=()=>{byId('statusScreen').hidden=true;byId('st
 byId('statusScreenRefresh').onclick=refresh;
 window.addEventListener('keydown',event=>{if(event.key==='Escape'&&!byId('statusScreen').hidden)byId('statusScreenClose').click();});
 byId('gamesRefresh').onclick=refreshGames;byId('record').onclick=toggleRecord;byId('extensionsRefresh').onclick=refreshExtensions;
-byId('deckyRefresh').onclick=refreshDecky;byId('deckyStoreLoad').onclick=loadDeckyStore;
+byId('deckyRefresh').onclick=()=>refreshDecky(true);byId('deckyStoreLoad').onclick=loadDeckyStore;
 byId('deckySearch').oninput=()=>{deckyStoreIndex=0;showDeckyStore();};
 byId('deckyStoreFilter').onchange=()=>{deckyStoreIndex=0;showDeckyStore();};
 byId('deckyStorePrevious').onclick=()=>{deckyStoreIndex--;showDeckyStore();};

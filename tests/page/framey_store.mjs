@@ -180,8 +180,8 @@ await old;
 assert.match(el('deckyStoreList').children[0].children[0].textContent,/Current/);
 assert.doesNotMatch(el('deckyStoreList').children[0].children[0].textContent,/Stale/);
 
-// A saved job does not survive a server restart. Clear it instead of offering
-// Check result forever for an ID that the new server cannot know.
+// A saved job does not survive a server restart. Keep changes disabled after
+// the missing result until a manual installed-status refresh succeeds.
 session.set('frameyPluginJob',JSON.stringify({job:'old-job',action:'install',name:'Plugin 2'}));
 ctx.mockApi=async path => {
   if(path.startsWith('/api/job'))throw Error('no such job (the app may have restarted)');
@@ -193,7 +193,34 @@ await vm.runInContext('checkDeckyJob()',ctx);
 assert.match(el('deckyJobStatus').textContent,/server has no record of this request/);
 assert.equal(el('deckyJobCheck').hidden,true);
 assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(session.get('frameyPluginUnknown'),'1');
+assert.equal(el('deckyStoreList').children[0].children[1].disabled,true);
+assert.match(el('deckyState').textContent,/unknown result/);
+const reopenedDoc={getElementById:id=>new Element(id),createElement:()=>new Element(),hidden:false};
+const reopened=vm.createContext({document:reopenedDoc,location:{hash:'',pathname:'/'},crypto:webcrypto,
+  sessionStorage:ctx.sessionStorage,history:{replaceState(){}},confirm:()=>true,
+  window:{addEventListener(){}},setInterval(){},setTimeout(){},console});
+vm.runInContext(script,reopened);
+assert.equal(vm.runInContext('deckyJobPending()',reopened),true,'reload keeps the unknown-result gate');
+await vm.runInContext('deckyChange("install",{id:98,name:"Current",sha256:"a".repeat(64)})',ctx);
+assert.match(el('deckyJobStatus').textContent,/Refresh plugins to review installed status/);
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky');throw Error('offline');};
+vm.runInContext('api=mockApi',ctx);
+await el('deckyRefresh').onclick();
+assert.equal(session.get('frameyPluginUnknown'),'1');
+assert.equal(el('deckyStoreList').children[0].children[1].disabled,true);
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true};};
+vm.runInContext('api=mockApi',ctx);
+await el('deckyRefresh').onclick();
+assert.equal(session.get('frameyPluginUnknown'),'1');
+assert.match(el('deckyState').textContent,/status is incomplete/);
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true,plugins:[]};};
+vm.runInContext('api=mockApi',ctx);
+await el('deckyRefresh').onclick();
+assert.equal(session.has('frameyPluginUnknown'),false);
 assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
+assert.match(el('deckyJobStatus').textContent,/Installed plugins refreshed/);
+assert.equal(el('deckyJobProgress').hidden,true);
 
 // Known hardware blockers remain visible, cannot install, and keep their reason in the opened panel.
 ctx.hardware={id:900,name:'Hardware only',version:'1.0',description:'Fan control',root:false,
@@ -278,6 +305,7 @@ ctx.mockApi=async (path,body) => {
 vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"c".repeat(64)})',ctx);
 assert.equal(el('frameyPanel').hidden,true);
+assert.equal(el('deckyJobProgress').hidden,false);
 assert.match(el('deckyJobStatus').textContent,/Old plugin panel closed; reopen it/);
 vm.runInContext('openFrameyPanel(2,"Plugin 2")',ctx);
 ctx.mockApi=async()=>{throw Error('offline');};
