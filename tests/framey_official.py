@@ -12,6 +12,8 @@ PLUGINS = (
      'folder': 'SDH-PauseGames', 'sha256': '4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62'},
     {'id': 24, 'name': 'RadiYo!', 'version': '1.3', 'api_version': 'legacy',
      'folder': 'radiyo-steam-deck', 'sha256': '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'},
+    {'id': 104, 'name': 'Game Sync', 'version': '1.0.4', 'api_version': 1,
+     'folder': 'SDH-GameSync', 'sha256': '65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd'},
     {'id': 60, 'name': 'DeckyFileServer', 'version': '1.2.0', 'api_version': 1,
      'folder': 'DeckyFileServer', 'sha256': '7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0'},
     {'id': 125, 'name': 'Decky Localsend', 'version': '0.4.5', 'api_version': 1,
