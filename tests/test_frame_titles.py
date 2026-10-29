@@ -403,6 +403,7 @@ class Names(unittest.TestCase):
 
 
 class Parms(unittest.TestCase):
+    @unittest.skipIf(os.name == 'nt', 'POSIX shell script')
     def test_fex_launcher_quotes_target_and_passes_arguments(self):
         with tempfile.TemporaryDirectory() as home:
             fex = os.path.join(home, '.steam/steam/steamapps/common/FEX-Emu/usr/bin/FEX')
