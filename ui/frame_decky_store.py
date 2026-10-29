@@ -860,6 +860,22 @@ def split_by_app(data):
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+            # Steam Status 1.2.3 disables TLS checks for its Steam CM-list and
+            # speed-test downloads. Keep the default verified contexts in the
+            # exact managed archive, including both indentation variants.
+            if int(plugin_id)==123 and digest=='9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e' and folder=='steamstatus-decky':
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if hashlib.sha256(data).hexdigest()!='3b0d2daa28f9f59b81bd0e7e11528e5b3522bd3287dc6bcd1ad8f7a92086858a':
+                    raise RuntimeError('Steam Status source differs from pinned archive')
+                for indent in (b'                ', b'                    '):
+                    unsafe=(indent+b'ssl_context.check_hostname = False\n'
+                            +indent+b'ssl_context.verify_mode = ssl.CERT_NONE\n')
+                    if data.count(unsafe)!=1:
+                        raise RuntimeError('Steam Status TLS source changed')
+                    data=data.replace(unsafe,b'')
+                main.write_bytes(data)
+                compat_shims.append('steam-status-verified-tls')
             # Deck Settings' exact 1.2.6 image uploader sends a bearer token
             # over HTTPS while disabling both certificate and hostname checks.
             # Retain Python's verified default context in this managed copy.

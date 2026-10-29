@@ -164,7 +164,18 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'deck-settings-readonly':
+            if case['probe'] == 'steam-status-readonly':
+                # Only read private defaults. The public CM-list and 100 MB
+                # download diagnostics must never run in this runtime probe.
+                source = (plugin/'main.py').read_text()
+                assert source.count('ssl.create_default_context()') == 2
+                assert 'ssl.CERT_NONE' not in source and 'ssl_context.check_hostname = False' not in source
+                settings = current('get_settings')
+                assert isinstance(settings, dict) and settings['refresh_interval_seconds'] == 120, settings
+                report['result'] = ('published Decky discovery and private settings read passed; '
+                                    'both managed public diagnostic contexts retain TLS verification; '
+                                    'no public network diagnostics, Frame or VR test')
+            elif case['probe'] == 'deck-settings-readonly':
                 # Never upload images, send a token, or change game settings.
                 # The container has no network or host Steam library access.
                 source = (plugin/'main.py').read_text()

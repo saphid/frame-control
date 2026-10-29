@@ -282,6 +282,48 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 
+    def test_exact_steam_status_managed_copy_verifies_public_diagnostics_tls(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 123)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=123,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        source = (folder/'main.py').read_text(encoding='utf-8')
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['steam-status-verified-tls'])
+        self.assertEqual(source.count('ssl.create_default_context()'), 2)
+        self.assertNotIn('ssl.CERT_NONE', source)
+        self.assertNotIn('ssl_context.check_hostname = False', source)
+
+        plugin_class = next(node for node in ast.parse(source).body
+                            if isinstance(node, ast.ClassDef) and node.name == 'Plugin')
+        nested = {}
+        for method_name, function_name in (('test_steam_latency', 'fetch_and_test_cms'),
+                                           ('test_internet_speed', 'test_download')):
+            method = next(node for node in plugin_class.body if getattr(node, 'name', None) == method_name)
+            nested[function_name] = next(node for node in ast.walk(method)
+                                         if isinstance(node, ast.FunctionDef) and node.name == function_name)
+        logger = types.SimpleNamespace(info=lambda *_: None, error=lambda *_: None)
+        namespace = {'ssl': ssl, 'urllib': urllib, 'time': types.SimpleNamespace(time=lambda: 1),
+                     'decky_plugin': types.SimpleNamespace(logger=logger),
+                     'test_url': 'https://private.invalid/fixture'}
+        exec(compile(ast.Module(body=list(nested.values()), type_ignores=[]),
+                     '<managed-steam-status>', 'exec'), namespace)
+        context = ssl.create_default_context()
+        with patch.object(ssl, 'create_default_context', return_value=context), \
+                patch.object(urllib.request, 'urlopen', side_effect=OSError('network denied')):
+            with self.assertRaisesRegex(OSError, 'network denied'):
+                namespace['fetch_and_test_cms']()
+            self.assertEqual(namespace['test_download'](), 0)
+        self.assertTrue(context.check_hostname)
+        self.assertEqual(context.verify_mode, ssl.CERT_REQUIRED)
+        result = self.apply('remove', plugin_id=123, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
     def test_exact_suggestme_fallback_keeps_certificate_verification(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 132)
