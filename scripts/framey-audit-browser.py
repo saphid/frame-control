@@ -34,17 +34,56 @@ addEventListener('message', event=>{
 });
 </script>'''
 
+# Opt-in replay for the exact Speed Test frontend. Fetch is replaced before the
+# official bundle loads; CSP still denies every network connection. Keep the
+# ordinary 116-plugin audit network-denied by default.
+SPEED_TEST_FETCH = r'''window.__speedTestMock={trace:0,down:0,up:0,other:0};
+window.fetch=async(input,options={})=>{
+  const url=new URL(String(input));
+  if(url.origin!=='https://speed.cloudflare.com'){
+    window.__speedTestMock.other++;
+    throw Error('Mock rejects external request');
+  }
+  if(options.signal?.aborted)throw new DOMException('Aborted','AbortError');
+  await new Promise(resolve=>setTimeout(resolve,12));
+  if(url.pathname==='/cdn-cgi/trace'){
+    window.__speedTestMock.trace++;
+    return new Response('colo=SYD\\n',{status:200});
+  }
+  if(url.pathname==='/__down'){
+    window.__speedTestMock.down++;
+    const bytes=Math.max(0,Math.min(Number(url.searchParams.get('bytes'))||0,100000));
+    return new Response(new Uint8Array(bytes),{status:200});
+  }
+  if(url.pathname==='/__up'&&options.method==='POST'){
+    window.__speedTestMock.up++;
+    return new Response('ok',{status:200});
+  }
+  window.__speedTestMock.other++;
+  throw Error('Mock rejects unknown Speed Test request');
+};'''
 
-def render_panel(record, data):
+
+def audit_prelude(speed_test_mock=False):
+    if not speed_test_mock:
+        return PRELUDE
+    return PRELUDE.replace(
+        "window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));",
+        SPEED_TEST_FETCH)
+
+
+def render_panel(record, data, speed_test_mock=False):
     if hashlib.sha256(data).hexdigest() != record['sha256']:
         raise ValueError('Archive hash mismatch')
+    if speed_test_mock and record['id'] != 118:
+        raise ValueError('Speed Test mock requires plugin 118')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         bundle = archive.read(record['folder']+'/dist/index.js')
     # The audit supplies only digest-checked archive bytes, not an installed
     # receipt. Stub the receipt-bound lookup while using the shipped renderer.
     with patch.object(framey_panel, '_owned_dist', return_value=(None, bundle, record['sha256'])):
         return framey_panel.panel(record['id']).replace(
-            b'<script id="framey-bundle"', PRELUDE.encode()+b'<script id="framey-bundle"')
+            b'<script id="framey-bundle"', audit_prelude(speed_test_mock).encode()+b'<script id="framey-bundle"')
 
 
 def read_module_asset(path, records, cache):
@@ -122,12 +161,18 @@ def main():
     parser.add_argument('--cache', type=Path, required=True)
     parser.add_argument('--catalog', type=Path, default=ROOT/'ui/framey-compatibility.json')
     parser.add_argument('--port', type=int, default=18765)
+    parser.add_argument('--speed-test-mock', action='store_true',
+                        help='Replay only plugin 118 with bounded in-memory Cloudflare responses')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
                         help='Optional detached running-app JSON; replay only, not live Steam/backend evidence')
     args = parser.parse_args()
     plugins = json.loads(args.catalog.read_text())['plugins']
+    if args.speed_test_mock:
+        plugins = [plugin for plugin in plugins if plugin['id'] == 118]
+        if len(plugins) != 1:
+            parser.error('Speed Test 118 missing from catalog')
     records = {p['id']: p for p in plugins}
     library = None
     if args.library_snapshot:
@@ -153,14 +198,18 @@ def main():
             if path == '/':
                 # Only names/IDs are needed by the UI; never embed raw executable source.
                 catalog = json.dumps([{'id': p['id'], 'name': p['name']} for p in plugins]).replace('<', '\\u003c')
-                body = PAGE.replace('CATALOG_DATA', catalog).replace(
+                page = PAGE.replace('CATALOG_DATA', catalog)
+                if args.speed_test_mock:
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Backend calls are denied. Speed Test uses bounded in-memory fixtures; CSP blocks network.')
+                body = page.replace(
                     'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).replace(
                     'RUNNING_DATA', json.dumps(running).replace('<', '\\u003c')).encode()
             elif path.startswith('/panel/'):
                 try:
                     record = records[int(path.split('/')[-1])]
                     data = (args.cache/(record['sha256']+'.zip')).read_bytes()
-                    body = render_panel(record, data)
+                    body = render_panel(record, data, args.speed_test_mock)
                 except (KeyError, ValueError, OSError, zipfile.BadZipFile):
                     self.send_error(404, 'Verified frontend archive unavailable')
                     return

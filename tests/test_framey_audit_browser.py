@@ -17,6 +17,15 @@ spec.loader.exec_module(audit)
 
 
 class ReceiptBoundAudit(unittest.TestCase):
+    def test_speed_test_replay_is_opt_in_and_network_denied(self):
+        default = audit.audit_prelude()
+        replay = audit.audit_prelude(speed_test_mock=True)
+        self.assertIn("window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));", default)
+        self.assertNotIn('speed.cloudflare.com', default)
+        self.assertIn("url.origin!=='https://speed.cloudflare.com'", replay)
+        self.assertIn('Math.min(Number(url.searchParams.get', replay)
+        self.assertIn("url.pathname==='/__up'&&options.method==='POST'", replay)
+
     def test_digest_checked_archive_renders_without_installed_plugin(self):
         bundle = b"import './chunks/frontend.js';"
         stream = io.BytesIO()
@@ -32,6 +41,8 @@ class ReceiptBoundAudit(unittest.TestCase):
         self.assertIn(b'const report=(kind,message)', page)
         with self.assertRaisesRegex(ValueError, 'hash mismatch'):
             audit.render_panel({**record, 'sha256':'0'*64}, data)
+        with self.assertRaisesRegex(ValueError, 'requires plugin 118'):
+            audit.render_panel(record, data, speed_test_mock=True)
 
         with tempfile.TemporaryDirectory() as directory:
             cache = Path(directory)
