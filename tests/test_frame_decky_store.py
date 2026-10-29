@@ -134,6 +134,22 @@ class ArchiveTests(unittest.TestCase):
             with self.subTest(digest=digest), self.assertRaisesRegex(ValueError, 'Unsafe'):
                 frame_decky_store.archive_info(data, digest, 'Example')
 
+    def test_exact_steamback_archive_duplicate_members_are_unchanged(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(plugin for plugin in PLUGINS if plugin['id'] == 46)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']),
+                         record['folder'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            duplicates = {}
+            for entry in bundle.infolist():
+                duplicates.setdefault(entry.filename, []).append(entry)
+            duplicates = [entries for entries in duplicates.values() if len(entries) > 1]
+            self.assertTrue(duplicates)
+            for entries in duplicates:
+                self.assertEqual([bundle.read(entry) for entry in entries][1:],
+                                 [bundle.read(entries[0])] * (len(entries) - 1))
+
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
 class StoreTransaction(unittest.TestCase):
@@ -191,6 +207,24 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove')
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
+
+    def test_exact_steamback_duplicate_archive_installs_and_removes(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(record for record in PLUGINS if record['id'] == 46)
+        data = official_archive(plugin)
+        folder = plugin['folder']
+        installed = self.folder.parent / folder
+        result = self.apply('install', data, plugin_id=plugin['id'],
+                            folder=folder, version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        receipt = json.loads((installed / '.frame-control-store.json').read_text())
+        self.assertEqual((receipt['storeId'], receipt['sha256']),
+                         (plugin['id'], plugin['sha256']))
+        self.assertTrue((installed / 'py_modules/steamback/__init__.py').is_file())
+        result = self.apply('remove', plugin_id=plugin['id'],
+                            folder=folder, version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(installed.exists())
 
     def test_exact_radiyo_managed_copy_restores_tls_verification(self):
         from framey_official import PLUGINS, archive as official_archive

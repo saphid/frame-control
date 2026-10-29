@@ -30,6 +30,11 @@
     "probe": "storage-cleaner"
   },
   {
+    "id": 46,
+    "shim": null,
+    "probe": "steamback-empty"
+  },
+  {
     "id": 104,
     "shim": null,
     "probe": "game-sync-config"

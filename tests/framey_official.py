@@ -31,6 +31,8 @@ PLUGINS = (
      'folder': 'steamstatus-decky', 'sha256': '9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e'},
     {'id': 50, 'name': 'Storage Cleaner', 'version': '1.4.0', 'api_version': 1,
      'folder': 'decky-storage-cleaner', 'sha256': '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'},
+    {'id': 46, 'name': 'Steamback', 'version': '1.0.0-1', 'api_version': 'legacy',
+     'folder': 'Steamback', 'sha256': 'ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3'},
     {'id': 18, 'name': 'Bluetooth', 'version': '3.1.1', 'api_version': 1,
      'folder': 'Bluetooth', 'sha256': 'f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5'},
     {'id': 26, 'name': 'HLTB for Deck', 'version': '2.0.12', 'api_version': 1,
