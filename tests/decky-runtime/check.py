@@ -366,7 +366,23 @@ def main():
                 assert not Path('/tmp/notifications.log').exists()
                 assert 'filename="/tmp/notifications.log"' not in (plugin/'main.py').read_text()
                 assert '=== ENVIRON ===' not in (plugin/'py_modules/connector/crypto.py').read_text()
-                fingerprint = until_ready(lambda: legacy('local_fingerprint'), 'private certificate fingerprint')
+
+                def fingerprint_when_ready():
+                    # Decky lists the plugin before its _main finishes creating
+                    # local.crt. Retry only that known startup race; all other
+                    # RPC failures still fail this native backend check.
+                    response = rpc('loader/call_legacy_plugin_method', record['name'],
+                                   'local_fingerprint', {})
+                    if response.get('success') is True:
+                        report['calls'].append({'method': 'local_fingerprint',
+                                                'result': response['result']})
+                        return response['result']
+                    if (response.get('success') is False and
+                            "No such file or directory: 'local.crt'" in str(response.get('result'))):
+                        raise FileNotFoundError('private certificate is still being created')
+                    raise AssertionError(('local_fingerprint', response))
+
+                fingerprint = until_ready(fingerprint_when_ready, 'private certificate fingerprint')
                 assert len(fingerprint) == 64 and all(c in '0123456789abcdef' for c in fingerprint), fingerprint
                 assert legacy('device_list') == []
                 assert legacy('notification_list') == []
@@ -386,7 +402,7 @@ def main():
                                            start_new_session=True)
                 processes.append(backend)
                 until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(lambda: legacy('local_fingerprint'), 'persisted fingerprint') == fingerprint
+                assert until_ready(fingerprint_when_ready, 'persisted fingerprint') == fingerprint
                 assert legacy('notification_list') == []
                 assert not Path('/tmp/notifications.log').exists()
                 report['result'] = ('discovery, private certificate, empty device list and synthetic notification '
