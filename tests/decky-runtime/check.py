@@ -1,5 +1,6 @@
 """Container-only real Decky backend discovery and smoke tests; no host services."""
 import argparse
+import ast
 import asyncio
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -163,7 +164,61 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'theme-music-settings':
+            if case['probe'] == 'deck-settings-readonly':
+                # Never upload images, send a token, or change game settings.
+                # The container has no network or host Steam library access.
+                source = (plugin/'main.py').read_text()
+                assert 'ssl.CERT_NONE' not in source and 'ctx.check_hostname = False' not in source
+                vendor = current('get_sys_vendor')
+                storage = current('is_emmc_storage')
+                assert isinstance(vendor, str) and isinstance(storage, bool), (vendor, storage)
+                # Exercise only the installed helper method against a private
+                # self-signed listener. A successful TLS handshake would expose
+                # the fixture bearer header, so rejection is the required result.
+                cls = next(node for node in ast.parse(source).body
+                           if isinstance(node, ast.ClassDef) and node.name == 'Plugin')
+                method = next(node for node in cls.body
+                              if isinstance(node, ast.FunctionDef) and node.name == '_http_request')
+                namespace = {'ssl': ssl, 'urllib': __import__('urllib'), 'RuntimeError': RuntimeError}
+                exec(compile(ast.Module(body=[method], type_ignores=[]),
+                             '<managed-deck-settings>', 'exec'), namespace)
+
+                hits = []
+                class UploadHandler(BaseHTTPRequestHandler):
+                    def do_POST(self):
+                        hits.append(self.headers.get('Authorization'))
+                        self.send_response(200)
+                        self.end_headers()
+
+                    def log_message(self, *_):
+                        pass
+
+                secure = ThreadingHTTPServer(('127.0.0.1', 0), UploadHandler)
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                fixtures = ROOT/'tests/decky-runtime/fixtures'
+                context.load_cert_chain(fixtures/'localhost-selfsigned.crt',
+                                        fixtures/'localhost-selfsigned.key')
+                secure.socket = context.wrap_socket(secure.socket, server_side=True)
+                worker = threading.Thread(target=secure.serve_forever, daemon=True)
+                worker.start()
+                try:
+                    try:
+                        namespace['_http_request'](None, f'https://localhost:{secure.server_port}/',
+                                                   'POST', {'Authorization': 'Bearer private-fixture'},
+                                                   b'private fixture', timeout=3)
+                    except RuntimeError as error:
+                        assert 'CERTIFICATE_VERIFY_FAILED' in str(error), error
+                    else:
+                        raise AssertionError('Deck Settings accepted a self-signed upload endpoint')
+                    assert hits == [], hits
+                finally:
+                    secure.shutdown()
+                    secure.server_close()
+                    worker.join(timeout=3)
+                report['result'] = ('published Decky discovery and read-only system/storage RPCs passed; '
+                                    'managed upload helper rejected self-signed loopback HTTPS; '
+                                    'real uploads, reports, settings writes, Frame and VR unverified')
+            elif case['probe'] == 'theme-music-settings':
                 # The official plugin can search/download media and patch Steam
                 # game pages. This case exercises only private settings in a
                 # networkless container, without media or user library data.

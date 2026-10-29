@@ -7433,13 +7433,15 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
       "status": "partial",
-      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Remote reports/proxy fetch, settings changes and ARM64 backend remain unverified.",
+      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Exact managed 1.2.6 installs restore certificate and hostname checks for the token-bearing image uploader. Published Decky 3.3.0 x86_64 discovers the managed backend, returns read-only system/storage values, and rejects a private self-signed upload endpoint before sending a fixture token. Older copies need Update. Remote reports, public uploads, settings changes, the real Frame backend and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame SSH"
+        "real Frame SSH",
+        "isolated Decky 3.3.0 x86_64 backend",
+        "local TLS negative control"
       ],
       "browser": {
         "id": 93,
@@ -7485,7 +7487,14 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-deck-settings-tls-2026-10-29.md",
+        "mode": "exact managed 1.2.6 source under published Decky 3.3.0 x86_64; read-only RPCs and self-signed loopback HTTPS rejection; no external upload"
+      },
+      "requiredShims": [
+        "deck-settings-verified-tls"
+      ]
     },
     {
       "id": 94,

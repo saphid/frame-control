@@ -5,6 +5,11 @@
     "probe": "theme-music-settings"
   },
   {
+    "id": 93,
+    "shim": "deck-settings-verified-tls",
+    "probe": "deck-settings-readonly"
+  },
+  {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
     "probe": "emuchievements-private-hash"
