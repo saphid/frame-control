@@ -1479,7 +1479,7 @@
         "https://github.com/isiah-lloyd/radiyo-steam-deck"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds. Exact official legacy backend passed published Decky 3.3.0 x86_64 discovery and loopback-only station fetch, custom-station fetch and redirect in a network-isolated container. Real radio services, HTTPS behavior, audio playback, real Frame backend and worn VR remain unverified. The published backend disables HTTPS certificate verification; no external request was made.",
+      "reason": "Initializer succeeds. The exact official legacy backend passes isolated Decky 3.3.0 discovery and loopback HTTP station fetch, custom fetch and redirect. A digest-scoped managed install restores TLS certificate and hostname checks; its fetch and redirect methods reject a loopback self-signed HTTPS endpoint. External radio services, trusted HTTPS, audio playback, real Frame backend and worn VR remain unverified. Older installed copies need an update for the TLS fix.",
       "blockInstall": false,
       "verification": [
         "static archive",

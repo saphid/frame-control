@@ -289,10 +289,10 @@ def main():
                 report['result'] = ('discovery, default config and private setting restart persistence passed; '
                     'rclone, cloud authentication, sync, process signals, real Frame and VR unverified')
             elif case['probe'] == 'radio-local':
-                # The published backend accepts arbitrary URLs and disables
-                # HTTPS verification. Exercise only a loopback fixture inside
-                # this network-isolated container; no station or audio opens.
+                # Exercise HTTP behavior and prove managed RadiYo rejects a
+                # self-signed HTTPS endpoint. No station or audio opens.
                 marker = 'Framey private radio station\n'
+                assert 'ctx.verify_mode = ssl.CERT_NONE' not in (plugin/'main.py').read_text()
 
                 class RadioHandler(BaseHTTPRequestHandler):
                     def do_GET(self):
@@ -329,8 +329,27 @@ def main():
                     server.shutdown()
                     server.server_close()
                     worker.join(timeout=3)
-                report['result'] = ('actual Decky discovery and local station fetch/redirect passed; '
-                    'external radio, HTTPS, audio playback, Frame and VR unverified')
+                secure = ThreadingHTTPServer(('127.0.0.1', 0), RadioHandler)
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+                fixtures = ROOT/'tests/decky-runtime/fixtures'
+                context.load_cert_chain(fixtures/'localhost-selfsigned.crt',
+                                        fixtures/'localhost-selfsigned.key')
+                secure.socket = context.wrap_socket(secure.socket, server_side=True)
+                worker = threading.Thread(target=secure.serve_forever, daemon=True)
+                worker.start()
+                try:
+                    base_url = f'https://localhost:{secure.server_port}'
+                    for method, kwargs in (
+                            ('fetch', {'url': base_url+'/station', 'customStation': False}),
+                            ('getRedirectUrl', {'url': base_url+'/redirect'})):
+                        result = legacy(method, **kwargs)
+                        assert 'error' in result and 'CERTIFICATE_VERIFY_FAILED' in result['error'], result
+                finally:
+                    secure.shutdown()
+                    secure.server_close()
+                    worker.join(timeout=3)
+                report['result'] = ('discovery, loopback HTTP fetch/redirect and self-signed HTTPS rejection passed; '
+                    'external stations, trusted HTTPS, playback, real Frame and VR unverified')
             elif case['probe'] == 'shelves-settings':
                 # Private configuration only. Never register a Steam Home
                 # patch, import a user's settings, or touch their library.

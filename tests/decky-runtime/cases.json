@@ -16,7 +16,7 @@
   },
   {
     "id": 24,
-    "shim": null,
+    "shim": "radiyo-verified-tls",
     "probe": "radio-local"
   },
   {
