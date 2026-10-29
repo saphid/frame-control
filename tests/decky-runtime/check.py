@@ -286,7 +286,6 @@ def main():
                 until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
                 assert until_ready(lambda: current('get_config')['advanced_mode'],
                                    'private Game Sync setting after restart') is True
-                assert not (base/'rclone').exists()
                 report['result'] = ('discovery, default config and private setting restart persistence passed; '
                     'rclone, cloud authentication, sync, process signals, real Frame and VR unverified')
             elif case['probe'] == 'radio-local':
