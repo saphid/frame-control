@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 # Inspect the actual DMG and ZIP before either Mac installer is uploaded.
 set -euo pipefail
+shopt -s nullglob
 
 cd "$(dirname "$0")/.."
-mapfile -t references < <(find app/dist -mindepth 2 -maxdepth 2 -type d -name 'Frame Control.app' -print)
+references=(app/dist/*/'Frame Control.app')
 if [[ ${#references[@]} -ne 1 ]]; then
   echo "expected one unpacked Mac app; found ${#references[@]}" >&2
   exit 1
@@ -12,7 +13,7 @@ reference=${references[0]}
 version=$(node -p "require('./app/package.json').version")
 
 for extension in dmg zip; do
-  mapfile -t packages < <(find app/dist -maxdepth 1 -type f -name "*.$extension" -print)
+  packages=(app/dist/*."$extension")
   if [[ ${#packages[@]} -ne 1 ]]; then
     echo "expected one Mac $extension; found ${#packages[@]}" >&2
     exit 1
