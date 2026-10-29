@@ -33,7 +33,7 @@ action works in VR.** No plugin was tried by a wearer.
 | Bluetooth 3.1.1 | Partial | Backend logged `Bluetooth plugin loaded`. Pairing and VR controls were not checked. |
 | PowerTools 2.0.3 | Not applicable | Manifest asks for root; archive includes x86_64 Ryzen binaries and targets Steam Deck hardware. The Frame user service blocks it. |
 | Audio Loader 1.6.1 | Not applicable | Manifest asks for `_root`; the Frame user service blocks it. |
-| Wine Cellar 0.2.1 | Broken on ARM64 | Archive includes an x86_64 backend binary. The store installer blocks it before execution. |
+| Wine Cellar 0.2.1 | Broken on ARM64 | Archive includes an x86_64 backend binary. The store installer blocks it before execution. A [read-only ARM64 helper probe](evidence/framey-wine-cellar-arm64-2026-10-29.md) does not verify a safe panel bridge or plugin operation. |
 | MagicPods 2.0.21 | Broken on ARM64 | Archive includes an x86_64 `magicpodscore` binary. The store installer blocks it before execution. |
 | Decky Recorder | Not in current official store | No matching plugin appeared in the official store list on this date; no archive was installed. Frame Control's own headset panel has a separate recorder. |
 
