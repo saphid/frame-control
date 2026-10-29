@@ -60,7 +60,7 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
         page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
         for old, new in [('CATALOG_DATA', '[{"id":67,"name":"Battery Tracker"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
-                         ('BATTERY_FIXTURE', 'true')]:
+                         ('BATTERY_FIXTURE', 'true'), ('NETWORK_FIXTURE', 'false')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -99,6 +99,51 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
     {method:'get_recent_data',lookback:8},
     {method:'delete_all',lookback:null},
   ]);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=page_script,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
+    def test_network_sentinel_fixture_is_read_only_and_exact_plugin_scoped(self):
+        page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
+        for old, new in [('CATALOG_DATA', '[{"id":114,"name":"Network Sentinel"}]'),
+                         ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
+                         ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'true')]:
+            page_script = page_script.replace(old, new)
+        script = r'''
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const messages=[],handlers={};
+const context={panel:{src:'',contentWindow:{postMessage:data=>messages.push(data)}},
+  run:{disabled:false},download:{},progress:{textContent:''},
+  addEventListener:(type,handler)=>{handlers[type]=handler},
+  setTimeout:callback=>{callback();return 1},
+  URL,Blob,Number,Promise,JSON,Error,Object};
+context.window=context;
+vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
+(async()=>{
+  await context.runAudit([114],1200);
+  assert.equal(context.panel.src,'/panel/114');
+  function call(method,legacy=false){
+    messages.length=0;
+    handlers.message({source:context.panel.contentWindow,
+      data:{type:'framey:call',id:1,method,args:[],legacy}});
+    return messages.at(-1);
+  }
+  for(const method of ['get_network_status','get_live_ping','get_settings',
+    'get_connection_info','get_network_history']){
+    assert.ok(Object.hasOwn(call(method),'result'),method);
+  }
+  assert.equal(call('get_settings').result.auto_monitor,false);
+  for(const method of ['start_monitoring','stop_monitoring','update_settings',
+    'clear_history','test_single_ping','test_dns','scan_wifi_networks']){
+    assert.match(call(method).error,/rejects backend method/,method);
+  }
+  assert.match(call('get_network_status',true).error,/backend method blocked/);
+  assert.equal(context.networkFixtureCalls.length,13);
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''
         result = subprocess.run(['node', '-e', script], input=page_script,
