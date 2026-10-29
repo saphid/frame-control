@@ -11886,12 +11886,16 @@
         "https://github.com/lemossilva/suggestme-decky-plugin.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; recommendation backend and Steam library data unverified.",
+      "reason": "The exact managed install keeps certificate and hostname verification when SuggestMe's certifi context fails. Published Decky 3.3.0 amd64 discovered the backend, returned empty-library defaults and kept a private filter preset after restart. Existing managed copies need update or reinstall; older copies may disable TLS verification on certifi failure. Real Steam library recommendations, credentials, external requests, ARM64 Frame backend and worn VR remain unverified.",
       "blockInstall": false,
+      "requiredShims": [
+        "suggestme-verified-tls"
+      ],
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 amd64 backend"
       ],
       "browser": {
         "id": 132,

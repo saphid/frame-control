@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `67.zip` and `114.zip` on 2026-10-28. `24.zip` and `104.zip` were added on 2026-10-29.
+and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `104.zip` and `132.zip` were added on 2026-10-29.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -13,6 +13,7 @@ from a local fixture so CI does not depend on the store being online.
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
 | `24.zip` | RadiYo! | 1.3 | `647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43` |
 | `104.zip` | Game Sync | 1.0.4 | `65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd` |
+| `132.zip` | SuggestMe | 1.5.3 | `248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4` |
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
 | `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `114.zip` | Network Sentinel | 1.0.4 | `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5` |
@@ -68,6 +69,11 @@ and redirect, and rejects a self-signed loopback HTTPS endpoint from both
 methods. The certificate and private key under `tests/decky-runtime/fixtures`
 are public test fixtures; they grant no trusted access. External radio, trusted
 HTTPS and audio playback remain unverified.
+SuggestMe runs through actual published Decky 3.3.0 instance RPC in the same
+isolation. Its managed copy keeps certificate verification on when certifi
+context creation fails. The probe covers default and empty-library reads plus
+a private filter preset after restart. It uses no account credentials, external
+network, actual Steam library or real Frame.
 Storage Cleaner runs through the published Decky loader with only disposable
 cache markers: size/list, selected-app delete and whole-directory delete pass.
 The managed copy rejects traversal and symlink delete paths. No real game or

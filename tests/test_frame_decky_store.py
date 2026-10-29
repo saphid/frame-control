@@ -1,5 +1,6 @@
 """Official Decky store transport and owned plugin transaction."""
 import sandbox  # noqa: F401
+import ast
 import hashlib
 import asyncio
 import importlib.util
@@ -9,6 +10,7 @@ import logging
 import os
 from pathlib import Path
 import secrets
+import ssl
 import subprocess
 import sys
 import tempfile
@@ -243,6 +245,34 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotIn('ctx.check_hostname = False', source)
         self.assertEqual(source.count("'URL Error: ' + str(error.reason)"), 2)
         result = self.apply('remove', plugin_id=24, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    def test_exact_suggestme_fallback_keeps_certificate_verification(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 132)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=132,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        source = (folder/'main.py').read_text(encoding='utf-8')
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])
+        self.assertNotIn('ssl.CERT_NONE', source)
+        self.assertNotIn('ctx.check_hostname = False', source)
+        method = next(node for node in ast.parse(source).body
+                      if isinstance(node, ast.FunctionDef) and node.name == '_create_ssl_context')
+        namespace = {'ssl': ssl, 'certifi': types.SimpleNamespace(where=lambda: '/missing-ca')}
+        exec(compile(ast.Module(body=[method], type_ignores=[]), '<managed-suggestme>', 'exec'), namespace)
+        verified = ssl.create_default_context()
+        with patch.object(ssl, 'create_default_context', side_effect=[OSError('certifi CA failed'), verified]):
+            fallback = namespace['_create_ssl_context']()
+        self.assertIs(fallback, verified)
+        self.assertTrue(fallback.check_hostname)
+        self.assertEqual(fallback.verify_mode, ssl.CERT_REQUIRED)
+        result = self.apply('remove', plugin_id=132, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 

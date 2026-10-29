@@ -90,6 +90,16 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
+    def test_suggestme_old_copy_exposes_tls_update_requirement(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 132)
+        old = dict(storeId=132, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['suggestme-verified-tls'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertIn('may disable TLS verification', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
             self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')

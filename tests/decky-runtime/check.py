@@ -288,6 +288,33 @@ def main():
                                    'private Game Sync setting after restart') is True
                 report['result'] = ('discovery, default config and private setting restart persistence passed; '
                     'rclone, cloud authentication, sync, process signals, real Frame and VR unverified')
+            elif case['probe'] == 'suggestme-private':
+                # No Steam API key, account, owned library, external request or
+                # recommendation fetch enters this network-isolated probe.
+                source = (plugin/'main.py').read_text()
+                assert 'ssl.CERT_NONE' not in source and 'check_hostname = False' not in source
+                config = current('get_config')
+                assert config['has_steam_api_key'] is False and config['has_steam_id'] is False, config
+                status = current('get_library_status')
+                assert status['total_games'] == 0 and status['is_refreshing'] is False, status
+                empty = current('get_suggestion', 'luck', {})
+                assert empty['game'] is None and 'Library is empty' in empty['error'], empty
+                assert current('get_filter_presets')['active_index'] is None
+                saved = current('save_filter_preset', 0, 'Framey private', {'genres': []})
+                assert saved == {'success': True}, saved
+                presets = current('get_filter_presets')
+                assert presets['active_index'] == 0 and presets['presets'][0]['label'] == 'Framey private', presets
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                restored = until_ready(lambda: current('get_filter_presets')['presets'][0],
+                                       'private SuggestMe preset after restart')
+                assert restored['label'] == 'Framey private', restored
+                report['result'] = ('published Decky discovery, empty library and private preset restart passed; '
+                    'network recommendations, actual Steam library, Frame and VR unverified')
             elif case['probe'] == 'radio-local':
                 # Exercise HTTP behavior and prove managed RadiYo rejects a
                 # self-signed HTTPS endpoint. No station or audio opens.

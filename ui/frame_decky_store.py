@@ -43,6 +43,8 @@ BATTERY_TRACKER_DIGEST = '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed
 BATTERY_TRACKER_MAIN = '2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725'
 RADIYO_DIGEST = '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'
 RADIYO_MAIN = '868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e'
+SUGGESTME_DIGEST = '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4'
+SUGGESTME_MAIN = '9c141daf754302698d3e3e9ced70e36e9a4beb0b04f794fb66e7e45bd3b8d6e3'
 STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
 
@@ -178,6 +180,9 @@ def archive_info(data, expected_hash, expected_name):
         if (expected_hash == RADIYO_DIGEST and expected_name == 'RadiYo!' and folder == 'radiyo-steam-deck'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != RADIYO_MAIN):
             raise ValueError('RadiYo source differs from the pinned archive')
+        if (expected_hash == SUGGESTME_DIGEST and expected_name == 'SuggestMe' and folder == 'SuggestMe-decky-plugin'
+                and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != SUGGESTME_MAIN):
+            raise ValueError('SuggestMe source differs from the pinned archive')
         if (expected_hash == STORAGE_CLEANER_DIGEST and expected_name == 'Storage Cleaner'
                 and folder == 'decky-storage-cleaner'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != STORAGE_CLEANER_MAIN):
@@ -737,6 +742,19 @@ def split_by_app(data):
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+            # The exact SuggestMe archive disables hostname and certificate
+            # checks if certifi context creation fails. Keep the system CA
+            # fallback verified before any credential-bearing API request.
+            if int(plugin_id)==132 and digest=='248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4' and folder=='SuggestMe-decky-plugin':
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if hashlib.sha256(data).hexdigest()!='9c141daf754302698d3e3e9ced70e36e9a4beb0b04f794fb66e7e45bd3b8d6e3':
+                    raise RuntimeError('SuggestMe source differs from pinned archive')
+                old=b'    except Exception:\r\n        ctx = ssl.create_default_context()\r\n        ctx.check_hostname = False\r\n        ctx.verify_mode = ssl.CERT_NONE\r\n        return ctx\r\n'
+                new=b'    except Exception:\r\n        return ssl.create_default_context()\r\n'
+                if data.count(old)!=1: raise RuntimeError('SuggestMe TLS source changed')
+                main.write_bytes(data.replace(old,new))
+                compat_shims.append('suggestme-verified-tls')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.
