@@ -29,6 +29,8 @@ A [Free Loader duplicate-entry follow-up](evidence/framey-free-loader-duplicates
 
 A [2026-10-28 static action-limit review](evidence/framey-static-action-limits-2026-10-28.md) hash-checked the exact AutoSuspend and CheatDeck archives. AutoSuspend contains Steam suspend/shutdown paths, and CheatDeck's advertised trainer flow needs a Steam game context menu and launch-option writes. Neither plugin was executed; both retain their broken labels.
 
+A [static EmuDecky startup audit](evidence/framey-emudecky-static-2026-10-29.md) hash-checked the exact 1.0.2-1 archive. Besides its x86_64 helper and root flag, the backend would run git reset --hard and git pull on load in the user's EmuDeck checkout. The plugin was not executed and remains blocked.
+
 A [Network Sentinel user-service check](evidence/framey-network-sentinel-2026-10-28.md) adapts only the exact 1.0.4 digest. In isolated actual Decky 3.3.0 amd64 and ARM64, the pinned plugin-local psutil wheel, private settings RPC and one monitoring-loop sample pass. External ping/DNS, a real Frame backend, panel controls and worn VR remain unverified; this is partial compatibility.
 
 A [Battery Tracker user-service check](evidence/framey-battery-tracker-2026-10-28.md) adapts only the exact 0.2.0 digest. A locked read-only Frame probe confirmed a Battery-type supply with the required fields; actual Decky 3.3.0 amd64 and ARM64 recorded private Frame-shaped samples and returned history/per-app power. A [local panel replay](evidence/framey-battery-panel-fixture-2026-10-29.md) rendered synthetic history and lookback controls in Chromium. The managed plugin has not run on the real Frame; real Frame panel controls and worn VR remain unverified. This is partial compatibility.
@@ -91,7 +93,7 @@ The API column shows manifest / actual bundled frontend API. Many manifests say 
 | 68: Wine Cellar 0.2.1 | 1 / 2 | broken | Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend. Frontend audit failed: Audit blocks WebSocket. | static archive, local browser, fake-Frame |
 | 70: MicroSDeck 0.11.2 | legacy / 2 | broken | Plugin contains a non-ARM64 Linux binary: MicroSDeck/bin/backend. | static archive, local browser, fake-Frame |
 | 72: ScreenshotUploader 0.0.3 | legacy / legacy | partial | Initializer succeeds; screenshot upload requires external credentials/network and was not run. | static archive, local browser, fake-Frame |
-| 73: EmuDecky 1.0.2-1 | legacy / legacy | broken | Plugin contains a non-ARM64 Linux binary: EmuDecky/bin/hello. | static archive, local browser, fake-Frame |
+| 73: EmuDecky 1.0.2-1 | legacy / legacy | broken | The exact archive contains an x86_64 bin/hello and requests root. Its backend _main also runs git reset --hard and git pull in the user's EmuDeck backend checkout on load. No managed install or EmuDeck command was run; this remains blocked. | static archive, local browser, fake-Frame |
 | 74: KDE Connect 0.1.0-1 | legacy / legacy | partial | Initializer succeeds; KDE Connect installation/pairing/file transfers unverified. | static archive, local browser, fake-Frame |
 | 75: Reshadeck 0.2.0 | legacy / legacy | partial | Initializer succeeds; ReShade deployment into Proton games is unverified. | static archive, local browser, fake-Frame |
 | 76: CheatDeck 1.1.6 | 1 / 2 | broken | Frontend audit failed: Cannot convert undefined or null to object. Its primary trainer workflow uses a Steam game context menu and launch-option writes, with no target in the isolated Framey panel; no trainer launch was verified. | static archive, local browser, fake-Frame |
@@ -310,7 +312,7 @@ A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.
 | Syncthing | bin/decky-syncthing-watchdog | The watchdog needs an ARM64 build, plus a supported Syncthing runtime/package and safe path validation. |
 | Wine Cellar | bin/backend | Native backend needs an ARM64 build; direct websocket and Wine runtime assumptions also need integration. |
 | MicroSDeck | bin/backend | Native backend needs an ARM64 build and block-device/mount permission audit; no storage actions were run. |
-| EmuDecky | bin/hello | Published bin/hello is x86_64 even if unused; upstream must remove it or publish an ARM64 archive, plus remove root dependency. |
+| EmuDecky | bin/hello | Published bin/hello is x86_64 even if unused, and the manifest requests root. A safe ARM64 adaptation must also remove the automatic git reset --hard and git pull startup behavior before any managed backend test. |
 | MagicPods | bin/magicpodscore | magicpodscore requires an upstream ARM64 artifact/source and protocol tests; frontend uses a direct websocket. |
 | Decky-Undervolt | bin/libryzenadj.so, bin/ryzenadj | RyzenAdj is AMD-specific and cannot be ported to control the Frame SoC. |
 | Decky-SpoofDPI | bin/spoofdpi | SpoofDPI is a separate upstream helper; needs an ARM64 artifact/protocol and network-permission validation. |

@@ -5617,7 +5617,7 @@
         "https://github.com/SteamDeckHomebrew/decky-plugin-template"
       ],
       "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: EmuDecky/bin/hello.",
+      "reason": "The exact archive contains an x86_64 bin/hello and requests root. Its backend _main also runs git reset --hard and git pull in the user's EmuDeck backend checkout on load. No managed install or EmuDeck command was run; this remains blocked.",
       "blockInstall": true,
       "verification": [
         "static archive",
@@ -5646,7 +5646,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Published bin/hello is x86_64 even if unused; upstream must remove it or publish an ARM64 archive, plus remove root dependency.",
+      "nativePort": "Published bin/hello is x86_64 even if unused, and the manifest requests root. A safe ARM64 adaptation must also remove the automatic git reset --hard and git pull startup behavior before any managed backend test.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts"
