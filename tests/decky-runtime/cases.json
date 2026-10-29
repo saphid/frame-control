@@ -25,6 +25,11 @@
     "probe": "suggestme-private"
   },
   {
+    "id": 79,
+    "shim": "notifications-private-logs",
+    "probe": "notifications-private"
+  },
+  {
     "id": 135,
     "shim": null,
     "probe": "shelves-settings"

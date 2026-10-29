@@ -14,6 +14,8 @@ PLUGINS = (
      'folder': 'radiyo-steam-deck', 'sha256': '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'},
     {'id': 132, 'name': 'SuggestMe', 'version': '1.5.3', 'api_version': 1,
      'folder': 'SuggestMe-decky-plugin', 'sha256': '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4'},
+    {'id': 79, 'name': 'Decky Notifications', 'version': '1.0.1', 'api_version': 'legacy',
+     'folder': 'decky-notifications', 'sha256': '3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312'},
     {'id': 104, 'name': 'Game Sync', 'version': '1.0.4', 'api_version': 1,
      'folder': 'SDH-GameSync', 'sha256': '65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd'},
     {'id': 60, 'name': 'DeckyFileServer', 'version': '1.2.0', 'api_version': 1,
