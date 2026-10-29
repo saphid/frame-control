@@ -41,7 +41,8 @@ RUN ln -sf ../usr/lib/os-release /etc/os-release \
     && cp /usr/bin/sleep /usr/local/lib/fakeframe/bin/vrserver \
     && cp /usr/bin/sleep /usr/local/lib/fakeframe/bin/plasmashell \
     && chmod 1777 /var/lib/fakeframe /var/log/fakeframe \
-    && chown -R steamos:steamos /home/steamos
+    && chown -R steamos:steamos /home/steamos \
+    && chmod 755 /home/steamos
 
 EXPOSE 22 32000 9999
 CMD ["python3", "/usr/local/lib/fakeframe/init.py"]

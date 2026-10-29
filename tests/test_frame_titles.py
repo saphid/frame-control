@@ -4,10 +4,12 @@ import json
 import os
 import shutil
 import struct
+import subprocess
 import sys
 import tempfile
 import unittest
 import zipfile
+from unittest import mock
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'ui'))
 import frame_titles  # noqa: E402
@@ -53,6 +55,11 @@ class Classify(unittest.TestCase):
         self.assertEqual(self.check(elf(0xB7)), {'format': 'elf', 'arch': 'arm64', 'exe': True})
         self.assertEqual(self.check(elf(0x3E))['arch'], 'x86_64')
         self.assertEqual(self.check(elf(0x3E, e_type=2, interp=False))['exe'], True)   # ET_EXEC
+        self.assertTrue(self.check(elf(0x3E, e_type=2, interp=False))['static'])
+        self.assertFalse(self.check(elf(0x3E, e_type=2, interp=True))['static'])
+
+    def test_truncated_static_elf_table_is_not_assumed_safe_for_direct_fex(self):
+        self.assertFalse(self.check(elf(0x3E, e_type=2, interp=False)[:64])['static'])
 
     def test_shared_library_is_not_a_program(self):
         self.assertFalse(self.check(elf(0xB7, interp=False))['exe'])
@@ -123,6 +130,18 @@ class Targets(unittest.TestCase):
         p = self.plan({'game.x86_64': elf(0x3E)}, 'game')
         self.assertEqual(p['runtime'], 'SteamLinuxRuntime_4')
         self.assertIn("won't start", p['note'])
+
+    def test_static_x86_64_linux_build_uses_native_fex_launcher(self):
+        p = self.plan({'game.x86_64': elf(0x3E, e_type=2, interp=False)}, 'game')
+        self.assertEqual(p['runtime'], 'SteamLinuxRuntime_4-arm64')
+        self.assertTrue(p['static'])
+        self.assertIn('static', p['note'].lower())
+
+    def test_script_beside_static_x86_binary_keeps_old_runtime(self):
+        p = self.plan({'run.sh': b'#!/bin/sh\nexec bin/game\n',
+                       'bin/game': elf(0x3E, e_type=2, interp=False)}, 'game')
+        self.assertEqual(p['target'], 'run.sh')
+        self.assertEqual(p['runtime'], 'SteamLinuxRuntime_4')
 
     def test_native_arm64_beats_x86_64(self):
         p = self.plan({'game.x86_64': elf(0x3E, pad=900), 'game.arm64': elf(0xB7)}, 'game')
@@ -384,6 +403,38 @@ class Names(unittest.TestCase):
 
 
 class Parms(unittest.TestCase):
+    def test_fex_launcher_quotes_target_and_passes_arguments(self):
+        with tempfile.TemporaryDirectory() as home:
+            fex = os.path.join(home, '.steam/steam/steamapps/common/FEX-Emu/usr/bin/FEX')
+            os.makedirs(os.path.dirname(fex))
+            with open(fex, 'w') as out:
+                out.write('#!/bin/sh\nprintf "%s\\n" "$@"\n')
+            os.chmod(fex, 0o755)
+            title = os.path.join(home, 'title')
+            os.mkdir(title)
+            rel = "bin/game's name; echo unsafe"
+            os.mkdir(os.path.join(title, 'bin'))
+            open(os.path.join(title, rel), 'w').close()
+            wrapper = os.path.join(title, frame_titles.FEX_LAUNCHER)
+            with open(wrapper, 'w') as out:
+                out.write(frame_titles.fex_launcher(rel))
+            os.chmod(wrapper, 0o755)
+            run = subprocess.run([wrapper, 'one', 'two words'], env={**os.environ, 'HOME': home},
+                                 capture_output=True, text=True, check=True)
+            self.assertEqual(run.stdout.splitlines(), [os.path.join(title, rel), 'one', 'two words'])
+
+    def test_static_x86_install_requires_fex_before_device_mutation(self):
+        with tempfile.TemporaryDirectory() as root:
+            program = os.path.join(root, 'game.x86_64')
+            with open(program, 'wb') as out:
+                out.write(elf(0x3E, e_type=2, interp=False))
+            plan = frame_titles.inspect(root, 'game')
+            with mock.patch.object(frame_titles, 'ssh', return_value='') as read:
+                with self.assertRaisesRegex(FrameError, 'FEX is unavailable'):
+                    frame_titles._install(plan, lambda *_: None)
+            read.assert_called_once()
+            self.assertIn('test -x', read.call_args.args[0])
+
     def test_proton_parms(self):
         p = frame_titles.shortcut_parms('Cool_Game', '/home/steamos/devkit-game/Cool_Game',
                                         'Cool Game.exe', 'proton-experimental')
