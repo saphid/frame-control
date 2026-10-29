@@ -20,3 +20,9 @@ version all stop before an upload or release PATCH. Existing successful dry-run
 and publication cases still pass with an exact fake commit and version. This
 evidence uses local fixtures only; it is not a tagged installer build, real
 Frame smoke or release publication.
+
+The first two hosted Windows runs exposed a test harness error: Git Bash used
+the runner's `git.exe` instead of an extensionless fake `git` script. The suite
+now creates a small real Git checkout for each fixture, while keeping GitHub
+calls on the existing fake `gh`. The 19 publisher tests pass locally after
+this change; hosted checks on the new head remain the merge gate.

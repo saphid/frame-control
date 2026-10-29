@@ -16,7 +16,6 @@ import unittest
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
-SCRIPT = ROOT / "scripts" / "publish-release.sh"
 FAKEGH = ROOT / "tests" / "fakegh"
 INSTALLERS = ["Frame-Control-mac-arm64.dmg", "Frame-Control-mac-arm64.zip",
               "Frame-Control-mac-x64.dmg", "Frame-Control-mac-x64.zip", "Frame-Control-Setup-x64.exe",
@@ -71,25 +70,34 @@ class PublishRelease(unittest.TestCase):
                    local_head=None, local_dirty=False, local_status_fail=False,
                    local_version="9.8.7"):
         d = Path(tempfile.mkdtemp())
-        shutil.copy2(FAKEGH / "gh", d / "gh")
-        git = d / "git"
-        git.write_text('''#!/bin/sh
-if [ "$1" = "-C" ]; then shift 2; fi
-case "$*" in
-  'rev-parse --verify HEAD') printf '%s\\n' "$FAKEGIT_HEAD" ;;
-  'status --porcelain --untracked-files=normal') [ "$FAKEGIT_STATUS_FAIL" = 1 ] && exit 2; [ "$FAKEGIT_DIRTY" = 1 ] && echo '?? owned-test-file' || : ;;
-  'show HEAD:app/package.json') printf '{"version":"%s"}\\n' "$FAKEGIT_VERSION" ;;
-  *) exit 2 ;;
-esac
-''')
-        git.chmod(0o700)
+        self.addCleanup(shutil.rmtree, d, ignore_errors=True)
+        checkout = d / "checkout"
+        scripts = checkout / "scripts"
+        scripts.mkdir(parents=True)
+        for name in ("publish-release.sh", "verify-release-gates.py",
+                     "verify-frame-smoke-result.py", "release-checksums.py",
+                     "verify-release-asset-audit.py", "release-safety-note.md"):
+            shutil.copy2(ROOT / "scripts" / name, scripts / name)
+        app = checkout / "app"
+        app.mkdir()
+        (app / "package.json").write_text(json.dumps({"version": local_version}))
+        subprocess.run(["git", "-C", str(checkout), "init", "-q"], check=True)
+        subprocess.run(["git", "-C", str(checkout), "add", "."], check=True)
+        subprocess.run(["git", "-C", str(checkout), "-c", "user.name=Release Test",
+                        "-c", "user.email=release-test@example.invalid", "commit", "-qm", "fixture"], check=True)
+        commit = subprocess.check_output(["git", "-C", str(checkout), "rev-parse", "HEAD"], text=True).strip()
+        tag_commit = local_head or commit
+        if local_dirty:
+            (checkout / "owned-test-file").write_text("dirty")
+        if local_status_fail:
+            (checkout / ".git" / "index").write_bytes(b"invalid index")
         (d / "releases.json").write_text(json.dumps(releases))
-        (d / "gates.json").write_text(json.dumps(gates or {}))
+        (d / "gates.json").write_text(json.dumps({"tag_commit": tag_commit, **(gates or {})}))
         steps = ["cleanup: leftovers from earlier runs", "devkit service: properties.json",
                  "status", "cleanup: everything this run installed"] + [
                      f"{kind}: {action}" for kind in ("arm64", "x86_64", "exe")
                      for action in ("install", "launch", "remove")]
-        clean_smoke = {"source": {"commit": "a" * 40, "clean": True},
+        clean_smoke = {"source": {"commit": tag_commit, "clean": True},
                        "lock_released": True,
                        "steps": [{"step": name, "ok": True} for name in steps],
                        "passed": len(steps), "skipped": 0, "failed": 0,
@@ -107,15 +115,11 @@ esac
         if audit is not False and matching:
             (d / 'asset-audit.json').write_text(json.dumps(
                 asset_audit(matching, tags) if audit is None else audit))
-        env = dict(os.environ, PATH="%s:%s" % (d, os.environ["PATH"]),
+        env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
                    FAKEGH_GATES=str(d / "gates.json"),
-                   FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0",
-                   FAKEGIT_HEAD=local_head or "a" * 40,
-                   FAKEGIT_DIRTY="1" if local_dirty else "0",
-                   FAKEGIT_STATUS_FAIL="1" if local_status_fail else "0",
-                   FAKEGIT_VERSION=local_version)
+                   FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0")
         env.pop("FRAME_SMOKE_RESULT", None)
         if smoke is not False:
             env["FRAME_SMOKE_RESULT"] = str(d / "smoke.json")
@@ -123,7 +127,8 @@ esac
             env['RELEASE_ASSET_AUDIT'] = str(d / 'asset-audit.json')
         else:
             env.pop('RELEASE_ASSET_AUDIT', None)
-        p = subprocess.run(["sh", str(SCRIPT), *args], env=env, capture_output=True, text=True, timeout=30)
+        p = subprocess.run(["sh", str(scripts / "publish-release.sh"), *args],
+                           env=env, capture_output=True, text=True, timeout=30)
         log = [json.loads(line) for line in (d / "log").read_text().splitlines()] if (d / "log").exists() else []
         upload = json.loads((d / "upload.json").read_text()) if (d / "upload.json").exists() else None
         return p, log, upload
