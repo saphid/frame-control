@@ -225,6 +225,16 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
                                      frame_decky_store.FILESERVER_BINARIES[arch])
+                if plugin['id'] == 68:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['wine-cellar-native-bridge'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    arch = ssh('uname -m').strip()
+                    self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
+                                     frame_decky_store.WINE_CELLAR_AARCH64 if arch == 'aarch64'
+                                     else frame_decky_store.WINE_CELLAR_ORIGINAL)
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
                 if plugin['id'] == 125:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])

@@ -118,6 +118,15 @@ def main():
         (plugin/'main.py').write_text(source)
 
     (home/'.local/share/Steam/steamui/images').mkdir(parents=True)
+    if case['probe'] == 'wine-cellar-private-state':
+        steam = home/'.local/share/Steam'
+        (steam/'config').mkdir(parents=True)
+        (steam/'steamapps').mkdir(exist_ok=True)
+        (steam/'compatibilitytools.d').mkdir(exist_ok=True)
+        (steam/'config/config.vdf').write_text(
+            '"InstallConfigStore" { "Software" { "Valve" { "Steam" { "CompatToolMapping" { } } } } }')
+        (steam/'steamapps/libraryfolders.vdf').write_text(
+            '"libraryfolders" { "0" { "path" "PRIVATE" } }')
     loader = base/'PluginLoader'
     shutil.copy('/input/PluginLoader', loader)
     loader.chmod(0o700)
@@ -242,6 +251,22 @@ def main():
                 report['result'] = ('published Decky discovery and private settings read passed; '
                                     'both managed public diagnostic contexts retain TLS verification; '
                                     'no public network diagnostics, Frame or VR test')
+            elif case['probe'] == 'wine-cellar-private-state':
+                helper = plugin/'bin/backend'
+                machine = 183 if __import__('platform').machine() == 'aarch64' else 62
+                assert helper.read_bytes()[:4] == b'\x7fELF'
+                assert int.from_bytes(helper.read_bytes()[18:20], 'little') == machine
+                token = until_ready(lambda: current('framey_ws_open'), 'private Wine Cellar helper')
+                assert isinstance(token, str) and len(token) == 32, token
+                assert current('framey_ws_send', token, '{"type":"GetState"}') is None
+                reply = until_ready(lambda: next((json.loads(message) for message in
+                    current('framey_ws_poll', token)['messages'] if json.loads(message).get('type') == 'UpdateState'),
+                    None), 'read-only Wine Cellar state')
+                assert reply['app_state']['installed_tools'] == [], reply
+                assert current('framey_ws_close', token) is None
+                report['result'] = ('actual Decky 3.3.0 discovery, managed native helper and fixed-origin '
+                                    'read-only state RPC passed against private empty Steam home; '
+                                    'no install/uninstall, real library or VR test')
             elif case['probe'] == 'deck-settings-readonly':
                 # Never upload images, send a token, or change game settings.
                 # The container has no network or host Steam library access.

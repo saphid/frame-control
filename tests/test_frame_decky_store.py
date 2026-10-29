@@ -487,6 +487,34 @@ class StoreTransaction(unittest.TestCase):
                 frame_decky_store.apply_script(60, frame_decky_store.FILESERVER_DIGEST)
         self.assertEqual(frame_decky_store.apply_script(60, '0'*64), frame_decky_store.APPLY)
 
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux helper architecture')
+    def test_exact_wine_cellar_archive_gets_only_the_pinned_native_helper(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        record = next(p for p in PLUGINS if p['id'] == 68)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=68, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        helper = folder/'bin/backend'
+        expected = (frame_decky_store.WINE_CELLAR_AARCH64 if platform.machine() == 'aarch64'
+                    else frame_decky_store.WINE_CELLAR_ORIGINAL)
+        self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), expected)
+        self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['wine-cellar-native-bridge'])
+        self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(),
+                         frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
+        self.assertEqual(hashlib.sha256((folder/'dist/index.js').read_bytes()).hexdigest(),
+                         frame_decky_store.WINE_CELLAR_FRONTEND)
+
+    def test_corrupt_wine_cellar_offline_helper_is_rejected(self):
+        with patch.object(frame_decky_store, 'WINE_CELLAR_AARCH64', '0'*64):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(68, frame_decky_store.WINE_CELLAR_DIGEST)
+        self.assertEqual(frame_decky_store.apply_script(68, '0'*64), frame_decky_store.APPLY)
+
     def test_exact_fileserver_gets_native_user_helper(self):
         from framey_official import PLUGINS, archive as official_archive
         import platform

@@ -61,7 +61,8 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
         for old, new in [('CATALOG_DATA', '[{"id":67,"name":"Battery Tracker"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'true'), ('NETWORK_FIXTURE', 'false'),
-                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false')]:
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false'),
+                         ('WINE_FIXTURE', 'false'), ('WINE_STATE', 'null')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -112,7 +113,8 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
         for old, new in [('CATALOG_DATA', '[{"id":114,"name":"Network Sentinel"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'true'),
-                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false')]:
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false'),
+                         ('WINE_FIXTURE', 'false'), ('WINE_STATE', 'null')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -158,7 +160,8 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
         for old, new in [('CATALOG_DATA', '[{"id":79,"name":"Decky Notifications"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'false'),
-                         ('NOTIFICATIONS_FIXTURE', 'true'), ('THEME_MUSIC_FIXTURE', 'false')]:
+                         ('NOTIFICATIONS_FIXTURE', 'true'), ('THEME_MUSIC_FIXTURE', 'false'),
+                         ('WINE_FIXTURE', 'false'), ('WINE_STATE', 'null')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');
@@ -204,7 +207,8 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
         for old, new in [('CATALOG_DATA', '[{"id":52,"name":"Game Theme Music"}]'),
                          ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
                          ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'false'),
-                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'true')]:
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'true'),
+                         ('WINE_FIXTURE', 'false'), ('WINE_STATE', 'null')]:
             page_script = page_script.replace(old, new)
         script = r'''
 const assert=require('node:assert/strict');

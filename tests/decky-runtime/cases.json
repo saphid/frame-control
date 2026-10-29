@@ -5,6 +5,11 @@
     "probe": "prefix-manager"
   },
   {
+    "id": 68,
+    "shim": "wine-cellar-native-bridge",
+    "probe": "wine-cellar-private-state"
+  },
+  {
     "id": 52,
     "shim": null,
     "probe": "theme-music-settings"

@@ -33,7 +33,7 @@ action works in VR.** No plugin was tried by a wearer.
 | Bluetooth 3.1.1 | Partial | Backend logged `Bluetooth plugin loaded`. Pairing and VR controls were not checked. |
 | PowerTools 2.0.3 | Not applicable | Manifest asks for root; archive includes x86_64 Ryzen binaries and targets Steam Deck hardware. The Frame user service blocks it. |
 | Audio Loader 1.6.1 | Not applicable | Manifest asks for `_root`; the Frame user service blocks it. |
-| Wine Cellar 0.2.1 | Broken on ARM64 | Archive includes an x86_64 backend binary. The store installer blocks it before execution. A [read-only ARM64 helper probe](evidence/framey-wine-cellar-arm64-2026-10-29.md) does not verify a safe panel bridge or plugin operation. |
+| Wine Cellar 0.2.1 | Partial with exact managed adaptation | The official ZIP still includes an x86_64 helper. An exact-digest managed install can supply a pinned ARM64 helper and receipt-bound panel bridge. Published Decky 3.3.0 read a private empty state; local Chromium rendered that fixture. Tool changes, real Frame managed service, and worn VR remain unverified. Existing copies need update/reinstall. [Evidence](evidence/framey-wine-cellar-bridge-2026-10-29.md). |
 | MagicPods 2.0.21 | Broken on ARM64 | Archive includes an x86_64 `magicpodscore` binary. The store installer blocks it before execution. |
 | Decky Recorder | Not in current official store | No matching plugin appeared in the official store list on this date; no archive was installed. Frame Control's own headset panel has a separate recorder. |
 
@@ -53,7 +53,7 @@ catalogue. All 11 had a frontend bundle, but their manifests differed:
 | Manifest in the checked archive | Plugins | Framey panel result |
 | --- | --- | --- |
 | API v2 | ProtonDB Badges 1.3.4 | Eligible; settings rendered in local Chromium. No worn VR check. |
-| API v1 | Bluetooth 3.1.1, HLTB for Deck 2.0.12, SteamGridDB 1.8.1, Storage Cleaner 1.4.0, Wine Cellar 0.2.1, MagicPods 2.0.21 | Storage Cleaner rendered its empty-data panel in local Chromium. HLTB started and built a settings view in a local host test; its Steam game page patches have no target. Other panels remain untested. Wine Cellar and MagicPods fail the ARM64 archive check. None has a worn VR result. |
+| API v1 | Bluetooth 3.1.1, HLTB for Deck 2.0.12, SteamGridDB 1.8.1, Storage Cleaner 1.4.0, Wine Cellar 0.2.1, MagicPods 2.0.21 | Storage Cleaner rendered its empty-data panel in local Chromium. HLTB started and built a settings view in a local host test; its Steam game page patches have no target. Other panels remain untested. Wine Cellar has a separately tested exact-digest managed adaptation, while MagicPods still fails the ARM64 archive check. None has a worn VR result. |
 | No `api_version` field | CSS Loader 2.1.3, Animation Changer 1.3.2, Audio Loader 1.6.1, PowerTools 2.0.3 | CSS Loader's legacy IIFE passes the Framey panel packaging check; its theme UI remains untested. Animation Changer's panel remains untested. Audio Loader and PowerTools request root and are blocked. |
 
 The [archive audit record](evidence/framey-official-archive-audit-2026-10-25.json)
