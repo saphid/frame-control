@@ -51,16 +51,16 @@ def find_release(tag):
         if not isinstance(batch, list):
             raise AuditError("GitHub release list is not an array")
         releases.extend(batch)
-        try:
-            return CHECKSUMS["find_release"](
-                (json.dumps(item) for item in releases), tag
-            )
-        except ValueError as error:
-            if "found 0" not in str(error):
-                raise AuditError(str(error)) from error
         if len(batch) < 100:
             break
-    raise AuditError(f"no unique release found for {tag}")
+    else:
+        raise AuditError("release list exceeded 20 pages; cannot verify uniqueness")
+    try:
+        return CHECKSUMS["find_release"](
+            (json.dumps(item) for item in releases), tag
+        )
+    except ValueError as error:
+        raise AuditError(str(error)) from error
 
 
 def validate_assets(release):

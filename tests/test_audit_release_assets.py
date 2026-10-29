@@ -34,6 +34,38 @@ def release_assets():
 
 
 class AssetAudit(unittest.TestCase):
+    def test_release_lookup_rejects_matching_draft_on_later_page(self):
+        first = {"id": 42, "tag_name": "untagged-first", "draft": True,
+                 "name": "Frame Control 9.8.7"}
+        second = {"id": 43, "tag_name": "untagged-second", "draft": True,
+                  "name": "Frame Control 9.8.7"}
+        first_page = [first] + [
+            {"id": number, "tag_name": f"v0.0.{number}", "draft": False}
+            for number in range(1, 100)
+        ]
+        with mock.patch.object(audit, "github_json", side_effect=[first_page, [second]]) as github:
+            with self.assertRaisesRegex(audit.AuditError, "expected one release"):
+                audit.find_release("v9.8.7")
+        self.assertEqual(github.call_count, 2)
+
+    def test_release_lookup_finds_match_after_full_first_page(self):
+        first_page = [
+            {"id": number, "tag_name": f"v0.0.{number}", "draft": False}
+            for number in range(1, 101)
+        ]
+        matching = {"id": 42, "tag_name": "v9.8.7", "draft": True}
+        with mock.patch.object(audit, "github_json", side_effect=[first_page, [matching]]) as github:
+            self.assertEqual(audit.find_release("v9.8.7"), matching)
+        self.assertEqual(github.call_count, 2)
+
+    def test_release_lookup_refuses_unfinished_pagination(self):
+        page = [{"id": number, "tag_name": "v9.8.7" if number == 1 else f"v0.0.{number}"}
+                for number in range(1, 101)]
+        with mock.patch.object(audit, "github_json", return_value=page) as github:
+            with self.assertRaisesRegex(audit.AuditError, "cannot verify uniqueness"):
+                audit.find_release("v9.8.7")
+        self.assertEqual(github.call_count, 20)
+
     def test_published_manifest_matches_release_bytes(self):
         assets, _ = release_assets()
         release = {"tag_name": "v9.8.7", "body": "Release notes", "assets": assets}
