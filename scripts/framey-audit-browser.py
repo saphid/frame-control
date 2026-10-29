@@ -115,9 +115,10 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 <script>
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
-  notificationsFixture=NOTIFICATIONS_FIXTURE;
+  notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE;
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
+window.themeMusicFixtureCalls=[];window.themeMusicFixtureState=null;
 window.results=[];let active=null,running=false;
 addEventListener('message',event=>{
   if(event.source!==panel.contentWindow||!active)return;
@@ -157,6 +158,27 @@ addEventListener('message',event=>{
       event.source.postMessage({type:'framey:reply',id:data.id,
         ...(Object.hasOwn(fixtures,data.method)?{result:fixtures[data.method]}:
           {error:'Private Network Sentinel fixture rejects backend method'})},'*');
+    }else if(themeMusicFixture&&active.id===52&&!data.legacy){
+      // Only the exact frontend's private settings object is replayed. No
+      // search, download, playback, cache, or Steam-page method is allowed.
+      const validSettings=value=>value&&typeof value==='object'&&!Array.isArray(value)&&
+        Object.keys(value).sort().join(',')==='defaultMuted,downloadAudio,invidiousInstance,useYtDlp,volume'&&
+        typeof value.defaultMuted==='boolean'&&typeof value.downloadAudio==='boolean'&&
+        typeof value.useYtDlp==='boolean'&&typeof value.invidiousInstance==='string'&&
+        value.invidiousInstance.length<=256&&Number.isFinite(value.volume)&&
+        value.volume>=0&&value.volume<=1;
+      const validArgs=Array.isArray(data.args)&&data.args.length===2&&
+        data.args[0]==='settings'&&validSettings(data.args[1]);
+      if(window.themeMusicFixtureCalls.length<30)
+        window.themeMusicFixtureCalls.push({method:data.method,key:data.args?.[0]??null});
+      if(validArgs&&data.method==='get_setting'){
+        event.source.postMessage({type:'framey:reply',id:data.id,
+          result:structuredClone(window.themeMusicFixtureState??data.args[1])},'*');
+      }else if(validArgs&&data.method==='set_setting'){
+        window.themeMusicFixtureState=structuredClone(data.args[1]);
+        event.source.postMessage({type:'framey:reply',id:data.id,result:null},'*');
+      }else event.source.postMessage({type:'framey:reply',id:data.id,
+        error:'Private Game Theme Music fixture rejects backend method'},'*');
     }else if(notificationsFixture&&active.id===79&&data.legacy){
       if(window.notificationsFixtureCalls.length<30)window.notificationsFixtureCalls.push(data.method);
       const fixtures={
@@ -186,7 +208,7 @@ window.runAudit=async(ids,settleMs=1200)=>{
     if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);
-    if(!batteryFixture&&!networkFixture&&!notificationsFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
+    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
 };
@@ -209,13 +231,16 @@ def main():
                         help='Replay only plugin 114 with bounded synthetic read-only network status')
     parser.add_argument('--decky-notifications-fixture', action='store_true',
                         help='Replay only plugin 79 with private in-memory notification and device data')
+    parser.add_argument('--theme-music-settings-fixture', action='store_true',
+                        help='Replay only plugin 52 with private in-memory settings; media calls remain denied')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
                         help='Optional detached running-app JSON; replay only, not live Steam/backend evidence')
     args = parser.parse_args()
     if sum((args.speed_test_mock, args.battery_tracker_fixture,
-            args.network_sentinel_fixture, args.decky_notifications_fixture)) > 1:
+            args.network_sentinel_fixture, args.decky_notifications_fixture,
+            args.theme_music_settings_fixture)) > 1:
         parser.error('Choose one frontend fixture')
     plugins = json.loads(args.catalog.read_text())['plugins']
     if args.speed_test_mock:
@@ -237,6 +262,11 @@ def main():
         if (len(plugins) != 1 or plugins[0]['sha256'] !=
                 '3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312'):
             parser.error('Decky Notifications 1.0.1 fixture requires its pinned archive digest')
+    if args.theme_music_settings_fixture:
+        plugins = [plugin for plugin in plugins if plugin['id'] == 52]
+        if (len(plugins) != 1 or plugins[0]['sha256'] !=
+                '9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e'):
+            parser.error('Game Theme Music 1.7.1-1 fixture requires its pinned archive digest')
     records = {p['id']: p for p in plugins}
     library = None
     if args.library_snapshot:
@@ -275,9 +305,13 @@ def main():
                 if args.decky_notifications_fixture:
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Decky Notifications uses private in-memory data; CSP blocks network and backend writes. The panel stays open for display checks.')
+                if args.theme_music_settings_fixture:
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Game Theme Music uses private in-memory settings; CSP blocks network and media actions. The panel stays open for control checks.')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
+                page = page.replace('THEME_MUSIC_FIXTURE', 'true' if args.theme_music_settings_fixture else 'false')
                 body = page.replace(
                     'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).replace(
                     'RUNNING_DATA', json.dumps(running).replace('<', '\\u003c')).encode()
