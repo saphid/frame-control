@@ -9,6 +9,7 @@ import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import json
 import hashlib
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -70,6 +71,7 @@ class PublishRelease(unittest.TestCase):
                    local_head=None, local_dirty=False, local_status_fail=False,
                    local_version="9.8.7"):
         d = Path(tempfile.mkdtemp())
+        shutil.copy2(FAKEGH / "gh", d / "gh")
         git = d / "git"
         git.write_text('''#!/bin/sh
 if [ "$1" = "-C" ]; then shift 2; fi
@@ -105,7 +107,7 @@ esac
         if audit is not False and matching:
             (d / 'asset-audit.json').write_text(json.dumps(
                 asset_audit(matching, tags) if audit is None else audit))
-        env = dict(os.environ, PATH="%s:%s:%s" % (d, FAKEGH, os.environ["PATH"]),
+        env = dict(os.environ, PATH="%s:%s" % (d, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
                    FAKEGH_GATES=str(d / "gates.json"),
