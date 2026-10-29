@@ -21,7 +21,7 @@ class RuntimeCoverage(unittest.TestCase):
             self.assertIn(case['id'], official)
             self.assertIn(case['probe'], ('mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
                                          'toggle-settings', 'fileserver', 'localsend', 'network-sentinel',
-                                         'battery-tracker', 'free-loader'))
+                                         'battery-tracker', 'free-loader', 'radio-local'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store

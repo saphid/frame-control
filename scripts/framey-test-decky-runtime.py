@@ -70,10 +70,15 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--loader', type=Path, help='Optional cached, digest-verified native Decky 3.3.0 binary')
     parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--case', type=int, help='Run one official plugin case locally; CI runs all cases')
     args = parser.parse_args()
     if sys.platform != 'linux' or not shutil.which('docker'):
         parser.error('Linux with Docker is required')
     cases = check_coverage()
+    if args.case is not None:
+        cases = [case for case in cases if case['id'] == args.case]
+        if not cases:
+            parser.error('Unknown official plugin case')
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest, 'cases': []}
@@ -85,8 +90,10 @@ def main():
             loader.write_bytes(data)
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], None) for case in cases] + [
-                (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
-                (60, '--reproduce-fileserver-empty-flag-regression')]
+                (plugin_id, negative) for plugin_id, negative in [
+                    (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
+                    (60, '--reproduce-fileserver-empty-flag-regression')]
+                if args.case is None or args.case == plugin_id]
             for plugin_id, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',

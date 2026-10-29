@@ -2,6 +2,7 @@
 import argparse
 import asyncio
 import hashlib
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 import os
 from pathlib import Path
@@ -11,6 +12,7 @@ import socket
 import ssl
 import subprocess
 import sys
+import threading
 import time
 import urllib.request
 import zipfile
@@ -265,6 +267,49 @@ def main():
                 assert current('read_deals') == {}
                 report['result'] = ('discovery, default settings, empty local deals, '
                     'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
+            elif case['probe'] == 'radio-local':
+                # The published backend accepts arbitrary URLs and disables
+                # HTTPS verification. Exercise only a loopback fixture inside
+                # this network-isolated container; no station or audio opens.
+                marker = 'Framey private radio station\n'
+
+                class RadioHandler(BaseHTTPRequestHandler):
+                    def do_GET(self):
+                        if self.path == '/redirect':
+                            self.send_response(302)
+                            self.send_header('Location', '/station')
+                            self.end_headers()
+                        elif self.path == '/station':
+                            data = marker.encode()
+                            self.send_response(200)
+                            self.send_header('Content-Type', 'text/plain')
+                            self.send_header('Content-Length', str(len(data)))
+                            self.end_headers()
+                            self.wfile.write(data)
+                        else:
+                            self.send_error(404)
+
+                    def log_message(self, *_):
+                        pass
+
+                server = ThreadingHTTPServer(('127.0.0.1', 0), RadioHandler)
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                try:
+                    base_url = f'http://127.0.0.1:{server.server_port}'
+                    station = legacy('fetch', url=base_url+'/station', customStation=False)
+                    assert station['status'] == 200 and station['body'] == marker, station
+                    assert station['headers']['Content-Type'] == 'text/plain', station
+                    custom = legacy('fetch', url=base_url+'/station', customStation=True)
+                    assert custom['status'] == 200 and custom['body'] == '', custom
+                    redirect = legacy('getRedirectUrl', url=base_url+'/redirect')
+                    assert redirect == {'response': base_url+'/station'}, redirect
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    worker.join(timeout=3)
+                report['result'] = ('actual Decky discovery and local station fetch/redirect passed; '
+                    'external radio, HTTPS, audio playback, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
