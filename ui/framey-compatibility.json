@@ -927,12 +927,13 @@
         "https://github.com/pytest-dev/pytest-asyncio"
       ],
       "status": "partial",
-      "reason": "Controls render with fixture replies; actual Bluetooth discovery, labels and connections remain unverified.",
+      "reason": "Controls render with fixture replies. On the real standby Frame, the exact official backend's read-only adapter status and paired-device list returned powered=true, zero devices and no errors. That direct Python probe did not run through Decky or display a panel; discovery with paired devices, labels, connections, pairing and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "real Frame direct read-only backend"
       ],
       "browser": {
         "id": 18,
