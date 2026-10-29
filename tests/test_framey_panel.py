@@ -74,6 +74,8 @@ class Panel(unittest.TestCase):
         with patch.object(framey_panel.frame_decky, 'status', return_value={
                 'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck','sha256':RECEIPT}]}):
             for method, expression in framey_panel.STEAM_READS.items():
+                if method == 'GetGlobalCompatTools':
+                    continue  # This additional read is scoped to exact Wine Cellar 0.2.1.
                 def fake_ssh(command, stdin, **_):
                     self.assertEqual(command, 'python3 -')
                     compile(stdin, '<Steam read>', 'exec')
@@ -90,6 +92,46 @@ class Panel(unittest.TestCase):
             with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
                 framey_panel.read_steam(lambda *a,**k:self.fail('Stale read reached SSH'),
                                         81,'GetIPCountry','b'*64)
+
+    def test_wine_cellar_steam_tool_read_is_exact_receipt_scoped(self):
+        digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
+        installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
+                     'compatShims':['wine-cellar-native-bridge']}
+        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[
+                installed, {'storeId':81, 'name':'Other', 'sha256':digest}]}):
+            self.assertEqual(framey_panel.read_steam(lambda *_a, **_k:'{"result":[]}',
+                                                     68,'GetGlobalCompatTools',digest), {'result':[]})
+            with self.assertRaisesRegex(framey_panel.PanelError, 'only available'):
+                framey_panel.read_steam(lambda *_a, **_k:self.fail('Wrong plugin reached CEF'),
+                                        81,'GetGlobalCompatTools',digest)
+            with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
+                framey_panel.read_steam(lambda *_a, **_k:self.fail('Stale read reached CEF'),
+                                        68,'GetGlobalCompatTools','b'*64)
+
+    def test_wine_cellar_socket_methods_require_exact_managed_receipt(self):
+        digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
+        installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
+                     'compatShims':['wine-cellar-native-bridge']}
+        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+            self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"result":"token"}',
+                                                      68,'framey_ws_open',[],receipt=digest), {'result':'token'})
+            for method in ('framey_ws_escape', 'framey_ws_open_other'):
+                with self.assertRaisesRegex(framey_panel.PanelError, 'socket bridge'):
+                    framey_panel.call_method(lambda *_a, **_k:self.fail('Unapproved socket method reached CEF'),
+                                             68,method,[],receipt=digest)
+            installed['compatShims'] = []
+            with self.assertRaisesRegex(framey_panel.PanelError, 'socket bridge'):
+                framey_panel.call_method(lambda *_a, **_k:self.fail('Old install reached CEF'),
+                                         68,'framey_ws_open',[],receipt=digest)
+
+    def test_only_exact_wine_cellar_panel_loads_the_socket_facade(self):
+        digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
+        bundle = b'export default () => null;'
+        with patch.object(framey_panel, '_owned_dist', return_value=(None,bundle,digest)):
+            self.assertIn(b'data-wine-socket="1"', framey_panel.panel(68))
+            self.assertNotIn(b'data-wine-socket', framey_panel.panel(14))
+        with patch.object(framey_panel, '_owned_dist', return_value=(None,bundle,'a'*64)):
+            self.assertNotIn(b'data-wine-socket', framey_panel.panel(68))
 
     def test_steam_read_response_limit_and_socket_cleanup(self):
         from types import SimpleNamespace
@@ -218,6 +260,11 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
 
     def test_plugin_quick_actions_and_settings(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_actions.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_wine_cellar_socket_facade_uses_only_receipt_bound_calls(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_wine_socket.mjs')],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
