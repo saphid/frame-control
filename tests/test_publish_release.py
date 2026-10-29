@@ -66,8 +66,21 @@ def asset_audit(release, tag="v9.8.7"):
 
 class PublishRelease(unittest.TestCase):
     def run_script(self, releases, *args, tags="v9.8.7", gates=None,
-                   corrupt_manifest_readback=False, smoke=None, audit=None):
+                   corrupt_manifest_readback=False, smoke=None, audit=None,
+                   local_head=None, local_dirty=False, local_status_fail=False,
+                   local_version="9.8.7"):
         d = Path(tempfile.mkdtemp())
+        git = d / "git"
+        git.write_text('''#!/bin/sh
+if [ "$1" = "-C" ]; then shift 2; fi
+case "$*" in
+  'rev-parse --verify HEAD') printf '%s\\n' "$FAKEGIT_HEAD" ;;
+  'status --porcelain --untracked-files=normal') [ "$FAKEGIT_STATUS_FAIL" = 1 ] && exit 2; [ "$FAKEGIT_DIRTY" = 1 ] && echo '?? owned-test-file' || : ;;
+  'show HEAD:app/package.json') printf '{"version":"%s"}\\n' "$FAKEGIT_VERSION" ;;
+  *) exit 2 ;;
+esac
+''')
+        git.chmod(0o700)
         (d / "releases.json").write_text(json.dumps(releases))
         (d / "gates.json").write_text(json.dumps(gates or {}))
         steps = ["cleanup: leftovers from earlier runs", "devkit service: properties.json",
@@ -92,11 +105,15 @@ class PublishRelease(unittest.TestCase):
         if audit is not False and matching:
             (d / 'asset-audit.json').write_text(json.dumps(
                 asset_audit(matching, tags) if audit is None else audit))
-        env = dict(os.environ, PATH="%s:%s" % (FAKEGH, os.environ["PATH"]),
+        env = dict(os.environ, PATH="%s:%s:%s" % (d, FAKEGH, os.environ["PATH"]),
                    FAKEGH_RELEASES=str(d / "releases.json"), FAKEGH_TAGS=tags,
                    FAKEGH_LOG=str(d / "log"), FAKEGH_UPLOAD=str(d / "upload.json"),
                    FAKEGH_GATES=str(d / "gates.json"),
-                   FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0")
+                   FAKEGH_CORRUPT_MANIFEST_READBACK="1" if corrupt_manifest_readback else "0",
+                   FAKEGIT_HEAD=local_head or "a" * 40,
+                   FAKEGIT_DIRTY="1" if local_dirty else "0",
+                   FAKEGIT_STATUS_FAIL="1" if local_status_fail else "0",
+                   FAKEGIT_VERSION=local_version)
         env.pop("FRAME_SMOKE_RESULT", None)
         if smoke is not False:
             env["FRAME_SMOKE_RESULT"] = str(d / "smoke.json")
@@ -200,6 +217,18 @@ class PublishRelease(unittest.TestCase):
         self.assertIn('"page": "https://github.com/saphid/frame-control/releases/tag/v9.8.7"', p.stdout)
         self.assertIsNone(upload)
         self.assertTrue(all("-X" not in c for c in log))
+
+    def test_refuses_wrong_dirty_or_misversioned_local_checkout(self):
+        for kwargs, message in (({'local_head': 'b' * 40}, 'differs from release commit'),
+                                ({'local_dirty': True}, 'uncommitted or untracked'),
+                                ({'local_status_fail': True}, 'could not inspect local release checkout'),
+                                ({'local_version': '9.8.8'}, 'package version')):
+            with self.subTest(kwargs=kwargs):
+                p, log, upload = self.run_script([draft()], 'v9.8.7', **kwargs)
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn(message, p.stderr)
+                self.assertIsNone(upload)
+                self.assertFalse(any('-X' in call for call in log))
 
     def test_refuses_failed_e2e_or_cancelled_installer_before_mutation(self):
         for gates in ({"bad_job": "e2e", "bad_job_conclusion": "failure"},
