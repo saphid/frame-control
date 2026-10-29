@@ -292,21 +292,43 @@
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
-    strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal,
+    strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
+    const inFlight = R.useRef(false);
+    const [busy, setBusy] = R.useState(false);
+    const [error, setError] = R.useState('');
     const action = (callback, disabled) => () => {
-      if (disabled) return;
-      callback?.();
+      if (disabled || inFlight.current) return;
+      let result;
+      try {result = callback?.();}
+      catch (failure) {setError(String(failure?.message || failure)); return;}
+      if (result && typeof result.then === 'function') {
+        inFlight.current = true;
+        setBusy(true);
+        frameySetModalBusy?.(true);
+        setError('');
+        return Promise.resolve(result).then(() => {
+          inFlight.current = false;
+          frameySetModalBusy?.(false);
+          closeModal?.();
+        }, failure => {
+          inFlight.current = false;
+          setBusy(false);
+          frameySetModalBusy?.(false);
+          setError(String(failure?.message || failure));
+        });
+      }
       closeModal?.();
     };
     return R.createElement('section', null,
       R.createElement('h2', null, strTitle),
       strDescription && R.createElement('div', null, strDescription), children,
-      R.createElement('button', {type:'button', disabled:!!bOKDisabled,
+      error && R.createElement('p', {role:'alert'}, error),
+      R.createElement('button', {type:'button', disabled:!!bOKDisabled || busy,
         onClick:action(onOK, bOKDisabled)}, strOKButtonText || 'OK'),
-      onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled,
+      onMiddleButton && R.createElement('button', {type:'button', disabled:!!bMiddleDisabled || busy,
         onClick:action(onMiddleButton, bMiddleDisabled)}, strMiddleButtonText || 'More'),
-      !bAlertDialog && R.createElement('button', {type:'button', disabled:!!bCancelDisabled,
+      !bAlertDialog && R.createElement('button', {type:'button', disabled:!!bCancelDisabled || busy,
         onClick:action(onCancel, bCancelDisabled)}, strCancelButtonText || 'Cancel'));
   };
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
@@ -320,11 +342,11 @@
       role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
       'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
       !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.element?.props?.bCancelDisabled,
+        type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
         onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
   };
   function dismissModal(modal) {
-    if (modal.element?.props?.bCancelDisabled) return;
+    if (modal.running || modal.element?.props?.bCancelDisabled) return;
     modal.element?.props?.onCancel?.();
     modal.dismiss();
   }
@@ -343,6 +365,7 @@
     }
     if (event.key !== 'Escape') return;
     event.preventDefault();
+    if (modal.running) return;
     if (modal.element?.props?.onEscKeypress) modal.element.props.onEscKeypress();
     else dismissModal(modal);
   });
@@ -437,7 +460,14 @@
       if (callback !== modal.dismiss) callback?.();
       Close();
     };
-    modal.element = R.isValidElement(element) ? R.cloneElement(element, {closeModal:modal.dismiss}) : element;
+    const setModalBusy = busy => {
+      if (!modals.includes(modal)) return;
+      modal.running=!!busy;
+      renderModals();
+    };
+    const decorate = next => R.isValidElement(next) ?
+      R.cloneElement(next, {closeModal:modal.dismiss, frameySetModalBusy:setModalBusy}) : next;
+    modal.element = decorate(element);
     modals.push(modal);
     renderModals();
     setTimeout(()=>{if(modals.at(-1)===modal) modal.node?.focus();},0);
@@ -445,7 +475,7 @@
       if (!modals.includes(modal)) return;
       // Keep replacement dialogs dismissible inside this isolated host too.
       modal.source=next;
-      modal.element=R.isValidElement(next) ? R.cloneElement(next, {closeModal:modal.dismiss}) : next;
+      modal.element=decorate(next);
       renderModals();
     }};
   };

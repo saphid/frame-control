@@ -31,6 +31,12 @@ pending until all selected calls complete, stops on a rejected call, and still
 handles whole-directory deletion. This is a callback completion check, not a
 visual confirmation or real cache deletion check.
 
+Framey's ConfirmModal now keeps an asynchronous action open until it settles,
+blocks duplicate activation and Escape/Close while pending, and displays a
+rejected action for retry. The host action test covers both a deferred success
+and a rejected private action. This is local host behavior; the actual Storage
+Cleaner confirmation has not been visually exercised on the real Frame.
+
 The deletion fixture does not prove real Steam cache cleanup or recovery.
 Real Frame ARM64 backend, frontend confirmation flow, worn VR and physical
 controller behavior remain unverified. Storage Cleaner stays **partial**;

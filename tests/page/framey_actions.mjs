@@ -466,6 +466,38 @@ for (const actionIndex of [0,1]) for (const withCallback of [false,true]) {
   assert.equal(updatedCloses,Number(withCallback));assert.equal(modalRoot.value,null);
 }
 
+// Async confirmation stays open until its action succeeds, blocks duplicate
+// activation and dismissal, and displays a rejected backend action for retry.
+let completeAction, asyncCalls=0;
+const asyncHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
+  strTitle:'Private action',onOK:()=>{asyncCalls++;return new Promise(resolve=>{completeAction=resolve;});}}));
+modal=modalRoot.value.at(-1).children.at(-1);
+confirm=modal.type(modal.props);
+const asyncButton=nodes(confirm,'button')[0];
+const firstAction=asyncButton.props.onClick();
+asyncButton.props.onClick();
+assert.equal(asyncCalls,1);
+assert.equal(modalRoot.value.length,1);
+assert.equal(nodes(modalRoot.value[0],'button')[0].props.disabled,true);
+listeners.find(listener=>listener.type==='keydown').handler({key:'Escape',preventDefault(){}});
+assert.equal(modalRoot.value.length,1);
+completeAction();await firstAction;await asyncHandle.ClosedPromise;
+assert.equal(modalRoot.value,null);
+
+let rejectAction, failedCalls=0;
+const failedHandle=window.DFL.showModal(React.createElement(window.DFL.ConfirmModal,{
+  strTitle:'Private failure',onOK:()=>{failedCalls++;return new Promise((resolve,reject)=>{rejectAction=reject;});}}));
+modal=modalRoot.value.at(-1).children.at(-1);
+confirm=modal.type(modal.props);
+const failureButton=nodes(confirm,'button')[0];
+const failedAction=failureButton.props.onClick();
+rejectAction(new Error('private backend failed'));await failedAction;
+assert.equal(failedCalls,1);
+assert.equal(modalRoot.value.length,1);
+assert.ok(states.includes('private backend failed'));
+assert.equal(nodes(modalRoot.value[0],'button')[0].props.disabled,false);
+failedHandle.Close();await failedHandle.ClosedPromise;
+
 let selectedMenuItem=0;
 window.DFL.MenuItem({onSelected:()=>selectedMenuItem++}).props.onClick({});
 window.DFL.MenuItem({disabled:true,onSelected:()=>selectedMenuItem++}).props.onClick({});
