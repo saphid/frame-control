@@ -6,10 +6,11 @@
 // command line it checks an installed copy, which is what caught the Windows
 // installer silently dropping the library (see .github/workflows/release.yml):
 //   node build/check-resources.js INSTALLED_RESOURCES [REFERENCE_RESOURCES]
-// With a reference (the unpacked build's resources), every file in it must also
-// be in the installed copy, at the same size.
+// With a reference (the unpacked build's resources), every regular file in it
+// must also be in the installed copy with identical bytes.
 const fs = require("fs");
 const path = require("path");
+const crypto = require("crypto");
 
 const REQUIRED = [
   "ui/server.py",
@@ -61,14 +62,34 @@ function missing(dir) {
   return REQUIRED.filter((rel) => size(path.join(dir, rel)) <= 0);
 }
 
-// Files under reference that aren't in dir at the same size.
+// Files under reference that are absent or differ in the installed copy.
 function differences(dir, reference) {
+  function digest(file) {
+    const hash = crypto.createHash("sha256");
+    const buffer = Buffer.allocUnsafe(1024 * 1024);
+    const fd = fs.openSync(file, "r");
+    try {
+      let read;
+      while ((read = fs.readSync(fd, buffer, 0, buffer.length, null)) > 0) {
+        hash.update(buffer.subarray(0, read));
+      }
+    } finally {
+      fs.closeSync(fd);
+    }
+    return hash.digest("hex");
+  }
   const out = [];
   (function walk(rel) {
     for (const e of fs.readdirSync(path.join(reference, rel), { withFileTypes: true })) {
       const r = path.join(rel, e.name);
       if (e.isDirectory()) walk(r);
-      else if (e.isFile() && size(path.join(dir, r)) !== size(path.join(reference, r))) out.push(r.split(path.sep).join("/"));
+      else if (e.isFile()) {
+        const installed = path.join(dir, r);
+        const original = path.join(reference, r);
+        if (size(installed) !== size(original) || digest(installed) !== digest(original)) {
+          out.push(r.split(path.sep).join("/"));
+        }
+      }
     }
   })("");
   return out;
@@ -93,7 +114,7 @@ if (require.main === module) {
   }
   const problems = [...missing(dir), ...(reference ? differences(dir, reference) : [])];
   if (problems.length) {
-    console.error(`${dir} is missing or has the wrong size for:\n  ${[...new Set(problems)].join("\n  ")}`);
+    console.error(`${dir} is missing or differs from the unpacked build for:\n  ${[...new Set(problems)].join("\n  ")}`);
     process.exit(1);
   }
   console.log(`${dir}: all required resources present${reference ? ", and every file of " + reference : ""}`);
