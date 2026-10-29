@@ -4,6 +4,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
+    {'id': 28, 'name': 'Emuchievements', 'version': '2.0.5', 'api_version': 'legacy',
+     'folder': 'Emuchievements', 'sha256': '98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89'},
     {'id': 67, 'name': 'Battery Tracker', 'version': '0.2.0', 'api_version': 'legacy',
      'folder': 'steam-deck-battery-tracker', 'sha256': '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94'},
     {'id': 114, 'name': 'Network Sentinel', 'version': '1.0.4', 'api_version': 1,

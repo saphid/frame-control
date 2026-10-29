@@ -28,7 +28,7 @@ def lookup(plugin_id, digest, version, installed_shims=None):
         if result['status'] in ('works', 'partial') and required and installed_shims is not None and (
                 not isinstance(installed_shims, list) or
                 any(shim not in installed_shims for shim in required)):
-            result['status'] = 'partial'
+            result['status'] = record.get('missingShimStatus', 'partial')
             result['reason'] = ('Update or reinstall this managed plugin to add its missing Frame compatibility fix. '
                                 + result['reason'])
         return result

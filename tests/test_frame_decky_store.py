@@ -410,6 +410,47 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux helper architecture')
+    def test_exact_emuchievements_gets_verified_managed_helper_and_source(self):
+        from framey_official import PLUGINS, archive as official_archive
+        import platform
+        record = next(p for p in PLUGINS if p['id'] == 28)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=28,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+        helper = folder/'bin/hash'
+        self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
+                         frame_decky_store.EMU_BINARIES[platform.machine()])
+        self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
+        source = folder/'main.py'
+        self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        self.assertIn('asyncio.create_subprocess_exec', source.read_text())
+        self.assertNotIn('os.popen', source.read_text())
+        self.assertEqual(self.apply('remove', plugin_id=28, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+
+    def test_emuchievements_exception_rejects_changed_archive_or_assets(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 28)
+        changed = io.BytesIO(official_archive(record))
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr('Emuchievements/changed.txt', 'changed')
+        altered = changed.getvalue()
+        with self.assertRaisesRegex(ValueError, 'non-ARM64'):
+            frame_decky_store.archive_info(altered, hashlib.sha256(altered).hexdigest(), record['name'])
+        self.assertEqual(frame_decky_store.apply_script(28, '0'*64), frame_decky_store.APPLY)
+        with patch.object(frame_decky_store, 'EMU_BINARIES', {'x86_64': '0'*64, 'aarch64': '0'*64}):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(28, record['sha256'])
+        with patch.object(frame_decky_store, 'EMU_MANAGED_MAIN', '0'*64):
+            with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
+                frame_decky_store.apply_script(28, record['sha256'])
+
     def test_localsend_exception_does_not_accept_another_archive_or_corrupt_helper(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 125)

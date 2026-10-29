@@ -1778,13 +1778,19 @@
         "https://github.com/EmuDeck/Emuchievements",
         "https://github.com/EmuDeck/Emuchievements.git"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: Emuchievements/bin/hash.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "The exact managed 2.0.5 archive installs a source-matched, safety-patched ARM64 hash helper. Published Decky 3.3.0 discovery and private synthetic direct/ZIP ROM hashing passed on amd64; ARM64 native CI is required. Update or reinstall for this helper. Real ROM formats, RetroAchievements login, Steam page integration, real Frame execution and worn VR remain unverified.",
+      "blockInstall": false,
+      "requiredShims": [
+        "emuchievements-safe-arm64"
+      ],
+      "missingShimStatus": "broken",
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "host transaction",
+        "actual Decky 3.3.0 amd64 synthetic hash",
+        "fake-Frame managed install/remove"
       ],
       "browser": {
         "id": 28,
@@ -1801,12 +1807,12 @@
       },
       "archiveValidation": {
         "id": 28,
-        "accepted": false,
-        "reason": "Plugin contains a non-ARM64 Linux binary: Emuchievements/bin/hash"
+        "accepted": true,
+        "folder": "Emuchievements"
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "A source-matched ARM64 helper matched one synthetic ROM on the real Frame (docs/evidence/framey-emuchievements-arm-2026-10-26.md). The pinned upstream source proposed for packaging also has unsafe archive extraction and cleanup paths (docs/evidence/framey-native-port-blockers-2026-10-26.md); fix and test those before shipping an ARM64 binary. The official x86_64 ZIP remains blocked; format coverage, plugin backend/UI, login and worn VR are unverified.",
+      "nativePort": "The pinned upstream source had unsafe archive extraction and cleanup (docs/evidence/framey-native-port-blockers-2026-10-26.md). The exact managed archive replaces the x86 helper and Python call with source-matched, safety-patched builds; both architectures rebuild byte for byte offline. Published Decky 3.3.0 amd64 private synthetic direct/ZIP ROM hashing and hostile archive rejection pass (docs/evidence/framey-emuchievements-managed-2026-10-29.md). ARM64 native CI, real Frame managed backend, real ROM formats, login, Steam UI and worn VR remain unverified.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -1816,9 +1822,8 @@
       "fakeFrame": {
         "id": 28,
         "sha256": "98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89",
-        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: Emuchievements/bin/hash",
-        "result": "blocked",
-        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: Emuchievements/bin/hash."
+        "archiveValidation": "accepted by exact-digest native adaptation",
+        "result": "installed-removed"
       }
     },
     {
@@ -13735,6 +13740,6 @@
       }
     }
   ],
-  "fakeFrameMethod": "116 exact archives validated and attempted through real HTTP/SSH in private disposable fake Frame; 60 installed, frontend bytes/receipt checked, then removed; 56 rejected. Official backend code never executed.",
+  "fakeFrameMethod": "The full 116-archive audit previously installed/removed 60 and rejected 56 in a disposable fake Frame. A later exact Emuchievements fixture flow installed/removed one of those previously blocked archives, yielding 61 installable/55 blocked by current policy; the full sweep has not been rerun. Official backend code never executed in fake Frame.",
   "realFrameMethod": "2026-10-25: shared lock held; isolated temporary Decky 3.3.0 ARM64 user service with only exact ProtonDB/Steam Status backends; read-only settings RPCs succeeded via existing Steam CEF websocket. Temporary service/base removed and lock released; battery 100 to 99; no power settings changed. No official plugin panel was opened in VR. Follow-up 2026-10-26: safe isolated Notebook draw/save/reopen and Simple Timer event/start/cancel/persistence checks; see docs/evidence/framey-events-backend-2026-10-26.json."
 }

@@ -23,7 +23,8 @@ class RuntimeCoverage(unittest.TestCase):
                                          'toggle-settings', 'fileserver', 'localsend', 'network-sentinel',
                                          'battery-tracker', 'free-loader', 'radio-local', 'game-sync-config',
                                          'shelves-settings', 'storage-cleaner', 'steamback-private-save',
-                                         'suggestme-private', 'notifications-private'))
+                                         'suggestme-private', 'notifications-private',
+                                         'emuchievements-private-hash'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store

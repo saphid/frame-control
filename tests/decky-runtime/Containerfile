@@ -2,7 +2,7 @@
 FROM debian:trixie-slim
 RUN apt-get update && apt-get install -y --no-install-recommends \
       python3 python3-dbus python3-gi python3-websockets dbus-bin dbus-daemon \
-      ca-certificates zlib1g openssl \
+      ca-certificates zlib1g openssl libbz2-1.0 liblzma5 liblz4-1 libzstd1 libstdc++6 \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -u 1100 -s /bin/sh tester \
     && mkdir -p /run/user/1100 && chown tester:tester /run/user/1100

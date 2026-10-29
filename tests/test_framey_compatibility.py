@@ -110,6 +110,14 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
+    def test_emuchievements_old_x86_helper_is_still_blocked(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 28)
+        old = dict(storeId=28, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['emuchievements-safe-arm64'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):
             self.assertEqual(compatibility.lookup(12, 'a'*64, '1.0')['status'], 'unverified')
