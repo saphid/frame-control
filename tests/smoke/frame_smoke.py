@@ -235,9 +235,9 @@ def missing_x86_runtime_lines(appid):
     return [line for line in steam_log_lines(marker) if 'Tool 4183110 ' in line and marker in line]
 
 
-# What a launch must show, per kind. The x86-64 runtime isn't installed on the
-# Frame, so Steam acknowledges that launch and logs "... is not installed"
-# instead (docs/sideloading.md, 2026-09-26): record a skip, not a launch pass.
+# What a launch must show, per kind. Static x86-64 titles should use the
+# title-local FEX launcher. If Steam still reports its x86 runtime missing,
+# record a skip and fail the release gate rather than claiming a launch pass.
 EXPECTED = {'arm64': ('running',), 'x86_64': ('running',), 'exe': ('running', 'started')}
 
 

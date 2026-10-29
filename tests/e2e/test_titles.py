@@ -5,6 +5,7 @@ import http.server
 import json
 import os
 import platform
+import struct
 import subprocess
 import sys
 import threading
@@ -111,8 +112,32 @@ class Titles(harness.FrameTestCase):
         self.assertIsNone(job['error'], job)
         self.assert_installed('_2048_Deluxe', 'proton-experimental', '2048-Deluxe.exe')
 
-    def test_x86_64_linux_build_needs_a_runtime_the_frame_lacks(self):
-        _, folder = self.folder('x86_64', 'Tiny PC Game')
+    def test_static_x86_64_linux_build_uses_frame_fex_launcher(self):
+        _, folder = self.folder('x86_64', 'Tiny Static PC Game')
+        plan, job = install_title(folder)
+        self.assertEqual(plan['runtime'], 'SteamLinuxRuntime_4-arm64')
+        self.assertTrue(plan['static'])
+        self.assertIsNone(job['error'], job)
+        self.assert_installed('Tiny_Static_PC_Game', 'SteamLinuxRuntime_4-arm64', '.frame-control-fex-launch')
+        meta = json.loads(ssh(f'cat {GAMES}/Tiny_Static_PC_Game-framecontrol.json'))
+        self.assertEqual(meta['target'], 'fc-smoke-x86_64')
+        self.assertEqual(meta['launch_target'], '.frame-control-fex-launch')
+        ok('POST', '/api/titles', {'action': 'launch', 'id': 'Tiny_Static_PC_Game'})
+        run = launches('devkit')[-1]
+        self.assertTrue(run['started'])
+        self.assertEqual(run['command'], f'{GAMES}/Tiny_Static_PC_Game/.frame-control-fex-launch')
+        if NATIVE == 'x86_64':
+            done = wait_for(lambda: launches('devkit')[-1].get('exit') is not None and launches('devkit')[-1],
+                            30, 'the static x86-64 program to exit')
+            self.assertEqual(done['exit'], 0)
+
+    def test_dynamic_x86_64_linux_build_needs_a_runtime_the_frame_lacks(self):
+        program, folder = self.folder('x86_64', 'Tiny PC Game')
+        # This synthetic ELF advertises PT_INTERP. Steam rejects the absent
+        # runtime before execution, so its loader bytes are never used.
+        with open(program, 'r+b') as f:
+            f.seek(64)
+            f.write(struct.pack('<I', 3))
         plan, job = install_title(folder)
         self.assertEqual(plan['runtime'], 'SteamLinuxRuntime_4')
         self.assertIsNone(job['error'], job)
@@ -126,15 +151,6 @@ class Titles(harness.FrameTestCase):
         # The headset smoke test finds this in Steam's logs, where compat_log.txt has
         # binary bytes in it: only grep -a returns the line (Frame, 2026-09-27).
         self.assertIn(run['message'], ssh('grep -arshF "but is not installed" ~/.local/share/Steam/logs/'))
-        # With the runtime installed, it starts.
-        ctl('runtime', 'SteamLinuxRuntime_4', 'installed')
-        ok('POST', '/api/titles', {'action': 'launch', 'id': 'Tiny_PC_Game'})
-        run = launches('devkit')[-1]
-        self.assertTrue(run['started'])
-        if NATIVE == 'x86_64':
-            done = wait_for(lambda: launches('devkit')[-1].get('exit') is not None and launches('devkit')[-1],
-                            30, 'the x86-64 test program to exit')
-            self.assertEqual(done['exit'], 0)
 
     def test_reinstall_with_another_runtime_keeps_one_shortcut(self):
         zip_path = self.game_zip()

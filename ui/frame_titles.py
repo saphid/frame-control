@@ -8,7 +8,8 @@ asks the running Steam client to register it with a runtime:
 
   Windows .exe      -> Proton Experimental (steam_play=1; x86-64 runs through FEX)
   aarch64 ELF       -> Steam Linux Runtime 4.0 ARM64 (steam_play=0)
-  x86-64 ELF        -> Steam Linux Runtime 4.0 (steam_play=0; runs through FEX)
+  static x86-64 ELF -> native launcher invoking Frame's FEX (steam_play=0)
+  dynamic x86-64 ELF -> Steam Linux Runtime 4.0 (not installed on tested Frame)
 
 Everything device-side is inferred from Valve's steamos-devkit source until
 checked on a headset; see docs/sideloading.md.
@@ -68,6 +69,8 @@ RUNTIMES = {
 # Experimental rather than stable: the Frame's ARM64 Proton + FEX stack is new,
 # and Proton fixes reach Experimental first. --runtime proton-stable switches.
 DEFAULT_PROTON = 'proton-experimental'
+FEX_LAUNCHER = '.frame-control-fex-launch'
+FEX_BINARY = '$HOME/.steam/steam/steamapps/common/FEX-Emu/usr/bin/FEX'
 
 ELF_MACHINES = {0xB7: 'arm64', 0x3E: 'x86_64', 0x03: 'x86', 0x28: 'arm'}
 PE_MACHINES = {0x8664: 'x86_64', 0xAA64: 'arm64', 0x14C: 'x86', 0x1C4: 'arm'}
@@ -103,24 +106,27 @@ def _elf(f, head):
     wide, end = head[4] == 2, '<' if head[5] == 1 else '>'
     e_type, machine = struct.unpack_from(end + 'HH', head, 16)
     arch = ELF_MACHINES.get(machine, f'elf-0x{machine:x}')
-    if e_type == 2:                        # ET_EXEC
-        return {'format': 'elf', 'arch': arch, 'exe': True}
-    if e_type != 3:                        # not ET_DYN either: object file, core dump
+    if e_type not in (2, 3):               # object file, core dump
         return {'format': 'elf', 'arch': arch, 'exe': False}
-    # ET_DYN is a PIE executable or a shared library; only executables ask for an interpreter.
+    # ET_EXEC can still be dynamically linked. Only an executable with a valid
+    # program table and no PT_INTERP may use the Frame's direct FEX launcher.
+    # ET_DYN is a PIE executable or a shared library; only the former has PT_INTERP.
     if wide:
         phoff, = struct.unpack_from(end + 'Q', head, 32)
         phentsize, phnum = struct.unpack_from(end + 'HH', head, 54)
     else:
         phoff, = struct.unpack_from(end + 'I', head, 28)
         phentsize, phnum = struct.unpack_from(end + 'HH', head, 42)
-    if phentsize < (56 if wide else 32) or phnum > 256:
-        return {'format': 'elf', 'arch': arch, 'exe': False}
-    f.seek(phoff)
-    table = f.read(phentsize * phnum)
-    interp = any(struct.unpack_from(end + 'I', table, i * phentsize)[0] == 3   # PT_INTERP
-                 for i in range(len(table) // phentsize))
-    return {'format': 'elf', 'arch': arch, 'exe': interp}
+    interp = None
+    if phentsize >= (56 if wide else 32) and 0 < phnum <= 256:
+        f.seek(phoff)
+        table = f.read(phentsize * phnum)
+        if len(table) == phentsize * phnum:
+            interp = any(struct.unpack_from(end + 'I', table, i * phentsize)[0] == 3
+                         for i in range(phnum))
+    if e_type == 2:
+        return {'format': 'elf', 'arch': arch, 'exe': True, 'static': interp is False}
+    return {'format': 'elf', 'arch': arch, 'exe': interp is True}
 
 
 def _pe(f, head):
@@ -380,7 +386,8 @@ def candidates(root, title=''):
             skip = bool(SKIP_RE.search(fn)) or any(SKIP_DIRS.match(p) for p in parts)
             match = 2 if want and stem == want else 1 if want and stem and (want in stem or stem in want) else 0
             found.append({'path': '/'.join(parts + [fn]), 'format': c['format'], 'arch': c['arch'],
-                          'size': os.path.getsize(full), 'depth': len(parts), 'skip': skip, 'match': match})
+                          'static': c.get('static', False), 'size': os.path.getsize(full),
+                          'depth': len(parts), 'skip': skip, 'match': match})
     found.sort(key=_rank)
     _prefer_launcher_script(found)
     return found
@@ -413,6 +420,9 @@ def runtime_for(target, found=()):
         # A script runs in the runtime of the binaries next to it; alone, natively.
         elf = next((c for c in found if c['format'] == 'elf' and not c['skip']), None)
         if elf:
+            if elf['arch'] == 'x86_64' and elf.get('static'):
+                return 'SteamLinuxRuntime_4', ('This script calls an x86-64 Linux binary; its own launch path is '
+                                                'unverified and the x86-64 Steam runtime is absent on the tested Frame.')
             return runtime_for(elf)[0], 'A shell script; runtime chosen from the Linux binary next to it.'
         return 'SteamLinuxRuntime_4-arm64', 'A shell script with no Linux binary beside it; run natively.'
     if fmt == 'pe':
@@ -424,6 +434,12 @@ def runtime_for(target, found=()):
     if fmt == 'elf' and arch == 'arm64':
         return 'SteamLinuxRuntime_4-arm64', 'Native ARM64 Linux build.'
     if fmt == 'elf' and arch == 'x86_64':
+        if target.get('static'):
+            return 'SteamLinuxRuntime_4-arm64', ('Static x86-64 Linux build: Frame Control prepares a title-local '
+                                                 'FEX launcher without the missing x86-64 Steam runtime. '
+                                                 'The tiny static smoke title launched on the tested Frame. '
+                                                 'Requires FEX on the headset; other games and dynamic '
+                                                 'libraries remain unverified.')
         return 'SteamLinuxRuntime_4', ("x86-64 Linux build: probably won't start. It needs the x86-64 Steam "
                                        "Linux Runtime 4.0, which the Frame didn't install for a sideloaded title "
                                        "(2026-09-26). Use an ARM64 or Windows build if there is one.")
@@ -511,7 +527,8 @@ def _choose(plan, rel, runtime=None):
         if not c or not c['exe']:
             raise FrameError(f"{rel} isn't a program the Frame can start")
         target = {'path': os.path.relpath(full, root).replace(os.sep, '/'), 'format': c['format'],
-                  'arch': c['arch'], 'size': os.path.getsize(full), 'depth': rel.count('/'),
+                  'arch': c['arch'], 'static': c.get('static', False),
+                  'size': os.path.getsize(full), 'depth': rel.count('/'),
                   'skip': False, 'match': 0}
     alias, note = runtime_for(target, plan['candidates'])
     allowed = allowed_runtimes(target, plan['candidates'])
@@ -519,7 +536,8 @@ def _choose(plan, rel, runtime=None):
         if runtime not in allowed:
             raise FrameError(f"{target['path']} can't use {runtime}; choose one of {', '.join(allowed)}")
         alias = runtime
-    plan.update(target=target['path'], format=target['format'], arch=target['arch'], runtime=alias,
+    plan.update(target=target['path'], format=target['format'], arch=target['arch'],
+                static=target.get('static', False), runtime=alias,
                 runtime_label=RUNTIMES[alias]['label'], runtimes=allowed, note=note)
     plan['warnings'] = (['This looks like an installer or helper, not the game itself.'] if target['skip'] else [])
     return plan
@@ -545,6 +563,15 @@ def shortcut_parms(gameid, directory, rel, runtime):
     settings['compat_tool'] = runtime
     return {'gameid': gameid, 'directory': directory, 'argv': argv_for(rel), 'env': {},
             'settings': settings, 'clear_settings': True, 'force_appid': '', 'lepton_args': ''}
+
+
+def fex_launcher(rel):
+    """A title-local shell entry point for a static x86-64 ELF, with no shell-expanded path."""
+    return ('#!/bin/sh\nset -eu\n'
+            f'FEX="{FEX_BINARY}"\n'
+            'if [ ! -x "$FEX" ]; then echo "Frame FEX is unavailable" >&2; exit 127; fi\n'
+            'DIR=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+            f'exec "$FEX" "$DIR"/{shlex.quote(rel)} "$@"\n')
 
 
 # ---- the Frame side ----------------------------------------------------------
@@ -671,6 +698,12 @@ def _install(plan, step, artwork=None):
     gid = plan['id']
     if not NEW_ID_RE.match(gid) or gid.lower() in RESERVED_IDS:
         raise FrameError(f'bad title id {gid!r}')
+    direct_fex = plan.get('format') == 'elf' and plan.get('arch') == 'x86_64' and plan.get('static')
+    if direct_fex:
+        if os.path.lexists(os.path.join(plan['root'], FEX_LAUNCHER)):
+            raise FrameError(f'{FEX_LAUNCHER} is reserved for Frame Control\'s x86 launcher')
+        if ssh(f'test -x "{FEX_BINARY}" && echo yes || true', timeout=30).strip() != 'yes':
+            raise FrameError('Frame FEX is unavailable; this static x86-64 Linux build cannot launch')
     icon = None
     for filename in ('icon.png', 'logo.png'):
         path = os.path.join(plan['root'], filename)
@@ -699,11 +732,17 @@ def _install(plan, step, artwork=None):
             ssh(f'rm -rf {directory} && mv {part} {directory}', timeout=120)
         # Same modes Valve's client gives an upload (rsync --chmod=Du=rwx,Dgo=rx,Fu=rwx,Fog=rx).
         ssh(f'chmod -R 755 {directory}', timeout=300)
+        launch_target = plan['target']
+        if direct_fex:
+            launch_target = FEX_LAUNCHER
+            ssh(f'cat > {directory}/{FEX_LAUNCHER}', input=fex_launcher(plan['target']), timeout=30)
+            ssh(f'chmod 755 {directory}/{FEX_LAUNCHER}', timeout=30)
         step('Registering with Steam', 0.9)
-        parms = shortcut_parms(gid, directory, plan['target'], plan['runtime'])
+        parms = shortcut_parms(gid, directory, launch_target, plan['runtime'])
         reply = _json_out(ssh(f'{PY}steam-client-create-shortcut --parms {shlex.quote(json.dumps(parms))}',
                               timeout=90), 'steam-client-create-shortcut')
-        meta = {'id': gid, 'name': plan['name'], 'target': plan['target'], 'runtime': plan['runtime'],
+        meta = {'id': gid, 'name': plan['name'], 'target': plan['target'], 'launch_target': launch_target,
+                'runtime': plan['runtime'],
                 'source': plan['source'], 'size': plan['size'], 'installed': time.strftime('%Y-%m-%dT%H:%M:%S'),
                 # Until art is applied: the only entries automatic backfill may touch.
                 'art_pending': True}

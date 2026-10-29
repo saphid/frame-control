@@ -225,8 +225,9 @@ removes three tiny titles built from bytes by `tests/smoke/tiny_programs.py`
 (an ARM64 and an x86-64 static Linux program that sleep for ten seconds, and
 an x86-64 `.exe` that exits at once). A launch passes only with fresh evidence:
 the ARM64 program running, the `.exe` started (its process or Steam's log),
-and the x86-64 program running. If Steam logs that the optional x86-64 runtime
-is not installed, that launch is **skipped**, with the reason and log saved in
+and the static x86-64 program running through the title-local FEX launcher.
+If Steam logs that the optional x86-64 runtime is not installed, that launch
+is **skipped**, with the reason and log saved in
 the result. It does not prove that the x86-64 title ran. Steam's log lines about
 each title are kept.
 
