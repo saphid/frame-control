@@ -3,7 +3,8 @@
 # (docs/releasing.md). Checks every installer is attached with a SHA-256
 # digest first, since the app's updater refuses assets without one, then
 # attaches update.json, the manifest the updater reads.
-# Usage: FRAME_SMOKE_RESULT=/path/to/result.json scripts/publish-release.sh [--dry-run] v0.4.0
+# Usage: FRAME_SMOKE_RESULT=/path/to/result.json RELEASE_ASSET_AUDIT=/path/to/audit.json \
+#        scripts/publish-release.sh [--dry-run] v0.4.0
 #
 # Everything goes through the REST API (gh api), not `gh release view/edit`:
 # those look a draft up by its tag, and a draft can show tag_name
@@ -93,6 +94,12 @@ print(matches[0] if len(matches)==1 else "absent")' "$tmp/release.json")
   echo "not publishing: SHA256SUMS is absent or does not match the ten installer digests" >&2; exit 1;
 }
 echo "ok       SHA256SUMS"
+
+[ -n "${RELEASE_ASSET_AUDIT:-}" ] || {
+  echo "not publishing: RELEASE_ASSET_AUDIT is required from the independent installer audit" >&2
+  exit 1
+}
+python3 "$(dirname "$0")/verify-release-asset-audit.py" "$RELEASE_ASSET_AUDIT" "$tmp/release.json" "$tag"
 
 # Every published release carries the same concrete verification instructions.
 # Keep the release's own notes, and append this section only once. The tag URL
