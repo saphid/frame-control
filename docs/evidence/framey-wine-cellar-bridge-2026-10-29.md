@@ -41,12 +41,13 @@ its managed plugin on the real Frame or access the headset.
   rejected tool commands, fetches and network access. See
   [browser capture](framey-wine-cellar-browser-2026-10-29.png).
 
-The first hosted fake-Frame e2e run passed the generic pinned official
-install/remove flow on PR head `035baa9350959fbb1faaf805cf4afb93765d7845`.
-A stronger Wine Cellar specific receipt/helper-hash assertion has been added
-for the next head and is **pending**. The local e2e launcher needs `zsh`,
-which is unavailable on this test host; its failure to launch is not an e2e
-pass.
+Hosted fake-Frame e2e passed the Wine Cellar specific install/remove,
+receipt shim, ARM64 helper SHA-256 and managed Python SHA-256 assertions on
+PR head `23905597b582473efb5c239c7253e335f6b7fb80`
+([e2e job](https://github.com/saphid/frame-control/actions/runs/40953312198/job/123726825884)).
+That flow uses a stubbed backend; it does not prove tool operation. The local
+e2e launcher needs `zsh`, which is unavailable on this test host; its failure
+to launch is not an e2e pass.
 
 ## Remaining limits
 

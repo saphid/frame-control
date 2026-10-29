@@ -5339,7 +5339,8 @@
         "static archive",
         "local browser fixture",
         "actual Decky 3.3.0 AMD64/ARM64 private state",
-        "managed install unit"
+        "managed install unit",
+        "fake-Frame e2e install/remove and helper hash"
       ],
       "browser": {
         "id": 68,
@@ -5365,9 +5366,9 @@
       "fakeFrame": {
         "id": 68,
         "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
-        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend",
-        "result": "pending-new-fake-Frame-e2e",
-        "reason": "Earlier 116-plugin snapshot blocked this archive; new adaptation awaits exact-head fake-Frame CI."
+        "archiveValidation": "accepted",
+        "result": "installed-removed",
+        "reason": "Exact managed archive installed and removed through fake Frame HTTP/SSH; receipt shim and ARM64 helper/managed Python SHA-256 checked. Plugin backend execution and VR use are outside this fake-Frame flow."
       },
       "requiredShims": [
         "wine-cellar-native-bridge"
