@@ -63,8 +63,11 @@ for private settings and a synthetic exclusion list. No process-control method
 is called. The official frontend's standalone Toggle component separately
 checks saved true/false state and matching settings callbacks; effects are inert.
 RadiYo! runs through actual published Decky 3.3.0 legacy RPC in a network-isolated
-container. Only loopback station fetch, custom-station fetch and redirect are
-tested. External radio, HTTPS and audio playback remain unverified.
+container. The managed copy passes loopback station fetch, custom-station fetch
+and redirect, and rejects a self-signed loopback HTTPS endpoint from both
+methods. The certificate and private key under `tests/decky-runtime/fixtures`
+are public test fixtures; they grant no trusted access. External radio, trusted
+HTTPS and audio playback remain unverified.
 Game Sync runs through actual published Decky 3.3.0 instance RPC in the same
 isolation. Only default configuration and a private setting surviving restart
 are checked. No rclone, cloud sync, process signal, Frame backend or VR action

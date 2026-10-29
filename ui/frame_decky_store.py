@@ -41,6 +41,8 @@ NETWORK_SENTINEL_DIGEST = 'd3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a026052
 NETWORK_SENTINEL_MAIN = '2baa390cb66dc267e8f04e61ba1edc43af75115ad5e453d308f6bf26ed70b6b9'
 BATTERY_TRACKER_DIGEST = '91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94'
 BATTERY_TRACKER_MAIN = '2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725'
+RADIYO_DIGEST = '647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43'
+RADIYO_MAIN = '868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -171,6 +173,9 @@ def archive_info(data, expected_hash, expected_name):
         if battery_tracker and (flags != ['_root'] or 'api_version' in manifest
                                 or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != BATTERY_TRACKER_MAIN):
             raise ValueError('Battery Tracker manifest or source differs from the pinned archive')
+        if (expected_hash == RADIYO_DIGEST and expected_name == 'RadiYo!' and folder == 'radiyo-steam-deck'
+                and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != RADIYO_MAIN):
+            raise ValueError('RadiYo source differs from the pinned archive')
         return folder
 
 
@@ -710,6 +715,21 @@ def split_by_app(data):
                 source=source.replace(old,old+'        env["LD_LIBRARY_PATH"] = env.get("LD_LIBRARY_PATH_ORIG", "")\n')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('music-control-system-dbus-env')
+            # RadiYo's exact 1.3 backend turns off certificate and hostname
+            # checks for both outbound requests. Restore Python's default TLS
+            # policy only for the pinned official source in this managed copy.
+            if int(plugin_id)==24 and digest=='647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43' and folder=='radiyo-steam-deck':
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if hashlib.sha256(data).hexdigest()!='868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e':
+                    raise RuntimeError('RadiYo source differs from pinned archive')
+                unsafe=b'        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n'
+                broken=b"'URL Error: ' + error.reason"
+                if data.count(unsafe)!=2 or data.count(broken)!=2:
+                    raise RuntimeError('RadiYo TLS source changed')
+                data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
+                main.write_bytes(data)
+                compat_shims.append('radiyo-verified-tls')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')

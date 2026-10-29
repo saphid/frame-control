@@ -192,6 +192,26 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_exact_radiyo_managed_copy_restores_tls_verification(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 24)
+        data = official_archive(plugin)
+        self.assertEqual(frame_decky_store.archive_info(data, plugin['sha256'], plugin['name']), plugin['folder'])
+        result = self.apply('install', data, plugin_id=24,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        source = (folder/'main.py').read_text(encoding='utf-8')
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['radiyo-verified-tls'])
+        self.assertEqual(source.count('ctx = ssl.create_default_context()'), 2)
+        self.assertNotIn('ssl.CERT_NONE', source)
+        self.assertNotIn('ctx.check_hostname = False', source)
+        self.assertEqual(source.count("'URL Error: ' + str(error.reason)"), 2)
+        result = self.apply('remove', plugin_id=24, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
     def test_modified_fileserver_archive_does_not_inherit_exception(self):
         from framey_official import PLUGINS, archive as official_archive
         record = next(p for p in PLUGINS if p['id'] == 60)
