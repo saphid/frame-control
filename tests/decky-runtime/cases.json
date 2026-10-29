@@ -10,6 +10,11 @@
     "probe": "deck-settings-readonly"
   },
   {
+    "id": 123,
+    "shim": "steam-status-verified-tls",
+    "probe": "steam-status-readonly"
+  },
+  {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
     "probe": "emuchievements-private-hash"

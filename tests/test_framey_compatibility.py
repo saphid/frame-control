@@ -113,6 +113,16 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
+    def test_steam_status_old_copy_exposes_diagnostic_tls_update_requirement(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 123)
+        old = dict(storeId=123, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['steam-status-verified-tls'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertIn('certificate and hostname verification', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_notifications_old_copy_exposes_logging_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 79)
         old = dict(storeId=79, version=plugin['version'], sha256=plugin['sha256'])

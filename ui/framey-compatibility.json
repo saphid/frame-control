@@ -10895,13 +10895,15 @@
         "https://github.com/sponsors/bschelst"
       ],
       "status": "partial",
-      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Persistence, live backend diagnostics and VR controls unverified.",
+      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Exact managed 1.2.3 installs keep certificate and hostname verification for public CM-list and speed-test downloads; older managed copies need Update. Native Decky discovery and private defaults passed in isolation. Persistence, live public diagnostics, real Frame use of the adapted backend and VR controls remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame SSH"
+        "real Frame SSH",
+        "isolated Decky 3.3.0 x86_64 backend",
+        "local verified-context test"
       ],
       "browser": {
         "id": 123,
@@ -10973,7 +10975,14 @@
           "defaultRefreshInterval": 120
         },
         "errors": []
-      }
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-steam-status-tls-2026-10-29.md",
+        "mode": "exact managed 1.2.3 source; private default-settings RPC and two verified TLS contexts with network denied"
+      },
+      "requiredShims": [
+        "steam-status-verified-tls"
+      ]
     },
     {
       "id": 124,
