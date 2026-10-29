@@ -376,12 +376,14 @@ class StoreTransaction(unittest.TestCase):
         plugin = self.folder.parent/record['folder']
         self.assertEqual(json.loads((plugin/'plugin.json').read_text())['flags'], [])
         self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'],
-                         ['deckyfileserver-user-native', 'deckyfileserver-https-address'])
+                         ['deckyfileserver-user-native', 'deckyfileserver-https-address',
+                          'deckyfileserver-directory-entry'])
         helper = plugin/'bin/backend'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), frame_decky_store.FILESERVER_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         compile((plugin/'main.py').read_text(), str(plugin/'main.py'), 'exec')
         self.assertIn('if arg]', (plugin/'main.py').read_text())
+        self.assertIn('Choose an existing absolute directory', (plugin/'main.py').read_text())
         rendered = subprocess.run(['node', str(Path(__file__).parent/'page/framey_fileserver_url.mjs'),
                                    str(plugin/'dist/index.js')], capture_output=True, text=True, timeout=20)
         self.assertEqual(rendered.returncode, 0, rendered.stderr)

@@ -456,6 +456,21 @@ try:
                                   '                    ] if arg],\n                    stdout=PIPE,')
                 text=text.replace('                    [\n                        f"{decky.DECKY_PLUGIN_DIR}',
                                   '                    [arg for arg in [\n                        f"{decky.DECKY_PLUGIN_DIR}')
+                # A typed value must never make the helper serve its process
+                # working directory by accident. The original picker supplied
+                # an existing absolute folder; preserve that start condition.
+                old_start="""            if enable:
+                if is_port_in_use(await Plugin.get_port(self)):
+"""
+                new_start="""            if enable:
+                directory = await Plugin.get_directory(self)
+                if not isinstance(directory, str) or not os.path.isabs(directory) or not os.path.isdir(directory):
+                    Plugin.set_error(self, "Choose an existing absolute directory before starting the server.")
+                    return False
+                if is_port_in_use(await Plugin.get_port(self)):
+"""
+                if text.count(old_start)!=1: raise RuntimeError('DeckyFileServer start guard changed')
+                text=text.replace(old_start,new_start)
                 # Hostname DNS is not guaranteed on Frame OS. A UDP connect
                 # selects the kernel source address without sending any packet.
                 text=text.replace('        return socket.gethostbyname(socket.gethostname())',
@@ -498,9 +513,45 @@ try:
                 state.port),
 """
                 if bundle.count(old_url)!=1: raise RuntimeError('DeckyFileServer address UI changed')
-                frontend.write_text(bundle.replace(old_url,new_url),encoding='utf-8')
+                bundle=bundle.replace(old_url,new_url)
+                # Chromium cannot disclose a native absolute path through a
+                # directory picker. Keep the choice explicit in this exact
+                # plugin's settings, without granting a general file API.
+                old_picker="""    const handleDestinationClick = async (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const file = await openFilePicker(1 /* FileSelectionType.FOLDER */, directory, false);
+        if (file.path) {
+            setForm({
+                ...form,
+                directory: file.path,
+            });
+        }
+    };
+"""
+                new_picker="""    const handleDirectoryChange = (e) => {
+        setForm({ ...form, directory: e.currentTarget.value });
+    };
+"""
+                old_button="""                window.SP_REACT.createElement(DFL.DialogButton
+                // @ts-ignore
+                , {\x20
+                    // @ts-ignore
+                    onClick: handleDestinationClick, style: { flex: 1, textAlign: "left" } }, form.directory),
+"""
+                new_field="""                window.SP_REACT.createElement(DFL.TextField, {
+                    label: "Directory to share (absolute path)",
+                    value: form.directory,
+                    placeholder: "/home/steamos/Downloads",
+                    onChange: handleDirectoryChange }),
+"""
+                if bundle.count(old_picker)!=1 or bundle.count(old_button)!=1:
+                    raise RuntimeError('DeckyFileServer directory control changed')
+                bundle=bundle.replace(old_picker,new_picker).replace(old_button,new_field)
+                frontend.write_text(bundle,encoding='utf-8')
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
+                compat_shims.append('deckyfileserver-directory-entry')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.

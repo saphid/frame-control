@@ -259,6 +259,9 @@ def main():
                 assert until_ready(lambda: current('get_port') == 8000, 'default port')
                 assert current('get_directory') == str(home)
                 assert current('get_server_running') is False
+                for bad_directory in ('', 'relative-folder', str(home/'missing-folder')):
+                    rejected = current('set_status', {'directory': bad_directory, 'server_running': True})
+                    assert not rejected['server_running'] and 'existing absolute directory' in rejected['error'], rejected
                 fixture = home/'public-fixture'
                 fixture.mkdir()
                 marker = b'Framey public read-only fixture\n'
