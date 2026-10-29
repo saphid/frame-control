@@ -10,7 +10,7 @@ on:
   push:
     tags: ["v*"]
   pull_request:
-    paths: ["app/**", "desktop/**", "mac/frame-mac-view/**", "scripts/check-appimage-launch.py", ".github/workflows/release.yml"]
+    paths: ["app/**", "desktop/**", "mac/frame-mac-view/**", "scripts/check-appimage-launch.py", "scripts/check-mac-installer-payload.sh", ".github/workflows/release.yml"]
   workflow_dispatch:
 
 # A newer push to the same pull request supersedes a build still in progress.
@@ -136,6 +136,10 @@ jobs:
             lipo "$binary" -verify_arch "$(uname -m)"
           done
           "$resources/python/bin/python3" -I -B -c 'import http.server, ssl, sqlite3; print(ssl.OPENSSL_VERSION)'
+      - name: Check the Mac DMG and ZIP payloads
+        if: runner.os == 'macOS'
+        shell: bash
+        run: bash scripts/check-mac-installer-payload.sh
       - name: Launch the built Linux AppImage
         if: matrix.os == 'ubuntu-latest'
         run: python3 scripts/check-appimage-launch.py app/dist/Frame-Control-linux-x86_64.AppImage
