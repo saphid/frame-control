@@ -229,6 +229,12 @@ def steam_log_lines(*patterns):
     return out.strip().splitlines()
 
 
+def missing_x86_runtime_lines(appid):
+    """Only the Steam runtime error for this smoke title's shortcut counts."""
+    marker = f'for appID {appid}, but is not installed'
+    return [line for line in steam_log_lines(marker) if 'Tool 4183110 ' in line and marker in line]
+
+
 # What a launch must show, per kind. The x86-64 runtime isn't installed on the
 # Frame, so Steam acknowledges that launch and logs "... is not installed"
 # instead (docs/sideloading.md, 2026-09-26): record a skip, not a launch pass.
@@ -238,10 +244,13 @@ EXPECTED = {'arm64': ('running',), 'x86_64': ('running',), 'exe': ('running', 's
 def title_cycle(smoke, kind, folder):
     path = tiny_programs.write(folder, kind)
     gid = PREFIX + kind                 # named outright: the file names would share one id
+    shortcut = None
 
     def install():
+        nonlocal shortcut
         smoke.installed.add(gid)
         meta = frame_titles.install(path, name=gid)
+        shortcut = meta.get('shortcut')
         listed = {t['id']: t for t in frame_titles.list_titles()}
         if gid not in listed:
             raise AssertionError(f'{gid} is not in the title list after installing')
@@ -249,9 +258,10 @@ def title_cycle(smoke, kind, folder):
 
     def launch():
         mine = (f'devkit-game/{gid}', f'"{gid}"')
-        # The missing-runtime line names Steam's app id, which we don't know, so
-        # any new one counts; nothing else is launching during the test.
-        seen, seen_missing = len(steam_log_lines(*mine)), len(steam_log_lines('but is not installed'))
+        if kind == 'x86_64' and (not isinstance(shortcut, int) or shortcut <= 0):
+            raise AssertionError('installed x86_64 title has no Steam shortcut app ID')
+        seen = len(steam_log_lines(*mine))
+        seen_missing = len(missing_x86_runtime_lines(shortcut)) if kind == 'x86_64' else 0
         frame_titles.launch(gid)       # raises unless Steam confirmed it
         outcome, procs, new = 'no evidence', [], []
         deadline = time.monotonic() + 12
@@ -259,7 +269,7 @@ def title_cycle(smoke, kind, folder):
             # [d]: the pattern mustn't match the shell running pgrep, whose command line holds it.
             procs = ssh(f"pgrep -af -- '[d]evkit-game/{gid}/' || true").strip().splitlines()
             new = steam_log_lines(*mine)[seen:]
-            missing = steam_log_lines('but is not installed')[seen_missing:]
+            missing = missing_x86_runtime_lines(shortcut)[seen_missing:] if kind == 'x86_64' else []
             if procs:
                 outcome = 'running'
             elif missing:
