@@ -55,6 +55,56 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
+    def test_battery_tracker_fixture_uses_legacy_envelopes_and_rejects_other_calls(self):
+        page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
+        for old, new in [('CATALOG_DATA', '[{"id":67,"name":"Battery Tracker"}]'),
+                         ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
+                         ('BATTERY_FIXTURE', 'true')]:
+            page_script = page_script.replace(old, new)
+        script = r'''
+const assert=require('node:assert/strict');
+const vm=require('node:vm');
+const fs=require('node:fs');
+const messages=[],handlers={};
+const context={
+  panel:{src:'',contentWindow:{postMessage:(data)=>messages.push(data)}},
+  run:{disabled:false},download:{},progress:{textContent:''},
+  addEventListener:(type,handler)=>{handlers[type]=handler},
+  setTimeout:(callback)=>{callback();return 1},
+  URL,Blob,Number,Promise,JSON,Error,
+};
+context.window=context;
+vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
+(async()=>{
+  await context.runAudit([67],1200);
+  assert.equal(context.panel.src,'/panel/67');
+  function call(id,method,args,legacy=true){
+    messages.length=0;
+    handlers.message({source:context.panel.contentWindow,
+      data:{type:'framey:call',id,method,args,legacy}});
+    return messages.at(-1);
+  }
+  const history=call(1,'get_recent_data',[{lookback:5}]);
+  assert.equal(history.result.success,true);
+  assert.deepEqual(JSON.parse(JSON.stringify(history.result.result)),
+    {x:[0.2,0.8],cap:[0.89,0.88],power_data:[{name:'Framey private',average_power:1.5}]});
+  assert.equal(call(2,'set_app',[{app:'Framey private'}]).result.result,true);
+  assert.match(call(3,'get_recent_data',[{lookback:8}]).error,/rejects backend method/);
+  assert.match(call(4,'delete_all',[{}]).error,/rejects backend method/);
+  assert.match(call(5,'get_recent_data',[{lookback:1}],false).error,/backend method blocked/);
+  assert.deepEqual(JSON.parse(JSON.stringify(context.batteryFixtureCalls)),[
+    {method:'get_recent_data',lookback:5},
+    {method:'set_app',lookback:null},
+    {method:'get_recent_data',lookback:8},
+    {method:'delete_all',lookback:null},
+  ]);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=page_script,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_digest_checked_archive_renders_without_installed_plugin(self):
         bundle = b"import './chunks/frontend.js';"
         stream = io.BytesIO()

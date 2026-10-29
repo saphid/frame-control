@@ -5194,7 +5194,7 @@
         "https://github.com/safijari/steam-deck-battery-tracker.git"
       ],
       "status": "partial",
-      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers recorded Frame-shaped private battery samples and returned history/per-app power. A locked real Frame read verified the required sysfs fields, not the managed plugin. Real Frame ARM64 recording, long-term history, foreground-app labeling, panel controls and worn VR remain unverified; existing copies need update or reinstall.",
+      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers recorded Frame-shaped private battery samples and returned history/per-app power. A locked real Frame read verified the required sysfs fields, not the managed plugin. Local Chromium rendered synthetic history, an average-power row and lookback slider requests from 1 to 5. Real Frame ARM64 recording, long-term history, foreground-app labeling, Frame panel controls and worn VR remain unverified; existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
         "battery-tracker-user-supply"
