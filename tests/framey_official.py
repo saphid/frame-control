@@ -8,7 +8,7 @@ ROOT = Path(__file__).parent / 'fixtures/framey-official'
 MANAGED_FRONTENDS = {
     50: '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125',
     60: '34968b88fc828708680c1b82d774e76e8e11b5413222b9c508c10e1b7c375c78',
-    130: 'fabc041ea94ae7433421e35df3bd2eee72cb6d6d2c9b4515333cc3233556b85b',
+    130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
     {'id': 130, 'name': 'Games Prefix Manager', 'version': '1.0.1', 'api_version': 'legacy',

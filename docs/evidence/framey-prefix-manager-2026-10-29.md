@@ -24,12 +24,20 @@ special files, and use separate filenames rather than overwrite older backups.
 A failed backup preserves the prefix. The panel reports backend refusals and
 RPC errors through its toaster. Removal remains the normal managed operation.
 
+Automatic orphan cleanup is **disabled**, including direct RPC and stale cached
+lists. The upstream non-Steam parser reads only the first Steam user's shortcut
+file and silently accepts read/parse failures. Missing metadata therefore cannot
+prove that a prefix is unused. The adaptation bypasses that parser and labels
+unmatched prefixes **Unidentified prefix (may still be in use)**, never Orphan.
+The panel disables its bulk cleanup control and explains the incomplete shortcut
+coverage. Explicitly selected per-prefix backup/delete remains available.
+
 This remains **partial**. No actual Steam prefix was deleted or backed up on
 Frame. Complete non-Steam shortcut parsing, live Frame panel controls,
 wearer-visible rendering and physical controller/keyboard input are unverified.
-Symlink prefixes cannot be managed by this adaptation. The upstream prefix
-scanner and its orphan classification have not been exhaustively validated
-against real libraries; synthetic orphan cleanup is not a real-save safety claim.
+Symlink prefixes cannot be managed by this adaptation. Automatic orphan
+classification and cleanup are intentionally unavailable. Unidentified prefixes
+may belong to another Steam user or an installed non-Steam game.
 The managed copy needs the `prefix-manager-user-paths` receipt marker;
 older receipts retain a broken label until Update/reinstall.
 
@@ -47,10 +55,15 @@ unprivileged container user. It uses public `loader/get_plugins` and
 `loader/call_legacy_plugin_method`; it never constructs `Plugin` manually.
 The container has no network, devices, session bus or host home/Steam mounts.
 
-The x86_64 pass verifies an empty initial list, a regular prefix and orphan in
-two disposable libraries, backup contents, deletion and orphan cleanup. A
-second backup for the same app ID preserves the first. Traversal, a root
-symlink, nested backup symlink and replaced compatdata symlink are refused;
+The x86_64 pass verifies an empty initial list, a regular Steam prefix and unidentified prefix in
+two disposable libraries, backup contents and explicitly selected deletion.
+It also verifies that cleanup returns zero removals, gives an actionable refusal
+and never creates backups, even with a valid shortcut in the second Steam user's
+file, malformed data in either file, unreadable data, no shortcut files, or
+metadata changed after listing. Independent save-marker readbacks prove the
+protected prefix survives. The fixture failed against the earlier implementation
+because unmatched prefixes were incorrectly labeled Orphan. A second
+backup for the same app ID preserves the first. Traversal, a root symlink, nested backup symlink and replaced compatdata symlink are refused;
 independent marker readbacks confirm unrelated data survives. The new case is
 also included in the repository's native ARM64 CI gate; its result must be
 checked separately before a green handoff.
@@ -67,11 +80,13 @@ Decky 3.3.0 x86_64 container containing only synthetic prefixes. External
 network was denied. Passed:
 
 - Open the prefix modal, filter by game name, cancel a deletion confirmation.
-- Backup-and-delete a selected disposable prefix; clean a disposable orphan.
+- Backup-and-delete a selected disposable prefix.
+- Show the disabled **Orphan Cleanup Unavailable** control and unidentified-prefix
+  warning; refuse a direct bulk-cleanup RPC and preserve the unidentified prefix.
 - Display a symlink backup refusal and retain the affected prefix.
 - Reopen the modal and observe the backend's remaining list.
-- Independently read both ZIP backups and verify their marker bytes; preserve
-  the unrelated prefix and outside marker.
+- Independently read the ZIP backup and verify its marker bytes; preserve
+  the unidentified prefix, unrelated prefix and outside marker.
 
 Shared T3 preview automation was unavailable due to this host's AppArmor
 restriction, so the installed local Chromium was used. These are local browser
@@ -83,6 +98,12 @@ At 2026-10-29 21:19 UTC, the test acquired `/tmp/frame-test.lock` with an owned
 random token. It started only a private, bounded, removable user service with
 the digest-verified published ARM64 Decky v3.3.0 binary:
 `8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6`.
+
+This real-device read-only check used the earlier implementation,
+before automatic orphan cleanup was disabled. It verifies user-service discovery
+and listing on ARM64, not the later classification/refusal behavior. No new
+headset check was needed for the fail-closed repair; that repair is exercised in
+the disposable published-loader fixture and included in the native ARM64 CI gate.
 
 Discovery and `get_games` ran through Steam CEF's normal `DeckyBackend.call`
 bridge. Discovery returned the expected 1.0.1 plugin and the read-only list

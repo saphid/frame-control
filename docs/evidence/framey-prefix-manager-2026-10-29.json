@@ -32,20 +32,34 @@
                 "name": "Private Game",
                 "appid": "4242",
                 "type": "Steam",
-                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4242",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
                 "prefix_status": "Folder",
                 "size": "28.0 B",
-                "install_path": "/home/tester/.local/share/Steam/steamapps/common/Private"
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
               },
               {
-                "name": "ORPHAN PREFIX",
+                "name": "Unidentified prefix (may still be in use)",
                 "appid": "4343",
-                "type": "Orphan",
-                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
                 "prefix_status": "Folder",
                 "size": "28.0 B",
                 "install_path": "-"
               }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
             ]
           },
           {
@@ -55,26 +69,248 @@
                 "name": "Private Game",
                 "appid": "4242",
                 "type": "Steam",
-                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4242",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
                 "prefix_status": "Folder",
                 "size": "28.0 B",
-                "install_path": "/home/tester/.local/share/Steam/steamapps/common/Private"
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
               },
               {
-                "name": "ORPHAN PREFIX",
-                "appid": "4444",
-                "type": "Orphan",
-                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4444",
-                "prefix_status": "Symlink",
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "-"
+              }
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "cleanup_orphans",
+            "result": [
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "get_games",
+            "result": [
+              {
+                "name": "Private Game",
+                "appid": "4242",
+                "type": "Steam",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4242",
+                "prefix_status": "Folder",
+                "size": "28.0 B",
+                "install_path": "/home/tester/Private Library/steamapps/common/Private"
+              },
+              {
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
+                "prefix_status": "Folder",
                 "size": "28.0 B",
                 "install_path": "-"
               },
               {
-                "name": "ORPHAN PREFIX",
-                "appid": "4343",
-                "type": "Orphan",
-                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4343",
-                "prefix_status": "Folder",
+                "name": "Unidentified prefix (may still be in use)",
+                "appid": "4444",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4444",
+                "prefix_status": "Symlink",
                 "size": "28.0 B",
                 "install_path": "-"
               }
@@ -128,10 +364,10 @@
                 "install_path": "/home/tester/.local/share/Steam/steamapps/common/Private"
               },
               {
-                "name": "ORPHAN PREFIX",
+                "name": "Unidentified prefix (may still be in use)",
                 "appid": "4343",
-                "type": "Orphan",
-                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
                 "prefix_status": "Folder",
                 "size": "28.0 B",
                 "install_path": "-"
@@ -149,10 +385,10 @@
             "method": "get_games",
             "result": [
               {
-                "name": "ORPHAN PREFIX",
+                "name": "Unidentified prefix (may still be in use)",
                 "appid": "4343",
-                "type": "Orphan",
-                "prefix_path": "/home/tester/Private Library/steamapps/compatdata/4343",
+                "type": "Unidentified",
+                "prefix_path": "/home/tester/.local/share/Steam/steamapps/compatdata/4343",
                 "prefix_status": "Folder",
                 "size": "28.0 B",
                 "install_path": "-"
@@ -162,7 +398,14 @@
           {
             "method": "cleanup_orphans",
             "result": [
-              1,
+              0,
+              "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
+            ]
+          },
+          {
+            "method": "delete_prefix",
+            "result": [
+              true,
               "Success"
             ]
           },
@@ -184,9 +427,12 @@
           "oldBackupPreserved": true,
           "outsideMarkerPreserved": true,
           "symlinkAndTraversalRejected": true,
-          "privatePrefixesRemoved": true
+          "privatePrefixesRemoved": true,
+          "bulkCleanupAlwaysRefused": true,
+          "secondUserPrefixPreserved": true,
+          "malformedAndUnreadableShortcutsPreserved": true
         },
-        "result": "published Decky legacy discovery, current-user/multi-library discovery, private backup/delete/orphan cleanup and symlink/traversal refusals passed; no real saves or VR"
+        "result": "published Decky legacy discovery, current-user/multi-library discovery, private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals and symlink/traversal refusals passed; no real saves or VR"
       }
     ]
   },
@@ -195,14 +441,17 @@
     "searchFiltered": true,
     "confirmationCancel": true,
     "privateBackupDeleteCompleted": true,
-    "orphanCleanupCompleted": true,
+    "bulkCleanupDisabledVisible": true,
+    "unidentifiedWarningVisible": true,
     "reopenReflectsBackend": true,
     "independentState": {
-      "twoBackupContentsMatch": true,
+      "backupContentsMatch": true,
+      "unidentifiedPrefixPreserved": true,
       "onlySelectedFixturesRemoved": true,
       "outsideMarkerPreserved": true
     },
-    "scope": "local Chromium Framey opaque iframe; actual Decky 3.3.0 x86_64; only disposable synthetic prefixes; no real Frame UI or worn/controller claim"
+    "scope": "local Chromium Framey opaque iframe; actual Decky 3.3.0 x86_64; only disposable synthetic prefixes; no real Frame UI or worn/controller claim",
+    "directBulkCleanupRefused": true
   },
   "realFrame": {
     "timeUtc": "2026-10-29T21:19:09.374528+00:00",
@@ -244,7 +493,8 @@
       ],
       "backupsExist": false
     },
-    "lockReleased": true
+    "lockReleased": true,
+    "implementationScope": "earlier read-only discovery/listing before the fail-closed cleanup repair; no device test of revised labels or refusal"
   },
   "independentCleanupAudit": {
     "passed": true,
@@ -261,6 +511,7 @@
       "result": "installed-removed"
     },
     "scope": "isolated HTTP/SSH install, exact managed frontend hash, receipt and removal; no plugin backend execution",
-    "mergedMain": "66c06e9"
+    "mergedMain": "8928b55",
+    "implementationScope": "after fail-closed orphan cleanup repair; updated exact managed frontend hash"
   }
 }

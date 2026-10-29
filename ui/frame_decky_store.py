@@ -453,9 +453,14 @@ def get_steam_library_folders():
 async def _framey_get_games(self):
     SIZE_CACHE.clear()
     steam = parse_steam_games()
-    nonsteam = parse_nonsteam_shortcuts()
-    known_ids = {g["appid"] for g in steam + nonsteam}
-    self.games = steam + nonsteam + find_orphans(known_ids)
+    # The published shortcut parser reads only one user and swallows errors.
+    # Missing metadata is never evidence that a prefix is unused. Do not use
+    # that parser or expose the scanner's unproven "Orphan" classification.
+    unidentified = find_orphans({g["appid"] for g in steam})
+    for game in unidentified:
+        game["name"] = "Unidentified prefix (may still be in use)"
+        game["type"] = "Unidentified"
+    self.games = steam + unidentified
     return self.games
 
 def _framey_prefix(game):
@@ -513,14 +518,9 @@ async def _framey_delete_prefix(self, appid, do_backup):
         return False, str(error)
 
 async def _framey_cleanup_orphans(self, do_backup):
-    removed = 0
-    for game in list(self.games):
-        if game["type"] == "Orphan":
-            ok, message = await _framey_delete_prefix(self, game["appid"], do_backup)
-            if not ok:
-                return removed, message
-            removed += 1
-    return removed, "Success" if removed else "No orphans found"
+    # Refuse even direct RPC or stale cached rows. Do not create backups or
+    # delete anything until complete non-Steam shortcut coverage is proven.
+    return 0, "Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use"
 
 Plugin.get_games = _framey_get_games
 Plugin.delete_prefix = _framey_delete_prefix
@@ -551,6 +551,18 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                     old=b'await serverAPI.callPluginMethod("'+method+b'", {'
                     if bundle.count(old)!=count: raise RuntimeError('Games Prefix Manager action source changed')
                     bundle=bundle.replace(old,b'await frameyPrefixAction(serverAPI, "'+method+b'", {')
+                replacements=(
+                    (b'onClick: handleCleanupOrphans, disabled: loading',
+                     b'onClick: handleCleanupOrphans, disabled: true'),
+                    (b'"Clean Orphans"', b'"Orphan Cleanup Unavailable"'),
+                    (b' Scan for all game prefixes and orphans.',
+                     b' Scan Steam and unidentified prefixes. Unidentified prefixes may still be in use.'),
+                    (b' Automatically find and delete prefixes for uninstalled games.',
+                     b' Disabled on Frame: non-Steam shortcut coverage is incomplete. Unidentified prefixes may still be in use.'),
+                )
+                for old,new in replacements:
+                    if bundle.count(old)!=1: raise RuntimeError('Games Prefix Manager cleanup source changed')
+                    bundle=bundle.replace(old,new)
                 anchor=b'    const ConfirmModal = '
                 if bundle.count(anchor)!=1: raise RuntimeError('Games Prefix Manager modal source changed')
                 frontend.write_bytes(bundle.replace(anchor,helper+anchor))
