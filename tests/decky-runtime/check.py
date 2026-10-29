@@ -396,14 +396,39 @@ def main():
                 assert not whole.exists()
                 report['result'] = ('published Decky discovery, private size/list and selected/whole fixture deletion passed; '
                     'real Steam caches, Frame and VR unverified')
-            elif case['probe'] == 'steamback-empty':
-                # This is an isolated private home with no real Steam saves.
-                # Never call do_backup or do_restore from the runtime suite.
+            elif case['probe'] == 'steamback-private-save':
+                # The loader and plugin only see this disposable container home.
+                steam = home/'.local/share/Steam'
+                game = steam/'userdata/424242/777'
+                remote = game/'remote'
+                remote.mkdir(parents=True)
+                (steam/'steamapps').mkdir(parents=True)
+                (steam/'steamapps/appmanifest_777.acf').write_text(
+                    '"AppState"\n{\n"installdir" "private-game"\n}\n')
+                (game/'remotecache.vdf').write_text(
+                    '"777"\n{\n"save.dat"\n{\n"size" "3"\n}\n}\n')
+                save = remote/'save.dat'
+                save.write_bytes(b'old')
+                game_info = {'game_id': 777, 'install_root': str(steam)}
                 assert legacy('set_account_id', id_num=424242) is None
                 assert legacy('get_saveinfos') == []
                 assert legacy('find_supported', game_infos=[]) == []
-                report['result'] = ('published Decky discovery, private account setup and empty save-list/support reads passed; '
-                    'real Steam saves, backups, restore, Frame and VR unverified')
+                supported = legacy('find_supported', game_infos=[game_info])
+                assert len(supported) == 1 and supported[0]['save_games_roots'] == {str(remote): ''}, supported
+                snapshot = legacy('do_backup', game_info=supported[0])
+                assert snapshot['game_info']['game_id'] == 777 and not snapshot['is_undo'], snapshot
+                saved = list(base.rglob(snapshot['filename']+'/save.dat'))
+                assert len(saved) == 1 and saved[0].read_bytes() == b'old', saved
+                save.write_bytes(b'new')
+                assert legacy('do_restore', save_info=snapshot) is None
+                assert save.read_bytes() == b'old'
+                undo = next(item for item in legacy('get_saveinfos') if item['is_undo'])
+                undone = list(base.rglob(undo['filename']+'/save.dat'))
+                assert len(undone) == 1 and undone[0].read_bytes() == b'new', undone
+                assert legacy('do_restore', save_info=undo) is None
+                assert save.read_bytes() == b'new'
+                report['result'] = ('published Decky discovery and private save discovery, backup, restore and undo '
+                    'passed with independent bytes; real Steam saves, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
