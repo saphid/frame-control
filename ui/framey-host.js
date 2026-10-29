@@ -107,6 +107,82 @@
       parent.postMessage({type, id, method, args, legacy, session:cacheSession}, '*');
     });
   }
+  // The exact Wine Cellar archive expects Steam's loopback WebSocket origin.
+  // This opaque iframe never gets that origin or a direct network connection.
+  // Only its receipt-bound managed backend may reach the fixed local helper.
+  const wineSockets = new Set();
+  if (document.getElementById('framey-bundle')?.dataset?.wineSocket === '1') {
+    class WineSocket extends EventTarget {
+      constructor(url, protocols) {
+        super();
+        if (url !== 'ws://localhost:8887' || protocols !== undefined)
+          throw new TypeError('Wine Cellar socket URL or protocol unavailable');
+        this.url = url;
+        this.readyState = WineSocket.CONNECTING;
+        this.onopen = this.onmessage = this.onerror = this.onclose = null;
+        this._token = null;
+        this._sendChain = Promise.resolve();
+        wineSockets.add(this);
+        request('framey_ws_open', []).then(token => {
+          if (typeof token !== 'string' || !/^[0-9a-f]{32}$/.test(token))
+            throw Error('Invalid Wine Cellar socket token');
+          this._token = token;
+          if (this.readyState !== WineSocket.CONNECTING) {
+            request('framey_ws_close', [token]).catch(() => {});
+            return;
+          }
+          this.readyState = WineSocket.OPEN;
+          this._emit('open', new Event('open'));
+          this._poll();
+        }).catch(error => this._fail(error));
+      }
+      _emit(kind, event) {
+        this.dispatchEvent(event);
+        try { this['on' + kind]?.(event); } catch (error) { console.warn('Wine Cellar event handler failed', error); }
+      }
+      _fail(error) {
+        if (this.readyState === WineSocket.CLOSED) return;
+        this._emit('error', new Event('error'));
+        console.warn('Wine Cellar socket unavailable', error?.message || error);
+        this.close();
+      }
+      async _poll() {
+        if (this.readyState !== WineSocket.OPEN) return;
+        try {
+          const data = await request('framey_ws_poll', [this._token]);
+          if (!data || !Array.isArray(data.messages) || data.messages.length > 32 || typeof data.closed !== 'boolean')
+            throw Error('Invalid Wine Cellar socket response');
+          for (const message of data.messages) {
+            if (typeof message !== 'string' || message.length > 262144)
+              throw Error('Invalid Wine Cellar socket message');
+            if (this.readyState !== WineSocket.OPEN) break;
+            this._emit('message', new MessageEvent('message', {data:message}));
+          }
+          if (data.closed) this.close();
+          else if (this.readyState === WineSocket.OPEN) setTimeout(() => this._poll(), 50);
+        } catch (error) { this._fail(error); }
+      }
+      send(data) {
+        if (this.readyState !== WineSocket.OPEN)
+          throw new DOMException('Wine Cellar socket is not open', 'InvalidStateError');
+        if (typeof data !== 'string' || data.length > 65536)
+          throw new TypeError('Wine Cellar socket accepts bounded text only');
+        this._sendChain = this._sendChain.then(() => request('framey_ws_send', [this._token, data]));
+        this._sendChain.catch(error => this._fail(error));
+      }
+      close() {
+        if (this.readyState === WineSocket.CLOSED) return;
+        this.readyState = WineSocket.CLOSED;
+        wineSockets.delete(this);
+        if (this._token) this._sendChain.catch(() => {}).then(() =>
+          request('framey_ws_close', [this._token]).catch(() => {}));
+        this._emit('close', new Event('close'));
+      }
+    }
+    Object.assign(WineSocket, {CONNECTING:0, OPEN:1, CLOSING:2, CLOSED:3});
+    Object.assign(WineSocket.prototype, {CONNECTING:0, OPEN:1, CLOSING:2, CLOSED:3});
+    window.WebSocket = WineSocket;
+  }
   function syncEvents() {
     if (eventClosed) return Promise.resolve();
     if (eventRequest) return eventRequest.then(() =>
@@ -185,6 +261,7 @@
     if (event.data.error) item.reject(Error(event.data.error)); else item.resolve(event.data.result);
   });
   addEventListener('unload', () => {
+    for (const socket of wineSockets) socket.close();
     eventClosed = true; clearTimeout(eventTimer);
     try { plugin?.onDismount?.(); } catch (_) {}
     // Parent tears down the remote session on close; CEF also expires it after 15s.
@@ -598,6 +675,7 @@
   };
   window.SteamClient = {
     Settings:{GetCurrentLanguage:async()=>steamLanguage(),
+      GetGlobalCompatTools:()=>request('GetGlobalCompatTools',[],false,'framey:steam'),
       ...register(['RegisterForSettingsChanges'])},
     Apps:register(['RegisterForAppDetails','RegisterForGameActionTaskChange',
       'RegisterForGameActionStart','RegisterForGameActionEnd','RegisterForGameActionUserRequest']),

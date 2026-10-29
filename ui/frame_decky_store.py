@@ -14,7 +14,6 @@ import re
 import secrets
 import urllib.request
 import zipfile
-from pathlib import Path
 
 import frame_decky
 import framey_compatibility
@@ -58,6 +57,12 @@ EMU_BINARIES = {
 }
 STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591'
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
+WINE_CELLAR_DIGEST = '7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8'
+WINE_CELLAR_ORIGINAL = '7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe'
+WINE_CELLAR_MAIN = '87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6be97'
+WINE_CELLAR_FRONTEND = '51ffdf606e0e307f46ea45828eb94f24ce75c44ccce5f55f696aa7aec89924b6'
+WINE_CELLAR_AARCH64 = 'd668a9ac02ccce97cf601bcff86f0b2104ee85e6a1105499e66178d9d19b64a8'
+WINE_CELLAR_MANAGED_MAIN = '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -140,6 +145,8 @@ def archive_info(data, expected_hash, expected_name):
                             and folder == 'network-sentinel')
         battery_tracker = (expected_hash == BATTERY_TRACKER_DIGEST and expected_name == 'Battery Tracker'
                            and folder == 'steam-deck-battery-tracker')
+        wine_cellar = (expected_hash == WINE_CELLAR_DIGEST and expected_name == 'Wine Cellar'
+                       and folder == 'decky-wine-cellar')
         seen = {}
         for entry in files:
             name = entry.filename
@@ -174,7 +181,9 @@ def archive_info(data, expected_hash, expected_name):
                         or (localsend and name == 'decky-localsend/bin/localsend-core'
                             and hashlib.sha256(archive.read(entry)).hexdigest() == LOCALSEND_ORIGINAL)
                         or (emuchievements and name == 'Emuchievements/bin/hash'
-                            and hashlib.sha256(archive.read(entry)).hexdigest() == EMU_ORIGINAL_HELPER)):
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == EMU_ORIGINAL_HELPER)
+                        or (wine_cellar and name == 'decky-wine-cellar/bin/backend'
+                            and hashlib.sha256(archive.read(entry)).hexdigest() == WINE_CELLAR_ORIGINAL)):
                     raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
@@ -212,6 +221,10 @@ def archive_info(data, expected_hash, expected_name):
                 and folder == 'decky-storage-cleaner'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != STORAGE_CLEANER_MAIN):
             raise ValueError('Storage Cleaner source differs from the pinned archive')
+        if wine_cellar and (manifest.get('api_version') != 1 or flags != ['debug']
+                or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != WINE_CELLAR_MAIN
+                or hashlib.sha256(archive.read(folder+'/dist/index.js')).hexdigest() != WINE_CELLAR_FRONTEND):
+            raise ValueError('Wine Cellar manifest, Python or frontend differs from the pinned archive')
         return folder
 
 
@@ -255,6 +268,16 @@ def apply_script(plugin_id, digest):
         # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
         return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
                 +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+    if plugin_id == 68 and digest == WINE_CELLAR_DIGEST:
+        assets = Path(__file__).parent/'vendor/wine-cellar-0.2.1'
+        packed = (assets/'aarch64.gz').read_bytes()
+        if hashlib.sha256(gzip.decompress(packed)).hexdigest() != WINE_CELLAR_AARCH64:
+            raise ValueError('Bundled Wine Cellar ARM64 helper SHA-256 mismatch')
+        managed = (assets/'main.py.gz').read_bytes()
+        if hashlib.sha256(gzip.decompress(managed)).hexdigest() != WINE_CELLAR_MANAGED_MAIN:
+            raise ValueError('Bundled Wine Cellar Python SHA-256 mismatch')
+        return ('FRAMEY_WINE_CELLAR_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'
+                +'FRAMEY_WINE_CELLAR_MAIN = '+repr(base64.b64encode(managed).decode('ascii'))+'\n'+APPLY)
     if not ((plugin_id == 89 and digest == DECKYSPY_DIGEST)
             or (plugin_id == 114 and digest == NETWORK_SENTINEL_DIGEST)):
         return APPLY
@@ -321,6 +344,7 @@ try:
             emuchievements=(int(plugin_id)==28 and digest=='98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89' and folder=='Emuchievements')
             network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
             battery_tracker=(int(plugin_id)==67 and digest=='91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94' and folder=='steam-deck-battery-tracker')
+            wine_cellar=(int(plugin_id)==68 and digest=='7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8' and folder=='decky-wine-cellar')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
@@ -356,7 +380,9 @@ try:
                                 or (localsend and f.filename==folder+'/bin/localsend-core' and
                                     hashlib.sha256(z.read(f)).hexdigest()=='d448d03861d578685e6c70ea3ace25eb34fca99cb9d4f98bf51ba23aa5cae843')
                                 or (emuchievements and f.filename==folder+'/bin/hash' and
-                                    hashlib.sha256(z.read(f)).hexdigest()=='19de50ce746e5a312495e9c1cf5daad5ef37ad021a98c5af2c5922fec392e51e')):
+                                    hashlib.sha256(z.read(f)).hexdigest()=='19de50ce746e5a312495e9c1cf5daad5ef37ad021a98c5af2c5922fec392e51e')
+                                or (wine_cellar and f.filename==folder+'/bin/backend' and
+                                    hashlib.sha256(z.read(f)).hexdigest()=='7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe')):
                             raise RuntimeError('Plugin contains a non-ARM64 Linux binary')
                     if header[:2]==b'MZ': raise RuntimeError('Plugin contains a Windows binary')
             stage.mkdir(mode=0o700)
@@ -374,6 +400,33 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if wine_cellar:
+                helper=unpacked/'bin/backend'
+                source=unpacked/'main.py'
+                frontend=unpacked/'dist/index.js'
+                if (manifest.get('name')!='Wine Cellar' or manifest.get('api_version')!=1 or manifest.get('flags')!=['debug']
+                    or hashlib.sha256(helper.read_bytes()).hexdigest()!='7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe'
+                    or hashlib.sha256(source.read_bytes()).hexdigest()!='87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6be97'
+                    or hashlib.sha256(frontend.read_bytes()).hexdigest()!='51ffdf606e0e307f46ea45828eb94f24ce75c44ccce5f55f696aa7aec89924b6'):
+                    raise RuntimeError('Wine Cellar official source mismatch')
+                arch=platform.machine()
+                if arch=='aarch64':
+                    packed=globals().get('FRAMEY_WINE_CELLAR_AARCH64')
+                    if not isinstance(packed,str): raise RuntimeError('Missing Wine Cellar ARM64 helper')
+                    native=gzip.decompress(base64.b64decode(packed,validate=True))
+                    if (hashlib.sha256(native).hexdigest()!='d668a9ac02ccce97cf601bcff86f0b2104ee85e6a1105499e66178d9d19b64a8'
+                        or native[:4]!=b'\x7fELF' or int.from_bytes(native[18:20],'little')!=183):
+                        raise RuntimeError('Wine Cellar ARM64 helper mismatch')
+                    helper.write_bytes(native)
+                elif arch!='x86_64': raise RuntimeError('Unsupported Wine Cellar helper architecture')
+                helper.chmod(0o700)
+                packed_main=globals().get('FRAMEY_WINE_CELLAR_MAIN')
+                if not isinstance(packed_main,str): raise RuntimeError('Missing Wine Cellar managed Python')
+                managed=gzip.decompress(base64.b64decode(packed_main,validate=True))
+                if hashlib.sha256(managed).hexdigest()!='44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411':
+                    raise RuntimeError('Wine Cellar managed Python mismatch')
+                source.write_bytes(managed)
+                compat_shims.append('wine-cellar-native-bridge')
             if emuchievements:
                 helper=unpacked/'bin/hash'
                 source=unpacked/'main.py'

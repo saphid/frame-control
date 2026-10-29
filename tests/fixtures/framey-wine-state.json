@@ -1,0 +1,35 @@
+{
+  "app_state": {
+    "app_compat_tool_mappings": {},
+    "app_compat_tool_mappings_stale": false,
+    "catalog_flavors": [
+      {
+        "flavor": "ProtonGE",
+        "releases": []
+      },
+      {
+        "flavor": "Luxtorpeda",
+        "releases": []
+      },
+      {
+        "flavor": "Boxtron",
+        "releases": []
+      },
+      {
+        "flavor": "ProtonCachyOS",
+        "releases": []
+      }
+    ],
+    "current_operation": null,
+    "installed_tools": [],
+    "queued_operations": [],
+    "steam_visible_tools": [],
+    "updater_last_check": null,
+    "updater_state": "Idle"
+  },
+  "command": null,
+  "notification": null,
+  "operation_state": null,
+  "steam_visible_tools": null,
+  "type": "UpdateState"
+}

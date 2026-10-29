@@ -6,6 +6,7 @@ import re
 import shlex
 
 import frame_decky
+import frame_decky_store
 
 
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
@@ -129,6 +130,7 @@ def panel(plugin_id):
     _, bundle, receipt = _owned_dist(plugin_id)
     encoded = base64.b64encode(bundle).decode('ascii')
     module = f' data-module="/framey/module/{plugin_id}/{receipt}/index.js"' if b'./chunks/' in bundle else ''
+    wine_socket = ' data-wine-socket="1"' if plugin_id == 68 and receipt == frame_decky_store.WINE_CELLAR_DIGEST else ''
     return ('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
@@ -143,7 +145,7 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-dialog{position:fixed;inset:12px;margin:0;z-index:100;overflow:auto;box-shadow:0 0 0 24px #0d1925e6}
 .framey-dialog[hidden]{display:none}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
-<script id="framey-bundle" type="application/json"''' + module + '''>''' + encoded + '''</script>
+<script id="framey-bundle" type="application/json"''' + module + wine_socket + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
 <script src="/framey-runtime/host.js"></script></html>''').encode()
 
@@ -183,6 +185,11 @@ def call_method(ssh, plugin_id, method, args, legacy=False, receipt=None):
     if type(legacy) is not bool or (legacy and (len(args) != 1 or not isinstance(args[0], dict))):
         raise PanelError('Legacy plugin methods need one keyword argument object')
     plugin = _current_plugin(ssh, plugin_id, receipt)
+    if method.startswith('framey_ws_') and (
+            method not in {'framey_ws_open', 'framey_ws_send', 'framey_ws_poll', 'framey_ws_close'} or
+            plugin_id != 68 or receipt != frame_decky_store.WINE_CELLAR_DIGEST or
+            'wine-cellar-native-bridge' not in plugin.get('compatShims', [])):
+        raise PanelError('This plugin does not have the Wine Cellar socket bridge')
     payload = {'name':plugin['name'], 'method':method, 'args':args, 'legacy':legacy}
     # Library-sized arguments can exceed the OS limit for a single SSH command
     # argument. Send them as a quoted Python literal on stdin instead.
@@ -196,6 +203,7 @@ STEAM_READS = {
     'GetIPCountry': 'SteamClient.User.GetIPCountry()',
     'GetInstallFolders': 'SteamClient.InstallFolder.GetInstallFolders()',
     'GetSystemInfo': 'SteamClient.System.GetSystemInfo()',
+    'GetGlobalCompatTools': 'SteamClient.Settings.GetGlobalCompatTools()',
     # Copy selected scalar fields, never Steam objects, methods, credentials or
     # paths. Only the current public Steam ID is needed for per-user plugin data.
     # Compact rows keep even a large library inside the response budget.
@@ -232,6 +240,8 @@ def read_steam(ssh, plugin_id, method, receipt=None):
     if not isinstance(method, str) or method not in STEAM_READS:
         raise PanelError('This Steam API is unavailable in Framey')
     _current_plugin(ssh, plugin_id, receipt)
+    if method == 'GetGlobalCompatTools' and (plugin_id != 68 or receipt != frame_decky_store.WINE_CELLAR_DIGEST):
+        raise PanelError('This Steam read is only available to the pinned Wine Cellar panel')
     expression = '(async()=>await ' + STEAM_READS[method] + ')()'
     script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
         '__FRAMEY_STEAM_LIMIT__', str(2*1024*1024 if method == 'GetLibrarySnapshot' else 256*1024))
