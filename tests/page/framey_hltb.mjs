@@ -46,7 +46,9 @@ vm.runInContext(hostTest,context);
 context.DFL=window.DFL;
 context.SP_REACT=window.SP_REACT;
 context.SP_JSX=window.SP_JSX;
-vm.runInContext(official,context,{timeout:2000});
+// This is a hang guard, not a frontend latency target. The hosted Windows
+// runner can spend over 2 seconds in this bundle while the full suite runs.
+vm.runInContext(official,context,{timeout:5000});
 const plugin=window.__official();
 assert.equal(typeof window.DFL.findModuleChild,'function');
 assert.equal(window.DFL.findModuleChild(()=>{}),undefined); // Steam has no matching module in the VR panel.

@@ -1,0 +1,5 @@
+# HLTB frontend startup test timeout, 2026-10-29
+
+The [PR #422 Windows server-tests job](https://github.com/saphid/frame-control/actions/runs/40863105507/job/123411019038) failed in the unchanged `test_hltb_frontend_starts_with_framey_module_stub`: Node's `vm.runInContext` exceeded its 2-second timeout while executing the exact pinned HLTB for Deck 2.0.12 frontend. This test checks startup and an empty local settings panel; it is not a user-visible latency benchmark. The same exact-head Windows job passed on its [second run](https://github.com/saphid/frame-control/actions/runs/40863105507/attempts/2), and the surrounding checks passed. No HLTB or Framey production source changed between attempts.
+
+The test-only change raises the VM hang guard to 5 seconds, below the Python subprocess's 10-second limit. It retains the startup, module fallback, panel and teardown assertions. It does not change production behavior or claim HLTB badges, live search, real Frame use, physical controllers or worn VR. Hosted Windows and other checks on the new head must pass before this change is merged.
