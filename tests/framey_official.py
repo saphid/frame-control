@@ -4,6 +4,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent / 'fixtures/framey-official'
 PLUGINS = (
+    {'id': 93, 'name': 'Deck Settings', 'version': '1.2.6', 'api_version': 1,
+     'folder': 'decky-game-settings', 'sha256': '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132'},
     {'id': 52, 'name': 'Game Theme Music', 'version': '1.7.1-1', 'api_version': 1,
      'folder': 'SDH-GameThemeMusic', 'sha256': '9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e'},
     {'id': 118, 'name': 'Speed Test', 'version': '1.0.2', 'api_version': 1,

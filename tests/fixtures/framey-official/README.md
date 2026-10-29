@@ -3,7 +3,7 @@
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
-and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `52.zip`, `79.zip`, `104.zip`, `118.zip` and `132.zip` were added on 2026-10-29.
+and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `52.zip`, `79.zip`, `93.zip`, `104.zip`, `118.zip` and `132.zip` were added on 2026-10-29.
 Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
@@ -15,6 +15,7 @@ from a local fixture so CI does not depend on the store being online.
 | `28.zip` | Emuchievements | 2.0.5 | `98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89` |
 | `52.zip` | Game Theme Music | 1.7.1-1 | `9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e` |
 | `79.zip` | Decky Notifications | 1.0.1 | `3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312` |
+| `93.zip` | Deck Settings | 1.2.6 | `23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132` |
 | `104.zip` | Game Sync | 1.0.4 | `65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd` |
 | `132.zip` | SuggestMe | 1.5.3 | `248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4` |
 | `118.zip` | Speed Test | 1.0.2 | `8b1ee429aece9330b83ea3fc2e7e27d007ac61a737169f20bda3f1a19ab95508` |

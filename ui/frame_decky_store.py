@@ -860,6 +860,19 @@ def split_by_app(data):
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+            # Deck Settings' exact 1.2.6 image uploader sends a bearer token
+            # over HTTPS while disabling both certificate and hostname checks.
+            # Retain Python's verified default context in this managed copy.
+            if int(plugin_id)==93 and digest=='23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132' and folder=='decky-game-settings':
+                main=unpacked/'main.py'
+                data=main.read_bytes()
+                if hashlib.sha256(data).hexdigest()!='598ef3e05bb5154031988601f6f1041929f83e8b48549f72ffc24e873dcdaea0':
+                    raise RuntimeError('Deck Settings source differs from pinned archive')
+                unsafe=b'        ctx.check_hostname = False\n        ctx.verify_mode = ssl.CERT_NONE\n'
+                if data.count(unsafe)!=1:
+                    raise RuntimeError('Deck Settings TLS source changed')
+                main.write_bytes(data.replace(unsafe,b''))
+                compat_shims.append('deck-settings-verified-tls')
             # The exact SuggestMe archive disables hostname and certificate
             # checks if certifi context creation fails. Keep the system CA
             # fallback verified before any credential-bearing API request.

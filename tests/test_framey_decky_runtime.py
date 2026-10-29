@@ -24,7 +24,8 @@ class RuntimeCoverage(unittest.TestCase):
                                          'battery-tracker', 'free-loader', 'radio-local', 'game-sync-config',
                                          'shelves-settings', 'storage-cleaner', 'steamback-private-save',
                                          'suggestme-private', 'notifications-private',
-                                         'emuchievements-private-hash', 'theme-music-settings'))
+                                         'emuchievements-private-hash', 'theme-music-settings',
+                                         'deck-settings-readonly'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store
