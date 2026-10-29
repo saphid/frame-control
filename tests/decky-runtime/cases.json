@@ -32,7 +32,7 @@
   {
     "id": 46,
     "shim": null,
-    "probe": "steamback-empty"
+    "probe": "steamback-private-save"
   },
   {
     "id": 104,
