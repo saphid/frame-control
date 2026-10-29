@@ -90,6 +90,10 @@ network and device isolation. Its managed copy uses Decky's captured logs and
 omits the upstream environment dump on certificate failure. A private certificate,
 empty device list, synthetic notification read/clear and restart pass. No phone
 pairing, LAN delivery, real Frame or VR notification was tested.
+The opt-in `--decky-notifications-fixture` browser audit also renders one
+synthetic trusted device and notification in the exact panel while blocking
+all backend writes and network. See
+[`framey-notifications-panel-fixture-2026-10-29.md`](../../../docs/evidence/framey-notifications-panel-fixture-2026-10-29.md).
 Storage Cleaner runs through the published Decky loader with only disposable
 cache markers: size/list, selected-app delete and whole-directory delete pass.
 The managed copy rejects traversal and symlink delete paths. No real game or
