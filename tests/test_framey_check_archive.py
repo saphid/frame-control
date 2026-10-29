@@ -14,14 +14,18 @@ SAMPLE = ROOT / 'examples/framey-settings'
 
 
 class ArchiveChecker(unittest.TestCase):
-    def run_check(self, manifest=None, extra=None, frontend=True, name='Framey Settings Sample'):
+    def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
+                  name='Framey Settings Sample'):
         with tempfile.TemporaryDirectory() as folder:
             archive = Path(folder) / 'plugin.zip'
             with zipfile.ZipFile(archive, 'w') as output:
                 output.writestr('framey-settings/plugin.json',
                                 json.dumps(manifest or json.loads((SAMPLE / 'plugin.json').read_text())))
                 if frontend:
-                    output.write(SAMPLE / 'dist/index.js', 'framey-settings/dist/index.js')
+                    if bundle is None:
+                        output.write(SAMPLE / 'dist/index.js', 'framey-settings/dist/index.js')
+                    else:
+                        output.writestr('framey-settings/dist/index.js', bundle)
                 if extra:
                     output.writestr(extra[0], extra[1])
             run = subprocess.run([sys.executable, str(CHECKER), str(archive), '--name', name],
@@ -50,6 +54,22 @@ class ArchiveChecker(unittest.TestCase):
         self.assertEqual(code, 0, result)
         self.assertTrue(result['installerAccepted'])
         self.assertFalse(result['panelCandidate'])
+
+    def test_api_v1_requires_legacy_iife_or_decky_initializer(self):
+        manifest = json.loads((SAMPLE / 'plugin.json').read_text())
+        manifest['api_version'] = 1
+        bundle = b'export default () => ({content: null});' + b' ' * 2000
+        marker = b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit'
+        cases = [
+            (bundle, None, False),
+            (bundle + marker, None, True),
+            (bundle + b'./chunks/entry.js', ('framey-settings/dist/chunks/entry.js', marker), True),
+        ]
+        for frontend, extra, candidate in cases:
+            with self.subTest(candidate=candidate, chunk=extra is not None):
+                code, result = self.run_check(manifest=manifest, bundle=frontend, extra=extra)
+                self.assertEqual(code, 0, result)
+                self.assertEqual(result['panelCandidate'], candidate)
 
     def test_root_x86_and_wrong_store_name_are_rejected(self):
         cases = [

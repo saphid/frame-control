@@ -16,6 +16,40 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'ui'))
 import frame_decky_store
 
+API_V1_MARKER = b'__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit'
+
+
+def api_v1_bridge(archive, folder, bundle):
+    """Mirror the API v1 initializer/chunk admission in framey_panel._owned_dist."""
+    if API_V1_MARKER in bundle:
+        return True
+    if b'./chunks/' not in bundle:
+        return False
+    prefix = folder + '/dist/chunks/'
+    children = {}
+    for item in archive.infolist():
+        if not item.filename.startswith(prefix):
+            continue
+        tail = item.filename[len(prefix):]
+        if not tail:
+            continue
+        child = tail.split('/')[0]
+        if '/' in tail:
+            children.setdefault(child, None)  # A directory, not a direct JS chunk.
+        else:
+            children[child] = item
+    if len(children) > 128:
+        return False
+    supported = False
+    for item in children.values():
+        if item is None or item.is_dir() or not item.filename.endswith('.js'):
+            continue
+        if item.file_size > 8 * 1024 * 1024:
+            return False
+        if API_V1_MARKER in archive.read(item):
+            supported = True
+    return supported
+
 
 def check(path, name):
     with path.open('rb') as source:
@@ -30,14 +64,17 @@ def check(path, name):
         entry = folder + '/dist/index.js'
         frontend = next((item for item in archive.infolist() if item.filename == entry and not item.is_dir()), None)
         version = manifest.get('api_version')
-        if version is None and frontend is not None:
+        bundle = b''
+        if frontend is not None and 0 < frontend.file_size <= 8 * 1024 * 1024:
             with archive.open(frontend) as source:
-                legacy = re.match(rb'\s*\(function\s*\(', source.read(256)) is not None
-        else:
-            legacy = False
+                bundle = source.read()
+        legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
+        frontend_api = (version == 2 or
+                        (version == 1 and (legacy or api_v1_bridge(archive, folder, bundle))) or
+                        (version is None and legacy))
         panel_candidate = bool(manifest_entry.file_size <= 16_384 and
                                frontend and 0 < frontend.file_size <= 8 * 1024 * 1024 and
-                               ((type(version) is int and version in (1, 2)) or legacy))
+                               type(version) in (int, type(None)) and frontend_api)
     return {'ok': True, 'sha256': digest, 'folder': folder,
             'installerAccepted': True, 'panelCandidate': panel_candidate,
             'note': ('Basic panel files found; frontend startup, backend discovery and VR input still need runtime tests.'
