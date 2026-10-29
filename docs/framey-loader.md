@@ -221,7 +221,10 @@ starts, Frame Control stops before downloading or changing the headset. Refresh
 the store and review the new version before retrying. Job results live in server
 memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
-asks you to refresh the installed list before making another change.
+keeps plugin changes disabled until **Refresh plugins** successfully reads the
+installed list. An automatic status read does not clear this unknown outcome.
+If browser session storage is denied, the unknown-result gate lasts for the
+current open panel only; refresh installed status after reopening it.
 
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
