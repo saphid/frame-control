@@ -74,9 +74,9 @@ count. So a build reaches people only when you publish it, after testing it.
 
    The script checks that the tag is on GitHub, that exact-commit main CI
    (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
-   release workflow are green with no failed,
-   cancelled, skipped or running jobs in any run attempt, and that all ten installers
-   are attached, each with the SHA-256 digest GitHub records. It also checks
+   release workflow are green with no failed, cancelled, skipped or running
+   jobs in any exact-tag push run or attempt, and that all ten installers are
+   attached, each with the SHA-256 digest GitHub records. It also checks
    that the draft does not begin with a `WITHDRAWN` notice, so the preserved
    v0.4.48 draft cannot accidentally be offered again. It checks
    that the uploaded `SHA256SUMS` digest matches a fresh list of those ten

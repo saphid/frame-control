@@ -61,14 +61,29 @@ def tag_commit(tag):
     raise GateError(f"{tag} has too many nested tag objects")
 
 
-def exact_run(workflow, branch, sha, event):
+def exact_runs(workflow, branch, sha, event):
     query = f"actions/workflows/{workflow}/runs?branch={quote(branch, safe='')}&head_sha={sha}&per_page=100"
-    runs = api(query).get("workflow_runs") or []
+    runs = []
+    for page in range(1, 21):
+        data = api(f"{query}&page={page}")
+        batch = data.get("workflow_runs")
+        total = data.get("total_count")
+        if not isinstance(batch, list) or type(total) is not int or total < 0:
+            raise GateError(f"invalid {workflow} run list for {branch} at {sha}")
+        runs.extend(batch)
+        if len(runs) >= total or len(batch) < 100:
+            break
+    if len(runs) != total or len({run.get('id') for run in runs}) != len(runs):
+        raise GateError(f"incomplete or duplicate {workflow} run list for {branch} at {sha}")
     matching = [run for run in runs if run.get("head_sha") == sha
                 and run.get("head_branch") == branch and run.get("event") == event]
     if not matching:
         raise GateError(f"no exact {workflow} {event} run for {branch} at {sha}")
-    run = max(matching, key=lambda item: item["id"])
+    return sorted(matching, key=lambda item: item["id"])
+
+
+def exact_run(workflow, branch, sha, event):
+    run = exact_runs(workflow, branch, sha, event)[-1]
     if run.get("status") != "completed" or run.get("conclusion") != "success":
         raise GateError(f"{workflow} run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
     return run
@@ -107,7 +122,12 @@ def main(tag, smoke_result):
     sha = tag_commit(tag)
     successful_jobs(exact_run("checks.yml", "main", sha, "push"), MAIN_JOBS)
     successful_jobs(exact_run("decky-runtime.yml", "main", sha, "push"), DECKY_JOBS)
-    successful_jobs(exact_run("release.yml", tag, sha, "push"), RELEASE_JOBS)
+    # A fresh run must not hide a failed, cancelled, or skipped installer in an
+    # earlier separate push run for the same tag and commit.
+    for run in exact_runs("release.yml", tag, sha, "push"):
+        if run.get("status") != "completed" or run.get("conclusion") != "success":
+            raise GateError(f"release.yml run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
+        successful_jobs(run, RELEASE_JOBS)
     command = [sys.executable, str(Path(__file__).with_name("verify-frame-smoke-result.py")),
                smoke_result, sha]
     checked = subprocess.run(command, text=True, capture_output=True, check=False)
