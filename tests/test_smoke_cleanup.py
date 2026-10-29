@@ -126,13 +126,13 @@ class Safety(unittest.TestCase):
         gid = 'fc_smoke_x86_64'
         with mock.patch.object(frame_smoke.tiny_programs, 'write', return_value=Path('/tmp/tiny')), \
              mock.patch.object(frame_smoke.frame_titles, 'install', return_value={
-                 'runtime': 'SteamLinuxRuntime_4'}), \
+                 'runtime': 'SteamLinuxRuntime_4', 'shortcut': 12345}), \
              mock.patch.object(frame_smoke.frame_titles, 'list_titles', side_effect=[
                  [{'id': gid}], []]), \
              mock.patch.object(frame_smoke.frame_titles, 'launch') as launch, \
              mock.patch.object(frame_smoke.frame_titles, 'remove') as remove, \
              mock.patch.object(frame_smoke, 'steam_log_lines', side_effect=[
-                 [], [], [], ['Tool 4183110 Steam Linux Runtime 4.0 is found, but is not installed']]), \
+                 [], [], [], ['Tool 4183110 "Steam Linux Runtime 4.0" is found for appID 12345, but is not installed']]), \
              mock.patch.object(frame_smoke, 'ssh', return_value=''), \
              mock.patch.object(frame_smoke, 'stop_titles', return_value={'stopped_pids': []}):
             frame_smoke.title_cycle(smoke, 'x86_64', '/tmp')
@@ -146,6 +146,39 @@ class Safety(unittest.TestCase):
         self.assertNotIn(gid, smoke.installed)
         launch.assert_called_once_with(gid)
         remove.assert_called_once_with(gid)
+
+    def test_missing_runtime_evidence_belongs_to_installed_shortcut(self):
+        lines = [
+            'Tool 4183110 "Steam Linux Runtime 4.0" is found for appID 999, but is not installed',
+            'Tool 4183120 "Steam Linux Runtime 4.0 (arm64)" is found for appID 12345, but is not installed',
+            'Tool 4183110 "Steam Linux Runtime 4.0" is found for appID 123450, but is not installed',
+            'Tool 4183110 "Steam Linux Runtime 4.0" is found for appID 12345, but is not installed',
+        ]
+        with mock.patch.object(frame_smoke, 'steam_log_lines', return_value=lines) as read:
+            self.assertEqual(frame_smoke.missing_x86_runtime_lines(12345), [lines[-1]])
+        read.assert_called_once_with('for appID 12345, but is not installed')
+
+    def test_other_titles_missing_runtime_cannot_skip_smoke_launch(self):
+        smoke = frame_smoke.Smoke()
+        gid = 'fc_smoke_x86_64'
+        with mock.patch.object(frame_smoke.tiny_programs, 'write', return_value=Path('/tmp/tiny')), \
+             mock.patch.object(frame_smoke.frame_titles, 'install', return_value={
+                 'runtime': 'SteamLinuxRuntime_4', 'shortcut': 12345}), \
+             mock.patch.object(frame_smoke.frame_titles, 'list_titles', side_effect=[
+                 [{'id': gid}], []]), \
+             mock.patch.object(frame_smoke.frame_titles, 'launch'), \
+             mock.patch.object(frame_smoke.frame_titles, 'remove'), \
+             mock.patch.object(frame_smoke, 'steam_log_lines', side_effect=[
+                 [], [], [], ['Tool 4183110 "Steam Linux Runtime 4.0" is found for appID 999, but is not installed']]), \
+             mock.patch.object(frame_smoke.time, 'monotonic', side_effect=[0, 0, 0, 0, 0, 13, 13, 13, 13]), \
+             mock.patch.object(frame_smoke.time, 'sleep'), \
+             mock.patch.object(frame_smoke, 'ssh', return_value=''), \
+             mock.patch.object(frame_smoke, 'stop_titles', return_value={'stopped_pids': []}):
+            frame_smoke.title_cycle(smoke, 'x86_64', '/tmp')
+        self.assertFalse(smoke.steps[1]['ok'])
+        self.assertFalse(smoke.steps[1].get('skipped', False))
+        self.assertIn('no evidence', smoke.steps[1]['error'])
+        self.assertTrue(smoke.steps[2]['ok'])
 
     def test_optional_runtime_skip_fails_gate_and_is_counted_in_saved_result(self):
         with tempfile.TemporaryDirectory() as root:
