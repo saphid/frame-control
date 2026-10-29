@@ -11787,9 +11787,8 @@
       "fakeFrame": {
         "id": 130,
         "sha256": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473",
-        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
-        "result": "blocked",
-        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
       },
       "requiredShims": [
         "prefix-manager-user-paths"

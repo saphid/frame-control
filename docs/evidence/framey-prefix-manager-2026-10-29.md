@@ -6,6 +6,8 @@ The 2026-10-29 official store refresh returned 116 visible plugins; every
 catalog version and digest was unchanged. Source:
 [GamesPrefixManager](https://github.com/Saad-Alareqi/GamesPrefixManager).
 The original GPLv3 license is preserved in the pinned test ZIP and installation.
+Scoped machine-readable results are in
+[`framey-prefix-manager-2026-10-29.json`](framey-prefix-manager-2026-10-29.json).
 
 ## Change and limits
 
@@ -30,6 +32,12 @@ scanner and its orphan classification have not been exhaustively validated
 against real libraries; synthetic orphan cleanup is not a real-save safety claim.
 The managed copy needs the `prefix-manager-user-paths` receipt marker;
 older receipts retain a broken label until Update/reinstall.
+
+The full 116-archive fake-Frame HTTP/SSH audit also checks managed receipt,
+exact transformed frontend bytes and removal. Its assertions now distinguish
+the pinned managed frontends for Storage Cleaner, DeckyFileServer and this
+plugin from their original ZIP bytes; other archives still require identical
+upstream frontend bytes. No plugin backend runs in that harness.
 
 ## Published Decky discovery and RPC
 
