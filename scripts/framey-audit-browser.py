@@ -115,7 +115,9 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 <script>
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
-  notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE;
+  notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE,
+  wineFixture=WINE_FIXTURE, wineState=WINE_STATE;
+window.wineFixtureCalls=[];let wineSocketNext=0;const wineSessions=new Map();
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
 window.themeMusicFixtureCalls=[];window.themeMusicFixtureState=null;
@@ -131,11 +133,36 @@ addEventListener('message',event=>{
   if(data.type==='framey:running')event.source.postMessage({type:'framey:reply',id:data.id,
     ...(runningSnapshot?{result:runningSnapshot}:{error:'Read-only compatibility audit: live running context blocked'})},'*');
   if(data.type==='framey:steam')event.source.postMessage({type:'framey:reply',id:data.id,
-    ...(data.method==='GetLibrarySnapshot'&&librarySnapshot?
+    ...(wineFixture&&active.id===68&&data.method==='GetGlobalCompatTools'?{result:[]}:
+      data.method==='GetLibrarySnapshot'&&librarySnapshot?
       {result:librarySnapshot}:{error:'Read-only compatibility audit: live Steam API blocked'})},'*');
   if(data.type==='framey:call'){
     if(!active.methods.includes(data.method))active.methods.push(data.method);
-    if(batteryFixture&&active.id===67&&data.legacy){
+    if(wineFixture&&active.id===68&&!data.legacy){
+      if(window.wineFixtureCalls.length<30)window.wineFixtureCalls.push(data.method);
+      const reply=(result,error)=>event.source.postMessage({type:'framey:reply',id:data.id,
+        ...(error?{error}:{result})},'*');
+      if(data.method==='framey_ws_open'){
+        const token=(++wineSocketNext).toString(16).padStart(32,'0');
+        wineSessions.set(token,{requested:false,sent:false});
+        reply(token);
+      }
+      else if(data.method==='framey_ws_send'){
+        let command;
+        try{command=JSON.parse(data.args?.[1]);}catch(_){command=null;}
+        const session=wineSessions.get(data.args?.[0]);
+        if(!session)reply(null,'Wine fixture socket unavailable');
+        else if(command?.type==='GetState'){session.requested=true;reply(null);}
+        else if(command?.type==='ReportSteamVisibleTools'&&Array.isArray(command.steam_visible_tools))reply(null);
+        else reply(null,'Wine fixture denies compatibility-tool commands and invalid messages');
+      }else if(data.method==='framey_ws_poll'){
+        const session=wineSessions.get(data.args?.[0]);
+        const messages=session?.requested&&!session.sent?[JSON.stringify(wineState)]:[];
+        if(messages.length)session.sent=true;
+        setTimeout(()=>reply({messages,closed:false}),100);
+      }else if(data.method==='framey_ws_close'){wineSessions.delete(data.args?.[0]);reply(null);}
+      else reply(null,'Wine fixture denies unknown backend method');
+    }else if(batteryFixture&&active.id===67&&data.legacy){
       const lookback=data.args?.[0]?.lookback;
       if(window.batteryFixtureCalls.length<20)
         window.batteryFixtureCalls.push({method:data.method,lookback:lookback??null});
@@ -208,7 +235,7 @@ window.runAudit=async(ids,settleMs=1200)=>{
     if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);
-    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
+    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture&&!wineFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
 };
@@ -233,6 +260,8 @@ def main():
                         help='Replay only plugin 79 with private in-memory notification and device data')
     parser.add_argument('--theme-music-settings-fixture', action='store_true',
                         help='Replay only plugin 52 with private in-memory settings; media calls remain denied')
+    parser.add_argument('--wine-cellar-fixture', action='store_true',
+                        help='Replay only plugin 68 with native empty-state response; commands remain denied')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
@@ -240,7 +269,7 @@ def main():
     args = parser.parse_args()
     if sum((args.speed_test_mock, args.battery_tracker_fixture,
             args.network_sentinel_fixture, args.decky_notifications_fixture,
-            args.theme_music_settings_fixture)) > 1:
+            args.theme_music_settings_fixture, args.wine_cellar_fixture)) > 1:
         parser.error('Choose one frontend fixture')
     plugins = json.loads(args.catalog.read_text())['plugins']
     if args.speed_test_mock:
@@ -267,6 +296,14 @@ def main():
         if (len(plugins) != 1 or plugins[0]['sha256'] !=
                 '9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e'):
             parser.error('Game Theme Music 1.7.1-1 fixture requires its pinned archive digest')
+    if args.wine_cellar_fixture:
+        plugins = [plugin for plugin in plugins if plugin['id'] == 68]
+        if (len(plugins) != 1 or plugins[0]['sha256'] !=
+                '7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8'):
+            parser.error('Wine Cellar 0.2.1 fixture requires its pinned archive digest')
+        wine_state = json.loads((ROOT/'tests/fixtures/framey-wine-state.json').read_text())
+    else:
+        wine_state = None
     records = {p['id']: p for p in plugins}
     library = None
     if args.library_snapshot:
@@ -308,10 +345,15 @@ def main():
                 if args.theme_music_settings_fixture:
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Game Theme Music uses private in-memory settings; CSP blocks network and media actions. The panel stays open for control checks.')
+                if args.wine_cellar_fixture:
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Wine Cellar replays a native private empty-state response; CSP blocks network and all install/uninstall commands.')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
                 page = page.replace('THEME_MUSIC_FIXTURE', 'true' if args.theme_music_settings_fixture else 'false')
+                page = page.replace('WINE_FIXTURE', 'true' if args.wine_cellar_fixture else 'false')
+                page = page.replace('WINE_STATE', json.dumps(wine_state).replace('<', '\\u003c'))
                 body = page.replace(
                     'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).replace(
                     'RUNNING_DATA', json.dumps(running).replace('<', '\\u003c')).encode()

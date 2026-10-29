@@ -398,7 +398,7 @@ window.addEventListener('message',async event=>{
   }
   if(!['framey:call','framey:steam'].includes(req.type)||req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||typeof req.method!=='string'||!Array.isArray(req.args))return;
   const steamRead=req.type==='framey:steam';
-  if(steamRead&&(req.args.length!==0||!['GetIPCountry','GetInstallFolders','GetSystemInfo','GetLibrarySnapshot'].includes(req.method)))return;
+  if(steamRead&&(req.args.length!==0||!['GetIPCountry','GetInstallFolders','GetSystemInfo','GetLibrarySnapshot','GetGlobalCompatTools'].includes(req.method)))return;
   const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
     reply={type:'framey:reply',id:req.id};
   try{const data=await api(steamRead?'/api/framey/steam':'/api/framey/method',

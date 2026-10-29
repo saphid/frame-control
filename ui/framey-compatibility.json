@@ -5332,13 +5332,14 @@
         "https://github.com/FlashyReese/decky-wine-cellar",
         "https://github.com/FlashyReese/decky-wine-cellar.git"
       ],
-      "status": "broken",
-      "reason": "Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend. Frontend audit failed: Audit blocks WebSocket.",
-      "blockInstall": true,
+      "status": "partial",
+      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 amd64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge.",
+      "blockInstall": false,
       "verification": [
         "static archive",
-        "local browser",
-        "fake-Frame"
+        "local browser fixture",
+        "actual Decky 3.3.0 amd64 private state",
+        "managed install unit"
       ],
       "browser": {
         "id": 68,
@@ -5350,12 +5351,12 @@
       },
       "archiveValidation": {
         "id": 68,
-        "accepted": false,
-        "reason": "Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend"
+        "accepted": true,
+        "reason": "Exact digest-scoped ARM64 managed adaptation"
       },
       "backend": "Python + native payload",
       "hardware": "No specific hardware requirement detected statically; runtime requirements unverified.",
-      "nativePort": "Native backend needs an ARM64 build; direct websocket and Wine runtime assumptions also need integration.",
+      "nativePort": "Only the exact managed 0.2.1 archive receives a pinned ARM64 helper and receipt-bound socket bridge. The official ZIP still contains x86_64; existing copies require update/reinstall. Install/uninstall and live compatibility-tool operation remain unverified.",
       "uiSurfaces": [
         "local/Steam routes",
         "toasts",
@@ -5365,9 +5366,13 @@
         "id": 68,
         "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
         "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend",
-        "result": "blocked",
-        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-wine-cellar/bin/backend. Frontend audit failed: Audit blocks WebSocket."
-      }
+        "result": "pending-new-fake-Frame-e2e",
+        "reason": "Earlier 116-plugin snapshot blocked this archive; new adaptation awaits exact-head fake-Frame CI."
+      },
+      "requiredShims": [
+        "wine-cellar-native-bridge"
+      ],
+      "missingShimStatus": "broken"
     },
     {
       "id": 70,

@@ -28,7 +28,7 @@ def render(data):
         '- **N/A** means the plugin targets hardware or a display/UI surface that Framey does not provide. The store disables installation for these versions.', '',
         '## Verification limits', '',
         f"All exact archives were hash-checked and statically inspected. The local Chromium host used Framey commit `{data['hostCommit']}`, React 18.3.1 and an opaque `allow-scripts` iframe. "
-        'Each frontend was attempted for 1.2 seconds, including React effects. All plugin backend calls, fetches and websockets were denied. '
+        'Each frontend was attempted for 1.2 seconds, including React effects. All plugin backend calls, fetches and websockets were denied in this original catalog sweep; separately linked focused replays may use private fixtures. '
         'Some plugins attempt mutating actions on mount; none reached a backend. Initialization (`ready`) does not guarantee React rendered, and delayed errors/actions may occur after the observation window. '
         'The JSON preserves initializer errors, capped console observations and attempted method names.', '',
         'The optional full-catalog fake-Frame audit exercises the real HTTP/SSH installer, receipt, frontend bytes and removal, '
@@ -132,7 +132,7 @@ def render(data):
             p['backend']+('; '+', '.join(native) if native else ''),p['hardware']]))+' |')
     lines += ['', '## Native payload portability', '',
         'All published Linux native payloads in this snapshot are x86_64; no published aarch64 payload was found. '
-        'The three Windows DLLs belong to Decky-Framegen. Only the exact managed DeckyFileServer, Decky Localsend and Emuchievements adaptations below can replace their published x86 helpers; other x86 archives remain blocked. '
+        'The three Windows DLLs belong to Decky-Framegen. Only the exact managed DeckyFileServer, Decky Localsend, Emuchievements and Wine Cellar adaptations below can replace their published x86 helpers; other x86 archives remain blocked. '
         'The native compatibility constraints below remain specific to each plugin.', '',
         'A [DeckyFileServer ARM64 follow-up](evidence/framey-fileserver-arm64-2026-10-27.md) ships an offline, digest-checked GPL helper build, corresponding vendored source and a build recipe. '
         'Only its exact managed archive can replace the x86 helper and remove its unnecessary root flag. Actual Decky 3.3.0 discovery/RPC and real Frame HTTPS private-fixture listing/download pass; uploads stay disabled. '
@@ -153,6 +153,7 @@ def render(data):
         'The exact ARM64 helper separately hashed private synthetic direct and ZIP ROMs under the real Frame shared lock without waking the headset or changing services. '
         'Only the exact managed 2.0.5 archive can receive the replacement; old installed copies still have the x86 helper and remain broken until update or reinstall. '
         'Real ROM formats, RetroAchievements login, Steam UI integration, real Frame managed backend, and worn VR remain unverified.', '',
+        '[Wine Cellar 0.2.1 managed bridge evidence](evidence/framey-wine-cellar-bridge-2026-10-29.md) pins the official ZIP, an ARM64 Rust helper and a receipt-bound fixed-origin WebSocket facade. Published Decky 3.3.0 AMD64 discovered the managed plugin and read an empty private Steam-home state; a separate local Chromium fixture rendered the official empty-state panel with mutating commands denied. Fake-Frame and native ARM64 CI are pending. Tool downloads, install/removal, live Steam library, real Frame managed service and worn VR remain unverified. Older copies still contain the x86 helper and need update/reinstall.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
     for p in data['plugins']:
         if p['native']:
