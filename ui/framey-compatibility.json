@@ -5333,12 +5333,12 @@
         "https://github.com/FlashyReese/decky-wine-cellar.git"
       ],
       "status": "partial",
-      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 amd64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge.",
+      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 AMD64 and ARM64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser fixture",
-        "actual Decky 3.3.0 amd64 private state",
+        "actual Decky 3.3.0 AMD64/ARM64 private state",
         "managed install unit"
       ],
       "browser": {

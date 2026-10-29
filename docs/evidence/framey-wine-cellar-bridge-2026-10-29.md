@@ -27,11 +27,13 @@ its managed plugin on the real Frame or access the headset.
 - The exact official ZIP passed the managed installer unit flow. It rejects a
   different digest, source, frontend or architecture. A receipt check rejects
   stale or wrong-plugin socket calls before CEF access.
-- Published Decky 3.3.0 on isolated AMD64 discovered the managed plugin,
-  spawned its native helper against a private empty Steam home, and answered
-  a read-only `GetState` with zero installed tools. The probe closed the
-  socket. Its JSON result is `/tmp/framey-wine-decky-runtime-20261029-mppkd9qczt.json`
-  on the test host.
+- Published Decky 3.3.0 on isolated AMD64 and native ARM64 discovered the
+  managed plugin, spawned the matching helper against a private empty Steam
+  home, and answered a read-only `GetState` with zero installed tools. Both
+  probes closed the socket. The AMD64 JSON result is
+  `/tmp/framey-wine-decky-runtime-20261029-mppkd9qczt.json` on the test host.
+  The [ARM64 hosted job](https://github.com/saphid/frame-control/actions/runs/40952094213/job/123722554018)
+  passed Wine Cellar case 68 on PR head `035baa9350959fbb1faaf805cf4afb93765d7845`.
 - Local Chromium ran the exact official frontend in an opaque iframe with a
   fixture shaped like that empty native state. Dashboard displayed “No
   installed compatibility tools are available.” The Applications view
@@ -39,9 +41,12 @@ its managed plugin on the real Frame or access the headset.
   rejected tool commands, fetches and network access. See
   [browser capture](framey-wine-cellar-browser-2026-10-29.png).
 
-The focused fake-Frame e2e and native ARM64 Decky CI gates are pending on the
-implementation PR. The local e2e launcher needs `zsh`, which is unavailable
-on this test host; its failure to launch is not an e2e pass.
+The first hosted fake-Frame e2e run passed the generic pinned official
+install/remove flow on PR head `035baa9350959fbb1faaf805cf4afb93765d7845`.
+A stronger Wine Cellar specific receipt/helper-hash assertion has been added
+for the next head and is **pending**. The local e2e launcher needs `zsh`,
+which is unavailable on this test host; its failure to launch is not an e2e
+pass.
 
 ## Remaining limits
 
