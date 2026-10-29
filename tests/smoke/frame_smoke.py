@@ -33,6 +33,7 @@ headset isn't reachable. A skipped launch is not a release smoke pass.
 """
 import argparse
 import json
+import math
 import os
 import platform
 import re
@@ -126,10 +127,13 @@ def preflight():
     proximity = state.get('proximity')
     if (not isinstance(proximity, list) or not proximity or
             any(not isinstance(value, (int, float)) or isinstance(value, bool) or
-                value < 0 or value > 10 for value in proximity)):
+                not math.isfinite(value) or value < 0 or value > 10
+                for value in proximity)):
         raise RuntimeError('Frame proximity is active or unknown; active session untouched')
     battery = state.get('battery')
-    if not battery or min(battery) < 20:
+    if (not isinstance(battery, list) or not battery or
+            any(type(value) is not int or value < 20 or value > 100
+                for value in battery)):
         raise RuntimeError('Frame battery is unavailable or below the smoke threshold')
     return state
 

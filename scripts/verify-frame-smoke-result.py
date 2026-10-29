@@ -2,6 +2,7 @@
 """Check a locked Frame smoke result against the exact release commit."""
 
 import json
+import math
 import re
 import sys
 from pathlib import Path
@@ -40,7 +41,8 @@ def verify(result, commit):
     state = result.get('preflight') or {}
     if (not isinstance(state, dict) or state.get('activity') != 3 or
             not isinstance(state.get('proximity'), list) or not state['proximity'] or
-            any(type(value) not in (int, float) or value < 0 or value > 10
+            any(type(value) not in (int, float) or not math.isfinite(value) or
+                value < 0 or value > 10
                 for value in state['proximity']) or
             not isinstance(state.get('battery'), list) or not state['battery'] or
             any(type(value) is not int or value < 20 or value > 100
