@@ -32,6 +32,17 @@ receipt and both replacement hashes; the unique Docker project and volumes
 were removed. This was a packaging test: fake Frame did not execute the
 official backend. The earlier full 116-archive sweep was not rerun.
 
+A separate locked real Frame helper probe used an atomic owner
+`framey-emu-53bfd980257900b50aa48020` in `/tmp/frame-test.lock` before any
+device read. SteamVR activity was 3 (standby), proximity was 2.375, and battery
+was 99%. The exact bundled ARM64 ELF was checked by SHA-256 and machine type,
+then executed only against a private synthetic direct ROM and ZIP. Both returned
+`05e78ec22256f6c3ff82e4f15cf4d92e`, the independently computed fixture MD5.
+The owned files were removed, battery remained 99%, and the matching owner
+released the lock. No service, power setting, Steam title, input or headset
+wake was changed. Standby means no worn test was possible. This proves only
+direct helper execution on the Frame, not the installed Decky backend path.
+
 Hosted native ARM64 Decky, fake Frame e2e, and exact-head checks are required
 before this change may merge. Real ROM formats, RetroAchievements login,
 Steam page integration, real Frame managed backend execution, and worn VR are

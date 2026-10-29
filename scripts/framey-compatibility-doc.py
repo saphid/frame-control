@@ -145,6 +145,7 @@ def render(data):
         '[Emuchievements managed helper evidence](evidence/framey-emuchievements-managed-2026-10-29.md) '
         'records the pinned upstream source, bounded archive extraction, no-shell Python invocation and byte-for-byte offline rebuilds for amd64 and ARM64. '
         'Published Decky 3.3.0 on amd64 discovered the exact managed plugin and hashed private synthetic direct and ZIP ROMs while rejecting hostile archives. '
+        'The exact ARM64 helper separately hashed private synthetic direct and ZIP ROMs under the real Frame shared lock without waking the headset or changing services. '
         'Only the exact managed 2.0.5 archive can receive the replacement; old installed copies still have the x86 helper and remain broken until update or reinstall. '
         'Real ROM formats, RetroAchievements login, Steam UI integration, real Frame managed backend, and worn VR remain unverified.', '',
         '| Plugin | Native payloads | ARM64 result / remaining blocker |', '| --- | --- | --- |']
