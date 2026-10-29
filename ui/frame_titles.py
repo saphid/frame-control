@@ -437,8 +437,9 @@ def runtime_for(target, found=()):
         if target.get('static'):
             return 'SteamLinuxRuntime_4-arm64', ('Static x86-64 Linux build: Frame Control prepares a title-local '
                                                  'FEX launcher without the missing x86-64 Steam runtime. '
-                                                 'Requires FEX on the headset; Steam title launch, dynamic '
-                                                 'libraries and game compatibility remain unverified.')
+                                                 'The tiny static smoke title launched on the tested Frame. '
+                                                 'Requires FEX on the headset; other games and dynamic '
+                                                 'libraries remain unverified.')
         return 'SteamLinuxRuntime_4', ("x86-64 Linux build: probably won't start. It needs the x86-64 Steam "
                                        "Linux Runtime 4.0, which the Frame didn't install for a sideloaded title "
                                        "(2026-09-26). Use an ARM64 or Windows build if there is one.")

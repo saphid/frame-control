@@ -51,7 +51,7 @@ The program's header decides, not its file name:
 | Windows `.exe`, x86-64 (PE machine `0x8664`) | `proton-experimental` | 1 | Inferred: ARM64 Proton runs x86-64 code through FEX |
 | Windows `.exe`, 32-bit x86 (`0x14c`) or ARM64 (`0xaa64`) | `proton-experimental` | 1 | Inferred |
 | Linux ELF, aarch64 (`e_machine` `0xB7`) | `SteamLinuxRuntime_4-arm64` | 0 | Verified: starts, but natively (see below) |
-| Static Linux ELF, x86-64 (`0x3E`, `ET_EXEC`, no `PT_INTERP`) | `SteamLinuxRuntime_4-arm64` mapping, title-local FEX launcher | 0 | Direct FEX probe passed; Steam title launch pending (see below) |
+| Static Linux ELF, x86-64 (`0x3E`, `ET_EXEC`, no `PT_INTERP`) | `SteamLinuxRuntime_4-arm64` mapping, title-local FEX launcher | 0 | Tiny static Steam title launched on Frame OS 0.5.6; other games unverified (see below) |
 | Dynamic Linux ELF, x86-64 (`0x3E`) | `SteamLinuxRuntime_4` | 0 | Verified not to start: the runtime isn't installed (see below) |
 | Shell script | the runtime of the Linux binary beside it, else `SteamLinuxRuntime_4-arm64` | 0 | Guess |
 | Anything else (32-bit Linux, other CPUs, DLLs, data) | refused with a message | | |
@@ -172,10 +172,11 @@ and the app (inspect, install job, ▶, Remove, and install links):
   Steam records the mapping (`CompatToolMapping`, `compat_log.txt`) but launches
   the devkit title without the runtime's `_v2-entry-point` prefix. Fine for a
   self-contained build; a build that needs the runtime's libraries may not start.
-- [ ] **A static x86-64 Linux build through the title-local FEX launcher**:
-  direct execution of the tiny static test ELF passed on this Frame, but a
-  Steam devkit title using the launcher has not yet been verified. See
-  [the bounded probe](evidence/x86-static-fex-2026-10-29.md).
+- [x] **A tiny static x86-64 Linux build runs through the title-local FEX
+  launcher**: the clean feature-branch smoke installed, launched and removed
+  the devkit title on Frame OS 0.5.6 with 13 passed, zero skipped and zero
+  failed. Other games and dynamic x86-64 binaries remain unverified. See
+  [the locked evidence](evidence/x86-static-fex-2026-10-29.md).
 - [ ] **A dynamic x86-64 Linux build doesn't start**: Steam logs `Tool 4183110 "Steam
   Linux Runtime 4.0" is found for appID …, but is not installed`, and the Frame
   doesn't install that x86-64 runtime for a devkit title (a `steam://install/4183110`
