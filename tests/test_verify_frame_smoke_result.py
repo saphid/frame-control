@@ -1,6 +1,7 @@
 """The release smoke gate requires a complete result from its exact checkout."""
 
 import importlib.util
+import math
 import unittest
 from pathlib import Path
 
@@ -50,6 +51,20 @@ class VerifyFrameSmokeResult(unittest.TestCase):
         data['preflight']['activity'] = 1
         with self.assertRaisesRegex(ValueError, 'preflight'):
             gate.verify(data, SHA)
+
+    def test_rejects_nonfinite_proximity_and_invalid_battery(self):
+        for proximity in (math.nan, math.inf, -math.inf):
+            with self.subTest(proximity=proximity):
+                data = result()
+                data['preflight']['proximity'] = [proximity]
+                with self.assertRaisesRegex(ValueError, 'preflight'):
+                    gate.verify(data, SHA)
+        for battery in ([True], [math.nan], [101], [19], ['99']):
+            with self.subTest(battery=battery):
+                data = result()
+                data['preflight']['battery'] = battery
+                with self.assertRaisesRegex(ValueError, 'preflight'):
+                    gate.verify(data, SHA)
 
     def test_rejects_missing_lock_release_record(self):
         data = result()

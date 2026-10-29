@@ -108,7 +108,8 @@ class Safety(unittest.TestCase):
             self.assertEqual(frame_smoke.source_revision(), {'commit': None, 'clean': False})
 
     def test_locked_preflight_rejects_active_or_unknown_proximity_before_titles(self):
-        for proximity in ([], [88.0625], [4.6875, 88.0625], [None]):
+        for proximity in ([], [88.0625], [4.6875, 88.0625], [None],
+                          [float('nan')], [float('inf')], [float('-inf')]):
             with self.subTest(proximity=proximity), mock.patch.object(
                     frame_smoke, 'remote', return_value=mock.Mock(
                         returncode=0, stdout=json.dumps({
@@ -261,7 +262,10 @@ class SharedSmokeLock(unittest.TestCase):
         for state in ({'activity':1,'proximity':[1],'battery':[100]},
                       {'activity':None,'proximity':[],'battery':[100]},
                       {'activity':3,'proximity':[],'battery':[19]},
-                      {'activity':3,'proximity':[],'battery':[]}):
+                      {'activity':3,'proximity':[],'battery':[]},
+                      {'activity':3,'proximity':[0],'battery':[True]},
+                      {'activity':3,'proximity':[0],'battery':[float('nan')]},
+                      {'activity':3,'proximity':[0],'battery':[101]}):
             with self.subTest(state=state), mock.patch.object(frame_smoke, 'remote',
                     return_value=mock.Mock(returncode=0, stdout=json.dumps(state))):
                 with self.assertRaises(RuntimeError):
