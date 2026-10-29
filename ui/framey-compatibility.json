@@ -3829,12 +3829,13 @@
         "https://github.com/yt-dlp/yt-dlp"
       ],
       "status": "partial",
-      "reason": "An inert local component lets the exact frontend initialize and render its Settings view in opaque Chromium. Backend get_setting and plugin network were denied in the audit; Steam game-page theme injection has no verified target in Framey. Music search, playback, downloads, settings persistence and worn VR remain unverified.",
+      "reason": "An inert local component lets the exact frontend render its Settings view in opaque Chromium. The unmodified official backend passes published Decky 3.3.0 discovery and a private setting saved across loader restart in an isolated x86_64 container. Steam game-page theme injection has no verified target in Framey; music search, playback, downloads, real Frame backend and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 x86_64 backend"
       ],
       "browser": {
         "id": 52,
@@ -3869,6 +3870,10 @@
         "frontendReady": true,
         "settingsRendered": true,
         "steamGamePagePatched": false
+      },
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-game-theme-music-native-2026-10-29.md",
+        "mode": "exact official archive in isolated published Decky 3.3.0 x86_64; private setting saved across restart; no network or media actions"
       }
     },
     {

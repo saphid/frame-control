@@ -163,7 +163,25 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'emuchievements-private-hash':
+            if case['probe'] == 'theme-music-settings':
+                # The official plugin can search/download media and patch Steam
+                # game pages. This case exercises only private settings in a
+                # networkless container, without media or user library data.
+                key = 'framey_private_fixture'
+                assert current('get_setting', key, 'missing') == 'missing'
+                assert current('set_setting', key, 'saved') is None
+                assert current('get_setting', key, 'missing') == 'saved'
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert until_ready(lambda: current('get_setting', key, 'missing') == 'saved',
+                                   'private Game Theme Music setting after restart')
+                report['result'] = ('published Decky discovery and private setting restart passed; '
+                                    'search, downloads, playback, Steam page injection, Frame and VR unverified')
+            elif case['probe'] == 'emuchievements-private-hash':
                 # Synthetic files live only in this networkless, disposable
                 # container. Do not read a user's ROMs or log in to RA.
                 content = b'Framey private synthetic ROM fixture\n' * 3
