@@ -54,6 +54,25 @@ managed installer to offer it. Framey deliberately opens only plugins that the
 official store installed and marked as owned; copying this example into the
 plugin directory does not enable its VR panel.
 
+From the repository root, pack and validate this sample without contacting a
+store or headset:
+
+```sh
+python3 - <<'PY'
+from pathlib import Path
+from zipfile import ZipFile
+source = Path('examples/framey-settings')
+with ZipFile('/tmp/framey-settings-sample.zip', 'w') as archive:
+    for name in ('plugin.json', 'main.py', 'dist/index.js'):
+        archive.write(source / name, 'framey-settings/' + name)
+PY
+python3 scripts/framey-check-archive.py /tmp/framey-settings-sample.zip --name 'Framey Settings Sample'
+```
+
+Expect `installerAccepted` and `panelCandidate` to be `true`. This only checks
+local archive admission. Published store identity, Decky backend discovery,
+frontend behavior and physical VR input need their separate tests.
+
 ## Test and adapt
 
 Run `python3 -m unittest discover -s tests -p test_framey_sample.py` from the
