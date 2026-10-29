@@ -4401,7 +4401,8 @@
       },
       "requiredShims": [
         "deckyfileserver-user-native",
-        "deckyfileserver-https-address"
+        "deckyfileserver-https-address",
+        "deckyfileserver-directory-entry"
       ],
       "managedNative": {
         "shim": "deckyfileserver-user-native",
