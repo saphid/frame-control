@@ -57,8 +57,22 @@ the rendered input when that supported fallback appears. It records whether
 manual entry was needed, and failed captures use bounded chunks. The new trial
 also incorporates the pending bounded instance-registry cleanup repair. These
 are test-fixture changes; they do not turn a backend scan retry into a UI retry
-or claim automatic discovery. The second trial is running; no new pass is
-credited.
+or claim automatic discovery. The second trial at `49f084f` completed the browser phase with automatic
+port discovery (`manualPortFallbackUsed=false`), four Running/Stopped stages,
+actual backend RPCs and sandboxed renderer observations. This trial did not
+exercise manual entry. Its successful-phase screenshots were not retained
+when the later HTTP phase failed, so no inspected visual capture is credited.
+All 122 source hashes match that revision.
+
+The HTTP phase reached its process-identity check after service Start returned,
+but only the Flatpak launcher existed at that moment. It failed rather than
+crediting an unsigned launcher as the runtime. QEMU, both owned browsers, the
+HTTP server, bridge and synthetic receipt were cleaned up. The new probe waits
+for authenticated REST readiness before requiring signed process identity;
+only expected 425/502 readiness responses may retry, and authentication or
+unknown HTTP failures still fail. Five focused HTTP tests and 34 package/input/
+evidence/cleanup tests pass. The third trial at `a8d1187` is running; no whole
+HTTP probe pass is credited.
 
 No runtime pass is credited yet. Even a passing probe will leave actual Steam
 CEF, the production browser parent over HTTP, external SSH transport, managed

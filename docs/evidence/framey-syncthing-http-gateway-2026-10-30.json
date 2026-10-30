@@ -91,6 +91,140 @@
       "consoleSha256": "a69cc306e072e61acbd5d37e58058acf70638a47c818b49e2ea297ba4a8d3023",
       "ownedQemuReaped": true,
       "failureScreenshotTruncated": true
+    },
+    {
+      "sourceRevision": "49f084fb82e9645ccca5191d521fe60d3eb3f59a",
+      "success": false,
+      "allSourceFingerprintsVerified": 122,
+      "httpGatewayReached": true,
+      "failure": "Process identity checked before signed child existed; only Flatpak launcher present",
+      "browserPhase": {
+        "success": true,
+        "manualPortFallbackUsed": false,
+        "stages": [
+          {
+            "type": "test:stage",
+            "stage": "running",
+            "text": "Syncthing\n Running\nFolders\nPrivate service sync\nDevices\nframey-owned-vm\nowned-peer",
+            "errors": [],
+            "manualPortFallbackUsed": false
+          },
+          {
+            "type": "test:stage",
+            "stage": "stopped",
+            "text": "Syncthing\n Stopped",
+            "errors": [],
+            "manualPortFallbackUsed": false
+          },
+          {
+            "type": "test:stage",
+            "stage": "restarted",
+            "text": "Syncthing\n Running\nFolders\nDevices",
+            "errors": [],
+            "manualPortFallbackUsed": false
+          },
+          {
+            "type": "test:stage",
+            "stage": "stopped",
+            "text": "Syncthing\n Stopped",
+            "errors": [],
+            "manualPortFallbackUsed": false
+          }
+        ],
+        "actualPackagedProcessObservations": [
+          {
+            "stage": "running",
+            "pids": [
+              1038,
+              1048,
+              1057
+            ]
+          },
+          {
+            "stage": "restarted",
+            "pids": [
+              1127,
+              1141,
+              1149
+            ]
+          }
+        ],
+        "sandboxedRenderers": [
+          {
+            "pid": 959,
+            "ancestryToBrowser": [
+              959,
+              894,
+              892,
+              870
+            ],
+            "commandLineStyle": "process-title",
+            "seccomp": 2,
+            "noNewPrivs": 1
+          },
+          {
+            "pid": 970,
+            "ancestryToBrowser": [
+              970,
+              894,
+              892,
+              870
+            ],
+            "commandLineStyle": "process-title",
+            "seccomp": 2,
+            "noNewPrivs": 1
+          },
+          {
+            "pid": 971,
+            "ancestryToBrowser": [
+              971,
+              894,
+              892,
+              870
+            ],
+            "commandLineStyle": "process-title",
+            "seccomp": 2,
+            "noNewPrivs": 1
+          },
+          {
+            "pid": 1002,
+            "ancestryToBrowser": [
+              1002,
+              894,
+              892,
+              870
+            ],
+            "commandLineStyle": "process-title",
+            "seccomp": 2,
+            "noNewPrivs": 1
+          }
+        ],
+        "ownedBrowserReaped": true,
+        "bridgeStopped": true,
+        "screenshotsRetained": false
+      },
+      "httpProgress": {
+        "success": false,
+        "realFrameContacted": false,
+        "syntheticCef": true,
+        "syntheticStoreReceipt": true,
+        "realSteamCef": false,
+        "managedInstallVerified": false,
+        "installerEnabled": false,
+        "browserSandboxDisabled": false,
+        "productionHttpHandler": true,
+        "productionPanelDispatcher": true,
+        "productionMethodScript": true,
+        "productionLocalSshWrapper": true,
+        "uiSourceFingerprints": 105,
+        "ownedBrowserReaped": true,
+        "httpServerStopped": true,
+        "ownedReceiptRemoved": true
+      },
+      "resultSha256": "f5c9957c4b2a738a48ca857f21d4c35b02241cae11b23ad06f8629c677d25481",
+      "consoleSha256": "f42e71eb17c031637fb5af2077b6465a9eeb24fd1463e9b5d6798ecf26c2d2ab",
+      "ownedQemuReaped": true
     }
-  ]
+  ],
+  "pendingRuntimeRevision": "a8d1187d96bc4c4b58172959a0b85c9fe418b62c"
 }
