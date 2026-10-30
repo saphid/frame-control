@@ -73,8 +73,15 @@ contracts, Python syntax and generated-document checks also pass.
 
 The [native report](framey-syncthing-runtime-2026-10-30.json) records exact
 source/executable hashes and independent results. The local real-runtime proof
-is AMD64 only; the same new fixture is required in the native AMD64/ARM64 CI
-matrix before merge.
+is AMD64. Both native AMD64/ARM64 jobs subsequently passed on exact
+`5fe2428d5351aa9fd49c88039d57108fb6c77671` in
+[run 41007011225](https://github.com/saphid/frame-control/actions/runs/41007011225).
+Both artifacts were independently matched to committed source fingerprints,
+build/helper/loader hashes, all independent states, real HTTP 403 and 100%
+completion. Runtime shutdown upper bounds were 10.037 seconds (AMD64) and
+10.045 seconds (ARM64). All 15 head checks and all 11 current-main checks passed,
+with no feedback or unresolved threads, before #465 merged as
+`3e42bf2cfd65750691690eba833e205c3fefd8cf`.
 
 ## Remaining gates
 
@@ -86,6 +93,6 @@ install/update/remove. Those remain admission gates; existing unit/data
 ownership must be protected before any real service operation.
 
 Actual plugin browser controls, the complete Framey frontend-to-backend flow,
-ARM64 real-runtime execution, real Frame runtime, wearer-visible rendering and
+real Frame runtime, wearer-visible rendering and
 physical controllers remain unverified. The compatibility rating stays broken
 and archive validation still refuses the exact official ZIP.

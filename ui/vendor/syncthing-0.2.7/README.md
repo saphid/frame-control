@@ -21,8 +21,19 @@ reserve the fixed listener before settings/PID/log/systemd activity, and remove
 PID/executable-name discovery. A private Unix listener shares the original HTTP
 handler and uses a socket in the Python owner's temporary directory (0700),
 with socket mode 0600. It requires Rust 1.89 or later; builds use 1.98.1.
-Existing service control, gamescope monitoring, HTTP routes, authentication and
-TLS behavior are unchanged.
+The service-file follow-up adds `owned_unit.rs` and uses a separate
+`frame-control-syncthing.service` in the actual user's home. A matching header
+and exact-byte sidecar are required for updates, removal and managed control.
+Foreign/edited, symlinked, hardlinked, oversized or wrong-owner files and
+unsafe parent directories are refused. A persistent lock serializes cooperating
+candidate operations; this is not a sandbox against arbitrary same-UID writers.
+Legacy `decky-syncthing.service` files are never automatically adopted or removed.
+Managed guards run before DBus, including the wizard's early stop. External
+transition stops/disables/removes only a proved owned new unit, and failures
+propagate. A reserved managed name cannot bypass ownership in external mode.
+Actual systemd resolution, drop-ins and enable-link behavior remain unverified;
+no service manager was made available by the isolated probe. Gamescope, HTTP
+authentication and TLS code are unchanged.
 
 The candidate `main.py` retains its own `Popen` session until it is reaped,
 bounds TERM/KILL waits, and stops it on unload. Restart and v1 migration no longer
@@ -66,14 +77,15 @@ the transport facade, not browser rendering. See the
 [private HTTP evidence](../../../docs/evidence/framey-syncthing-http-2026-10-30.md).
 
 A [real-runtime preflight](../../../docs/evidence/framey-syncthing-runtime-2026-10-30.md)
-uses pinned upstream Syncthing v2.1.7 test inputs. AMD64 private two-way sync,
-runtime restart and actual REST reads through released Decky RPC are covered;
-the processes are started directly, with service setup disabled. The same
-fixture is added to the native ARM64 CI gate. No runtime is bundled.
+uses pinned upstream Syncthing v2.1.7 test inputs. AMD64 and ARM64 private two-way sync,
+runtime restart and actual REST reads through released Decky RPC passed #465 CI;
+the processes are started directly, with service setup disabled. The source fingerprints and both native reports were independently checked. No runtime is bundled.
 
-Before admission, verify actual Syncthing service behavior over DBus, native
-ARM64 runtime, managed install/update/remove and browser controls. Audit the original
-managed service paths and migration behavior. Automatic gamescope behavior is
+Before admission, verify actual Syncthing service behavior over DBus,
+managed install/update/remove, unit migration and browser controls. Automatic gamescope behavior is
 not SteamVR behavior. Browser controls, managed-service synchronization, real Frame and physical
 controllers remain unverified. See
 [`docs/evidence/framey-syncthing-ownership-2026-10-30.md`](../../../docs/evidence/framey-syncthing-ownership-2026-10-30.md).
+
+See the [service-file evidence](../../../docs/evidence/framey-syncthing-service-files-2026-10-30.md)
+for the precise filesystem and pre-DBus proof and remaining manager limits.

@@ -1,6 +1,14 @@
 --- a/backend/decky-syncthing-watchdog/src/main.rs
 +++ b/backend/decky-syncthing-watchdog/src/main.rs
-@@ -27,16 +27,16 @@
+@@ -3,6 +3,7 @@
+ mod panic_util;
+ mod proxy;
+ mod service;
++mod owned_unit;
+ mod settings;
+ mod util;
+ mod watch_gamescope;
+@@ -27,16 +28,16 @@
  use log4rs::encode::pattern::PatternEncoder;
  use log4rs::filter::threshold::ThresholdFilter;
  use std::convert::Infallible;
@@ -23,7 +31,7 @@
  
  const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
  const LOGFILE_WATCHDOG: &str = "watchdog.log";
-@@ -49,18 +49,32 @@
+@@ -49,18 +50,32 @@
      let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
      let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
  
@@ -67,7 +75,7 @@
  
      setup_self_logging(&watchdog_log_dir_path);
      register_panic_hook(&watchdog_log_dir_path);
-@@ -84,13 +98,36 @@
+@@ -84,13 +99,36 @@
          }
      });
  
@@ -108,7 +116,7 @@
  }
  
  async fn handle<S>(
-@@ -121,36 +158,15 @@
+@@ -121,36 +159,15 @@
      write(pid_file_path, process::id().to_string()).unwrap();
  }
  
@@ -154,3 +162,202 @@
  }
  
  fn setup_self_logging(dir: &Path) {
+--- a/backend/decky-syncthing-watchdog/src/lib.rs
++++ b/backend/decky-syncthing-watchdog/src/lib.rs
+@@ -6,6 +6,7 @@
+ mod panic_util;
+ mod proxy;
+ pub mod service;
++mod owned_unit;
+ mod settings;
+ mod util;
+ mod watch_gamescope;
+--- a/backend/decky-syncthing-watchdog/src/service.rs
++++ b/backend/decky-syncthing-watchdog/src/service.rs
+@@ -2,6 +2,7 @@
+ //! If in Flatpak mode: Installs a custom service and controls it.
+ //! If not in Flatpak mode: Uninstalls it (if exists) and controls the configured service.
+ 
++use crate::owned_unit::{self, OwnedUnit};
+ use crate::settings::{Autostart, Mode, Settings};
+ use homedir::my_home;
+ use log::{debug, info, warn};
+@@ -9,7 +10,6 @@
+ use std::path::PathBuf;
+ use std::sync::LazyLock;
+ use std::time::Duration;
+-use tokio::fs;
+ use tokio::sync::Mutex;
+ use tokio::time::Instant;
+ use which::which;
+@@ -19,12 +19,26 @@
+ 
+ static LAST_START: LazyLock<Mutex<Option<Instant>>> = LazyLock::new(Default::default);
+ static WHICH_FLATPAK: LazyLock<Result<PathBuf, which::Error>> = LazyLock::new(|| which("flatpak"));
+-static SERVICE_DIR: LazyLock<Option<PathBuf>> = LazyLock::new(|| {
+-    my_home()
+-        .transpose()
+-        .and_then(|x| x.ok())
+-        .map(|h| h.join(".config").join("systemd").join("user"))
+-});
++fn managed_unit() -> io::Result<OwnedUnit> {
++    let home = my_home().map_err(io::Error::other)?.ok_or_else(|| io::Error::other("home dir not found"))?;
++    OwnedUnit::open(&home)
++}
++
++fn control_guard(service_type: &ServiceType<'_>) -> io::Result<Option<OwnedUnit>> {
++    match service_type {
++        ServiceType::Managed => {
++            let owned = managed_unit()?;
++            owned.require()?;
++            Ok(Some(owned))
++        }
++        ServiceType::External { name, .. } => {
++            if name.trim_end_matches(".service") == owned_unit::UNIT {
++                return Err(io::Error::other("Reserved managed unit cannot be selected as external"));
++            }
++            Ok(None)
++        }
++    }
++}
+ 
+ pub type ServiceError = anyhow::Error;
+ 
+@@ -34,7 +48,7 @@
+ }
+ 
+ impl<'a> ServiceType<'a> {
+-    const MANAGED_SERVICE_NAME: &'static str = "decky-syncthing";
++    const MANAGED_SERVICE_NAME: &'static str = owned_unit::UNIT;
+ 
+     fn get_for(settings: &'a Settings) -> Self {
+         match settings.mode {
+@@ -66,17 +80,23 @@
+     debug!("Init service");
+     let service_type = ServiceType::get_for(settings);
+     let managed_service_name = ServiceType::Managed.systemd_unit().0;
++    // Preflight and hold ownership before opening DBus or performing an action.
++    // The legacy decky-syncthing unit is never adopted, disabled or removed.
++    let owned = managed_unit()?;
++    let contents = if matches!(service_type, ServiceType::Managed) {
++        let executable = WHICH_FLATPAK.as_ref().map_err(|e| io::Error::other(*e))?;
++        Some(owned_unit::render(executable.to_str().ok_or_else(|| io::Error::other("Non-UTF8 flatpak path"))?,
++                               &settings.flatpak_name, &settings.flatpak_binary)?)
++    } else {
++        control_guard(&service_type)?;
++        None
++    };
+     let systemctl_user = Systemctl::new(SessionType::Session).await?;
+     match &service_type {
+         ServiceType::Managed => {
+             // Create/Update the managed service.
+             debug!("Create managed service service");
+-            create_managed_service(
+-                managed_service_name,
+-                &settings.flatpak_name,
+-                &settings.flatpak_binary,
+-            )
+-            .await?;
++            owned.write(contents.as_ref().unwrap())?;
+             systemctl_user.daemon_reload().await?;
+             // Enable or disable the managed service based on autostart settings.
+             match settings.autostart {
+@@ -93,14 +113,12 @@
+         }
+         ServiceType::External { name, user_service } => {
+             // Disable & delete the managed service.
+-            if service_exists_in_config(managed_service_name).await? {
+-                debug!("Disable and delete managed service");
+-                systemctl_user.disable(managed_service_name).await.ok();
+-
+-                let r = delete_managed_service(managed_service_name).await;
+-                if r.is_ok() {
+-                    systemctl_user.daemon_reload().await.ok();
+-                }
++            if owned.exists()? {
++                owned.require()?;
++                systemctl_user.stop(managed_service_name).await?;
++                systemctl_user.disable(managed_service_name).await?;
++                owned.remove()?;
++                systemctl_user.daemon_reload().await?;
+             }
+             // Enable or disable the external service based on autostart settings.
+             let systemctl_client = match *user_service {
+@@ -134,6 +152,7 @@
+ pub async fn get_state(settings: &Settings) -> Result<SyncthingState, ServiceError> {
+     debug!("get_state");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+@@ -150,6 +169,7 @@
+     }
+     debug!("start_service");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+@@ -170,6 +190,7 @@
+     }
+     debug!("stop_service");
+     let service_type = ServiceType::get_for(settings);
++    let _ownership = control_guard(&service_type)?;
+     let (service_name, is_user_service) = service_type.systemd_unit();
+     let systemctl_client = match is_user_service {
+         true => Systemctl::new(SessionType::Session),
+@@ -186,53 +207,6 @@
+         None => Duration::from_secs(999),
+         Some(last_update) => Instant::now().duration_since(*last_update),
+     }
+-}
+-
+-fn service_path(unit: &str) -> Result<PathBuf, io::Error> {
+-    SERVICE_DIR
+-        .as_ref()
+-        .map(|x| x.join(format!("{unit}.service")))
+-        .ok_or_else(|| io::Error::new(io::ErrorKind::NotFound, "home dir not found"))
+-}
+-
+-async fn create_managed_service(
+-    unit: &str,
+-    flatpak: &str,
+-    flatpak_exec: &str,
+-) -> Result<(), io::Error> {
+-    let path = service_path(unit)?;
+-    fs::create_dir_all(path.parent().unwrap()).await?;
+-    let flatpak_cmd = WHICH_FLATPAK
+-        .as_ref()
+-        .map_err(|e| io::Error::other(*e))?
+-        .to_str()
+-        .unwrap();
+-    fs::write(
+-        path,
+-        format!(
+-            "[Unit]
+-Description=Decky managed Syncthing starter - Open Source Continuous File Synchronization
+-
+-[Service]
+-ExecStart={} run --die-with-parent --command={} {} --no-browser --no-restart
+-Restart=on-failure
+-SuccessExitStatus=3 4
+-RestartForceExitStatus=3 4
+-
+-[Install]
+-WantedBy=default.target",
+-            flatpak_cmd, flatpak_exec, flatpak
+-        ),
+-    )
+-    .await
+-}
+-
+-async fn delete_managed_service(unit: &str) -> Result<(), io::Error> {
+-    fs::remove_file(service_path(unit)?).await
+-}
+-
+-async fn service_exists_in_config(unit: &str) -> Result<bool, io::Error> {
+-    Ok(service_path(unit)?.exists())
+ }
+ 
+ pub mod systemctl {
