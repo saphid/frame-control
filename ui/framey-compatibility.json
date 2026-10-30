@@ -11874,14 +11874,14 @@
         "https://github.com/bentemple/decky-download-all"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 x86_64 verifies discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
+      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 AMD64 and ARM64 verify discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
         "managed Chromium queue fixtures (synthetic Steam only)",
-        "published Decky 3.3.0 x86_64 discovery/logging RPC"
+        "published Decky 3.3.0 AMD64/ARM64 discovery/logging RPC"
       ],
       "browser": {
         "id": 131,
@@ -13576,12 +13576,13 @@
         "https://github.com/allmazz/decky-desktop-apps.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Flatpak app discovery and Steam shortcut changes unverified.",
+      "reason": "Initializer succeeds. Published Decky 3.3.0 AMD64 and ARM64 verify private desktop-entry parsing/filtering, XDG precedence, settings persistence and temporary-shortcut bookkeeping across a loader restart. Actual installed Flatpak discovery, Steam shortcut changes, app launches, browser/backend integration, the real Frame and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 AMD64/ARM64 private desktop entries/settings/bookkeeping"
       ],
       "browser": {
         "id": 143,
@@ -13620,7 +13621,8 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md"
     },
     {
       "id": 144,

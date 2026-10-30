@@ -61,6 +61,20 @@ def module(name, path):
     return value
 
 
+def verify_decky_shutdown(report, *, migration=False):
+    """Require the guest's owned-service stop and complete loader-log check."""
+    actual, removed = (('actualMigrationDeckyUserService', 'ownedMigrationDeckyServiceRemoved')
+                       if migration else ('actualDeckyUserService', 'ownedDeckyServiceRemoved'))
+    stop = report.get('ownedDeckyStop')
+    if (any(report.get(key) is not True for key in (actual, removed, 'deckyShutdownLogChecked'))
+        or not isinstance(stop, dict)
+        or stop.get('activeState') != 'inactive' or stop.get('result') != 'success'
+        or stop.get('killMode') != 'mixed' or stop.get('execMainStatus') != '0'
+        or type(stop.get('mainPidBefore')) is not int or stop['mainPidBefore'] <= 0
+        or type(stop.get('mainPidAfter')) is not int or stop['mainPidAfter'] != 0):
+        raise ValueError('Missing or unsuccessful owned Decky shutdown proof')
+
+
 def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
          user_probe=None, normal_root=False, timeout=300, root_size_mib=1024,
          browser=False):
@@ -425,13 +439,9 @@ def main():
             ):
                 raise RuntimeError('Service manager or isolation proof is incomplete')
             service = report['candidateService']
+            verify_decky_shutdown(service)
             if (
                 any(service.get(key) is not True for key in REQUIRED_SERVICE_RESULTS)
-                or service.get('actualDeckyUserService') is not True
-                or service.get('ownedDeckyServiceRemoved') is not True
-                or service.get('ownedDeckyStop', {}).get('result') != 'success'
-                or service.get('ownedDeckyStop', {}).get('killMode') != 'mixed'
-                or service.get('ownedDeckyStop', {}).get('execMainStatus') != '0'
                 or service.get('flatpakPackageVerified') is not False
                 or service.get('realFrameContacted') is not False
             ):

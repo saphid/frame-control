@@ -1,0 +1,131 @@
+{
+  "head": "bc3e592d5e8c18162f0bcde06c54ed07cedbb3c5",
+  "runId": 41118169214,
+  "jobId": 124277712723,
+  "architecture": "aarch64",
+  "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+  "archiveSha256": "82ae975e8a9545124c7e3e3cc66eeadbe7b505ebc220ddc6f2a07800e7760cfd",
+  "nativeCasesCompleted": 33,
+  "officialArchiveDigestsVerified": 30,
+  "exactCompletedJobVerified": true,
+  "exactWorkflowRunVerified": true,
+  "caseInventoryAndDiscoveryVerified": true,
+  "expectedNegativeRegressionsVerified": true,
+  "steamgriddbPrivateArtwork": {
+    "id": 36,
+    "name": "SteamGridDB",
+    "version": "1.8.1",
+    "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+    "shim": null,
+    "calls": [
+      {
+        "method": "get_local_start",
+        "result": "/home/tester"
+      },
+      {
+        "method": "read_file_as_base64",
+        "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+      },
+      {
+        "method": "get_setting",
+        "result": false
+      },
+      {
+        "method": "set_setting",
+        "result": null
+      },
+      {
+        "method": "get_setting",
+        "result": {
+          "enabled": false,
+          "label": "Private artwork fixture",
+          "ids": [
+            777,
+            888
+          ]
+        }
+      },
+      {
+        "method": "set_shortcut_icon_from_path",
+        "result": true
+      },
+      {
+        "method": "set_shortcut_icon",
+        "result": "icon_is_same_path"
+      },
+      {
+        "method": "set_shortcut_icon",
+        "result": true
+      },
+      {
+        "method": "set_steam_icon_from_path",
+        "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+      },
+      {
+        "method": "download_as_base64",
+        "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+      },
+      {
+        "method": "set_shortcut_icon_from_url",
+        "result": true
+      },
+      {
+        "method": "set_steam_icon_from_url",
+        "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+      },
+      {
+        "method": "get_setting",
+        "result": {
+          "enabled": false,
+          "label": "Private artwork fixture",
+          "ids": [
+            777,
+            888
+          ]
+        }
+      },
+      {
+        "method": "get_local_start",
+        "result": "/home/tester"
+      }
+    ],
+    "discovered": [
+      {
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "load_type": 1,
+        "disabled": false
+      }
+    ],
+    "privateArtwork": {
+      "settingsPersistedAcrossLoaderRestart": true,
+      "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+      "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+      "localFileRoundTrip": true,
+      "signedShortcutIdNormalized": true,
+      "shortcutSetSamePathClear": true,
+      "unselectedShortcutPreserved": true,
+      "cacheTempFilesReplaced": true,
+      "loopbackDownloads": 3,
+      "ownedHttpServerStopped": true,
+      "noProductionChanges": true,
+      "externalArtworkServiceVerified": false,
+      "steamContextMenuVerified": false,
+      "browserVerified": false,
+      "realSteamCef": false,
+      "realFrameContacted": false,
+      "physicalControllerVerified": false
+    },
+    "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "workflowEvent": "push",
+  "workflowRunAttempt": 1,
+  "githubArtifactDigestVerified": true,
+  "artifactId": 13007031921,
+  "checkoutCommit": "bc3e592d5e8c18162f0bcde06c54ed07cedbb3c5",
+  "checkoutTree": "baec1bfc8f0a15a65c09e2d42d3fad0e12b26f70",
+  "checkoutTreeMatchesExactHead": true,
+  "jobLogSha256": "0d890e4f392067df293bd875658ce255f9e6e8c535d155e69651bd5f763e7b8b"
+}
