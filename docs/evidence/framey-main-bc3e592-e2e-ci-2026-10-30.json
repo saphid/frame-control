@@ -1,0 +1,17 @@
+{
+  "success": true,
+  "head": "bc3e592d5e8c18162f0bcde06c54ed07cedbb3c5",
+  "run": 41118169332,
+  "job": 124277712597,
+  "workflowEvent": "push",
+  "runAttempt": 1,
+  "workflowConclusionAtAudit": null,
+  "workflowStatusAtAudit": "queued",
+  "checkoutCommit": "bc3e592d5e8c18162f0bcde06c54ed07cedbb3c5",
+  "checkoutTree": "baec1bfc8f0a15a65c09e2d42d3fad0e12b26f70",
+  "actualE2ePassed": true,
+  "e2eSeconds": 233,
+  "includingBuildsSeconds": 306,
+  "logSha256": "3458e83170d000e5cd45c9d8adf4bcbec5dded0de67dd65612f236c4078d00c8",
+  "realFrameContacted": false
+}
