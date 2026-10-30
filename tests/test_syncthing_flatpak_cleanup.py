@@ -105,3 +105,45 @@ class MigrationInstanceCleanup(unittest.TestCase):
         report = {}
         scope['run_cleanup'](report)
         self.assertEqual(report['remainingFlatpakApplications'], ['me.kozec.syncthingtk.other'])
+
+
+class OwnedDeckyStop(unittest.TestCase):
+    def probe(self, properties, ticks):
+        path = Path(__file__).resolve().parent/'decky-runtime/syncthing_service.py'
+        module = ast.parse(path.read_text())
+        functions = [node for node in module.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ('wait', 'stop_decky_service')]
+        scope = dict(json=json, prop=Mock(side_effect=properties), ctl=Mock(), print=Mock(),
+                     Path=Mock(return_value=SimpleNamespace(exists=lambda: False)),
+                     time=SimpleNamespace(monotonic=Mock(side_effect=ticks), sleep=Mock()),
+                     WebSocketException=type('WebSocketException', (Exception,), {}))
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(path), 'exec'), scope)
+        return scope
+
+    def test_manager_completion_after_command_budget_still_requires_clean_result(self):
+        scope = self.probe(['811', '1min 30s', 'deactivating', 'inactive', 'success', '0'],
+                           [0, 0, 0, 40, 41])
+        report = {}
+        scope['stop_decky_service']('frame-control-decky.service', report)
+        scope['ctl'].assert_called_once_with('stop', '--no-block', 'frame-control-decky.service')
+        scope['Path'].assert_called_once_with('/proc/811')
+        self.assertEqual(report['ownedDeckyStop']['result'], 'success')
+        self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 41)
+
+    def test_systemd_forced_timeout_is_not_successful_cleanup(self):
+        scope = self.probe(['811', '1min 30s', 'failed', 'timeout', '0'], [0, 0, 0, 91])
+        report = {}
+        with self.assertRaises(AssertionError):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['result'], 'timeout')
+        self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 91)
+        scope['print'].assert_called_once()
+
+    def test_persistent_stop_job_fails_and_retains_last_state(self):
+        scope = self.probe(['811', '1min 30s', 'deactivating'], [0, 0, 0, 101, 102])
+        report = {}
+        with self.assertRaisesRegex(RuntimeError, 'owned Decky service stop'):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['activeState'], 'deactivating')
+        self.assertNotIn('result', report['ownedDeckyStop'])
+        scope['print'].assert_called_once()

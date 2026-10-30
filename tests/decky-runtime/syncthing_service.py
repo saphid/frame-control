@@ -63,6 +63,32 @@ def prop(unit, key):
     return ctl('show', unit, '--property=' + key, '--value')
 
 
+def stop_decky_service(unit, report):
+    """Observe the owned manager's stop job; forced or incomplete stops fail."""
+    began = time.monotonic()
+    report['ownedDeckyStop'] = state = {
+        'mainPidBefore': int(prop(unit, 'MainPID')),
+        'timeoutStopUSec': prop(unit, 'TimeoutStopUSec'),
+    }
+    try:
+        # The manager's default stop budget is 90 seconds. A blocking
+        # systemctl command with the general 35-second RPC budget can expire
+        # before that job completes, losing both its result and our logs.
+        ctl('stop', '--no-block', unit)
+        def stopped():
+            state['activeState'] = prop(unit, 'ActiveState')
+            return state['activeState'] in ('inactive', 'failed')
+        wait(stopped, 'owned Decky service stop', timeout=100)
+        state['result'] = prop(unit, 'Result')
+        state['mainPidAfter'] = int(prop(unit, 'MainPID'))
+        assert state['activeState'] == 'inactive' and state['result'] == 'success', state
+        assert state['mainPidBefore'] > 0 and state['mainPidAfter'] == 0, state
+        assert not Path('/proc/'+str(state['mainPidBefore'])).exists(), state
+    finally:
+        state['elapsedSeconds'] = round(time.monotonic() - began, 3)
+        print('FRAMEY_DECKY_STOP_JSON=' + json.dumps(state), flush=True)
+
+
 def main(signed_flatpak=False):
     assert (
         os.getuid() == 1100
@@ -785,18 +811,18 @@ def main(signed_flatpak=False):
             if backend.poll() is None:
                 os.killpg(backend.pid, signal.SIGTERM)
             backend.wait(timeout=15)
-        if decky_service is not None:
-            decky_pid = int(prop(decky_service.name, 'MainPID'))
-            ctl('stop', decky_service.name)
-            assert prop(decky_service.name, 'MainPID') == '0'
-            assert decky_pid > 0 and not Path('/proc/'+str(decky_pid)).exists()
-            decky_service.unlink()
-            ctl('daemon-reload')
-            report['ownedDeckyServiceRemoved'] = True
-        for log in logs:
-            log.seek(0)
-            print(log.read()[-3000:], flush=True)
-            log.close()
+        try:
+            if decky_service is not None:
+                stop_decky_service(decky_service.name, report)
+                decky_service.unlink()
+                ctl('daemon-reload')
+                report['ownedDeckyServiceRemoved'] = True
+        finally:
+            # Preserve the actual loader tail even if cleanup fails.
+            for log in logs:
+                log.seek(0)
+                print(log.read()[-3000:], flush=True)
+                log.close()
     assert not Path(f'/proc/{helper_pid}').exists()
     if signed_flatpak:
         instances = subprocess.check_output(
