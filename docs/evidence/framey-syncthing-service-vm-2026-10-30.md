@@ -96,3 +96,19 @@ unverified. No wake, input, hardware lock or headset operation occurred here;
 the separate hourly worn-check schedule keeps ownership of that check. Nothing
 in this evidence admits Syncthing, changes its compatibility rating or satisfies
 the release's locked real Frame smoke gate.
+
+## Exact-head CI follow-up
+
+Head `81e243b893efb54e527f764978345ac895492c26` passed all 14 checks before
+#467 merged as `aea15ae72e135e74a245dc904bdb7f108df8970e`. Native workflow
+`41011839394` produced AMD64 artifact `12958386602` and ARM64 artifact
+`12958521417`. Both were independently matched to committed sources,
+build/helper/loader/runtime hashes, nine executed Rust tests, all ownership and
+real sync results, all 13 required service flags, measured RPC budgets and the
+actual guest console report. AMD64 stop/transition took 10.176/10.484 seconds;
+ARM64 took 10.453/2.186 seconds. Both guests used actual systemd and real Decky
+RPC, with the documented Flatpak launcher substitution. ARM64 service execution
+is therefore now proved for that head; packaging and other limits remain.
+
+The subsequent [loaded identity follow-up](framey-syncthing-loaded-unit-2026-10-30.md)
+records a separately reproduced drop-in mismatch and its own verification scope.

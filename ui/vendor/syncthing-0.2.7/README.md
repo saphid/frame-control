@@ -32,8 +32,13 @@ Managed guards run before DBus, including the wizard's early stop. External
 transition stops/disables/removes only a proved owned new unit, and failures
 propagate. A reserved managed name cannot bypass ownership in external mode.
 A separate networkless service VM exercises actual systemd/DBus, fragment
-identity, enable links and explicit external-service control. Drop-ins, aliases,
-existing-service migration and actual Flatpak packaging still need verification.
+identity, enable links and explicit external-service control. Managed operations
+also require fresh manager properties: the canonical ID/name, exact owned
+fragment, no drop-ins or aliases and no pending reload. Foreign shadow paths,
+overrides and aliases are preserved and refused. Own enable/disable operations
+finish with daemon reload and another identity check. This is not protection
+from arbitrary concurrent same-UID writers. Existing-service migration and
+actual Flatpak packaging still need verification.
 Gamescope, HTTP authentication and TLS code are unchanged.
 
 The candidate `main.py` retains its own `Popen` session until it is reaped,
@@ -104,9 +109,12 @@ Both architecture CI jobs must execute the full probe. See the
 [service VM evidence](../../../docs/evidence/framey-syncthing-service-vm-2026-10-30.md).
 
 Before admission, verify Flatpak packaging, managed install/update/remove,
-unit overrides/migration and browser controls. Automatic gamescope behavior is
+existing-service migration and browser controls. Automatic gamescope behavior is
 not SteamVR behavior. Real Frame and physical controllers remain unverified. See
 [`docs/evidence/framey-syncthing-ownership-2026-10-30.md`](../../../docs/evidence/framey-syncthing-ownership-2026-10-30.md).
 
 See the [service-file evidence](../../../docs/evidence/framey-syncthing-service-files-2026-10-30.md)
 for the filesystem and pre-DBus proof preceding the service VM fixture.
+The [loaded-identity evidence](../../../docs/evidence/framey-syncthing-loaded-unit-2026-10-30.md)
+records the reproduced drop-in control failure and the separate AMD64 guard
+proof; native ARM64 CI for that follow-up remains a merge gate.
