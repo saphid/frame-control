@@ -5,6 +5,12 @@
     "probe": "prefix-manager"
   },
   {
+    "id": 130,
+    "version": "1.0.2",
+    "shim": "prefix-manager-user-paths",
+    "probe": "prefix-manager"
+  },
+  {
     "id": 68,
     "shim": "wine-cellar-native-bridge",
     "probe": "wine-cellar-private-state"

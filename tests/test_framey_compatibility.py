@@ -78,6 +78,12 @@ class Compatibility(unittest.TestCase):
         self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
 
+    def test_unpublished_prefix_manager_102_has_no_store_compatibility_claim(self):
+        from framey_official import PREFIX_MANAGER_102
+        release = PREFIX_MANAGER_102
+        result = compatibility.lookup(release['id'], release['sha256'], release['version'])
+        self.assertEqual(result['status'], 'unverified')
+
     def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
         installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),

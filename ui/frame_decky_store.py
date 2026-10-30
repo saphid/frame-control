@@ -59,6 +59,9 @@ STORAGE_CLEANER_DIGEST = '1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e9960
 STORAGE_CLEANER_MAIN = '6fd4d012568edae22ba421495455b3c02899155e4c7484f5aa5be6ce9b14dd5f'
 PREFIX_MANAGER_DIGEST = 'ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'
 PREFIX_MANAGER_MAIN = '2cead9898de712fa32fe8a217b8b5be6b043927ada28667fe696191429589896'
+# Upstream GitHub v1.0.2 release asset. The live Decky store still serves 1.0.1.
+PREFIX_MANAGER_102_DIGEST = '12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6'
+PREFIX_MANAGER_102_MAIN = '265e64b688f55d5468a29c484462d277a6a06d72ba6d6ea0920790dc34ca79fd'
 WINE_CELLAR_DIGEST = '7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8'
 WINE_CELLAR_ORIGINAL = '7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3473d29fe'
 WINE_CELLAR_MAIN = '87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6be97'
@@ -114,7 +117,8 @@ def catalog():
         if ((item['id'] == 60 and item['name'] == 'DeckyFileServer' and item['sha256'] == FILESERVER_DIGEST)
             or (item['id'] == 114 and item['name'] == 'Network Sentinel' and item['sha256'] == NETWORK_SENTINEL_DIGEST)
             or (item['id'] == 67 and item['name'] == 'Battery Tracker' and item['sha256'] == BATTERY_TRACKER_DIGEST)
-            or (item['id'] == 130 and item['name'] == 'Games Prefix Manager' and item['sha256'] == PREFIX_MANAGER_DIGEST)):
+            or (item['id'] == 130 and item['name'] == 'Games Prefix Manager'
+                and item['sha256'] in (PREFIX_MANAGER_DIGEST, PREFIX_MANAGER_102_DIGEST))):
             item['root'] = False  # Exact managed adaptation runs as the Frame user.
         item['compatibility'] = framey_compatibility.lookup(item['id'], item['sha256'], item['version'])
     return unique
@@ -148,8 +152,9 @@ def archive_info(data, expected_hash, expected_name):
                             and folder == 'network-sentinel')
         battery_tracker = (expected_hash == BATTERY_TRACKER_DIGEST and expected_name == 'Battery Tracker'
                            and folder == 'steam-deck-battery-tracker')
-        prefix_manager = (expected_hash == PREFIX_MANAGER_DIGEST and expected_name == 'Games Prefix Manager'
-                          and folder == 'GamesPrefixManager')
+        prefix_manager = (expected_name == 'Games Prefix Manager' and
+                          ((expected_hash == PREFIX_MANAGER_DIGEST and folder == 'GamesPrefixManager') or
+                           (expected_hash == PREFIX_MANAGER_102_DIGEST and folder == 'games-prefix-manager')))
         wine_cellar = (expected_hash == WINE_CELLAR_DIGEST and expected_name == 'Wine Cellar'
                        and folder == 'decky-wine-cellar')
         seen = {}
@@ -213,7 +218,8 @@ def archive_info(data, expected_hash, expected_name):
                                 or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != BATTERY_TRACKER_MAIN):
             raise ValueError('Battery Tracker manifest or source differs from the pinned archive')
         if prefix_manager and (flags != ['root'] or 'api_version' in manifest
-                               or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != PREFIX_MANAGER_MAIN):
+                               or hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() !=
+                               (PREFIX_MANAGER_MAIN if expected_hash == PREFIX_MANAGER_DIGEST else PREFIX_MANAGER_102_MAIN)):
             raise ValueError('Games Prefix Manager manifest or source differs from the pinned archive')
         if (expected_hash == RADIYO_DIGEST and expected_name == 'RadiYo!' and folder == 'radiyo-steam-deck'
                 and hashlib.sha256(archive.read(folder+'/main.py')).hexdigest() != RADIYO_MAIN):
@@ -352,7 +358,9 @@ try:
             emuchievements=(int(plugin_id)==28 and digest=='98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89' and folder=='Emuchievements')
             network_sentinel=(int(plugin_id)==114 and digest=='d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5' and folder=='network-sentinel')
             battery_tracker=(int(plugin_id)==67 and digest=='91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94' and folder=='steam-deck-battery-tracker')
-            prefix_manager=(int(plugin_id)==130 and digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473' and folder=='GamesPrefixManager')
+            prefix_manager=(int(plugin_id)==130 and
+                ((digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473' and folder=='GamesPrefixManager') or
+                 (digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6' and folder=='games-prefix-manager')))
             wine_cellar=(int(plugin_id)==68 and digest=='7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8' and folder=='decky-wine-cellar')
             manifest=json.loads(z.read(folder+'/plugin.json'))
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
@@ -414,7 +422,9 @@ try:
                 data=main.read_bytes()
                 if (manifest.get('name')!='Games Prefix Manager' or flags!=['root']
                         or 'api_version' in manifest
-                        or hashlib.sha256(data).hexdigest()!='2cead9898de712fa32fe8a217b8b5be6b043927ada28667fe696191429589896'):
+                        or hashlib.sha256(data).hexdigest()!=('2cead9898de712fa32fe8a217b8b5be6b043927ada28667fe696191429589896'
+                            if digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'
+                            else '265e64b688f55d5468a29c484462d277a6a06d72ba6d6ea0920790dc34ca79fd')):
                     raise RuntimeError('Games Prefix Manager manifest or source differs from pinned archive')
                 # Keep the published legacy calling convention. All reads and
                 # writes run as Decky's user; no root or Steam process changes.
@@ -531,11 +541,27 @@ Plugin.get_games = _framey_get_games
 Plugin.delete_prefix = _framey_delete_prefix
 Plugin.cleanup_orphans = _framey_cleanup_orphans
 """
+                if digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6':
+                    adaptation=adaptation.replace(b'exact official 1.0.1 archive',b'exact upstream v1.0.2 release asset')
+                    adaptation=adaptation.replace(
+                        b'async def _framey_delete_prefix(self, appid, do_backup):\n',
+                        b'async def _framey_delete_prefix(self, appid, do_backup, delete_game_folder=False):\n'
+                        b'    if delete_game_folder:\n'
+                        b'        return False, "Game data deletion is unavailable on Frame; no files changed"\n')
                 main.write_bytes(data+adaptation)
                 frontend=unpacked/'dist/index.js'
                 bundle=frontend.read_bytes()
-                if hashlib.sha256(bundle).hexdigest()!='2812dfe99594f64d76f7978961844bbd8431356ac649763a4a10bfdf23205ca5':
+                if hashlib.sha256(bundle).hexdigest()!=('2812dfe99594f64d76f7978961844bbd8431356ac649763a4a10bfdf23205ca5'
+                    if digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'
+                    else '1ab8001b6f244319a37e721c37ed8520bb3d6e2b0b3aca1ac09b09012ed0ecd4'):
                     raise RuntimeError('Games Prefix Manager frontend differs from pinned archive')
+                if digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6':
+                    # Its new game-data deletion uses an unbounded install_path.
+                    # Hide the toggle, and also refuse a forged direct RPC above.
+                    for old in (b'showDeleteGameFolder: true',
+                                b'showDeleteGameFolder: game.install_path !== "-" && !!game.install_path'):
+                        if bundle.count(old)!=1: raise RuntimeError('Games Prefix Manager game-data source changed')
+                        bundle=bundle.replace(old,b'showDeleteGameFolder: false')
                 helper=b"""    const frameyPrefixAction = async (serverAPI, method, args) => {
         try {
             const response = await serverAPI.callPluginMethod(method, args);

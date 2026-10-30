@@ -70,6 +70,15 @@ PLUGINS = (
      'folder': 'Deck-Shelves', 'sha256': 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'},
 )
 
+# Upstream GitHub release asset, not the version currently listed by Decky's
+# store. Keep it out of PLUGINS so fake-store fixtures remain truthful.
+PREFIX_MANAGER_102 = {
+    'id': 130, 'name': 'Games Prefix Manager', 'version': '1.0.2',
+    'api_version': 'legacy', 'folder': 'games-prefix-manager',
+    'sha256': '12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6',
+    'fixture': '130-v102.zip',
+}
+
 # This archive has a legacy IIFE frontend with no manifest API version.
 LEGACY_PLUGINS = (
     {'id': 7, 'name': 'CSS Loader', 'version': '2.1.3', 'api_version': 'legacy',
@@ -78,4 +87,4 @@ LEGACY_PLUGINS = (
 
 
 def archive(plugin):
-    return (ROOT / f"{plugin['id']}.zip").read_bytes()
+    return (ROOT / plugin.get('fixture', f"{plugin['id']}.zip")).read_bytes()

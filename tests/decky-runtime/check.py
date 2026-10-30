@@ -26,7 +26,7 @@ from websockets.exceptions import WebSocketException
 ROOT = Path('/repo')
 sys.path[:0] = [str(ROOT/'ui'), str(ROOT/'tests')]
 import frame_decky_store
-from framey_official import PLUGINS, archive
+from framey_official import PLUGINS, PREFIX_MANAGER_102, archive
 
 
 async def request(route, args):
@@ -64,13 +64,16 @@ def until_ready(read, description):
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
+    parser.add_argument('version', nargs='?', default='-')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     args = parser.parse_args()
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
-    record = next(p for p in PLUGINS if p['id'] == args.id)
-    case = next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text()) if p['id'] == args.id)
+    record = (PREFIX_MANAGER_102 if args.id == 130 and args.version == '1.0.2'
+              else next(p for p in PLUGINS if p['id'] == args.id))
+    case = next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
+                if p['id'] == args.id and p.get('version', '-') == args.version)
     data = archive(record)
     assert hashlib.sha256(data).hexdigest() == record['sha256']
     assert frame_decky_store.archive_info(data, record['sha256'], record['name']) == record['folder']
@@ -198,6 +201,14 @@ def main():
                     f'"libraryfolders" {{ "0" {{ "path" "{steam}" }} "1" {{ "path" "{secondary}" }} }}')
                 rows = legacy('get_games')
                 assert {(g['appid'], g['type']) for g in rows} == {('4242', 'Steam'), ('4343', 'Unidentified')}, rows
+                if record['version'] == '1.0.2':
+                    # The upstream release added install-folder removal. No
+                    # private or real game data may be touched by that action.
+                    rejected = legacy('delete_prefix', appid='4242', do_backup=True,
+                                      delete_game_folder=True)
+                    assert rejected == [False, 'Game data deletion is unavailable on Frame; no files changed'], rejected
+                    assert (installed/'save.dat').read_bytes() == marker
+                    assert not (home/'Documents/PrefixBackups').exists()
                 # The pinned shortcut parser reads only the first Steam user
                 # and silently accepts parse failures. Never infer that an
                 # unmatched prefix is unused, even with no shortcut files.

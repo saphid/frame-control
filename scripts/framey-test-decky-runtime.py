@@ -89,12 +89,12 @@ def main():
             loader = Path(temp)/'PluginLoader'
             loader.write_bytes(data)
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
-            probes = [(case['id'], None) for case in cases] + [
-                (plugin_id, negative) for plugin_id, negative in [
+            probes = [(case['id'], case.get('version'), None) for case in cases] + [
+                (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression')]
                 if args.case is None or args.case == plugin_id]
-            for plugin_id, negative in probes:
+            for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',
                     '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '128',
@@ -103,16 +103,16 @@ def main():
                     '--tmpfs', '/run/user/1100:rw,uid=1100,gid=1100,mode=700',
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
-                    tag, str(plugin_id)]
+                    tag, str(plugin_id), version or '-']
                 if negative:
                     command.append(negative)
                 try:
                     result = subprocess.run(command, capture_output=True, text=True, timeout=120)
                     if result.returncode:
-                        raise RuntimeError(f'Decky runtime case {plugin_id} failed:\n{result.stdout}\n{result.stderr}')
+                        raise RuntimeError(f'Decky runtime case {plugin_id} {version or "store"} failed:\n{result.stdout}\n{result.stderr}')
                     observation = json.loads(result.stdout)
                     report['cases'].append(observation)
-                    print(f"PASS {plugin_id}: {observation['result']}", flush=True)
+                    print(f"PASS {plugin_id} {version or 'store'}: {observation['result']}", flush=True)
                 finally:
                     subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     finally:

@@ -13,12 +13,15 @@ spec.loader.exec_module(gate)
 
 class RuntimeCoverage(unittest.TestCase):
     def test_current_shims_have_unique_official_archive_probes(self):
-        from framey_official import PLUGINS
+        from framey_official import PLUGINS, PREFIX_MANAGER_102
         cases = gate.check_coverage()
         official = {record['id'] for record in PLUGINS}
-        self.assertEqual(len(cases), len({case['id'] for case in cases}))
+        self.assertEqual(len(cases), len({(case['id'], case.get('version')) for case in cases}))
         for case in cases:
             self.assertIn(case['id'], official)
+            if case.get('version'):
+                self.assertEqual((case['id'], case['version']),
+                                 (PREFIX_MANAGER_102['id'], PREFIX_MANAGER_102['version']))
             self.assertIn(case['probe'], ('mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
                                          'toggle-settings', 'fileserver', 'localsend', 'network-sentinel',
                                          'battery-tracker', 'free-loader', 'radio-local', 'game-sync-config',
