@@ -14,6 +14,8 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 124, 'name': 'AlarMe', 'version': '1.6.3', 'api_version': 1,
      'folder': 'alarme-decky-plugin', 'sha256': '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe'},
+    {'id': 65, 'name': 'Decky Terminal', 'version': '0.5.3', 'api_version': 1,
+     'folder': 'decky-terminal', 'sha256': '7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872'},
     {'id': 143, 'name': 'Desktop Apps', 'version': '0.1.0', 'api_version': 1,
      'folder': 'decky-desktop-apps', 'sha256': '33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577'},
     {'id': 117, 'name': 'DeckyParty File Manager', 'version': '1.0.0', 'api_version': 'legacy',

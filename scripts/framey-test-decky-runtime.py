@@ -77,11 +77,17 @@ def main():
     cases = check_coverage()
     if args.case is not None:
         cases = [case for case in cases if case['id'] == args.case]
-        if not cases:
+        if not cases and args.case != 65:
             parser.error('Unknown official plugin case')
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
-    report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest, 'cases': []}
+    inputs = ['scripts/framey-test-decky-runtime.py', 'tests/decky-runtime/check.py',
+              'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
+              'tests/framey_official.py', 'ui/frame_decky_store.py',
+              '.github/workflows/decky-runtime.yml']
+    report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,
+              'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+                               for name in inputs}, 'cases': []}
     try:
         subprocess.run(['docker', 'build', '-q', '-t', tag, '-f', str(ROOT/'tests/decky-runtime/Containerfile'),
                         str(ROOT/'tests/decky-runtime')], check=True, timeout=300)
@@ -93,7 +99,8 @@ def main():
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
-                    (124, '--reproduce-alarme-pause-regression')]
+                    (124, '--reproduce-alarme-pause-regression'),
+                    (65, '--reproduce-terminal-import-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
