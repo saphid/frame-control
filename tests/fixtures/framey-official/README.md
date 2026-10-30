@@ -153,3 +153,11 @@ marker transfer outside Decky. The native Decky gate checks discovery and
 read-only backend status/configuration with its network helper stopped. The
 managed ARM64 helper and transfer remain separately gated; the fixture does
 not prove worn VR or a transfer on Frame.
+
+TabMaster 2.15.1 (`61.zip`, SHA-256 `e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5`)
+runs its exact unmodified backend in published Decky 3.3.0. Its native case
+uses only synthetic users, tab/filter/profile/friend/tag settings and an owned
+container home. It verifies disk readback, shared-tab visibility, false values,
+loader restart persistence and two clean owned loader exits. It does not
+exercise Steam library-tab editing, backups/restores, browser rendering,
+real Frame or physical controllers. These remain separate verification gates.
