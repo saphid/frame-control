@@ -16,11 +16,13 @@ GPLv3/template/Syncthing notices.
 `source.tar.gz` contains the original Rust sources, locked manifest and license;
 its SHA-256 is
 `a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f`.
-`watchdog.patch` changes startup ownership only: retain an exclusive file lock,
+`watchdog.patch` changes startup ownership and adds private HTTP IPC: retain an exclusive file lock,
 reserve the fixed listener before settings/PID/log/systemd activity, and remove
-PID/executable-name discovery. It requires Rust 1.89 or later; builds use 1.98.1.
-Service control, gamescope monitoring, HTTP routes, authentication and TLS
-behavior are unchanged.
+PID/executable-name discovery. A private Unix listener shares the original HTTP
+handler and uses a socket in the Python owner's temporary directory (0700),
+with socket mode 0600. It requires Rust 1.89 or later; builds use 1.98.1.
+Existing service control, gamescope monitoring, HTTP routes, authentication and
+TLS behavior are unchanged.
 
 The candidate `main.py` retains its own `Popen` session until it is reaped,
 bounds TERM/KILL waits, and stops it on unload. Restart and v1 migration no longer
@@ -28,6 +30,13 @@ invoke name-wide `pkill`/`killall`. A late restart after unload is refused.
 PID cleanup takes the same exclusive lock and checks the retained child PID;
 it preserves another owner's PID and the persistent lock inode. A typing-only
 `NotRequired` annotation is replaced with `Optional` for Python 3.9 importability.
+Its HTTP RPC accepts only the published frontend's GET/POST routes and selected
+headers, bounds response bytes and socket operations (normally 5 seconds, 20
+for the original setup-start wait), preserves HTTP errors and
+does not follow redirects. Four worker slots remain occupied until completion,
+even if their RPC awaiters are cancelled. The transport uses only that retained
+child's private Unix socket; there is no TCP fallback. Restart/unload removes
+the temporary directory only after reaping the owned child.
 
 Build with an existing Rust Bookworm image containing native/ARM64 targets and
 compilers, for example the local Wine Cellar cross-builder:
@@ -50,8 +59,14 @@ native architecture. The test runner verifies the exact official ZIP and the
 published Decky 3.3.0 loader before injecting the candidate into a private home.
 This is not a managed-install or Frame test.
 
-Before admission, implement the receipt-bound fixed-origin HTTP bridge and
-verify actual Syncthing service/runtime behavior over DBus. Audit the original
+An inactive receipt-bound host facade keeps the original frontend's fixed
+loopback URLs. Only the exact digest and a dedicated receipt shim may call the
+HTTP RPC; no installer currently produces that shim. Node VM coverage verifies
+the transport facade, not browser rendering. See the
+[private HTTP evidence](../../../docs/evidence/framey-syncthing-http-2026-10-30.md).
+
+Before admission, verify actual Syncthing service/runtime behavior over DBus,
+managed install/update/remove and browser controls. Audit the original
 managed service paths and migration behavior. Automatic gamescope behavior is
 not SteamVR behavior. Browser controls, synchronization, real Frame and physical
 controllers remain unverified. See

@@ -1,5 +1,6 @@
 """Unreleased Syncthing ownership candidate; no official helper or service runs."""
 import sandbox  # noqa: F401
+import asyncio
 import importlib.util
 import logging
 import os
@@ -33,7 +34,145 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
         self.owner = self.module.watchdog
 
     async def asyncTearDown(self):
+        # Failed assertions in a mocked-Popen test must never signal a real PID.
+        if isinstance(self.owner.process, Mock):
+            self.owner.process = None
         self.owner.stop()
+
+    def private_http(self):
+        from http.server import BaseHTTPRequestHandler
+        import socketserver
+        import threading
+        requests = []
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *_args):
+                pass
+
+            def do_GET(self):
+                requests.append((self.command, self.path, dict(self.headers)))
+                if self.path == '/__decky-watchdog/check/start':
+                    # Upstream's setup check deliberately waits 4–11 seconds.
+                    import time
+                    time.sleep(5.1)
+                code, body, length = 200, b'{"privateFixture":true}', None
+                if 'large' in self.path:
+                    body = b'x'*(256*1024+1)
+                if 'truncated' in self.path:
+                    body, length = b'short', 100
+                if 'redirect' in self.path:
+                    code, body = 302, b''
+                if self.command == 'POST':
+                    code, body = 204, b''
+                self.send_response(code)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Content-Length', str(length if length is not None else len(body)))
+                if code == 302:
+                    self.send_header('Location', 'http://127.0.0.1:1/never-follow')
+                self.end_headers()
+                try:
+                    self.wfile.write(body)
+                except BrokenPipeError:
+                    pass
+
+            do_POST = do_GET
+        self.owner.runtime = tempfile.TemporaryDirectory(prefix='framey-syncthing-test-')
+        server = socketserver.UnixStreamServer(str(Path(self.owner.runtime.name)/'watchdog.sock'), Handler)
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        def cleanup():
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+        self.addCleanup(cleanup)
+        self.owner.process = Mock(pid=424242)
+        self.owner.process.poll.return_value = None
+        return requests
+
+    async def test_http_uses_only_private_socket_and_preserves_status_and_headers(self):
+        requests = self.private_http()
+        with patch.object(self.module.http.client.HTTPConnection, 'connect', side_effect=AssertionError('TCP fallback')):
+            response = self.owner.fetch('GET', '/rest/system/status?folder=private%20fixture',
+                                        {'Accept':'application/json','X-API-Key':'private-fixture'})
+            self.assertEqual(response['status'], 200)
+            self.assertEqual(response['body'], '{"privateFixture":true}')
+            self.assertEqual(response['headers']['content-type'], 'application/json')
+            self.assertEqual(requests[-1][:2], ('GET','/rest/system/status?folder=private%20fixture'))
+            self.assertEqual(requests[-1][2]['x-api-key'], 'private-fixture')
+            self.assertEqual(self.owner.fetch('POST', '/__decky-watchdog/start', {})['status'], 204)
+
+    async def test_http_rejects_other_origins_paths_methods_and_headers_before_io(self):
+        requests = self.private_http()
+        for method,path,headers in [
+                ('GET','http://127.0.0.1:58384/rest/system/status',{}),
+                ('GET','//other/rest/system/status',{}), ('GET','/rest/../private',{}),
+                ('GET','/rest/%73ystem/status',{}), ('GET','/rest/system/status#fragment',{}),
+                ('GET','/rest/system/status\r\nHost: other',{}), ('GET','/rest\\system/status',{}),
+                ('DELETE','/rest/system/status',{}), ('POST','/rest/system/status',{}),
+                ('GET','/rest/system/status',{'Host':'other'}),
+                ('GET','/rest/system/status',{'authorization':'private\r\nInjected: fixture'}),
+                ('GET','/rest/system/status',{'Accept':'a','accept':'b'}),
+                ('GET','/rest/system/status',{'X-API-Key':'x'*4097})]:
+            with self.subTest(method=method,path=path), self.assertRaises(ValueError):
+                self.owner.fetch(method,path,headers)
+        self.assertEqual(requests, [])
+
+    async def test_http_size_truncation_and_redirect_boundaries(self):
+        requests = self.private_http()
+        for mode in ('large','truncated'):
+            with self.subTest(mode=mode), self.assertRaises(ValueError):
+                self.owner.fetch('GET','/rest/system/status?'+mode,{})
+        before = len(requests)
+        self.assertEqual(self.owner.fetch('GET','/rest/system/status?redirect',{})['status'], 302)
+        self.assertEqual(len(requests), before+1)
+
+    async def test_http_without_live_owned_socket_never_falls_back_to_tcp(self):
+        self.owner.runtime = tempfile.TemporaryDirectory(prefix='framey-syncthing-test-')
+        self.owner.process = Mock(pid=424242)
+        self.owner.process.poll.return_value = None
+        with patch.object(self.module.http.client.HTTPConnection, 'connect', side_effect=AssertionError('TCP fallback')):
+            with self.assertRaises(FileNotFoundError):
+                self.owner.fetch('GET','/rest/system/status',{})
+            self.owner.closed = True
+            with self.assertRaises(RuntimeError):
+                self.owner.fetch('GET','/rest/system/status',{})
+
+    async def test_setup_check_can_outlast_normal_socket_timeout(self):
+        self.private_http()
+        response = self.owner.fetch('POST', '/__decky-watchdog/check/start', {})
+        self.assertEqual(response['status'], 204)
+
+    async def test_http_rpc_caps_concurrent_requests(self):
+        self.owner.http_inflight = 4
+        with self.assertRaisesRegex(ValueError, 'Too many'):
+            await self.module.Plugin.framey_http_fetch(self.module.Plugin, 'GET','/rest/system/status',{})
+        self.assertEqual(self.owner.http_inflight, 4)
+
+    async def test_cancelled_rpc_retains_slot_until_socket_worker_finishes(self):
+        entered, release = asyncio.Event(), asyncio.Event()
+        workers = []
+        async def private_worker(*_args):
+            workers.append(asyncio.current_task())
+            if len(workers) == 4:
+                entered.set()
+            await release.wait()
+            raise RuntimeError('Abandoned fixture response')
+        with patch.object(self.module.asyncio, 'to_thread', side_effect=private_worker):
+            requests = [asyncio.create_task(self.module.Plugin.framey_http_fetch(
+                self.module.Plugin, 'GET', '/rest/system/status', {})) for _ in range(4)]
+            try:
+                await asyncio.wait_for(entered.wait(), 2)
+                for request in requests:
+                    request.cancel()
+                await asyncio.gather(*requests, return_exceptions=True)
+                self.assertEqual(self.owner.http_inflight, 4)
+                with self.assertRaisesRegex(ValueError, 'Too many'):
+                    await self.module.Plugin.framey_http_fetch(
+                        self.module.Plugin, 'GET', '/rest/system/status', {})
+                self.assertTrue(all(not worker.done() for worker in workers))
+            finally:
+                release.set()
+                await asyncio.gather(*requests, *workers, return_exceptions=True)
+            self.assertEqual(self.owner.http_inflight, 0)
 
     async def test_reset_without_owned_handle_never_spawns_a_name_wide_killer(self):
         with patch.object(self.module.subprocess, 'Popen') as spawn:
