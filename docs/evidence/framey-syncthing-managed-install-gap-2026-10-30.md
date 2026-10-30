@@ -34,3 +34,9 @@ synthetic receipt, sandboxed desktop capture, DOM input or backend registration
 does not establish managed installation, Steam CEF, wearer-visible visuals or
 physical-controller usability. The separate hourly headset schedule remains
 responsible for the physical gate.
+
+A read-only replay of production `archive_info()` against those actual ZIP
+bytes rejects the original x86_64 watchdog with the expected non-ARM64
+binary error. The catalogue entry still has `blockInstall: true`. The
+companion JSON binds both checks to the exact store/catalogue source hashes;
+no installation, network operation or real Frame access was performed.
