@@ -87,6 +87,17 @@ def wait(check, description):
     raise RuntimeError(description + ": " + str(last))
 
 
+def wait_for_instances():
+    """Flatpak's instance registry can briefly outlive the reaped processes."""
+    began = time.monotonic()
+    def empty():
+        instances = flat("ps", "--columns=application", timeout=10).splitlines()
+        PROGRESS['remainingFlatpakApplications'] = instances
+        return APP not in instances
+    wait(empty, "owned Flatpak instance registry cleanup")
+    PROGRESS['instanceCleanupElapsedSeconds'] = round(time.monotonic() - began, 3)
+
+
 def main():
     marker = Path("/framey-owned-vm")
     if (
@@ -421,8 +432,8 @@ def main():
             log.close()
         report["ownedProcessesReaped"] = all(p.poll() is not None for p in processes)
         report["forcedTermination"] = forced
-    instances = flat("ps", "--columns=application")
-    assert APP not in instances and not forced
+    assert not forced
+    wait_for_instances()
     report["noOwnedFlatpakInstancesRemain"] = True
     if Path('/input/candidate-inputs.json').exists():
         migration = subprocess.run(
@@ -446,7 +457,7 @@ def main():
                  if 'FRAMEY_USER_SERVICE_JSON=' in line]
         assert candidate.returncode == 0 and len(lines) == 1
         report['candidateService'] = json.loads(lines[0])
-        assert APP not in flat('ps', '--columns=application')
+        wait_for_instances()
         report['candidateInputs'] = json.loads(Path('/input/candidate-inputs.json').read_text())
     marker = home / ".var/app" / APP / "preserved-owned-marker"
     marker.write_text("private fixture data")
