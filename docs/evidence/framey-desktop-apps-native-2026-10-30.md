@@ -35,3 +35,16 @@ change the compatibility table or grant a release approval.
 Full server regression at the same runtime sources passed 1,847 tests in
 224.691 seconds with 16 platform-related skips and no failures. PR CI remains
 required for the exact review head, including native ARM64.
+
+## Published native CI follow-up
+
+[Independent AMD64 and ARM64 artifact audits](framey-desktop-apps-native-ci-2026-10-30.json)
+passed on exact head `327f3b2633f5e58e4dda65a5d441b0e841dc5ea6`, run
+`41070708249`. Both actual pinned Decky 3.3.0 loaders passed all official native
+cases and three negative regression cases. Desktop Apps' 13 RPCs verified entry
+discovery/filtering, settings persistence and temporary-shortcut bookkeeping
+across restart; all pinned archive digests and local source hashes matched.
+Actual Flatpak installation, Steam shortcut changes, launching apps, browser
+rendering, the real Frame and physical controllers remain unverified. Current
+main was then incorporated through a normal merge; fresh CI is required on the
+updated head, and these old-head artifacts are historical evidence only.
