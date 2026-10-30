@@ -57,12 +57,45 @@ non-browser defaults are unchanged.
 
 ## Current evidence
 
-The private workflow adds an independent AMD64 browser entry alongside native
-AMD64/ARM64 package entries, with exact-head metadata and screenshot artifacts.
-It has not run in CI. Workflow YAML and shell blocks parse locally; 24 focused
-package/input/evidence tests pass. These are not runtime proof.
-The full server suite at `04fcd58` passed 1,837 tests in 223.328 seconds,
-with 16 platform/environment skips and no failures.
+The fresh full driver at `8bbadf8d43aa23da3293bbcfadb46f7b64c99525` passed
+locally on AMD64. Independent audit binds all 25 source fingerprints, source-built
+helper and signed packages. Chromium 156.0.8078.73 completed setup and the four
+actual backend stages; all four captures were visually inspected:
+
+- [Running](framey-syncthing-browser-native-running1-2026-10-30.png): folder
+  `Private service sync` and both devices visible.
+- [Stopped](framey-syncthing-browser-native-stopped2-2026-10-30.png): Stopped
+  displayed after the first real stop.
+- [Restarted](framey-syncthing-browser-native-restarted3-2026-10-30.png): Running
+  dashboard restored with a distinct actual service PID.
+- [Stopped again](framey-syncthing-browser-native-stopped4-2026-10-30.png): Stopped
+  displayed after the second real stop.
+
+The redacted journal contains 70 real RPC calls, including all required setup
+and control routes. Both signed Syncthing process sets match actual systemd
+PIDs, executable hashes, package commits and ancestry. Four observed browser
+renderers have seccomp 2, no-new-privileges 1 and ancestry to the owned browser.
+The driver also passes nine backend setup results, 17 lifecycle results, 18
+ownership refusals, 12 migration results, two-way sync and preserving uninstall.
+Browser, bridge and QEMU were reaped. The source-bound JSON retains inputs,
+hashes, journal, process observations and screenshot hashes.
+
+All 30 focused package/input/evidence tests pass. The full server suite at the
+same checkpoint passed 1,843 tests in 222.535 seconds, with 16
+platform/environment skips and no failures. Exact-head CI has not run for this
+private layer. The proposed workflow adds an independent AMD64 browser entry
+alongside native AMD64/ARM64 package entries with source-bound artifacts.
+
+This proves the uninstalled candidate on a desktop VM through a private test
+bridge with synthetic DOM input. Changed helper ARM64 runtime, ARM64 browser,
+production HTTP/SSH transport, managed install/update/remove, real Frame and
+physical controller use remain unverified. Installation remains blocked.
+
+## Development trials
+
+The earlier full server suite at `04fcd58` passed 1,837 tests in 223.328 seconds,
+with 16 platform/environment skips and no failures. The failed trials below
+remain retained and do not contribute passing results.
 
 The first trial at `988c2c1` stopped in the host packer: the Chromium executable
 is 331,230,040 bytes and exceeded the normal file bound. No VM launched.
@@ -158,3 +191,8 @@ The final full server run at `8bbadf8`, including the readiness and kernel
 evidence verifier changes, passed 1,843 tests in 222.535 seconds with 16
 platform/environment skips and no failures. The eighth full driver trial
 runs at the same source checkpoint.
+
+The eighth full driver at `8bbadf8` passed with the corrected strict verifier.
+Its independent audit and four inspected captures are summarized above. The
+original seventh-trial failed result remains unchanged; no failed, cancelled
+or skipped gate has been treated as a pass.
