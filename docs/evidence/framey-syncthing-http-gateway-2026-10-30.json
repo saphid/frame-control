@@ -226,5 +226,13 @@
       "ownedQemuReaped": true
     }
   ],
-  "pendingRuntimeRevision": "a8d1187d96bc4c4b58172959a0b85c9fe418b62c"
+  "pendingRuntimeRevision": "a8d1187d96bc4c4b58172959a0b85c9fe418b62c",
+  "fullServerRegression": {
+    "sourceRevision": "ce5190f",
+    "tests": 1852,
+    "skips": 16,
+    "failures": 0,
+    "elapsedSeconds": 227.55,
+    "logSha256": "07a2dbb87134ed7a14be96f2c7a253d97c0f3667a3fda63ef045a66eae24f811"
+  }
 }

@@ -42,8 +42,8 @@ integration proof.
 Two focused guard/packing tests pass: host or wrong-guest refusal precedes
 commands/environment changes, and the source bundle includes unchanged
 production dispatch, local SSH and catalogue imports. The existing 22 package
-input/evidence tests also pass. Full server regression at `f870ceb` passed 1,845 tests in 227.444 seconds,
-with 16 skips and no failures.
+input/evidence tests also pass. Full server regression at `f870ceb` passed
+1,845 tests in 227.444 seconds, with 16 skips and no failures.
 The first combined trial at `88271c9` failed before reaching the HTTP gateway:
 the real browser reached the manual-port fallback after one scan returned no
 port. The fixture waited only for automatic discovery and timed out. Its 122
@@ -57,8 +57,8 @@ the rendered input when that supported fallback appears. It records whether
 manual entry was needed, and failed captures use bounded chunks. The new trial
 also incorporates the pending bounded instance-registry cleanup repair. These
 are test-fixture changes; they do not turn a backend scan retry into a UI retry
-or claim automatic discovery. The second trial at `49f084f` completed the browser phase with automatic
-port discovery (`manualPortFallbackUsed=false`), four Running/Stopped stages,
+or claim automatic discovery. The second trial at `49f084f` completed the
+browser phase with automatic port discovery (`manualPortFallbackUsed=false`), four Running/Stopped stages,
 actual backend RPCs and sandboxed renderer observations. This trial did not
 exercise manual entry. Its successful-phase screenshots were not retained
 when the later HTTP phase failed, so no inspected visual capture is credited.
@@ -72,7 +72,8 @@ for authenticated REST readiness before requiring signed process identity;
 only expected 425/502 readiness responses may retry, and authentication or
 unknown HTTP failures still fail. Five focused HTTP tests and 34 package/input/
 evidence/cleanup tests pass. The third trial at `a8d1187` is running; no whole
-HTTP probe pass is credited.
+HTTP probe pass is credited. The expanded full server regression at `ce5190f`
+passed 1,852 tests in 227.550 seconds, with the same 16 skips and no failures.
 
 No runtime pass is credited yet. Even a passing probe will leave actual Steam
 CEF, the production browser parent over HTTP, external SSH transport, managed
