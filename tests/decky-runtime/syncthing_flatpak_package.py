@@ -19,14 +19,32 @@ from gi.repository import Gio, OSTree, GLib
 
 APP = "me.kozec.syncthingtk"
 PROGRESS = {}
+ARCH = os.uname().machine
 EXPECTED = {
-    "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
-    "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
-}
+    "x86_64": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+    },
+    "aarch64": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9",
+    },
+}[ARCH]
 
 
 def command(args, timeout=180):
-    p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+    began = time.monotonic()
+    try:
+        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        def tail(value):
+            return (value.decode(errors='replace') if isinstance(value, bytes) else value or '')[-10000:]
+        PROGRESS['timedOutCommand'] = {
+            'argv': args, 'timeoutSeconds': timeout,
+            'elapsedSeconds': round(time.monotonic() - began, 3),
+            'stdout': tail(error.stdout), 'stderr': tail(error.stderr),
+        }
+        raise
     if p.returncode:
         raise RuntimeError(
             str(args)
@@ -79,6 +97,8 @@ def main():
         raise RuntimeError("Only the private Flatpak VM may run this user probe")
     home = Path.home()
     inputs = json.loads(Path("/input/flatpak-inputs.json").read_text())
+    install_limit = inputs['timeouts']['installSeconds']
+    assert install_limit == (900 if ARCH == 'aarch64' else 300)
     global PROGRESS
     report = {
         "realFrameContacted": False,
@@ -129,6 +149,7 @@ def main():
         )
         report[kind + "EmbeddedKeySha256"] = included_sha
         del included, variant
+        began = time.monotonic()
         log = flat(
             "install",
             "--user",
@@ -138,11 +159,12 @@ def main():
             "--no-related",
             "--bundle",
             str(bundle),
-            timeout=300,
+            timeout=install_limit,
         )
+        report[kind + 'InstallElapsedSeconds'] = round(time.monotonic() - began, 3)
         report[kind + "InstallLog"] = log[-1000:]
         bundle.unlink()  # Only the assembled input created by this fixture.
-        target = APP if kind == "app" else "runtime/org.gnome.Platform/x86_64/49"
+        target = APP if kind == "app" else "runtime/org.gnome.Platform/" + ARCH + "/49"
         actual = flat("info", "--user", "--show-commit", target)
         assert actual == EXPECTED[kind], (kind, actual)
         report[kind + "InstalledCommit"] = actual

@@ -1,0 +1,28 @@
+{
+  "head": "44dcd64b9f87085738a23da6a831a2a93279bbf5",
+  "workflowRun": 41023189365,
+  "artifactId": 12963836055,
+  "artifactSha256": "5f1fa766eec1b11af2f43247df4a6861443406fe3c92595609342be61899ece0",
+  "architecture": "aarch64",
+  "success": false,
+  "allSourceFingerprintsVerified": true,
+  "offlineSignatureCounts": {
+    "app": 1,
+    "runtime": 1
+  },
+  "offlineContentIntegrityVerified": true,
+  "guestPartial": {
+    "realFrameContacted": false,
+    "architecture": "aarch64",
+    "flatpakVersion": "Flatpak 1.16.6",
+    "signedBundlesInstalled": false,
+    "packageLaunched": false,
+    "actualTwoWaySync": false,
+    "installerEnabled": false,
+    "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa"
+  },
+  "failure": "Signed GNOME runtime installation exceeded the 300-second Flatpak command limit under QEMU TCG. Package launch and sync not verified.",
+  "ownedQemuReaped": true,
+  "installerEnabled": false,
+  "realFrameContacted": false
+}

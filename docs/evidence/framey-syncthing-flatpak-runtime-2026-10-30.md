@@ -138,8 +138,8 @@ and Syncthing 2.1.7; their native AMD64/ARM64 passes remain separate evidence.
 ## Repeatable repository probe
 
 `scripts/framey-test-syncthing-flatpak-package.py` repeats the package gates
-using the committed guest probes and the shared service-VM packer. It requires
-Linux AMD64, Python 3.11+, QEMU TCG, a disposable rootfs export and the exact
+using the committed guest probes and the shared service-VM packer. The original
+proof below uses Linux AMD64, Python 3.11+, QEMU TCG, a disposable rootfs export and the exact
 bundles/key recorded above. The shared packer supports an ordinary guest root
 for bubblewrap; existing shim fixtures retain their previous initramfs path.
 No host filesystem is extracted or ownership changed.
@@ -168,7 +168,9 @@ success. QEMU has 6 GiB RAM, two virtual CPUs, no NIC, host disk/home/bus or
 headset devices. A marked guest bootstrap is required before any service or
 shutdown command. Nineteen ownership/transport/guard tests passed locally,
 including refusal of the package bootstrap on a host with UID 0 mocked.
-The package probe is a manual runtime test; ordinary CI does not execute it.
+The original package proof was a manual runtime test. The
+[native package follow-up](framey-syncthing-native-package-2026-10-30.md) adds
+exact-head AMD64/ARM64 package CI; its presence is not a passing result.
 
 The repository runner passed all required gates on AMD64. Its full JSON and
 exact source/rootfs/kernel/initrd/bundle fingerprints are recorded separately

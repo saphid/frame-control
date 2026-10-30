@@ -1,0 +1,116 @@
+name: Syncthing actual Flatpak package
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/framey-*syncthing*.py'
+      - 'tests/decky-runtime/syncthing_flatpak_package*.py'
+      - 'tests/decky-runtime/Containerfile.flatpak*'
+      - 'tests/test_syncthing_flatpak*.py'
+      - '.github/workflows/syncthing-flatpak-package.yml'
+  pull_request:
+    paths:
+      - 'scripts/framey-*syncthing*.py'
+      - 'tests/decky-runtime/syncthing_flatpak_package*.py'
+      - 'tests/decky-runtime/Containerfile.flatpak*'
+      - 'tests/test_syncthing_flatpak*.py'
+      - '.github/workflows/syncthing-flatpak-package.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  signed-package:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 75
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Install preparation tools and matching QEMU emulator
+        run: |
+          case "$(uname -m)" in
+            x86_64) emulator=qemu-system-x86 ;;
+            aarch64) emulator=qemu-system-arm ;;
+            *) exit 1 ;;
+          esac
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-gi "$emulator"
+      - name: Bounded exact app and runtime objects (download is not proof)
+        run: |
+          /usr/bin/python3 -m unittest discover -s tests -p 'test_syncthing_flatpak*.py' -q
+          /usr/bin/python3 scripts/framey-prepare-syncthing-flatpak.py fetch \
+            --architecture "$(uname -m)" --directory "$RUNNER_TEMP/flatpak-payload"
+      - name: Offline signatures, full content and retained-signature local bundles
+        run: |
+          audit_image="framey-flatpak-bundles:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          audit_container="framey-flatpak-bundles-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          trap 'docker rm -f "$audit_container" >/dev/null 2>&1 || true; docker image rm "$audit_image" >/dev/null 2>&1 || true' EXIT
+          mkdir "$RUNNER_TEMP/flatpak-generated"
+          docker build -q -t "$audit_image" -f tests/decky-runtime/Containerfile.flatpak-bundles tests/decky-runtime
+          docker run --rm --name "$audit_container" --network none --read-only \
+            --user "$(id -u):$(id -g)" --cap-drop ALL --security-opt no-new-privileges \
+            --pids-limit 128 --tmpfs /tmp:rw,mode=1777,size=1g \
+            --mount "type=bind,source=$PWD/scripts,target=/scripts,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/flatpak-payload,target=/payload,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/flatpak-generated,target=/output" \
+            "$audit_image" /scripts/framey-prepare-syncthing-flatpak.py bundle \
+            --architecture "$(uname -m)" --directory /payload --output /output/bundles
+      - name: Actual native package, systemd service, two-way sync and preserving uninstall
+        run: |
+          vm_image="framey-flatpak-vm:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          vm_container="framey-flatpak-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          trap 'docker rm -f "$vm_container" >/dev/null 2>&1 || true; docker image rm "$vm_image" >/dev/null 2>&1 || true' EXIT
+          case "$(uname -m)" in
+            x86_64) kernel=linux-image-amd64 ;;
+            aarch64) kernel=linux-image-arm64 ;;
+            *) exit 1 ;;
+          esac
+          docker build -q -t "$vm_image" --build-arg "KERNEL_PACKAGE=$kernel" \
+            -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
+          docker create --name "$vm_container" --network none --cap-drop ALL --entrypoint /bin/true "$vm_image"
+          docker export "$vm_container" > "$RUNNER_TEMP/flatpak-rootfs.tar"
+          python3 scripts/framey-test-syncthing-flatpak-package.py \
+            --rootfs-tar "$RUNNER_TEMP/flatpak-rootfs.tar" \
+            --bundles "$RUNNER_TEMP/flatpak-generated/bundles" \
+            --key "$RUNNER_TEMP/flatpak-generated/bundles/flathub-key.gpg" \
+            --preparation "$RUNNER_TEMP/flatpak-generated/bundles/preparation.json" \
+            --output "$RUNNER_TEMP/flatpak-package"
+      - name: Bind evidence to exact checked-out head
+        if: always()
+        env:
+          AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          python3 - <<'PY'
+          import hashlib,json,os,subprocess
+          from pathlib import Path
+          head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
+          assert head==os.environ['AUDIT_HEAD']
+          paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
+          report={'headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
+          result=Path(os.environ['RUNNER_TEMP'])/'flatpak-package/result.json'
+          if result.exists():report['packagePass']=json.loads(result.read_text()).get('success') is True
+          (Path(os.environ['RUNNER_TEMP'])/'flatpak-exact-head.json').write_text(json.dumps(report,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: syncthing-flatpak-package-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/flatpak-payload/fetch-report.json
+            ${{ runner.temp }}/flatpak-generated/bundles/preparation.json
+            ${{ runner.temp }}/flatpak-package/result.json
+            ${{ runner.temp }}/flatpak-package/inputs.json
+            ${{ runner.temp }}/flatpak-package/console.log
+            ${{ runner.temp }}/flatpak-exact-head.json
+          if-no-files-found: error
