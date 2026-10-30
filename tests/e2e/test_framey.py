@@ -210,6 +210,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                         helper_hash = hashlib.sha256(bundle.read('Decky-CP/bin/copyparty-sfx.py')).hexdigest()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/copyparty-sfx.py').split()[0], helper_hash)
+                if plugin['id'] == 104:
+                    self.assertEqual(found[0]['compatShims'], ['game-sync-bounded-selection'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                        manager_hash = hashlib.sha256(bundle.read(plugin['folder']+'/py_modules/rclone_manager.py')).hexdigest()
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/rclone_manager.py').split()[0], manager_hash)
                 if plugin['id'] == 130:
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
                     self.assertEqual(found[0]['compatShims'], ['prefix-manager-user-paths'])

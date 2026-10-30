@@ -40,6 +40,9 @@ def render(data):
         'python3 scripts/framey-audit-browser.py --cache /tmp/framey-archives',
         '```', '',
         'Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.', '',
+        'A [Game Sync selection follow-up](evidence/framey-game-sync-selection-2026-10-30.md) bounds the exact managed 1.0.4 read-only selection check to its configured root, including linked files and directories. '
+        'Published Decky 3.3.0 x86_64 verifies private selection RPCs, outside-path and cycle refusals, and restart persistence. Existing copies need Update/reinstall. '
+        'This does not sandbox rclone execution: its amd64 updater, default --copy-links arguments, cloud sync, process signals, revised ARM64 check, real Frame and worn/controller use remain unverified. Game Sync stays partial.', '',
         'A [DeckyParty lifecycle follow-up](evidence/framey-deckyparty-lifecycle-2026-10-30.md) runs the exact official 1.0.0 helper as the actual service user without sudo, isolates its temporary cache and reaps its owned process session. '
         'Published Decky 3.3.0 AMD64/ARM64 verify authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup. '
         'The fixture uses an owned disposable disk volume; Copyparty\'s refusal to upload into tmpfs remains intact. LAN/HTTPS, external media, real Frame backend, panel controls and worn/controller use remain unverified. Existing copies need Update/reinstall. '

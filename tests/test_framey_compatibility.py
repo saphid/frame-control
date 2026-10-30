@@ -147,6 +147,15 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
+    def test_game_sync_old_copy_requires_selection_fix(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 104)
+        old = dict(storeId=104, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['game-sync-bounded-selection'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_emuchievements_old_x86_helper_is_still_blocked(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 28)
         old = dict(storeId=28, version=plugin['version'], sha256=plugin['sha256'])

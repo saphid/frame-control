@@ -686,7 +686,7 @@ def main():
                 report['result'] = ('discovery, default settings, empty local deals, '
                     'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
             elif case['probe'] == 'game-sync-config':
-                # Exercise only private settings. This plugin also exposes
+                # Exercise private settings and read-only selections. This plugin also exposes
                 # rclone cloud sync and arbitrary process signals; neither
                 # belongs in a passive compatibility probe.
                 settings = current('get_config')
@@ -696,6 +696,45 @@ def main():
                 assert settings['advanced_mode'] is False, settings
                 assert current('set_config', 'advanced_mode', True) is None
                 assert current('get_config')['advanced_mode'] is True
+                selection = home/'sync-selection/saves'
+                selection.mkdir(parents=True)
+                (selection/'nested').mkdir()
+                (selection/'save.bin').write_bytes(b'private save')
+                (selection/'nested/save2.bin').write_bytes(b'private nested save')
+                outside = home/'sync-selection/saves-other'
+                outside.mkdir()
+                marker = b'private outside fixture'
+                (outside/'private.bin').write_bytes(marker)
+                (selection/'alias').symlink_to(selection/'nested')
+                assert current('set_config', 'sync_root', str(selection)) is None
+                assert current('test_syncpath', str(selection/'save.bin')) == 1
+                assert current('test_syncpath', str(selection)+'/*') == 1
+                assert current('test_syncpath', str(selection/'nested')+'/**') == 1
+                assert current('test_syncpath', str(selection/'alias')+'/**') == 1
+
+                def refused(path):
+                    try:
+                        current('test_syncpath', str(path))
+                    except AssertionError as error:
+                        assert 'outside the sync root' in str(error) or 'Recursive directory link' in str(error), error
+                    else:
+                        raise AssertionError('Expected Game Sync selection refusal')
+
+                refused(outside/'private.bin')
+                refused(selection/'../saves-other/private.bin')
+                link = selection/'linked.bin'
+                link.symlink_to(outside/'private.bin')
+                refused(link)
+                refused(str(selection)+'/**')
+                link.unlink()
+                link = selection/'linked-directory'
+                link.symlink_to(outside)
+                refused(str(selection)+'/**')
+                link.unlink()
+                (selection/'nested/cycle').symlink_to(selection)
+                refused(str(selection)+'/**')
+                (selection/'nested/cycle').unlink()
+                assert (outside/'private.bin').read_bytes() == marker
                 os.killpg(backend.pid, signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
@@ -704,7 +743,14 @@ def main():
                 until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
                 assert until_ready(lambda: current('get_config')['advanced_mode'],
                                    'private Game Sync setting after restart') is True
-                report['result'] = ('discovery, default config and private setting restart persistence passed; '
+                assert current('get_config')['sync_root'] == str(selection)
+                assert current('test_syncpath', str(selection/'save.bin')) == 1
+                refused(outside/'private.bin')
+                assert (outside/'private.bin').read_bytes() == marker
+                report['independentState'] = {'outsideFileUnchanged':True, 'validSelectionCount':True,
+                    'siblingAndParentEscapeRefused':True, 'outsideLinksRefused':True,
+                    'insideLinksAllowed':True, 'cyclesRefused':True, 'restartBoundaryPreserved':True}
+                report['result'] = ('discovery, default config, bounded private selections and setting restart persistence passed; '
                     'rclone, cloud authentication, sync, process signals, real Frame and VR unverified')
             elif case['probe'] == 'suggestme-private':
                 # No Steam API key, account, owned library, external request or

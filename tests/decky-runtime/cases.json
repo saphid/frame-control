@@ -92,7 +92,7 @@
   },
   {
     "id": 104,
-    "shim": null,
+    "shim": "game-sync-bounded-selection",
     "probe": "game-sync-config"
   },
   {
