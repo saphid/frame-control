@@ -179,7 +179,113 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'deckyparty-private-files':
+            if case['probe'] == 'steamgriddb-private-artwork':
+                # Exact original backend; every path is in the disposable
+                # container home. No host Steam, game or artwork is exposed.
+                import base64
+                artwork = base64.b64decode(
+                    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII=')
+                source = home/'private-artwork.png'
+                source.write_bytes(artwork)
+                assert current('get_local_start') == str(home)
+                assert base64.b64decode(current('read_file_as_base64', str(source)), validate=True) == artwork
+                state = base/'settings'/record['folder']/'steamgriddb.json'
+                assert current('get_setting', 'framey-private', False) is False
+                assert state.read_bytes() == b''
+                saved = {'enabled': False, 'label': 'Private artwork fixture', 'ids': [777, 888]}
+                assert current('set_setting', 'framey-private', saved) is None
+                before = state.read_bytes()
+                assert json.loads(before) == {'framey-private': saved}
+                assert current('get_setting', 'framey-private', None) == saved
+
+                steam = home/'.local/share/Steam'
+                config = steam/'userdata/424242/config'
+                (config/'grid').mkdir(parents=True)
+                shortcuts = config/'shortcuts.vdf'
+                appid = 0xf1234567  # Published backend normalizes signed shortcut IDs.
+
+                def shortcuts_bytes(icon):
+                    return (b'\x00shortcuts\x00\x000\x00\x02appid\x00' + appid.to_bytes(4, 'little') +
+                            b'\x01icon\x00' + icon.encode() + b'\x00\x08\x001\x00\x02appid\x00' +
+                            (0xf7654321).to_bytes(4, 'little') + b'\x01icon\x00unselected-canary\x00\x08\x08\x08')
+
+                shortcuts.write_bytes(shortcuts_bytes('original-private-icon'))
+                icon = config/'grid'/f'{appid}_icon.png'
+                assert current('set_shortcut_icon_from_path', appid, '424242', str(source)) is True
+                assert icon.read_bytes() == artwork
+                assert shortcuts.read_bytes() == shortcuts_bytes(str(icon))
+                unchanged = shortcuts.read_bytes()
+                assert current('set_shortcut_icon', appid, '424242', str(icon)) == 'icon_is_same_path'
+                assert shortcuts.read_bytes() == unchanged
+                assert current('set_shortcut_icon', appid, '424242', None) is True
+                assert shortcuts.read_bytes() == shortcuts_bytes('')
+                cache = steam/'appcache/librarycache/777/private-icon.jpg'
+                assert current('set_steam_icon_from_path', 777, str(source), 'private-icon') == str(cache)
+                assert cache.read_bytes() == artwork
+                assert not cache.with_name('private-icon.jpg_temp').exists()
+
+                requests = []
+
+                class ArtworkHandler(BaseHTTPRequestHandler):
+                    def do_GET(self):
+                        requests.append(self.path)
+                        if self.path != '/private.png':
+                            self.send_error(404)
+                            return
+                        self.send_response(200)
+                        self.send_header('Content-Type', 'image/png')
+                        self.send_header('Content-Length', str(len(artwork)))
+                        self.end_headers()
+                        self.wfile.write(artwork)
+
+                    def log_message(self, *_):
+                        pass
+
+                server = ThreadingHTTPServer(('127.0.0.1', 0), ArtworkHandler)
+                worker = threading.Thread(target=server.serve_forever, daemon=True)
+                worker.start()
+                try:
+                    url = f'http://127.0.0.1:{server.server_port}/private.png'
+                    assert base64.b64decode(current('download_as_base64', url), validate=True) == artwork
+                    assert current('set_shortcut_icon_from_url', appid, '424242', url) is True
+                    assert icon.read_bytes() == artwork
+                    assert shortcuts.read_bytes() == shortcuts_bytes(str(icon))
+                    remote_cache = steam/'appcache/librarycache/888/private-download.jpg'
+                    assert current('set_steam_icon_from_url', 888, url, 'private-download') == str(remote_cache)
+                    assert remote_cache.read_bytes() == artwork
+                    assert not remote_cache.with_name('private-download.jpg_temp').exists()
+                finally:
+                    server.shutdown()
+                    server.server_close()
+                    worker.join(timeout=3)
+                assert requests == ['/private.png']*3
+                assert not worker.is_alive()
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
+                assert current('get_setting', 'framey-private', None) == saved
+                assert state.read_bytes() == before
+                assert current('get_local_start') == str(home)
+                assert shortcuts.read_bytes() == shortcuts_bytes(str(icon))
+                report['privateArtwork'] = dict(settingsPersistedAcrossLoaderRestart=True,
+                    settingsSha256=hashlib.sha256(before).hexdigest(),
+                    artworkSha256=hashlib.sha256(artwork).hexdigest(),
+                    localFileRoundTrip=True, signedShortcutIdNormalized=True,
+                    shortcutSetSamePathClear=True, unselectedShortcutPreserved=True,
+                    cacheTempFilesReplaced=True, loopbackDownloads=len(requests),
+                    ownedHttpServerStopped=True, noProductionChanges=True,
+                    externalArtworkServiceVerified=False, steamContextMenuVerified=False,
+                    browserVerified=False, realSteamCef=False,
+                    realFrameContacted=False, physicalControllerVerified=False)
+                report['result'] = ('published Decky API1 discovery, private settings/restart, '
+                    'local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID '
+                    'normalization passed; Steam context menu, external service, browser and VR unverified')
+            elif case['probe'] == 'deckyparty-private-files':
                 assert legacy('is_enabled') is False
                 marker = b'Framey private Copyparty download fixture\n'
                 (home/'fixture-download.bin').write_bytes(marker)
