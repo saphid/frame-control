@@ -77,6 +77,11 @@ The [ARM64 artifact excerpt](framey-deckyparty-native-arm64-2026-10-30.json)
 identifies the exact workflow/head/loader and records the same independent
 file-operation and lifecycle checks. That head's Python 3.9 failure was fixed
 afterward; the new exact-head CI remains a merge gate.
+The next head `4d28468` could not start that job: `ubuntu-latest` selected
+Ubuntu 26.04, for which setup-python publishes no Python 3.9 x64 build.
+Its published versions manifest lists 22.04 and 24.04 for Python 3.9.25.
+The minimum-version job is now pinned to Ubuntu 24.04; the Python baseline
+and all test steps are retained. New exact-head CI must verify this change.
 Three fake-Frame HTTP/SSH install/update/remove tests passed
 in 72.393 seconds and their uniquely named project/volumes were removed.
 The full local suite passed **1,774 tests, 16 skips, zero failures** in
