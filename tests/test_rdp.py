@@ -8,6 +8,7 @@ Run: python3 -m unittest discover -s tests
 import sandbox  # noqa: F401  (first: keeps tests off real data and services)
 import email.message
 import io
+import json
 import socket
 import sys
 import tempfile
@@ -112,11 +113,46 @@ class OpenRdp(unittest.TestCase):
         self.assertEqual(list(self.cache.iterdir()), [])
 
     def test_linux_clients_get_the_user(self):
-        with platform("linux"), mock.patch.object(frame_host, "which",
-                                                  lambda n, *e: "/usr/bin/xfreerdp" if n == "xfreerdp" else None):
-            message = frame_host.open_rdp("frame", "127.0.0.1")
-        self.assertEqual(self.spawned, [["xfreerdp", "/v:127.0.0.1", "/u:steamos", "/dynamic-resolution"]])
-        self.assertIn("steamos", message)
+        for client in ("remmina", "xfreerdp3", "xfreerdp"):
+            with self.subTest(client), platform("linux"), mock.patch.object(frame_host, "which",
+                    lambda n, *e: f"/usr/bin/{n}" if n == client else None):
+                self.spawned.clear()
+                message = frame_host.open_rdp("frame", "127.0.0.1")
+                expected = (["remmina", "-c", "rdp://steamos@127.0.0.1"] if client == "remmina" else
+                            [client, "/v:127.0.0.1", "/u:steamos", "/dynamic-resolution"])
+                self.assertEqual(self.spawned, [expected])
+                self.assertIn("steamos", message)
+
+    def post_rdp(self):
+        body = json.dumps({"what": "rdp"}).encode()
+        handler = server.Handler.__new__(server.Handler)
+        handler.path = "/api/open"
+        handler.local_request = lambda: True
+        handler.headers = {"Content-Length": str(len(body))}
+        handler.rfile = io.BytesIO(body)
+        handler.send_json = mock.Mock()
+        with mock.patch.multiple(server, LOCAL=False, LINK=None, HOST_OPTS=["HostName=127.0.0.1"]), \
+                mock.patch.object(server.frame_telemetry, "diagnostic") as diagnostic:
+            handler.do_POST()
+        return handler.send_json, diagnostic
+
+    def test_missing_linux_client_is_actionable_without_diagnostic_or_spawn(self):
+        with platform("linux"), mock.patch.object(frame_host, "which", return_value=None):
+            reply, diagnostic = self.post_rdp()
+        reply.assert_called_once_with({"error": "No RDP client found: install Remmina or FreeRDP"}, 400)
+        diagnostic.assert_not_called()
+        self.assertEqual(self.spawned, [])
+
+    def test_linux_client_launch_failure_still_reports_server_error(self):
+        for error in (frame_host.HostError("client launch failed"), OSError("client launch failed")):
+            with self.subTest(error=type(error).__name__), platform("linux"), \
+                    mock.patch.object(frame_host, "which", return_value="/usr/bin/remmina"), \
+                    mock.patch.object(frame_host, "_spawn", side_effect=error) as spawn:
+                reply, diagnostic = self.post_rdp()
+            self.assertEqual(reply.call_args.args[1], 500)
+            self.assertIn("client launch failed", reply.call_args.args[0]["error"])
+            diagnostic.assert_called_once()
+            spawn.assert_called_once_with(["remmina", "-c", "rdp://steamos@127.0.0.1"])
 
 
 class PageGoneAway(unittest.TestCase):

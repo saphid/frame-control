@@ -24,6 +24,12 @@ ARCHES = {
     "x86_64": ("qemu-system-x86_64", "ttyS0", []),
     "aarch64": ("qemu-system-aarch64", "ttyAMA0", ["-machine", "virt"]),
 }
+# ARM64 TCG spends substantially longer validating/installing the GNOME runtime.
+# Keep per-command, user, systemd-unit and outer emulator limits explicit.
+BUDGETS = {
+    'x86_64': {'installSeconds': 300, 'userSeconds': 840, 'unitSeconds': 900, 'hostSeconds': 960},
+    'aarch64': {'installSeconds': 900, 'userSeconds': 2400, 'unitSeconds': 2460, 'hostSeconds': 2520},
+}
 COMMITS = {
     "x86_64": {
         "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
@@ -245,7 +251,8 @@ def main():
         payloads.update(extra)
     elif args.archive or args.loader:
         parser.error('Candidate archive/loader require --candidate-helper')
-    manifest = {"bundles": bundles, "bundleChunks": {}}
+    budgets = BUDGETS[arch]
+    manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets}
     for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
@@ -286,7 +293,7 @@ def main():
         bootstrap=root_probe.read_bytes(),
         user_probe=user_probe.read_bytes(),
         normal_root=True,
-        timeout=900,
+        timeout=budgets['unitSeconds'],
     )
     (args.output / "vmlinuz").write_bytes(kernel)
     inputs = {
@@ -300,7 +307,8 @@ def main():
         "preparationSha256": sha(args.preparation) if args.preparation else None,
         "keySha256": KEY_SHA256,
         "memoryMiB": 6144,
-        "timeoutSeconds": 960,
+        "timeoutSeconds": budgets['hostSeconds'],
+        "guestTimeouts": budgets,
         "networkDevice": False,
         "hostBusExposed": False,
         "realFrameContacted": False,
@@ -346,7 +354,7 @@ def main():
                 start_new_session=True,
             )
             try:
-                code = process.wait(timeout=960)
+                code = process.wait(timeout=budgets['hostSeconds'])
             finally:
                 reap(process)
                 result["ownedQemuReaped"] = process.poll() is not None

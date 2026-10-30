@@ -41,11 +41,14 @@ try:
         "XDG_RUNTIME_DIR=/run/user/1100",
         "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus",
     ]
+    limits = json.loads(Path('/input/flatpak-inputs.json').read_text())['timeouts']
+    expected_user_limit = 2400 if os.uname().machine == 'aarch64' else 840
+    assert limits['userSeconds'] == expected_user_limit
     result = subprocess.run(
         user + ["python3", "/framey-user.py"],
         capture_output=True,
         text=True,
-        timeout=840,
+        timeout=limits['userSeconds'],
     )
     print(result.stdout, flush=True)
     print(result.stderr[-12000:], flush=True)
