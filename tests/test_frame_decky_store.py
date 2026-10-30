@@ -848,7 +848,9 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads((shotty / '.frame-control-store.json').read_text())
         self.assertEqual(receipt['sha256'], plugin['sha256'])
-        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir'])
+        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((shotty/'LICENSE').read_bytes(), original.read('Shotty/LICENSE'))
         compat = shotty / 'py_modules/click.py'
         self.assertTrue(compat.is_file())
         source = '''import asyncio, importlib.util, logging, sys, types
@@ -877,6 +879,9 @@ assert copied.read_bytes() == b'local screenshot fixture'
                                   capture_output=True, text=True,
                                   env={**self.env, 'XDG_CONFIG_HOME': str(Path(self.tmp.name)/'.config')}, timeout=10)
         self.assertEqual(imported.returncode, 0, imported.stderr)
+        contracts = subprocess.run([sys.executable, str(Path(__file__).parent/'shotty_contract.py'), str(shotty)],
+                                   capture_output=True, text=True, env=self.env, timeout=15)
+        self.assertEqual(contracts.returncode, 0, contracts.stderr)
         result = self.apply('remove', expected=plugin['sha256'], **args)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(shotty.exists())

@@ -103,7 +103,12 @@ def main():
                     '--tmpfs', '/run/user/1100:rw,uid=1100,gid=1100,mode=700',
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
-                    tag, str(plugin_id), version or '-']
+                    ]
+                if plugin_id == 53:
+                    # Exercise screenshots whose Pictures target is on another
+                    # filesystem, rather than accidentally validating os.link.
+                    command += ['--tmpfs', '/home/tester/Pictures:rw,uid=1100,gid=1100,mode=700']
+                command += [tag, str(plugin_id), version or '-']
                 if negative:
                     command.append(negative)
                 try:

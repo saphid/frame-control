@@ -251,6 +251,9 @@ PSUTIL_DIGESTS = {
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 53 and digest == 'ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe':
+        source = Path(__file__).with_name('framey_shotty.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SHOTTY_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 28 and digest == EMU_DIGEST:
         assets = Path(__file__).parent/'vendor/emuchievements-2.0.5'
         payloads = {}
@@ -922,6 +925,71 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                     '        base = os.path.join(os.path.expanduser("~"), ".config")\n'
                     '    return os.path.join(base, app_name)\n',encoding='utf-8')
                 compat_shims.append('shotty-click-app-dir')
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='7c58aa5e273dca65ccfb59746f24b4d20edfd478b280fc8e08ff92dbe7d0d1be':
+                    raise RuntimeError('Shotty source differs from pinned archive')
+                safe=globals().get('FRAMEY_SHOTTY_SOURCE')
+                if not isinstance(safe,str) or not safe: raise RuntimeError('Missing Shotty copy compatibility source')
+                helper=compat.parent/'framey_shotty.py'
+                if helper.exists(): raise RuntimeError('Shotty copy helper collides with archive')
+                compile(safe,str(helper),'exec')
+                helper.write_text(safe,encoding='utf-8')
+                source='from framey_shotty import app_id, filename, destination, sources, copy_file, read_source, write_image\n'+source
+                start=source.index('    async def copy_screenshot(')
+                end=source.index('    def get_app_name(',start)
+                source=source[:start]+"""    async def copy_screenshot(self, app_id=0, url=""):
+        try:
+            # Validate the entire selection before writing any destination.
+            from framey_shotty import app_id as checked_id
+            checked_id(app_id)
+            if not isinstance(url, str): raise ValueError("Invalid screenshot URL")
+            leaf = filename(url.rsplit("/", 1)[-1])
+            found = sources(app_id, leaf)
+            if len(found) != 1: return False
+            path = Plugin.make_path(self, app_id, leaf)
+            image = read_source(found[0])
+            write_image(image, path)
+            write_image(image, self._dump_folder / "most_recent.jpg", replace=True)
+            return True
+        except Exception:
+            decky_plugin.logger.exception("Screenshot copy refused")
+            return False
+
+    async def sdsa_classic(self):
+        total = 0
+        for source in sources():
+            identifier = app_id(int(source.parent.parent.name))
+            target = Plugin.make_path(self, identifier, source.name)
+            total += int(copy_file(source, target))
+        return total
+
+"""+source[end:]
+                start=source.index('    def make_path(')
+                end=source.index('    async def _main(',start)
+                source=source[:start]+"""    def make_path(self, app_id, fname):
+        return destination(self._dump_folder, Plugin.get_app_name(self, app_id) or str(app_id), fname)
+
+"""+source[end:]
+                start=source.index('                        path = (')
+                end=source.index('                        os.unlink(png_path)',start)
+                source=source[:start]+"""                        path = destination(Plugin._dump_folder, Plugin._current_app_name,
+                                           str(int(time.time())) + ".png")
+                        image = read_source(png_path)
+                        write_image(image, path)
+                        write_image(image, self._dump_folder / "most_recent.jpg", replace=True)
+"""+source[end:]
+                source+="""
+    async def _unload(self):
+        task = Plugin._rescuer_task
+        Plugin._rescuer_task = None
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+"""
+                compile(source,str(main),'exec')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('shotty-bounded-copies')
             # Both exact official archives omit psutil. Install the pinned BSD
             # native wheel in the plugin folder only; never use pip or system paths.
             deckyspy=(int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy')
