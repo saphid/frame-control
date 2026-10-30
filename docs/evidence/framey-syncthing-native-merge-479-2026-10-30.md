@@ -22,3 +22,11 @@ replay is separate and pending after retained failures. Production Steam CEF,
 ARM64 browser, managed install/update/remove, real Frame visuals and physical
 controllers remain unverified. Installation stays blocked. No release or real
 Frame contact occurred. Postmerge main CI must pass before another merge.
+
+## Following HTTP dispatcher merge
+
+The [#480 merge audit](framey-syncthing-http-merge-480-2026-10-30.md) records the
+next exact-main/PR gates and both native signed-package architectures, plus the
+sequential AMD64 production HTTP dispatcher evidence. That result uses explicit
+fixture CEF and receipt data and does not resolve the failed full production
+browser parent, enable installation, or verify physical headset/controller use.
