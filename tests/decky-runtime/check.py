@@ -219,7 +219,7 @@ def main():
 
             if case['probe'] == 'terminal-import-regression':
                 # Discovery also lists a backend whose import failed. Require
-                # the precise original failure and an actual RPC refusal.
+                # the precise original failure and unavailable backend RPC.
                 failure = "ModuleNotFoundError: No module named 'termios'"
                 until_ready(lambda: failure in (home/'runtime.log').read_text(),
                             'original Terminal termios import regression')
@@ -231,14 +231,19 @@ def main():
                         source_hashes[name] = hashlib.sha256(actual).hexdigest()
                 try:
                     current('get_config')
+                except TimeoutError:
+                    outcome = 'timeout'
                 except AssertionError as error:
                     assert 'type' in str(error) and '2' in str(error), error
+                    outcome = 'error-response'
                 else:
                     raise AssertionError('Original Terminal unexpectedly served RPC')
+                assert rpc('loader/get_plugins') == discovered, 'loader must remain responsive'
                 assert not report['calls']
                 report['expectedRegression'] = dict(success=False, phase='backend import',
                     exception=failure, originalPluginUnmodified=True,
-                    backendSourceSha256=source_hashes, rpcRefused=True,
+                    backendSourceSha256=source_hashes, rpcUnavailable=True,
+                    rpcOutcome=outcome, loaderResponsiveAfterRpc=True,
                     rpcMethodsSucceeded=0, ptyCommandsExecuted=0,
                     realFrameContacted=False, physicalControllerVerified=False)
                 report['result'] = ('original published Terminal import regression reproduced; '
