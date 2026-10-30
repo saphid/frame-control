@@ -141,3 +141,14 @@ sockets before the fix; all nine HTTP tests now pass, alongside 26 package/
 cleanup tests. A new full local parent replay is running separately. Fresh CI
 is required for this revised fixture; no production code or installer policy
 is changed, and the parent gate remains excluded from this workflow.
+
+
+## Later production-parent result
+
+The parent failures and pending replay above describe the earlier trials.
+The later strict local AMD64 replay12 completed successfully; see
+[its audited result, limits and captures](framey-syncthing-parent12-2026-10-30.md).
+That private-source pass is historical evidence. The separate production-parent
+CI job must establish the published head, and ARM64 parent, actual Steam CEF,
+managed install, real Frame and physical controller behavior remain unverified.
+Installation remains blocked.

@@ -10,7 +10,7 @@ import frame_decky_store
 
 
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
-EVENT = re.compile(r'[A-Za-z0-9_:/.-]{1,128}\Z')
+EVENT = re.compile(r'[A-Za-z0-9_#:/.-]{1,128}\Z')
 SESSION = re.compile(r'[A-Za-z0-9_.-]{1,100}\Z')
 RECEIPT = re.compile(r'[0-9a-f]{64}\Z')
 MODULE_PATH = re.compile(r'[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*/[A-Za-z0-9_.-]+\.js\Z|index\.js\Z')
@@ -169,7 +169,7 @@ finally: page.sock.close()
 def _current_plugin(ssh, plugin_id, receipt):
     if not isinstance(receipt, str) or not RECEIPT.fullmatch(receipt):
         raise PanelError('Reopen the plugin panel to refresh its store receipt')
-    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    found = [p for p in frame_decky.plugin_status(ssh)['plugins'] if p.get('storeId') == plugin_id]
     if len(found) != 1:
         raise PanelError('The plugin is not managed by the Frame Control Decky store')
     if found[0].get('sha256') != receipt:
