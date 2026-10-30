@@ -176,7 +176,7 @@ def verify_candidate(service, arch, bundles, required_results):
         'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
         'discoveredDefaultPort', 'discoveredDefaultApiKey', 'scannedBasicAuth',
         'persistedThroughDeckyRpc', 'authenticatedRestWithDiscoveredKey',
-        'ownedSetupServiceStopped',
+        'setupCommittedAndReloaded', 'ownedSetupServiceStopped',
     )):
         raise ValueError('Missing actual-package setup discovery proof')
     definitions = service.get('rejectedManagedDefinitions', {})

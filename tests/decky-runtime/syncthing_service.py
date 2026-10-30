@@ -424,14 +424,16 @@ def main(signed_flatpak=False):
             assert authenticated['status'] == 200
             assert json.loads(authenticated['body'])['myID'] == own_id
             # The official wizard commits setup before normal service controls
-            # become active; stop intentionally does nothing while unconfigured.
+            # become active, then explicitly reloads the watchdog's settings.
             setting('is_setup', True)
+            assert http('POST', 'reload-config')['status'] == 204
             assert http('POST', 'stop')['status'] == 204
             assert prop(service, 'MainPID') == '0'
             report['wizardConfigDiscovery'] = dict(
                 defaultPackageConfig=True, remainedUnconfiguredDuringScan=True,
                 discoveredDefaultPort=True, discoveredDefaultApiKey=True,
                 scannedBasicAuth=True, persistedThroughDeckyRpc=True,
+                setupCommittedAndReloaded=True,
                 authenticatedRestWithDiscoveredKey=True, ownedSetupServiceStopped=True,
             )
         else:

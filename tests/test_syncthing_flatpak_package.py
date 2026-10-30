@@ -98,7 +98,7 @@ class PreparedPackage(unittest.TestCase):
                 'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
                 'discoveredDefaultPort', 'discoveredDefaultApiKey', 'scannedBasicAuth',
                 'persistedThroughDeckyRpc', 'authenticatedRestWithDiscoveredKey',
-                'ownedSetupServiceStopped',
+                'setupCommittedAndReloaded', 'ownedSetupServiceStopped',
             ), True),
             rejectedManagedDefinitions={name: {
                 'mainPidBefore': 120, 'mainPidAfter': 120,
@@ -119,7 +119,8 @@ class PreparedPackage(unittest.TestCase):
 
     def test_setup_requires_discovery_and_authenticated_use_without_preset_key(self):
         for field in ('discoveredDefaultApiKey', 'authenticatedRestWithDiscoveredKey',
-                      'remainedUnconfiguredDuringScan', 'ownedSetupServiceStopped'):
+                      'remainedUnconfiguredDuringScan', 'setupCommittedAndReloaded',
+                      'ownedSetupServiceStopped'):
             report, required = self.candidate()
             report['wizardConfigDiscovery'][field] = False
             with self.subTest(field=field), self.assertRaises(ValueError):

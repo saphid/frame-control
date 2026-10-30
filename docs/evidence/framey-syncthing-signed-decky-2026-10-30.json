@@ -504,6 +504,28 @@
         "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0"
       },
       "ownedQemuReaped": true
+    },
+    {
+      "success": false,
+      "stage": "Fixture saved is_setup=true but omitted the published frontend explicit watchdog reload before normal Stop; corrected to reproduce save then reload then control.",
+      "sourceRevision": "dfc2d01",
+      "resultSha256": "309c4d7f395df39432491dcb13874752f0cde98816e05b3e34c0b48f546b54b5",
+      "consoleSha256": "30bc151d5a54b3434533bb42331a272ac22623e6b8eab99f93fd416ec4d209a6",
+      "sourceSha256": {
+        "scripts/framey-test-syncthing-flatpak-package.py": "67ca11e7529f85612d2022d354821ba7f9a2540cd5ca5662eeaaccfac1fe58c3",
+        "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+        "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+        "tests/decky-runtime/syncthing_flatpak_package.py": "9db217441e55056411dea92b8e6f17a8ce6131d47dd22d20b2f711d60ce9c916",
+        "tests/decky-runtime/syncthing_service.py": "dd609f0a64d5a720673c276dfaac0723530ce41ad062604a7aa807141eef1eef",
+        "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+        "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+        "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+        "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+        "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+        "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+        "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0"
+      },
+      "ownedQemuReaped": true
     }
   ],
   "earlierShimRegression": {
