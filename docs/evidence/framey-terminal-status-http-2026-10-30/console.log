@@ -1,0 +1,78 @@
+c[?7l[2J[0mSeaBIOS (version 1.16.3-debian-1.16.3-2)
+Booting from ROM...
+c[?7l[2J[   45.695011] systemd[1]: Failed to find module 'autofs4'
+[!p]104[?7hsystemd 257.13-1~deb13u1 running in system mode (+PAM +AUDIT +SELINUX +APPARMOR +IMA +IPE +SMACK +SECCOMP +GCRYPT -GNUTLS +OPENSSL +ACL +BLKID +CURL +ELFUTILS +FIDO2 +IDN2 -IDN +IPTC +KMOD +LIBCRYPTSETUP +LIBCRYPTSETUP_PLUGINS +LIBFDISK +PCRE2 +PWQUALITY +P11KIT +QRENCODE +TPM2 +BZIP2 +LZ4 +XZ +ZLIB +ZSTD +BPF_FRAMEWORK +BTF -XKBCOMMON -UTMP +SYSVINIT +LIBARCHIVE)
+Detected virtualization qemu.
+Detected architecture x86-64.
+Hostname set to <framey-owned-vm>.
+Failed to open libbpf, cgroup BPF features disabled: Operation not supported
+Queued start job for default target multi-user.target.
+[[0;1;38:5:185mUNSUPP[0m] Starting of [0;1;39mproc-sys-fs-binfmt_mis…[0mSystem Automount Point unsupported.
+modprobe@configfs.service: Deactivated successfully.
+modprobe@drm.service: Deactivated successfully.
+modprobe@efi_pstore.service: Deactivated successfully.
+modprobe@fuse.service: Deactivated successfully.
+[0;1;39mSystem is tainted: unmerged-bin[0m
+[!p]104[?7h[6n[32766;32766H[6n[!p]104[?7h[6n[32766;32766H[6n
+Debian GNU/Linux 13 framey-owned-vm ttyS0
+
+framey-owned-vm login: user@1100.service: Deactivated successfully.
+user@1100.service: Consumed 54.268s CPU time, 195.2M memory peak.
+framey-probe.service: Deactivated successfully.
+framey-probe.service: Consumed 3min 22.515s CPU time, 447.9M memory peak.
+Startup finished in 45.554s (kernel) + 3min 277ms (userspace) = 3min 45.832s.
+framey-terminal-shutdown.service: Deactivated successfully.
+framey-terminal-shutdown.timer: Deactivated successfully.
+apt-daily-upgrade.timer: Deactivated successfully.
+apt-daily.timer: Deactivated successfully.
+dpkg-db-backup.timer: Deactivated successfully.
+fstrim.timer: Deactivated successfully.
+systemd-tmpfiles-clean.timer: Deactivated successfully.
+systemd-udev-load-credentials.service: Deactivated successfully.
+getty@tty1.service: Deactivated successfully.
+serial-getty@ttyS0.service: Deactivated successfully.
+[!p]104[?7h[6n[32766;32766H[6nrun-user-1100.mount: Deactivated successfully.
+systemd-random-seed.service: Deactivated successfully.
+user-runtime-dir@1100.service: Deactivated successfully.
+user-1100.slice: Consumed 54.705s CPU time, 195.2M memory peak.
+dbus.service: Deactivated successfully.
+systemd-logind.service: Deactivated successfully.
+systemd-user-sessions.service: Deactivated successfully.
+systemd-ask-password-console.path: Deactivated successfully.
+systemd-ask-password-wall.path: Deactivated successfully.
+user.slice: Consumed 54.705s CPU time, 195.2M memory peak.
+dbus.socket: Deactivated successfully.
+systemd-hostnamed.socket: Deactivated successfully.
+systemd-sysctl.service: Deactivated successfully.
+systemd-modules-load.service: Deactivated successfully.
+systemd-update-done.service: Deactivated successfully.
+ldconfig.service: Deactivated successfully.
+systemd-journal-catalog-update.service: Deactivated successfully.
+systemd-tmpfiles-setup.service: Deactivated successfully.
+tmp.mount: Deactivated successfully.
+run-lock.mount: Deactivated successfully.
+home-tester.mount: Deactivated successfully.
+systemd-tmpfiles-setup-dev.service: Deactivated successfully.
+systemd-sysusers.service: Deactivated successfully.
+systemd-remount-fs.service: Deactivated successfully.
+systemd-tmpfiles-setup-dev-early.service: Deactivated successfully.
+systemd-poweroff.service: Deactivated successfully.
+[0;1;39mShutting down.[0m
+Syncing filesystems and block devices.
+Sending SIGTERM to remaining processes...
+Sending SIGKILL to remaining processes...
+Unmounting file systems.
+Unmounting '/run/credentials/systemd-journald.service'.
+All filesystems unmounted.
+Deactivating swaps.
+All swaps deactivated.
+Detaching loop devices.
+All loop devices detached.
+Stopping MD devices.
+All MD devices stopped.
+Detaching DM devices.
+All DM devices detached.
+All filesystems, swaps, loop devices, MD devices and DM devices detached.
+Syncing filesystems and block devices.
+Powering off.
+[  229.868591] reboot: Power down
