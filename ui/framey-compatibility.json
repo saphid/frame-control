@@ -8928,13 +8928,14 @@
         "https://github.com/GedasFX/decky-cloud-save"
       ],
       "status": "partial",
-      "reason": "Exact official backend discovers under isolated Decky 3.3.0 amd64 and ARM64; default get_config and a private setting read/write survive a loader restart. The isolated browser baseline still stops at its denied get_config call. Cloud login, rclone download/sync (including ARM64), process signals, real Frame and VR are unverified. The published updater names an amd64 rclone download, so no ARM64 sync claim follows.",
+      "reason": "The exact managed 1.0.4 selection check resolves paths inside the configured sync root, refuses outside links and recursive directory cycles, and retains the 9,000-file count limit. Private actual Decky 3.3.0 x86_64 RPCs verify those read-only selections and setting restart persistence; original configuration discovery was also verified on ARM64. Existing copies need Update/reinstall. This does not constrain rclone execution or prove cloud sync: the published updater still names an amd64 download and default sync arguments include --copy-links. Cloud login, sync, process signals, the updated ARM64 selection check, real Frame and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky 3.3.0 amd64 and ARM64 configuration"
+        "isolated Decky 3.3.0 amd64 and ARM64 configuration",
+        "isolated Decky 3.3.0 x86_64 bounded path-selection RPCs"
       ],
       "browser": {
         "id": 104,
@@ -8970,6 +8971,17 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": false
+      },
+      "requiredShims": [
+        "game-sync-bounded-selection"
+      ],
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-game-sync-selection-2026-10-30.md",
+        "compatShim": "game-sync-bounded-selection",
+        "actualDeckyX86": true,
+        "actualDeckyArm64": false,
+        "actualFrameBackend": false,
+        "mode": "read-only private selections and config persistence; no rclone, cloud requests or process signals"
       }
     },
     {

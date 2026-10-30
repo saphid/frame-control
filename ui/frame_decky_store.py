@@ -931,6 +931,63 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
 """+source[b:]
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
+            # Game Sync's selection count must stay inside its configured root,
+            # including when a selected file or walked directory is a symlink.
+            if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
+                utility=unpacked/'py_modules/utils.py'
+                source=utility.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='f17be1aabb2cf2a886a96ea4b57ad3390871979db398d48824e45dbc1113404b':
+                    raise RuntimeError('Game Sync utility source mismatch')
+                a=source.index('def test_syncpath(')
+                b=source.index('\ndef delete_lock_files(',a)
+                source=source[:a]+"""def test_syncpath(syncpath: str) -> int:
+    if not isinstance(syncpath, str) or not syncpath:
+        raise ValueError("A sync path is required")
+    root = Path(Config.get_config_item("sync_root")).expanduser().resolve(strict=True)
+    recursive = syncpath.endswith("/**")
+    directory = recursive or syncpath.endswith("/*")
+    selected = syncpath[:-3] if recursive else syncpath[:-2] if directory else syncpath
+
+    def bounded(path):
+        try:
+            resolved = path.expanduser().resolve()
+            resolved.relative_to(root)
+            return resolved
+        except (OSError, RuntimeError, ValueError) as error:
+            raise ValueError("Selection is outside the sync root or cannot be resolved") from error
+
+    selected = bounded(Path(selected))
+    if not directory:
+        return int(selected.is_file())
+    if not selected.is_dir():
+        return 0
+    count = 0
+    pending = [(selected, frozenset())]
+    while pending:
+        current, ancestors = pending.pop()
+        current = bounded(current)
+        stat = current.stat()
+        identity = (stat.st_dev, stat.st_ino)
+        if identity in ancestors:
+            raise ValueError("Recursive directory link in sync selection")
+        ancestors = ancestors | {identity}
+        with os.scandir(current) as entries:
+            for entry in entries:
+                if not recursive and entry.is_dir():
+                    continue
+                target = bounded(Path(entry.path))
+                if target.is_dir():
+                    pending.append((target, ancestors))
+                elif target.is_file():
+                    count += 1
+                    if count > 9000:
+                        return -1
+    return count
+
+"""+source[b:]
+                compile(source,str(utility),'exec')
+                utility.write_text(source,encoding='utf-8')
+                compat_shims.append('game-sync-bounded-selection')
             # The exact DeckyParty archive already runs as the service user.
             # Invoke its original helper with system Python, without sudo, and
             # keep ownership until its process has exited and been reaped.
