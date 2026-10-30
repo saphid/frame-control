@@ -4,8 +4,10 @@ Syncthing 0.2.7 (official store ID 64) remains **broken and blocked from
 installation**. This follows the [signed app audit](framey-syncthing-flatpak-payload-2026-10-30.md).
 It verifies signed runtime content and actual AMD64 Flatpak package launch,
 private user-service control and two-way sync in a disposable VM. Framey
-managed installation, Decky/browser integration, native ARM64 package execution,
-gamescope, VR and controller usability remain unverified.
+managed installation, Decky/browser integration, gamescope, VR and controller
+usability remain separate gates. This page records the initial AMD64 audit;
+subsequent [native package CI](framey-syncthing-native-package-2026-10-30.md)
+verified package execution on AMD64 and ARM64.
 
 ## Matching signed runtime
 
