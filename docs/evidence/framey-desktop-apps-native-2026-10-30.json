@@ -158,5 +158,13 @@
     "logSha256": "42965a0400675f5dec0ab49fdcad0f9625fb2170e62d95967d43c88ab266dc5a",
     "correctedAssertion": "SettingsManager writes its top-level keys directly; verified against pinned Decky 3.3.0 source",
     "source": "https://github.com/SteamDeckHomebrew/decky-loader/blob/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/settings.py"
+  },
+  "fullServerRegression": {
+    "sourceRevision": "0c2a7b53757b91e4578872d3a95a6515e0260493",
+    "tests": 1847,
+    "elapsedSeconds": 224.691,
+    "skips": 16,
+    "failures": 0,
+    "logSha256": "9d801b11808c58b2864fcb533d39f5a193c2540a0d11727957eeef17ddc37707"
   }
 }

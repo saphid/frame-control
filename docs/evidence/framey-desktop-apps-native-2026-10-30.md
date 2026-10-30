@@ -31,3 +31,7 @@ ARM64 CI, browser controls, discovery of actual installed Flatpaks, Steam
 shortcut operations, application launch, the real Frame and worn/controller
 usability remain unverified. Desktop Apps stays partial; this test does not
 change the compatibility table or grant a release approval.
+
+Full server regression at the same runtime sources passed 1,847 tests in
+224.691 seconds with 16 platform-related skips and no failures. PR CI remains
+required for the exact review head, including native ARM64.
