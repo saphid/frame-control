@@ -1,0 +1,22 @@
+Frame Control talks only to your own Steam Frame.
+
+What it sends, and where
+- Everything goes over SSH, straight from this device to the headset address you chose (on your network, or your own Tailscale). There are no Frame Control servers, accounts, analytics, ads or crash reports.
+- To set up, it copies its server program to the Frame (~/.cache/frame-control) and runs it there while you're connected. It stops when you disconnect.
+- The page you see comes from that server, through a tunnel that only this app's web view uses. Links to websites open in your browser.
+
+What it keeps on this device
+- The headset's address, port and user name, and the headset's SSH identity (host key fingerprint) that you confirmed.
+- Its own SSH key, made inside the Android Keystore. The private part can't be copied out of it.
+- None of this is backed up or transferred to another device. Uninstalling the app removes it.
+
+What it doesn't keep
+- The Developer Mode password. It's used once, to add this device's key to the Frame, and isn't saved.
+
+On the headset
+- This device's public key is added to ~/.ssh/authorized_keys, with a comment naming this device's model, so you can see which key is which. Remove that line to revoke this device.
+
+Things you ask it to do
+- Save puts screenshots in Pictures/Frame Control. Send to Frame copies only the files you pick. Paste reads the clipboard only when you tap it. Install links from websites wait for you to tap Install.
+- Installing games or apps, catalogue lookups, Steam artwork/fonts and F-Droid icons are fetched by the headset itself. Those services see the headset's network address and the requested asset. The phone's web view routes allowed images/fonts through SSH and blocks other external resources.
+- General downloads ask where to save through Android's document picker. Interrupted saves remove incomplete images and request deletion of incomplete documents (the document provider can refuse); images and documents already exported stay until you delete them.

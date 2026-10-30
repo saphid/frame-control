@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ios/scripts/icon-ios.svg: the headset visor (its nose cut out of the path), eyes and glints. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:aapt="http://schemas.android.com/aapt"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1024" android:viewportHeight="1024">
+    <group android:pivotX="512" android:pivotY="512" android:scaleX="1.1" android:scaleY="1.1">
+        <path android:pathData="M352,350H672A130,130 0,0 1,802 480V540A130,130 0,0 1,672 670H588.3A78,96 0,1 0,435.7 670H352A130,130 0,0 1,222 540V480A130,130 0,0 1,352 350Z">
+            <aapt:attr name="android:fillColor">
+                <gradient android:type="linear" android:startX="0" android:startY="350"
+                    android:endX="0" android:endY="670"
+                    android:startColor="#FFFFFF" android:endColor="#DFE8F5" />
+            </aapt:attr>
+        </path>
+        <path android:fillColor="#13233A" android:pathData="M350,430H410A50,50 0,0 1,460 480V504A50,50 0,0 1,410 554H350A50,50 0,0 1,300 504V480A50,50 0,0 1,350 430Z" />
+        <path android:fillColor="#13233A" android:pathData="M614,430H674A50,50 0,0 1,724 480V504A50,50 0,0 1,674 554H614A50,50 0,0 1,564 504V480A50,50 0,0 1,614 430Z" />
+        <path android:fillColor="#66C0F4" android:fillAlpha="0.9" android:pathData="M335,448H361A15,15 0,0 1,361 478H335A15,15 0,0 1,335 448Z" />
+        <path android:fillColor="#66C0F4" android:fillAlpha="0.9" android:pathData="M599,448H625A15,15 0,0 1,625 478H599A15,15 0,0 1,599 448Z" />
+    </group>
+</vector>

@@ -1,0 +1,29 @@
+# Every version is exact; gradle/verification-metadata.xml pins each artifact's SHA-256.
+[versions]
+agp = "9.5.0"
+jsch = "2.28.8"
+bouncycastle = "1.86"
+coroutines = "1.10.2"
+activity = "1.13.0"
+lifecycle = "2.11.0"
+webkit = "1.18.0"
+junit = "4.13.2"
+sshd = "2.20.1"
+slf4j = "2.0.20"
+
+[libraries]
+jsch = { module = "com.github.mwiede:jsch", version.ref = "jsch" }
+bouncycastle = { module = "org.bouncycastle:bcprov-jdk18on", version.ref = "bouncycastle" }
+coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
+coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
+activity = { module = "androidx.activity:activity", version.ref = "activity" }
+lifecycle-runtime = { module = "androidx.lifecycle:lifecycle-runtime", version.ref = "lifecycle" }
+lifecycle-viewmodel = { module = "androidx.lifecycle:lifecycle-viewmodel", version.ref = "lifecycle" }
+webkit = { module = "androidx.webkit:webkit", version.ref = "webkit" }
+junit = { module = "junit:junit", version.ref = "junit" }
+sshd-core = { module = "org.apache.sshd:sshd-core", version.ref = "sshd" }
+sshd-sftp = { module = "org.apache.sshd:sshd-sftp", version.ref = "sshd" }
+slf4j-nop = { module = "org.slf4j:slf4j-nop", version.ref = "slf4j" }
+
+[plugins]
+android-application = { id = "com.android.application", version.ref = "agp" }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Themed-icon layer: the visor with its eyes cut out. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="1024" android:viewportHeight="1024">
+    <group android:pivotX="512" android:pivotY="512" android:scaleX="1.1" android:scaleY="1.1">
+        <path android:fillColor="#FFFFFF" android:fillType="evenOdd"
+            android:pathData="M352,350H672A130,130 0,0 1,802 480V540A130,130 0,0 1,672 670H588.3A78,96 0,1 0,435.7 670H352A130,130 0,0 1,222 540V480A130,130 0,0 1,352 350ZM350,430H410A50,50 0,0 1,460 480V504A50,50 0,0 1,410 554H350A50,50 0,0 1,300 504V480A50,50 0,0 1,350 430ZM614,430H674A50,50 0,0 1,724 480V504A50,50 0,0 1,674 554H614A50,50 0,0 1,564 504V480A50,50 0,0 1,614 430Z" />
+    </group>
+</vector>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The iPhone app's palette (ios/FrameControl/Views/RootView.swift). -->
+<resources>
+    <color name="frame_background">#0E141B</color>
+    <color name="frame_panel">#1E2329</color>
+    <color name="frame_field">#151A20</color>
+    <color name="frame_blue">#1A9FFF</color>
+    <color name="frame_muted">#8F98A0</color>
+    <color name="frame_text">#FFFFFF</color>
+    <color name="frame_green">#34C759</color>
+    <color name="frame_orange">#FF9F0A</color>
+    <color name="frame_red">#FF453A</color>
+</resources>

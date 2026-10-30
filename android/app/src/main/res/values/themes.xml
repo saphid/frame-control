@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.FrameControl" parent="android:Theme.Material.NoActionBar">
+        <item name="android:colorPrimary">@color/frame_blue</item>
+        <item name="android:colorAccent">@color/frame_blue</item>
+        <item name="android:colorBackground">@color/frame_background</item>
+        <item name="android:windowBackground">@color/frame_background</item>
+        <item name="android:textColorPrimary">@color/frame_text</item>
+        <item name="android:textColorSecondary">@color/frame_muted</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:alertDialogTheme">@style/Theme.FrameControl.Dialog</item>
+    </style>
+
+    <style name="Theme.FrameControl.Dialog" parent="android:Theme.Material.Dialog.Alert">
+        <item name="android:colorAccent">@color/frame_blue</item>
+        <item name="android:colorBackground">@color/frame_panel</item>
+    </style>
+</resources>
