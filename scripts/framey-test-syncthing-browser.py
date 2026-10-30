@@ -34,6 +34,9 @@ def fingerprints():
 
 
 PROBE = r'''
+const browserErrors=[];
+addEventListener('error',event=>browserErrors.push(event.message));
+addEventListener('unhandledrejection',event=>browserErrors.push(String(event.reason)));
 addEventListener('message', async event => {
   if (event.source !== parent || event.data?.type !== 'test:run') return;
   const configured = event.data.configured, wizard = event.data.wizard;
@@ -47,7 +50,7 @@ addEventListener('message', async event => {
     button().click();
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  let wizardCompleted=false, error=null;
+  let wizardCompleted=false, finishNavigation=false, error=null;
   const installationMethod=document.getElementById('framey-root').innerText.includes('Installation Method');
   try {
     if(welcome && wizard){
@@ -61,11 +64,17 @@ addEventListener('message', async event => {
       [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Continue').click();
       await wait(()=>document.getElementById('framey-root').innerText.includes('All done!'));
       wizardCompleted=true;
+      if(event.data.finishNavigation){
+        [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Get Started').click();
+        await wait(()=>document.getElementById('framey-root').innerText.includes('State request failed. Status: 500'));
+        await new Promise(resolve=>setTimeout(resolve,250));
+        finishNavigation=!document.getElementById('framey-root').innerText.includes('All done!');
+      }
     }
   }catch(err){error=err.message;}
   const text = document.getElementById('framey-root').innerText;
   parent.postMessage({type:'test:done', welcome, installationMethod: text.includes('Installation Method'),
-    entryInstallationMethod:installationMethod,wizardCompleted,error,
+    entryInstallationMethod:installationMethod,wizardCompleted,finishNavigation,error,browserErrors,
     configuredErrorVisible:configured&&text.includes('State request failed. Status: 500'),
     text: text.slice(0,2500), syntheticInput:true, realBackend:false}, '*');
 });
@@ -81,7 +90,8 @@ addEventListener('message', event => {
   if(event.source!==target)return;
   const req=event.data||{};
   if(req.type==='framey:cache:init'){target.postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
-  if(req.type==='framey:ready'){target.postMessage({type:'test:run',configured:CONFIGURED,wizard:WIZARD},'*');return;}
+  if(req.type==='framey:ready'){target.postMessage({type:'test:run',configured:CONFIGURED,wizard:WIZARD,
+    finishNavigation:FINISH_NAVIGATION},'*');return;}
   if(req.type==='test:done'){
     complete=true;
     document.getElementById('result').textContent=JSON.stringify({...req,calls,settings});return;
@@ -141,9 +151,12 @@ def main():
     profiles.add_argument('--migrating', action='store_true')
     profiles.add_argument('--configured', action='store_true')
     parser.add_argument('--wizard', action='store_true')
+    parser.add_argument('--finish-navigation', action='store_true')
     args = parser.parse_args()
     if args.wizard and args.configured:
         parser.error('Wizard replay requires an incomplete setup profile')
+    if args.finish_navigation and not args.wizard:
+        parser.error('Finish navigation requires --wizard')
     source_hashes = fingerprints()
     args.output.mkdir(parents=True, exist_ok=False)
     bundle = frontend(args.archive, args.candidate)
@@ -156,6 +169,7 @@ def main():
     panel = panel.replace('</html>', '<script>' + PROBE + '</script></html>')
     parent = PARENT.replace('SETUP_STATE', json.dumps('migratingV2' if args.migrating else args.configured))
     parent = parent.replace('CONFIGURED', json.dumps(args.configured)).replace('WIZARD', json.dumps(args.wizard))
+    parent = parent.replace('FINISH_NAVIGATION', json.dumps(args.finish_navigation))
     document = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
 content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; style-src 'unsafe-inline'; img-src data:">
 <title>Private Syncthing setup fixture</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:950px;border:0}pre{white-space:pre-wrap}</style>
@@ -205,7 +219,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                     browser.kill(); browser.wait(timeout=5)
         report.update(archiveSha256=DIGEST, frontendSha256=hashlib.sha256(bundle).hexdigest(),
                       candidate=args.candidate, migrating=args.migrating, configured=args.configured,
-                      wizard=args.wizard,realFrameContacted=False,
+                      wizard=args.wizard,finishNavigationRequested=args.finish_navigation,realFrameContacted=False,
                       browserReaped=browser.poll() is not None, installerEnabled=False)
         report['browser'] = subprocess.check_output([str(args.browser.resolve()), '--version'], text=True).strip()
         report['sourceSha256'] = source_hashes
@@ -219,10 +233,16 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
             if args.wizard:
                 settings = report.get('settings', {})
                 calls = report.get('calls', [])
-                routes = [call['args'][0]['path'] for call in calls if call['method'] == 'framey_http_fetch']
+                routes = [call['args'][0]['path'] for call in calls if call['method'] == 'framey_http_fetch'
+                          and call['args'][0]['method'] == 'POST']
                 expected_routes = ['/__decky-watchdog/check/' + name for name in
                                    ('start', 'scan_port', 'scan_api_key', 'scan_basic_auth')]
                 expected_routes.append('/__decky-watchdog/reload-config')
+                completion = [i for i, call in enumerate(calls) if call ==
+                              {'method':'set_setting','args':[{'setting':'is_setup','value':True}]}]
+                reloads = [i for i, call in enumerate(calls) if call ==
+                           {'method':'framey_http_fetch','args':[{'method':'POST',
+                            'path':'/__decky-watchdog/reload-config','headers':{}}]}]
                 report['passed'] = (report['passed'] and report.get('wizardCompleted') is True
                                     and settings.get('is_setup') is True and settings.get('autostart') == 'boot'
                                     and settings.get('keep_running_on_desktop') is True
@@ -230,11 +250,11 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                                     and routes == expected_routes
                                     and settings.get('mode') == 'flatpak'
                                     and settings.get('flatpak_name') == 'me.kozec.syncthingtk'
-                                    and calls[-2:] == [
-                                        {'method':'set_setting','args':[{'setting':'is_setup','value':True}]},
-                                        {'method':'framey_http_fetch','args':[{'method':'POST',
-                                         'path':'/__decky-watchdog/reload-config','headers':{}}]},
-                                    ])
+                                    and len(completion) == 1 and len(reloads) == 1
+                                    and completion[0] < reloads[0])
+                if args.finish_navigation:
+                    report['passed'] = (report['passed'] and report.get('finishNavigation') is True
+                                        and report.get('browserErrors') == [])
             else:
                 report['passed'] = (report['passed'] and all(call['method'] == 'get_settings_json'
                                                            for call in report.get('calls', [])))
