@@ -66,6 +66,14 @@ REQUIRED = (
     "noOwnedFlatpakInstancesRemain",
     "uninstallPreservedOwnedData",
 )
+MIGRATION_REQUIRED = (
+    'actualLegacySignedPackage', 'v1SettingsMigratedAndPersisted',
+    'pendingSetupPreservedLiveLegacy', 'legacyUnitAndEnablementPreserved',
+    'configCertificateDataPreserved', 'unrelatedHelperPreserved',
+    'explicitExternalControlAndAuth', 'actualLegacyStopRestart',
+    'legacyDataRetainedAfterRestart', 'ownedProcessesReaped',
+    'ownedLegacyFixtureRemoved', 'noOwnedFlatpakInstancesRemain',
+)
 
 
 def sha(path):
@@ -159,8 +167,31 @@ def candidate_payloads(helper_path, report_path, archive_path, loader_path, arch
         'watchdog': helper, 'PluginLoader': loader, 'official.zip': official,
         'main.py': (assets / 'main.py').read_bytes(),
         'syncthing_service.py': (ROOT / 'tests/decky-runtime/syncthing_service.py').read_bytes(),
+        'syncthing_migration.py': (ROOT / 'tests/decky-runtime/syncthing_migration.py').read_bytes(),
         'candidate-inputs.json': json.dumps(evidence).encode(),
     }, evidence
+
+
+def verify_migration(report, arch, bundles):
+    if (report.get('architecture') != arch
+        or report.get('installerEnabled') is not False
+        or report.get('realFrameContacted') is not False
+        or report.get('flatpakPackageVerified') is not True
+        or any(report.get(key) is not True for key in MIGRATION_REQUIRED)):
+        raise ValueError('Missing actual legacy migration preservation/control proof')
+    for key, main_key in (('legacyIdentityBefore', 'legacyMainPidBefore'),
+                          ('legacyIdentityAfterRestart', 'legacyMainPidAfterRestart')):
+        processes = report.get(key, [])
+        if not processes:
+            raise ValueError('Missing signed legacy process identity')
+        for process in processes:
+            lineage = process.get('ancestryToMainPid', [])
+            if (process.get('pid', 0) <= 0 or report.get(main_key, 0) <= 0
+                or not lineage or lineage[0] != process['pid'] or lineage[-1] != report[main_key]
+                or process.get('executableSha256') != report.get('packagedBinarySha256')
+                or any(process.get(kind + 'Commit') != bundles[kind]['commit']
+                       for kind in ('app', 'runtime'))):
+                raise ValueError('Legacy migration used an unexpected process/package')
 
 
 def verify_candidate(service, arch, bundles, required_results):
@@ -283,7 +314,8 @@ def main():
     source_paths = [Path(__file__).resolve(), packer_path, root_probe, user_probe]
     if candidate:
         source_paths.extend(ROOT / path for path in [
-            'tests/decky-runtime/syncthing_service.py', 'scripts/build-framey-syncthing.py',
+            'tests/decky-runtime/syncthing_service.py', 'tests/decky-runtime/syncthing_migration.py',
+            'scripts/build-framey-syncthing.py',
             'scripts/framey-test-decky-runtime.py', 'scripts/framey-test-syncthing-runtime.py',
             'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
             'ui/vendor/syncthing-0.2.7/owned_unit.rs', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
@@ -392,10 +424,13 @@ def main():
         ):
             raise RuntimeError("Package cleanup/authentication gate failed")
         if candidate:
+            verify_migration(package.get('candidateMigration', {}), arch, bundles)
             verify_candidate(package.get('candidateService', {}), arch, bundles,
                              packer.REQUIRED_SERVICE_RESULTS)
             if package.get('uninstallPreservedCandidateData') is not True:
                 raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
+            if package.get('uninstallPreservedMigrationData') is not True:
+                raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths
