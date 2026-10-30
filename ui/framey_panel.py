@@ -169,7 +169,7 @@ finally: page.sock.close()
 def _current_plugin(ssh, plugin_id, receipt):
     if not isinstance(receipt, str) or not RECEIPT.fullmatch(receipt):
         raise PanelError('Reopen the plugin panel to refresh its store receipt')
-    found = [p for p in frame_decky.status(ssh)['plugins'] if p.get('storeId') == plugin_id]
+    found = [p for p in frame_decky.plugin_status(ssh)['plugins'] if p.get('storeId') == plugin_id]
     if len(found) != 1:
         raise PanelError('The plugin is not managed by the Frame Control Decky store')
     if found[0].get('sha256') != receipt:
