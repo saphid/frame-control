@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add the Frame simulator, `scripts/frame-sim.sh`: the fake Frame kept running
+  on 127.0.0.1 under the `frame-sim` SSH alias, for trying the app, scripts and
+  smoke test without the headset. It adds a test-picture headset view, live view
+  and recording, `vrcmd`, a proximity sensor, and arm64 launches on x86-64.
+  Simulator smoke results are marked and refused by the release gate.
+  [Frame simulator](docs/testing.md#frame-simulator).
+
 - Fix smoke cleanup skipping orphan metadata and Steam shortcuts after a test
   title directory was already removed. Sweep and verify all six exact reserved
   smoke IDs; preserve similarly named titles. Make `scripts/frame-smoke.sh`

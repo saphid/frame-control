@@ -1,13 +1,16 @@
 # Testing
 
 Frame Control uses unit tests, Fake Frame end-to-end tests and a real-headset
-smoke test. A Windows test VM checks the packaged app. A SteamOS VM may come
-later ([issue #6](https://github.com/saphid/frame-control/issues/6)).
+smoke test. The [Frame simulator](#frame-simulator) keeps the fake Frame running
+for trying changes by hand before they go near the headset. A Windows test VM
+checks the packaged app. A SteamOS VM may come later
+([issue #6](https://github.com/saphid/frame-control/issues/6)).
 
 | Layer | Runs | Needs | Covers |
 |---|---|---|---|
 | Unit tests (`tests/*.py`) | `python3 -m unittest discover -s tests` | Python 3 and Node.js | Parsing, validation, request guards; SSH and HTTP are mocked |
 | Fake Frame (`tests/e2e`) | `scripts/e2e.sh` | Linux with Docker | The real server and scripts against a container that behaves like a Frame |
+| [Frame simulator](#frame-simulator) | `scripts/frame-sim.sh up` | Docker | The app, scripts and smoke test by hand against a long-running fake Frame on `frame-sim` |
 | Headset smoke test | `scripts/frame-smoke.sh` | A Frame on the `frame` alias | Install, launch and remove on the real device, recorded with its BUILD_ID |
 | [Windows test VM](#windows-test-vm) | `scripts/windows-vm.sh` | A Linux machine with KVM and Docker | The Windows build on a real Windows desktop, against a real Frame when needed |
 
@@ -174,6 +177,69 @@ switch while SSH is down:
 - `sudo` and the power buttons, Tailscale, and the Windows and macOS sides of
   the app (the host container is Linux, so the `rsync` paths are tested and the
   `scp` fallback isn't).
+
+## Frame simulator
+
+`scripts/frame-sim.sh` runs the fake Frame on its own, outside the e2e harness,
+so you or an agent can try a change against something that answers like a
+headset before pushing it to one. It listens on 127.0.0.1 and `up` writes an
+SSH alias for it, `frame-sim`, the same way Frame Control's setup does. It shows
+up in the app's Devices list, and anything that takes `FRAME_ALIAS` can use it.
+
+```sh
+scripts/frame-sim.sh up                 # build and start it; a few minutes the first time
+ssh frame-sim                           # a shell on the "headset", as steamos
+scripts/frame-sim.sh ui                 # ui/server.py against it, on http://127.0.0.1:47811/
+scripts/frame-sim.sh run scripts/push.sh            # any script, with FRAME_ALIAS=frame-sim
+scripts/frame-sim.sh smoke              # the headset smoke test, against the simulator
+scripts/frame-sim.sh ctl sleep on       # any fault switch; `ctl help` lists them
+scripts/frame-sim.sh down               # stop it (--forget also removes the alias and volumes)
+```
+
+It needs Docker (on a Mac, Colima as above) and Python 3. The images are
+`fakeframe-frame` (the e2e fake, rebuilt by `up` as needed) and `frame-sim` on
+top of it (`tests/fakeframe/sim`). The ports are 2222 for SSH, 32000 for
+Valve's devkit service and 9999 for the control port
+(`FRAME_SIM_SSH_PORT`, `FRAME_SIM_DEVKIT_PORT`, `FRAME_SIM_CTL_PORT`).
+
+`up` changes your `~/.ssh` in the ways Frame Control's own setup does. It
+creates `id_ed25519_frame` and `id_rsa_frame_devkit` if they're missing, adds
+the `frame-sim` block to `~/.ssh/config` and the simulator's host key to
+`known_hosts`. The simulator trusts your `id_ed25519_frame.pub` alongside its
+own harness key. Its host keys live in a volume, so restarting or rebuilding it
+doesn't look like a different headset; `down --forget` removes the alias, the
+host key and the app's pin.
+
+Everything in [What's real and what's fake](#whats-real-and-whats-fake) holds.
+The simulator adds stand-ins for what the fake can't show:
+
+| On the simulator | |
+|---|---|
+| The headset view (**Headset view**, `/api/screenshot?view=headset`) | `ui/frame_vrshot.py` runs unchanged against a stand-in `libopenvr_api.so` (`sim/openvr/fake_openvr.c`). It draws a side-by-side test picture: "FRAME SIMULATOR", the running title, the battery and the time |
+| Live view, panel video and recordings with sound | The app's own ffmpeg commands, through a wrapper that swaps the `/dev/video99`, x11grab and pulse inputs for the moving test picture and a quiet tone. Encoding, scaling and file handling are ffmpeg's |
+| SteamVR's `vrcmd` | `--stats`, `--overlays` and `--showdashboard` with made-up panels, in the formats the app parses |
+| The proximity sensor | `/sys/bus/iio/devices/iio:device0/in_proximity_raw`: 0 when nobody wears it, 120 when worn (a guess above the smoke test's 0-10 range) |
+| arm64 games on an x86-64 computer | qemu-user, as the Frame runs x86-64 programs through FEX. Static programs only: there are no arm64 libraries |
+
+Two switches belong to the simulator alone:
+
+| Command | Effect |
+|---|---|
+| `ctl vr on\|off` | SteamVR running. Off: `vrcmd` fails, the headset view gets init error 121, and `/dev/video99` is gone, so live view and recording say SteamVR isn't running |
+| `ctl worn on\|off` | Someone wearing it. On: activity level 1 and a high proximity reading, so the smoke test refuses to run, as it would on a worn headset |
+
+The smoke test passes against the simulator: 14 of 14 steps, and 15 with
+`--pair` after `ctl pairing on` (x86-64 Linux, 2026-10-30). That makes the
+simulator a quick way to check a change to the smoke test itself. Results go
+to `tests/smoke/results-sim/` and are marked `"simulated": true`.
+`scripts/verify-frame-smoke-result.py` refuses those, and any result that
+doesn't say, so the release gate still needs a run on the headset.
+
+Everything rendered is a test pattern: the simulator shows that the app asks for
+the right things and handles the answers. It says nothing about SteamVR, Proton,
+FEX, Android or how the headset performs. Use the headset smoke test for those.
+The desktop panel list stays empty (the fake has no `xprop` or `xwininfo`), and
+so does Android, as on the fake Frame.
 
 ## Headset smoke test
 

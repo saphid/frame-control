@@ -25,6 +25,8 @@ def verify(result, commit):
         raise ValueError('expected a full lowercase commit SHA-1')
     if result.get('source') != {'commit': commit, 'clean': True}:
         raise ValueError('smoke source is not the exact clean release commit')
+    if result.get('simulated') is not False:
+        raise ValueError('smoke ran on a fake Frame or simulator, or did not record which')
     if result.get('lock_released') is not True:
         raise ValueError('smoke lock release was not recorded')
     steps = result.get('steps')

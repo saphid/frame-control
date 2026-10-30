@@ -98,7 +98,7 @@ class PublishRelease(unittest.TestCase):
                      f"{kind}: {action}" for kind in ("arm64", "x86_64", "exe")
                      for action in ("install", "launch", "remove")]
         clean_smoke = {"source": {"commit": tag_commit, "clean": True},
-                       "lock_released": True,
+                       "simulated": False, "lock_released": True,
                        "steps": [{"step": name, "ok": True} for name in steps],
                        "passed": len(steps), "skipped": 0, "failed": 0,
                        "preflight": {"activity": 3, "proximity": [2.3125], "battery": [100]}}

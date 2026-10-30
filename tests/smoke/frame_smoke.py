@@ -61,6 +61,7 @@ import stop_processes  # noqa: E402
 RESULTS = Path(os.environ.get('FRAME_SMOKE_RESULTS') or HERE / 'results')
 PREFIX = 'fc_smoke_'
 LOCK = '/tmp/frame-test.lock'
+FAKEFRAME_MARK = '/usr/local/lib/fakeframe/fakeframe_state.py'   # only on a fake Frame
 
 
 def source_revision():
@@ -429,6 +430,11 @@ def run_smoke(args, before):
     release = os_release()
     build = release['BUILD_ID'] or 'unknown'
     print(f'==> Frame smoke test on {ALIAS}: SteamOS {release["VERSION_ID"]} ({release["VARIANT_ID"]}), build {build}')
+    # The fake Frame and the Frame simulator (tests/fakeframe) carry the real BUILD_ID;
+    # this marks their results so the release gate never takes one for the headset's.
+    simulated = ssh(f'test -e {FAKEFRAME_MARK} && echo yes || true').strip() == 'yes'
+    if simulated:
+        print('    (a fake Frame: these results are not evidence about the headset)', flush=True)
     # Frame Control copies Valve's devkit tools to ~/devkit-utils on the first install
     # (as Valve's client does). If they weren't there before, they go again at the end.
     had_utils = ssh('test -d ~/devkit-utils && echo yes || true').strip() == 'yes'
@@ -454,7 +460,8 @@ def run_smoke(args, before):
     failed = len(smoke.steps) - passed - skipped
     RESULTS.mkdir(exist_ok=True)
     out = RESULTS / f"{started.replace(':', '')}-{build}.json"
-    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'source': source_revision(),
+    out.write_text(json.dumps({'started': started, 'alias': ALIAS, 'simulated': simulated,
+                               'source': source_revision(),
                                'preflight': before,
                                'os_release': release, 'paired': args.pair,
                                'passed': passed, 'skipped': skipped, 'failed': failed,
