@@ -1,0 +1,383 @@
+{
+  "date": "2026-10-30",
+  "baseCommit": "dcd8bb48a698be7730e796b68c5c3f7e777da08e",
+  "scope": "Exact signed GNOME 49 metadata and AMD64 complete payload audit; isolated Flatpak installation attempt",
+  "architectures": {
+    "x86_64": {
+      "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+      "validSignatures": 1,
+      "refBinding": [
+        "runtime/org.gnome.Platform/x86_64/49"
+      ],
+      "collection": "org.flathub.Stable",
+      "rootTree": "e4955f4b9c3968be7622c3e61e4ff3952a7765e256f6ccec2bc448abcf45fd5c",
+      "rootMetadata": "446a0ef11b7cc167f3b603e585c7eeeeb675faa412d5ec73f62988eb0b6c5488",
+      "endOfLife": null,
+      "sizes": {
+        "xa.download-size": 418822251,
+        "xa.installed-size": 1090746368
+      }
+    },
+    "aarch64": {
+      "commit": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9",
+      "validSignatures": 1,
+      "refBinding": [
+        "runtime/org.gnome.Platform/aarch64/49"
+      ],
+      "collection": "org.flathub.Stable",
+      "rootTree": "6352f2c4051f7236cca73b4aa5947b412345f22a18562b4097cbf42b88918f32",
+      "rootMetadata": "446a0ef11b7cc167f3b603e585c7eeeeb675faa412d5ec73f62988eb0b6c5488",
+      "endOfLife": null,
+      "sizes": {
+        "xa.download-size": 408634945,
+        "xa.installed-size": 1156618240
+      }
+    }
+  },
+  "amd64Payload": {
+    "architecture": "x86_64",
+    "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+    "maximumObjectBytes": 67108864,
+    "maximumCacheBytes": 536870912,
+    "runtimePayloadVerified": true,
+    "packageLaunched": false,
+    "complete": true,
+    "directoryTrees": 2769,
+    "fileContentObjects": 16410,
+    "totalObjectBytes": 403208504
+  },
+  "offlineBundleVerification": {
+    "refs": {
+      "runtime/org.gnome.Platform/x86_64/49": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+      "app/me.kozec.syncthingtk/x86_64/stable": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+    },
+    "signatures": {
+      "runtime/org.gnome.Platform/x86_64/49": 1,
+      "app/me.kozec.syncthingtk/x86_64/stable": 1
+    },
+    "bundles": {
+      "runtime": {
+        "sha256": "26f36945d6d1af6de730ff6cd62868781d9ed0f99b977b2400101c6f14ce649b",
+        "bytes": 292381368,
+        "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "app": {
+        "sha256": "5ff38521358f7bb9fefbe7cc4c48c552c3a11290a2f2fa84c69ef70678644977",
+        "bytes": 9872560,
+        "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+      }
+    },
+    "packageInstalled": false,
+    "packageLaunched": false,
+    "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 3 commit objects...\nfsck objects (1/19664) 0%\nfsck objects (2522/19664) 12%\nfsck objects (6019/19664) 30%\nfsck objects (9147/19664) 46%\nfsck objects (11595/19664) 58%\nfsck objects (12690/19664) 64%\nfsck objects (14238/19664) 72%\nfsck objects (16733/19664) 85%\nfsck objects (18918/19664) 96%\nfsck objects (19664/19664) 100%\nobject fsck of 3 commits completed successfully - no errors found.\n",
+    "runtimeBundleLog": "",
+    "appBundleLog": ""
+  },
+  "runtimeInstalled": false,
+  "packageLaunched": false,
+  "actualPackageServiceLifecycleVerified": false,
+  "actualPackageTwoWaySyncVerified": false,
+  "nativeArm64RuntimeExecuted": false,
+  "frameyManagedInstallerEnabled": false,
+  "realFrameContacted": false,
+  "compatibility": "broken; installation remains blocked",
+  "publicKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+  "evidenceSourceSha256": {
+    "metadata.py": "6fdb7a2bed0362665c3e6c34452663c854a84c7fc17a71224f9e5fda84020fd2",
+    "fetch-runtime.py": "6618b8023204aad98d28f80d87ad9783ffa7cce9770aaa44bd8f8cba500d3814",
+    "bundle.py": "b174ab473432e4581debe2b3b183d092ded6606ec5db7e3b411997efd00b933d",
+    "runtime-inputs.json": "5665d0937626f0ee7f9e4f2ebcf4a7cb48973ac4a22a900256ad005d96059ee2",
+    "runtime-metadata.json": "f818588db472ac701b302d5b5243ef1b786b34a2cc621a6699cd56bf0a116f12",
+    "runtime-fetch.json": "3f837b3584551676843c810a8bbe66fc0579608afb9863e7568450d6bb6d494b",
+    "bundle-with-origin.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+    "bundles/origin-bundle-report.json": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+    "bundles/bundle-report.json": "85587ad0dcbcf8470d15caf81cc18f14284e5c1752c947a1c9ef0b68c4d300ee"
+  },
+  "vmAttempts": {
+    "first": {
+      "limit": "Fixture overlay order omitted inputs; no install attempted",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "inputs": {
+          "packerSha256": "f2ddfd7709f610c67ed10d74bef2588ad7ef28ac76ea35260bf87cc51f3142a1",
+          "bundleReportSha256": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+          "image": "sha256:bc4010dcb4ed5bc86b09e0e4608da9584d6ea04f15eaf297305b645ed77498f0",
+          "memoryMiB": 4096,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 668501504,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "2641bfceb435cd03808790759e48207829e94cd44488e96d8a6f67ced6fe3aa9",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "bundle.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+            "run-vm.py": "8661014d6a43ed603211599b61471a457651d5ae8e26dec959497a8101aebdce",
+            "tests/decky-runtime/syncthing_service.py": "c34019341b9b49fac6b34ab293f3f9786fe213f435936531c8aadda34d843980",
+            "tests/decky-runtime/syncthing_service_root.py": "665ce2a9294cc6fdd9b8ac0893c061f70a49342f4b5046025efb0e70970014e9"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "9824745e6ec3a704bf8b72b02a79dbd980cc5babacd7cd6a24916379078e6ce7"
+    },
+    "second": {
+      "limit": "Default OSTree minimum 500 MB free space reached; expanded guest rather than lower protection",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "inputs": {
+          "packerSha256": "f2ddfd7709f610c67ed10d74bef2588ad7ef28ac76ea35260bf87cc51f3142a1",
+          "bundleReportSha256": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+          "image": "sha256:bc4010dcb4ed5bc86b09e0e4608da9584d6ea04f15eaf297305b645ed77498f0",
+          "memoryMiB": 4096,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 366236672,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "f0e9c10b5ec657eb100316876252a77e927bb87b742e92c8b82ebb755457183a",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "bundle.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+            "run-vm.py": "dcae008b81e8abbd7735b730f14fd531b19e7f9321c51a30e8290f908d55ff5e",
+            "tests/decky-runtime/syncthing_service.py": "c34019341b9b49fac6b34ab293f3f9786fe213f435936531c8aadda34d843980",
+            "tests/decky-runtime/syncthing_service_root.py": "665ce2a9294cc6fdd9b8ac0893c061f70a49342f4b5046025efb0e70970014e9"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "da29263bd8a18f6c425feaadc82ac243799e779bf9b27f7b86509f87b2e496df"
+    },
+    "third": {
+      "limit": "bubblewrap pivot_root rejected initramfs root; Flatpak then crashed",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "inputs": {
+          "packerSha256": "f2ddfd7709f610c67ed10d74bef2588ad7ef28ac76ea35260bf87cc51f3142a1",
+          "bundleReportSha256": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+          "image": "sha256:bc4010dcb4ed5bc86b09e0e4608da9584d6ea04f15eaf297305b645ed77498f0",
+          "memoryMiB": 6144,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 366236672,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "fb0cbeff66b7fd96062a1b83a901f4efc669807b8ffda293e2ac58bd62d4d621",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "bundle.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+            "run-vm.py": "e5db93098d23dc7ff804e01541662254672ede6d9b20544a18f5776cc569b31a",
+            "tests/decky-runtime/syncthing_service.py": "c34019341b9b49fac6b34ab293f3f9786fe213f435936531c8aadda34d843980",
+            "tests/decky-runtime/syncthing_service_root.py": "d7521d10cf2fe919f0bf8eae0596a7dc7303420ac5eeaaa17495e6adbd678881"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "a202a79f08801deb0c0a9f9dfcabf553d4f0a55f7744fefaee014f2bb5729ad7"
+    },
+    "fourth": {
+      "limit": "Normal tmpfs root; runtime bundle installation crashed in libgobject; no package launch",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "inputs": {
+          "packerSha256": "1c0b4cdb0d92db38b2f6c0f9df8af12ea8668d66274fb95f186f3ade0c60b580",
+          "bundleReportSha256": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+          "image": "sha256:bc4010dcb4ed5bc86b09e0e4608da9584d6ea04f15eaf297305b645ed77498f0",
+          "memoryMiB": 6144,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 366236672,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "fefb9d07236f6a55fddee2bf3103148af563c7541b34537f6888fefe6bdc4ba9",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "bundle.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+            "run-vm.py": "4bce4f8ec3706a627253bba62ff0224d511ec731716660b921de5d11081c243b",
+            "tests/decky-runtime/syncthing_service.py": "c34019341b9b49fac6b34ab293f3f9786fe213f435936531c8aadda34d843980",
+            "tests/decky-runtime/syncthing_service_root.py": "d7521d10cf2fe919f0bf8eae0596a7dc7303420ac5eeaaa17495e6adbd678881"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "98c8a1c7a08747a8b741cbef1202f255a08ffb98a30ca9d11788f8b3e27e13c4"
+    },
+    "fifth": {
+      "limit": "SIGSEGV in g_object_unref/g_list_free_full; verbose log attempted update-origin HTTPS summary in a networkless guest",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "inputs": {
+          "packerSha256": "1c0b4cdb0d92db38b2f6c0f9df8af12ea8668d66274fb95f186f3ade0c60b580",
+          "bundleReportSha256": "fb8c378353634516197325b9d193c16f3c93519239774f6e7baa0c147c935a67",
+          "image": "sha256:cff4511fa2da2f9b13f20bf37325353b86ea86cf811cc433ec46f7c130009f96",
+          "memoryMiB": 6144,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 391417856,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "40fb70448428bcd21faccd057bcc0eeffe16c590ce9dfb860f580a85b4f3282b",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "Containerfile.debug": "6109b4e189cef13946e7989cacc471e598f50a3ab28b6c604e2744a719c57a39",
+            "bundle.py": "e2c540e6e8c9efacf4c466471bd04acf5ee5abead111bdee13fc24aef45ff971",
+            "run-vm.py": "7fb71e233907d77244941f5c555b2c28007eebeb18752a8b3e426bac5ebc6080",
+            "tests/decky-runtime/syncthing_service.py": "4ebd065d038f258c28f24864c4d03cf3c94271886abf80d25a4198eee7fcd24d",
+            "tests/decky-runtime/syncthing_service_root.py": "d7521d10cf2fe919f0bf8eae0596a7dc7303420ac5eeaaa17495e6adbd678881"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "6eda6c8425af55b6275a0c89d58249c971637619594e821b1c903b63faaf16b0",
+      "mainThreadStackAndLastVerboseLines": "Thread 1 (Thread 0x7f66af27db40 (LWP 306) \"flatpak\"):\n#0  0x00007f66b1411c12 in g_type_check_instance_is_fundamentally_a () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0\n#1  0x00007f66b13f223b in g_object_unref () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0\n#2  0x000055bd22389242 in ?? ()\n#3  0x00007f66b1689970 in g_list_foreach () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n#4  0x00007f66b168999f in g_list_free_full () from /lib/x86_64-linux-gnu/libglib-2.0.so.0\n#5  0x000055bd223892d9 in ?? ()\n#6  0x00007f66b13f24fe in g_object_unref () from /lib/x86_64-linux-gnu/libgobject-2.0.so.0\n#7  0x000055bd222e072d in ?? ()\n#8  0x000055bd222b4985 in ?? ()\n#9  0x00007f66b0a00ca8 in ?? () from /lib/x86_64-linux-gnu/libc.so.6\n#10 0x00007f66b0a00d65 in __libc_start_main () from /lib/x86_64-linux-gnu/libc.so.6\n#11 0x000055bd222b5811 in ?? ()\nF: Opening user flatpak installation at path /home/tester/.local/share/flatpak\nF: No installations directory in /etc/flatpak/installations.d. Skipping\nF: Imported 1 GPG key to remote \"platform-origin\"\nF: Clearing cached summaries for remote platform-origin\nF: Fetching summary index file for remote \u2018platform-origin\u2019\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Should retry request (remaining: 5 retries), due to transient error: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Should retry request (remaining: 4 retries), due to transient error: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Should retry request (remaining: 3 retries), due to transient error: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Should retry request (remaining: 2 retries), due to transient error: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Should retry request (remaining: 1 retries), due to transient error: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Loading https://dl.flathub.org/repo/summary.idx using curl\nF: Failed to download optional summary index: While fetching https://dl.flathub.org/repo/summary.idx: [6] Could not resolve hostname\nF: Transaction: install bundle platform-origin:runtime/org.gnome.Platform/x86_64/49@2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d[$old]\nF: marking op install bundle:runtime/org.gnome.Platform/x86_64/49 resolved to 2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nF: No checksum specified, getting tip of runtime/org.gnome.Platform/x86_64/49 from origin platform-origin\nF: tip resolved to: 2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nF: running triggers from /usr/share/flatpak/triggers\nF: running trigger mime-database.trigger\nF: Running 'bwrap --unshare-ipc --unshare-net --unshare-pid --ro-bind / / --proc /proc --dev /dev --bind /home/tester/.local/share/flatpak /home/tester/.local/share/flatpak -- /usr/share/flatpak/triggers/mime-database.trigger /home/tester/.local/share/flatpak'\nF: running trigger gtk-icon-cache.trigger\nF: Running 'bwrap --unshare-ipc --unshare-net --unshare-pid --ro-bind / / --proc /proc --dev /dev --bind /home/tester/.local/share/flatpak /home/tester/.local/share/flatpak -- /usr/share/flatpak/triggers/gtk-icon-cache.trigger /home/tester/.local/share/flatpak'\nF: running trigger desktop-database.trigger\nF: Running 'bwrap --unshare-ipc --unshare-net --unshare-pid --ro-bind / / --proc /proc --dev /dev --bind /home/tester/.local/share/flatpak /home/tester/.local/share/flatpak -- /usr/share/flatpak/triggers/desktop-database.trigger /home/tester/.local/share/flatpak'\nF: Pruning repo\nF: Pruned 19181/0 objects, size 0 bytes"
+    },
+    "sixth": {
+      "limit": "Bundles rebuilt without embedded update-origin URL; runtime install still exited -11 (SIGSEGV). Origin URL was not sufficient to explain the crash; root cause unconfirmed. App never installed or launched.",
+      "result": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "partial": {
+          "realFrameContacted": false,
+          "architecture": "x86_64",
+          "flatpakVersion": "Flatpak 1.16.6",
+          "signedBundlesInstalled": false,
+          "packageLaunched": false,
+          "actualTwoWaySync": false,
+          "installerEnabled": false
+        },
+        "inputs": {
+          "packerSha256": "1c0b4cdb0d92db38b2f6c0f9df8af12ea8668d66274fb95f186f3ade0c60b580",
+          "bundleReportSha256": "85587ad0dcbcf8470d15caf81cc18f14284e5c1752c947a1c9ef0b68c4d300ee",
+          "image": "sha256:bc4010dcb4ed5bc86b09e0e4608da9584d6ea04f15eaf297305b645ed77498f0",
+          "memoryMiB": 6144,
+          "timeoutSeconds": 960,
+          "rootfsTarBytes": 366236672,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "3d01dd777ce4442d1c50d2063fae54a7d92d68d065528f9ac69dc2919a8ea277",
+          "sourceSha256": {
+            "Containerfile": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+            "Containerfile.debug": "6109b4e189cef13946e7989cacc471e598f50a3ab28b6c604e2744a719c57a39",
+            "bundle.py": "b174ab473432e4581debe2b3b183d092ded6606ec5db7e3b411997efd00b933d",
+            "run-vm.py": "fc23da94c99317082c9f3b7d1c420358838edcce67d2935bce607893255c133e",
+            "tests/decky-runtime/syncthing_service.py": "71393e6cf8dccc8d2629c39af4b84fe915e9f18dd74b90b59efb3daa57a25a38",
+            "tests/decky-runtime/syncthing_service_root.py": "63cec9686215980ab8fbcd4ece9d0dcb74915b7ffe075817262155d28affb8e5"
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false
+        },
+        "ownedQemuReaped": true
+      },
+      "consoleSha256": "d76f51da5f1cd2244773dbffa78e36308df91ffc2b72841c3a81e7c3a99a8ae3"
+    }
+  },
+  "evidenceKind": "Local audit; not CI runtime proof; experimental VM harness retained locally with recorded source fingerprints",
+  "offlineBundlesWithoutOrigin": {
+    "refs": {
+      "runtime/org.gnome.Platform/x86_64/49": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+      "app/me.kozec.syncthingtk/x86_64/stable": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+    },
+    "signatures": {
+      "runtime/org.gnome.Platform/x86_64/49": 1,
+      "app/me.kozec.syncthingtk/x86_64/stable": 1
+    },
+    "bundles": {
+      "runtime": {
+        "sha256": "9e2a88bf95d9a6bdcf15335d967ef2d311946875d241b24f998631bdb1899069",
+        "bytes": 292381320,
+        "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "app": {
+        "sha256": "25c3368e362634e6cf239bc58663bb8b7ca69b6f5fbfa90ab3b86956c1884a04",
+        "bytes": 9872520,
+        "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+      }
+    },
+    "packageInstalled": false,
+    "packageLaunched": false,
+    "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 3 commit objects...\nfsck objects (1/19664) 0%\nfsck objects (2522/19664) 12%\nfsck objects (6019/19664) 30%\nfsck objects (9147/19664) 46%\nfsck objects (11595/19664) 58%\nfsck objects (12690/19664) 64%\nfsck objects (14238/19664) 72%\nfsck objects (16733/19664) 85%\nfsck objects (18918/19664) 96%\nfsck objects (19664/19664) 100%\nobject fsck of 3 commits completed successfully - no errors found.\n",
+    "bundleOriginUrlIncluded": false,
+    "reportRecovery": "Both build-bundle calls completed; output report write failed because its previous file was owned by fixture UID1100. Host atomically replaced only this owned report after rehashing both completed bundles; no package pass inferred."
+  },
+  "mainCiAfterObsFix": {
+    "head": "dcd8bb48a698be7730e796b68c5c3f7e777da08e",
+    "allChecksPassed": true,
+    "checks": [
+      {
+        "name": "decky-runtime (ubuntu-latest)",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976133/job/123938523908"
+      },
+      {
+        "name": "decky-runtime (ubuntu-24.04-arm)",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976133/job/123938523603"
+      },
+      {
+        "name": "server-tests (windows-latest, 3.12)",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523584"
+      },
+      {
+        "name": "server-tests (ubuntu-latest, 3.13)",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523554"
+      },
+      {
+        "name": "checks",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523483"
+      },
+      {
+        "name": "server-tests (macos-latest, 3.12)",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523461"
+      },
+      {
+        "name": "e2e",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523456"
+      },
+      {
+        "name": "ios",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523386"
+      },
+      {
+        "name": "wireless-windows",
+        "conclusion": "success",
+        "url": "https://github.com/saphid/frame-control/actions/runs/41017976090/job/123938523271"
+      }
+    ]
+  },
+  "retainedLocalHarnessArchive": {
+    "filename": "framey-flatpak-runtime-sources-mppkd9qczt.tar.gz",
+    "sha256": "f64d7eb6ac2724126d188f508cd06c6ea07301f47265385ad9fdd678ed0927e0",
+    "bytes": 17385,
+    "availableAsCiArtifact": false
+  },
+  "cleanup": {
+    "ownedQemuReaped": true,
+    "realFrameContacted": false,
+    "publicCachesRetained": true,
+    "preexistingDataChanged": false,
+    "ownedImagesRemoved": true,
+    "ownedContainersRemoved": true
+  }
+}
