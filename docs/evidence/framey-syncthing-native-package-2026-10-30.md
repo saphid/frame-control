@@ -88,9 +88,10 @@ explicitly documented launcher shim.
 
 ## Current evidence and limits
 
-Twelve focused tests pass locally: existing transport retry/refusal cases,
+Thirteen focused tests pass locally: existing transport retry/refusal cases,
 changed-descriptor/wrong-ref/unsafe-cache rejection and prepared-input cases for wrong architecture, commits, signature
-counts, key, incomplete verification, missing bundles and size bounds.
+counts, key, incomplete verification, missing bundles and size bounds, plus
+source fingerprints on the checks job's Python 3.9.
 
 The [local JSON evidence](framey-syncthing-native-package-2026-10-30.json)
 records complete preparation for both architectures and an AMD64 replay using
@@ -107,6 +108,31 @@ fingerprints and all required results are retained. Its owned VM was reaped;
 both offline containers and only the image created for this audit were removed.
 Public caches and pre-existing data remain. ARM64 bundle preparation on this
 AMD64 host is static evidence only; native ARM64 runtime remains unverified.
+
+## First native CI result and bounded retry
+
+On PR #472 head `44dcd64b9f87085738a23da6a831a2a93279bbf5`, the AMD64
+artifact passed independent checks of exact-head/source hashes, both signatures,
+actual package/version/namespace, service restart, sync, authentication refusal,
+cleanup and preserving uninstall. Its stop completed in 0.142 seconds.
+
+The ARM64 job **failed** while installing the signed GNOME runtime under TCG:
+the Flatpak install exceeded 300 seconds. The guest had spent over five minutes
+assembling/validating that runtime before installation began. Both offline
+signatures and complete content integrity had passed, but no ARM64 package
+launch or sync was proved. The [failure record](framey-syncthing-arm-package-timeout-2026-10-30.json)
+binds that result to its artifact and exact sources. Neither artifact existence
+nor verified downloads/signatures make this native package job green.
+
+The ARM64 retry retains all proof requirements and records explicit bounded
+limits: each installation gets 900 seconds, the user probe 2,400 seconds, its
+systemd unit 2,460 seconds and the outer owned emulator 2,520 seconds. The
+workflow has a 75-minute ceiling including preparation/build work. AMD64 keeps
+its existing 300/840/900/960-second limits. Timeout diagnostics retain the actual
+command, elapsed time and captured output; a failed guest is reported before
+testing its completed architecture field. ARM64 remains unverified until an
+exact-new-head job and its retained evidence pass. This budget change alone
+does not establish that the installation succeeds.
 
 Native ARM64 package execution is not established by an AMD64 run, ARM64
 metadata/downloads or cross-building an image. Even successful package CI

@@ -1,9 +1,12 @@
 """Prepared bundles cannot bypass exact architecture/commit/signature gates."""
 
 import copy
+import hashlib
 import importlib.util
 from pathlib import Path
+import tempfile
 import unittest
+from unittest.mock import patch
 
 
 class PreparedPackage(unittest.TestCase):
@@ -29,6 +32,14 @@ class PreparedPackage(unittest.TestCase):
                 for kind, commit in self.module.COMMITS[arch].items()
             },
         }
+
+    def test_fingerprints_work_without_python_311_file_digest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / 'fixture'
+            data = b'bounded source fingerprint\n' * 50000
+            path.write_bytes(data)
+            with patch.object(hashlib, 'file_digest', None, create=True):
+                self.assertEqual(self.module.sha(path), hashlib.sha256(data).hexdigest())
 
     def test_native_architecture_has_its_own_exact_commit_pins(self):
         for arch in self.module.ARCHES:

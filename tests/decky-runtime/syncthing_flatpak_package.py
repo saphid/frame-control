@@ -33,7 +33,18 @@ EXPECTED = {
 
 
 def command(args, timeout=180):
-    p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+    began = time.monotonic()
+    try:
+        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        def tail(value):
+            return (value.decode(errors='replace') if isinstance(value, bytes) else value or '')[-10000:]
+        PROGRESS['timedOutCommand'] = {
+            'argv': args, 'timeoutSeconds': timeout,
+            'elapsedSeconds': round(time.monotonic() - began, 3),
+            'stdout': tail(error.stdout), 'stderr': tail(error.stderr),
+        }
+        raise
     if p.returncode:
         raise RuntimeError(
             str(args)
@@ -86,6 +97,8 @@ def main():
         raise RuntimeError("Only the private Flatpak VM may run this user probe")
     home = Path.home()
     inputs = json.loads(Path("/input/flatpak-inputs.json").read_text())
+    install_limit = inputs['timeouts']['installSeconds']
+    assert install_limit == (900 if ARCH == 'aarch64' else 300)
     global PROGRESS
     report = {
         "realFrameContacted": False,
@@ -136,6 +149,7 @@ def main():
         )
         report[kind + "EmbeddedKeySha256"] = included_sha
         del included, variant
+        began = time.monotonic()
         log = flat(
             "install",
             "--user",
@@ -145,8 +159,9 @@ def main():
             "--no-related",
             "--bundle",
             str(bundle),
-            timeout=300,
+            timeout=install_limit,
         )
+        report[kind + 'InstallElapsedSeconds'] = round(time.monotonic() - began, 3)
         report[kind + "InstallLog"] = log[-1000:]
         bundle.unlink()  # Only the assembled input created by this fixture.
         target = APP if kind == "app" else "runtime/org.gnome.Platform/" + ARCH + "/49"
