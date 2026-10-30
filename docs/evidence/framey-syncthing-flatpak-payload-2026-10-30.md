@@ -99,10 +99,13 @@ replacement processes through all 18 rejected override/alias controls. This
 is AMD64/ARM64 service evidence for the uninstalled candidate, separately from
 the static package audit.
 
-Next, pin and verify the matching **runtime payloads**, then launch the actual
-app through Flatpak in an owned disposable VM with its default sandbox and
-private data. Require actual package service control and two-way sync before
-using that result toward compatibility. Managed install/update/remove,
+The [runtime follow-up](framey-syncthing-flatpak-runtime-2026-10-30.md) verifies
+both architecture-specific GNOME 49 commit signatures and the complete AMD64
+runtime content. Its AMD64 disposable VM installs and launches the exact signed
+package, then checks real private user-service control and two-way sync with
+the default Flatpak sandbox. Native ARM64 package execution and Framey
+managed lifecycle/integration remain unverified. Require those gates before
+using this result toward compatibility. Managed install/update/remove,
 existing-service migration, browser controls and real Frame/SteamVR/controller
 gates remain pending. No headset was contacted, no host Flatpak store changed
 and no app was installed. Private containers and only the images created by

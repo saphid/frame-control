@@ -61,29 +61,45 @@ def module(name, path):
     return value
 
 
-def pack(archive_path, output, payloads):
+def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
+         user_probe=None, normal_root=False, timeout=300):
     """Write guest-only newc bytes directly; never extract/chown host files."""
     unit = (
         b'[Unit]\nDescription=Private Framey service probe\nAfter=dbus.service\nRequires=dbus.service\n'
-        b'[Service]\nType=oneshot\nExecStart=/usr/bin/python3 /framey-root.py\nTimeoutStartSec=300\n'
-        b'StandardOutput=journal+console\nStandardError=journal+console\n'
+        b'[Service]\nType=oneshot\nExecStart=/usr/bin/python3 /framey-root.py\n'
+        + f'TimeoutStartSec={timeout}\n'.encode()
+        + b'StandardOutput=journal+console\nStandardError=journal+console\n'
         b'[Install]\nWantedBy=multi-user.target\n'
     )
     init = (
         b'#!/bin/sh\nmount -t devtmpfs devtmpfs /dev\nmount -t proc proc /proc\n'
         b'mount -t sysfs sysfs /sys\nmount -t tmpfs tmpfs /run\nmkdir -p /run/lock\n'
-        b'exec /usr/lib/systemd/systemd --log-target=console\n'
     )
+    if normal_root:
+        # Bubblewrap requires an ordinary guest root, rather than initramfs.
+        init += (
+            b'mkdir /newroot\nmount -t tmpfs -o size=1024m tmpfs /newroot\n'
+            b'tar -C / --exclude=./newroot --exclude=./dev --exclude=./proc --exclude=./sys --exclude=./run -cf - . | tar -C /newroot -xf -\n'
+            b'mkdir -p /newroot/dev /newroot/proc /newroot/sys /newroot/run\n'
+            b'mount --move /dev /newroot/dev\nmount --move /proc /newroot/proc\n'
+            b'mount --move /sys /newroot/sys\nmount --move /run /newroot/run\n'
+            b'exec /usr/sbin/switch_root /newroot /usr/lib/systemd/systemd --log-target=console\n'
+        )
+    else:
+        init += b'exec /usr/lib/systemd/systemd --log-target=console\n'
+
     regular, directory, link = stat.S_IFREG, stat.S_IFDIR, stat.S_IFLNK
     overlays = {
         'init': (regular | 0o755, init),
-        'framey-owned-vm': (regular | 0o444, MARKER),
+        'framey-owned-vm': (regular | 0o444, marker),
         'framey-root.py': (
             regular | 0o644,
+            bootstrap if bootstrap is not None else
             (ROOT / 'tests/decky-runtime/syncthing_service_root.py').read_bytes(),
         ),
         'framey-user.py': (
             regular | 0o644,
+            user_probe if user_probe is not None else
             (ROOT / 'tests/decky-runtime/syncthing_service.py').read_bytes(),
         ),
         'etc/machine-id': (regular | 0o444, uuid.uuid4().hex.encode() + b'\n'),
