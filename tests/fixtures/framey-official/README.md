@@ -6,13 +6,16 @@ These are unmodified ZIPs downloaded from the official Decky store CDN on
 and `67.zip` and `114.zip` on 2026-10-28. `24.zip`, `28.zip`, `52.zip`, `79.zip`, `93.zip`, `104.zip`, `118.zip` and `132.zip` were added on 2026-10-29.
 `130.zip` was added from the same digest-verified cache on 2026-10-29; a fresh
 official store read confirmed all 116 catalog version/digest records unchanged.
-Each ZIP includes its upstream `LICENSE`. They are test data, not plugins shipped or installed by
+The store ZIPs include their upstream `LICENSE`. The separate upstream v1.0.2
+GitHub release ZIP omits it; `130-v102.LICENSE` is the GPLv3 file from its
+tag, byte-identical to the license in `130.zip`. These are test data, not plugins shipped or installed by
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
+| `130-v102.zip` | Games Prefix Manager upstream GitHub release asset; **not in the Decky store on 2026-10-30** | 1.0.2 | `12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6` |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
 | `24.zip` | RadiYo! | 1.3 | `647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43` |
 | `28.zip` | Emuchievements | 2.0.5 | `98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89` |

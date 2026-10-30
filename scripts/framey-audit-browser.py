@@ -8,17 +8,24 @@ evidence only. No official Python/native backend is imported or executed.
 import argparse
 import hashlib
 import io
+import os
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
 import re
+import secrets
+import subprocess
 import sys
+import tempfile
 from unittest.mock import patch
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT/'ui'))
+sys.path.insert(0, str(ROOT/'tests'))
 import framey_panel
+import frame_decky_store
+from framey_official import PREFIX_MANAGER_102
 
 PRELUDE = '''<script>
 const report=(kind,message)=>parent.postMessage({type:'audit:log',kind,message:String(message)},'*');
@@ -72,18 +79,54 @@ def audit_prelude(speed_test_mock=False):
         SPEED_TEST_FETCH)
 
 
-def render_panel(record, data, speed_test_mock=False):
+def render_panel(record, data, speed_test_mock=False, managed_bundle=None):
     if hashlib.sha256(data).hexdigest() != record['sha256']:
         raise ValueError('Archive hash mismatch')
     if speed_test_mock and record['id'] != 118:
         raise ValueError('Speed Test mock requires plugin 118')
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         bundle = archive.read(record['folder']+'/dist/index.js')
+    if managed_bundle is not None:
+        bundle = managed_bundle
     # The audit supplies only digest-checked archive bytes, not an installed
     # receipt. Stub the receipt-bound lookup while using the shipped renderer.
     with patch.object(framey_panel, '_owned_dist', return_value=(None, bundle, record['sha256'])):
         return framey_panel.panel(record['id']).replace(
             b'<script id="framey-bundle"', audit_prelude(speed_test_mock).encode()+b'<script id="framey-bundle"')
+
+
+def managed_prefix_102_bundle(data):
+    """Install only the pinned release asset in a disposable local home."""
+    digest = PREFIX_MANAGER_102['sha256']
+    if hashlib.sha256(data).hexdigest() != digest:
+        raise ValueError('Games Prefix Manager release asset digest mismatch')
+    with tempfile.TemporaryDirectory(prefix='framey-prefix-browser-') as home:
+        root = Path(home)
+        unit = root/'.config/systemd/user/frame-control-decky.service'
+        unit.parent.mkdir(parents=True)
+        unit.write_text('[Service]\n')
+        (root/'.local/share/frame-control/decky/plugins').mkdir(parents=True)
+        systemctl = root/'systemctl'
+        systemctl.write_text('#!/bin/sh\nexit 0\n')
+        systemctl.chmod(0o700)
+        token = secrets.token_hex(12)
+        source = Path('/tmp/frame-control-decky-plugin-'+token)
+        source.write_bytes(data)
+        try:
+            env = dict(os.environ, HOME=home, PATH=home+os.pathsep+os.environ['PATH'])
+            command = [sys.executable, '-', 'install', token, '130', digest,
+                       PREFIX_MANAGER_102['folder'], '1.0.2', '-']
+            result = subprocess.run(command, input=frame_decky_store.apply_script(130, digest),
+                                    capture_output=True, text=True, env=env, timeout=30)
+            if result.returncode:
+                raise ValueError('Private managed install failed: '+result.stderr[-500:])
+            bundle = (root/'.local/share/frame-control/decky/plugins'/
+                      PREFIX_MANAGER_102['folder']/'dist/index.js').read_bytes()
+            if hashlib.sha256(bundle).hexdigest() != '2935cf40573094200ef7b8a910760970100715823c0e058a5cfbb1d2158a58f5':
+                raise ValueError('Managed Games Prefix Manager frontend differs from pinned result')
+            return bundle
+        finally:
+            source.unlink(missing_ok=True)
 
 
 def read_module_asset(path, records, cache):
@@ -116,7 +159,7 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
   notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE,
-  wineFixture=WINE_FIXTURE, wineState=WINE_STATE;
+  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false;
 window.wineFixtureCalls=[];let wineSocketNext=0;const wineSessions=new Map();
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
@@ -162,6 +205,15 @@ addEventListener('message',event=>{
         setTimeout(()=>reply({messages,closed:false}),100);
       }else if(data.method==='framey_ws_close'){wineSessions.delete(data.args?.[0]);reply(null);}
       else reply(null,'Wine fixture denies unknown backend method');
+    }else if(prefixFixture&&active.id===130&&data.legacy){
+      const result=data.method==='get_games'?{success:true,result:[{
+        name:'Private Game',appid:'4242',type:'Steam',
+        prefix_path:'/home/tester/.local/share/Steam/steamapps/compatdata/4242',
+        prefix_status:'Folder',size:'1.0 KB',
+        install_path:'/home/tester/.local/share/Steam/steamapps/common/Private'
+      }]}:null;
+      event.source.postMessage({type:'framey:reply',id:data.id,
+        ...(result?{result}:{error:'Private prefix fixture blocks writes'})},'*');
     }else if(batteryFixture&&active.id===67&&data.legacy){
       const lookback=data.args?.[0]?.lookback;
       if(window.batteryFixtureCalls.length<20)
@@ -235,7 +287,7 @@ window.runAudit=async(ids,settleMs=1200)=>{
     if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);
-    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture&&!wineFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
+    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture&&!wineFixture&&!prefixFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
 };
@@ -262,6 +314,8 @@ def main():
                         help='Replay only plugin 52 with private in-memory settings; media calls remain denied')
     parser.add_argument('--wine-cellar-fixture', action='store_true',
                         help='Replay only plugin 68 with native empty-state response; commands remain denied')
+    parser.add_argument('--prefix-manager-102-fixture', action='store_true',
+                        help='Replay the managed upstream v1.0.2 panel with one private row; all writes denied')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
@@ -269,7 +323,8 @@ def main():
     args = parser.parse_args()
     if sum((args.speed_test_mock, args.battery_tracker_fixture,
             args.network_sentinel_fixture, args.decky_notifications_fixture,
-            args.theme_music_settings_fixture, args.wine_cellar_fixture)) > 1:
+            args.theme_music_settings_fixture, args.wine_cellar_fixture,
+            args.prefix_manager_102_fixture)) > 1:
         parser.error('Choose one frontend fixture')
     plugins = json.loads(args.catalog.read_text())['plugins']
     if args.speed_test_mock:
@@ -304,6 +359,11 @@ def main():
         wine_state = json.loads((ROOT/'tests/fixtures/framey-wine-state.json').read_text())
     else:
         wine_state = None
+    managed_prefix_bundle = None
+    if args.prefix_manager_102_fixture:
+        plugins = [PREFIX_MANAGER_102]
+        data = (args.cache/(PREFIX_MANAGER_102['sha256']+'.zip')).read_bytes()
+        managed_prefix_bundle = managed_prefix_102_bundle(data)
     records = {p['id']: p for p in plugins}
     library = None
     if args.library_snapshot:
@@ -348,6 +408,12 @@ def main():
                 if args.wine_cellar_fixture:
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Wine Cellar replays a native private empty-state response; CSP blocks network and all install/uninstall commands.')
+                if args.prefix_manager_102_fixture:
+                    page = page.replace('Exact archived frontend code runs in an opaque iframe.',
+                                        'The exact digest-checked managed frontend runs in an opaque iframe.')
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Games Prefix Manager replays one private row in its managed panel; every write and network call is blocked.')
+                    page = page.replace('prefixFixture=false', 'prefixFixture=true')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
@@ -361,7 +427,7 @@ def main():
                 try:
                     record = records[int(path.split('/')[-1])]
                     data = (args.cache/(record['sha256']+'.zip')).read_bytes()
-                    body = render_panel(record, data, args.speed_test_mock)
+                    body = render_panel(record, data, args.speed_test_mock, managed_prefix_bundle)
                 except (KeyError, ValueError, OSError, zipfile.BadZipFile):
                     self.send_error(404, 'Verified frontend archive unavailable')
                     return

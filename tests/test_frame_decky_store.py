@@ -103,8 +103,12 @@ class ArchiveTests(unittest.TestCase):
     def test_only_exact_prefix_manager_adaptation_clears_store_root(self):
         records = [{'id': 130, 'name': 'Games Prefix Manager', 'tags': ['root'],
                     'versions': [{'name': '1.0.1', 'hash': frame_decky_store.PREFIX_MANAGER_DIGEST}]}]
-        with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
-            self.assertFalse(frame_decky_store.catalog()[0]['root'])
+        for version, digest in (('1.0.1', frame_decky_store.PREFIX_MANAGER_DIGEST),
+                                ('1.0.2', frame_decky_store.PREFIX_MANAGER_102_DIGEST)):
+            records[0]['versions'][0].update(name=version, hash=digest)
+            with self.subTest(version=version), patch.object(frame_decky_store.urllib.request, 'urlopen',
+                    return_value=io.BytesIO(json.dumps(records).encode())):
+                self.assertFalse(frame_decky_store.catalog()[0]['root'])
         records[0]['versions'][0]['hash'] = 'a'*64
         with patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(json.dumps(records).encode())):
             self.assertTrue(frame_decky_store.catalog()[0]['root'])
@@ -247,6 +251,30 @@ class StoreTransaction(unittest.TestCase):
             frontend = subprocess.run(['node', str(Path(__file__).parent/'page/framey_prefix_manager.mjs'),
                                        str(folder/'dist/index.js')], capture_output=True, text=True, timeout=10)
             self.assertEqual(frontend.returncode, 0, frontend.stderr)
+        self.assertEqual(self.apply('remove', plugin_id=130, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+
+    def test_prefix_manager_102_release_asset_disables_game_data_delete(self):
+        from framey_official import PREFIX_MANAGER_102, archive as official_archive
+        record = PREFIX_MANAGER_102
+        data = official_archive(record)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), record['sha256'])
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']), record['folder'])
+        result = self.apply('install', data, plugin_id=130, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / record['folder']
+        self.assertEqual(json.loads((folder/'plugin.json').read_text())['flags'], [])
+        source = (folder/'main.py').read_text()
+        compile(source, str(folder/'main.py'), 'exec')
+        self.assertIn('if delete_game_folder:\n        return False, "Game data deletion is unavailable on Frame; no files changed"', source)
+        frontend = (folder/'dist/index.js').read_text()
+        self.assertNotIn('showDeleteGameFolder: true', frontend)
+        self.assertNotIn('showDeleteGameFolder: game.install_path !== "-"', frontend)
+        self.assertEqual(frontend.count('showDeleteGameFolder: false'), 2)
+        if shutil.which('node'):
+            checked = subprocess.run(['node', str(Path(__file__).parent/'page/framey_prefix_manager.mjs'),
+                                      str(folder/'dist/index.js')], capture_output=True, text=True, timeout=10)
+            self.assertEqual(checked.returncode, 0, checked.stderr)
         self.assertEqual(self.apply('remove', plugin_id=130, folder=record['folder']).returncode, 0)
         self.assertFalse(folder.exists())
         changed = io.BytesIO(data)
