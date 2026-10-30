@@ -77,7 +77,16 @@ independent audit of all 122 source fingerprints. The expanded full server regre
 passed 1,852 tests in 227.550 seconds, with the same 16 skips and no failures.
 
 All four retained captures were independently inspected and show Running →
-Stopped → Running → Stopped. This trial used automatic port discovery
+Stopped → Running → Stopped:
+
+- [Running](framey-syncthing-http-gateway-running1-2026-10-30.png)
+- [Stopped](framey-syncthing-http-gateway-stopped2-2026-10-30.png)
+- [Restarted](framey-syncthing-http-gateway-restarted3-2026-10-30.png)
+- [Stopped again](framey-syncthing-http-gateway-stopped4-2026-10-30.png)
+
+These captures cover the private-bridge browser phase; the subsequent production
+HTTP dispatch phase is established by its source-bound request/native report.
+This trial used automatic port discovery
 (`manualPortFallbackUsed=false`); it does not establish the manual fallback.
 The browser lifecycle still uses its private RPC bridge. The separate HTTP
 phase exercised the unchanged production dispatch with 105 production source
@@ -86,7 +95,8 @@ start/stop, and cleanup. Its signed Syncthing process identities matched the
 package. All 17 lifecycle checks, 18 ownership refusals, 12 migration checks,
 preserving uninstall and owned QEMU cleanup passed. Result SHA-256:
 `bed309be4b5824d67b6f1fcccaa5aaed14690c348a2682295dc7641c3ddbc571`.
-The JSON companion records the independent audit and capture digests; both
+The JSON companion records the independent audit, all source fingerprints and
+capture digests; both
 failed development trials remain recorded above and in that companion.
 
 The unpublished CI follow-up requests `--browser-setup --http-gateway` in its
