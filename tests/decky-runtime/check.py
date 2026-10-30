@@ -136,6 +136,39 @@ def main():
     env.update(UNPRIVILEGED_PATH=str(base), PRIVILEGED_PATH=str(base), CHOWN_PLUGIN_PATH='0',
                LIVE_RELOAD='0', USE_CEF_CLOSE_WORKAROUND='0', KEEP_SYSTEMD_SERVICE='1',
                DBUS_SESSION_BUS_ADDRESS='unix:path=/run/user/1100/bus')
+    if case['probe'] == 'desktop-apps-private-entries':
+        # The real backend scans only disposable container paths. Exec is a
+        # canary: discovery/settings must never launch a desktop application.
+        primary, secondary = home/'desktop-primary', home/'desktop-secondary'
+        for directory in (primary, secondary):
+            (directory/'applications').mkdir(parents=True)
+        canary = home/'desktop-exec-canary'
+        executable = home/'fixture-desktop-app'
+        executable.write_text('#!/bin/sh\nprintf launched > '+str(canary)+'\n')
+        executable.chmod(0o700)
+        def entry(directory, name, body):
+            path = directory/'applications'/name
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text('[Desktop Entry]\n'+body)
+            return path
+        desktop = entry(primary, 'framey-private.desktop',
+            'Type=Application\nName=Private Desktop App\nExec='+str(executable)+' --name %c --file %k %U\n')
+        entry(secondary, 'framey-private.desktop',
+              'Type=Application\nName=Wrong duplicate\nExec=/bin/false\n')
+        entry(primary, 'nested/framey-flatpak.desktop',
+              'Type=Application\nName=Private Flatpak\nExec=/usr/bin/flatpak run org.framey.Private %f\n'
+              'X-Flatpak=org.framey.Private\nPath='+str(home)+'/private-workdir\n')
+        for name, body in {
+                'hidden': 'Type=Application\nHidden=true\nName=Hidden\nExec=/bin/false\n',
+                'nodisplay': 'Type=Application\nNoDisplay=true\nName=NoDisplay\nExec=/bin/false\n',
+                'terminal': 'Type=Application\nTerminal=true\nName=Terminal\nExec=/bin/false\n',
+                'link': 'Type=Link\nName=Link\nExec=/bin/false\n',
+                'noname': 'Type=Application\nExec=/bin/false\n',
+                'noexec': 'Type=Application\nName=NoExec\n',
+                'malformed': 'Type=Application\nName=Malformed\nExec="unterminated\n',
+        }.items():
+            entry(primary, 'framey-private-'+name+'.desktop', body)
+        env['XDG_DATA_DIRS'] = str(primary)+':'+str(secondary)
     if case['probe'] == 'battery-tracker':
         supply = home/'battery-supply'/'max1720x_bat_7-36'
         supply.mkdir(parents=True)
@@ -526,6 +559,59 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'protondb-private-settings':
+                # The exact frontend reads/writes one settings object. Keep
+                # every write inside the disposable native container home.
+                defaults = dict(size='regular', position='tl', labelTypeOnHover='off',
+                    disableSubmit=False, enableLibraryBadge=True, enableStoreBadge=True,
+                    storeBadgePosition='bc', showAnalysisButton=True, roundedCorners=False,
+                    showLibraryIcons=True, libraryIconPosition='bl')
+                state = base/'settings'/record['folder']/'config.json'
+                assert current('get_setting', 'settings', defaults) == defaults
+                # Published Decky shadows the bundled settings module and
+                # creates an empty config during SettingsManager startup.
+                initial = state.read_bytes()
+                assert initial == b''
+                assert current('get_setting', 'missing-private-setting', None) is None
+                assert state.read_bytes() == initial, 'Reading defaults must preserve config bytes'
+                info = current('get_system_info')
+                assert set(info) == {'plugin_version', 'os_name', 'os_version', 'decky_version'}
+                assert all(isinstance(value, str) and value for value in info.values()), info
+                os_release = dict(line.split('=', 1) for line in
+                    Path('/etc/os-release').read_text().splitlines() if '=' in line)
+                assert info['os_name'] == os_release['NAME'].strip('"')
+                assert info['os_version'] == os_release['VERSION_ID'].strip('"')
+                first = dict(defaults, size='compact', position='br', enableLibraryBadge=False)
+                assert current('set_setting', 'settings', first) is None
+                assert current('get_setting', 'settings', defaults) == first
+                assert json.loads(state.read_text()) == {'settings': first}
+                saved = dict(first, enableStoreBadge=False, roundedCorners=True)
+                assert current('set_setting', 'settings', saved) is None
+                before = state.read_bytes()
+                assert json.loads(before) == {'settings': saved}
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
+                assert current('get_setting', 'settings', defaults) == saved
+                assert current('get_setting', 'missing-private-setting', False) is False
+                assert current('get_system_info') == info
+                assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
+                    frontendSettingsObject=True, settingsPersistedToDisk=True,
+                    settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
+                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    settingsSha256=hashlib.sha256(before).hexdigest(),
+                    badgeRenderingVerified=False, browserVerified=False,
+                    realSteamCef=False, realFrameContacted=False,
+                    physicalControllerVerified=False)
+                report['result'] = ('published Decky API2 discovery, private frontend settings '
+                    'write/read and loader-restart persistence, false values and container OS '
+                    'metadata passed; badge rendering, browser, Frame and VR unverified')
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.
@@ -992,6 +1078,51 @@ def main():
                     worker.join(timeout=3)
                 report['result'] = ('discovery, loopback HTTP fetch/redirect and self-signed HTTPS rejection passed; '
                     'external stations, trusted HTTPS, playback, real Frame and VR unverified')
+            elif case['probe'] == 'desktop-apps-private-entries':
+                import shlex
+                apps = current('get_apps')
+                assert apps['framey-private'] == dict(id='framey-private', name='Private Desktop App',
+                    bin=str(executable), cmd=shlex.join(['--name', 'Private Desktop App', '--file', str(desktop)]),
+                    workdir=str(home), flatpak=False), apps
+                flatpak = apps['nested-framey-flatpak']
+                assert flatpak == dict(id='nested-framey-flatpak', name='Private Flatpak', bin='/usr/bin/flatpak',
+                    cmd='run org.framey.Private', workdir=str(home/'private-workdir'), flatpak=True), flatpak
+                assert not any('framey-private-'+name in apps for name in
+                               ('hidden','nodisplay','terminal','link','noname','noexec','malformed')), apps
+                assert not canary.exists()
+                current('set_app_setting', 'framey-private', 'favorite', True)
+                current('set_app_setting', 'framey-private', 'hidden', True)
+                current('set_app_setting', 'framey-private', 'lastOpened', 424242)
+                assert current('get_temporary_shortcuts') == []
+                current('save_temporary_shortcut', 424242)
+                current('save_temporary_shortcut', 424242)
+                assert current('get_temporary_shortcuts') == [424242]
+                state = base/'settings'/record['folder']/'settings.json'
+                saved = json.loads(state.read_text())
+                assert saved['apps']['framey-private'] == dict(favorite=True, hidden=True, lastOpened=424242)
+                assert saved['temporaryShortcuts'] == [424242]
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Desktop Apps discovery')
+                restored = current('get_apps')['framey-private']
+                assert restored['favorite'] is True and restored['hidden'] is True and restored['lastOpened'] == 424242
+                assert current('get_temporary_shortcuts') == [424242]
+                current('forget_temporary_shortcut', 424242)
+                current('forget_temporary_shortcut', 424242)
+                assert current('get_temporary_shortcuts') == []
+                assert json.loads(state.read_text())['temporaryShortcuts'] == []
+                assert not canary.exists()
+                report['desktopEntries'] = dict(discovery=True, xdgPrecedence=True, filteredEntries=7,
+                    fieldCodes=True, flatpakMetadata=True, privateSettingsPersisted=True,
+                    temporaryShortcutBookkeeping=True, loaderRestart=True, noApplicationLaunched=True,
+                    actualFlatpakDiscovery=False, actualSteamShortcutChanges=False,
+                    realFrameContacted=False, physicalControllerVerified=False)
+                report['result'] = ('published Decky discovery, private desktop-entry parsing/filtering, '
+                    'settings and temporary-shortcut bookkeeping across restart passed; actual Flatpak installation, '
+                    'Steam shortcut changes, app launch, real Frame and VR unverified')
             elif case['probe'] == 'shelves-settings':
                 # Private configuration only. Never register a Steam Home
                 # patch, import a user's settings, or touch their library.
