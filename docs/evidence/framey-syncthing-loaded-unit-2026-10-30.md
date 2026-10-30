@@ -57,8 +57,8 @@ loaded alias to its private already-running legacy service. It requires state,
 start, stop, wizard start, reload and external transition to refuse while
 preserving process IDs, unit/receipt/override bytes and the legacy enable link.
 A separate un-reloaded drop-in must cause refusal while the real Syncthing
-process keeps its original PID. The ordinary real two-way sync and full
-service lifecycle remain required after the override cases, with cleanup.
+process keeps its original PID. Both the refusal cases and ordinary real
+two-way sync and full service lifecycle remain required, with cleanup.
 
 The [machine-readable report](framey-syncthing-loaded-unit-2026-10-30.json)
 records the red probe's fingerprints and the corrected build/native/service
