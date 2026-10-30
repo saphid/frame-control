@@ -20,3 +20,5 @@ Also retain independent exact-main `bc3e592` native AMD64/ARM64 (33 probes/30 pu
 - [framey-main-bc3e592-e2e-ci-2026-10-30.json](framey-main-bc3e592-e2e-ci-2026-10-30.json)
 
 All browser CEF, receipts and inputs are private synthetic fixtures. Actual Steam CEF, managed installation, the real Frame and physical/worn controller usability remain unverified. No real Frame was contacted, no publication authorized, no compatibility status promoted, and no installer policy changed.
+
+A [later current-source audit](framey-host-and-main-current-ci-2026-10-30.md) records all nine completed host-gate jobs at PR #493 head `f114892` and completed native/e2e jobs at main `d89291e`. It preserves the pending main package and physical-testing gates and does not replace the historical identities above.
