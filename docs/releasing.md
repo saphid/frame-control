@@ -75,11 +75,12 @@ count. So a build reaches people only when you publish it, after testing it.
    gh workflow run syncthing-flatpak-package.yml --ref main
    ```
 
-   The publisher requires successful jobs at the exact release commit on
+   The signed-package gate requires successful jobs at the exact release commit on
    `main`, from a push or manual dispatch. PR results, another branch, or an
-   older commit do not satisfy it. Every matching run and attempt must pass;
-   a later success does not conceal a failure, cancellation or skip. This
-   verifies the isolated package candidate, not a managed installation or
+   older commit do not satisfy it. Every matching main checks, native Decky,
+   signed-package and tagged installer run and attempt must pass;
+   a later success does not conceal a failure, cancellation or skip. The
+   signed-package evidence verifies the isolated candidate, not a managed installation or
    wearer-visible Syncthing controls.
 
    Supply the saved smoke result to the publisher. Both its dry run and publish

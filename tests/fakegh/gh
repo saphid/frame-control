@@ -101,6 +101,14 @@ elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
            "conclusion": gate.get("decky_conclusion" if run_id == 503 else ("main_conclusion" if is_main else "release_conclusion"), "success"),
            "html_url": "https://github.com/saphid/frame-control/actions/runs/%s" % run_id}
     runs = [run]
+    if run_id in (501, 503):
+        kind = 'main' if run_id == 501 else 'decky'
+        if gate.get('prior_' + kind + '_run'):
+            prior_id = 497 if kind == 'main' else 498
+            runs.append(dict(run, id=prior_id, run_attempt=1,
+                             status=gate.get('prior_' + kind + '_status', 'completed'),
+                             conclusion=gate.get('prior_' + kind + '_conclusion', 'success'),
+                             html_url='https://github.com/saphid/frame-control/actions/runs/%s' % prior_id))
     if run_id == 504:
         run.update(head_sha=gate.get("signed_sha", commit),
                    head_branch=gate.get("signed_branch", branch),
@@ -125,11 +133,14 @@ elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
     parts = endpoint[len(repo + "actions/runs/"):].split("/")
     run_id = parts[0]
     attempt = int(parts[2])
-    names = {"500": release_jobs, "501": main_jobs, "502": release_jobs,
+    names = {"497": main_jobs, "498": decky_jobs,
+             "500": release_jobs, "501": main_jobs, "502": release_jobs,
              "503": decky_jobs, "504": signed_jobs, "499": signed_jobs}[run_id]
     names = [name for name in names if name != gate.get("omit_job")]
     jobs = [{"name": name, "status": "completed",
-             "conclusion": (gate.get("prior_release_run_bad_conclusion", "cancelled")
+             "conclusion": (gate.get("prior_runtime_bad_conclusion", "failure")
+                            if run_id in ("497", "498") and name == gate.get("prior_runtime_bad_job")
+                            else gate.get("prior_release_run_bad_conclusion", "cancelled")
                             if run_id == "500" and name == gate.get("prior_release_run_bad_job")
                             else gate.get("signed_prior_bad_conclusion", "failure")
                             if run_id == "504" and attempt == 1 and name == gate.get("signed_prior_bad_job")

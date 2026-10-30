@@ -261,6 +261,31 @@ class PublishRelease(unittest.TestCase):
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
 
+    def test_prior_main_or_native_run_cannot_be_hidden_by_later_success(self):
+        for kind, job in (('main', 'e2e'), ('decky', 'decky-runtime (ubuntu-24.04-arm)')):
+            cases = [{f'prior_{kind}_conclusion': state}
+                     for state in ('failure', 'cancelled', 'skipped')]
+            cases += [{f'prior_{kind}_status': 'in_progress', f'prior_{kind}_conclusion': None},
+                      {'prior_runtime_bad_job': job, 'prior_runtime_bad_conclusion': 'failure'}]
+            for case in cases:
+                gates = {f'prior_{kind}_run': True, **case}
+                with self.subTest(gates=gates):
+                    p, log, upload = self.run_script([draft()], 'v9.8.7', gates=gates)
+                    self.assertNotEqual(p.returncode, 0, p.stdout)
+                    self.assertIn('release gate failed', p.stderr)
+                    self.assertIsNone(upload)
+                    self.assertFalse(any('-X' in call for call in log))
+
+    def test_all_successful_main_and_native_runs_are_checked(self):
+        p, log, upload = self.run_script([draft()], '--dry-run', 'v9.8.7',
+                                        gates={'prior_main_run': True, 'prior_decky_run': True})
+        self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+        for run in (497, 498, 501, 503):
+            self.assertTrue(any(f'actions/runs/{run}/attempts/1/jobs' in arg
+                                for call in log for arg in call), run)
+        self.assertIsNone(upload)
+        self.assertFalse(any('-X' in call for call in log))
+
     def test_signed_package_gates_stop_publication_before_any_mutation(self):
         cases = [{"signed_missing": True}, {"signed_sha": "c" * 40},
                  {"signed_branch": "unrelated"}, {"signed_event": "pull_request"},
