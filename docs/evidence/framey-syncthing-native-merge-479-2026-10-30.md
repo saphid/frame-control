@@ -18,7 +18,7 @@ runtime results, distinct from the ownership fixture using a launcher shim.
 The [separate combined AMD64 browser audit](framey-syncthing-browser-5a66291-ci-2026-10-30.md)
 retains the inspected Running/Stopped/Running/Stopped captures. It uses a private
 test bridge and synthetic DOM input. The production-parent HTTP development
-replay is separate and pending after retained failures. Production Steam CEF,
+replay was separate and pending after retained failures when this audit was written. Production Steam CEF,
 ARM64 browser, managed install/update/remove, real Frame visuals and physical
 controllers remain unverified. Installation stays blocked. No release or real
 Frame contact occurred. Postmerge main CI must pass before another merge.
@@ -28,5 +28,17 @@ Frame contact occurred. Postmerge main CI must pass before another merge.
 The [#480 merge audit](framey-syncthing-http-merge-480-2026-10-30.md) records the
 next exact-main/PR gates and both native signed-package architectures, plus the
 sequential AMD64 production HTTP dispatcher evidence. That result uses explicit
-fixture CEF and receipt data and does not resolve the failed full production
-browser parent, enable installation, or verify physical headset/controller use.
+fixture CEF and receipt data and does not resolve those historical full production
+browser-parent failures, enable installation, or verify physical headset/controller use.
+
+
+## Later local parent result
+
+The parent-failure statements above record the state at the audited merge.
+Later strict local AMD64 replay12 passed at private source `a4f37b6`, with all
+123 source fingerprints and eight captures independently checked. It used
+synthetic CEF/receipt data and did not establish ARM64 parent, actual Steam CEF,
+managed installation, real Frame or physical-controller behavior. The published
+follow-up [#486](https://github.com/saphid/frame-control/pull/486) carries the
+candidate, durable evidence and a separate exact-head production-parent CI gate.
+Its published-head results must pass independently. Installation remains blocked.

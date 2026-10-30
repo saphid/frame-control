@@ -18,9 +18,21 @@ seven successful CEF RPCs, one socket with unique IDs, and owned cleanup.
 
 The separate private-bridge browser phase had 70 RPCs and four previously
 inspected Running/Stopped/Running/Stopped captures. These do not prove the full
-production browser parent: that excluded development replay still fails, with
-no established root cause. Fixture CEF and the store receipt are synthetic.
+production browser parent. At the time of this merge, that excluded development
+replay had failed and its cause was unestablished. Fixture CEF and the store receipt are synthetic.
 ARM64 browser/HTTP, actual Steam CEF, managed install/update/remove, real Frame
 visuals and physical controllers remain unverified. Installation stays blocked.
 No new release or hardware contact occurred. Postmerge main CI is a new gate;
 these premerge results do not grant a postmerge or release pass.
+
+
+## Later local parent result
+
+The parent-failure statements above record the state at the audited merge.
+Later strict local AMD64 replay12 passed at private source `a4f37b6`, with all
+123 source fingerprints and eight captures independently checked. It used
+synthetic CEF/receipt data and did not establish ARM64 parent, actual Steam CEF,
+managed installation, real Frame or physical-controller behavior. The published
+follow-up [#486](https://github.com/saphid/frame-control/pull/486) carries the
+candidate, durable evidence and a separate exact-head production-parent CI gate.
+Its published-head results must pass independently. Installation remains blocked.

@@ -37,7 +37,19 @@ discovery; manual fallback was not exercised.
 
 This is a private-bridge desktop browser test. It does not verify the production
 browser parent over HTTP, actual Steam CEF, managed installation, ARM64 browser,
-real Frame or physical controllers. The separate parent-browser trial remains
+real Frame or physical controllers. At the time of that audit the separate parent-browser trial was
 failed/pending; installation stays blocked. The [completed native audits](framey-syncthing-native-merge-479-2026-10-30.md)
 subsequently verified both signed ARM64 results before #479 merged. No release
 is credited here.
+
+
+## Later local parent result
+
+The parent-failure statements above record the state at the audited merge.
+Later strict local AMD64 replay12 passed at private source `a4f37b6`, with all
+123 source fingerprints and eight captures independently checked. It used
+synthetic CEF/receipt data and did not establish ARM64 parent, actual Steam CEF,
+managed installation, real Frame or physical-controller behavior. The published
+follow-up [#486](https://github.com/saphid/frame-control/pull/486) carries the
+candidate, durable evidence and a separate exact-head production-parent CI gate.
+Its published-head results must pass independently. Installation remains blocked.
