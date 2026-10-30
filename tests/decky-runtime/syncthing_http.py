@@ -183,11 +183,25 @@ class StatusProcessSampler:
                     observerStopped=not self.thread.is_alive())
 
 
+def panel_command_kind(source, panel):
+    """Match both sides of the shipped payload slot, without inspecting its value."""
+    if not isinstance(source, str):
+        return None
+    for kind, template, marker in (
+            ('panel-method', panel.METHOD_SCRIPT, '__FRAMEY_METHOD_PAYLOAD__'),
+            ('panel-events', panel.EVENT_SCRIPT, '__FRAMEY_EVENTS_SOURCE__')):
+        prefix, found, suffix = template.partition(marker)
+        assert found and prefix and suffix
+        if source.startswith(prefix) and source.endswith(suffix):
+            return kind
+    return None
+
+
 def observe_ssh(call, records, lock, started, kind, *args, process_profiles=None, **kwargs):
-    assert kind in ('decky-status', 'panel-method', 'headset-status', 'other')
+    assert kind in ('decky-status', 'panel-method', 'panel-events', 'headset-status', 'other')
     begin = time.monotonic()
     entry = dict(kind=kind, startedAfterSeconds=round(begin-started, 3), outcome='success')
-    sampler = StatusProcessSampler(begin) if kind in ('decky-status', 'panel-method') and process_profiles is not None else None
+    sampler = StatusProcessSampler(begin) if kind in ('decky-status', 'panel-method', 'panel-events') and process_profiles is not None else None
     sampler_started = False
     if sampler:
         try:
@@ -285,7 +299,6 @@ def exercise(runtime_identity, service):
     previous_ssh = server.ssh
     import frame_decky
     import framey_panel
-    method_prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
     status_source = (bundle/'ui/frame_status.py').read_text()
 
     def traced_ssh(*args, **kwargs):
@@ -293,8 +306,8 @@ def exercise(runtime_identity, service):
             return previous_ssh(*args, **kwargs)
         source = kwargs.get('stdin')
         kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE, frame_decky.PANEL_STATUS_PROBE) else
-                'panel-method' if isinstance(source, str) and source.startswith(method_prefix) else
-                'headset-status' if source == status_source else 'other')
+                (panel_command_kind(source, framey_panel) or
+                 ('headset-status' if source == status_source else 'other')))
         return observe_ssh(previous_ssh, ssh_records, ssh_lock, parent_started, kind, *args,
                            process_profiles=status_profiles, **kwargs)
 

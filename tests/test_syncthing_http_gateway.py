@@ -264,6 +264,22 @@ class PrivateSshDiagnostics(unittest.TestCase):
                           'detail':'private-fixture-key', 'offline':True}), 'ssh-timeout')
         self.assertEqual(module.safe_error_category({'error':'unknown private-fixture-key'}), 'other')
 
+    def test_shipped_method_and_event_templates_with_common_preamble_have_distinct_kinds(self):
+        import sys
+        with patch.object(sys, 'path', [str(ROOT/'ui'), *sys.path]):
+            import framey_panel
+        module = self.gateway()
+        method = framey_panel.METHOD_SCRIPT.replace('__FRAMEY_METHOD_PAYLOAD__', repr('{}'))
+        event = framey_panel.EVENT_SCRIPT.replace('__FRAMEY_EVENTS_SOURCE__', repr('fixture'))
+        # The earlier prefix-only observer incorrectly called both a method.
+        prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
+        self.assertTrue(method.startswith(prefix) and event.startswith(prefix))
+        self.assertEqual(module.panel_command_kind(method, framey_panel), 'panel-method')
+        self.assertEqual(module.panel_command_kind(event, framey_panel), 'panel-events')
+        for unrelated in (None, b'private-fixture-credential', framey_panel.STEAM_READ_SCRIPT,
+                          prefix+'private-fixture-credential'):
+            self.assertIsNone(module.panel_command_kind(unrelated, framey_panel))
+
 
 class StatusProcessDiagnostics(unittest.TestCase):
     def gateway(self):
@@ -345,7 +361,7 @@ class StatusProcessDiagnostics(unittest.TestCase):
     def test_profiled_observer_preserves_exact_call_result_error_and_arguments(self):
         import threading
         module = self.gateway()
-        for kind, error in ((kind, error) for kind in ('decky-status', 'panel-method')
+        for kind, error in ((kind, error) for kind in ('decky-status', 'panel-method', 'panel-events')
                             for error in (None, RuntimeError('private-fixture-credential'))):
             records = []; profiles = dict(records=[], overflow=False); result = object()
             call = Mock(return_value=result, side_effect=error)

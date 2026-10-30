@@ -20,7 +20,7 @@ import threading
 import time
 import urllib.request
 
-from syncthing_http import CEF as RPC_CEF, observe_ssh, safe_error_category
+from syncthing_http import CEF as RPC_CEF, observe_ssh, panel_command_kind, safe_error_category
 from syncthing_http_parent import command, install_child_harness, sandboxed_renderers
 from terminal_browser import COMMAND, PROBE, screenshot
 from syncthing_service import stop_decky_service
@@ -140,14 +140,13 @@ def exercise(name, home):
         import frame_decky
         import framey_panel
         previous_ssh = server.ssh
-        method_prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
         status_source = (bundle/'ui/frame_status.py').read_text()
 
         def traced_ssh(*args, **kwargs):
             source = kwargs.get('stdin')
             kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE, frame_decky.PANEL_STATUS_PROBE) else
-                    'panel-method' if isinstance(source, str) and source.startswith(method_prefix) else
-                    'headset-status' if source == status_source else 'other')
+                    (panel_command_kind(source, framey_panel) or
+                     ('headset-status' if source == status_source else 'other')))
             return observe_ssh(previous_ssh, ssh_records, ssh_lock, started, kind, *args,
                                process_profiles=status_profiles, **kwargs)
 

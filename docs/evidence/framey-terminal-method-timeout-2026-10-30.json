@@ -791,10 +791,16 @@
   "evidenceKind": "independent exact-head CI browser audit",
   "fixtureOnly": true,
   "productionDeadlineChanged": false,
-  "localDiagnosticChange": "Classify METHOD_SCRIPT invocations as panel-method and collect the same bounded passive process samples as status calls; record the fixed kind in each profile. No caching, bypass, retries or command/deadline changes.",
+  "localDiagnosticChange": "Match both prefix and suffix of shipped method/event payload slots, label panel-method/panel-events separately and sample bounded passive process state; no command, payload, timeout or receipt changes.",
   "localValidation": {
-    "sharedHttpGatewayTests": 32,
+    "sharedHttpGatewayTests": 33,
     "failureDiagnosticTests": 3
   },
-  "newDiagnosticNativeReplayVerified": false
+  "newDiagnosticNativeReplayVerified": false,
+  "priorLocalReplay": {
+    "source": "4a5e9674943da4dfc627f86863cf05c2802bc21f",
+    "productionHttpPassed": true,
+    "sharedPreambleMislabelingFound": true,
+    "finalInputReplayVerified": false
+  }
 }
