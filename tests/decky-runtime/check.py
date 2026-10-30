@@ -168,7 +168,10 @@ def main():
             def legacy(method, **kwargs):
                 response = rpc('loader/call_legacy_plugin_method', record['name'], method, kwargs)
                 assert response['success'] is True, (method, response)
-                report['calls'].append({'method': method, 'result': response['result']})
+                recorded = response['result']
+                if record['id'] == 117 and method == 'get_status':
+                    recorded = dict(recorded, password='[private fixture credential omitted]')
+                report['calls'].append({'method': method, 'result': recorded})
                 return response['result']
 
             def current(method, *values):
@@ -176,7 +179,102 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'download-all-logging':
+            if case['probe'] == 'deckyparty-private-files':
+                assert legacy('is_enabled') is False
+                marker = b'Framey private Copyparty download fixture\n'
+                (home/'fixture-download.bin').write_bytes(marker)
+                assert legacy('get_status')['user'] == 'tester'
+                assert legacy('get_status')['home'] == str(home)
+
+                def server_pids():
+                    owned = []
+                    for entry in Path('/proc').glob('[0-9]*'):
+                        try:
+                            if (entry.stat().st_uid == os.getuid() and
+                                    str(plugin/'bin/copyparty-sfx.py').encode() in
+                                    (entry/'cmdline').read_bytes().split(b'\0')):
+                                owned.append(int(entry.name))
+                        except (OSError, ProcessLookupError): pass
+                    return owned
+
+                def closed():
+                    with socket.socket() as probe:
+                        probe.settimeout(.2)
+                        return probe.connect_ex(('127.0.0.1',3923)) != 0
+
+                assert server_pids() == [] and closed()
+                legacy('set_enabled', enabled=True)
+                state = legacy('get_status')
+                credential = state['password']
+                assert state['enabled'] is True and isinstance(credential,str) and credential
+
+                def http(path, password=None, data=None, method=None):
+                    headers = {'Cookie':'cppwd='+password} if password else {}
+                    if data is not None:
+                        headers['Content-Type'] = 'application/octet-stream'
+                    request = urllib.request.Request('http://127.0.0.1:3923/'+path,
+                        headers=headers, data=data, method=method or ('PUT' if data is not None else 'GET'))
+                    return urllib.request.urlopen(request, timeout=2).read()
+
+                assert until_ready(lambda: http('fixture-download.bin',credential), 'private Copyparty download') == marker
+                pids = server_pids()
+                assert pids
+                assert marker in http('?ls',credential) or b'fixture-download.bin' in http('?ls',credential)
+                for password in (None,'incorrect-private-password'):
+                    try: assert http('fixture-download.bin',password) != marker
+                    except urllib.error.HTTPError as error: assert error.code in (401,403,404)
+                uploaded = b'Framey private uploaded bytes\n'
+                try:
+                    http('fixture-upload.bin',credential,data=uploaded)
+                except urllib.error.HTTPError as error:
+                    detail = error.read().decode(errors='replace').replace(credential,'[redacted]')
+                    output = '\n'.join(p.read_text(errors='replace')[-5000:] for name in
+                        ('std-out.log','std-err.log') for p in home.rglob(name))
+                    output = output.replace(credential,'[redacted]')
+                    raise AssertionError('Private upload failed: '+detail[:2000]+'\n'+output) from None
+                assert (home/'fixture-upload.bin').read_bytes() == uploaded
+                legacy('set_enabled', enabled=False)
+                assert closed() and server_pids() == []
+                # A second start proves that disable reaped the previous child.
+                legacy('set_enabled', enabled=True)
+                credential = legacy('get_status')['password']
+                assert until_ready(lambda: http('fixture-upload.bin',credential), 'restarted Copyparty') == uploaded
+                http('fixture-upload.bin',credential,method='DELETE')
+                assert not (home/'fixture-upload.bin').exists()
+                assert (home/'fixture-download.bin').read_bytes() == marker
+                unrelated = subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True)
+                processes.append(unrelated)
+                for reload_index in range(3):
+                    rpc('loader/reload_plugin',record['name'])
+                    # The reload RPC queues work. Do not race a legacy RPC against
+                    # the wrapper whose response listener Decky is shutting down.
+                    def reload_finished():
+                        output = (home/'runtime.log').read_text()
+                        return (output.count('Loaded DeckyParty File Manager') == reload_index+2 and
+                                output.count('Unloaded DeckyParty File Manager') == reload_index+1)
+                    until_ready(reload_finished, 'actual plugin reload completion')
+                    until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
+                    assert legacy('is_enabled') is False
+                    if reload_index < 2:
+                        legacy('set_enabled', enabled=True)
+                        credential = legacy('get_status')['password']
+                        assert until_ready(lambda: http('fixture-download.bin',credential),
+                                           'Copyparty between reloads') == marker
+                assert unrelated.poll() is None
+                unrelated.terminate()
+                unrelated.wait(timeout=3)
+                log.flush()
+                log.seek(0)
+                lifecycle_log = log.read()
+                assert 'Unloaded DeckyParty File Manager' in lifecycle_log
+                assert 'Sending SIGKILL' not in lifecycle_log
+                report['independentState'] = {'privateDownload':True, 'privateUpload':True,
+                    'privateDelete':True,
+                    'anonymousAndWrongPasswordRefused':True, 'disabledChildReaped':True,
+                    'reloadStoppedServer':True, 'reloadCount':3, 'unrelatedChildUntouched':True}
+                report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload/delete, '
+                    'disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified')
+            elif case['probe'] == 'download-all-logging':
                 assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}
                 assert 'FrameyQueueDownloads' in (plugin/'dist/index.js').read_text()
                 report['result'] = ('published Decky discovery and logging RPC passed; '

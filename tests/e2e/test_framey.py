@@ -204,6 +204,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
+                if plugin['id'] == 117:
+                    self.assertEqual(found[0]['compatShims'], ['deckyparty-user-lifecycle'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                        helper_hash = hashlib.sha256(bundle.read('Decky-CP/bin/copyparty-sfx.py')).hexdigest()
+                    self.assertEqual(ssh(f'sha256sum {installed}/bin/copyparty-sfx.py').split()[0], helper_hash)
                 if plugin['id'] == 130:
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
                     self.assertEqual(found[0]['compatShims'], ['prefix-manager-user-paths'])

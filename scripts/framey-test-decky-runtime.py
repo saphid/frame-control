@@ -99,11 +99,16 @@ def main():
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',
                     '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '128',
                     '--tmpfs', '/tmp:rw,exec,mode=1777',
-                    '--tmpfs', '/home/tester:rw,exec,uid=1100,gid=1100,mode=700',
                     '--tmpfs', '/run/user/1100:rw,uid=1100,gid=1100,mode=700',
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
+                # Copyparty deliberately refuses uploads to tmpfs. Use an
+                # anonymous Docker volume, populated with the image's owned
+                # tester home and removed with this container, for this case.
+                home_mount = (['--mount', 'type=volume,destination=/home/tester'] if plugin_id == 117 else
+                              ['--tmpfs', '/home/tester:rw,exec,uid=1100,gid=1100,mode=700'])
+                command += home_mount
                 if plugin_id == 53:
                     # Exercise screenshots whose Pictures target is on another
                     # filesystem, rather than accidentally validating os.link.
@@ -119,7 +124,7 @@ def main():
                     report['cases'].append(observation)
                     print(f"PASS {plugin_id} {version or 'store'}: {observation['result']}", flush=True)
                 finally:
-                    subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                    subprocess.run(['docker', 'rm', '-f', '--volumes', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
     finally:
         args.output.parent.mkdir(parents=True, exist_ok=True)
         args.output.write_text(json.dumps(report, indent=2)+'\n')

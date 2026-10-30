@@ -12,8 +12,12 @@ tag, byte-identical to the license in `130.zip`. These are test data, not plugin
 Frame Control. The fake Frame tests serve them
 from a local fixture so CI does not depend on the store being online.
 
+`117.zip` was added from the digest-verified static audit cache on 2026-10-30.
+A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
 | `130-v102.zip` | Games Prefix Manager upstream GitHub release asset; **not in the Decky store on 2026-10-30** | 1.0.2 | `12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6` |
 | `13.zip` | Pause Games | 1.0.3 | `4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62` |
