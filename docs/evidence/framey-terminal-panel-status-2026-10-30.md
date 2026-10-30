@@ -1,0 +1,11 @@
+# Installed-panel status candidate
+
+Exact PR #492 head `f9301c93882765144b74f9effd73cce549107b8a` still fails ARM64 production HTTP job [124331191004](https://github.com/saphid/frame-control/actions/runs/41133819814/job/124331191004). Installed status returns HTTP 503 after 15.460 seconds, before any Terminal frontend stage. Its [independent audit](framey-terminal-panel-status-arm-failure-2026-10-30.json) verifies all 166 source fingerprints, the complete guest packet and strict owned cleanup. The [capture](framey-terminal-panel-status-arm-failure-2026-10-30.png) shows installed plugins unavailable, with no Terminal panel.
+
+The runnable production process continued consuming CPU until its unchanged SSH deadline. A modified subsequent diagnostic completed in 7.732 seconds, with 5.345 seconds cumulative importing `http.client`. That warmed, instrumented request does not establish a sole cause or supersede the failed gate.
+
+The installed-panel page now requests `/api/decky/panel-status`. This read-only probe returns fresh managed-service, version and installed-plugin receipts without CEF networking or OS diagnostics. It retains the 15-second SSH deadline and bounds its read-only `systemctl --user is-active` command at two seconds. The existing full `/api/decky` diagnostics remain unchanged. Both routes retain the existing Host and UI-header guards; no authentication or compatibility policy changes.
+
+Local tests execute the real panel probe in a private HOME while rejecting unrelated HTTP, URL and platform imports. They cover active/stopped service, current and legacy ownership receipts, replacement plugin receipts, missing ownership/unit, compatibility enrichment and preservation of all canary bytes. Real HTTP-handler checks cover request guards and both routes; the existing frontend fixture retains stale-panel, unknown-result and concurrent-refresh coverage on the new route.
+
+This candidate requires a fresh production HTTP replay, ARM64 execution and all exact-head CI gates. Earlier native candidate and AMD64 browser successes remain historical evidence. No managed installation, native Steam CEF, real Frame, wearer or controller usability is verified here. No deadline increase, retry or gate waiver.

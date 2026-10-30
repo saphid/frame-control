@@ -291,7 +291,7 @@ def exercise(runtime_identity, service):
         if not parent_active:
             return previous_ssh(*args, **kwargs)
         source = kwargs.get('stdin')
-        kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE) else
+        kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE, frame_decky.PANEL_STATUS_PROBE) else
                 'panel-method' if isinstance(source, str) and source.startswith(method_prefix) else
                 'headset-status' if source == status_source else 'other')
         return observe_ssh(previous_ssh, ssh_records, ssh_lock, parent_started, kind, *args,

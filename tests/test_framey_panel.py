@@ -22,6 +22,32 @@ RECEIPT = 'a' * 64
 
 
 class Panel(unittest.TestCase):
+    def test_panel_status_http_uses_fresh_probe_and_existing_request_guards(self):
+        httpd = server.ThreadingHTTPServer(('127.0.0.1', 0), server.Handler)
+        thread = threading.Thread(target=httpd.serve_forever, daemon=True)
+        thread.start()
+        self.addCleanup(httpd.server_close)
+        self.addCleanup(httpd.shutdown)
+        def get(path, headers):
+            conn = http.client.HTTPConnection('127.0.0.1', httpd.server_port, timeout=5)
+            try:
+                conn.request('GET', path, headers=headers)
+                reply = conn.getresponse()
+                return reply.status, json.loads(reply.read())
+            finally:
+                conn.close()
+        state = {'managed': True, 'running': True, 'version': 'v3.3.0', 'plugins': []}
+        with patch.object(server.frame_decky, 'panel_status', return_value=state) as panel, \
+             patch.object(server.frame_decky, 'status', return_value={'cef': False}) as full:
+            for headers in ({}, {'Host': 'evil.example', 'X-Frame-UI': '1'}):
+                self.assertEqual(get('/api/decky/panel-status', headers)[0], 403)
+            panel.assert_not_called()
+            self.assertEqual(get('/api/decky/panel-status', {'X-Frame-UI': '1'}), (200, state))
+            panel.assert_called_once_with(server.ssh)
+            full.assert_not_called()
+            self.assertEqual(get('/api/decky', {'X-Frame-UI': '1'}), (200, {'cef': False}))
+            full.assert_called_once_with(server.ssh)
+
     def test_syncthing_http_facade_uses_receipt_bound_legacy_rpc(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_syncthing_http.mjs')],
                                 capture_output=True, text=True, timeout=10)

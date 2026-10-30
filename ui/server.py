@@ -3751,6 +3751,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_extensions.list_extensions())
             elif path == "/api/decky":
                 self.send_json(frame_decky.status(ssh))
+            elif path == "/api/decky/panel-status":
+                self.send_json(frame_decky.panel_status(ssh))
             elif path == "/api/decky/store":
                 self.send_json({'plugins': frame_decky_store.catalog()})
             elif path.startswith('/framey/panel/'):

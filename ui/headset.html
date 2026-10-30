@@ -137,7 +137,7 @@ function newDeckyRequestId(){return Array.from(crypto.getRandomValues(new Uint8A
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
-async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
+async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;try{const state=await api('/api/decky/panel-status');
   if(request!==deckyStatusRequest)return;
   if(reviewUnknown&&(!Array.isArray(state.plugins)||typeof state.running!=='boolean'))
     throw Error('Installed plugin status is incomplete');

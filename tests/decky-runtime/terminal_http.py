@@ -128,7 +128,7 @@ def exercise(name, home):
 
         def traced_ssh(*args, **kwargs):
             source = kwargs.get('stdin')
-            kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE) else
+            kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE, frame_decky.PANEL_STATUS_PROBE) else
                     'headset-status' if source == status_source else 'other')
             return observe_ssh(previous_ssh, ssh_records, ssh_lock, started, kind, *args,
                                process_profiles=status_profiles, **kwargs)
@@ -143,7 +143,7 @@ def exercise(name, home):
             def do_GET(self):
                 assert len(assets) < 200
                 assets.append(self.path.split('?', 1)[0])
-                self.fixture_status_started = time.monotonic() if self.path == '/api/decky' else None
+                self.fixture_status_started = time.monotonic() if self.path in ('/api/decky', '/api/decky/panel-status') else None
                 self.fixture_request = None
                 if self.path == '/cef' and self.local_request():
                     self.send_bytes(cef_document(token).encode(), 'text/html; charset=utf-8')
@@ -334,7 +334,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         if not report['success'] and status_failed and previous_ssh is not None:
             try:
                 from terminal_status_diagnostic import diagnose
-                report['statusFailureDiagnostic'] = diagnose(frame_decky.PROBE, home)
+                report['statusFailureDiagnostic'] = diagnose(frame_decky.PANEL_STATUS_PROBE, home)
             except Exception:
                 report['statusFailureDiagnosticUnavailable'] = True
         if page:
