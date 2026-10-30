@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 143, 'name': 'Desktop Apps', 'version': '0.1.0', 'api_version': 1,
+     'folder': 'decky-desktop-apps', 'sha256': '33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577'},
     {'id': 117, 'name': 'DeckyParty File Manager', 'version': '1.0.0', 'api_version': 'legacy',
      'folder': 'Decky-CP', 'sha256': '193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf'},
     {'id': 131, 'name': 'Download All', 'version': '1.1.0', 'api_version': 1,
