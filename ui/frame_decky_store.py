@@ -966,13 +966,13 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
             except ProcessLookupError:
                 pass
             try:
-                process.wait(timeout=3)
+                process.wait(timeout=2)
             except subprocess.TimeoutExpired:
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
-                process.wait(timeout=3)
+                process.wait(timeout=1)
         else:
             process.wait()
         Plugin._proc = None
@@ -992,22 +992,34 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                     '    async def set_enabled(self, enabled):\n'
                     '        if type(enabled) is not bool:\n'
                     '            raise ValueError("Enable must be a boolean")')
-                source=source.replace('    async def _main(self):\n        try:',
-                    '    async def _main(self):\n'
-                    '        if Plugin._runner_task is not None and not Plugin._runner_task.done():\n'
-                    '            return\n        try:')
-                source+="""
+                source=source.replace('_runner_task: asyncio.Task | None = None', '_runner_handle = None')
+                a=source.index('    async def copyparty_runner(self):')
+                source=source[:a]+"""    @staticmethod
+    def copyparty_runner():
+        if Plugin._runner_handle is None:
+            return
+        try:
+            if Plugin._enabled:
+                if Plugin._proc is None or Plugin._proc.poll() is not None:
+                    Plugin._start_process()
+            else:
+                Plugin._stop_process()
+        except Exception:
+            logger.info(traceback.format_exc())
+        Plugin._runner_handle = asyncio.get_running_loop().call_later(1, Plugin.copyparty_runner)
+
+    async def _main(self):
+        if Plugin._runner_handle is None:
+            Plugin._runner_handle = asyncio.get_running_loop().call_later(1, Plugin.copyparty_runner)
+        logger.info("Initialized")
+
     async def _unload(self):
         Plugin._enabled = False
-        task = Plugin._runner_task
-        Plugin._runner_task = None
+        handle = Plugin._runner_handle
+        Plugin._runner_handle = None
         logger.info("Stopping owned Copyparty runner")
-        if task is not None:
-            task.cancel()
-            try:
-                await task
-            except asyncio.CancelledError:
-                pass
+        if handle is not None:
+            handle.cancel()
         logger.info("Stopping owned Copyparty process")
         Plugin._stop_process()
         Plugin._password = None

@@ -28,7 +28,7 @@ class Lifecycle(unittest.IsolatedAsyncioTestCase):
     async def asyncSetUp(self):
         Plugin._enabled = False
         Plugin._proc = None
-        Plugin._runner_task = None
+        Plugin._runner_handle = None
 
     async def asyncTearDown(self):
         if hasattr(Plugin, '_unload'):
@@ -65,14 +65,15 @@ class Lifecycle(unittest.IsolatedAsyncioTestCase):
     async def test_stop_escalates_only_after_owned_timeout(self):
         process = unittest.mock.Mock()
         process.poll.return_value = None
-        process.wait.side_effect = [subprocess.TimeoutExpired('private child', 3), 0]
+        process.wait.side_effect = [subprocess.TimeoutExpired('private child', 2), 0]
         Plugin._proc = process
         process.pid = 424242
         with patch.object(module.os, 'killpg') as kill:
             Plugin._stop_process()
         self.assertEqual(kill.call_args_list, [unittest.mock.call(process.pid,module.signal.SIGTERM),
                                                unittest.mock.call(process.pid,module.signal.SIGKILL)])
-        self.assertEqual(process.wait.call_count, 2)
+        self.assertEqual(process.wait.call_args_list,
+                         [unittest.mock.call(timeout=2), unittest.mock.call(timeout=1)])
         self.assertIsNone(Plugin._proc)
 
     async def test_child_environment_and_owned_temporary_files(self):
@@ -87,17 +88,22 @@ class Lifecycle(unittest.IsolatedAsyncioTestCase):
                 self.assertEqual(options['env']['TMPDIR'],str(folder/'private-runtime/copyparty-tmp'))
         Plugin._proc = None
 
-    async def test_repeated_main_has_one_runner_and_unload_awaits_it(self):
+    async def test_repeated_main_has_one_runner_and_unload_cancels_it(self):
         plugin = Plugin()
         await Plugin._main(plugin)
-        first = Plugin._runner_task
+        first = Plugin._runner_handle
         await Plugin._main(plugin)
-        self.assertIs(Plugin._runner_task, first)
+        self.assertIs(Plugin._runner_handle, first)
         await Plugin._unload(plugin)
-        self.assertTrue(first.done())
-        self.assertIsNone(Plugin._runner_task)
+        self.assertTrue(first.cancelled())
+        self.assertIsNone(Plugin._runner_handle)
         self.assertFalse(Plugin._enabled)
         self.assertIsNone(Plugin._password)
+        with patch.object(Plugin, '_start_process') as spawn:
+            Plugin._enabled = True
+            Plugin.copyparty_runner()
+            spawn.assert_not_called()
+            self.assertIsNone(Plugin._runner_handle)
 
     async def test_non_boolean_enable_is_refused(self):
         for value in ('false', 1, None, []):

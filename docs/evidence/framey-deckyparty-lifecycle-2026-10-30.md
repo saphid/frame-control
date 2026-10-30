@@ -28,12 +28,14 @@ checks its Python source hash and changes the backend to:
 - Keep Copyparty's temporary extraction cache inside plugin runtime storage,
   avoiding the shared global `/tmp/pe-copyparty.*` cache cleanup.
 - Start the helper in its own process session, terminate only that process
-  group, wait up to three seconds, and kill/reap its owned group after timeout.
+  group, wait up to two seconds, then kill and allow one second to reap it.
   An exited child is reaped before its handle is cleared.
-- Keep one runner, require a Boolean enable request, and cancel/await the
-  owned runner before stopping its helper on unload. Awaiting the task directly
-  passes actual Decky unload; a first `gather` implementation exceeded Decky's
-  five-second shutdown deadline and was replaced before submission.
+- Keep one scheduled polling callback and require a Boolean enable request.
+  Unload cancels that callback synchronously before stopping its helper;
+  a callback invoked after unload cannot restart it. Earlier task-based runners
+  intermittently stalled while awaiting cancellation in published Decky and
+  exceeded its five-second shutdown deadline. The final callback implementation
+  needs no asynchronous runner wait and bounds child shutdown below that deadline.
 
 The original frontend, helper, manifest and LICENSE stay byte-identical.
 The server stays disabled by default. Upstream authentication, volume
@@ -46,7 +48,10 @@ Existing managed copies require Update/reinstall.
 Seven direct lifecycle contracts pass with private paths, including actual
 child reaping while an unrelated child survives, timeout escalation, repeated
 startup/unload, malformed enable requests and child environment/cache scope.
-The managed install test also checks preserved payloads and digest scope.
+The managed install test also checks preserved payloads and digest scope. All
+57 installer tests pass after the final callback change, as do the exact install
+and seven contracts in Python 3.9. The final local x86_64 native report records
+three active-server reloads and source SHA-256s for the installer and probe.
 
 [Published Decky 3.3.0 x86_64 evidence](framey-deckyparty-native-2026-10-30.json)
 comes from an unprivileged container with no external network, host devices,
@@ -61,7 +66,7 @@ that guard. The original helper and real legacy RPCs verify:
 - Upload bytes read independently from disk, restart/readback, and deletion of
   that uploaded fixture while another private file remains unchanged.
 - Disable removes the listening server and all matching helper processes.
-- Decky's real reload calls `_unload`, closes the server, leaves no matching
+- Three consecutive real Decky reloads call `_unload`, close the server, leave no matching
   process and starts a disabled plugin. No forced Decky SIGKILL occurs, and
   an unrelated private child survives.
 
@@ -71,12 +76,15 @@ response listener. Credentials generated inside the fixture are omitted from
 the committed report. Containers, anonymous volumes and the runner's image
 are removed by the harness.
 
-The same case passed [native AMD64/ARM64 CI](https://github.com/saphid/frame-control/actions/runs/40999192658)
+The earlier task-based case passed [native AMD64/ARM64 CI](https://github.com/saphid/frame-control/actions/runs/40999192658)
 on head `bdeb347e20c11fc22723f82337ce5fc0500e4acb`, first attempt.
 The [ARM64 artifact excerpt](framey-deckyparty-native-arm64-2026-10-30.json)
 identifies the exact workflow/head/loader and records the same independent
-file-operation and lifecycle checks. That head's Python 3.9 failure was fixed
-afterward; the new exact-head CI remains a merge gate.
+file-operation and lifecycle checks. These earlier single-reload results did
+not establish reliable cleanup: native AMD64 head `90720e1` later stalled in
+the runner await and Decky force-killed the plugin. The final scheduled-callback
+implementation expands the native probe to three consecutive active-server
+reloads; new exact-head AMD64/ARM64 CI remains a merge gate.
 The next head `4d28468` could not start that job: `ubuntu-latest` selected
 Ubuntu 26.04, for which setup-python publishes no Python 3.9 x64 build.
 Its published versions manifest lists 22.04 and 24.04 for Python 3.9.25.

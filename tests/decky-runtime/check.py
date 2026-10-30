@@ -244,16 +244,22 @@ def main():
                 assert (home/'fixture-download.bin').read_bytes() == marker
                 unrelated = subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True)
                 processes.append(unrelated)
-                rpc('loader/reload_plugin',record['name'])
-                # The reload RPC queues work. Do not race a legacy RPC against
-                # the wrapper whose response listener Decky is shutting down.
-                def reload_finished():
-                    output = (home/'runtime.log').read_text()
-                    return (output.count('Loaded DeckyParty File Manager') == 2 and
-                            'Unloaded DeckyParty File Manager' in output)
-                until_ready(reload_finished, 'actual plugin reload completion')
-                until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
-                assert legacy('is_enabled') is False
+                for reload_index in range(3):
+                    rpc('loader/reload_plugin',record['name'])
+                    # The reload RPC queues work. Do not race a legacy RPC against
+                    # the wrapper whose response listener Decky is shutting down.
+                    def reload_finished():
+                        output = (home/'runtime.log').read_text()
+                        return (output.count('Loaded DeckyParty File Manager') == reload_index+2 and
+                                output.count('Unloaded DeckyParty File Manager') == reload_index+1)
+                    until_ready(reload_finished, 'actual plugin reload completion')
+                    until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
+                    assert legacy('is_enabled') is False
+                    if reload_index < 2:
+                        legacy('set_enabled', enabled=True)
+                        credential = legacy('get_status')['password']
+                        assert until_ready(lambda: http('fixture-download.bin',credential),
+                                           'Copyparty between reloads') == marker
                 assert unrelated.poll() is None
                 unrelated.terminate()
                 unrelated.wait(timeout=3)
@@ -265,7 +271,7 @@ def main():
                 report['independentState'] = {'privateDownload':True, 'privateUpload':True,
                     'privateDelete':True,
                     'anonymousAndWrongPasswordRefused':True, 'disabledChildReaped':True,
-                    'reloadStoppedServer':True, 'unrelatedChildUntouched':True}
+                    'reloadStoppedServer':True, 'reloadCount':3, 'unrelatedChildUntouched':True}
                 report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload/delete, '
                     'disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified')
             elif case['probe'] == 'download-all-logging':
