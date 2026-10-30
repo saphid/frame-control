@@ -8,8 +8,11 @@ on:
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
       - 'scripts/framey-test-syncthing-runtime.py'
+      - 'scripts/framey-test-syncthing-service.py'
       - 'tests/decky-runtime/syncthing_candidate.py'
       - 'tests/decky-runtime/syncthing_runtime.py'
+      - 'tests/decky-runtime/syncthing_service*.py'
+      - 'tests/decky-runtime/Containerfile.systemd'
       - 'tests/test_framey_syncthing_candidate.py'
       - 'tests/test_framey_panel.py'
       - 'tests/page/framey_syncthing_http.mjs'
@@ -23,8 +26,11 @@ on:
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
       - 'scripts/framey-test-syncthing-runtime.py'
+      - 'scripts/framey-test-syncthing-service.py'
       - 'tests/decky-runtime/syncthing_candidate.py'
       - 'tests/decky-runtime/syncthing_runtime.py'
+      - 'tests/decky-runtime/syncthing_service*.py'
+      - 'tests/decky-runtime/Containerfile.systemd'
       - 'tests/test_framey_syncthing_candidate.py'
       - 'tests/test_framey_panel.py'
       - 'tests/page/framey_syncthing_http.mjs'
@@ -48,7 +54,7 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
-    timeout-minutes: 15
+    timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Build pinned source with owned startup and private HTTP (not installed)
@@ -66,6 +72,20 @@ jobs:
           python3 scripts/framey-test-syncthing-runtime.py \
             --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
             --output "$RUNNER_TEMP/syncthing-runtime.json"
+      - name: Install matching QEMU system emulator
+        run: |
+          case "$(uname -m)" in
+            x86_64) emulator=qemu-system-x86 ;;
+            aarch64) emulator=qemu-system-arm ;;
+            *) exit 1 ;;
+          esac
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends "$emulator"
+      - name: Actual systemd user service lifecycle in an isolated networkless VM
+        run: |
+          python3 scripts/framey-test-syncthing-service.py \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-service.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -75,4 +95,6 @@ jobs:
             ${{ runner.temp }}/syncthing-build/*.json
             ${{ runner.temp }}/syncthing-native.json
             ${{ runner.temp }}/syncthing-runtime.json
+            ${{ runner.temp }}/syncthing-service.json
+            ${{ runner.temp }}/syncthing-service.console.log
           if-no-files-found: error

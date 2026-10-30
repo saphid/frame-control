@@ -31,9 +31,10 @@ Legacy `decky-syncthing.service` files are never automatically adopted or remove
 Managed guards run before DBus, including the wizard's early stop. External
 transition stops/disables/removes only a proved owned new unit, and failures
 propagate. A reserved managed name cannot bypass ownership in external mode.
-Actual systemd resolution, drop-ins and enable-link behavior remain unverified;
-no service manager was made available by the isolated probe. Gamescope, HTTP
-authentication and TLS code are unchanged.
+A separate networkless service VM exercises actual systemd/DBus, fragment
+identity, enable links and explicit external-service control. Drop-ins, aliases,
+existing-service migration and actual Flatpak packaging still need verification.
+Gamescope, HTTP authentication and TLS code are unchanged.
 
 The candidate `main.py` retains its own `Popen` session until it is reaped,
 bounds TERM/KILL waits, and stops it on unload. Restart and v1 migration no longer
@@ -43,7 +44,7 @@ it preserves another owner's PID and the persistent lock inode. A typing-only
 `NotRequired` annotation is replaced with `Optional` for Python 3.9 importability.
 Its HTTP RPC accepts only the published frontend's GET/POST routes and selected
 headers, bounds response bytes and socket operations (normally 5 seconds, 20
-for the original setup-start wait), preserves HTTP errors and
+for setup/start/stop/reload service lifecycle calls), preserves HTTP errors and
 does not follow redirects. Four worker slots remain occupied until completion,
 even if their RPC awaiters are cancelled. The transport uses only that retained
 child's private Unix socket; there is no TCP fallback. Restart/unload removes
@@ -81,11 +82,31 @@ uses pinned upstream Syncthing v2.1.7 test inputs. AMD64 and ARM64 private two-w
 runtime restart and actual REST reads through released Decky RPC passed #465 CI;
 the processes are started directly, with service setup disabled. The source fingerprints and both native reports were independently checked. No runtime is bundled.
 
-Before admission, verify actual Syncthing service behavior over DBus,
-managed install/update/remove, unit migration and browser controls. Automatic gamescope behavior is
-not SteamVR behavior. Browser controls, managed-service synchronization, real Frame and physical
-controllers remain unverified. See
+The service preflight boots a private systemd guest using QEMU TCG on the
+matching native AMD64 or ARM64 runner. There is no guest NIC or host filesystem,
+device or session-bus passthrough. It uses a launcher shim for the `flatpak`
+command and the same pinned real Syncthing binary; this does not prove the
+actual Flatpak package. Run it with the native helper:
+
+```sh
+python3 scripts/framey-test-syncthing-service.py \
+  --helper /tmp/syncthing-candidate-build/"$(uname -m)".watchdog \
+  --output /tmp/syncthing-service.json
+```
+
+Docker and the matching `qemu-system-x86_64` or `qemu-system-aarch64` executable
+are required. The runner builds/exports a private Debian guest image and records
+its image/kernel/initrd/input digests, then removes only its owned container,
+temporary files, VM and newly built image. An explicitly provided `--image` is
+preserved. VM failure leaves a console log; prior success JSON is removed before
+VM setup.
+Both architecture CI jobs must execute the full probe. See the
+[service VM evidence](../../../docs/evidence/framey-syncthing-service-vm-2026-10-30.md).
+
+Before admission, verify Flatpak packaging, managed install/update/remove,
+unit overrides/migration and browser controls. Automatic gamescope behavior is
+not SteamVR behavior. Real Frame and physical controllers remain unverified. See
 [`docs/evidence/framey-syncthing-ownership-2026-10-30.md`](../../../docs/evidence/framey-syncthing-ownership-2026-10-30.md).
 
 See the [service-file evidence](../../../docs/evidence/framey-syncthing-service-files-2026-10-30.md)
-for the precise filesystem and pre-DBus proof and remaining manager limits.
+for the filesystem and pre-DBus proof preceding the service VM fixture.
