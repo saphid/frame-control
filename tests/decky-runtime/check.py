@@ -68,12 +68,17 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     args = parser.parse_args()
+    if args.reproduce_terminal_import_regression:
+        assert args.id == 65 and args.version == '-'
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
     record = (PREFIX_MANAGER_102 if args.id == 130 and args.version == '1.0.2'
               else next(p for p in PLUGINS if p['id'] == args.id))
-    case = next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
-                if p['id'] == args.id and p.get('version', '-') == args.version)
+    case = (dict(id=65, shim=None, probe='terminal-import-regression')
+            if args.reproduce_terminal_import_regression else
+            next(p for p in json.loads((ROOT/'tests/decky-runtime/cases.json').read_text())
+                 if p['id'] == args.id and p.get('version', '-') == args.version))
     data = archive(record)
     assert hashlib.sha256(data).hexdigest() == record['sha256']
     assert frame_decky_store.archive_info(data, record['sha256'], record['name']) == record['folder']
@@ -212,7 +217,33 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'steamgriddb-private-artwork':
+            if case['probe'] == 'terminal-import-regression':
+                # Discovery also lists a backend whose import failed. Require
+                # the precise original failure and an actual RPC refusal.
+                failure = "ModuleNotFoundError: No module named 'termios'"
+                until_ready(lambda: failure in (home/'runtime.log').read_text(),
+                            'original Terminal termios import regression')
+                source_hashes = {}
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for name in ('main.py', 'py_modules/decky_terminal/terminal.py'):
+                        actual = (plugin/name).read_bytes()
+                        assert actual == original.read(record['folder']+'/'+name)
+                        source_hashes[name] = hashlib.sha256(actual).hexdigest()
+                try:
+                    current('get_config')
+                except AssertionError as error:
+                    assert 'type' in str(error) and '2' in str(error), error
+                else:
+                    raise AssertionError('Original Terminal unexpectedly served RPC')
+                assert not report['calls']
+                report['expectedRegression'] = dict(success=False, phase='backend import',
+                    exception=failure, originalPluginUnmodified=True,
+                    backendSourceSha256=source_hashes, rpcRefused=True,
+                    rpcMethodsSucceeded=0, ptyCommandsExecuted=0,
+                    realFrameContacted=False, physicalControllerVerified=False)
+                report['result'] = ('original published Terminal import regression reproduced; '
+                                    'discovery is not backend usability; no PTY or input executed')
+            elif case['probe'] == 'steamgriddb-private-artwork':
                 # Exact original backend; every path is in the disposable
                 # container home. No host Steam, game or artwork is exposed.
                 import base64

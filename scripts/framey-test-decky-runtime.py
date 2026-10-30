@@ -77,7 +77,7 @@ def main():
     cases = check_coverage()
     if args.case is not None:
         cases = [case for case in cases if case['id'] == args.case]
-        if not cases:
+        if not cases and args.case != 65:
             parser.error('Unknown official plugin case')
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
@@ -92,7 +92,8 @@ def main():
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
-                    (60, '--reproduce-fileserver-empty-flag-regression')]
+                    (60, '--reproduce-fileserver-empty-flag-regression'),
+                    (65, '--reproduce-terminal-import-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
