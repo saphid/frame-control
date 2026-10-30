@@ -99,7 +99,7 @@ The JSON companion records the independent audit, all source fingerprints and
 capture digests; both
 failed development trials remain recorded above and in that companion.
 
-The unpublished CI follow-up requests `--browser-setup --http-gateway` in its
+The CI follow-up requests `--browser-setup --http-gateway` in its
 AMD64 browser job, binds packed production source hashes to the checked-out
 head and keeps the two native package jobs. No CI pass for this new path is
 credited yet; ARM64 still runs signed-package checks without this browser/HTTP
@@ -109,3 +109,12 @@ Actual Steam CEF, the production browser parent over HTTP, external SSH
 transport, managed install/update/remove, native ARM64 execution of this new
 path, real Frame visuals and physical controller use remain unverified. No
 real Frame was contacted and the hourly worn schedule is unchanged.
+
+
+The review branch is refreshed by a normal merge of the exact #479 head
+`5a6629155b4b9b9822f6d2c216b47a377b59f2e0`. This changes no production UI or
+helper bytes from the passing local HTTP trial. Current-head CI must run before
+merge. The later full production browser-parent development trial is separate:
+it has not passed and is not enabled by this workflow. In particular, the
+browser captures above do not establish that the production parent can complete
+its concurrent folder/device reads over HTTP. Installation remains blocked.
