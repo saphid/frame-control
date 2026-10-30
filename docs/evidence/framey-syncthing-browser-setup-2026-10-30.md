@@ -122,3 +122,22 @@ ARM64 needed two null backend probes before discovering 8384. Those backend
 fixture probes do not prove that the published UI retries; the synthetic
 manual-port case above still exercises its actual single-scan fallback.
 This additional native backend proof remains separate from browser execution.
+
+## Exact-head browser CI
+
+The dedicated Chromium workflow 41048089800 passed for #477 at
+`8b01a614b865ac9469f4a6fa7cc0605ebc31ab07`. Independent audit of artifact
+12973481694 binds its GitHub artifact digest, five exact-head metadata source
+hashes and all six runtime source hashes in each of its six cases. The
+[source-bound summary](framey-syncthing-browser-setup-ci-2026-10-30.json) retains
+case result and screenshot hashes, Chrome version, request counts and ports.
+All six captures were visually inspected: Loading for the original, Finish
+for fresh setup, Installation Method entry for migration, and the expected
+configured-state error for configured/completion/manual-port cases. The manual
+port is established by the recorded input/save sequence and port 8390, not by
+the final error capture. Browser cleanup is verified for every case.
+
+The negative original result is the workflow's required reproduction; all
+five candidate cases pass. This records the browser job only, not completion
+of #477's remaining native/e2e/main gates. All responses here remain synthetic;
+actual browser/backend integration has its separate disposable-VM record.
