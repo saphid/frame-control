@@ -11,3 +11,5 @@ tests/fixtures/** -text
 *.apk binary
 *.jar binary
 *.obb binary
+# Unified-diff context uses a literal space on otherwise empty lines.
+ui/vendor/syncthing-0.2.7/watchdog.patch text eol=lf -whitespace

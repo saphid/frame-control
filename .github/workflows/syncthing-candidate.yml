@@ -1,0 +1,56 @@
+name: Syncthing ownership candidate
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ui/vendor/syncthing-0.2.7/**'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-syncthing-candidate.py'
+      - 'tests/decky-runtime/syncthing_candidate.py'
+      - '.github/workflows/syncthing-candidate.yml'
+  pull_request:
+    paths:
+      - 'ui/vendor/syncthing-0.2.7/**'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-syncthing-candidate.py'
+      - 'tests/decky-runtime/syncthing_candidate.py'
+      - '.github/workflows/syncthing-candidate.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  owned-watchdog:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Build pinned source with owned startup (not installed)
+        run: |
+          docker pull rust:1.98.1-bookworm
+          python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
+            --architectures "$(uname -m)" --output "$RUNNER_TEMP/syncthing-build"
+      - name: Actual released Decky discovery, restart and unload ownership
+        run: |
+          python3 scripts/framey-test-syncthing-candidate.py \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-native.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: syncthing-candidate-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/syncthing-build/*.log
+            ${{ runner.temp }}/syncthing-build/*.json
+            ${{ runner.temp }}/syncthing-native.json
+          if-no-files-found: error

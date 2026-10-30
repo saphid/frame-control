@@ -4888,7 +4888,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "flatpak; gamescope",
-      "nativePort": "The watchdog needs an ARM64 build, plus a supported Syncthing runtime/package and safe path validation.",
+      "nativePort": "Uninstalled ownership candidate builds pinned Rust source for AMD64/ARM64 and passes released Decky 3.3.0 AMD64 restart/reload ownership probes. The installer still refuses this archive. Receipt-bound HTTP bridge, real DBus service behavior, ARM64 runtime and Frame/UI gates remain pending (docs/evidence/framey-syncthing-ownership-2026-10-30.md).",
       "uiSurfaces": [
         "local/Steam routes"
       ],

@@ -1,0 +1,111 @@
+--- a/backend/decky-syncthing-watchdog/src/main.rs
++++ b/backend/decky-syncthing-watchdog/src/main.rs
+@@ -28,15 +28,12 @@
+ use log4rs::filter::threshold::ThresholdFilter;
+ use std::convert::Infallible;
+ use std::env::args;
+-use std::fs::{read_to_string, write};
++use std::fs::{File, OpenOptions, write};
+ use std::net::IpAddr;
+ use std::ops::Deref;
+ use std::path::{Path, PathBuf};
+ use std::process;
+ use std::process::ExitCode;
+-use std::time::Duration;
+-use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
+-use tokio::time::sleep;
+ 
+ const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
+ const LOGFILE_WATCHDOG: &str = "watchdog.log";
+@@ -49,18 +46,25 @@
+     let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
+     let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
+ 
+-    if other_process_already_running(&watchdog_pid_path) {
+-        debug!("other watchdog was already running. Not starting.");
+-        return ExitCode::SUCCESS;
+-    }
+-
++    // Hold the same inode for the whole process lifetime. Never discover or
++    // signal another process using a stale PID or an executable-name match.
++    let _ownership = match acquire_ownership(&watchdog_pid_path) {
++        Ok(file) => file,
++        Err(err) => {
++            eprintln!("Watchdog ownership unavailable: {err}");
++            return ExitCode::FAILURE;
++        }
++    };
++    // Reserve the listener before touching the PID, settings, logs or systemd.
++    // An unrelated listener must survive and no configured service may change.
++    let listener = match Server::try_bind(&BIND_ADDR.parse().unwrap()) {
++        Ok(listener) => listener,
++        Err(err) => {
++            eprintln!("Watchdog listener unavailable: {err}");
++            return ExitCode::FAILURE;
++        }
++    };
+     update_pid_file(&watchdog_pid_path);
+-    // To avoid race conditions on start, we check again.
+-    sleep(Duration::from_millis(150)).await;
+-    if other_process_already_running(&watchdog_pid_path) {
+-        debug!("other watchdog was already running. Not starting.");
+-        return ExitCode::SUCCESS;
+-    }
+ 
+     setup_self_logging(&watchdog_log_dir_path);
+     register_panic_hook(&watchdog_log_dir_path);
+@@ -84,7 +88,7 @@
+         }
+     });
+ 
+-    let server = Server::bind(&BIND_ADDR.parse().unwrap()).serve(make_svc);
++    let server = listener.serve(make_svc);
+     let watcher = gamescope_watchdog.background_watch();
+ 
+     let (r1, r2) = tokio::join!(server, watcher);
+@@ -121,36 +125,15 @@
+     write(pid_file_path, process::id().to_string()).unwrap();
+ }
+ 
+-fn other_process_already_running(pid_file_path: &Path) -> bool {
+-    if pid_file_path.exists() {
+-        let pid_in_file = read_to_string(pid_file_path)
+-            .unwrap()
+-            .trim()
+-            .parse::<u32>()
+-            .unwrap_or_default();
+-        if process::id() == pid_in_file {
+-            // If we are ourselves in the PID file, then we continue as if no other instance
+-            // was running.
+-            return false;
+-        }
+-        let mut system = System::new();
+-        let pid_in_file_as_pid = Pid::from_u32(pid_in_file);
+-
+-        GamescopeWatchdog::does_process_exist_and_match_cond(
+-            &mut system,
+-            pid_in_file_as_pid,
+-            |proc| {
+-                // we check if the process matches the binary name, it could be it's just another
+-                // unrelated process after restart.
+-                proc.exe()
+-                    .to_string_lossy()
+-                    .contains(env!("CARGO_BIN_NAME"))
+-            },
+-        )
+-        .is_some()
+-    } else {
+-        false
+-    }
++fn acquire_ownership(pid_file_path: &Path) -> Result<File, Box<dyn std::error::Error>> {
++    let file = OpenOptions::new()
++        .read(true)
++        .write(true)
++        .create(true)
++        .truncate(false)
++        .open(pid_file_path.with_extension("framey-lock"))?;
++    file.try_lock()?;
++    Ok(file)
+ }
+ 
+ fn setup_self_logging(dir: &Path) {
