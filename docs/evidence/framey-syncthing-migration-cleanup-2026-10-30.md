@@ -92,5 +92,40 @@ passed all ten source fingerprints, 17 lifecycle assertions and 18 ownership
 refusals. Actual released Decky stopped with mixed policy in 7.559 seconds,
 inactive state, success result, zero exit status and MainPID. This is not a
 controlled reproduction proving the prior cancellation's cause. The full
-signed-package/production-parent replay remains pending; updated exact-head CI and independent artifact audits remain required before
-merge. Compatibility and physical-controller claims remain unpromoted.
+signed-package/production-parent replay subsequently failed as recorded below.
+Updated exact-head CI and independent artifact audits remain required before merge. Compatibility and physical-controller claims remain unpromoted.
+
+
+## Dashboard queue starvation after restart
+
+The full local replay at `e061dfefeb52bafbb8c5ff66d7202a8c3143b175`
+[failed its restarted dashboard gate](framey-syncthing-dashboard-queue-failure-2026-10-30.json).
+The independent audit matched all 124 committed inputs, the complete
+7,538-byte checksummed packet and the checksummed gateway diagnostic chunks.
+Migration cleanup passed in 0.295 seconds. The final unit stop was
+inactive/success with zero exit status/MainPID in 2.866 seconds, although
+Decky's log still contains a plugin-shutdown cancellation. Neither the mixed
+policy nor a successful unit status proves an error-free plugin shutdown.
+
+The [failure capture](framey-syncthing-dashboard-queue-failure-2026-10-30.png)
+shows Running and the configured folder, but Devices displays
+`Error: Decky backend timed out`. All native RPC replies and production SSH
+calls succeeded. Six serialized successful dashboard reads span 31.72 seconds;
+queue waiting consumed the same 30-second deadline as active RPC execution.
+A clock-controlled regression reproduces starvation with six individually
+successful 5.5-second reads. It fails on the previous code and passes after
+the repair.
+
+Keep one fetch active, the 16-item waiting cap, 30-second queue expiry,
+cancellation behavior and fixed managed-backend path. After dispatch, each
+request now receives the existing full 30-second RPC execution budget.
+Queue waiting and execution are bounded separately, so the combined bound
+is up to 60 seconds rather than 30. Expired waiting work is never dispatched;
+hung active RPCs still time out. No backend, systemd or fixture stage timeout
+was increased. This fixes actual frontend starvation rather than removing
+the dashboard's error-free readiness requirement.
+
+The updated browser regression, all 98 Syncthing, 30 panel and three Decky
+tests pass.
+A fresh full package/production-parent replay and exact-head CI are required;
+the failed `e061dfe` run is not credited as package or restart proof.
