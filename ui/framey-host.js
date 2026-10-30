@@ -256,7 +256,7 @@
       });
   }
   function addPluginEvent(event, listener) {
-    if (typeof event !== 'string' || !/^[A-Za-z0-9_:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
+    if (typeof event !== 'string' || !/^[A-Za-z0-9_#:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
       throw Error('Invalid Decky event listener');
     if (!eventListeners.has(event)) {
       if (eventListeners.size >= 32) throw Error('Too many Decky event names');

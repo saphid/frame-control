@@ -240,7 +240,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             read.assert_called_once_with(server.ssh,81,'GetIPCountry',RECEIPT)
 
     def test_decky_event_queue_scope_bounds_expiry_and_reconnect(self):
-        for name in ('framey_events.mjs', 'framey_event_parent.mjs'):
+        for name in ('framey_events.mjs', 'framey_event_parent.mjs', 'framey_terminal_events.mjs'):
             with self.subTest(script=name):
                 result = subprocess.run(['node', str(Path(__file__).parent/'page'/name)],
                                         capture_output=True, text=True, timeout=10)
@@ -272,6 +272,19 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                     with self.assertRaises(framey_panel.PanelError):
                         framey_panel.poll_events(lambda *a, **k:self.fail('Unexpected SSH'),
                                                 plugin_id, session, events, cursor, RECEIPT)
+
+    def test_terminal_output_event_keeps_exact_name_and_receipt_owned_plugin(self):
+        event = 'terminal_output#private-pty'
+        def fake_ssh(command, stdin=None, **_):
+            import shlex
+            payload = json.loads(shlex.split(command)[2])
+            self.assertEqual(payload, dict(name='Decky Terminal', session='private-session',
+                                          events=[event], cursor=0))
+            return json.dumps(dict(events=[dict(event=event, args=['private output'])], cursor=1))
+        with patch.object(framey_panel.frame_decky, 'status', return_value={
+                'plugins':[dict(storeId=65, name='Decky Terminal', sha256=RECEIPT)]}):
+            result = framey_panel.poll_events(fake_ssh, 65, 'private-session', [event], 0, RECEIPT)
+        self.assertEqual(result['events'], [dict(event=event, args=['private output'])])
 
     def test_event_action_has_same_headset_boundary_as_methods(self):
         with patch.object(server, 'HEADSET_RUNTIME', False), patch.dict(server.os.environ, {'FRAME_E2E_CONTAINER':'0'}):
