@@ -93,7 +93,7 @@ class PreparedPackage(unittest.TestCase):
             architecture='x86_64', flatpakPackageVerified=True,
             realFrameContacted=False, noOwnedFlatpakInstancesRemain=True,
             packagedBinarySha256='b' * 64,
-            deckyApiKeyErrorStatus=403,
+            deckyApiKeyErrorStatus=403, setupPortScans=[None, 8384],
             wizardConfigDiscovery=dict.fromkeys((
                 'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
                 'discoveredDefaultPort', 'discoveredDefaultApiKey', 'scannedBasicAuth',
@@ -133,6 +133,16 @@ class PreparedPackage(unittest.TestCase):
     def verify(self, report, required):
         self.module.verify_candidate(report, 'x86_64',
                                      self.prepared('x86_64')['bundles'], required)
+
+    def test_port_readiness_retries_cannot_hide_a_failed_or_wrong_scan(self):
+        for scans in ([], [None], [8080, 8384], [8384, 8384]):
+            report, required = self.candidate()
+            report['setupPortScans'] = scans
+            with self.subTest(scans=scans), self.assertRaises(ValueError):
+                self.verify(report, required)
+        report, required = self.candidate()
+        report['setupPortScans'] = [8384]
+        self.verify(report, required)
 
     def test_old_shim_or_incomplete_lifecycle_cannot_establish_package_integration(self):
         report, required = self.candidate()

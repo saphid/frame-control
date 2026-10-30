@@ -179,6 +179,10 @@ def verify_candidate(service, arch, bundles, required_results):
         'setupCommittedAndReloaded', 'ownedSetupServiceStopped',
     )):
         raise ValueError('Missing actual-package setup discovery proof')
+    scans = service.get('setupPortScans', [])
+    if (not scans or scans[-1] != 8384
+        or any(port is not None for port in scans[:-1])):
+        raise ValueError('Missing setup port discovery attempt evidence')
     definitions = service.get('rejectedManagedDefinitions', {})
     routes = {'GET state', 'POST start', 'POST stop', 'POST check/start',
               'POST reload-config', 'POST external transition'}

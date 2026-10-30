@@ -75,6 +75,31 @@ regression and reports `flatpakPackageVerified: false`. Both workflows check
 out the exact PR head. Artifacts/source fingerprints and failed results are
 retained; workflow definitions or older artifacts do not establish a pass.
 
+## ARM64 CI failure and discovery retry scope
+
+At exact head `67188e18b24429755f8954765cabdf9fed208686`, run
+[41033180996](https://github.com/saphid/frame-control/actions/runs/41033180996)
+passed the AMD64 combined gate but failed ARM64 at the assertion that the
+first port scan returned 8384. The original fixture did not record that
+returned value. The [failure record](framey-syncthing-signed-decky-arm-failure-2026-10-30.json)
+binds artifact 12967544563 to the exact sources. Its partial result passed
+signed package launch, two-way sync, service restart and process cleanup;
+it does **not** pass the combined Decky setup/lifecycle gate. QEMU was reaped.
+
+Systemd running state does not establish GUI/API readiness. Startup timing
+is the current hypothesis, not a proven diagnosis from the old assertion.
+The revised fixture repeats the existing port scan only when the returned
+port is null, using the existing 60-second bounded guest wait. HTTP errors
+and unexpected non-null ports fail immediately. Every returned port and the
+elapsed time are retained in the report and console, including on failure.
+Only an actual 8384 discovery followed by the original key scan and
+authenticated REST proof can pass. The verifier rejects missing, incomplete
+or wrong-port retry journals. This replays the wizard's Retry action; it does
+not prove first-attempt scan success or fix browser startup behavior.
+
+Both native combined CI jobs must pass again on the new exact head. The
+installer stays blocked; no release or hardware verification is credited.
+
 ## Evidence and admission limits
 
 The [JSON record](framey-syncthing-signed-decky-2026-10-30.json) contains the

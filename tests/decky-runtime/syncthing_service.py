@@ -402,10 +402,28 @@ def main(signed_flatpak=False):
             reply = http('POST', 'check/start')
             assert reply['status'] == 200 and json.loads(reply['body'])['success'] is True
             runtime_identity(service)
-            reply = http('POST', 'check/scan_port')
-            assert reply['status'] == 200
-            scanned_port = json.loads(reply['body'])['port']
-            assert scanned_port == 8384
+            # Running systemd state does not establish GUI/API readiness.
+            # Replay the wizard's Retry action only for a not-yet-found port;
+            # retain every result instead of crediting first-attempt discovery.
+            port_scans = []
+            scan_started = time.monotonic()
+
+            def scan_port():
+                reply = http('POST', 'check/scan_port')
+                assert reply['status'] == 200, reply
+                port = json.loads(reply['body'])['port']
+                port_scans.append(port)
+                assert port in (None, 8384), port_scans
+                return port
+
+            try:
+                scanned_port = wait(scan_port, 'signed package setup port discovery')
+            finally:
+                report['setupPortScans'] = port_scans
+                report['setupPortScanElapsedSeconds'] = round(time.monotonic() - scan_started, 3)
+                print('FRAMEY_SETUP_PORT_SCAN_JSON=' + json.dumps({
+                    'ports': port_scans, 'elapsedSeconds': report['setupPortScanElapsedSeconds'],
+                }), flush=True)
             setting('port', scanned_port)
             reply = http('POST', 'check/scan_api_key')
             assert reply['status'] == 200
