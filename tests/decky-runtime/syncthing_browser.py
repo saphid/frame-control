@@ -218,7 +218,15 @@ content="default-src 'none'; script-src 'unsafe-inline'; frame-src data:; connec
                           browserPackages=subprocess.check_output(['dpkg-query', '-W', 'chromium', 'chromium-common', 'chromium-sandbox'], text=True).strip(),
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
+    except BaseException:
+        if page:
+            try:
+                report['lastStage'] = page.eval('window.stage')
+            except (OSError, frame_steam.Fail):
+                report['lastStageUnavailable'] = True
+        raise
     finally:
+        report.update(stages=stages, calls=calls)
         if page:
             page.sock.close()
         if browser:
