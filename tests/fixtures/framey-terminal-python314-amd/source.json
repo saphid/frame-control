@@ -1,0 +1,9 @@
+{
+  "image": "python@sha256:ddec44f5ab04dd68aaee83d7dc9831c964a4bb9e950c89960e60760373fbf54f",
+  "files": {
+    "LICENSE": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+    "pty.py": "655814df6302412a3991305d05a301e0a2514d1363b7465a30898513a53bddfc",
+    "tty.py": "1ab5e5e047130b310355e907a3306178299b9f2044fb526ac63bd116e9a16d2b",
+    "termios.cpython-314-x86_64-linux-gnu.so": "64d395cf49bb6a7c672b3cd5dfe113b556282328703daafddb15d0ac1455ecea"
+  }
+}
