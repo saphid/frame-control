@@ -7,7 +7,9 @@ on:
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
+      - 'scripts/framey-test-syncthing-runtime.py'
       - 'tests/decky-runtime/syncthing_candidate.py'
+      - 'tests/decky-runtime/syncthing_runtime.py'
       - 'tests/test_framey_syncthing_candidate.py'
       - 'tests/test_framey_panel.py'
       - 'tests/page/framey_syncthing_http.mjs'
@@ -20,7 +22,9 @@ on:
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
+      - 'scripts/framey-test-syncthing-runtime.py'
       - 'tests/decky-runtime/syncthing_candidate.py'
+      - 'tests/decky-runtime/syncthing_runtime.py'
       - 'tests/test_framey_syncthing_candidate.py'
       - 'tests/test_framey_panel.py'
       - 'tests/page/framey_syncthing_http.mjs'
@@ -57,6 +61,11 @@ jobs:
           python3 scripts/framey-test-syncthing-candidate.py \
             --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
             --output "$RUNNER_TEMP/syncthing-native.json"
+      - name: Actual pinned Syncthing peers through candidate Decky RPC
+        run: |
+          python3 scripts/framey-test-syncthing-runtime.py \
+            --helper "$RUNNER_TEMP/syncthing-build/$(uname -m).watchdog" \
+            --output "$RUNNER_TEMP/syncthing-runtime.json"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -65,4 +74,5 @@ jobs:
             ${{ runner.temp }}/syncthing-build/*.log
             ${{ runner.temp }}/syncthing-build/*.json
             ${{ runner.temp }}/syncthing-native.json
+            ${{ runner.temp }}/syncthing-runtime.json
           if-no-files-found: error

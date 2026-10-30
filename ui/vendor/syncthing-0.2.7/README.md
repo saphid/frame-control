@@ -65,8 +65,14 @@ HTTP RPC; no installer currently produces that shim. Node VM coverage verifies
 the transport facade, not browser rendering. See the
 [private HTTP evidence](../../../docs/evidence/framey-syncthing-http-2026-10-30.md).
 
-Before admission, verify actual Syncthing service/runtime behavior over DBus,
-managed install/update/remove and browser controls. Audit the original
+A [real-runtime preflight](../../../docs/evidence/framey-syncthing-runtime-2026-10-30.md)
+uses pinned upstream Syncthing v2.1.7 test inputs. AMD64 private two-way sync,
+runtime restart and actual REST reads through released Decky RPC are covered;
+the processes are started directly, with service setup disabled. The same
+fixture is added to the native ARM64 CI gate. No runtime is bundled.
+
+Before admission, verify actual Syncthing service behavior over DBus, native
+ARM64 runtime, managed install/update/remove and browser controls. Audit the original
 managed service paths and migration behavior. Automatic gamescope behavior is
 not SteamVR behavior. Browser controls, synchronization, real Frame and physical
 controllers remain unverified. See

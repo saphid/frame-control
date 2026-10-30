@@ -1,0 +1,105 @@
+{
+  "atUtc": "2026-10-30T05:10:04.655861+00:00",
+  "scope": "Actual Syncthing AMD64 runtime preflight; directly retained private peers, no DBus/service manager, no managed install or real Frame. Classification remains broken.",
+  "nativeAmd64": {
+    "runtime": "v2.1.7",
+    "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "helperSha256": "fba483be71143f75bccfa7f1ab74d524b5605ea1c748704a7d8a1e033f54de28",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "independentState": {
+      "twoWaySync": true,
+      "runtimeRestartPreservedFiles": true,
+      "realRestProxy": true,
+      "realApiKeyErrorPreserved": true,
+      "completionPercent": 100,
+      "deckyShutdownStoppedOwnedHelper": true,
+      "allOwnedProcessesReaped": true
+    },
+    "markerBytes": 3239,
+    "markerSha256": "39fd6ed70748fda5b97fd6b75eeebe1ed9e1a077662c40fd813624420989320e",
+    "reverseBytes": 1677,
+    "reverseSha256": "ebc4a5eb1748124f2cb2ab2f419ae3eea04e5d6c5eee94de06661729f35e5fc7",
+    "realDeckyRpcProxy": {
+      "/rest/system/status": 200,
+      "/rest/system/version": 200,
+      "/rest/config/options": 200,
+      "/rest/config/devices": 200,
+      "/rest/stats/device": 200,
+      "/rest/config/folders": 200,
+      "/rest/stats/folder": 200,
+      "/rest/db/status?folder=framey-private": 200,
+      "/rest/system/connections": 200
+    },
+    "apiKeyErrorStatus": 403,
+    "installerEnabled": false,
+    "syncthingStopBudgetSeconds": 25,
+    "serviceManagerVerified": false,
+    "systemdBus": "absent; service setup stays disabled",
+    "realFrameContacted": false,
+    "runtimeStopElapsedUpperBoundsSeconds": [
+      10.093,
+      10.093
+    ],
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeArchiveUrl": "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-linux-amd64-v2.1.7.tar.gz",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-runtime.py": "3a15798c0007068e4e66829b7079c165e17c4d65b9c37bf9c1b5d830a149d167",
+      "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+      "ui/vendor/syncthing-0.2.7/main.py": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "65a38255715ed355a47a77b3a65c1109d9a138865c4f7ee75b55767dd39f8943"
+    }
+  },
+  "publishedRuntime": {
+    "tag": "v2.1.7",
+    "publishedAt": "2026-10-21T06:09:14Z",
+    "archiveHashesMatchReleaseAssetMetadataAndChecksumListing": true,
+    "pgpSignatureVerified": false,
+    "checksumListingSha256": "c512202f9138caca4aa22cc8f9b71fb4288c8a16d5af97f45206275efabd0d1d",
+    "arm64ArchiveSha256": "48e456690cd2b97e7d26b02b5ac35f62a3b36172267b144cfeaf02c993ab955c",
+    "arm64BinarySha256": "3381c439af70c31db557d02581d0665d279f9efac1d0ea6806835a5b80dc65c7",
+    "arm64ExecutedLocally": false
+  },
+  "parentNativeCI": {
+    "pullRequest": 464,
+    "head": "863d77bbaaa149eb0bc5a67bcd1487efa6fb22f7",
+    "mergeCommit": "d1379501f9091964b6c3a0011978ca063e0a4f1c",
+    "run": 41005829610,
+    "artifacts": {
+      "amd64": 12955915046,
+      "arm64": 12955930341
+    },
+    "scope": "Exact-head ownership/private HTTP tests against synthetic upstream; not real-runtime ARM64 proof",
+    "sourceAndBuildHashesIndependentlyMatched": true
+  },
+  "helperRustInput": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "65a38255715ed355a47a77b3a65c1109d9a138865c4f7ee75b55767dd39f8943",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f"
+  },
+  "localValidation": {
+    "compatibilityContracts": 16,
+    "compatibilityContractsPassed": true,
+    "syntaxAndGeneratedDocsPassed": true,
+    "shutdownRegression": "Eight-second test budget reproduced forced cleanup; upstream allows 10s service stop plus 10s database close. Final shared 25s deadline passed without SIGKILL and with successful runtime exit codes."
+  },
+  "archiveAdmission": {
+    "allowed": false,
+    "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog"
+  },
+  "unverified": [
+    "New exact-head CI and native ARM64 real-runtime fixture",
+    "Actual DBus/systemd service control",
+    "Managed service paths and pre-existing unit ownership",
+    "Flatpak/runtime package and migration policy",
+    "Managed install/update/remove",
+    "Actual plugin browser controls and full Framey frontend/backend flow",
+    "Real Frame runtime and wearer-visible rendering",
+    "Physical controllers"
+  ],
+  "releaseAttempted": false
+}
