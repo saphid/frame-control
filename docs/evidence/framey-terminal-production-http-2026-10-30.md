@@ -81,3 +81,42 @@ The [terminal](framey-terminal-native-ci-terminal-2026-10-30.png),
 inspected. Shell ancestry/reaping, renderer sandboxing, event listener/session
 closure and complete owned cleanup passed again. This validates the updated
 local AMD64 runner; native CI and ARM64 browser evidence remain pending.
+
+
+## Native CI results and retained ARM64 failure
+
+At `391095ba02ee6d4b9a2e9eb39580503e723d9b0c`, the
+[AMD64 CI artifact audit](framey-terminal-native-ci-amd-2026-10-30.json)
+independently passed all 164 source fingerprints, the complete checksummed
+packet, 14 production method requests, six event polls, four native/delivered
+output events, and shell/event-listener cleanup. All three captures were
+inspected: returned output includes `18 125` and `framey-browser-output`,
+then removal leaves an empty active-terminal list. These captures remain in
+[artifact 13001366029](https://github.com/saphid/frame-control/actions/runs/41103940032/artifacts/13001366029).
+The old fixture's inactive-service flag alone does not establish a graceful
+Decky stop.
+
+The [ARM64 failure audit](framey-terminal-native-ci-arm-failure-2026-10-30.json)
+matched all 164 source fingerprints and the complete 258,896-byte packet from
+[artifact 12999809974](https://github.com/saphid/frame-control/actions/runs/41103940032/artifacts/12999809974).
+Backend discovery succeeded, but the unchanged production installed-plugin
+list remained unpopulated for the 90-second readiness budget. No Terminal
+panel request or browser stage completed. The old packet lacks the installed
+status error and request timing needed to explain this; no timeout cause is
+established and the failed gate remains failed.
+
+The fixture now retains bounded installed-status HTTP timings/statuses, the
+actual production UI error, and the existing passive SSH/process observer's
+diagnostics. Production commands, timeouts, replies and exceptions pass
+through unchanged, with no cache, retry, serialization or receipt bypass.
+The observer is restored during cleanup. No production UI or compatibility
+claim is changed to make this test pass.
+
+The branch also incorporates #491's managed Decky `KillMode=mixed` policy.
+The owned Terminal unit now uses that policy and the shared bounded stop
+observer, requiring inactive state, `Result=success`, zero exit status/MainPID
+and the original PID gone. A stop failure is retained and remains fatal;
+the fixture no longer treats any inactive unit as sufficient shutdown proof.
+Updated exact-head native CI and the local AMD64 replay are pending. ARM64
+browser, real Steam CEF, managed installation and physical-controller limits
+remain unverified.

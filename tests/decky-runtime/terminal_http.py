@@ -4,6 +4,7 @@ The CEF protocol facade and managed release receipt are synthetic. The actual
 Decky user service, production parent, panel, SSH wrapper and event script run
 unchanged in a networkless owned VM. This is never a real Steam/Frame test.
 """
+from contextlib import redirect_stdout
 import hashlib
 import io
 import json
@@ -19,9 +20,10 @@ import threading
 import time
 import urllib.request
 
-from syncthing_http import CEF as RPC_CEF
+from syncthing_http import CEF as RPC_CEF, observe_ssh, safe_error_category
 from syncthing_http_parent import command, install_child_harness, sandboxed_renderers
 from terminal_browser import COMMAND, PROBE, screenshot
+from syncthing_service import stop_decky_service
 
 
 def cef_document(token):
@@ -90,7 +92,7 @@ def exercise(name, home):
                     '[Service]\nType=simple\nWorkingDirectory=/home/tester\n'
                     'ExecStart=/usr/bin/env UNPRIVILEGED_PATH='+str(base)+' PRIVILEGED_PATH='+str(base)+
                     ' CHOWN_PLUGIN_PATH=0 LIVE_RELOAD=0 USE_CEF_CLOSE_WORKAROUND=0 KEEP_SYSTEMD_SERVICE=1 '+str(base/'PluginLoader')+'\n'
-                    'KillMode=control-group\nTimeoutStopSec=10\n')
+                    'KillMode=mixed\n')
     def ctl(*args, check=True):
         return subprocess.run(['/usr/bin/systemctl', '--user', *args], check=check,
                               capture_output=True, text=True, timeout=30)
@@ -104,6 +106,10 @@ def exercise(name, home):
                   browserSandboxDisabled=False, uiSourceFingerprints=sources)
     browser = cef = page = httpd = worker = None
     stages, shots, requests, assets = [], {}, [], []
+    status_requests, ssh_records, ssh_lock = [], [], threading.Lock()
+    status_profiles = dict(records=[], overflow=False)
+    previous_ssh = None
+    started = time.monotonic()
     temporary = tempfile.TemporaryDirectory(prefix='framey-terminal-http-')
     try:
         ctl('daemon-reload'); ctl('start', unit.name)
@@ -116,6 +122,20 @@ def exercise(name, home):
         token = until_ready(token_ready, 'owned Decky user service', timeout=60)
         import server
         assert server.LOCAL and server.HEADSET_RUNTIME
+        import frame_decky
+        previous_ssh = server.ssh
+        status_source = (bundle/'ui/frame_status.py').read_text()
+
+        def traced_ssh(*args, **kwargs):
+            source = kwargs.get('stdin')
+            kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE) else
+                    'headset-status' if source == status_source else 'other')
+            return observe_ssh(previous_ssh, ssh_records, ssh_lock, started, kind, *args,
+                               process_profiles=status_profiles, **kwargs)
+
+        # Reuse the bounded passive observer: arguments, timeouts, responses
+        # and exceptions pass through without caching, retries or bypasses.
+        server.ssh = traced_ssh
         class Handler(server.Handler):
             def log_message(self, *_):
                 pass
@@ -123,6 +143,8 @@ def exercise(name, home):
             def do_GET(self):
                 assert len(assets) < 200
                 assets.append(self.path.split('?', 1)[0])
+                self.fixture_status_started = time.monotonic() if self.path == '/api/decky' else None
+                self.fixture_request = None
                 if self.path == '/cef' and self.local_request():
                     self.send_bytes(cef_document(token).encode(), 'text/html; charset=utf-8')
                 elif self.path == '/parent-bootstrap' and self.local_request():
@@ -131,6 +153,8 @@ def exercise(name, home):
                     super().do_GET()
 
             def do_POST(self):
+                self.fixture_status_started = None
+                self.fixture_request = None
                 original = self.rfile
                 if self.path in ('/api/framey/method', '/api/framey/events'):
                     length = int(self.headers.get('Content-Length', '0'))
@@ -148,6 +172,19 @@ def exercise(name, home):
                     self.rfile = original
 
             def send_json(self, obj, status=200):
+                status_started = getattr(self, 'fixture_status_started', None)
+                if status_started is not None:
+                    entry = dict(startedAfterSeconds=round(status_started-started, 3),
+                                 elapsedSeconds=round(time.monotonic()-status_started, 3),
+                                 httpStatus=status)
+                    if status == 200:
+                        entry.update(running=obj.get('running'),
+                                     pluginCount=len(obj.get('plugins', [])))
+                    else:
+                        entry['errorCategory'] = safe_error_category(obj)
+                    with ssh_lock:
+                        assert len(status_requests) < 100, 'Status HTTP trace limit exceeded'
+                        status_requests.append(entry)
                 entry = getattr(self, 'fixture_request', None)
                 if entry is not None:
                     assert len(requests) < 500
@@ -293,7 +330,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         if page:
             if not report['success']:
                 try:
-                    report['parentFailureState'] = page.eval("({panel:document.getElementById('frameyPanelStatus')?.textContent,installed:document.getElementById('deckyInstalled')?.innerText,errors:window.terminalErrors,failure:window.terminalFailure,stage:window.terminalStage})")
+                    report['parentFailureState'] = page.eval("({panel:document.getElementById('frameyPanelStatus')?.textContent,deckyState:document.getElementById('deckyState')?.textContent?.slice(0,512),installed:document.getElementById('deckyInstalled')?.innerText,errors:window.terminalErrors,failure:window.terminalFailure,stage:window.terminalStage})")
                     report['screenshots']['failure'] = screenshot(page)
                 except (OSError, frame_steam.Fail):
                     report['parentFailureUnavailable'] = True
@@ -311,8 +348,22 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         if httpd:
             httpd.shutdown(); httpd.server_close(); worker.join(timeout=8)
             report['httpServerStopped'] = not worker.is_alive()
-        ctl('stop', unit.name)
-        report['ownedDeckyServiceStopped'] = ctl('is-active', unit.name, check=False).returncode != 0
+        if previous_ssh is not None:
+            server.ssh = previous_ssh
+            report['sshObserverRemoved'] = server.ssh is previous_ssh
+        report.update(statusHttpRequests=status_requests, parentSshTrace=ssh_records,
+                      statusProcessProfiles=status_profiles, productionStatusCommandUnchanged=True)
+        stop_error = None
+        try:
+            with redirect_stdout(sys.stderr):
+                stop_decky_service(unit.name, report)
+            report['ownedDeckyServiceStopped'] = True
+        except Exception as error:
+            # Retain failed stop diagnostics and restore only this VM's dummy
+            # unit/receipt; the error remains fatal after the report is emitted.
+            stop_error = error
+            report['success'] = False
+            report['ownedDeckyServiceStopped'] = False
         unit.write_bytes(original_unit); receipt.unlink(); receipt.parent.rmdir()
         ctl('daemon-reload')
         report['originalUnitRestored'] = unit.read_bytes() == original_unit and not receipt.exists()
@@ -324,6 +375,8 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
             else: os.environ[key] = value
         temporary.cleanup()
         print('FRAMEY_TERMINAL_BROWSER_JSON='+json.dumps(report), file=sys.stderr, flush=True)
+        if stop_error is not None:
+            raise stop_error
     assert all(report[key] for key in ('ownedTargetClosed', 'ownedBrowserReaped', 'httpServerStopped',
-               'ownedDeckyServiceStopped', 'originalUnitRestored', 'ownedBundleRemoved'))
+               'ownedDeckyServiceStopped', 'originalUnitRestored', 'ownedBundleRemoved', 'sshObserverRemoved'))
     return report

@@ -106,7 +106,7 @@ def main():
               '.github/workflows/decky-runtime.yml']
     if args.production_http:
         names += ['tests/decky-runtime/'+name for name in
-                  ('terminal_http.py', 'syncthing_http.py', 'syncthing_http_parent.py')]
+                  ('terminal_http.py', 'syncthing_http.py', 'syncthing_http_parent.py', 'syncthing_service.py')]
         names += ['apk-catalog/'+name for name in ('build.py', 'reports.py', 'pick.py')]
     suffix={'x86_64':'amd','aarch64':'arm'}[arch]
     names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-'+suffix],cwd=ROOT,text=True).splitlines()

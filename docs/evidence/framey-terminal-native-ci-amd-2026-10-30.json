@@ -1,0 +1,180 @@
+{
+  "success": true,
+  "sourceRevision": "391095ba02ee6d4b9a2e9eb39580503e723d9b0c",
+  "sourceFingerprintsVerified": 164,
+  "productionSourceUnchanged": true,
+  "packetBytes": 1588283,
+  "packetSha256": "8cb8549fc4aa51c2218b027b61a9e56d6d92273c4ad5af61d06be5bdaf169e2a",
+  "resultSha256": "a06966d7a6c14c473e8ac931f2808b8dd9c8fc9842850da6f8c5396908e9a682",
+  "productionMethodRequests": 14,
+  "productionEventRequests": 6,
+  "nativeEvents": 4,
+  "deliveredEvents": 4,
+  "nativeLifecycle": {
+    "firstPid": 317,
+    "reloadPid": 320,
+    "config": {
+      "__version__": 1,
+      "default_shell": "/bin/sh"
+    },
+    "outputSha256": "90a25c23f30c43fce7126fde2d8c82c3e745753b40db2a1a37a4cd39dee82d00",
+    "reloadBefore": {
+      "pid": 320,
+      "uid": 1100,
+      "state": "S",
+      "ppid": 315,
+      "startTicks": 6636,
+      "cmdline": "/bin/sh\u0000"
+    },
+    "reloadAfter": null,
+    "calls": [
+      {
+        "method": "get_terminals",
+        "result": []
+      },
+      {
+        "method": "get_shells",
+        "result": [
+          "/bin/sh",
+          "/usr/bin/sh",
+          "/bin/bash",
+          "/usr/bin/bash",
+          "/bin/rbash",
+          "/usr/bin/rbash",
+          "/usr/bin/dash"
+        ]
+      },
+      {
+        "method": "set_default_shell",
+        "result": true
+      },
+      {
+        "method": "get_default_shell",
+        "result": "/bin/sh"
+      },
+      {
+        "method": "get_config",
+        "result": {
+          "__version__": 1,
+          "default_shell": "/bin/sh"
+        }
+      },
+      {
+        "method": "create_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminal",
+        "result": {
+          "is_started": true,
+          "is_completed": false,
+          "pid": 317,
+          "title": "AlfaOneBravoTwo"
+        }
+      },
+      {
+        "method": "subscribe_terminal",
+        "result": true
+      },
+      {
+        "method": "change_terminal_window_size",
+        "result": true
+      },
+      {
+        "method": "send_terminal_input",
+        "result": true
+      },
+      {
+        "method": "private_pty_output",
+        "result": {
+          "markerHex": "6672616d65792d6f776e65642d7465726d696e616c0a",
+          "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\r\n31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n$ "
+        }
+      },
+      {
+        "method": "unsubscribe_terminal",
+        "result": true
+      },
+      {
+        "method": "remove_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminals",
+        "result": []
+      },
+      {
+        "method": "create_terminal",
+        "result": true
+      },
+      {
+        "method": "get_terminal",
+        "result": {
+          "is_started": true,
+          "is_completed": false,
+          "pid": 320,
+          "title": "AlfaOneBravoTwo"
+        }
+      }
+    ],
+    "privateInputOutput": true,
+    "resizeVerified": true,
+    "explicitRemoveReaped": true,
+    "reloadReaped": true,
+    "unrelatedProcessPreserved": true,
+    "configPersistedAcrossPluginReload": true,
+    "realFrameContacted": false,
+    "browserVerified": false,
+    "physicalControllerVerified": false
+  },
+  "renderedTerminalRows": [
+    "$ printf 'framey-browser-terminal\\n' > framey-browser-terminal-marker; stty size; printf 'framey-browser-output\\n'",
+    "18 125",
+    "framey-browser-output",
+    "$",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+    ""
+  ],
+  "browserShell": {
+    "pid": 553,
+    "uid": 1100,
+    "ancestryToDeckyService": [
+      553,
+      350,
+      349,
+      338,
+      336
+    ]
+  },
+  "browserShellReaped": true,
+  "captures": {
+    "terminal": "98a093ac86a6292a9076945f648053d4da82d57a81e4b1df133f2cb6a6c60fbe",
+    "output": "daf97be217fa272553973c354915d719fb58f2efade6f813fd05f386c0441054",
+    "removed": "cb61e797cee485405d32604a0549cd822959bbdb76c19156a9f520712e33dcf3"
+  },
+  "syntheticCef": true,
+  "syntheticManagedReceipt": true,
+  "productionHttpVerified": true,
+  "productionEventsVerified": true,
+  "productionAdapterVerified": false,
+  "realSteamCef": false,
+  "arm64BrowserVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "allCapturesInspected": true,
+  "artifact": 13001366029,
+  "artifactSha256": "522cfb69c54bb45c4f6a59681cdc7913e8689d8ff3106eb017584d97b27f0e22",
+  "gracefulDeckyStopVerified": false
+}
