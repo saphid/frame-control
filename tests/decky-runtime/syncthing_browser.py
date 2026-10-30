@@ -208,9 +208,20 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 name = label+str(len(stages))
                 screenshots[name] = screenshot(page)
             renderers = []
+            browser_processes = []
             for process in Path('/proc').iterdir():
                 try:
-                    if process.name.isdecimal() and b'--type=renderer' in (process/'cmdline').read_bytes().split(b'\0'):
+                    if not process.name.isdecimal():
+                        continue
+                    raw_command = (process/'cmdline').read_bytes()
+                    # Chromium can rewrite argv into one process-title string.
+                    # Match a whole flag in either form, retaining strict PID
+                    # ancestry and actual kernel sandbox requirements below.
+                    arguments = raw_command.replace(b'\0', b' ').split()
+                    if b'chromium' in raw_command:
+                        browser_processes.append({'pid': int(process.name),
+                                                  'command': raw_command[:4096].decode(errors='replace')})
+                    if b'--type=renderer' in arguments:
                         lineage = [int(process.name)]
                         while lineage[-1] != browser.pid:
                             parent = int(Path('/proc/'+str(lineage[-1])+'/stat').read_text().rsplit(')', 1)[1].split()[1])
@@ -218,9 +229,12 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                             lineage.append(parent)
                         status = (process/'status').read_text()
                         assert 'Seccomp:\t2\n' in status and 'NoNewPrivs:\t1\n' in status
-                        renderers.append({'pid': int(process.name), 'ancestryToBrowser': lineage})
+                        renderers.append({'pid': int(process.name), 'ancestryToBrowser': lineage,
+                                          'commandLineStyle': 'argv' if b'--type=renderer' in raw_command.split(b'\0') else 'process-title',
+                                          'seccomp': 2, 'noNewPrivs': 1})
                 except FileNotFoundError:
                     continue
+            report['browserProcesses'] = browser_processes
             assert renderers, 'No sandboxed Chromium renderer observed'
             saved = json.loads(legacy_rpc('get_settings_json'))
             assert Path('/proc/'+str(browser.pid)+'/exe').resolve() == Path('/usr/lib/chromium/chromium')
@@ -253,7 +267,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 report['lastStageUnavailable'] = True
         raise
     finally:
-        report.update(stages=stages, calls=calls)
+        report.update(stages=stages, calls=calls, actualPackagedProcessObservations=observations)
         if page:
             page.sock.close()
         if browser:

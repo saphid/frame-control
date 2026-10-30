@@ -126,3 +126,12 @@ At checkpoint `b12f392`, the full server suite passed 1,841 tests in
 changed AMD64 helper built offline from locked dependencies and passed all
 11 ownership/service-file tests. This is build evidence, not an ARM64 or
 browser runtime pass. The sixth combined trial uses that source-bound helper.
+
+The sixth trial at `b12f392` completed all four DOM stages, including Stopped
+after both stop calls. It failed at the renderer sandbox observer: no renderer
+matched its exact NUL-delimited argv flag test. All 25 source hashes match,
+and its browser, bridge and VM were reaped. No overall runtime pass is credited.
+The observer now also accepts a whole renderer flag in a rewritten process
+title, records which format matched and retains Chromium argument diagnostics.
+Actual seccomp 2, no-new-privileges 1 and ancestry to the owned browser remain
+mandatory. A new replay must establish whether the argument format was the cause.
