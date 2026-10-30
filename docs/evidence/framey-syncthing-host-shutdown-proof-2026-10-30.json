@@ -1,0 +1,31 @@
+{
+  "historicalArtifactSha256": "7f3a119747b085fbd3b64f4e45e049007bdc1471832d9a0fff2e75be1df7c2a0",
+  "historicalSuccessfulJobContainedCancellation": true,
+  "observations": [
+    {
+      "path": "migration",
+      "beforeAccepted": true,
+      "afterRejected": true,
+      "error": "Missing or unsuccessful owned Decky shutdown proof"
+    },
+    {
+      "path": "service",
+      "beforeAccepted": true,
+      "afterRejected": true,
+      "error": "Missing or unsuccessful owned Decky shutdown proof"
+    }
+  ],
+  "currentRealOwnershipProofAccepted": true,
+  "currentRealOwnershipProofWithoutLogCheckRejected": true,
+  "realFrameContacted": false,
+  "baseRevision": "6e8f0f9291be2db99862ab1e38b9e9edc1c8f745",
+  "redSubtestFailures": 28,
+  "focusedPackageTests": 46,
+  "syncthingTests": 102,
+  "logSha256": {
+    "red": "f961d846710966017696173ac51ae6ebaec5fe572f1282d209277f43841fe5fa",
+    "green": "1ce42e1577733a0dacbf8c442ad6d1d0be3d573d693e962762bcfcaa6e3d84aa",
+    "all-syncthing": "8ff4d7419c20104edee0d9b94a0e93a3582e35702d021ed377a6b25342690eb0"
+  },
+  "limits": "Host verifier regression only. New-head CI/runtime package checks remain required. No real Frame or controller testing."
+}

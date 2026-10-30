@@ -181,6 +181,8 @@ def verify_migration(report, arch, bundles):
         or report.get('flatpakPackageVerified') is not True
         or any(report.get(key) is not True for key in MIGRATION_REQUIRED)):
         raise ValueError('Missing actual legacy migration preservation/control proof')
+    module('syncthing_service_gates', ROOT/'scripts/framey-test-syncthing-service.py').verify_decky_shutdown(
+        report, migration=True)
     if report.get('pendingSetupRoutes') != {'GET state': 500, 'POST start': 204, 'POST stop': 204}:
         raise ValueError('Missing pending migration refusal/no-op proof')
     if report.get('legacyMainPidBefore') == report.get('legacyMainPidAfterRestart'):
@@ -208,6 +210,7 @@ def verify_candidate(service, arch, bundles, required_results):
         or service.get('deckyApiKeyErrorStatus') != 403
         or any(service.get(key) is not True for key in required_results)):
         raise ValueError('Incomplete actual-package candidate lifecycle proof')
+    module('syncthing_service_gates', ROOT/'scripts/framey-test-syncthing-service.py').verify_decky_shutdown(service)
     wizard = service.get('wizardConfigDiscovery', {})
     if any(wizard.get(key) is not True for key in (
         'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
