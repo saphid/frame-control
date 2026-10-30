@@ -23,3 +23,12 @@
                      setError(null);
                  }
                  else {
+@@ -3053,7 +3058,7 @@
+             })();
+         }, [serverApi]);
+         const finish = () => {
+-            setTimeout(() => deckyFrontendLib.Navigation.OpenQuickAccessMenu(deckyFrontendLib.QuickAccessTab.Decky), 100);
++            // This setup already runs inside the isolated plugin panel.
+             deckyFrontendLib.Navigation.NavigateBack();
+         };
+         if (loading) {
