@@ -30,5 +30,12 @@
   "realFrameContacted": false,
   "physicalControllerVerified": false,
   "compatibilityPromotion": false,
-  "newRelease": false
+  "newRelease": false,
+  "fullRegression": {
+    "tests": 1857,
+    "failures": 0,
+    "skips": 16,
+    "seconds": 226.157,
+    "logSha256": "b4e57f1d90e73f8a915acd7e9b3622ba949a4d31d336d0daebcdc7f3d4e4e018"
+  }
 }
