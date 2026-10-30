@@ -42,7 +42,9 @@ try:
         "DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus",
     ]
     limits = json.loads(Path('/input/flatpak-inputs.json').read_text())['timeouts']
-    expected_user_limit = 2400 if os.uname().machine == 'aarch64' else 840
+    browser = json.loads(Path('/input/flatpak-inputs.json').read_text()).get('browserSetupRequested', False)
+    assert not browser or os.uname().machine == 'x86_64'
+    expected_user_limit = 1440 if browser else (2400 if os.uname().machine == 'aarch64' else 840)
     assert limits['userSeconds'] == expected_user_limit
     result = subprocess.run(
         user + ["python3", "/framey-user.py"],

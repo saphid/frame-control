@@ -18,6 +18,8 @@ import platform
 import shutil
 import signal
 import subprocess
+import tempfile
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHES = {
@@ -242,6 +244,27 @@ def verify_candidate(service, arch, bundles, required_results):
             raise ValueError('Candidate service executed an unexpected package')
 
 
+def browser_payloads(official):
+    browser = module('syncthing_browser_render', ROOT / 'scripts/framey-test-syncthing-browser.py')
+    with tempfile.TemporaryDirectory(prefix='framey-browser-panel-') as temporary:
+        archive = Path(temporary) / 'official.zip'
+        archive.write_bytes(official)
+        bundle = browser.frontend(archive, True)
+    with patch.object(browser.framey_panel, '_owned_dist', return_value=(None, bundle, browser.DIGEST)):
+        panel = browser.framey_panel.panel(64).decode()
+    import base64
+    for route, name in [('react.js', 'vendor/react-18.3.1.min.js'),
+                        ('react-dom.js', 'vendor/react-dom-18.3.1.min.js'), ('host.js', 'framey-host.js')]:
+        data = base64.b64encode((ROOT / 'ui' / name).read_bytes()).decode()
+        panel = panel.replace(f'src="/framey-runtime/{route}"', f'src="data:text/javascript;base64,{data}"')
+    return {
+        'browser-panel.html': panel.encode(),
+        'syncthing_browser.py': (ROOT / 'tests/decky-runtime/syncthing_browser.py').read_bytes(),
+        'frame_steam.py': (ROOT / 'ui/frame_steam.py').read_bytes(),
+    }, {'frontendSha256': hashlib.sha256(bundle).hexdigest(),
+        'panelSha256': hashlib.sha256(panel.encode()).hexdigest()}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -262,10 +285,14 @@ def main():
     parser.add_argument('--candidate-build-report', type=Path)
     parser.add_argument('--archive', type=Path, help='Optional pinned official Syncthing plugin ZIP')
     parser.add_argument('--loader', type=Path, help='Optional pinned native Decky 3.3.0 loader')
+    parser.add_argument('--browser-setup', action='store_true',
+                        help='AMD64 only: actual browser controls with Decky and the signed package')
     args = parser.parse_args()
     arch = platform.machine()
     if platform.system() != "Linux" or arch not in ARCHES:
         parser.error("This package probe requires native AMD64 or ARM64 Linux")
+    if args.browser_setup and (arch != 'x86_64' or not args.candidate_helper):
+        parser.error('Combined browser setup currently requires AMD64 and a source-bound candidate')
     emulator, console_device, machine = ARCHES[arch]
     if shutil.which(emulator) is None:
         parser.error(emulator + " is required")
@@ -296,8 +323,14 @@ def main():
         payloads.update(extra)
     elif args.archive or args.loader:
         parser.error('Candidate archive/loader require --candidate-helper')
-    budgets = BUDGETS[arch]
-    manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets}
+    browser_inputs = None
+    if args.browser_setup:
+        browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
+        payloads.update(browser_extra)
+    budgets = ({'installSeconds': 300, 'userSeconds': 1440, 'unitSeconds': 1500, 'hostSeconds': 1560}
+               if args.browser_setup else BUDGETS[arch])
+    manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets,
+                "browserSetupRequested": args.browser_setup}
     for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
@@ -326,6 +359,14 @@ def main():
             'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
             'ui/vendor/syncthing-0.2.7/owned_unit.rs', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
         ])
+    if args.browser_setup:
+        source_paths.extend(ROOT / path for path in [
+            'scripts/framey-test-syncthing-browser.py', 'tests/decky-runtime/syncthing_browser.py',
+            'tests/decky-runtime/Containerfile.flatpak-vm', 'ui/framey_panel.py', 'ui/framey-host.js',
+            'ui/frame_decky.py', 'ui/frame_decky_store.py', 'ui/framey_compatibility.py',
+            'ui/frame_steam.py', 'ui/vendor/react-18.3.1.min.js', 'ui/vendor/react-dom-18.3.1.min.js',
+            'ui/vendor/syncthing-0.2.7/frontend.patch',
+        ])
     fingerprints = {str(path.relative_to(ROOT)): sha(path) for path in source_paths}
     spec = importlib.util.spec_from_file_location("service_vm", packer_path)
     packer = importlib.util.module_from_spec(spec)
@@ -340,6 +381,7 @@ def main():
         user_probe=user_probe.read_bytes(),
         normal_root=True,
         timeout=budgets['unitSeconds'],
+        root_size_mib=2048 if args.browser_setup else 1024,
     )
     (args.output / "vmlinuz").write_bytes(kernel)
     inputs = {
@@ -352,13 +394,14 @@ def main():
         "architecture": arch,
         "preparationSha256": sha(args.preparation) if args.preparation else None,
         "keySha256": KEY_SHA256,
-        "memoryMiB": 6144,
+        "memoryMiB": 8192 if args.browser_setup else 6144,
         "timeoutSeconds": budgets['hostSeconds'],
         "guestTimeouts": budgets,
         "networkDevice": False,
         "hostBusExposed": False,
         "realFrameContacted": False,
         "candidate": candidate,
+        "browserSetup": browser_inputs,
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -371,7 +414,7 @@ def main():
         "-smp",
         "2",
         "-m",
-        "6144",
+        str(inputs['memoryMiB']),
         "-nodefaults",
         "-nographic",
         "-serial",
@@ -435,6 +478,22 @@ def main():
                              packer.REQUIRED_SERVICE_RESULTS)
             if package.get('uninstallPreservedCandidateData') is not True:
                 raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
+        if args.browser_setup:
+            browser_result = package.get('candidateService', {}).get('browserSetup', {})
+            if (browser_result.get('success') is not True
+                or browser_result.get('actualDeckyRpc') is not True
+                or browser_result.get('browserSandboxDisabled') is not False
+                or browser_result.get('ownedBrowserReaped') is not True
+                or browser_result.get('bridgeStopped') is not True):
+                raise RuntimeError('Combined sandboxed browser/backend proof is incomplete')
+            import base64
+            for name, encoded in browser_result['screenshots'].items():
+                if name not in ('running1', 'stopped2', 'restarted3', 'stopped4'):
+                    raise RuntimeError('Unexpected browser screenshot stage')
+                data = base64.b64decode(encoded, validate=True)
+                if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
+                    raise RuntimeError('Invalid browser screenshot')
+                (args.output / ('browser-'+name+'.png')).write_bytes(data)
             if package.get('uninstallPreservedMigrationData') is not True:
                 raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
         if any(

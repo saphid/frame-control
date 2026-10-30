@@ -390,6 +390,17 @@ def main(signed_flatpak=False):
         def setting(name, value):
             legacy_rpc('set_setting', setting=name, value=value)
 
+        if signed_flatpak and Path('/input/browser-panel.html').exists():
+            from syncthing_browser import exercise
+            report['browserSetup'] = exercise(legacy_rpc, runtime_identity, service)
+            saved = json.loads(legacy_rpc('get_settings_json'))
+            assert saved['is_setup'] is True and saved['api_key'] == key and saved['port'] == 8384
+            assert prop(service, 'MainPID') == '0'
+            # This is newly created VM state. Reset only its profile for the
+            # independent backend scan/lifecycle regression below.
+            setting('is_setup', False)
+            setting('api_key', '')
+
         for name, value in [
             ('mode', 'flatpak'),
             ('flatpak_name', app),

@@ -437,7 +437,7 @@ def main():
         report['candidateMigration'] = json.loads(lines[0])
         candidate = subprocess.run(
             ['python3', '/input/syncthing_service.py', '--signed-flatpak'],
-            capture_output=True, text=True, timeout=360,
+            capture_output=True, text=True, timeout=720 if inputs.get('browserSetupRequested') else 360,
         )
         print(candidate.stdout, flush=True)
         print(candidate.stderr[-12000:], flush=True)

@@ -62,7 +62,7 @@ def module(name, path):
 
 
 def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
-         user_probe=None, normal_root=False, timeout=300):
+         user_probe=None, normal_root=False, timeout=300, root_size_mib=1024):
     """Write guest-only newc bytes directly; never extract/chown host files."""
     unit = (
         b'[Unit]\nDescription=Private Framey service probe\nAfter=dbus.service\nRequires=dbus.service\n'
@@ -78,7 +78,7 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
     if normal_root:
         # Bubblewrap requires an ordinary guest root, rather than initramfs.
         init += (
-            b'mkdir /newroot\nmount -t tmpfs -o size=1024m tmpfs /newroot\n'
+            b'mkdir /newroot\n' + f'mount -t tmpfs -o size={root_size_mib}m tmpfs /newroot\n'.encode() +
             b'tar -C / --exclude=./newroot --exclude=./dev --exclude=./proc --exclude=./sys --exclude=./run -cf - . | tar -C /newroot -xf -\n'
             b'mkdir -p /newroot/dev /newroot/proc /newroot/sys /newroot/run\n'
             b'mount --move /dev /newroot/dev\nmount --move /proc /newroot/proc\n'
