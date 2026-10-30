@@ -856,6 +856,30 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual((folder / 'main.py').read_bytes(), original_main)
         self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text()).get('compatShims', []), [])
 
+    def test_exact_deckyparty_archive_owns_user_process_lifecycle(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 117)
+        data = official_archive(plugin)
+        args = {'plugin_id':117, 'folder':plugin['folder'], 'version':plugin['version']}
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['deckyparty-user-lifecycle'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for name in ('LICENSE', 'plugin.json', 'dist/index.js', 'bin/copyparty-sfx.py'):
+                self.assertEqual((folder/name).read_bytes(), original.read('Decky-CP/'+name))
+        contracts = subprocess.run([sys.executable, str(Path(__file__).parent/'deckyparty_contract.py'), str(folder)],
+                                  capture_output=True, text=True, env=self.env, timeout=15)
+        self.assertEqual(contracts.returncode, 0, contracts.stderr)
+        self.assertEqual(self.apply('remove', expected=plugin['sha256'], **args).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr('Decky-CP/unrecognized-version.txt', 'changed payload')
+        result = self.apply('install', changed.getvalue(), **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
     def test_exact_shotty_archive_gets_isolated_click_import(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 53)

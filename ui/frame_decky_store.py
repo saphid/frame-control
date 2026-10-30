@@ -928,6 +928,73 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
 """+source[b:]
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
+            # The exact DeckyParty archive already runs as the service user.
+            # Invoke its original helper with system Python, without sudo, and
+            # keep ownership until its process has exited and been reaped.
+            if int(plugin_id)==117 and digest=='193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf' and folder=='Decky-CP':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
+                    raise RuntimeError('DeckyParty Python source mismatch')
+                source='import pwd\n'+source
+                a=source.index('    @staticmethod\n    def _get_home_dir(')
+                b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
+                source=source[:a]+"""    @staticmethod
+    def _get_home_dir():
+        return str(Path.home())
+
+    @staticmethod
+    def _get_user():
+        return pwd.getpwuid(os.getuid()).pw_name
+
+"""+source[b:]
+                source=source.replace('            "sudo",\n            "-u",\n            user,\n            "-E",',
+                                      '            "/usr/bin/python3",')
+                a=source.index('    @staticmethod\n    def _stop_process(')
+                b=source.index('    @staticmethod\n    def _start_process(',a)
+                source=source[:a]+"""    @staticmethod
+    def _stop_process():
+        process = Plugin._proc
+        if process is None:
+            return
+        if process.poll() is None:
+            process.terminate()
+            try:
+                process.wait(timeout=3)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=3)
+        else:
+            process.wait()
+        Plugin._proc = None
+
+"""+source[b:]
+                source=source.replace('        env = os.environ.copy()',
+                    '        env = os.environ.copy()\n'
+                    '        for key in ("LD_LIBRARY_PATH", "PYTHONHOME", "PYTHONPATH"):\n'
+                    '            env.pop(key, None)')
+                source=source.replace('    async def set_enabled(self, enabled):',
+                    '    async def set_enabled(self, enabled):\n'
+                    '        if type(enabled) is not bool:\n'
+                    '            raise ValueError("Enable must be a boolean")')
+                source=source.replace('    async def _main(self):\n        try:',
+                    '    async def _main(self):\n'
+                    '        if Plugin._runner_task is not None and not Plugin._runner_task.done():\n'
+                    '            return\n        try:')
+                source+="""
+    async def _unload(self):
+        Plugin._enabled = False
+        task = Plugin._runner_task
+        Plugin._runner_task = None
+        if task is not None:
+            task.cancel()
+            await asyncio.gather(task, return_exceptions=True)
+        Plugin._stop_process()
+        Plugin._password = None
+"""
+                compile(source,str(main),'exec')
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('deckyparty-user-lifecycle')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's
