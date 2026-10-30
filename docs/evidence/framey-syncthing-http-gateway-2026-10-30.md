@@ -42,7 +42,8 @@ integration proof.
 Two focused guard/packing tests pass: host or wrong-guest refusal precedes
 commands/environment changes, and the source bundle includes unchanged
 production dispatch, local SSH and catalogue imports. The existing 22 package
-input/evidence tests also pass. Full server regression is running at `f870ceb`.
+input/evidence tests also pass. Full server regression at `f870ceb` passed 1,845 tests in 227.444 seconds,
+with 16 skips and no failures.
 The first combined HTTP gateway VM trial is running at `88271c9`; the following
 commit adds only the two tests, with no packed runtime source changes.
 
