@@ -37,7 +37,9 @@ def probe(name, home, backend, processes):
             assert pid > 0 and (Path('/proc')/str(pid)).stat().st_uid == os.getuid()
             assert await call('subscribe_terminal', terminal_id) is True
             assert await call('change_terminal_window_size', terminal_id, 31, 97) is True
-            command = "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\n"
+            # A newly started interactive shell may emit its prompt after input
+            # is echoed. Separate it from stty's result; retain exact line checks.
+            command = "printf 'framey-owned-terminal\\n' > framey-terminal-marker; printf '\\n'; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\n"
             assert await call('send_terminal_input', terminal_id, command) is True
             await client.drain(1)
             output = ''.join(e['args'][0] for e in client.events if e['event']=='terminal_output#'+terminal_id)
