@@ -22,6 +22,8 @@ addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
 addEventListener('securitypolicyviolation',e=>errors.push('CSP '+e.violatedDirective));
 const text=()=>document.getElementById('framey-root').innerText;
 const button=label=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===label);
+const dashboardReady=()=>text().includes('Running')&&text().includes('Private service sync')&&
+ text().includes('owned-peer')&&!text().split('\n').some(line=>line.trimStart().startsWith('Error:'));
 const wait=async read=>{const end=Date.now()+60000;while(Date.now()<end){if(read())return;
  await new Promise(resolve=>setTimeout(resolve,100));}throw Error('Browser DOM readiness timed out');};
 const stage=value=>parent.postMessage({type:'test:stage',stage:value,text:text().slice(0,3000),errors,manualPortFallbackUsed:window.manualPortFallbackUsed},'*');
@@ -46,7 +48,7 @@ addEventListener('message',async event=>{
    }
    await wait(()=>text().includes('Almost done!'));
    button('Continue').click();await wait(()=>button('Get Started'));button('Get Started').click();
-   await wait(()=>text().includes('Running')&&text().includes('Private service sync')&&text().includes('Devices'));
+   await wait(dashboardReady);
    stage('running');
   }else{
    const controls=[...document.querySelector('[flow-children="horizontal"]').querySelectorAll(':scope > button')];
@@ -55,6 +57,7 @@ addEventListener('message',async event=>{
    const target=event.data.action==='start'?'Running':'Stopped';
    await wait(()=>{if(text().includes('Failed'))throw Error('Actual dashboard reported Failed after '+event.data.action);
     return text().includes(target);});
+   if(event.data.action==='start')await wait(dashboardReady);
    stage(event.data.action==='start'?'restarted':'stopped');
   }
  }catch(e){stage('failed');parent.postMessage({type:'test:failure',error:e.message},'*');}

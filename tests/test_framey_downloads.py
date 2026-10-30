@@ -29,7 +29,7 @@ class Downloads(unittest.TestCase):
             self.assertIn('RegisterForDownloadItems', stdin)
             self.assertNotIn('__FRAMEY_STEAM_', stdin)
             return '{"result":{"ready":false,"items":[]}}'
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[installed]}):
             for action, appids, revision in [('read',None,None),('queue',[10,20],1),('close',None,None)]:
                 self.assertIn('result',framey_panel.downloads(ssh,131,'panel-1',action,appids,revision,DIGEST))
             invalid = [(True,'panel-1','read',None,None,DIGEST),(14,'panel-1','read',None,None,DIGEST),
