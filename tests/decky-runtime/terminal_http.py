@@ -216,8 +216,21 @@ window.advanceTerminal=(action,command)=>{window.terminalStage=null;
             assert frame == dict(sandbox='allow-scripts allow-popups', src='/framey/panel/65'), frame
             report['iframe'] = frame
             panel_url = page.eval("document.getElementById('frameyFrame').src")
+            # A completed HTTP event response precedes the child renderer's
+            # paint. Require actual output rows, excluding command echo, before
+            # taking evidence. This reads DOM only; it never supplies output.
+            old_input = "await new Promise(resolve=>setTimeout(resolve,2500));stage('output');"
+            assert PROBE.count(old_input) == 1
+            driver = PROBE.replace(old_input, """
+await wait(()=>[...document.querySelectorAll('.xterm-rows > div')]
+ .some(row=>row.textContent.trim()==='framey-browser-output'));
+await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);stage('output');""")
+            old_stage = 'text:text().slice(0,3000),errors'
+            assert driver.count(old_stage) == 1
+            driver = driver.replace(old_stage, old_stage+""",
+ terminalRows:[...document.querySelectorAll('.xterm-rows > div')].slice(0,200).map(row=>row.textContent.slice(0,512))""")
             report['childHarness'] = install_child_harness(page, panel_url,
-                PROBE+";window.terminalDomHarnessReady=true", "window.terminalDomHarnessReady===true")
+                driver+";window.terminalDomHarnessReady=true", "window.terminalDomHarnessReady===true")
             for action, label in [('create', 'terminal'), ('input', 'output'), ('close', 'removed')]:
                 page.eval('window.advanceTerminal('+json.dumps(action)+','+json.dumps(COMMAND)+')')
                 def advanced():
@@ -248,6 +261,7 @@ window.advanceTerminal=(action,command)=>{window.terminalStage=null;
                         chain.append(parent)
                     report['browserShell'] = dict(pid=shell_pid, uid=os.getuid(), ancestryToDeckyService=chain)
                 if action == 'input':
+                    assert any(row.strip() == 'framey-browser-output' for row in stage['terminalRows']), stage
                     def output_delivered():
                         delivered = [event for entry in requests if entry['route'] == '/api/framey/events'
                                      for event in entry['response'].get('events', [])]
