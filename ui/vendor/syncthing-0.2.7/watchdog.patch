@@ -1,23 +1,29 @@
 --- a/backend/decky-syncthing-watchdog/src/main.rs
 +++ b/backend/decky-syncthing-watchdog/src/main.rs
-@@ -28,15 +28,12 @@
+@@ -27,16 +27,16 @@
+ use log4rs::encode::pattern::PatternEncoder;
  use log4rs::filter::threshold::ThresholdFilter;
  use std::convert::Infallible;
- use std::env::args;
+-use std::env::args;
 -use std::fs::{read_to_string, write};
+-use std::net::IpAddr;
++use std::env::{args, var_os};
 +use std::fs::{File, OpenOptions, write};
- use std::net::IpAddr;
++use std::net::{IpAddr, Ipv4Addr};
  use std::ops::Deref;
  use std::path::{Path, PathBuf};
++use std::os::unix::fs::PermissionsExt;
  use std::process;
  use std::process::ExitCode;
 -use std::time::Duration;
 -use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
 -use tokio::time::sleep;
++use std::sync::Arc;
++use tokio::net::UnixListener;
  
  const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
  const LOGFILE_WATCHDOG: &str = "watchdog.log";
-@@ -49,18 +46,25 @@
+@@ -49,18 +49,32 @@
      let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
      let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
  
@@ -44,6 +50,13 @@
 +            return ExitCode::FAILURE;
 +        }
 +    };
++    let private_listener = match owned_listener() {
++        Ok(listener) => listener,
++        Err(err) => {
++            eprintln!("Watchdog private listener unavailable: {err}");
++            return ExitCode::FAILURE;
++        }
++    };
      update_pid_file(&watchdog_pid_path);
 -    // To avoid race conditions on start, we check again.
 -    sleep(Duration::from_millis(150)).await;
@@ -54,7 +67,7 @@
  
      setup_self_logging(&watchdog_log_dir_path);
      register_panic_hook(&watchdog_log_dir_path);
-@@ -84,7 +88,7 @@
+@@ -84,13 +98,36 @@
          }
      });
  
@@ -62,8 +75,40 @@
 +    let server = listener.serve(make_svc);
      let watcher = gamescope_watchdog.background_watch();
  
-     let (r1, r2) = tokio::join!(server, watcher);
-@@ -121,36 +125,15 @@
+-    let (r1, r2) = tokio::join!(server, watcher);
+-
+-    error!("server exited with: {r1:?} & {r2:?}");
++    let private_server = serve_owned(private_listener, settings.clone());
++    let (r1, r2, r3) = tokio::join!(server, watcher, private_server);
++
++    error!("server exited with: {r1:?} & {r2:?} & {r3:?}");
+     ExitCode::FAILURE
++}
++
++fn owned_listener() -> std::io::Result<UnixListener> {
++    let path = var_os("FRAMEY_SYNCTHING_SOCKET")
++        .map(PathBuf::from)
++        .ok_or_else(|| std::io::Error::other("Owned socket path is required"))?;
++    let listener = UnixListener::bind(&path)?;
++    std::fs::set_permissions(path, std::fs::Permissions::from_mode(0o600))?;
++    Ok(listener)
++}
++
++async fn serve_owned(listener: UnixListener, settings: Arc<SettingsProvider>) -> std::io::Result<()> {
++    loop {
++        let (stream, _) = listener.accept().await?;
++        let settings = settings.clone();
++        tokio::spawn(async move {
++            let service = service_fn(move |req| handle(Ipv4Addr::LOCALHOST.into(), req, settings.clone()));
++            if let Err(err) = hyper::server::conn::Http::new().serve_connection(stream, service).await {
++                warn!("Owned HTTP connection failed: {err}");
++            }
++        });
++    }
+ }
+ 
+ async fn handle<S>(
+@@ -121,36 +158,15 @@
      write(pid_file_path, process::id().to_string()).unwrap();
  }
  

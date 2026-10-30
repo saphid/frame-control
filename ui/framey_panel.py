@@ -131,6 +131,7 @@ def panel(plugin_id):
     encoded = base64.b64encode(bundle).decode('ascii')
     module = f' data-module="/framey/module/{plugin_id}/{receipt}/index.js"' if b'./chunks/' in bundle else ''
     wine_socket = ' data-wine-socket="1"' if plugin_id == 68 and receipt == frame_decky_store.WINE_CELLAR_DIGEST else ''
+    syncthing_http = ' data-syncthing-http="1"' if plugin_id == 64 and receipt == frame_decky_store.SYNCTHING_DIGEST else ''
     downloads = ' data-downloads="1"' if plugin_id == 131 and receipt == frame_decky_store.DOWNLOAD_ALL_DIGEST else ''
     return ('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
@@ -146,7 +147,7 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-dialog{position:fixed;inset:12px;margin:0;z-index:100;overflow:auto;box-shadow:0 0 0 24px #0d1925e6}
 .framey-dialog[hidden]{display:none}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
-<script id="framey-bundle" type="application/json"''' + module + wine_socket + downloads + '''>''' + encoded + '''</script>
+<script id="framey-bundle" type="application/json"''' + module + wine_socket + syncthing_http + downloads + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
 <script src="/framey-runtime/host.js"></script></html>''').encode()
 
@@ -191,6 +192,11 @@ def call_method(ssh, plugin_id, method, args, legacy=False, receipt=None):
             plugin_id != 68 or receipt != frame_decky_store.WINE_CELLAR_DIGEST or
             'wine-cellar-native-bridge' not in plugin.get('compatShims', [])):
         raise PanelError('This plugin does not have the Wine Cellar socket bridge')
+    if method.startswith('framey_http_') and (
+            method != 'framey_http_fetch' or not legacy or plugin_id != 64
+            or receipt != frame_decky_store.SYNCTHING_DIGEST
+            or 'syncthing-owned-native-http' not in plugin.get('compatShims', [])):
+        raise PanelError('This plugin does not have the Syncthing HTTP bridge')
     payload = {'name':plugin['name'], 'method':method, 'args':args, 'legacy':legacy}
     # Library-sized arguments can exceed the OS limit for a single SSH command
     # argument. Send them as a quoted Python literal on stdin instead.

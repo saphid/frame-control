@@ -4888,7 +4888,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "flatpak; gamescope",
-      "nativePort": "Uninstalled ownership candidate builds pinned Rust source for AMD64/ARM64 and passes released Decky 3.3.0 AMD64 restart/reload ownership probes. The installer still refuses this archive. Receipt-bound HTTP bridge, real DBus service behavior, ARM64 runtime and Frame/UI gates remain pending (docs/evidence/framey-syncthing-ownership-2026-10-30.md).",
+      "nativePort": "Uninstalled candidate builds pinned Rust source for AMD64/ARM64; released Decky 3.3.0 AMD64 verifies owned lifecycle and private-socket HTTP transport against a synthetic upstream fixture. The inactive receipt-bound facade has Node VM coverage only. The installer still refuses this archive. Actual Syncthing/DBus service behavior, bridge ARM64 runtime, managed lifecycle, browser and Frame/UI gates remain pending (docs/evidence/framey-syncthing-http-2026-10-30.md).",
       "uiSurfaces": [
         "local/Steam routes"
       ],

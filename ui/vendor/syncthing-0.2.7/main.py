@@ -2,8 +2,12 @@ import asyncio
 import json
 import os
 import fcntl
+import http.client
 import signal
+import socket
 import subprocess
+import tempfile
+from urllib.parse import urlsplit, unquote
 from pathlib import Path
 from typing import TypedDict, Literal, Union, Optional
 
@@ -100,6 +104,20 @@ class Plugin:
         watchdog.closed = True
         watchdog.stop()
 
+    async def framey_http_fetch(self, method: str, path: str, headers: dict):
+        if watchdog.http_inflight >= 4:
+            raise ValueError("Too many Syncthing requests")
+        watchdog.http_inflight += 1
+        worker = asyncio.create_task(asyncio.to_thread(watchdog.fetch, method, path, headers))
+        def finished(task):
+            watchdog.http_inflight -= 1
+            # A cancelled RPC must retain its slot until the socket worker ends.
+            # Retrieve errors even when that RPC no longer awaits the result.
+            if not task.cancelled():
+                task.exception()
+        worker.add_done_callback(finished)
+        return await asyncio.shield(worker)
+
 
 class OwnedWatchdog:
     """Own a child session until it is reaped; never find processes by name/PID file."""
@@ -107,6 +125,8 @@ class OwnedWatchdog:
     def __init__(self):
         self.process = None
         self.closed = False
+        self.runtime = None
+        self.http_inflight = 0
 
     def start(self):
         if self.closed:
@@ -117,14 +137,24 @@ class OwnedWatchdog:
             self.stop()
         env = patch_env(dict(os.environ))
         env.setdefault("DBUS_SESSION_BUS_ADDRESS", f"unix:path=/run/user/{os.getuid()}/bus")
-        self.process = subprocess.Popen(
-            [WATCHDOG_BIN_PATH, SETTINGS_PATH, WATCHDOG_PID_PATH, DECKY_PLUGIN_LOG_DIR],
-            env=env, start_new_session=True,
-        )
+        self.runtime = tempfile.TemporaryDirectory(prefix='framey-syncthing-')
+        env['FRAMEY_SYNCTHING_SOCKET'] = str(Path(self.runtime.name)/'watchdog.sock')
+        try:
+            self.process = subprocess.Popen(
+                [WATCHDOG_BIN_PATH, SETTINGS_PATH, WATCHDOG_PID_PATH, DECKY_PLUGIN_LOG_DIR],
+                env=env, start_new_session=True,
+            )
+        except BaseException:
+            self.runtime.cleanup()
+            self.runtime = None
+            raise
 
     def stop(self):
         process = self.process
         if process is None:
+            if self.runtime is not None:
+                self.runtime.cleanup()
+                self.runtime = None
             return
         if process.poll() is None:
             try:
@@ -144,6 +174,66 @@ class OwnedWatchdog:
         # Keep the handle if wait fails. Never pretend a live child was reaped.
         self.process = None
         self.clean_pid(process.pid)
+        if self.runtime is not None:
+            self.runtime.cleanup()
+            self.runtime = None
+
+    def fetch(self, method, path, headers):
+        # Match the exact frontend's routes. Never accept a host, port or socket
+        # path from it, and never fall back to the possibly foreign TCP listener.
+        if method not in ('GET', 'POST') or not isinstance(path, str) or len(path) > 8192:
+            raise ValueError("Invalid Syncthing HTTP request")
+        if any(ord(c) < 33 or ord(c) > 126 for c in path) or '\\' in path:
+            raise ValueError("Invalid Syncthing HTTP path")
+        parsed = urlsplit(path)
+        if (not path.startswith('/') or path.startswith('//') or parsed.scheme or parsed.netloc
+                or parsed.fragment or unquote(parsed.path) != parsed.path):
+            raise ValueError("Syncthing HTTP origin is fixed")
+        reads = {'/', '/__decky-watchdog/state', '/rest/system/status', '/rest/system/version',
+                 '/rest/config/options', '/rest/config/devices', '/rest/stats/device',
+                 '/rest/db/completion', '/rest/config/folders', '/rest/stats/folder',
+                 '/rest/db/status', '/rest/system/connections'}
+        writes = {'/', '/__decky-watchdog/reload-config', '/__decky-watchdog/start',
+                  '/__decky-watchdog/stop', '/__decky-watchdog/check/start',
+                  '/__decky-watchdog/check/scan_port', '/__decky-watchdog/check/scan_api_key',
+                  '/__decky-watchdog/check/scan_basic_auth'}
+        if parsed.path not in (reads if method == 'GET' else writes):
+            raise ValueError("Syncthing HTTP route is unavailable")
+        if not isinstance(headers, dict) or len(headers) > 4:
+            raise ValueError("Invalid Syncthing HTTP headers")
+        normalized = {}
+        for name, value in headers.items():
+            if (not isinstance(name, str) or name.lower() not in
+                    {'accept', 'content-type', 'authorization', 'x-api-key'}
+                    or name.lower() in normalized or not isinstance(value, str) or len(value) > 4096
+                    or any(ord(c) < 32 or ord(c) > 126 for c in value)):
+                raise ValueError("Invalid Syncthing HTTP headers")
+            normalized[name.lower()] = value
+        process, runtime = self.process, self.runtime
+        if self.closed or process is None or process.poll() is not None or runtime is None:
+            raise RuntimeError("Owned Syncthing watchdog is unavailable")
+        # Upstream setup deliberately sleeps up to eleven seconds while checking
+        # service startup. Keep it within the host's 25-second RPC budget.
+        timeout = 20 if parsed.path == '/__decky-watchdog/check/start' else 5
+        connection = http.client.HTTPConnection('localhost', timeout=timeout)
+        stream = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        stream.settimeout(timeout)
+        try:
+            stream.connect(str(Path(runtime.name)/'watchdog.sock'))
+            connection.sock = stream
+            connection.request(method, path, headers=normalized)
+            response = connection.getresponse()
+            data = response.read(256*1024+1)
+            if len(data) > 256*1024:
+                raise ValueError("Syncthing HTTP response is too large")
+            if response.length not in (0, None):
+                raise ValueError("Syncthing HTTP response was truncated")
+            # Preserve HTTP errors, but never follow Location to another origin.
+            return {'status':response.status, 'body':data.decode('utf-8'),
+                    'headers':{'content-type':response.getheader('Content-Type', '')[:256]}}
+        finally:
+            connection.close()
+            stream.close()
 
     @staticmethod
     def clean_pid(pid):

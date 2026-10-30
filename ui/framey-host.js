@@ -124,6 +124,36 @@
   // This opaque iframe never gets that origin or a direct network connection.
   // Only its receipt-bound managed backend may reach the fixed local helper.
   const wineSockets = new Set();
+  // The exact Syncthing frontend keeps its original loopback URLs. Its managed
+  // backend uses a private socket belonging to the retained child, never a
+  // general fetch proxy or an unverified listener on that TCP port.
+  if (document.getElementById('framey-bundle')?.dataset?.syncthingHttp === '1') {
+    window.fetch = async (input, init={}) => {
+      if (typeof input !== 'string' || !input.startsWith('http://127.0.0.1:58384/'))
+        throw new TypeError('Syncthing HTTP origin is fixed');
+      const url = new URL(input);
+      if (url.origin !== 'http://127.0.0.1:58384' || url.username || url.password || url.hash)
+        throw new TypeError('Syncthing HTTP origin is fixed');
+      if (!init || typeof init !== 'object' || (init.body != null && init.body !== ''))
+        throw new TypeError('Syncthing HTTP request body is unavailable');
+      if (init.signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
+      const method = String(init.method || 'GET').toUpperCase();
+      if (!['GET','POST'].includes(method)) throw new TypeError('Syncthing HTTP method is unavailable');
+      const headers = Object.fromEntries(new Headers(init.headers || {}));
+      if (Object.keys(headers).some(name => !['accept','content-type','authorization','x-api-key'].includes(name)))
+        throw new TypeError('Syncthing HTTP header is unavailable');
+      const reply = await request('framey_http_fetch', [{method, path:url.pathname+url.search, headers}], true);
+      if (!reply?.success) throw Error(String(reply?.result || 'Syncthing HTTP bridge unavailable'));
+      const data = reply.result;
+      if (!data || !Number.isInteger(data.status) || data.status < 200 || data.status > 599 ||
+          typeof data.body !== 'string' || data.body.length > 262144 ||
+          typeof data.headers?.['content-type'] !== 'string')
+        throw Error('Invalid Syncthing HTTP response');
+      if (init.signal?.aborted) throw new DOMException('Request aborted', 'AbortError');
+      return new Response([204,205,304].includes(data.status) ? null : data.body,
+        {status:data.status, headers:{'content-type':data.headers['content-type']}});
+    };
+  }
   if (document.getElementById('framey-bundle')?.dataset?.wineSocket === '1') {
     class WineSocket extends EventTarget {
       constructor(url, protocols) {

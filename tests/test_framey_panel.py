@@ -22,6 +22,40 @@ RECEIPT = 'a' * 64
 
 
 class Panel(unittest.TestCase):
+    def test_syncthing_http_facade_uses_receipt_bound_legacy_rpc(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_syncthing_http.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_syncthing_http_calls_require_exact_receipt_shim_and_legacy_envelope(self):
+        digest = framey_panel.frame_decky_store.SYNCTHING_DIGEST
+        installed = {'storeId':64, 'name':'Syncthing', 'sha256':digest,
+                     'compatShims':['syncthing-owned-native-http']}
+        args = [{'method':'GET', 'path':'/rest/system/status', 'headers':{}}]
+        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+            self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"success":true,"result":{}}',
+                64,'framey_http_fetch',args,True,digest), {'success':True,'result':{}})
+            for method,legacy in [('framey_http_escape',True),('framey_http_fetch',False)]:
+                with self.assertRaisesRegex(framey_panel.PanelError,'HTTP bridge'):
+                    framey_panel.call_method(lambda *_a, **_k:self.fail('Unapproved bridge reached SSH'),
+                        64,method,args,legacy,digest)
+            installed['compatShims'] = []
+            with self.assertRaisesRegex(framey_panel.PanelError,'HTTP bridge'):
+                framey_panel.call_method(lambda *_a, **_k:self.fail('Old receipt reached SSH'),
+                    64,'framey_http_fetch',args,True,digest)
+            installed.update(storeId=81,compatShims=['syncthing-owned-native-http'])
+            with self.assertRaisesRegex(framey_panel.PanelError,'HTTP bridge'):
+                framey_panel.call_method(lambda *_a, **_k:self.fail('Wrong plugin reached SSH'),
+                    81,'framey_http_fetch',args,True,digest)
+
+    def test_only_exact_syncthing_panel_loads_http_facade(self):
+        digest = framey_panel.frame_decky_store.SYNCTHING_DIGEST
+        with patch.object(framey_panel,'_owned_dist',return_value=(None,b'export default () => null;',digest)):
+            self.assertIn(b'data-syncthing-http="1"',framey_panel.panel(64))
+            self.assertNotIn(b'data-syncthing-http',framey_panel.panel(81))
+        with patch.object(framey_panel,'_owned_dist',return_value=(None,b'export default () => null;','a'*64)):
+            self.assertNotIn(b'data-syncthing-http',framey_panel.panel(64))
+
     def test_running_queue_and_host_contract(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_running.mjs')],
                                 capture_output=True, text=True, timeout=10)
