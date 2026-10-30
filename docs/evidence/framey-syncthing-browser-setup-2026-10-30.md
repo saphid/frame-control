@@ -160,3 +160,8 @@ native runtime inputs but failed at different fixture stages. That comparison
 does not establish the sync timeout's root cause. The pending follow-up adds
 an explicit real peer-connection gate and retains its observed state before
 checking transferred bytes. The failed AMD64 result still holds #477's merge.
+
+The later refreshed head `ff663a7` passed fresh browser, ownership and signed
+AMD64/ARM64 gates and merged as #477. The [refreshed exact-head evidence](framey-syncthing-setup-ff663a7-ci-2026-10-30.md)
+records both native artifact audits and the final merge gate. The older
+failed head above remains a failed result; its cause was not established.
