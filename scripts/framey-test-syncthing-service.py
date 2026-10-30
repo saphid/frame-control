@@ -62,7 +62,8 @@ def module(name, path):
 
 
 def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
-         user_probe=None, normal_root=False, timeout=300, root_size_mib=1024):
+         user_probe=None, normal_root=False, timeout=300, root_size_mib=1024,
+         browser=False):
     """Write guest-only newc bytes directly; never extract/chown host files."""
     unit = (
         b'[Unit]\nDescription=Private Framey service probe\nAfter=dbus.service\nRequires=dbus.service\n'
@@ -157,7 +158,7 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
             if (
                 name.startswith('/')
                 or '..' in Path(name).parts
-                or member.size > 256 * 1024 * 1024
+                or member.size > (384 if browser and name == 'usr/lib/chromium/chromium' else 256) * 1024 * 1024
             ):
                 raise ValueError('Unexpected guest root filesystem entry')
             if name.startswith('boot/vmlinuz-'):

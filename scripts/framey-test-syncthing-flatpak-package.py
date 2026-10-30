@@ -382,6 +382,7 @@ def main():
         normal_root=True,
         timeout=budgets['unitSeconds'],
         root_size_mib=2048 if args.browser_setup else 1024,
+        browser=args.browser_setup,
     )
     (args.output / "vmlinuz").write_bytes(kernel)
     inputs = {

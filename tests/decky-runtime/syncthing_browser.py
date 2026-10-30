@@ -209,9 +209,12 @@ content="default-src 'none'; script-src 'unsafe-inline'; frame-src data:; connec
                     continue
             assert renderers, 'No sandboxed Chromium renderer observed'
             saved = json.loads(legacy_rpc('get_settings_json'))
+            assert Path('/proc/'+str(browser.pid)+'/exe').resolve() == Path('/usr/lib/chromium/chromium')
             report.update(setupCommitted=saved['is_setup'] is True,
                           discoveredApiKeySaved=bool(saved['api_key']), savedPort=saved['port'],
                           browserVersion=subprocess.check_output(['/usr/bin/chromium', '--version'], text=True).strip(),
+                          browserExecutableSha256=hashlib.file_digest(Path('/usr/lib/chromium/chromium').open('rb'), 'sha256').hexdigest(),
+                          browserPackages=subprocess.check_output(['dpkg-query', '-W', 'chromium', 'chromium-common', 'chromium-sandbox'], text=True).strip(),
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
     finally:
