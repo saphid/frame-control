@@ -79,5 +79,45 @@
   },
   "allSixCapturesVisuallyInspected": true,
   "visualScope": "Original Loading; fresh Finish; migrating Installation Method entry; configured/finish/manual final expected state-500 view. Manual-port screenshot is the final view, not the port field.",
-  "overallPullRequestVerified": false
+  "overallPullRequestVerified": false,
+  "independentNativeOwnershipCi": {
+    "workflowRun": 41048089307,
+    "artifacts": [
+      {
+        "artifactId": 12973283871,
+        "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+        "architecture": "x86_64",
+        "artifactSha256": "9e519d77a9598a44b262fd5a5550b1fc649f822e27770cfb7266702ffd694ec7",
+        "allSourceFingerprintsVerified": true,
+        "actualDeckyNativeOwnership": true,
+        "actualRuntimeVersion": "v2.1.7",
+        "actualServiceResults": 17,
+        "ownershipRefusals": 18,
+        "signedFlatpakProof": false,
+        "realFrameContacted": false,
+        "installerEnabled": false
+      },
+      {
+        "artifactId": 12973806882,
+        "head": "8b01a614b865ac9469f4a6fa7cc0605ebc31ab07",
+        "architecture": "aarch64",
+        "artifactSha256": "3ae23e8ff83977a3eaa04bd23a120ec2f1e6e3ff52979ab1e1d1000ce3597e72",
+        "allSourceFingerprintsVerified": true,
+        "actualDeckyNativeOwnership": true,
+        "actualRuntimeVersion": "v2.1.7",
+        "actualServiceResults": 17,
+        "ownershipRefusals": 18,
+        "signedFlatpakProof": false,
+        "realFrameContacted": false,
+        "installerEnabled": false
+      }
+    ],
+    "signedPackageAmd64Failure": {
+      "workflowRun": 41048089270,
+      "artifactId": 12974371793,
+      "artifactSha256": "2399fcd778e4ff02e64c1a50ab6a90e7b9e6089014e4b5e6f9a9f7f44a9daeb4",
+      "failure": "actual Flatpak forward bytes: None",
+      "mergeGatePass": false
+    }
+  }
 }

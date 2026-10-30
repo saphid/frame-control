@@ -2007,5 +2007,43 @@
     "binaryIndependentlyVerified": true,
     "nativeExecution": false,
     "runtimeVerified": false
+  },
+  "pendingCleanupRepairLocalValidation": {
+    "pullRequest": 478,
+    "success": true,
+    "sourceRevision": "dbbee87da40075f7038706588987f592d983e81f",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": true,
+    "sourceFingerprints": 13,
+    "resultSha256": "7f897870dd2e91d96f85ea20bea88db6f12f1eb4034ea841de511afcb8acf5f8",
+    "consoleSha256": "e89b16c4577d79b73f706f0919d55a9155f3f693fcc3b0c4b91188edea00c825",
+    "defaultConfigPath": "/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml",
+    "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+    "requiredLifecycleResults": 17,
+    "ownershipRefusals": 18,
+    "stopRpcElapsedSeconds": 0.15,
+    "externalTransitionRpcElapsedSeconds": 1.012,
+    "processIdentityChecks": 10,
+    "uninstallPreservedCandidateData": true,
+    "ownedQemuReaped": true,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "wizardConfigDiscovery": {
+      "defaultPackageConfig": true,
+      "remainedUnconfiguredDuringScan": true,
+      "discoveredDefaultPort": true,
+      "discoveredDefaultApiKey": true,
+      "scannedBasicAuth": true,
+      "persistedThroughDeckyRpc": true,
+      "setupCommittedAndReloaded": true,
+      "authenticatedRestWithDiscoveredKey": true,
+      "ownedSetupServiceStopped": true
+    },
+    "migrationResults": 12,
+    "uninstallPreservedMigrationData": true,
+    "instanceCleanupElapsedSeconds": 0.273,
+    "remainingFlatpakApplications": [],
+    "packageCommitPinsVerified": true,
+    "physicalControllerVerified": false
   }
 }

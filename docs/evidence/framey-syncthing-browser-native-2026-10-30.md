@@ -203,3 +203,14 @@ Independent verification checks its ELF machine 183, source/image/lock and
 binary digests. The JSON retains the build report and log hashes. This helper
 was not executed, and cross compilation does not establish native unit tests
 or ARM64 runtime behavior. Those exact-head CI gates remain required.
+
+## Pending manual-port replay
+
+A subsequent HTTP-gateway development trial at `88271c9` stopped in the earlier
+browser phase: one automatic scan returned no port, and the actual UI offered
+manual port entry while the fixture waited only for automatic discovery. The
+new browser fixture enters the known private port through that visible input
+and records whether it was used. This is synthetic DOM interaction, not a
+claim that the UI retries automatically. Failed screenshots now use bounded
+console chunks. The revised probe remains unverified until its separate trial
+completes; the earlier passing replay above retains its exact source revision.

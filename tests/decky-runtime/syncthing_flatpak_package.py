@@ -364,6 +364,14 @@ def main():
             report["apiKeyErrorStatus"] = 403
         else:
             raise RuntimeError("Unauthenticated API accepted")
+        # REST readiness alone does not establish a TLS connection to the peer.
+        # Keep the observed connection state in partial evidence on timeout.
+        def connected():
+            statuses = [api(index, "/rest/system/connections") for index in range(2)]
+            report["peerConnections"] = statuses
+            return all(status.get("connections", {}).get(cases[1-index]["device"], {})
+                       .get("connected") is True for index, status in enumerate(statuses))
+        wait(connected, "actual signed Flatpak peer connection")
         forward = b"Frame Control actual signed Flatpak forward sync\n"
         reverse = b"Frame Control actual signed Flatpak reverse sync\n"
         (cases[0]["files"] / "forward.txt").write_bytes(forward)

@@ -306,11 +306,15 @@ def verify_browser(report, expected_panel):
     }.items():
         if type(report.get(key)) is not type(expected) or report[key] != expected:
             raise ValueError('Missing combined browser proof: '+key)
+    if type(report.get('manualPortFallbackUsed')) is not bool:
+        raise ValueError('Missing explicit automatic/manual port path')
     stages = report.get('stages', [])
     if ([s.get('stage') for s in stages] != ['running', 'stopped', 'restarted', 'stopped']
         or any(s.get('errors') != [] for s in stages)
         or 'Private service sync' not in stages[0].get('text', '')):
         raise ValueError('Missing visible browser lifecycle stages')
+    if any(s.get('manualPortFallbackUsed') is not report['manualPortFallbackUsed'] for s in stages):
+        raise ValueError('Inconsistent browser port path evidence')
     observations = report.get('actualPackagedProcessObservations', [])
     if (len(observations) != 2
         or [o.get('stage') for o in observations] != ['running', 'restarted']
