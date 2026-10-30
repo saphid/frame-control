@@ -307,6 +307,9 @@ color count, then removes the private temporary image from both devices.
 Pixel variety alone cannot prove the UI text was legible; a person must still
 confirm the view in the headset. The script does not install or remove a plugin,
 alter Steam settings, or wake the headset.
+Its JSON `passed` value reports machine checks only; the separate worn-visual
+and physical-controller verification fields remain false in this script.
+Record human evidence separately.
 
 
 ## Unattended VR checks

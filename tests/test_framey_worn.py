@@ -29,7 +29,12 @@ class WornGate(unittest.TestCase):
         with patch.object(worn,'remote') as remote, contextlib.redirect_stdout(io.StringIO()) as out:
             self.assertEqual(worn.main(),1)
         remote.assert_not_called()
-        self.assertIn('trusted pointer events alone do not prove',out.getvalue())
+        report = json.loads(out.getvalue())
+        self.assertIn('trusted pointer events alone do not prove', report['error'])
+        self.assertFalse(report['operatorWornConfirmed'])
+        self.assertFalse(report['wornVisualComfortVerified'])
+        self.assertFalse(report['controllerHardwareVerified'])
+        self.assertIn('no wearer confirmation', report['proof'])
 
     def test_standby_is_read_only_under_owned_lock_and_releases_it(self):
         state = {'battery':[{'percent':99}], 'activity':3, 'proximity':[6.25], 'panelService':True,
@@ -37,6 +42,10 @@ class WornGate(unittest.TestCase):
         code, report, remote, probe = self.run_gate(state)
         self.assertEqual(code, 1)
         self.assertIn('standby', report)
+        evidence = json.loads(report)
+        self.assertTrue(evidence['operatorWornConfirmed'])
+        self.assertFalse(evidence['wornVisualComfortVerified'])
+        self.assertFalse(evidence['controllerHardwareVerified'])
         probe.assert_called_once()
         self.assertEqual(remote.call_count, 2)
         self.assertIn('mkdir /tmp/frame-test.lock', remote.call_args_list[0].args[0])
