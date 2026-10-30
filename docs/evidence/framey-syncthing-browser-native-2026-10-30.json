@@ -1,0 +1,103 @@
+{
+  "date": "2026-10-30",
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "runtimePass": false,
+  "status": "Third trial pending; no combined browser runtime result credited.",
+  "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
+  "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
+  "failedDevelopmentTrials": [
+    {
+      "sourceRevision": "988c2c18ae527fb751711b46c27d7e52d1f1bc12",
+      "passed": false,
+      "driverLogSha256": "ae13638c6ffc4514cf060342a66c1b83752e49786121f06fc70a907927bb8718"
+    },
+    {
+      "sourceRevision": "d01472ab773919dfcf76d244d4cafa7a44de3289",
+      "passed": false,
+      "driverLogSha256": "2665054fb2927c6c8a13157e2db2bb2c64e47f14a16218cbda24e8d720ac9fb6",
+      "result": {
+        "success": false,
+        "inputs": {
+          "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
+          "rootfsTarBytes": 1045529088,
+          "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+          "initrdSha256": "d89223af02ae5ab97668db29c1dfbd315196f0d05929d039aecf119c52d82dcc",
+          "sourceSha256": {
+            "scripts/framey-test-syncthing-flatpak-package.py": "d373ef26854cf924064c94308617e8029a52e4b415593ed30e1f393908e7aa19",
+            "scripts/framey-test-syncthing-service.py": "377191a5de4129bbf44c1215beb521632101e10e81b2e6dcb03a4ebc5e0d1f68",
+            "tests/decky-runtime/syncthing_flatpak_package_root.py": "0b2e96f66118001480adf24d42e846aeb496eb5f8aa4cf1eee915ca43690f098",
+            "tests/decky-runtime/syncthing_flatpak_package.py": "f1c109231258c18834eacf47ef13025c3647285a9ced71bf734c1c68415b96ca",
+            "tests/decky-runtime/syncthing_service.py": "05479ae74a1189ff5083766fdcb79f525b35e7a938cffb587f312cdbba922a6a",
+            "tests/decky-runtime/syncthing_migration.py": "4f871c41f9c5384069bfcdce3c4abc0c93822705f9a95292b5660a643abde4a2",
+            "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+            "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+            "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+            "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+            "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+            "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+            "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+            "scripts/framey-test-syncthing-browser.py": "a916825418fda2e5d21fbbe1a302e2826950e7b81d186ea69a633deb3d5253bb",
+            "tests/decky-runtime/syncthing_browser.py": "dc42988c663e9cdc72ff79686407de51482955da8c02e1ba4220e2608dab2098",
+            "tests/decky-runtime/Containerfile.flatpak-vm": "447bf47a7f0c5f27fd90a825f23a676e1ce4fdff72ab42f115c0c92f9fd13060",
+            "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+            "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+            "ui/frame_decky.py": "2e26a03cafb8faaee551e795224108d30772137a671fa83fa970c6e80007051b",
+            "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+            "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4",
+            "ui/frame_steam.py": "7662a9fa60c6b263b96ad84d63d83ee3e8d299b04e34fe5af37c441e3e2a73e3",
+            "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+            "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+            "ui/vendor/syncthing-0.2.7/frontend.patch": "3c92e2e391af1b3bafbda77dd5852f0d1e9145c7f1bf59e70b49fd7f9e9c31cd"
+          },
+          "bundles": {
+            "app": {
+              "sha256": "d79338cc03f765959f317e60c8d23b375e0033259e7334e0bb84e310011618eb",
+              "bytes": 9872520,
+              "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+            },
+            "runtime": {
+              "sha256": "5cf985cb7bfb39d4d5d4876b2a78232e6ed91240cd4a4f3d309191c1e29e8d72",
+              "bytes": 292381320,
+              "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+            }
+          },
+          "architecture": "x86_64",
+          "preparationSha256": "c8e5e65cc247675948824c2af481c5eccc5987efcf3a6eabaf70932cad99cbe0",
+          "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "memoryMiB": 8192,
+          "timeoutSeconds": 1560,
+          "guestTimeouts": {
+            "installSeconds": 300,
+            "userSeconds": 1440,
+            "unitSeconds": 1500,
+            "hostSeconds": 1560
+          },
+          "networkDevice": false,
+          "hostBusExposed": false,
+          "realFrameContacted": false,
+          "candidate": {
+            "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+            "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+            "patchSha256": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+            "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+            "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+            "installerEnabled": false,
+            "architecture": "x86_64",
+            "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+            "buildReportSha256": "a57a051fb5bcdd52557fc1491b1c97cf31cf3cad9e4fa4808e42c11aa051635e",
+            "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+            "decky": "v3.3.0",
+            "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+          },
+          "browserSetup": {
+            "frontendSha256": "6abfd4861c74f730f9d29d00bfc478e8967f9f56c4ea84a442aac41a0d62972f",
+            "panelSha256": "d6ac52879310d080d1f005f3c42436e625b66bc1f3b622725e936cf22d5b4bc3"
+          }
+        },
+        "ownedQemuReaped": true,
+        "error": "Missing/ambiguous guest result or nonzero QEMU exit"
+      }
+    }
+  ]
+}
