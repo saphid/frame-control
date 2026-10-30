@@ -281,7 +281,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             self.assertEqual(payload, dict(name='Decky Terminal', session='private-session',
                                           events=[event], cursor=0))
             return json.dumps(dict(events=[dict(event=event, args=['private output'])], cursor=1))
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
                 'plugins':[dict(storeId=65, name='Decky Terminal', sha256=RECEIPT)]}):
             result = framey_panel.poll_events(fake_ssh, 65, 'private-session', [event], 0, RECEIPT)
         self.assertEqual(result['events'], [dict(event=event, args=['private output'])])
