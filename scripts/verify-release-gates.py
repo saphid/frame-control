@@ -30,6 +30,7 @@ DECKY_JOBS = {"decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)
 SIGNED_PACKAGE_JOBS = {
     "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
     "signed-package (ubuntu-latest, browser HTTP)",
+    "signed-package (ubuntu-latest, production parent HTTP)",
 }
 
 

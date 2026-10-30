@@ -5,7 +5,8 @@ checks and tagged installers, but did not inspect the signed Syncthing
 package workflow introduced after v0.4.56. A missing or failed package run
 could therefore pass the publisher's dry run.
 
-The gate now requires the AMD64, ARM64 and browser HTTP package jobs at the
+The gate now requires the AMD64, ARM64, browser HTTP and production-parent
+HTTP package jobs at the
 exact tagged commit on `main`, from a push or manual dispatch. It checks
 every matching run and every attempt; missing jobs, stale commits, other
 branches, PR results, unfinished jobs, failures, cancellations and skips
@@ -19,6 +20,12 @@ subcases: 14 invalid package states were accepted, and the two successful
 paths never inspected package runs. After the change, all 21 publisher
 tests and all 12 release-workflow tests passed. Syntax and diff checks passed.
 No test contacted GitHub, published a release or used the real Frame.
+
+After #486 merged, the branch was updated onto main `043085b` and the new
+production-parent HTTP job was also made mandatory. Its absence has a
+separate refusal case, and failed-state tests now check that the error names
+the signed-package gate. The original red-phase count above precedes this
+additional case.
 
 This adds an automated release precondition. It does not establish an
 installed Syncthing adaptation, Steam CEF, physical-controller usability or

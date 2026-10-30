@@ -64,7 +64,8 @@ release_jobs = ("draft", "checksums",
                 "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)")
 decky_jobs = ("decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)")
 signed_jobs = ("signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
-               "signed-package (ubuntu-latest, browser HTTP)")
+               "signed-package (ubuntu-latest, browser HTTP)",
+               "signed-package (ubuntu-latest, production parent HTTP)")
 
 
 def answer(response, fallback):

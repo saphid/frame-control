@@ -267,7 +267,8 @@ class PublishRelease(unittest.TestCase):
                  {"signed_status": "in_progress"}, {"signed_conclusion": "failure"}]
         cases += [{"omit_job": name} for name in (
             "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
-            "signed-package (ubuntu-latest, browser HTTP)")]
+            "signed-package (ubuntu-latest, browser HTTP)",
+            "signed-package (ubuntu-latest, production parent HTTP)")]
         cases += [{"bad_job": "signed-package (ubuntu-24.04-arm)",
                    "bad_job_conclusion": conclusion}
                   for conclusion in ("failure", "cancelled", "skipped")]
@@ -279,6 +280,7 @@ class PublishRelease(unittest.TestCase):
                 p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
                 self.assertNotEqual(p.returncode, 0, p.stdout)
                 self.assertIn("release gate failed", p.stderr)
+                self.assertRegex(p.stderr, 'syncthing-flatpak-package|signed-package')
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
 
