@@ -30,7 +30,8 @@ def main():
     source_paths = ['scripts/framey-test-syncthing-candidate.py',
                     'tests/decky-runtime/syncthing_candidate.py',
                     'ui/vendor/syncthing-0.2.7/main.py',
-                    'ui/vendor/syncthing-0.2.7/watchdog.patch']
+                    'ui/vendor/syncthing-0.2.7/watchdog.patch',
+                    'ui/vendor/syncthing-0.2.7/owned_unit.rs']
     source_hashes = {path:hashlib.sha256((ROOT/path).read_bytes()).hexdigest() for path in source_paths}
     machine = native.LOADERS[platform.machine()][2]
     if helper[:4] != b'\x7fELF' or int.from_bytes(helper[18:20], 'little') != machine:

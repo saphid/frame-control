@@ -40,6 +40,7 @@ def prepare(folder):
             target.write_bytes(archive.extractfile(member).read())
     subprocess.run(['patch', '--batch', '--fuzz=0', '-p1', '-i', str(ASSETS/'watchdog.patch')],
                    cwd=folder, check=True, capture_output=True, text=True)
+    shutil.copyfile(ASSETS/'owned_unit.rs', folder/'backend/decky-syncthing-watchdog/src/owned_unit.rs')
 
 
 def build(folder, image, arch, output):
@@ -58,6 +59,13 @@ def build(folder, image, arch, output):
             '--workdir', '/src/backend/decky-syncthing-watchdog', image]
     try:
         with (output/f'{arch}.build.log').open('w') as log:
+            native = arch == platform.machine()
+            if native:
+                tests = ['rustc', '--edition', '2024', '--test', 'src/owned_unit.rs',
+                         '-o', '/src/owned-unit-tests']
+                subprocess.run(args+tests, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=30)
+                subprocess.run(args+['/src/owned-unit-tests'], stdout=log, stderr=subprocess.STDOUT,
+                               check=True, timeout=30)
             result = subprocess.run(args+command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
         if result.returncode:
             raise RuntimeError(f'{arch} build failed; see {output/arch}.build.log')
@@ -69,7 +77,7 @@ def build(folder, image, arch, output):
         path.write_bytes(binary)
         path.chmod(0o700)
         return {'architecture':arch, 'elfMachine':machine, 'bytes':len(binary), 'sha256':sha(binary),
-                'command':command, 'executed':False}
+                'command':command, 'executed':False, 'serviceFileTestsExecuted':native}
     finally:
         subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -85,7 +93,7 @@ def main():
     args = parser.parse_args()
     args.output.mkdir(parents=True, exist_ok=True)
     image = json.loads(subprocess.check_output(['docker', 'image', 'inspect', args.image]))[0]['Id']
-    inputs = {name:sha((ASSETS/name).read_bytes()) for name in ('source.tar.gz', 'watchdog.patch', 'main.py')}
+    inputs = {name:sha((ASSETS/name).read_bytes()) for name in ('source.tar.gz', 'watchdog.patch', 'main.py', 'owned_unit.rs')}
     with tempfile.TemporaryDirectory(prefix='framey-syncthing-build-') as temp:
         source = Path(temp)
         prepare(source)
@@ -106,6 +114,7 @@ def main():
             raise RuntimeError('Candidate inputs changed during the build')
         report = {'sourceCommit':SOURCE_COMMIT, 'sourceArchiveSha256':SOURCE_SHA,
                   'patchSha256':inputs['watchdog.patch'],
+                  'ownedUnitSha256':inputs['owned_unit.rs'],
                   'pythonSha256':inputs['main.py'], 'builderImage':image,
                   'cargoLockSha256':sha(lock), 'builds':reports,
                   'installerEnabled':False, 'runtimeVerified':False}

@@ -144,6 +144,41 @@ def main():
             assert transport_requests[-1] == '/rest/db/status?folder=private%20fixture'
             response = legacy('framey_http_fetch', method='GET', path='/rest/system/status', headers={})
             assert response['status'] == 401, response
+            # Private filesystem proof: every managed route rejects a foreign
+            # unit before any absent DBus manager or Flatpak executable is used.
+            unit_dir = home/'.config/systemd/user'
+            unit_dir.mkdir(parents=True, exist_ok=True)
+            foreign_unit = unit_dir/'frame-control-syncthing.service'
+            legacy_unit = unit_dir/'decky-syncthing.service'
+            foreign_unit.write_text('pre-existing private unit marker')
+            legacy_unit.write_text('pre-existing private legacy marker')
+            settings_path = next(base.rglob('decky-syncthing.json'))
+            assert settings_path.is_file(), settings_path
+            retained_settings = settings_path.read_bytes()
+            configured = dict(defaults, mode='flatpak', is_setup=True, flatpak_name='example.Syncthing')
+            settings_path.write_text(json.dumps(configured))
+            for method, route in [('POST','reload-config'), ('GET','state'), ('POST','start'),
+                                  ('POST','stop'), ('POST','check/start')]:
+                reply = legacy('framey_http_fetch', method=method, path='/__decky-watchdog/'+route, headers={})
+                assert reply['status'] == 500 and 'unowned or was edited' in reply['body'], reply
+                assert foreign_unit.read_text() == 'pre-existing private unit marker'
+                assert legacy_unit.read_text() == 'pre-existing private legacy marker'
+            configured.update(mode='systemd', service_name='frame-control-syncthing.service')
+            settings_path.write_text(json.dumps(configured))
+            reply = legacy('framey_http_fetch', method='POST', path='/__decky-watchdog/reload-config', headers={})
+            assert reply['status'] == 500
+            for route in ['start','stop']:
+                reply = legacy('framey_http_fetch', method='POST', path='/__decky-watchdog/'+route, headers={})
+                assert reply['status'] == 500 and 'Reserved managed unit' in reply['body'], reply
+            settings_path.write_bytes(retained_settings)
+            reply = legacy('framey_http_fetch', method='POST', path='/__decky-watchdog/reload-config', headers={})
+            assert reply['status'] == 204, reply
+            assert foreign_unit.read_text() == 'pre-existing private unit marker'
+            assert legacy_unit.read_text() == 'pre-existing private legacy marker'
+            assert settings_path.read_bytes() == retained_settings
+            report['independentState']['foreignServiceFilesPreservedBeforeDBus'] = True
+            report['independentState']['reservedManagedNameRefusedAsExternal'] = True
+            report['serviceManagerVerified'] = False
             actual_pid_path = next(base.rglob('watchdog.pid'))
             second = subprocess.run([str(binary), str(actual_pid_path.parent/'unused.json'),
                                      str(actual_pid_path), str(home/'unused-log')],

@@ -4888,7 +4888,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "flatpak; gamescope",
-      "nativePort": "Uninstalled ownership/private HTTP candidate passes released Decky 3.3.0 AMD64/ARM64 CI. Pinned Syncthing v2.1.7 AMD64 private two-way sync, restart and actual REST reads through Decky RPC are verified; service setup stays disabled. The installer still refuses this archive. Actual DBus/systemd service behavior, managed unit ownership/migration, real-runtime ARM64, managed lifecycle, browser and Frame/UI gates remain pending (docs/evidence/framey-syncthing-runtime-2026-10-30.md).",
+      "nativePort": "Earlier uninstalled ownership/private HTTP candidate passed released Decky 3.3.0 AMD64/ARM64 CI. Pinned Syncthing v2.1.7 AMD64/ARM64 private two-way sync, restart and actual REST reads through Decky RPC passed #465 native CI; service setup stays disabled in runtime tests. A separate unit name and exact-byte ownership receipt guard candidate service files before DBus. The installer still refuses this archive. Actual DBus/systemd service behavior, unit migration/resolution, managed lifecycle, browser and Frame/UI gates remain pending (docs/evidence/framey-syncthing-service-files-2026-10-30.md).",
       "uiSurfaces": [
         "local/Steam routes"
       ],
