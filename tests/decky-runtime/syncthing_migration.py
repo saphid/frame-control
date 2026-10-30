@@ -8,6 +8,7 @@ from pathlib import Path
 import shutil
 import signal
 import subprocess
+import time
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
@@ -17,6 +18,21 @@ from syncthing_service import ctl, prop, rpc, wait
 
 def sha(path):
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def wait_for_instances(app, report):
+    """Observe registry drain after service stop; never remove or kill entries."""
+    began = time.monotonic()
+    def empty():
+        applications = subprocess.check_output(
+            ['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=10).splitlines()
+        report['remainingFlatpakApplications'] = applications
+        return app not in applications
+    try:
+        wait(empty, 'legacy Flatpak instance registry cleanup')
+    except RuntimeError as error:
+        raise RuntimeError(f"{error}; remaining applications={report.get('remainingFlatpakApplications')!r}") from error
+    report['instanceCleanupElapsedSeconds'] = round(time.monotonic() - began, 3)
 
 
 def main():
@@ -262,7 +278,7 @@ def main():
             log.close()
     assert {name: sha(runtime / name) for name in retained} == retained
     assert not managed.exists() and not receipt.exists()
-    assert app not in subprocess.check_output(['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=20)
+    wait_for_instances(app, report)
     report.update(ownedProcessesReaped=True, ownedLegacyFixtureRemoved=True,
                   noOwnedFlatpakInstancesRemain=True, retainedRuntime=str(runtime))
     print('FRAMEY_MIGRATION_JSON=' + json.dumps(report), flush=True)
