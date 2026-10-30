@@ -1,0 +1,351 @@
+{
+  "descriptorSha256": "3371dd250e61d9e1633630073fefda153cd4426f72f4afa0c3373ae2e8fea03a",
+  "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+  "verifierSha256": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8",
+  "payloadIntegrityVerified": true,
+  "packageInstalled": false,
+  "packageLaunched": false,
+  "realFrameContacted": false,
+  "architectures": {
+    "x86_64": {
+      "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+      "ref": "app/me.kozec.syncthingtk/x86_64/stable",
+      "metadata": "[Application]\nname=me.kozec.syncthingtk\nruntime=org.gnome.Platform/x86_64/49\nsdk=org.gnome.Sdk/x86_64/49\ncommand=syncthing-gtk\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Extension me.kozec.syncthingtk.Locale]\ndirectory=share/runtime/locale\nautodelete=true\nlocale-subset=true\n\n[Extension me.kozec.syncthingtk.Debug]\ndirectory=lib/debug\nautodelete=true\nno-autodownload=true\n\n[Build]\nbuilt-extensions=me.kozec.syncthingtk.Locale;me.kozec.syncthingtk.Debug;me.kozec.syncthingtk.Sources;\n",
+      "signatureValidity": {
+        "validSignatures": 1,
+        "allSignatures": 1
+      },
+      "manifestSha256": "2f4833fd6535c079fa1cf276c44ee3442fb7cc4903a0ae9366f2ec6284580cb5",
+      "syncthingSource": [
+        {
+          "url": "https://github.com/syncthing/syncthing/releases/download/v1.27.3/syncthing-source-v1.27.3.tar.gz",
+          "sha256": "3fe25b863bb3a0f74bc95a7afa71bdaa2a79971542962236be5d85f469aa897d",
+          "x-checker-data": {
+            "type": "anitya",
+            "project-id": 11814,
+            "url-template": "https://github.com/syncthing/syncthing/releases/download/v$version/syncthing-source-v$version.tar.gz",
+            "versions": {
+              "<": 2
+            }
+          },
+          "type": "archive"
+        }
+      ],
+      "binarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+      "binaryBytes": 24986568,
+      "elfMachine": 62,
+      "binaryExecuted": false
+    },
+    "aarch64": {
+      "commit": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+      "ref": "app/me.kozec.syncthingtk/aarch64/stable",
+      "metadata": "[Application]\nname=me.kozec.syncthingtk\nruntime=org.gnome.Platform/aarch64/49\nsdk=org.gnome.Sdk/aarch64/49\ncommand=syncthing-gtk\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Extension me.kozec.syncthingtk.Locale]\ndirectory=share/runtime/locale\nautodelete=true\nlocale-subset=true\n\n[Extension me.kozec.syncthingtk.Debug]\ndirectory=lib/debug\nautodelete=true\nno-autodownload=true\n\n[Build]\nbuilt-extensions=me.kozec.syncthingtk.Locale;me.kozec.syncthingtk.Debug;",
+      "signatureValidity": {
+        "validSignatures": 1,
+        "allSignatures": 1
+      },
+      "manifestSha256": "922354c6f25086bece065cdc0cceeff93fd1fec554b567c05a42b09b1b64d360",
+      "syncthingSource": [
+        {
+          "url": "https://github.com/syncthing/syncthing/releases/download/v1.27.3/syncthing-source-v1.27.3.tar.gz",
+          "sha256": "3fe25b863bb3a0f74bc95a7afa71bdaa2a79971542962236be5d85f469aa897d",
+          "x-checker-data": {
+            "type": "anitya",
+            "project-id": 11814,
+            "url-template": "https://github.com/syncthing/syncthing/releases/download/v$version/syncthing-source-v$version.tar.gz",
+            "versions": {
+              "<": 2
+            }
+          },
+          "type": "archive"
+        }
+      ],
+      "binarySha256": "5c340f530c0259b41509cd6b511bbcaa910f1553917a896add9830e4e10e602e",
+      "binaryBytes": 23451944,
+      "elfMachine": 183,
+      "binaryExecuted": false
+    }
+  },
+  "negativeControls": {
+    "x86_64WrongSignature": {
+      "rejected": true,
+      "cliExitCode": 0,
+      "validityError": "OstreeGpgError: Signature made Thu Jan \u20071 00:00:00 1970 using [unknown name] key ID 562702E9E3ED7EE8\nBAD signature from \"Flathub Repo Signing Key <flathub@flathub.org>\"\nPrimary key ID 4184DD4D907A7CAE\nPrimary key expires Mon Jun 14 13:18:56 2027 (1)"
+    },
+    "aarch64WrongSignature": {
+      "rejected": true,
+      "cliExitCode": 0,
+      "validityError": "OstreeGpgError: Signature made Thu Jan \u20071 00:00:00 1970 using [unknown name] key ID 562702E9E3ED7EE8\nBAD signature from \"Flathub Repo Signing Key <flathub@flathub.org>\"\nPrimary key ID 4184DD4D907A7CAE\nPrimary key expires Mon Jun 14 13:18:56 2027 (1)"
+    },
+    "corruptBinaryContent": {
+      "rejected": true,
+      "exitCode": 1,
+      "stderr": "In commits 2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034: fsck content object d32257b286fe812ac1b68c812d2fb233fe35f56e66c0a52703186ec8f551e6dc: Need more input\nerror: Repository corruption encountered\n"
+    },
+    "restoredStorePassed": true
+  },
+  "fsck": "Validating refs...\nValidating refs in collections...\nEnumerating commits...\nVerifying content integrity of 2 commit objects...\nfsck objects (1/495) 0%\nfsck objects (495/495) 100%\nobject fsck of 2 commits completed successfully - no errors found.\n",
+  "containerImage": "sha256:f14dd4ea6e5d9d7d15c1631aea57f598cedfefde6bf742bdde3a3e6a78b1c598",
+  "network": "none",
+  "hostFlatpakInstalled": false,
+  "sourceSha256": {
+    "scripts/framey-verify-syncthing-flatpak.py": "ad19c3d296066b608f540aa5ce84bfab8398c04fad611472ec3e06da0850d4d8",
+    "scripts/framey-fetch-syncthing-flatpak.py": "033ec0d3ea0390cad43c49545c25b44c1dc08af4e2f8978f0dc6dec2085f72b0",
+    "tests/decky-runtime/Containerfile.flatpak": "39771aaecba2d39aaace06e221c2c6e7a51d6a3b643db54c19ae2955e45509a6"
+  },
+  "fetched": {
+    "architectures": {
+      "x86_64": {
+        "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "fileCount": 678,
+        "uniqueContentObjects": 380
+      },
+      "aarch64": {
+        "commit": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "fileCount": 678,
+        "uniqueContentObjects": 380
+      }
+    },
+    "payloadVerified": false,
+    "packageLaunched": false,
+    "maxDownloadBytes": 268435456,
+    "descriptorSha256": "3371dd250e61d9e1633630073fefda153cd4426f72f4afa0c3373ae2e8fea03a",
+    "totalObjectBytes": 22551575
+  },
+  "privateContainersRemoved": true,
+  "ownedImageCleanup": [
+    {
+      "tag": "framey-flatpak-final:mppkd9qczt",
+      "id": "sha256:f14dd4ea6e5d9d7d15c1631aea57f598cedfefde6bf742bdde3a3e6a78b1c598",
+      "removed": true
+    },
+    {
+      "tag": "framey-flatpak-verify:mppkd9qczt",
+      "id": "sha256:dccd36bcc4afab703f6f7f61c12fb4292a7072ec0dcb781ce6b416d34604c0c3",
+      "removed": true
+    },
+    {
+      "tag": "framey-flatpak-offline:mppkd9qczt",
+      "id": "sha256:4ff697893011ff972d574c7f98f92f8ad852b4074e04719da57675cd1e61be32",
+      "removed": true
+    }
+  ],
+  "loadedIdentityCi": {
+    "pullRequest": 468,
+    "head": "445ef5b1b93f28f73cf7432123f97c734ca1643f",
+    "mergeCommit": "fc92d73f1122438ff1ae746ce58fe9dd00d278cd",
+    "prChecksPassed": 14,
+    "baseChecksPassed": 11,
+    "artifacts": [
+      {
+        "id": 12958284523,
+        "head": "445ef5b1b93f28f73cf7432123f97c734ca1643f",
+        "architecture": "x86_64",
+        "zipSha256": "736165c034be6d7d91376920c88f4477a0268e09100516999846950d889c424d",
+        "allSourceFingerprintsVerified": true,
+        "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+        "elevenRustTestsVerified": true,
+        "ownershipAndRealSyncVerified": true,
+        "actualServiceManagerVerified": true,
+        "candidateService": {
+          "architecture": "x86_64",
+          "flatpakPackageVerified": false,
+          "realFrameContacted": false,
+          "systemdManagerActual": true,
+          "ownedUnitLoadedByActualSystemd": true,
+          "rejectedManagedDefinitions": {
+            "drop-in": {
+              "mainPidBefore": 360,
+              "mainPidAfter": 360,
+              "fragmentPath": "/home/tester/.config/systemd/user/frame-control-syncthing.service",
+              "id": "frame-control-syncthing.service",
+              "names": "frame-control-syncthing.service",
+              "dropInPaths": "/home/tester/.config/systemd/user/frame-control-syncthing.service.d/private-foreign.conf",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 291,
+              "legacyStillEnabled": true
+            },
+            "shadow fragment": {
+              "mainPidBefore": 415,
+              "mainPidAfter": 415,
+              "fragmentPath": "/home/tester/.config/systemd/user.control/frame-control-syncthing.service",
+              "id": "frame-control-syncthing.service",
+              "names": "frame-control-syncthing.service",
+              "dropInPaths": "",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 291,
+              "legacyStillEnabled": true
+            },
+            "loaded alias": {
+              "mainPidBefore": 291,
+              "mainPidAfter": 291,
+              "fragmentPath": "/home/tester/.config/systemd/user/decky-syncthing.service",
+              "id": "decky-syncthing.service",
+              "names": "decky-syncthing.service frame-control-syncthing.service",
+              "dropInPaths": "",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 291,
+              "legacyStillEnabled": true
+            }
+          },
+          "dropInOverridePreserved": true,
+          "shadowFragmentPreserved": true,
+          "realSyncthingManagedPid": true,
+          "realDeckyRpcRest": true,
+          "managedServiceTwoWaySync": true,
+          "forwardSha256": "c7efcf812e3b857987733e2bce522cf5c31863d99bc85fa98795a45f6b2b2092",
+          "reverseSha256": "0922306fdcaa591f1aea0ee3808f96799d0f365216889507925a99a326232e3d",
+          "pendingReloadRefused": true,
+          "stopRpcElapsedSeconds": 10.138,
+          "actualStopJobReapedRuntime": true,
+          "legacyRunningUnitPreserved": true,
+          "retainedCertificateAndMarker": true,
+          "actualEnableDisableLinks": true,
+          "externalTransitionRpcElapsedSeconds": 10.443,
+          "ownedTransitionRemovedOnlyCandidateUnit": true,
+          "actualExternalUserServiceControl": true,
+          "retainedSyncAcrossServiceTransition": true,
+          "loadedAliasPreserved": true,
+          "ownedCleanup": true
+        }
+      },
+      {
+        "id": 12958676751,
+        "head": "445ef5b1b93f28f73cf7432123f97c734ca1643f",
+        "architecture": "aarch64",
+        "zipSha256": "9baea6a428bc718393b92609a8f9ebf74089fab24fbe076ebbef2607aa55cf75",
+        "allSourceFingerprintsVerified": true,
+        "helperSha256": "5228b92bc37f732711fef1c469bc8378f417e948b3e0eed639c0df92d7329ebe",
+        "elevenRustTestsVerified": true,
+        "ownershipAndRealSyncVerified": true,
+        "actualServiceManagerVerified": true,
+        "candidateService": {
+          "architecture": "aarch64",
+          "flatpakPackageVerified": false,
+          "realFrameContacted": false,
+          "systemdManagerActual": true,
+          "ownedUnitLoadedByActualSystemd": true,
+          "rejectedManagedDefinitions": {
+            "drop-in": {
+              "mainPidBefore": 360,
+              "mainPidAfter": 360,
+              "fragmentPath": "/home/tester/.config/systemd/user/frame-control-syncthing.service",
+              "id": "frame-control-syncthing.service",
+              "names": "frame-control-syncthing.service",
+              "dropInPaths": "/home/tester/.config/systemd/user/frame-control-syncthing.service.d/private-foreign.conf",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 287,
+              "legacyStillEnabled": true
+            },
+            "shadow fragment": {
+              "mainPidBefore": 421,
+              "mainPidAfter": 421,
+              "fragmentPath": "/home/tester/.config/systemd/user.control/frame-control-syncthing.service",
+              "id": "frame-control-syncthing.service",
+              "names": "frame-control-syncthing.service",
+              "dropInPaths": "",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 287,
+              "legacyStillEnabled": true
+            },
+            "loaded alias": {
+              "mainPidBefore": 287,
+              "mainPidAfter": 287,
+              "fragmentPath": "/home/tester/.config/systemd/user/decky-syncthing.service",
+              "id": "decky-syncthing.service",
+              "names": "decky-syncthing.service frame-control-syncthing.service",
+              "dropInPaths": "",
+              "refused": {
+                "GET state": 500,
+                "POST start": 500,
+                "POST stop": 500,
+                "POST check/start": 500,
+                "POST reload-config": 500,
+                "POST external transition": 500
+              },
+              "unitAndReceiptPreserved": true,
+              "legacyPidPreserved": 287,
+              "legacyStillEnabled": true
+            }
+          },
+          "dropInOverridePreserved": true,
+          "shadowFragmentPreserved": true,
+          "realSyncthingManagedPid": true,
+          "realDeckyRpcRest": true,
+          "managedServiceTwoWaySync": true,
+          "forwardSha256": "c7efcf812e3b857987733e2bce522cf5c31863d99bc85fa98795a45f6b2b2092",
+          "reverseSha256": "0922306fdcaa591f1aea0ee3808f96799d0f365216889507925a99a326232e3d",
+          "pendingReloadRefused": true,
+          "stopRpcElapsedSeconds": 0.793,
+          "actualStopJobReapedRuntime": true,
+          "legacyRunningUnitPreserved": true,
+          "retainedCertificateAndMarker": true,
+          "actualEnableDisableLinks": true,
+          "externalTransitionRpcElapsedSeconds": 2.292,
+          "ownedTransitionRemovedOnlyCandidateUnit": true,
+          "actualExternalUserServiceControl": true,
+          "retainedSyncAcrossServiceTransition": true,
+          "loadedAliasPreserved": true,
+          "ownedCleanup": true
+        }
+      }
+    ]
+  },
+  "localEvidenceSourceHead": "4ca1bd932a8494f90ef0377ae538be0a4cb356fe",
+  "transportFixVerification": {
+    "firstCiRun": 41014820841,
+    "firstCiJob": 123928656341,
+    "failure": "TLS handshake timeout before signature verification; no pass accepted",
+    "maximumAttempts": 3,
+    "certificateAndPermanentErrorsFailImmediately": true,
+    "transportUnitTestsPassed": 5,
+    "cachedClosureReenumerated": true,
+    "freshHttpsUrl": "https://dl.flathub.org/repo/objects/2b/e395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034.commitmeta",
+    "freshHttpsSha256": "85855fc8253b6ad12098b7fae78b7306bdfaa44474b0b8255e1e51d59686c9cf",
+    "sourceSha256": {
+      "scripts/framey-fetch-syncthing-flatpak.py": "f26c64bc34daea5d846771b4513798df963a80bf2abb3386da163f1a7f5df0a8",
+      "tests/test_syncthing_flatpak_fetch.py": "e2156b54726c9ee2bf74c7a6c1a89399560bd57cbf56944eb3cfb125660408cb",
+      ".github/workflows/syncthing-flatpak.yml": "16baa258ff6af27271807f2d43f4ab2580c7d446639b616889512598f949bb5f"
+    }
+  }
+}
