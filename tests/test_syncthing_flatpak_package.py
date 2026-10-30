@@ -114,6 +114,7 @@ class PreparedPackage(unittest.TestCase):
 
     def migration(self):
         report = dict.fromkeys(self.module.MIGRATION_REQUIRED, True)
+        report.update(self.decky_shutdown(migration=True))
         report.update(architecture='x86_64', installerEnabled=False,
                       realFrameContacted=False, flatpakPackageVerified=True,
                       packagedBinarySha256='b' * 64, legacyMainPidBefore=150,
@@ -197,7 +198,49 @@ class PreparedPackage(unittest.TestCase):
                 'ancestryToMainPid': [151, 150],
             } for _ in range(3)],
         )
+        report.update(self.decky_shutdown())
         return report, required
+
+    def decky_shutdown(self, migration=False):
+        # Fields emitted by the actual mixed-policy service fixtures. The
+        # current AMD64 ownership artifact reports a clean 328 -> 0 stop.
+        actual, removed = (('actualMigrationDeckyUserService', 'ownedMigrationDeckyServiceRemoved')
+                           if migration else ('actualDeckyUserService', 'ownedDeckyServiceRemoved'))
+        return {actual: True, removed: True, 'deckyShutdownLogChecked': True,
+                'ownedDeckyStop': dict(mainPidBefore=328, mainPidAfter=0,
+                    activeState='inactive', result='success', killMode='mixed',
+                    execMainStatus='0', execMainCode='0', elapsedSeconds=6.7,
+                    timeoutStopUSec='1min 30s')}
+
+    def test_both_package_paths_require_checked_loader_shutdown(self):
+        for migration in (False, True):
+            for field in self.decky_shutdown(migration):
+                for value in (None, False):
+                    report = self.migration() if migration else self.candidate()[0]
+                    if value is None:
+                        del report[field]
+                    else:
+                        report[field] = value
+                    with self.subTest(migration=migration, field=field, value=value):
+                        with self.assertRaisesRegex(ValueError, 'Decky shutdown'):
+                            if migration:
+                                self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+                            else:
+                                self.verify(report, self.candidate()[1])
+
+    def test_both_package_paths_refuse_unsuccessful_or_incomplete_stop(self):
+        for migration in (False, True):
+            for mutation in (dict(result='timeout'), dict(activeState='failed'),
+                             dict(killMode='control-group'), dict(execMainStatus='1'),
+                             dict(mainPidBefore=0), dict(mainPidAfter=328)):
+                report = self.migration() if migration else self.candidate()[0]
+                report['ownedDeckyStop'].update(mutation)
+                with self.subTest(migration=migration, mutation=mutation):
+                    with self.assertRaisesRegex(ValueError, 'Decky shutdown'):
+                        if migration:
+                            self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+                        else:
+                            self.verify(report, self.candidate()[1])
 
     def test_setup_requires_discovery_and_authenticated_use_without_preset_key(self):
         for field in ('discoveredDefaultApiKey', 'authenticatedRestWithDiscoveredKey',
