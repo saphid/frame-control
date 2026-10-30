@@ -121,7 +121,7 @@ class OwnedDeckyStop(unittest.TestCase):
         return scope
 
     def test_manager_completion_after_command_budget_still_requires_clean_result(self):
-        scope = self.probe(['811', '1min 30s', 'deactivating', 'inactive', 'success', '0'],
+        scope = self.probe(['811', '1min 30s', 'mixed', 'deactivating', 'inactive', 'success', '0', '1', '0'],
                            [0, 0, 0, 40, 41])
         report = {}
         scope['stop_decky_service']('frame-control-decky.service', report)
@@ -131,7 +131,7 @@ class OwnedDeckyStop(unittest.TestCase):
         self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 41)
 
     def test_systemd_forced_timeout_is_not_successful_cleanup(self):
-        scope = self.probe(['811', '1min 30s', 'failed', 'timeout', '0'], [0, 0, 0, 91])
+        scope = self.probe(['811', '1min 30s', 'mixed', 'failed', 'timeout', '0', '2', '9'], [0, 0, 0, 91])
         report = {}
         with self.assertRaises(AssertionError):
             scope['stop_decky_service']('frame-control-decky.service', report)
@@ -139,8 +139,18 @@ class OwnedDeckyStop(unittest.TestCase):
         self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 91)
         scope['print'].assert_called_once()
 
+    def test_loader_exit_error_is_not_successful_cleanup(self):
+        scope = self.probe(['811', '1min 30s', 'mixed', 'failed', 'exit-code', '0', '1', '1'],
+                           [0, 0, 0, 2])
+        report = {}
+        with self.assertRaises(AssertionError):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['result'], 'exit-code')
+        self.assertEqual(report['ownedDeckyStop']['execMainStatus'], '1')
+        scope['print'].assert_called_once()
+
     def test_persistent_stop_job_fails_and_retains_last_state(self):
-        scope = self.probe(['811', '1min 30s', 'deactivating'], [0, 0, 0, 101, 102])
+        scope = self.probe(['811', '1min 30s', 'mixed', 'deactivating'], [0, 0, 0, 101, 102])
         report = {}
         with self.assertRaisesRegex(RuntimeError, 'owned Decky service stop'):
             scope['stop_decky_service']('frame-control-decky.service', report)
