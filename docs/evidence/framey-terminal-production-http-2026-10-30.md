@@ -127,3 +127,53 @@ and MainPID in 2.897 seconds. No observer failure or leak was observed.
 Updated exact-head native CI remains required. ARM64
 browser, real Steam CEF, managed installation and physical-controller limits
 remain unverified.
+
+
+## ARM64 installed-status timeout at `4021f2f`
+
+The updated ARM64 browser job
+[124245011194](https://github.com/saphid/frame-control/actions/runs/41108679273/job/124245011194)
+failed before any Terminal panel request or completed stage. The
+[independent failure audit](framey-terminal-status-timeout-arm-2026-10-30.json)
+matched all 165 committed sources, the complete checksummed result packet and
+[artifact 13002318838](https://github.com/saphid/frame-control/actions/runs/41108679273/artifacts/13002318838)'s
+GitHub SHA-256. The [inspected capture](framey-terminal-status-timeout-arm-2026-10-30.png)
+shows the installed-plugin timeout and an unpopulated list.
+
+The unchanged production `/api/decky` request returned HTTP 503 in 15.367
+seconds. Its unchanged SSH call failed with `ssh-timeout` in 15.366 seconds;
+other concurrent status calls succeeded. Three passive process samples show
+its Python child runnable and accumulating CPU time. This identifies the
+failing operation, but does not identify which import or operation consumed
+the budget, establish a real Frame defect, or prove that a longer timeout
+would be correct. No production timeout, request, response or exception was
+modified by the observer. No Terminal panel, shell interaction or rendered
+output is verified by this failed ARM64 run.
+
+Owned target/browser/listener/bundle cleanup and QEMU/user-manager shutdown
+were retained. The actual Decky service stopped with inactive/success state,
+zero status/MainPID and mixed policy in 8.527 seconds. Its retained log still
+contains plugin-shutdown cancellation, so successful unit status does not
+prove error-free plugin shutdown. The earlier AMD64 passes and native
+candidate lifecycle results remain separate. ARM64 browser, production
+managed installation, real Steam CEF, Frame pixels and physical controllers
+remain unverified. The failed job is not credited as a passing gate.
+
+A failure-only diagnostic now runs in the owned VM after a failed production
+Decky-status request. It executes the same source under system Python with
+import timing and periodic stack snapshots, with its own 35-second diagnostic
+limit. This invocation is explicitly different from the production request;
+it does not use SSH and cannot establish that the production deadline passes.
+Only bounded module timing/frame summaries and boolean/count status fields
+are retained. Raw status replies, traceback source lines, paths and stderr
+are discarded. Its child belongs to a separate process group and is reaped.
+The original replay remains failed, with its original exception, original
+15-second SSH deadline and failure evidence. No diagnostics run before the
+production request or on a successful replay, so no warmed diagnostic run
+can make the original test pass.
+
+Focused subprocess tests cover import summaries, private-value omission,
+periodic stack capture, timeout and child cleanup. Fresh native ARM64
+execution remains required to identify the original delay; no import-specific
+root cause or production fix is claimed. The preserved ARM64 failed report
+and capture remain authoritative until a separate full replay passes.

@@ -327,6 +327,16 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 fixtureCefTrace=cef.eval('({records:fixtureRpcTrace,overflow:fixtureTraceOverflow,socketCount:fixtureSocketCount,nativeEvents:fixtureNativeEvents})'))
     finally:
         report.update(stages=stages, screenshots=shots, requests=requests, assets=assets)
+        # Never run before the real request: warming imports here cannot make
+        # the original replay pass. Its exception and failed outcome persist.
+        status_failed = any(entry['kind'] == 'decky-status' and entry['outcome'] == 'failure'
+                            for entry in ssh_records)
+        if not report['success'] and status_failed and previous_ssh is not None:
+            try:
+                from terminal_status_diagnostic import diagnose
+                report['statusFailureDiagnostic'] = diagnose(frame_decky.PROBE, home)
+            except Exception:
+                report['statusFailureDiagnosticUnavailable'] = True
         if page:
             if not report['success']:
                 try:
