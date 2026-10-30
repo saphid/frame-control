@@ -37,3 +37,12 @@ fingerprints, 11 Rust tests, actual Decky discovery/RPC, two-way Syncthing
 2.1.7 sync, 17 actual user-service results and 18 ownership refusals passed.
 This is the separate ownership runtime, not signed Syncthing 1.27.3 Flatpak
 proof. Fresh signed-package jobs were still pending at this audit.
+
+The fresh AMD64 signed-package artifact `12977877175` from run `41055354945`
+passed independent audit against `ff663a7`. Its GitHub SHA-256 is
+`f508effa9fbd3845b9d91c1011b2cf00591c309e2b0e206b882a0c2691a9e5d8`.
+Both peers reported connected before the byte checks; actual signed two-way
+sync, nine setup, 17 service lifecycle, 18 ownership refusal and 12 migration
+results passed. Preserving uninstall passed, and final Flatpak registry drain
+took 0.151 seconds. ARM64 remained pending at this audit. The previous head's
+AMD64 timeout remains recorded; this passing replay does not prove its cause.

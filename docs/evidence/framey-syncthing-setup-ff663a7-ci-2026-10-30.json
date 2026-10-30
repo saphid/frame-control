@@ -120,5 +120,68 @@
       "realFrameContacted": false,
       "installerEnabled": false
     }
-  ]
+  ],
+  "freshSignedPackageArtifacts": [
+    {
+      "head": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+      "architecture": "x86_64",
+      "artifactSha256": "f508effa9fbd3845b9d91c1011b2cf00591c309e2b0e206b882a0c2691a9e5d8",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.163,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 0.313,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 642,
+      "legacyPidAfter": 701,
+      "migrationDataPreservedAfterUninstall": true,
+      "workflowRun": 41055354945,
+      "artifactId": 12977877175,
+      "githubArtifactSha256": "f508effa9fbd3845b9d91c1011b2cf00591c309e2b0e206b882a0c2691a9e5d8",
+      "bothPeerConnectionsObserved": true,
+      "instanceCleanupElapsedSeconds": 0.151
+    }
+  ],
+  "freshArmSignedPackagePending": true,
+  "oldAmdFailureRetained": true
 }
