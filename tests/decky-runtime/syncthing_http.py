@@ -1,10 +1,12 @@
 """Production local HTTP/panel dispatcher with actual Decky and fixture CEF only."""
+import base64
 import hashlib
 import http.client
 import io
 import json
 import os
 from pathlib import Path
+import re
 import secrets
 import shutil
 import signal
@@ -79,6 +81,141 @@ window.DeckyBackend={call:async(route,...args)=>{
 
 
 
+def emit_gateway_progress(report):
+    # A diagnostic profile can exceed journald's single-message bound. Emit
+    # small, ordered, checksummed chunks without dropping cleanup fields.
+    encoded = json.dumps(report, ensure_ascii=True)
+    if len(encoded) > 2*1024**2:
+        encoded = json.dumps(dict(progressReportOverflow=True, encodedBytes=len(encoded)))
+    digest = hashlib.sha256(encoded.encode()).hexdigest()
+    chunks = [encoded[offset:offset+4000] for offset in range(0, len(encoded), 4000)]
+    for index, data in enumerate(chunks):
+        chunk = dict(index=index, total=len(chunks), sha256=digest, data=data)
+        print('FRAMEY_HTTP_GATEWAY_PROGRESS_CHUNK_JSON='+json.dumps(chunk), flush=True)
+
+
+def safe_error_category(value):
+    # Inspect only in memory. Never retain raw response bodies, commands,
+    # arguments, credentials or exception text in the fixture trace.
+    if isinstance(value, dict):
+        message = ' '.join(str(value.get(key, '')) for key in ('error', 'detail')).lower()
+    else:
+        message = str(value).lower()
+    for text, category in [('timed out talking to', 'ssh-timeout'),
+                           ('fixture decky rpc timeout', 'fixture-decky-timeout'),
+                           ('decky backend timed out', 'browser-rpc-timeout'),
+                           ('no sharedjscontext page', 'cef-unavailable'),
+                           ('devtools closed', 'cef-closed')]:
+        if text in message:
+            return category
+    if isinstance(value, dict) and value.get('offline') is True:
+        return 'offline'
+    return 'other'
+
+
+def status_process_tree(thread_id, proc=Path('/proc'), owner_pid=None):
+    """Read only this request thread's child tree; never read argv or environment."""
+    owner_pid = os.getpid() if owner_pid is None else owner_pid
+    def read(path):
+        with path.open() as stream:
+            return stream.read(4096)
+    def children(path, parent):
+        return [(int(value), parent) for value in read(path).split() if value.isdecimal()]
+    pending = children(proc/'self/task'/str(thread_id)/'children', owner_pid)
+    seen, result = set(), []
+    while pending and len(seen) < 12:
+        pid, parent = pending.pop(0)
+        if pid in seen:
+            continue
+        seen.add(pid)
+        try:
+            stat = read(proc/str(pid)/'stat')
+            prefix, fields = stat.rsplit(') ', 1)
+            actual_pid, command = prefix.split(' (', 1)
+            fields = fields.split()
+            if int(actual_pid) != pid or int(fields[1]) != parent:
+                continue  # Exited/reused PID is no longer our child.
+            command = command if command in ('python3', 'python3.13', 'python3.12',
+                                             'bash', 'sh', 'ssh', 'systemctl') else 'other'
+            channel = read(proc/str(pid)/'wchan').strip()
+            if channel not in ('0', 'do_wait', 'futex_wait_queue', 'futex_wait_queue_me',
+                               'pipe_read', 'pipe_write', 'wait_woken', 'ep_poll',
+                               'poll_schedule_timeout', 'hrtimer_nanosleep'):
+                channel = 'other'
+            result.append(dict(pid=pid, parentPid=parent, command=command,
+                               state=fields[0] if fields[0] in ('R', 'S', 'D', 'Z', 'T', 'I') else 'other',
+                               cpuTicks=int(fields[11])+int(fields[12]),
+                               residentPages=max(0, int(fields[21])), waitChannel=channel))
+            pending.extend(children(proc/str(pid)/'task'/str(pid)/'children', pid))
+        except (OSError, ValueError, IndexError):
+            continue  # A short-lived child can vanish between the reads.
+    return dict(processes=result, truncated=bool(pending))
+
+
+class StatusProcessSampler:
+    """Bounded passive samples while the unchanged SSH call runs concurrently."""
+    def __init__(self, started):
+        self.started = started
+        self.thread_id = threading.get_native_id()
+        self.cancel = threading.Event()
+        self.samples = []
+        self.errors = 0
+        self.thread = threading.Thread(target=self.run, daemon=True)
+
+    def run(self):
+        for delay in (2, 6, 6):
+            if self.cancel.wait(delay):
+                return
+            try:
+                sample = status_process_tree(self.thread_id)
+                sample['elapsedSeconds'] = round(time.monotonic()-self.started, 3)
+                self.samples.append(sample)
+            except (OSError, ValueError):
+                self.errors += 1  # No raw paths or exception text.
+
+    def start(self):
+        self.thread.start()
+
+    def finish(self):
+        self.cancel.set()
+        self.thread.join(timeout=1)
+        return dict(samples=list(self.samples), unavailableSamples=self.errors,
+                    observerStopped=not self.thread.is_alive())
+
+
+def observe_ssh(call, records, lock, started, kind, *args, process_profiles=None, **kwargs):
+    assert kind in ('decky-status', 'panel-method', 'headset-status', 'other')
+    begin = time.monotonic()
+    entry = dict(kind=kind, startedAfterSeconds=round(begin-started, 3), outcome='success')
+    sampler = StatusProcessSampler(begin) if kind == 'decky-status' and process_profiles is not None else None
+    sampler_started = False
+    if sampler:
+        try:
+            sampler.start()
+            sampler_started = True
+        except RuntimeError:
+            pass  # Diagnostic thread exhaustion must not replace the SSH call.
+    try:
+        return call(*args, **kwargs)
+    except Exception as error:
+        entry.update(outcome='failure', errorCategory=safe_error_category(error))
+        raise
+    finally:
+        if sampler:
+            profile = (sampler.finish() if sampler_started else
+                       dict(samples=[], unavailableSamples=1, observerStopped=True))
+            profile['startedAfterSeconds'] = entry['startedAfterSeconds']
+            with lock:
+                if len(process_profiles['records']) < 128:
+                    process_profiles['records'].append(profile)
+                else:
+                    process_profiles['overflow'] = True
+        entry['elapsedSeconds'] = round(time.monotonic()-begin, 3)
+        with lock:
+            assert len(records) < 500, 'Parent SSH trace limit exceeded'
+            records.append(entry)
+
+
 def wait_authenticated_rest(fetch, api_key, wait):
     def ready():
         response = fetch('GET', '/rest/system/status', {'X-API-Key': api_key})
@@ -114,6 +251,14 @@ def exercise(runtime_identity, service):
     assert not plugin.exists()
     plugin.mkdir(parents=True)
     shutil.copy(Path.home()/'decky/plugins/decky-syncthing/plugin.json', plugin/'plugin.json')
+    parent_requested = Path('/input/syncthing_http_parent.py').exists()
+    if parent_requested:
+        # The host already derived and hashed this frontend from the pinned
+        # archive plus candidate patch. Serve it through the real panel route.
+        encoded = re.search(rb'<script id="framey-bundle"[^>]*>([^<]+)</script>',
+                            Path('/input/browser-panel.html').read_bytes()).group(1)
+        (plugin/'dist').mkdir()
+        (plugin/'dist/index.js').write_bytes(base64.b64decode(encoded, validate=True))
     marker = plugin/'.frame-control-store.json'
     receipt = dict(storeId=64, version='0.2.7', sha256=DIGEST,
                    compatShims=['syncthing-owned-native-http'])
@@ -131,6 +276,30 @@ def exercise(runtime_identity, service):
     import server
     assert server.LOCAL and server.HEADSET_RUNTIME
     requests = []
+    parent_requests, parent_assets = [], []
+    parent_active = False
+    parent_started = None
+    ssh_records, ssh_lock = [], threading.Lock()
+    status_profiles = dict(records=[], overflow=False)
+    previous_ssh = server.ssh
+    import frame_decky
+    import framey_panel
+    method_prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
+    status_source = (bundle/'ui/frame_status.py').read_text()
+
+    def traced_ssh(*args, **kwargs):
+        if not parent_active:
+            return previous_ssh(*args, **kwargs)
+        source = kwargs.get('stdin')
+        kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE) else
+                'panel-method' if isinstance(source, str) and source.startswith(method_prefix) else
+                'headset-status' if source == status_source else 'other')
+        return observe_ssh(previous_ssh, ssh_records, ssh_lock, parent_started, kind, *args,
+                           process_profiles=status_profiles, **kwargs)
+
+    # Pass through arguments, results and exceptions unchanged. This observer
+    # does not cache, serialize, retry or bypass any receipt/status/RPC check.
+    server.ssh = traced_ssh
 
     class Handler(server.Handler):
         def log_message(self, *_args):
@@ -142,8 +311,50 @@ def exercise(runtime_identity, service):
                     token = response.read().decode()
                 document = CEF.replace('__FIXTURE_TOKEN__', json.dumps(token))
                 self.send_bytes(document.encode(), 'text/html; charset=utf-8')
+            elif self.path == '/parent-bootstrap' and self.local_request():
+                self.send_bytes(b'<!doctype html><title>Owned HTTP parent bootstrap</title>', 'text/html')
             else:
+                if parent_active:
+                    assert len(parent_assets) < 100
+                    parent_assets.append(self.path.split('?', 1)[0])
                 super().do_GET()
+
+        def do_POST(self):
+            previous_input = self.rfile
+            if parent_active and self.path == '/api/framey/method':
+                length = int(self.headers.get('Content-Length', '0'))
+                assert 0 < length <= 32768
+                raw = self.rfile.read(length)
+                req = json.loads(raw)
+                self.rfile = io.BytesIO(raw)
+                self.parent_request_started = time.monotonic()
+                entry = dict(method=req['method'],
+                             startedAfterSeconds=round(self.parent_request_started-parent_started, 3))
+                if req['method'] == 'framey_http_fetch':
+                    entry.update(httpMethod=req['args'][0]['method'], path=req['args'][0]['path'])
+                if req['method'] == 'set_setting':
+                    entry['setting'] = req['args'][0]['setting']
+                self.parent_request = entry
+            try:
+                super().do_POST()
+            finally:
+                self.rfile = previous_input
+
+        def send_json(self, obj, status=200):
+            entry = getattr(self, 'parent_request', None)
+            if entry is not None:
+                assert len(parent_requests) < 300
+                entry['elapsedSeconds'] = round(time.monotonic()-self.parent_request_started, 3)
+                entry['httpStatus'] = status
+                if status >= 400:
+                    entry['errorCategory'] = safe_error_category(obj)
+                value = obj.get('result', {})
+                if entry['method'] == 'framey_http_fetch' and isinstance(value, dict):
+                    result = value.get('result', {})
+                    if isinstance(result, dict):
+                        entry['backendStatus'] = result.get('status')
+                parent_requests.append(entry)
+            super().send_json(obj, status)
 
     httpd = server.LoopbackServer(('127.0.0.1', 0), Handler)
     worker = threading.Thread(target=httpd.serve_forever, daemon=True)
@@ -156,6 +367,7 @@ def exercise(runtime_identity, service):
                   productionHttpHandler=True, productionPanelDispatcher=True,
                   productionMethodScript=True, productionLocalSshWrapper=True,
                   uiSourceFingerprints=len(expected))
+    report.update(statusImportProfiling=False, productionStatusCommandUnchanged=True)
 
     def method(name, args, *, digest=DIGEST, plugin_id=64, legacy=True, authenticated=True):
         body = dict(id=plugin_id, receipt=digest, method=name, args=args, legacy=legacy)
@@ -232,6 +444,17 @@ def exercise(runtime_identity, service):
             assert saved['is_setup'] is True and saved['api_key'] and saved['port'] == 8384
             state = fetch('GET', '/__decky-watchdog/state')
             assert state['status'] == 200 and state['body'].strip() == 'stopped'
+            if parent_requested:
+                from syncthing_http_parent import exercise as browser_parent
+                parent_started = time.monotonic()
+                parent_active = True
+                try:
+                    result = browser_parent(page, base, settings['FRAME_UI_KEY'], browser.pid,
+                                            legacy, runtime_identity, service)
+                    result.update(httpRequests=parent_requests, requestedAssets=parent_assets)
+                    report['browserParent'] = result
+                finally:
+                    parent_active = False
             assert fetch('POST', '/__decky-watchdog/start')['status'] == 204
             response = wait_authenticated_rest(fetch, saved['api_key'], wait)
             pids = runtime_identity(service)
@@ -248,13 +471,16 @@ def exercise(runtime_identity, service):
                           requests=requests, success=True)
     finally:
         report.update(requests=requests, rejectedRequests=denied)
+        if parent_requested:
+            report.update(parentHttpRequests=parent_requests, parentRequestedAssets=parent_assets,
+                          parentSshTrace=ssh_records, statusProcessProfiles=status_profiles)
         if page:
             try:
                 report['fixtureCefTrace'] = page.eval(
                     '({records:window.fixtureRpcTrace,overflow:window.fixtureTraceOverflow,'
                     'authenticatedSocketCount:window.fixtureSocketCount,issuedRequestCount:window.fixtureRequestCount})')
-            except (OSError, frame_steam.Fail):
-                report['fixtureCefTraceUnavailable'] = True
+            except (OSError, frame_steam.Fail) as error:
+                report['fixtureCefTraceUnavailable'] = safe_error_category(error)
             finally:
                 page.sock.close()
         if browser:
@@ -271,9 +497,14 @@ def exercise(runtime_identity, service):
         worker.join(timeout=5)
         report['httpServerStopped'] = not worker.is_alive()
         marker.unlink()
+        if parent_requested:
+            (plugin/'dist/index.js').unlink()
+            (plugin/'dist').rmdir()
         (plugin/'plugin.json').unlink()
         plugin.rmdir()
         report['ownedReceiptRemoved'] = not plugin.exists()
+        server.ssh = previous_ssh
+        report['sshObserverRemoved'] = server.ssh is previous_ssh
         os.environ['PATH'] = previous_path
         frame_steam.CDP = previous_cdp
         for key, value in previous.items():
@@ -281,6 +512,9 @@ def exercise(runtime_identity, service):
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
-        print('FRAMEY_HTTP_GATEWAY_PROGRESS_JSON='+json.dumps(report), flush=True)
+        progress = dict(report)
+        if 'browserParent' in progress:
+            progress['browserParent'] = {k:v for k,v in progress['browserParent'].items() if k!='screenshots'}
+        emit_gateway_progress(progress)
     assert report['ownedBrowserReaped'] and report['httpServerStopped'] and report['ownedReceiptRemoved']
     return report

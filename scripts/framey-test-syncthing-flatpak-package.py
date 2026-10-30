@@ -267,7 +267,7 @@ def browser_payloads(official):
         'panelSha256': hashlib.sha256(panel.encode()).hexdigest()}
 
 
-def http_gateway_payloads():
+def http_gateway_payloads(browser_parent=False):
     import io
     import tarfile
     packed = io.BytesIO()
@@ -289,11 +289,14 @@ def http_gateway_payloads():
     data = packed.getvalue()
     if len(data) > 32*1024**2:
         raise ValueError('Production HTTP fixture UI exceeds its bound')
-    return {
+    payloads = {
         'framey-http-ui.tar': data,
         'framey-http-ui-sources.json': json.dumps(sources).encode(),
         'syncthing_http.py': (ROOT/'tests/decky-runtime/syncthing_http.py').read_bytes(),
-    }, {'uiArchiveSha256': hashlib.sha256(data).hexdigest(), 'sourceSha256': sources}
+    }
+    if browser_parent:
+        payloads['syncthing_http_parent.py'] = (ROOT/'tests/decky-runtime/syncthing_http_parent.py').read_bytes()
+    return payloads, {'uiArchiveSha256': hashlib.sha256(data).hexdigest(), 'sourceSha256': sources}
 
 
 def verify_browser(report, expected_panel):
@@ -365,6 +368,61 @@ def guest_report(console, browser=False):
     return json.loads(''.join(chunk['data'] for chunk in chunks))
 
 
+def verify_http_parent(report):
+    for name in ('success', 'syntheticInput', 'syntheticCef', 'syntheticStoreReceipt',
+                 'productionParentUnchanged', 'productionPanelUnchanged',
+                 'actualDeckyUserService', 'actualDeckyDiscovery', 'ownedTargetClosed'):
+        if report.get(name) is not True:
+            raise ValueError('Missing production browser parent proof: '+name)
+    for name in ('realSteamCef', 'realFrameContacted', 'managedInstallVerified',
+                 'installerEnabled', 'bootstrapStateInjected', 'browserSandboxDisabled'):
+        if report.get(name) is not False:
+            raise ValueError('Invalid production parent scope: '+name)
+    harness = report.get('childHarness', {})
+    if (harness.get('installed') is not True or harness.get('universalAccessGranted') is not False
+            or harness.get('mode') not in ('owned-iframe-target', 'owned-frame-isolated-world')):
+        raise ValueError('Missing scoped child DOM harness')
+    stages = report.get('stages', [])
+    if ([v.get('stage') for v in stages] != ['running', 'stopped', 'restarted', 'stopped']
+            or any(v.get('errors') != [] for v in stages)
+            or any(not all(label in stages[index].get('text', '')
+                           for label in ('Private service sync', 'owned-peer'))
+                   for index in (0, 2))
+            or any(line.lstrip().startswith('Error:')
+                   for stage in stages for line in stage.get('text', '').splitlines())):
+        raise ValueError('Missing production parent browser lifecycle')
+    if (type(report.get('manualPortFallbackUsed')) is not bool or
+            any(v.get('manualPortFallbackUsed') is not report['manualPortFallbackUsed'] for v in stages)):
+        raise ValueError('Missing production parent port path')
+    observations = report.get('actualPackagedProcessObservations', [])
+    if (len(observations) != 2 or [v.get('stage') for v in observations] != ['running', 'restarted']
+            or any(not v.get('pids') or any(type(p) is not int or p <= 0 for p in v['pids']) for v in observations)
+            or observations[0]['pids'][0] == observations[1]['pids'][0]):
+        raise ValueError('Missing production parent signed PID transitions')
+    renderers = report.get('sandboxedRendererPids', [])
+    if not renderers or any(v.get('seccomp') != 2 or v.get('noNewPrivs') != 1
+                           or len(v.get('ancestryToBrowser', [])) < 2 for v in renderers):
+        raise ValueError('Missing production parent renderer sandbox')
+    requests = report.get('httpRequests', [])
+    if (not requests or any(v.get('httpStatus') != 200 for v in requests)
+            or not {'get_settings_json', 'set_setting', 'framey_http_fetch'} <= {v.get('method') for v in requests}):
+        raise ValueError('Missing production parent HTTP calls')
+    if any(type(v.get(key)) not in (int, float) or not 0 <= v[key] < 600
+           for v in requests for key in ('startedAfterSeconds', 'elapsedSeconds')):
+        raise ValueError('Missing bounded production parent request timings')
+    if any(v.get('backendStatus') not in (200, 204, 425, 502)
+           for v in requests if v.get('method') == 'framey_http_fetch'):
+        raise ValueError('Unexpected production parent backend response')
+    controls = {v.get('path') for v in requests if v.get('method') == 'framey_http_fetch'}
+    if not {'/__decky-watchdog/start', '/__decky-watchdog/stop', '/__decky-watchdog/state'} <= controls:
+        raise ValueError('Missing production parent HTTP service controls')
+    if not {'/headset', '/framey/panel/64', '/framey-runtime/host.js'} <= set(report.get('requestedAssets', [])):
+        raise ValueError('Missing production parent assets')
+    if (report.get('parentErrors') != [] or set(report.get('screenshots', {})) !=
+            {'running1', 'stopped2', 'restarted3', 'stopped4'}):
+        raise ValueError('Missing production parent captures or unexpected errors')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -389,10 +447,16 @@ def main():
                         help='AMD64 only: actual browser controls with Decky and the signed package')
     parser.add_argument('--http-gateway', action='store_true',
                         help='With browser setup: production local HTTP/panel dispatch through fixture CEF')
+    parser.add_argument('--http-browser-parent', action='store_true',
+                        help='With HTTP gateway: unchanged production parent and actual Decky user service')
     args = parser.parse_args()
     if args.http_gateway and not args.browser_setup:
         parser.error('HTTP gateway probe requires --browser-setup')
+    if args.http_browser_parent and not args.http_gateway:
+        parser.error('HTTP browser parent requires --http-gateway')
     arch = platform.machine()
+    if args.http_browser_parent and arch != "x86_64":
+        parser.error("Production browser parent probe currently requires AMD64")
     if platform.system() != "Linux" or arch not in ARCHES:
         parser.error("This package probe requires native AMD64 or ARM64 Linux")
     if args.browser_setup and (arch != 'x86_64' or not args.candidate_helper):
@@ -431,9 +495,11 @@ def main():
     if args.browser_setup:
         browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
         payloads.update(browser_extra)
+        result_codec = module('guest_result', ROOT/'tests/decky-runtime/guest_result.py')
+        payloads['guest_result.py'] = (ROOT/'tests/decky-runtime/guest_result.py').read_bytes()
     http_gateway = None
     if args.http_gateway:
-        http_payloads, http_gateway = http_gateway_payloads()
+        http_payloads, http_gateway = http_gateway_payloads(args.http_browser_parent)
         payloads.update(http_payloads)
     budgets = ({'installSeconds': 300, 'userSeconds': 1440, 'unitSeconds': 1500, 'hostSeconds': 1560}
                if args.browser_setup else BUDGETS[arch])
@@ -469,6 +535,7 @@ def main():
         ])
     if args.browser_setup:
         source_paths.extend(ROOT / path for path in [
+            'tests/decky-runtime/guest_result.py',
             'scripts/framey-test-syncthing-browser.py', 'tests/decky-runtime/syncthing_browser.py',
             'tests/decky-runtime/Containerfile.flatpak-vm', 'ui/framey_panel.py', 'ui/framey-host.js',
             'ui/frame_decky.py', 'ui/frame_decky_store.py', 'ui/framey_compatibility.py',
@@ -479,6 +546,8 @@ def main():
         source_paths.extend(ROOT/name for name in http_gateway['sourceSha256']
                             if ROOT/name not in source_paths)
         source_paths.append(ROOT/'tests/decky-runtime/syncthing_http.py')
+        if args.http_browser_parent:
+            source_paths.append(ROOT/'tests/decky-runtime/syncthing_http_parent.py')
     fingerprints = {str(path.relative_to(ROOT)): sha(path) for path in source_paths}
     spec = importlib.util.spec_from_file_location("service_vm", packer_path)
     packer = importlib.util.module_from_spec(spec)
@@ -516,6 +585,10 @@ def main():
         "candidate": candidate,
         "browserSetup": browser_inputs,
         "httpGateway": http_gateway,
+        "httpBrowserParentRequested": args.http_browser_parent,
+        "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
+                             "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
+                            if args.browser_setup else None),
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -546,6 +619,11 @@ def main():
         f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
     ]
     console = args.output / "console.log"
+    packet_path = args.output / 'guest-result.packet'
+    if args.browser_setup:
+        command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
+                    '-device', 'virtio-serial-pci,id=framey_result_bus',
+                    '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
     result = {"success": False, "inputs": inputs}
     try:
         with console.open("w") as log:
@@ -563,7 +641,14 @@ def main():
                 result["ownedQemuReaped"] = process.poll() is not None
         if code != 0:
             raise RuntimeError('Nonzero QEMU exit')
-        guest = guest_report(console.read_text(), args.browser_setup)
+        if args.browser_setup:
+            if not packet_path.is_file() or not 0 < packet_path.stat().st_size <= result_codec.MAX_PAYLOAD+256:
+                raise RuntimeError('Missing/oversized dedicated guest result packet')
+            packet = packet_path.read_bytes()
+            guest = result_codec.decode(packet)
+            result['guestResultPacket'] = dict(bytes=len(packet), sha256=hashlib.sha256(packet).hexdigest())
+        else:
+            guest = guest_report(console.read_text())
         result["guest"] = guest
         package = guest.get("flatpak", {})
         if guest.get('success') is not True:
@@ -616,6 +701,18 @@ def main():
                 or gateway.get('rejectedRequests') != dict(missingUiKey=403, staleReceipt=400,
                     wrongPlugin=400, modernHttpCall=400, missingHttpShim=400)):
                 raise RuntimeError('HTTP gateway scope/refusal proof missing')
+            if args.http_browser_parent:
+                parent = gateway.get('browserParent', {})
+                verify_http_parent(parent)
+                if (package['candidateService'].get('actualDeckyUserService') is not True
+                        or package['candidateService'].get('ownedDeckyServiceRemoved') is not True):
+                    raise RuntimeError('Actual Decky user service cleanup proof missing')
+                for name, encoded in parent['screenshots'].items():
+                    import base64
+                    data = base64.b64decode(encoded, validate=True)
+                    if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
+                        raise RuntimeError('Invalid HTTP parent screenshot')
+                    (args.output/('http-parent-'+name+'.png')).write_bytes(data)
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths

@@ -32,7 +32,7 @@ class Panel(unittest.TestCase):
         installed = {'storeId':64, 'name':'Syncthing', 'sha256':digest,
                      'compatShims':['syncthing-owned-native-http']}
         args = [{'method':'GET', 'path':'/rest/system/status', 'headers':{}}]
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[installed]}):
             self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"success":true,"result":{}}',
                 64,'framey_http_fetch',args,True,digest), {'success':True,'result':{}})
             for method,legacy in [('framey_http_escape',True),('framey_http_fetch',False)]:
@@ -69,7 +69,7 @@ class Panel(unittest.TestCase):
             self.assertIn('262144', stdin)
             self.assertNotIn('__FRAMEY_STEAM_', stdin)
             return '{"result":{"apps":[],"events":[],"cursor":0}}'
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[{'storeId':13,'sha256':'a'*64}]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[{'storeId':13,'sha256':'a'*64}]}):
             self.assertEqual(framey_panel.poll_running(fake_ssh,13,'test-1',True,receipt='a'*64)['result']['cursor'],0)
             for plugin_id,session,active,cursor in [(True,'test',True,0),(0,'test',True,0),
                     (14,'test',True,0),(13,'bad session',True,0),(13,'test',1,0),
@@ -91,7 +91,7 @@ class Panel(unittest.TestCase):
             self.assertEqual(command,'python3 -')
             compile(stdin,'<running read>','exec')
             return '{"result":null}'
-        with patch.object(framey_panel.frame_decky,'status',side_effect=lambda _: {'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky,'plugin_status',side_effect=lambda _: {'plugins':[installed]}):
             framey_panel.poll_running(safe_ssh,13,'old-panel',True,receipt='a'*64)
             installed['sha256'] = 'b'*64  # Another manager replaces the installed plugin.
             for active in (True,False):
@@ -105,7 +105,7 @@ class Panel(unittest.TestCase):
             framey_panel.poll_running(safe_ssh,13,'new-panel',False,receipt='b'*64)
 
     def test_steam_reads_are_allowlisted_and_installed_only(self):
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
                 'plugins':[{'storeId':81,'name':'IsThereAnyDeal for Deck','sha256':RECEIPT}]}):
             for method, expression in framey_panel.STEAM_READS.items():
                 if method == 'GetGlobalCompatTools':
@@ -131,7 +131,7 @@ class Panel(unittest.TestCase):
         digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
         installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
                      'compatShims':['wine-cellar-native-bridge']}
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[
                 installed, {'storeId':81, 'name':'Other', 'sha256':digest}]}):
             self.assertEqual(framey_panel.read_steam(lambda *_a, **_k:'{"result":[]}',
                                                      68,'GetGlobalCompatTools',digest), {'result':[]})
@@ -146,7 +146,7 @@ class Panel(unittest.TestCase):
         digest = framey_panel.frame_decky_store.WINE_CELLAR_DIGEST
         installed = {'storeId':68, 'name':'Wine Cellar', 'sha256':digest,
                      'compatShims':['wine-cellar-native-bridge']}
-        with patch.object(framey_panel.frame_decky, 'status', return_value={'plugins':[installed]}):
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={'plugins':[installed]}):
             self.assertEqual(framey_panel.call_method(lambda *_a, **_k:'{"result":"token"}',
                                                       68,'framey_ws_open',[],receipt=digest), {'result':'token'})
             for method in ('framey_ws_escape', 'framey_ws_open_other'):
@@ -224,7 +224,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                 any(isinstance(t,ast.Name) and t.id=='payload' for t in n.targets))
             self.assertEqual(json.loads(ast.literal_eval(assignment.value.args[0]))['args'],args)
             return '{"result":null}'
-        with patch.object(framey_panel.frame_decky,'status',return_value={
+        with patch.object(framey_panel.frame_decky,'plugin_status',return_value={
                 'plugins':[{'storeId':53,'name':'Shotty','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh,
                 53,'set_id_map_fronend',args,True,RECEIPT),{'result':None})
@@ -255,7 +255,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             compile(stdin, '<event poll>', 'exec')
             self.assertIn('loader/plugin_event', stdin)
             return json.dumps({'events':[{'event':'timer:tick', 'args':[42]}], 'cursor':6})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':96,'name':'Simple Timer','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.poll_events(fake_ssh, 96, 'test-123.45', ['timer:tick'], 5, RECEIPT)['cursor'], 6)
             with self.assertRaisesRegex(framey_panel.PanelError, 'changed'):
@@ -384,7 +384,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                                       'args':[{'key':'mode'}], 'legacy':True})
             self.assertIn('loader/call_legacy_plugin_method', stdin)
             return json.dumps({'result':{'success':True, 'result':'dark'}})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':14,'name':'Legacy','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh, 14, 'read_setting', [{'key':'mode'}], True, RECEIPT),
                              {'result':{'success':True, 'result':'dark'}})
@@ -419,7 +419,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             compile(stdin, '<remote method>', 'exec')
             self.assertNotIn('__FRAMEY_METHOD_PAYLOAD__',stdin)
             return json.dumps({'result':{'theme':'dark'}})
-        with patch.object(framey_panel.frame_decky, 'status', return_value={
+        with patch.object(framey_panel.frame_decky, 'plugin_status', return_value={
             'plugins':[{'storeId':14,'name':'ProtonDB Badges','sha256':RECEIPT}]}):
             self.assertEqual(framey_panel.call_method(fake_ssh,14,'get_setting',['theme','dark'],receipt=RECEIPT),
                              {'result':{'theme':'dark'}})
