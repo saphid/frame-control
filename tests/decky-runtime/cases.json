@@ -5,6 +5,11 @@
     "probe": "steamgriddb-private-artwork"
   },
   {
+    "id": 18,
+    "shim": null,
+    "probe": "bluetooth-private-bluez"
+  },
+  {
     "id": 14,
     "shim": null,
     "probe": "protondb-private-settings"

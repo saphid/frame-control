@@ -181,6 +181,9 @@ def main():
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
         try:
+            if case['probe'] == 'bluetooth-private-bluez':
+                import bluetooth_bluez
+                private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
             if case['probe'] == 'mpris':
                 bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork',
                     '--address='+env['DBUS_SESSION_BUS_ADDRESS']], env=env, stdout=log, stderr=log,
@@ -212,7 +215,13 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'steamgriddb-private-artwork':
+            if case['probe'] == 'bluetooth-private-bluez':
+                report['privateBluez'] = bluetooth_bluez.exercise(
+                    current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
+                report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '
+                    'paired-device filtering, adapter selection, alias/battery replies, connection/power '
+                    'round trips and clean shutdown passed; actual radio, pairing, browser and VR unverified')
+            elif case['probe'] == 'steamgriddb-private-artwork':
                 # Exact original backend; every path is in the disposable
                 # container home. No host Steam, game or artwork is exposed.
                 import base64
