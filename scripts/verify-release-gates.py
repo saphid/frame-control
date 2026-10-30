@@ -27,6 +27,10 @@ RELEASE_JOBS = {
     "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
 }
 DECKY_JOBS = {"decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)"}
+SIGNED_PACKAGE_JOBS = {
+    "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
+    "signed-package (ubuntu-latest, browser HTTP)",
+}
 
 
 class GateError(Exception):
@@ -62,6 +66,7 @@ def tag_commit(tag):
 
 
 def exact_runs(workflow, branch, sha, event):
+    events = (event,) if isinstance(event, str) else event
     query = f"actions/workflows/{workflow}/runs?branch={quote(branch, safe='')}&head_sha={sha}&per_page=100"
     runs = []
     for page in range(1, 21):
@@ -76,7 +81,7 @@ def exact_runs(workflow, branch, sha, event):
     if len(runs) != total or len({run.get('id') for run in runs}) != len(runs):
         raise GateError(f"incomplete or duplicate {workflow} run list for {branch} at {sha}")
     matching = [run for run in runs if run.get("head_sha") == sha
-                and run.get("head_branch") == branch and run.get("event") == event]
+                and run.get("head_branch") == branch and run.get("event") in events]
     if not matching:
         raise GateError(f"no exact {workflow} {event} run for {branch} at {sha}")
     return sorted(matching, key=lambda item: item["id"])
@@ -122,6 +127,14 @@ def main(tag, smoke_result):
     sha = tag_commit(tag)
     successful_jobs(exact_run("checks.yml", "main", sha, "push"), MAIN_JOBS)
     successful_jobs(exact_run("decky-runtime.yml", "main", sha, "push"), DECKY_JOBS)
+    # Path filters may omit this workflow on a version-only main commit; a
+    # manual run on that exact main commit supplies the same native/package
+    # proof. Neither a PR result nor an older commit can satisfy this gate.
+    for run in exact_runs("syncthing-flatpak-package.yml", "main", sha,
+                          ("push", "workflow_dispatch")):
+        if run.get("status") != "completed" or run.get("conclusion") != "success":
+            raise GateError(f"signed-package run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
+        successful_jobs(run, SIGNED_PACKAGE_JOBS)
     # A fresh run must not hide a failed, cancelled, or skipped installer in an
     # earlier separate push run for the same tag and commit.
     for run in exact_runs("release.yml", tag, sha, "push"):

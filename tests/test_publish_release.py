@@ -261,6 +261,38 @@ class PublishRelease(unittest.TestCase):
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
 
+    def test_signed_package_gates_stop_publication_before_any_mutation(self):
+        cases = [{"signed_missing": True}, {"signed_sha": "c" * 40},
+                 {"signed_branch": "unrelated"}, {"signed_event": "pull_request"},
+                 {"signed_status": "in_progress"}, {"signed_conclusion": "failure"}]
+        cases += [{"omit_job": name} for name in (
+            "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
+            "signed-package (ubuntu-latest, browser HTTP)")]
+        cases += [{"bad_job": "signed-package (ubuntu-24.04-arm)",
+                   "bad_job_conclusion": conclusion}
+                  for conclusion in ("failure", "cancelled", "skipped")]
+        cases += [{"prior_signed_run_conclusion": "failure"},
+                  {"signed_attempts": 2, "signed_prior_bad_job": "signed-package (ubuntu-latest)",
+                   "signed_prior_bad_conclusion": "cancelled"}]
+        for gates in cases:
+            with self.subTest(gates=gates):
+                p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+                self.assertNotEqual(p.returncode, 0, p.stdout)
+                self.assertIn("release gate failed", p.stderr)
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
+    def test_signed_package_push_and_manual_runs_are_accepted(self):
+        for event in ("push", "workflow_dispatch"):
+            with self.subTest(event=event):
+                p, log, upload = self.run_script([draft()], "--dry-run", "v9.8.7",
+                                                 gates={"signed_event": event})
+                self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+                self.assertTrue(any("syncthing-flatpak-package.yml/runs" in arg
+                                    for call in log for arg in call))
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
     def test_refuses_missing_or_stale_independent_asset_audit(self):
         good = asset_audit(draft())
         cases = [False,
