@@ -1,0 +1,20 @@
+{
+  "failingMain": "f78a4ab2dfff84d3215bcf9e9124a6a45a7f11b4",
+  "ciRun": 41016148971,
+  "ciJob": 123932818070,
+  "realFrameContacted": false,
+  "oldDeterministicTestPassed": false,
+  "newObsTestsPassed": 13,
+  "ordinarySignalShutdownAttemptsPassed": 200,
+  "nativeWindowsVerified": false,
+  "realObsVerified": false,
+  "sourceSha256": {
+    "scripts/obs-headset-source.py": "fe3e576e23fd1ef874886533ad0b165fc300186aa0c4e659e572816508bd7994",
+    "tests/test_obs_headset_source.py": "ec294debe306909de6ac5354d30f7440556b93b80b668b0fe16ab6fd459f899c"
+  },
+  "oldSourceSha256": "81e503bf85c32e5febc372f410aab31f3f46fea70eef6eb2104ae4d07e6af208",
+  "oldDeterministicLog": "test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe (tests.ObsSourceTests.test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe) ... \n  test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe (tests.ObsSourceTests.test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe) (mode='watchdog-signal') ... ERROR\n\n======================================================================\nERROR: test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe (tests.ObsSourceTests.test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe) (mode='watchdog-signal')\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_obs_headset_source.py\", line 186, in test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe\n    self._check_stop_mode(mode)\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/tests/test_obs_headset_source.py\", line 235, in _check_stop_mode\n    _, errors = process.communicate(timeout=8)\n                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 1209, in communicate\n    stdout, stderr = self._communicate(input, endtime, timeout)\n                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.12/subprocess.py\", line 2116, in _communicate\n    self._check_timeout(endtime, orig_timeout, stdout, stderr)\n  File \"/usr/lib/python3.12/subprocess.py\", line 1253, in _check_timeout\n    raise TimeoutExpired(\nsubprocess.TimeoutExpired: Command '['/usr/bin/python3', '-c', 'import importlib.util,signal; s=importlib.util.spec_from_file_location(\"obs\", \\'/tmp/framey-obs-red-iu5bqnpm/old.py\\'); o=importlib.util.module_from_spec(s);s.loader.exec_module(o); original=o.StreamWatchdog.packet; o.StreamWatchdog.packet=lambda self:(original(self),signal.pthread_kill(self.thread.ident,signal.SIGTERM)); raise SystemExit(o.main())', '--frame', 'fake-frame', '--port', '53166']' timed out after 8 seconds\n\n----------------------------------------------------------------------\nRan 1 test in 8.180s\n\nFAILED (errors=1)\n",
+  "flagOnlyExperimentThreadDump": "Sending Frame view to udp://127.0.0.1:37320 for OBS; press Ctrl+C to stop.\nFrame Control OBS stream is ready\nThread 0x000071cfb68ff6c0 (most recent call first):\n  File \"/usr/lib/python3.12/threading.py\", line 359 in wait\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/scripts/obs-headset-source.py\", line 131 in _watch\n  File \"/usr/lib/python3.12/threading.py\", line 1010 in run\n  File \"/usr/lib/python3.12/threading.py\", line 1073 in _bootstrap_inner\n  File \"/usr/lib/python3.12/threading.py\", line 1030 in _bootstrap\n\nCurrent thread 0x000071cfb73c5080 (most recent call first):\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/scripts/obs-headset-source.py\", line 49 in relay\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/scripts/obs-headset-source.py\", line 170 in main\n  File \"/home/saphid/.t3/worktrees/steam-frame/fleet-mppkd9qczt/scripts/obs-headset-source.py\", line 212 in <module>\n  File \"<frozen runpy>\", line 88 in _run_code\n  File \"<frozen runpy>\", line 98 in _run_module_code\n  File \"<frozen runpy>\", line 286 in run_path\n  File \"<string>\", line 1 in <module>\n",
+  "oldOrdinaryReproIteration": 139,
+  "flagOnlyExperimentReproIteration": 2
+}

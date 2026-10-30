@@ -92,12 +92,44 @@ class ObsSourceTests(unittest.TestCase):
         proc.kill.assert_called_once()
         self.assertEqual(proc.wait.call_count, 2)
 
+    def test_sigterm_returns_from_packet_callback_and_restores_handler(self):
+        proc = mock.Mock()
+        proc.stdout = io.BytesIO(b'G' * obs.DATAGRAM)
+        proc.poll.return_value = proc.wait.return_value = 0
+        previous = signal.getsignal(signal.SIGTERM)
+        completed = []
+
+        def send(_sender, _data):
+            # Deliver at the same packet boundary as the subprocess regression.
+            signal.raise_signal(signal.SIGTERM)
+            completed.append(True)
+
+        with mock.patch.object(obs.subprocess, 'Popen', return_value=proc), \
+             mock.patch.object(obs._Sender, 'send', send):
+            self.assertEqual(obs.main(['--frame', 'fake-frame']), 0)
+        self.assertEqual(completed, [True])
+        self.assertEqual(signal.getsignal(signal.SIGTERM), previous)
+
+    def test_watchdog_stops_reader_on_requested_shutdown_without_stall_error(self):
+        child = mock.Mock()
+        child.poll.return_value = None
+        stopped = threading.Event()
+        child.terminate.side_effect = stopped.set
+        watchdog = obs.StreamWatchdog(child, startup=20, stall=10, stop_requested=lambda: True)
+        try:
+            self.assertTrue(stopped.wait(1))
+            self.assertEqual(watchdog.reason, '')
+        finally:
+            watchdog.close()
+
     def test_windows_sender_ignores_absent_receiver_and_hides_ssh_console(self):
         proc = mock.Mock()
         proc.stdout = io.BytesIO(bytes(range(188)) * 7)
         proc.poll.return_value = proc.wait.return_value = 0
         # These are the actual Python Winsock control and subprocess constants.
-        with mock.patch.object(obs.sys, 'platform', 'win32'), \
+        signal_pair = socket.socketpair() if os.name == 'nt' else None
+        with mock.patch.object(obs.socket, 'socketpair', return_value=signal_pair), \
+             mock.patch.object(obs.sys, 'platform', 'win32'), \
              mock.patch.object(obs.subprocess, 'CREATE_NO_WINDOW', 0x08000000, create=True), \
              mock.patch.object(obs.socket, 'socket') as socket_factory, \
              mock.patch.object(obs.subprocess, 'Popen', return_value=proc) as popen:
@@ -149,7 +181,7 @@ class ObsSourceTests(unittest.TestCase):
 
     @unittest.skipIf(sys.platform == 'win32', 'the fake SSH executable uses a POSIX shebang')
     def test_relay_stops_its_ssh_child_on_app_signal_or_control_pipe(self):
-        for mode in ('signal', 'control-pipe'):
+        for mode in ('signal', 'control-pipe', 'watchdog-signal'):
             with self.subTest(mode=mode):
                 self._check_stop_mode(mode)
 
@@ -174,12 +206,22 @@ class ObsSourceTests(unittest.TestCase):
                    'FAKE_SSH_STOPPED': str(stopped)}
             arguments = [sys.executable, str(SCRIPT), '--frame', 'fake-frame',
                          '--port', str(receiver.getsockname()[1])]
+            if mode == 'watchdog-signal':
+                wrapper = (
+                    'import importlib.util,signal; '
+                    f's=importlib.util.spec_from_file_location("obs", {str(SCRIPT)!r}); '
+                    'o=importlib.util.module_from_spec(s);s.loader.exec_module(o); '
+                    'original=o.StreamWatchdog.packet; '
+                    'o.StreamWatchdog.packet=lambda self:(original(self),signal.pthread_kill(self.thread.ident,signal.SIGTERM)); '
+                    'raise SystemExit(o.main())'
+                )
+                arguments = [sys.executable, '-c', wrapper, *arguments[2:]]
             if mode == 'control-pipe':
                 arguments.append('--control-stdin')
             process = subprocess.Popen(arguments,
                                        stdin=subprocess.PIPE if mode == 'control-pipe' else subprocess.DEVNULL,
                                        stdout=subprocess.PIPE,
-                                       stderr=subprocess.PIPE, env=env)
+                                       stderr=subprocess.PIPE, env=env, start_new_session=True)
             try:
                 packet, _ = receiver.recvfrom(1500)
                 self.assertEqual(packet, b'G' * 1316)
@@ -188,7 +230,8 @@ class ObsSourceTests(unittest.TestCase):
                     process.wait(timeout=8)
                     errors = process.stderr.read()
                 else:
-                    process.send_signal(signal.SIGTERM)
+                    if mode != 'watchdog-signal':
+                        process.send_signal(signal.SIGTERM)
                     _, errors = process.communicate(timeout=8)
                 self.assertEqual(process.returncode, 0, errors.decode())
                 self.assertIn(b'Frame Control OBS stream is ready', errors)
@@ -199,7 +242,7 @@ class ObsSourceTests(unittest.TestCase):
                 self.assertTrue(stopped.exists(), 'the SSH child survived relay shutdown')
             finally:
                 if process.poll() is None:
-                    process.kill()
+                    os.killpg(process.pid, signal.SIGKILL)
                     process.communicate(timeout=5)
                 process.stdout.close()
                 process.stderr.close()
