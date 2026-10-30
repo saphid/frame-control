@@ -15,7 +15,7 @@
       sessions.delete(key);
       if (!sessions.size) {clearInterval(bridge.timer); bridge.timer = null;}
     };
-    bridge = window.__frameyDownloadsBridgeV1 = {api, sessions, remove, timer:null, busy:false};
+    bridge = window.__frameyDownloadsBridgeV1 = {api, sessions, remove, timer:null, busy:false, inFlight:null};
   }
   if (payload.action === 'close') {bridge.remove(payload.session); return null;}
   if (typeof api?.RegisterForDownloadItems !== 'function')
@@ -85,7 +85,7 @@
       ids.some(id => !integer(id,1,4294967295)) || new Set(ids).size !== ids.length)
     throw Error('Invalid download queue request');
   if (!item.ready || item.failure) throw Error('Steam download list is unavailable');
-  if (bridge.busy) throw Error('Another download queue change is in progress');
+  if (bridge.busy || bridge.inFlight) throw Error('Another download queue change is in progress');
   if (payload.revision !== item.version || item.changedVersion === item.version)
     throw Error('Downloads changed or are awaiting a Steam update; review the current list');
   for (const method of ['QueueAppUpdate','SetQueueIndex','ResumeAppUpdate'])
@@ -103,7 +103,13 @@
     let timer;
     let result;
     try {
-      result = await Promise.race([api[name](...args,...(modern ? ['0'] : [])),
+      const native = Promise.resolve(api[name](...args,...(modern ? ['0'] : [])));
+      // A UI timeout cannot cancel Steam's promise. Keep replacement panels
+      // from starting another mutation until that native call actually settles.
+      bridge.inFlight = native;
+      const settled = () => {if (bridge.inFlight === native) bridge.inFlight = null;};
+      native.then(settled,settled);
+      result = await Promise.race([native,
         new Promise((_,reject) => {timer = setTimeout(() => reject(Error('Steam queue operation timed out; refresh before retrying')),2000);})]);
     } finally {clearTimeout(timer);}
     if (result === false) throw Error(name+' was refused by Steam');

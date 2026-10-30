@@ -57,8 +57,19 @@ await run();emit([row(10)]);calls.length=0;
 const hanging=run('queue',[10]);
 assert.equal(methodTimers.size,1);[...methodTimers.values()][0]();
 await assert.rejects(hanging,/timed out; refresh before retrying/);
+await run('close');await run('read',null,'replacement');emit([row(20)]);
+const retry=run('queue',[20],'replacement');
+assert.equal(calls.length,1,'a replacement panel cannot overlap a timed-out native call');
+await assert.rejects(retry,/in progress/);
 finish();await Promise.resolve();assert.equal(calls.length,1,'a late Steam reply never continues a timed-out batch');
-assert.equal(methodTimers.size,0);await run('close');
+assert.equal(methodTimers.size,0);
+await new Promise(resolve=>setImmediate(resolve));
+api.QueueAppUpdate=async(...args)=>calls.push(['queue',...args]);
+api.SetQueueIndex=async(...args)=>calls.push(['index',...args]);
+await run('queue',[20],'replacement');
+assert.deepEqual(calls.slice(1),[['queue',20,'0'],['index',20,0,'0'],['resume',20,'0']],
+  'a fresh panel can submit after the timed-out native call has actually settled');
+await run('close',null,'replacement');
 window.SteamClient.Downloads={};await assert.rejects(run(),/unavailable/);
 
 // The iframe exposes only the fixed batch facade, with no arbitrary Steam method.

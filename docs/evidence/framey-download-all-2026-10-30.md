@@ -32,7 +32,9 @@ success toast. Native void returns prove submission only, so the success
 message says **Submitted**, without claiming downloads completed. Earlier
 successful operations are not rolled back after a later failure. A native
 operation already in flight cannot be canceled; a late reply never continues
-a timed-out batch. Subscriptions unregister on close, API replacement or idle
+a timed-out batch. A replacement panel cannot submit another batch until that
+native call settles; a permanently pending native call keeps mutations blocked.
+Subscriptions unregister on close, API replacement or idle
 expiry. No wake, game launch or controller input is involved.
 
 ## Evidence
@@ -54,7 +56,8 @@ expiry. No wake, game launch or controller input is involved.
   parent routing. They cover private-field stripping, remote-client exclusion,
   invalid/stale/duplicate selection, an app completing during a batch,
   concurrent batches, partial failure,
-  timeout/late completion, panel identity, stale replies and subscription cleanup.
+  timeout/late completion, replacement-panel refusal while a native call is still
+  pending, panel identity, stale replies and subscription cleanup.
 - Managed install tests preserve backend/license bytes and check the exact
   frontend transform, receipt, archive pin and removal. The fake-Frame test
   checks actual HTTP/SSH installation, managed frontend hashes and removal;
@@ -63,7 +66,11 @@ expiry. No wake, game launch or controller input is involved.
   removed afterward. All 56 store tests and four download-bridge tests passed;
   the final browser replay also passed after the mid-batch completion check.
   The full local unit suite completed 1,773 tests with 16 skips and no failures;
-  those skipped checks are not verified by this run.
+  those skipped checks are not verified by this run. A follow-up regression
+  reproduced two overlapping native calls after a timeout and panel replacement.
+  The fix retains the native promise gate until settlement; all four focused
+  bridge tests and the opaque Chromium replay passed afterward. The test also
+  verifies that a fresh panel can submit again once the old native call settles.
 
 Repeat the isolated browser test with:
 
