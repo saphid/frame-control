@@ -46,3 +46,17 @@ sync, nine setup, 17 service lifecycle, 18 ownership refusal and 12 migration
 results passed. Preserving uninstall passed, and final Flatpak registry drain
 took 0.151 seconds. ARM64 remained pending at this audit. The previous head's
 AMD64 timeout remains recorded; this passing replay does not prove its cause.
+
+Fresh ARM64 artifact `12977639575` passed the same full signed-package and
+migration audit against `ff663a7`. Its SHA-256 is
+`4bdf2d759fc7d193a5e531127100760e1ed595e628ff8cf44f8fc50f5f9ba741`;
+final instance cleanup took 1.061 seconds. Both architecture failures/earlier
+checkpoints remain recorded at their original revisions.
+
+Immediately before merging #477, fetch and API reads agreed on exact main
+`cb53efe`, with 11/11 checks green. Exact PR head `ff663a7` had 17/17 green,
+CLEAN/MERGEABLE state and no comments, reviews or unresolved threads. GitHub
+reported no configured required checks; every reported check was required by
+this watch. Squash merge completed at 13:06:03 UTC as
+`28181ac0065389a70444b799c25be255fbc7dbaa`. Its new main CI still needs to pass
+before any further merge. No release or hardware verification was included.

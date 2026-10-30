@@ -14,3 +14,10 @@ ARM64 was still running at this audit, so main was not yet declared fully
 green and no further merge was authorized from this result alone. This is
 not release verification or a real Frame test. Syncthing installation remains
 blocked. See the companion JSON for exact identities and results.
+
+ARM64 artifact `12978736814` then passed the same independent exact-source,
+signature, actual process, sync, service, ownership and migration audit. Its
+SHA-256 is `88561ae98f92269c67048e4bfd203b2346e560b3d76afa57ee8749db31eab534`;
+final instance cleanup took 1.017 seconds. All 11 exact-main checks were green
+before #477 merged. This supersedes the earlier pending ARM64 checkpoint,
+while retaining its original scope. No release was attempted.

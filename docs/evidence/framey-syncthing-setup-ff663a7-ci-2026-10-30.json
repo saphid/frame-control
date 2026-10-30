@@ -180,8 +180,82 @@
       "githubArtifactSha256": "f508effa9fbd3845b9d91c1011b2cf00591c309e2b0e206b882a0c2691a9e5d8",
       "bothPeerConnectionsObserved": true,
       "instanceCleanupElapsedSeconds": 0.151
+    },
+    {
+      "head": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+      "architecture": "aarch64",
+      "artifactSha256": "4bdf2d759fc7d193a5e531127100760e1ed595e628ff8cf44f8fc50f5f9ba741",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.759,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "setupPortScans": [
+        null,
+        8384
+      ],
+      "setupPortScanElapsedSeconds": 0.806,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true,
+      "migrationMountNamespaceAssertionSourceBound": true,
+      "migrationResults": 12,
+      "legacyPidBefore": 643,
+      "legacyPidAfter": 705,
+      "migrationDataPreservedAfterUninstall": true,
+      "workflowRun": 41055354945,
+      "artifactId": 12977639575,
+      "githubArtifactSha256": "4bdf2d759fc7d193a5e531127100760e1ed595e628ff8cf44f8fc50f5f9ba741",
+      "instanceCleanupElapsedSeconds": 1.061
     }
   ],
-  "freshArmSignedPackagePending": true,
-  "oldAmdFailureRetained": true
+  "freshArmSignedPackagePending": false,
+  "oldAmdFailureRetained": true,
+  "mergeGate": {
+    "main": "cb53efed70db011bf7ad8ae906e4a88d2dcb72ff",
+    "mainChecksPassed": 11,
+    "prHead": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+    "prChecksPassed": 17,
+    "mergeable": "MERGEABLE",
+    "mergeStateStatus": "CLEAN",
+    "reviews": 0,
+    "comments": 0,
+    "unresolvedThreads": 0,
+    "configuredRequiredChecksReported": 0,
+    "allReportedChecksRequiredByWatch": true,
+    "mergedAt": "2026-10-30T13:06:03Z",
+    "mergeCommit": "28181ac0065389a70444b799c25be255fbc7dbaa"
+  }
 }
