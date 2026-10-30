@@ -109,7 +109,13 @@ def color_count(text):
 
 
 def main(worn_confirmed=False):
-    result = {'time':datetime.datetime.now(datetime.timezone.utc).isoformat(), 'proof':'operator-confirmed worn check', 'operatorWornConfirmed':worn_confirmed}
+    # The operator confirms wear before this check. Pointer events and pixels
+    # cannot establish what the wearer saw or which controller produced input.
+    result = {'time':datetime.datetime.now(datetime.timezone.utc).isoformat(),
+              'proof':('operator wear confirmation supplied; machine checks only'
+                       if worn_confirmed else 'no wearer confirmation; no machine check'),
+              'operatorWornConfirmed':worn_confirmed,
+              'wornVisualComfortVerified':False, 'controllerHardwareVerified':False}
     token = 'framey-' + secrets.token_hex(12)
     locked = False
     challenge = False

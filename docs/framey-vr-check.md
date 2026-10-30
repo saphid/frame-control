@@ -118,6 +118,9 @@ the same-plugin navigation regression without a headset.
    and proximity readings before input; proximity alone cannot establish wear.
    Sensor activity and trusted pointers can also be produced synthetically and
    cannot identify controller hardware.
+   The JSON `passed` value covers only the script's machine checks.
+   `wornVisualComfortVerified` and `controllerHardwareVerified` stay false;
+   record the wearer's visual and physical-controller observations separately.
 3. **1:15–2:15:** Use the controller to open Settings, return to Panel, invoke
    **Read saved setting**, close/reopen the plugin, and confirm the value
    remains. Try controller scroll, a slider and a harmless text field in an
