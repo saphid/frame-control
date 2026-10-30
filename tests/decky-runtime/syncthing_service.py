@@ -396,6 +396,9 @@ def main(signed_flatpak=False):
             saved = json.loads(legacy_rpc('get_settings_json'))
             assert saved['is_setup'] is True and saved['api_key'] == key and saved['port'] == 8384
             assert prop(service, 'MainPID') == '0'
+            if Path('/input/syncthing_http.py').exists():
+                from syncthing_http import exercise as http_gateway
+                report['httpGateway'] = http_gateway(runtime_identity, service)
             # This is newly created VM state. Reset only its profile for the
             # independent backend scan/lifecycle regression below.
             setting('is_setup', False)
