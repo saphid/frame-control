@@ -1,5 +1,10 @@
 [
   {
+    "id": 143,
+    "shim": null,
+    "probe": "desktop-apps-private-entries"
+  },
+  {
     "id": 117,
     "shim": "deckyparty-user-lifecycle",
     "probe": "deckyparty-private-files"
