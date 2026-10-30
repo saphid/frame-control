@@ -2,6 +2,7 @@
 import importlib.util
 import io
 import json
+import sys
 from pathlib import Path
 import tarfile
 import tempfile
@@ -9,6 +10,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'ui'))
 
 
 def load(name, path):
