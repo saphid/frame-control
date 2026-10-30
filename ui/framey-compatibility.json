@@ -927,13 +927,14 @@
         "https://github.com/pytest-dev/pytest-asyncio"
       ],
       "status": "partial",
-      "reason": "Controls render with fixture replies. On the real standby Frame, the exact official backend's read-only adapter status and paired-device list returned powered=true, zero devices and no errors. That direct Python probe did not run through Decky or display a panel; discovery with paired devices, labels, connections, pairing and worn VR remain unverified.",
+      "reason": "Controls render with fixture replies. On the real standby Frame, the exact official backend's read-only adapter status and paired-device list returned powered=true, zero devices and no errors. That direct Python probe did not run through Decky or display a panel; discovery with paired devices, labels, connections, pairing and worn VR remain unverified. Isolated native AMD64 Decky 3.3.0 also passes the unchanged backend through 13 RPCs against private synthetic BlueZ objects: paired-device filtering, adapter selection, labels/battery, reversible connection/power replies and clean unload. This does not verify actual Bluetooth connections or pairing; ARM64 native CI remains pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame direct read-only backend"
+        "real Frame direct read-only backend",
+        "native AMD64 private BlueZ fixture"
       ],
       "browser": {
         "id": 18,
@@ -976,7 +977,8 @@
         "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-bluetooth-private-bluez-2026-10-30.md"
     },
     {
       "id": 19,
