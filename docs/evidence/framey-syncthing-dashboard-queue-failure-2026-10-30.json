@@ -1,0 +1,95 @@
+{
+  "success": false,
+  "head": "e061dfefeb52bafbb8c5ff66d7202a8c3143b175",
+  "exactSourceFingerprintsVerified": 124,
+  "packetBytes": 7538,
+  "packetSha256": "3390b5b615feb454ce3d19e3d5b3f2889af375edcefc11533c15b5349e4d2de6",
+  "consoleSha256": "86cb190d0531261814688bd09a1ff2b35eba2645642b233f650e0dbd92efa5a6",
+  "ownedQemuReaped": true,
+  "migrationRegistryEmpty": true,
+  "migrationRegistryDrainSeconds": 0.295,
+  "ownedDeckyStop": {
+    "mainPidBefore": 857,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 2.866
+  },
+  "loaderCancellationErrorRetained": true,
+  "productionParentError": "production parent browser restarted: None",
+  "completedParentStages": [
+    "running",
+    "stopped"
+  ],
+  "captureSha256": "dc0658213a363e4d6bce05eb392cd91ec667e1d8a4837345ec56b70756074a24",
+  "captureVisuallyInspected": true,
+  "captureShows": "Running service and configured folder; Devices section reports Error: Decky backend timed out",
+  "dashboardReads": [
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 201.715,
+      "httpMethod": "GET",
+      "path": "/rest/config/folders",
+      "elapsedSeconds": 4.773,
+      "httpStatus": 200,
+      "backendStatus": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 206.592,
+      "httpMethod": "GET",
+      "path": "/rest/stats/folder",
+      "elapsedSeconds": 4.622,
+      "httpStatus": 200,
+      "backendStatus": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 211.272,
+      "httpMethod": "GET",
+      "path": "/rest/system/status",
+      "elapsedSeconds": 4.176,
+      "httpStatus": 200,
+      "backendStatus": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 215.526,
+      "httpMethod": "GET",
+      "path": "/rest/config/devices",
+      "elapsedSeconds": 9.38,
+      "httpStatus": 200,
+      "backendStatus": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 225.067,
+      "httpMethod": "GET",
+      "path": "/rest/stats/device",
+      "elapsedSeconds": 6.808,
+      "httpStatus": 200,
+      "backendStatus": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "startedAfterSeconds": 226.947,
+      "httpMethod": "GET",
+      "path": "/rest/db/status?folder=framey-private",
+      "elapsedSeconds": 6.488,
+      "httpStatus": 200,
+      "backendStatus": 200
+    }
+  ],
+  "dashboardHttpSpanSeconds": 31.72,
+  "allNativeRpcRepliesSucceeded": true,
+  "allParentSshCallsSucceeded": true,
+  "gatewayProgressSha256": "a6f15749b64e6d171ea42aaa8da3cc1f1edf5a923cffe57aa2b3827c7367eb1a",
+  "packagePass": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "limit": "The package/browser gate failed after restart. Six successful serialized dashboard reads span over the shared 30-second queue/RPC deadline. The unit stop succeeded but the loader still logged a shutdown cancellation; no duplicate-signal cause or error-free plugin shutdown is established."
+}

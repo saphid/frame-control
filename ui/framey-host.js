@@ -128,9 +128,10 @@
   // backend uses a private socket belonging to the retained child, never a
   // general fetch proxy or an unverified listener on that TCP port.
   if (document.getElementById('framey-bundle')?.dataset?.syncthingHttp === '1') {
-    // The dashboard starts five reads together, and its duplicate state
-    // reads contend for the helper's ownership lock. Keep one fetch active;
-    // queue time counts toward the existing total RPC deadline.
+    // The dashboard starts several reads together, and its duplicate state
+    // reads contend for the helper's ownership lock. Keep one fetch active.
+    // Bound queue waiting separately: later reads still need the full RPC
+    // budget after dispatch (at most 30 seconds waiting plus 30 executing).
     const fetchQueue = [];
     let fetchActive = false;
     function dispatchFetch() {
@@ -146,7 +147,7 @@
         return;
       }
       fetchActive = true;
-      request('framey_http_fetch', [item.args], true, 'framey:call', remaining)
+      request('framey_http_fetch', [item.args], true, 'framey:call', 30000)
         .then(item.resolve, item.reject).finally(() => {fetchActive = false; dispatchFetch();});
     }
     function queueFetch(args, signal) {

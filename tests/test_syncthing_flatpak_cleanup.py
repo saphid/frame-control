@@ -1,5 +1,7 @@
 """Instance cleanup tolerates registry lag, but never ignores a live entry."""
 import ast
+import io
+import json
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -40,3 +42,143 @@ class InstanceCleanup(unittest.TestCase):
         with self.assertRaisesRegex(RuntimeError, 'query failed'):
             scope['wait_for_instances']()
         self.assertEqual(scope['PROGRESS'], {})
+
+
+class MigrationInstanceCleanup(unittest.TestCase):
+    def probe(self, listings, ticks):
+        root = Path(__file__).resolve().parent/'decky-runtime'
+        migration = ast.parse((root/'syncthing_migration.py').read_text())
+        service = ast.parse((root/'syncthing_service.py').read_text())
+        functions = [node for tree, name in ((migration, 'wait_for_instances'), (service, 'wait'))
+                     for node in tree.body if isinstance(node, ast.FunctionDef) and node.name == name]
+        tree = ast.Module(body=functions, type_ignores=[])
+        scope = dict(json=json, subprocess=SimpleNamespace(check_output=Mock(side_effect=listings)),
+                     time=SimpleNamespace(monotonic=Mock(side_effect=ticks), sleep=Mock()),
+                     WebSocketException=type('WebSocketException', (Exception,), {}))
+        exec(compile(tree, str(root/'syncthing_migration.py'), 'exec'), scope)
+        main = next(node for node in migration.body if isinstance(node, ast.FunctionDef) and node.name == 'main')
+        # Execute the actual final cleanup, after service/process teardown,
+        # with intact private data and no owned unit/receipt. This reproduces
+        # the CI failure with the original immediate registry assertion too.
+        cleanup = compile(ast.Module(body=main.body[-5:], type_ignores=[]),
+                          str(root/'syncthing_migration.py'), 'exec')
+        scope.update(app='me.kozec.syncthingtk', retained={}, runtime=Path('/private-fixture'),
+                     managed=SimpleNamespace(exists=lambda: False),
+                     receipt=SimpleNamespace(exists=lambda: False), print=Mock())
+        def run_cleanup(report):
+            scope['report'] = report
+            exec(cleanup, scope)
+        scope['run_cleanup'] = run_cleanup
+        return scope
+
+    def test_migration_waits_for_registry_after_owned_service_stops(self):
+        app = 'me.kozec.syncthingtk'
+        scope = self.probe([app, app+'\nother.app', 'other.app'], [0, 0, 0, 1, 2, 3])
+        report = {}
+        scope['run_cleanup'](report)
+        self.assertEqual(scope['subprocess'].check_output.call_count, 3)
+        scope['subprocess'].check_output.assert_called_with(
+            ['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=10)
+        self.assertEqual(report['remainingFlatpakApplications'], ['other.app'])
+        self.assertEqual(report['instanceCleanupElapsedSeconds'], 3)
+        self.assertEqual(scope['time'].sleep.call_count, 2)
+        self.assertTrue(report['noOwnedFlatpakInstancesRemain'])
+
+    def test_migration_persistent_instance_fails_with_last_listing(self):
+        scope = self.probe(['me.kozec.syncthingtk'], [0, 0, 0, 61])
+        report = {}
+        with self.assertRaisesRegex(RuntimeError, "remaining applications=.*me.kozec.syncthingtk"):
+            scope['run_cleanup'](report)
+        self.assertEqual(report['remainingFlatpakApplications'], ['me.kozec.syncthingtk'])
+        self.assertNotIn('instanceCleanupElapsedSeconds', report)
+        self.assertNotIn('noOwnedFlatpakInstancesRemain', report)
+
+    def test_migration_failed_query_is_not_cleanup_proof(self):
+        error = RuntimeError('query failed')
+        scope = self.probe([error], [0, 0, 0])
+        report = {}
+        with self.assertRaisesRegex(RuntimeError, 'query failed'):
+            scope['run_cleanup'](report)
+        self.assertEqual(report, {})
+
+    def test_migration_allows_a_different_application_with_similar_name(self):
+        scope = self.probe(['me.kozec.syncthingtk.other'], [0, 0, 0, 1])
+        report = {}
+        scope['run_cleanup'](report)
+        self.assertEqual(report['remainingFlatpakApplications'], ['me.kozec.syncthingtk.other'])
+
+
+class DeckyShutdownLog(unittest.TestCase):
+    def check_log(self, text):
+        path = Path(__file__).resolve().parent/'decky-runtime/syncthing_service.py'
+        function = next(node for node in ast.parse(path.read_text()).body
+                        if isinstance(node, ast.FunctionDef) and node.name == 'verify_decky_log')
+        scope = {'print': Mock()}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), str(path), 'exec'), scope)
+        return scope['verify_decky_log'](io.StringIO(text))
+
+    def test_actual_migration_shutdown_cancellation_is_not_clean(self):
+        # Retained from exact-head CI artifact 13002674726. Its unit/package
+        # summary passed, but Decky's migration loader logged this failure.
+        text = ('[main][INFO]: Error during shutdown:\n'
+                '  File "decky_loader/plugin/plugin.py", line 183, in kill_if_still_running\n'
+                '  File "asyncio/tasks.py", line 712, in sleep\n'
+                'asyncio.exceptions.CancelledError\n'
+                '[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n')
+        with self.assertRaisesRegex(AssertionError, 'Decky shutdown errors'):
+            self.check_log(text)
+
+    def test_normal_shutdown_task_cleanup_is_allowed(self):
+        self.check_log('[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n')
+
+
+class OwnedDeckyStop(unittest.TestCase):
+    def probe(self, properties, ticks):
+        path = Path(__file__).resolve().parent/'decky-runtime/syncthing_service.py'
+        module = ast.parse(path.read_text())
+        functions = [node for node in module.body if isinstance(node, ast.FunctionDef)
+                     and node.name in ('wait', 'stop_decky_service')]
+        scope = dict(json=json, prop=Mock(side_effect=properties), ctl=Mock(), print=Mock(),
+                     Path=Mock(return_value=SimpleNamespace(exists=lambda: False)),
+                     time=SimpleNamespace(monotonic=Mock(side_effect=ticks), sleep=Mock()),
+                     WebSocketException=type('WebSocketException', (Exception,), {}))
+        exec(compile(ast.Module(body=functions, type_ignores=[]), str(path), 'exec'), scope)
+        return scope
+
+    def test_manager_completion_after_command_budget_still_requires_clean_result(self):
+        scope = self.probe(['811', '1min 30s', 'mixed', 'deactivating', 'inactive', 'success', '0', '1', '0'],
+                           [0, 0, 0, 40, 41])
+        report = {}
+        scope['stop_decky_service']('frame-control-decky.service', report)
+        scope['ctl'].assert_called_once_with('stop', '--no-block', 'frame-control-decky.service')
+        scope['Path'].assert_called_once_with('/proc/811')
+        self.assertEqual(report['ownedDeckyStop']['result'], 'success')
+        self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 41)
+
+    def test_systemd_forced_timeout_is_not_successful_cleanup(self):
+        scope = self.probe(['811', '1min 30s', 'mixed', 'failed', 'timeout', '0', '2', '9'], [0, 0, 0, 91])
+        report = {}
+        with self.assertRaises(AssertionError):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['result'], 'timeout')
+        self.assertEqual(report['ownedDeckyStop']['elapsedSeconds'], 91)
+        scope['print'].assert_called_once()
+
+    def test_loader_exit_error_is_not_successful_cleanup(self):
+        scope = self.probe(['811', '1min 30s', 'mixed', 'failed', 'exit-code', '0', '1', '1'],
+                           [0, 0, 0, 2])
+        report = {}
+        with self.assertRaises(AssertionError):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['result'], 'exit-code')
+        self.assertEqual(report['ownedDeckyStop']['execMainStatus'], '1')
+        scope['print'].assert_called_once()
+
+    def test_persistent_stop_job_fails_and_retains_last_state(self):
+        scope = self.probe(['811', '1min 30s', 'mixed', 'deactivating'], [0, 0, 0, 101, 102])
+        report = {}
+        with self.assertRaisesRegex(RuntimeError, 'owned Decky service stop'):
+            scope['stop_decky_service']('frame-control-decky.service', report)
+        self.assertEqual(report['ownedDeckyStop']['activeState'], 'deactivating')
+        self.assertNotIn('result', report['ownedDeckyStop'])
+        scope['print'].assert_called_once()
