@@ -71,9 +71,14 @@ def main():
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--terminal-candidate', action='store_true')
     parser.add_argument('--terminal-browser-candidate', action='store_true')
+    parser.add_argument('--terminal-http-candidate', action='store_true')
     args = parser.parse_args()
     if args.terminal_browser_candidate:
         assert args.terminal_candidate
+        assert Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
+        assert not Path('/sys/class/net/eth0').exists()
+    if args.terminal_http_candidate:
+        assert args.terminal_candidate and not args.terminal_browser_candidate
         assert Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
         assert not Path('/sys/class/net/eth0').exists()
     if args.terminal_candidate:
@@ -215,7 +220,7 @@ def main():
             backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
             processes.append(backend)
             discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery',
-                                     timeout=60 if args.terminal_browser_candidate else 20)
+                                     timeout=60 if (args.terminal_browser_candidate or args.terminal_http_candidate) else 20)
             assert len(discovered) == 1 and discovered[0]['name'] == record['name'], discovered
             assert discovered[0]['version'] == record['version'] and not discovered[0]['disabled'], discovered
             report['discovered'] = discovered
@@ -239,6 +244,14 @@ def main():
                 report['terminalLifecycle'] = probe(record['name'], home, backend, processes)
                 if args.terminal_browser_candidate:
                     from terminal_browser import exercise
+                    report['terminalBrowser'] = exercise(record['name'], home)
+                    assert report['terminalBrowser']['success'] is True
+                if args.terminal_http_candidate:
+                    # Free Decky's single frontend socket/port before starting
+                    # an actual owned user service for production status probes.
+                    os.killpg(backend.pid, signal.SIGTERM)
+                    backend.wait(timeout=10)
+                    from terminal_http import exercise
                     report['terminalBrowser'] = exercise(record['name'], home)
                     assert report['terminalBrowser']['success'] is True
                 abi = json.loads((home/'terminal-candidate-abi.json').read_text())

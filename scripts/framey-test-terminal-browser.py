@@ -48,8 +48,8 @@ try:
    target.write_bytes(data);target.chmod(member.mode&0o755)
  subprocess.run(['mount','-t','tmpfs','-o','size=768m,uid=1100,gid=1100,mode=700','tmpfs','/home/tester'],check=True,timeout=15)
  subprocess.run(['systemctl','start','user@1100.service'],check=True,timeout=40)
- command=['runuser','-u','tester','--','env','HOME=/home/tester','PYTHONDONTWRITEBYTECODE=1','PYTHONUNBUFFERED=1','XDG_RUNTIME_DIR=/run/user/1100','DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus','python3','/repo/tests/decky-runtime/check.py','65','-','--terminal-candidate','--terminal-browser-candidate']
- result=subprocess.run(command,capture_output=True,text=True,timeout=360)
+ command=['runuser','-u','tester','--','env','HOME=/home/tester','PYTHONDONTWRITEBYTECODE=1','PYTHONUNBUFFERED=1','XDG_RUNTIME_DIR=/run/user/1100','DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus','python3','/repo/tests/decky-runtime/check.py','65','-','--terminal-candidate','--terminal-http-candidate' if inputs['productionHttpRequested'] else '--terminal-browser-candidate']
+ result=subprocess.run(command,capture_output=True,text=True,timeout=600)
  report['probeExitStatus']=result.returncode
  lines=result.stdout.splitlines()
  report['stdoutTail']=result.stdout[-24000:]
@@ -88,6 +88,8 @@ def main():
     parser.add_argument('--rootfs-tar',type=Path,required=True)
     parser.add_argument('--loader',type=Path,required=True)
     parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--production-http',action='store_true',
+                        help='Use unchanged production HTTP parent, SSH and event dispatcher')
     args=parser.parse_args()
     assert sys.platform=='linux' and platform.machine()=='x86_64'
     assert not args.output.exists(), 'Use a new owned evidence directory'
@@ -97,6 +99,10 @@ def main():
               'tests/decky-runtime/terminal_lifecycle.py','tests/decky-runtime/terminal_candidate.py','tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/terminal_browser.py','tests/decky-runtime/guest_result.py',
               'scripts/framey-test-terminal-browser.py','scripts/framey-test-syncthing-service.py']
+    if args.production_http:
+        names += ['tests/decky-runtime/'+name for name in
+                  ('terminal_http.py', 'syncthing_http.py', 'syncthing_http_parent.py')]
+        names += ['apk-catalog/'+name for name in ('build.py', 'reports.py', 'pick.py')]
     names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-amd'],cwd=ROOT,text=True).splitlines()
     names=sorted(set(names))
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
@@ -136,7 +142,8 @@ def main():
         panelSha256=digest(panel.encode()),bootstrapSha256=digest(BOOTSTRAP.encode()),
         rootfsSha256=hashlib.file_digest(args.rootfs_tar.open('rb'),'sha256').hexdigest(),
         architecture='x86_64',cpuModel='max',accelerator='tcg,thread=multi',
-        memoryMiB=6144,timeoutSeconds=480,
+        memoryMiB=6144,timeoutSeconds=720 if args.production_http else 480,
+        productionHttpRequested=args.production_http,
         networkDevice=False,hostBusExposed=False,realFrameContacted=False,productionAdaptationEnabled=False,
         resultTransport=dict(kind='virtio-serial',port=codec.PORT,maximumPayloadBytes=codec.MAX_PAYLOAD))
     args.output.mkdir(parents=True)
@@ -145,7 +152,7 @@ def main():
         'PluginLoader':loader,'terminal-source.tar':raw.getvalue(),'terminal-panel.html':panel.encode(),
         'terminal-inputs.json':json.dumps(inputs).encode(),'guest_result.py':(ROOT/'tests/decky-runtime/guest_result.py').read_bytes()},
         marker=MARKER,bootstrap=BOOTSTRAP.encode(),user_probe=b'# not used\n',
-        normal_root=True,timeout=440,root_size_mib=3072,browser=True)
+        normal_root=True,timeout=680 if args.production_http else 440,root_size_mib=3072,browser=True)
     (args.output/'vmlinuz').write_bytes(kernel)
     packet=args.output/'guest-result.packet'
     command=['qemu-system-x86_64','-accel',inputs['accelerator'],'-cpu',inputs['cpuModel'],
@@ -160,7 +167,7 @@ def main():
     try:
         with (args.output/'console.log').open('wb') as log:
             process=subprocess.Popen(command,stdout=log,stderr=subprocess.STDOUT,start_new_session=True)
-            assert process.wait(timeout=480)==0
+            assert process.wait(timeout=inputs['timeoutSeconds'])==0
         guest=codec.decode(packet.read_bytes());report['guest']=guest
         assert guest['success'] is True, guest.get('error','Private Terminal runtime failed')
         assert guest['ownedUserManagerStopped'] is True
