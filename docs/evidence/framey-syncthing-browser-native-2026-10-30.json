@@ -99,5 +99,13 @@
         "error": "Missing/ambiguous guest result or nonzero QEMU exit"
       }
     }
-  ]
+  ],
+  "serverSuite": {
+    "sourceRevision": "04fcd58",
+    "tests": 1837,
+    "skipped": 16,
+    "failures": 0,
+    "elapsedSeconds": 223.328,
+    "logSha256": "df0049576ad320b56f5c3a1951203054c4adbe39a07abf5a70223625f064ebab"
+  }
 }

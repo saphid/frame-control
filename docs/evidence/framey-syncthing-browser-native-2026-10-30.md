@@ -61,6 +61,8 @@ The private workflow adds an independent AMD64 browser entry alongside native
 AMD64/ARM64 package entries, with exact-head metadata and screenshot artifacts.
 It has not run in CI. Workflow YAML and shell blocks parse locally; 24 focused
 package/input/evidence tests pass. These are not runtime proof.
+The full server suite at `04fcd58` passed 1,837 tests in 223.328 seconds,
+with 16 platform/environment skips and no failures.
 
 The first trial at `988c2c1` stopped in the host packer: the Chromium executable
 is 331,230,040 bytes and exceeded the normal file bound. No VM launched.
