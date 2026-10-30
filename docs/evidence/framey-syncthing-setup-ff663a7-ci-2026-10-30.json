@@ -1,0 +1,90 @@
+{
+  "head": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+  "artifactId": 12977350738,
+  "workflowRun": 41055355147,
+  "artifactSha256": "87eb21f7cd1b49948e1c18c691d7f8b6c47460edc23a54be3354b8f8a585fa5c",
+  "allSourceFingerprintsVerified": true,
+  "syntheticResponsesOnly": true,
+  "realBackend": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "installerEnabled": false,
+  "cases": {
+    "original": {
+      "expectedPass": false,
+      "actualPass": false,
+      "resultSha256": "ab25cc01ba91c4371e77758998978bc01bdecab2452522dbcd4ae57e73a66d2d",
+      "screenshotSha256": "e0a3a39bc48083f9873968a6129e3299ecd4e95ca0e5d4718e947ed58a6ab763",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 100,
+      "finalPort": 8384,
+      "captureFile": "framey-syncthing-setup-ff663a7-original-2026-10-30.png"
+    },
+    "fresh": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "403e517595bf914e0f250fcda0ec8113da4bc4fd202faedc274ea81492b5b4ef",
+      "screenshotSha256": "8e512ae8914aef18fa045861a5deef998e86cf7f259338a914f42b4a5e6f3d6b",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 20,
+      "finalPort": 8384,
+      "captureFile": "framey-syncthing-setup-ff663a7-fresh-2026-10-30.png"
+    },
+    "migrating": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "65053a5b7c7aef18b13a42d7b43b41fce67fb10d28a76eea4abcd62e132deec5",
+      "screenshotSha256": "691b771651e34fc6d1e56a32feb017ab2bfc5996c4cde094403617e81d780c74",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 2,
+      "finalPort": 8386,
+      "captureFile": "framey-syncthing-setup-ff663a7-migrating-2026-10-30.png"
+    },
+    "configured": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "e08a6bea0d2a9f444ff893548273822ceda15beea0205bd3d425af62fb8b9c82",
+      "screenshotSha256": "b592b253921991820d599256e1ffad818460c7b989e94591a0fe0ce31723ddf7",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 4,
+      "finalPort": 8384,
+      "captureFile": "framey-syncthing-setup-ff663a7-configured-2026-10-30.png"
+    },
+    "finish-navigation": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "1a7a0aee6f7d93ce0e3932caa2503e3fc12265c5444d5040f01ee152491f7d36",
+      "screenshotSha256": "22c63757b83db89cfc560dc8cc4a0625cf0a4b5ea11fcb3c2cb8246f7a74bc95",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 24,
+      "finalPort": 8384,
+      "captureFile": "framey-syncthing-setup-ff663a7-finish-navigation-2026-10-30.png"
+    },
+    "manual-port": {
+      "expectedPass": true,
+      "actualPass": true,
+      "resultSha256": "12923eeda2633230cd549b74d91b9907632a054d08476b16c38e7cbeec644670",
+      "screenshotSha256": "090a662dffce1a5af858c3ec787751fbed4f411cb225d0f44fbd20d83c91b300",
+      "sourceFingerprints": 6,
+      "browserReaped": true,
+      "browser": "Google Chrome 156.0.8078.47",
+      "rpcCalls": 25,
+      "finalPort": 8390,
+      "captureFile": "framey-syncthing-setup-ff663a7-manual-port-2026-10-30.png"
+    }
+  },
+  "allSixCapturesVisuallyInspected": true,
+  "visualScope": "Original Loading; fresh Finish; migrating Installation Method entry; configured/finish/manual expected final state-500 view. Manual capture is final view, not the port field.",
+  "overallPullRequestVerified": false,
+  "nativeChecksPending": true
+}
