@@ -47,8 +47,8 @@ def rpc(route, *args):
     return asyncio.run(request(route, list(args)))
 
 
-def until_ready(read, description):
-    deadline = time.monotonic()+20
+def until_ready(read, description, timeout=20):
+    deadline = time.monotonic()+timeout
     last = None
     while time.monotonic() < deadline:
         try:
@@ -70,7 +70,12 @@ def main():
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--terminal-candidate', action='store_true')
+    parser.add_argument('--terminal-browser-candidate', action='store_true')
     args = parser.parse_args()
+    if args.terminal_browser_candidate:
+        assert args.terminal_candidate
+        assert Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
+        assert not Path('/sys/class/net/eth0').exists()
     if args.terminal_candidate:
         assert args.id == 65 and args.version == '-' and not args.reproduce_terminal_import_regression
     if args.reproduce_terminal_import_regression:
@@ -209,7 +214,8 @@ def main():
                 until_ready(lambda: Path('/tmp/mpris-state.json').is_file(), 'silent MPRIS player')
             backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
             processes.append(backend)
-            discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery')
+            discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery',
+                                     timeout=60 if args.terminal_browser_candidate else 20)
             assert len(discovered) == 1 and discovered[0]['name'] == record['name'], discovered
             assert discovered[0]['version'] == record['version'] and not discovered[0]['disabled'], discovered
             report['discovered'] = discovered
@@ -231,6 +237,10 @@ def main():
             if case['probe'] == 'terminal-private-pty':
                 from terminal_lifecycle import probe
                 report['terminalLifecycle'] = probe(record['name'], home, backend, processes)
+                if args.terminal_browser_candidate:
+                    from terminal_browser import exercise
+                    report['terminalBrowser'] = exercise(record['name'], home)
+                    assert report['terminalBrowser']['success'] is True
                 abi = json.loads((home/'terminal-candidate-abi.json').read_text())
                 assert abi['versionInfo'][:2] == [3, 14] and abi['cacheTag'] == 'cpython-314', abi
                 assert abi['architecture'] == os.uname().machine, abi
