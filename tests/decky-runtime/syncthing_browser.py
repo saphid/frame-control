@@ -24,8 +24,8 @@ const text=()=>document.getElementById('framey-root').innerText;
 const button=label=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===label);
 const wait=async read=>{const end=Date.now()+60000;while(Date.now()<end){if(read())return;
  await new Promise(resolve=>setTimeout(resolve,100));}throw Error('Browser DOM readiness timed out');};
-const stage=value=>parent.postMessage({type:'test:stage',stage:value,text:text().slice(0,3000),errors},'*');
-let busy=false;
+const stage=value=>parent.postMessage({type:'test:stage',stage:value,text:text().slice(0,3000),errors,manualPortFallbackUsed:window.manualPortFallbackUsed},'*');
+let busy=false;window.manualPortFallbackUsed=false;
 addEventListener('message',async event=>{
  if(event.source!==parent||event.data?.type!=='test:advance'||busy)return;
  busy=true;
@@ -34,6 +34,16 @@ addEventListener('message',async event=>{
    await wait(()=>button('Start Setup'));button('Start Setup').click();
    await wait(()=>[...document.querySelectorAll('button')].some(b=>b.textContent.includes('"Syncthing GTK" Flatpak')));
    [...document.querySelectorAll('button')].find(b=>b.textContent.includes('"Syncthing GTK" Flatpak')).click();
+   await wait(()=>text().includes('Almost done!')||text().includes('Please enter the web UI port'));
+   if(text().includes('Please enter the web UI port')){
+    // Enter only the known private fixture port, through the rendered input.
+    const input=document.querySelector('input');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'8384');
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+    await new Promise(resolve=>setTimeout(resolve,50));
+    window.manualPortFallbackUsed=true;button('Continue').click();
+   }
    await wait(()=>text().includes('Almost done!'));
    button('Continue').click();await wait(()=>button('Get Started'));button('Get Started').click();
    await wait(()=>text().includes('Running')&&text().includes('Private service sync')&&text().includes('Devices'));
@@ -240,6 +250,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
             assert Path('/proc/'+str(browser.pid)+'/exe').resolve() == Path('/usr/lib/chromium/chromium')
             report.update(setupCommitted=saved['is_setup'] is True,
                           discoveredApiKeySaved=bool(saved['api_key']), savedPort=saved['port'],
+                          manualPortFallbackUsed=stages[0]['manualPortFallbackUsed'],
                           browserVersion=subprocess.check_output(['/usr/bin/chromium', '--version'], text=True).strip(),
                           browserExecutableSha256=hashlib.file_digest(Path('/usr/lib/chromium/chromium').open('rb'), 'sha256').hexdigest(),
                           browserPackages=subprocess.check_output(['dpkg-query', '-W', 'chromium', 'chromium-common', 'chromium-sandbox'], text=True).strip(),
@@ -261,8 +272,11 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
         if page:
             try:
                 report['lastStage'] = page.eval('window.stage')
-                print('FRAMEY_BROWSER_FAILURE_SCREENSHOT_JSON='+json.dumps(
-                    {'png': screenshot(page)}), flush=True)
+                image = screenshot(page)
+                parts = [image[offset:offset+4096] for offset in range(0, len(image), 4096)]
+                for index, data in enumerate(parts):
+                    print('FRAMEY_BROWSER_FAILURE_SCREENSHOT_CHUNK_JSON='+json.dumps(
+                        dict(index=index, total=len(parts), data=data)), flush=True)
             except (OSError, frame_steam.Fail):
                 report['lastStageUnavailable'] = True
         raise
