@@ -70,6 +70,13 @@
   // Adapt the pinned, unmodified desktop page after its scripts have loaded. Fetch,
   // encode and acknowledge one screenshot at a time, regardless of library size.
   document.addEventListener('DOMContentLoaded', () => {
+    // The pinned page's explicit display:grid overrides the browser's [hidden]
+    // rule, leaving the opaque name fallback over successfully loaded covers.
+    if (document.head) {
+      const style = document.createElement('style');
+      style.textContent = '.capsule .fallback[hidden] { display: none; }';
+      document.head.append(style);
+    }
     window.saveToDevice = items => saveItems(items, async item => item);
     window.saveShots = (list, btn) => {
       if (!list.length) return;

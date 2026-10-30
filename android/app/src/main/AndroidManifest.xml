@@ -6,6 +6,11 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- To notice the phone changing networks and check the connection then. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Hold the headset connection during a user-started system document picker. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- Android's prerequisite for the network-connected-device service type. -->
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
 
     <application
         android:allowBackup="false"
@@ -21,6 +26,12 @@
 
         <!-- No WebView usage statistics to Google from this app. -->
         <meta-data android:name="android.webkit.WebView.MetricsOptOut" android:value="true" />
+
+        <service
+            android:name=".PickerSessionService"
+            android:exported="false"
+            android:foregroundServiceType="connectedDevice"
+            android:stopWithTask="true" />
 
         <activity
             android:name=".MainActivity"

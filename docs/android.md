@@ -39,10 +39,22 @@ render. See `core/RemoteAsset.kt` and `WebShell.Client`.
 Plain HTTP is allowed only to `127.0.0.1` (`res/xml/network_security_config.xml`).
 
 The app stays connected while it's in front, and for three minutes after it
-goes out of sight. Then it disconnects, which stops the server on the Frame, and it
+goes out of sight. Android or the network may end the connection sooner. After
+three minutes the app disconnects, which stops the server on the Frame, and it
 reconnects when you come back. While connected it checks the session every 20 s.
 A dropped connection is restarted, and the page reconnects. A Frame that isn't
 answering gets the "Waiting for your Frame" screen, which retries by itself.
+System document pickers temporarily put another Activity in front. A local,
+unexported connected-device foreground service keeps the headset connection
+running during the picker, for at most three minutes; it stops on result,
+cancellation or Activity destruction and never restarts itself. It posts a low
+importance notification with a return-to-app action. On Android 13 and later,
+without notification permission this service appears in the system's Active apps
+list rather than the notification shade. The app does not ask for notification
+permission. If a connection or renderer is lost anyway, the old file callback
+is cancelled and a later selection asks the user to choose files again instead of
+silently delivering it to a destroyed page. Loaded game covers hide the pinned
+page's opaque fallback with a scoped Android CSS rule.
 
 ## Pairing
 
@@ -116,7 +128,7 @@ To move the app to a later server, commit it, then change both pinned values tog
 
 ## Building
 
-Needs JDK 17+, the Android SDK (platform 36, build-tools 36.1.0) and Python 3.8+
+Needs JDK 17+, the Android SDK (platform 36, build-tools 36.0.0) and Python 3.8+
 with `git` (for the bundle). Gradle comes from the wrapper (9.8.2,
 distribution and wrapper checksums pinned). Every dependency's SHA-256 is in
 `gradle/verification-metadata.xml`.
@@ -176,3 +188,19 @@ Targeting 37 will need the local-network permission (`ACCESS_LOCAL_NETWORK`)
 asked for at runtime, because Android 17 blocks LAN access for apps that target it
 ([local network permission](https://developer.android.com/privacy-and-security/local-network-permission)).
 Data safety answers are in [privacy-android.md](privacy-android.md).
+
+
+### Foreground-service declaration (draft)
+
+Declare the `connectedDevice` foreground-service use in Play Console. The user
+starts Send to Frame or chooses a save destination. The service preserves the
+existing SSH connection to their external Steam Frame while Android's document
+picker is in front, posts its notification (shown in Active apps rather than the
+notification shade without notification permission on Android 13+), and stops when the picker returns
+(or the Activity is destroyed, or the three-minute ceiling is reached). It has
+no boot receiver and does not restart. `CHANGE_NETWORK_STATE` is Android's normal
+permission prerequisite for this network-connected-device type; the app does not
+use it to alter network settings. See [Android's connected-device service
+requirements](https://developer.android.com/develop/background-work/services/fgs/service-types#connected-device).
+Use genuine long-picker runtime footage for Play's service-use demonstration;
+this draft has not been submitted.

@@ -57,10 +57,21 @@ and wiped afterwards. Neither the app nor JSch logs secrets.
 
 - `INTERNET`: SSH to the headset, and the local tunnel.
 - `ACCESS_NETWORK_STATE`: to notice network changes and check the connection.
+- `FOREGROUND_SERVICE` and `FOREGROUND_SERVICE_CONNECTED_DEVICE`: preserve the
+  headset connection while a system document picker is in front.
+- `CHANGE_NETWORK_STATE`: Android's normal permission prerequisite for that
+  network-connected-device service. The app does not use it to change network
+  settings.
 
 The app requests no storage, media, location, contacts, camera, microphone or
 notification permissions. Saving uses MediaStore (Pictures/Frame Control); sending
 files uses the system picker, so access covers only the files the user picks.
+A local connected-device foreground service runs only while a document picker
+is open (up to three minutes), posts a temporary notification, and stops when the
+picker returns or the Activity is destroyed. On Android 13 and later, without
+notification permission the service appears in the system's Active apps list
+rather than the notification shade. The app does not ask for that permission.
+The service does not collect data or restart itself.
 General downloads use Android's Create Document picker for a destination; tunnel
 requests carry the per-session authentication header and reject redirects away
 from the exact current tunnel origin. Image saves transfer one image at a time

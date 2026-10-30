@@ -70,12 +70,14 @@ class MainActivity : ComponentActivity(), WebShell.Host {
         val callback = documentCallback
         documentCallback = null
         val uri = if (result.resultCode == RESULT_OK) result.data?.data else null
-        if (callback != null) callback(uri)
-        else if (uri != null) {
-            // A picker may return after process death or Activity recreation.
-            NativeSaves.discardDocument(this, uri)
-            toast("Save was interrupted. Please try again.")
-        }
+        try {
+            if (callback != null) callback(uri)
+            else if (uri != null) {
+                // A picker may return after process death or Activity recreation.
+                NativeSaves.discardDocument(this, uri)
+                toast("Save was interrupted. Please try again.")
+            }
+        } finally { releasePickerSession() }
     }
 
     /** What's on screen, so a new step updates the text instead of rebuilding the view. */
@@ -145,13 +147,13 @@ class MainActivity : ComponentActivity(), WebShell.Host {
         screenRestart?.cancel()
         finder?.stop()
         finder = null
-        shell?.destroy()
-        shell = null
+        destroyShell()
         hostKeyDialog?.dismiss()
         documentCallback?.invoke(null)
         documentCallback = null
         fileCallback?.onReceiveValue(null)
         fileCallback = null
+        PickerSessionService.release()
         super.onDestroy()
     }
 
@@ -178,12 +180,17 @@ class MainActivity : ComponentActivity(), WebShell.Host {
         if (documentCallback != null) { result(null); return }
         documentCallback = result
         try {
+            holdPickerSession()
             createFile.launch(Intent(Intent.ACTION_CREATE_DOCUMENT).apply {
                 addCategory(Intent.CATEGORY_OPENABLE)
                 type = mime.takeIf { it.matches(Regex("[A-Za-z0-9!#$&^_.+-]+/[A-Za-z0-9!#$&^_.+-]+")) } ?: "application/octet-stream"
                 putExtra(Intent.EXTRA_TITLE, name)
             })
-        } catch (_: ActivityNotFoundException) { documentCallback = null; result(null) }
+        } catch (_: ActivityNotFoundException) {
+            documentCallback = null; releasePickerSession(); result(null)
+        } catch (_: IllegalStateException) {
+            documentCallback = null; releasePickerSession(); result(null)
+        }
     }
 
     override fun pickFiles(params: WebChromeClient.FileChooserParams, callback: ValueCallback<Array<Uri>>) {
@@ -197,16 +204,40 @@ class MainActivity : ComponentActivity(), WebShell.Host {
             }
         }.distinct().ifEmpty { listOf("*/*") }.toTypedArray()
         try {
+            holdPickerSession()
             if (params.mode == WebChromeClient.FileChooserParams.MODE_OPEN_MULTIPLE) pickMany.launch(types) else pickOne.launch(types)
         } catch (e: ActivityNotFoundException) {
             deliverFiles(null)
             Toast.makeText(this, "No app here can pick files", Toast.LENGTH_LONG).show()
+        } catch (_: IllegalStateException) {
+            deliverFiles(null)
+            toast("File selection couldn't start. Please try again.")
         }
     }
 
+    private fun holdPickerSession() {
+        PickerSessionService.hold(this)
+    }
+
+    private fun releasePickerSession() {
+        if (fileCallback == null && documentCallback == null) PickerSessionService.release()
+    }
+
     private fun deliverFiles(uris: Array<Uri>?) {
-        fileCallback?.onReceiveValue(uris)
+        val callback = fileCallback
         fileCallback = null
+        try {
+            if (callback != null) callback.onReceiveValue(uris)
+            else if (!uris.isNullOrEmpty()) toast("File selection was interrupted. Please choose files again.")
+        } finally { releasePickerSession() }
+    }
+
+    /** A chooser result belongs to its original page, never a replacement session. */
+    private fun destroyShell() {
+        if (shell == null) return
+        if (fileCallback != null) deliverFiles(null)
+        shell?.destroy()
+        shell = null
     }
 
     override fun historyChanged() {
@@ -216,8 +247,7 @@ class MainActivity : ComponentActivity(), WebShell.Host {
     override fun rendererGone() {
         // The page's renderer died (memory pressure): a fresh web view on the same tunnel.
         val phase = vm.controller.phase.value as? Phase.Ready
-        shell?.destroy()
-        shell = null
+        destroyShell()
         screen = null
         if (phase != null) render(phase)
     }
@@ -228,15 +258,14 @@ class MainActivity : ComponentActivity(), WebShell.Host {
         if (phase is Phase.Ready) {
             val replace = shell?.url != phase.url
             if (replace) {
-                shell?.destroy()
+                destroyShell()
                 shell = WebShell(this, phase.url, phase.port, lifecycleScope, this)
             }
             if (replace || screen !is Screen.Web) show { shell!!.view to Screen.Web }
             historyChanged()
             return
         }
-        shell?.destroy()
-        shell = null
+        destroyShell()
         historyChanged()
         when (phase) {
             is Phase.Setup -> if (screen !is Screen.Setup) show { setupScreen() to Screen.Setup }

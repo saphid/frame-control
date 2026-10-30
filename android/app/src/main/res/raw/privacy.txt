@@ -20,3 +20,5 @@ Things you ask it to do
 - Save puts screenshots in Pictures/Frame Control. Send to Frame copies only the files you pick. Paste reads the clipboard only when you tap it. Install links from websites wait for you to tap Install.
 - Installing games or apps, catalogue lookups, Steam artwork/fonts and F-Droid icons are fetched by the headset itself. Those services see the headset's network address and the requested asset. The phone's web view routes allowed images/fonts through SSH and blocks other external resources.
 - General downloads ask where to save through Android's document picker. Interrupted saves remove incomplete images and request deletion of incomplete documents (the document provider can refuse); images and documents already exported stay until you delete them.
+
+- While you choose a file or a save destination, a temporary service keeps the connection open (at most three minutes). On Android 13 and later, without notification permission it appears in the system's Active apps list rather than the notification shade. The app does not ask for notification permission. The service stops when the picker returns or the app closes.
