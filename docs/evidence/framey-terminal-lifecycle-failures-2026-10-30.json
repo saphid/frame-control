@@ -1,0 +1,245 @@
+{
+  "recordedAt": "2026-10-30T16:02:13.603393+00:00",
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "officialArchiveSha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+  "privateDependency": {
+    "image": "python@sha256:ddec44f5ab04dd68aaee83d7dc9831c964a4bb9e950c89960e60760373fbf54f",
+    "files": {
+      "LICENSE": "b0e25a78cffb43f4d92de8b61ccfa1f1f98ecbc22330b54b5251e7b6ba010231",
+      "pty.py": "655814df6302412a3991305d05a301e0a2514d1363b7465a30898513a53bddfc",
+      "tty.py": "1ab5e5e047130b310355e907a3306178299b9f2044fb526ac63bd116e9a16d2b",
+      "termios.cpython-314-x86_64-linux-gnu.so": "64d395cf49bb6a7c672b3cd5dfe113b556282328703daafddb15d0ac1455ecea"
+    }
+  },
+  "trials": [
+    {
+      "name": "resize-output",
+      "sourceRevision": "8682744eda6aa3fa6f53df2510f2542cb2119f73",
+      "sourceSha256": {
+        "scripts/framey-test-decky-runtime.py": "1e588b8e539cf4fb9b99d879695dcc7342d8dd47369874876fa5c5273437f20c",
+        "tests/decky-runtime/check.py": "62e86c98402fe26a6f67266b6ed89cc584c17313b65089f817523c27b2733d43",
+        "tests/decky-runtime/terminal_lifecycle.py": "83cf068a47fcc0e841703164ddf4a4b4027f70638716024a1a4557027ad0c6a5",
+        "tests/decky-runtime/cases.json": "e138ca1b1540612ce4153bab13d1f2bdae31ae29dae6535b9b13430d2e67cb95",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/fixtures/framey-official/65.zip": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "tests/framey_official.py": "3618bcd1faca19bb53494891036faef2014d803d7cbe381287253b0ce039a938"
+      },
+      "logSha256": "9f9ea1ec900b7a9e858eb3a0ec8f9ffa196b1caa905ca4c17ff0be39f9217d7e",
+      "terminalExitCode": 1,
+      "observation": {
+        "calls": [
+          {
+            "method": "get_terminals",
+            "result": []
+          },
+          {
+            "method": "get_shells",
+            "result": [
+              "/bin/sh",
+              "/usr/bin/sh",
+              "/bin/bash",
+              "/usr/bin/bash",
+              "/bin/rbash",
+              "/usr/bin/rbash",
+              "/usr/bin/dash"
+            ]
+          },
+          {
+            "method": "set_default_shell",
+            "result": true
+          },
+          {
+            "method": "get_default_shell",
+            "result": "/bin/sh"
+          },
+          {
+            "method": "get_config",
+            "result": {
+              "__version__": 1,
+              "default_shell": "/bin/sh"
+            }
+          },
+          {
+            "method": "create_terminal",
+            "result": true
+          },
+          {
+            "method": "get_terminal",
+            "result": {
+              "is_started": true,
+              "is_completed": false,
+              "pid": 23,
+              "title": "AlfaOneBravoTwo"
+            }
+          },
+          {
+            "method": "subscribe_terminal",
+            "result": true
+          },
+          {
+            "method": "change_terminal_window_size",
+            "result": true
+          },
+          {
+            "method": "send_terminal_input",
+            "result": true
+          },
+          {
+            "method": "private_pty_output",
+            "result": {
+              "markerHex": "",
+              "output": "^[[8;31;97tprintf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\r\n/bin/sh: 1: \u001b[8: not found\r\n/bin/sh: 1: 31: not found\r\n/bin/sh: 1: 97tprintf: not found\r\n31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n$ "
+            }
+          }
+        ],
+        "success": false,
+        "realFrameContacted": false,
+        "privateContainerInputOnly": true
+      }
+    },
+    {
+      "name": "reload-identity",
+      "sourceRevision": "5cbd9dc75eb68205a1b7a82ff0bda60c5cfce816",
+      "sourceSha256": {
+        "scripts/framey-test-decky-runtime.py": "bf4df758105635631f74f93754e3136440a811e745b20111edb0a6e5f8ad608f",
+        "tests/decky-runtime/check.py": "eeb12969142617d90a2955650231610b778c806da187cc03c91e7395da9aeade",
+        "tests/decky-runtime/terminal_lifecycle.py": "1b5381f7051a567ec107e7b0f3b1c807a00c1be2663458d881dc916f4f411cf8",
+        "tests/decky-runtime/cases.json": "e138ca1b1540612ce4153bab13d1f2bdae31ae29dae6535b9b13430d2e67cb95",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/fixtures/framey-official/65.zip": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "tests/framey_official.py": "3618bcd1faca19bb53494891036faef2014d803d7cbe381287253b0ce039a938"
+      },
+      "logSha256": "9c9fcbfa22105e483bd498803a2e39de0ac5b57a5e532b7ca0a870d5dcff0567",
+      "terminalExitCode": 1,
+      "observation": {
+        "firstPid": 23,
+        "reloadPid": 25,
+        "config": {
+          "__version__": 1,
+          "default_shell": "/bin/sh"
+        },
+        "outputSha256": "90a25c23f30c43fce7126fde2d8c82c3e745753b40db2a1a37a4cd39dee82d00",
+        "reloadBefore": {
+          "pid": 25,
+          "uid": 1100,
+          "state": "S",
+          "ppid": 21,
+          "startTicks": 342674965,
+          "cmdline": "/bin/sh\u0000"
+        },
+        "reloadAfter": {
+          "pid": 25,
+          "uid": 1100,
+          "state": "Z",
+          "ppid": 1,
+          "startTicks": 342674965,
+          "cmdline": ""
+        },
+        "calls": [
+          {
+            "method": "get_terminals",
+            "result": []
+          },
+          {
+            "method": "get_shells",
+            "result": [
+              "/bin/sh",
+              "/usr/bin/sh",
+              "/bin/bash",
+              "/usr/bin/bash",
+              "/bin/rbash",
+              "/usr/bin/rbash",
+              "/usr/bin/dash"
+            ]
+          },
+          {
+            "method": "set_default_shell",
+            "result": true
+          },
+          {
+            "method": "get_default_shell",
+            "result": "/bin/sh"
+          },
+          {
+            "method": "get_config",
+            "result": {
+              "__version__": 1,
+              "default_shell": "/bin/sh"
+            }
+          },
+          {
+            "method": "create_terminal",
+            "result": true
+          },
+          {
+            "method": "get_terminal",
+            "result": {
+              "is_started": true,
+              "is_completed": false,
+              "pid": 23,
+              "title": "AlfaOneBravoTwo"
+            }
+          },
+          {
+            "method": "subscribe_terminal",
+            "result": true
+          },
+          {
+            "method": "change_terminal_window_size",
+            "result": true
+          },
+          {
+            "method": "send_terminal_input",
+            "result": true
+          },
+          {
+            "method": "private_pty_output",
+            "result": {
+              "markerHex": "6672616d65792d6f776e65642d7465726d696e616c0a",
+              "output": "printf 'framey-owned-terminal\\n' > framey-terminal-marker; stty size; printf 'framey-owned-output\\n'; printf 'framey-owned-stderr\\n' >&2\r\n31 97\r\nframey-owned-output\r\nframey-owned-stderr\r\n$ "
+            }
+          },
+          {
+            "method": "unsubscribe_terminal",
+            "result": true
+          },
+          {
+            "method": "remove_terminal",
+            "result": true
+          },
+          {
+            "method": "get_terminals",
+            "result": []
+          },
+          {
+            "method": "create_terminal",
+            "result": true
+          },
+          {
+            "method": "get_terminal",
+            "result": {
+              "is_started": true,
+              "is_completed": false,
+              "pid": 25,
+              "title": "AlfaOneBravoTwo"
+            }
+          }
+        ],
+        "realFrameContacted": false,
+        "privateContainerInputOnly": true
+      }
+    }
+  ],
+  "originalImportWorks": false,
+  "privatePtyAndResizeVerified": true,
+  "resizeInputCorruptionReproduced": true,
+  "reloadZombieReproduced": true,
+  "reloadLiveShellLeakProven": false,
+  "productionAdaptationEnabled": false,
+  "arm64Verified": false,
+  "browserVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}
