@@ -19,17 +19,64 @@ DIGEST = '27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4'
 # This page supplies only Decky's RPC protocol, not Steam APIs or a real Steam
 # session. Production METHOD_SCRIPT and frame_steam.Page still execute unchanged.
 CEF = '''<!doctype html><title>SharedJSContext</title><p>Private Decky RPC CEF fixture</p>
-<script>window.DeckyBackend={call:async(route,...args)=>{
+<script>window.fixtureRpcTrace=[];window.fixtureTraceOverflow=false;
+window.fixtureSocketCount=0;window.fixtureRequestCount=0;
+const fixtureStarted=performance.now(),pending=new Map();
+let socket=null,transportFailed=false;
 const token=__FIXTURE_TOKEN__;
-return new Promise((resolve,reject)=>{
- const ws=new WebSocket('ws://127.0.0.1:1337/ws?auth='+encodeURIComponent(token));
- const timer=setTimeout(()=>{ws.close();reject(Error('Fixture Decky RPC timeout'));},20000);
- ws.onopen=()=>ws.send(JSON.stringify({type:0,id:1,route,args}));
- ws.onerror=()=>{clearTimeout(timer);reject(Error('Fixture Decky WebSocket failed'));};
- ws.onmessage=event=>{const reply=JSON.parse(event.data);if(reply.id!==1)return;
-  ws.send(JSON.stringify({type:3,id:1}));clearTimeout(timer);ws.close();
-  if(reply.type===1)resolve(reply.result);else reject(Error('Fixture Decky RPC rejected'));};
-});}};</script>'''
+const finish=(item,outcome)=>{if(item.entry.outcome==='pending')Object.assign(item.entry,
+ {outcome,elapsedMilliseconds:Math.round(performance.now()-item.started)});};
+const failTransport=()=>{
+ transportFailed=true;
+ for(const item of pending.values()){
+  finish(item,'transport-error');clearTimeout(item.timer);
+  item.reject(Error('Fixture Decky WebSocket failed'));
+ }
+ pending.clear();
+};
+const send=item=>{
+ if(!pending.has(item.message.id))return;
+ item.entry.openElapsedMilliseconds=Math.round(performance.now()-item.started);
+ socket.send(JSON.stringify(item.message));
+};
+const connect=()=>{
+ window.fixtureSocketCount++;
+ socket=new WebSocket('ws://127.0.0.1:1337/ws?auth='+encodeURIComponent(token));
+ socket.onopen=()=>{
+  // Decky 3.3.0 has one active socket and globally deduplicated request IDs.
+  // A new owned frontend first clears stale responses, then multiplexes calls.
+  socket.send(JSON.stringify({type:4,messages:[]}));
+  for(const item of pending.values())send(item);
+ };
+ socket.onerror=failTransport;socket.onclose=failTransport;
+ socket.onmessage=event=>{
+  const reply=JSON.parse(event.data);
+  if(![1,-1,2].includes(reply.type)||!Number.isSafeInteger(reply.id))return;
+  const item=pending.get(reply.id);
+  socket.send(JSON.stringify({type:3,id:reply.id}));
+  if(!item)return;
+  pending.delete(reply.id);clearTimeout(item.timer);
+  if(reply.type===1){finish(item,'succeeded');item.resolve(reply.result);}
+  else{finish(item,'rejected');item.reject(Error('Fixture Decky RPC rejected'));}
+ };
+};
+window.DeckyBackend={call:async(route,...args)=>{
+ const method=route==='loader/get_plugins'?'discovery':
+  ['get_settings_json','set_setting','framey_http_fetch'].includes(args[1])?args[1]:'other';
+ const started=performance.now(),id=++window.fixtureRequestCount;
+ const entry={requestId:id,method,startedAfterMilliseconds:Math.round(started-fixtureStarted),outcome:'pending'};
+ if(fixtureRpcTrace.length<500)fixtureRpcTrace.push(entry);else window.fixtureTraceOverflow=true;
+ return new Promise((resolve,reject)=>{
+  const item={started,entry,resolve,reject,message:{type:0,id,route,args}};
+  item.timer=setTimeout(()=>{
+   pending.delete(id);finish(item,'timed-out');reject(Error('Fixture Decky RPC timeout'));
+  },20000);
+  pending.set(id,item);
+  if(transportFailed){failTransport();return;}
+  if(!socket)connect();else if(socket.readyState===1)send(item);
+ });
+}};</script>'''
+
 
 
 def wait_authenticated_rest(fetch, api_key, wait):
@@ -202,7 +249,14 @@ def exercise(runtime_identity, service):
     finally:
         report.update(requests=requests, rejectedRequests=denied)
         if page:
-            page.sock.close()
+            try:
+                report['fixtureCefTrace'] = page.eval(
+                    '({records:window.fixtureRpcTrace,overflow:window.fixtureTraceOverflow,'
+                    'authenticatedSocketCount:window.fixtureSocketCount,issuedRequestCount:window.fixtureRequestCount})')
+            except (OSError, frame_steam.Fail):
+                report['fixtureCefTraceUnavailable'] = True
+            finally:
+                page.sock.close()
         if browser:
             if browser.poll() is None:
                 os.killpg(browser.pid, signal.SIGTERM)

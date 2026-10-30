@@ -118,3 +118,26 @@ merge. The later full production browser-parent development trial is separate:
 it has not passed and is not enabled by this workflow. In particular, the
 browser captures above do not establish that the production parent can complete
 its concurrent folder/device reads over HTTP. Installation remains blocked.
+
+
+## Fixture protocol correction
+
+Later production-parent development exposed a fixture protocol mismatch under
+concurrency: Decky 3.3.0 accepts one active WebSocket and globally deduplicates
+request IDs, while this initial fixture opened a socket per call and reused
+ID 1. The earlier sequential HTTP trial did not exercise overlapping calls.
+The published [backend](https://github.com/SteamDeckHomebrew/decky-loader/blob/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/wsrouter.py)
+and [frontend](https://github.com/SteamDeckHomebrew/decky-loader/blob/67196adfa9b299f20dfb0cc932e88a169417b7d5/frontend/src/wsrouter.ts)
+source establish the single-socket protocol.
+
+The fixture now sends an initial empty FULL_SYNC, multiplexes distinct CALL IDs
+over one authenticated socket, routes out-of-order results and acknowledges
+responses. It keeps concurrent calls and the 20-second per-call deadline, with
+no retry. Timeouts fail their request without closing the shared socket;
+transport close/error fails all pending calls. The bounded diagnostic trace
+contains only IDs, method categories, outcomes, timings and socket/request
+counts, excluding credentials and payloads. The regression failed with two
+sockets before the fix; all nine HTTP tests now pass, alongside 26 package/
+cleanup tests. A new full local parent replay is running separately. Fresh CI
+is required for this revised fixture; no production code or installer policy
+is changed, and the parent gate remains excluded from this workflow.
