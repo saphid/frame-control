@@ -65,3 +65,19 @@ The earlier AMD64 evidence above retains its exact tested source revision.
 Both native CI artifacts must be reviewed separately; compatibility and worn
 Frame/controller limits remain unchanged. The stacked branch also includes
 #491's read-only migration cleanup repair so package CI uses that same fix.
+
+The updated runner was replayed locally at
+`879ac33981ae2202313284873f6910709bd1f422` on AMD64. Its
+[independent audit](framey-terminal-native-ci-local-2026-10-30.json) matched all
+164 committed fingerprints, including the CI workflow and rootfs recipe,
+and the complete 1,583,753-byte packet with SHA-256
+`a8f11520453734ef29a9fd6a77e494ff1b668a875fe378d4081bf7252396d3af`.
+The host's packet metadata matched the independent checksum. Four native
+output events traversed 14 method requests and six event requests; the exact
+returned DOM rows include `18 125`, `framey-browser-output`, and the prompt.
+The [terminal](framey-terminal-native-ci-terminal-2026-10-30.png),
+[output](framey-terminal-native-ci-output-2026-10-30.png), and
+[removed](framey-terminal-native-ci-removed-2026-10-30.png) captures were all
+inspected. Shell ancestry/reaping, renderer sandboxing, event listener/session
+closure and complete owned cleanup passed again. This validates the updated
+local AMD64 runner; native CI and ARM64 browser evidence remain pending.
