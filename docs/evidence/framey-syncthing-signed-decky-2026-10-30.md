@@ -73,14 +73,16 @@ proofs, different running binaries/commits and compatibility with the oldest
 Python used by the checks job.
 
 The [retained JSON](framey-syncthing-signed-decky-2026-10-30.json) records a
-passing AMD64 combined run, checked against every current probe source hash,
+passing AMD64 combined replay after merging the base timeout fix locally at
+`563af04`, checked against all 12 committed probe source hashes,
 plus three failed development trials and their cleanup. The passing run
 requires all 17 lifecycle results, all 18 ownership refusals and eight process
-identity observations. Owned stop took 0.172 seconds and the transition to the
-separate user service took 0.967 seconds. Its certificate and reverse-sync bytes
+identity observations. Owned stop took 0.212 seconds and the transition to the
+separate user service took 0.985 seconds. Its certificate and reverse-sync bytes
 survived uninstall, no owned Flatpak instances remained and its QEMU was reaped.
 Seventeen focused tests pass. The server suite during this work ran 1,817 tests
-with 16 platform/environment skips and no failures.
+with 16 platform/environment skips and no failures. The merged base also
+passes all 11 focused RDP tests.
 
 The actual default configuration was
 `~/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml`.
@@ -94,9 +96,12 @@ native package-only artifact passed independent verification; the prior ARM64
 artifact proved signatures/content but failed before installation completed.
 Native combined AMD64/ARM64 CI remains unverified. Older package-only artifacts
 and this local AMD64 result do not establish that new combined native gate.
-Merge the base timeout changes and validate the resulting sources before
-publishing this follow-up; do not start overlapping native CI while the base
-gate is pending.
+The base timeout changes are now merged locally and the resulting AMD64
+combined sources passed the replay above. Its updated AMD64 package-only CI
+artifact at `3fcda28` also passed independent source, signature, package, sync
+and cleanup verification (stop: 0.102 seconds). The earlier combined result
+remains identified separately in the JSON. Do not publish this follow-up or
+start overlapping native CI while the base ARM64 gate is pending.
 
 QEMU exposes no host filesystem, bus, disk, hardware or network NIC. The
 published Flatpak's `filesystems=host` permission sees only the disposable
