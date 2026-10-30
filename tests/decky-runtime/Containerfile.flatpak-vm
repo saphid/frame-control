@@ -1,8 +1,10 @@
 # Guest rootfs for matching AMD64/ARM64 QEMU TCG; no host bus, devices or home.
 FROM debian:trixie-slim
 ARG KERNEL_PACKAGE=linux-image-amd64
+# Optional browser only for the disposable combined UI/backend probe.
+ARG BROWSER_PACKAGES=
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      systemd-sysv dbus-user-session libpam-systemd ${KERNEL_PACKAGE} python3 python3-dbus python3-gi python3-websockets dbus-bin dbus-daemon \
+      systemd-sysv dbus-user-session libpam-systemd ${KERNEL_PACKAGE} ${BROWSER_PACKAGES} python3 python3-dbus python3-gi python3-websockets dbus-bin dbus-daemon \
       ca-certificates zlib1g openssl libbz2-1.0 liblzma5 liblz4-1 libzstd1 libstdc++6 \
     && rm -rf /var/lib/apt/lists/* \
     && useradd -m -u 1100 -s /bin/sh tester \

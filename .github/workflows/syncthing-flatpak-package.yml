@@ -9,6 +9,14 @@ on:
       - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
+      - 'tests/decky-runtime/syncthing_browser.py'
+      - 'ui/framey_panel.py'
+      - 'ui/framey-host.js'
+      - 'ui/frame_steam.py'
+      - 'ui/frame_decky.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/framey_compatibility.py'
+      - 'ui/vendor/react*.js'
       - 'tests/decky-runtime/syncthing_migration.py'
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
@@ -21,6 +29,14 @@ on:
       - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
+      - 'tests/decky-runtime/syncthing_browser.py'
+      - 'ui/framey_panel.py'
+      - 'ui/framey-host.js'
+      - 'ui/frame_steam.py'
+      - 'ui/frame_decky.py'
+      - 'ui/frame_decky_store.py'
+      - 'ui/framey_compatibility.py'
+      - 'ui/vendor/react*.js'
       - 'tests/decky-runtime/syncthing_migration.py'
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
@@ -37,10 +53,17 @@ concurrency:
 
 jobs:
   signed-package:
+    name: signed-package (${{ matrix.os }}${{ matrix.browser && ', browser' || '' }})
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
+        include:
+          - os: ubuntu-latest
+            browser: false
+          - os: ubuntu-24.04-arm
+            browser: false
+          - os: ubuntu-latest
+            browser: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 75
     steps:
@@ -77,6 +100,8 @@ jobs:
             "$audit_image" /scripts/framey-prepare-syncthing-flatpak.py bundle \
             --architecture "$(uname -m)" --directory /payload --output /output/bundles
       - name: Actual native package with Decky RPC, owned service, sync and preserving uninstall
+        env:
+          FRAMEY_BROWSER: ${{ matrix.browser }}
         run: |
           vm_image="framey-flatpak-vm:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           vm_container="framey-flatpak-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -86,14 +111,20 @@ jobs:
             aarch64) kernel=linux-image-arm64 ;;
             *) exit 1 ;;
           esac
-          docker build -q -t "$vm_image" --build-arg "KERNEL_PACKAGE=$kernel" \
+          browser_packages=
+          browser_flags=()
+          if [ "$FRAMEY_BROWSER" = true ]; then
+            browser_packages='chromium chromium-sandbox'
+            browser_flags=(--browser-setup)
+          fi
+          docker build -q -t "$vm_image" --build-arg "KERNEL_PACKAGE=$kernel" --build-arg "BROWSER_PACKAGES=$browser_packages" \
             -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
           docker create --name "$vm_container" --network none --cap-drop ALL --entrypoint /bin/true "$vm_image"
           docker export "$vm_container" > "$RUNNER_TEMP/flatpak-rootfs.tar"
           docker pull rust:1.98.1-bookworm
           python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
             --architectures "$(uname -m)" --output "$RUNNER_TEMP/signed-package-candidate"
-          python3 scripts/framey-test-syncthing-flatpak-package.py \
+          python3 scripts/framey-test-syncthing-flatpak-package.py "${browser_flags[@]}" \
             --rootfs-tar "$RUNNER_TEMP/flatpak-rootfs.tar" \
             --bundles "$RUNNER_TEMP/flatpak-generated/bundles" \
             --key "$RUNNER_TEMP/flatpak-generated/bundles/flathub-key.gpg" \
@@ -105,6 +136,7 @@ jobs:
         if: always()
         env:
           AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+          FRAMEY_BROWSER: ${{ matrix.browser }}
         run: |
           python3 - <<'PY'
           import hashlib,json,os,subprocess
@@ -112,7 +144,8 @@ jobs:
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           assert head==os.environ['AUDIT_HEAD']
           paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/syncthing_service.py','tests/decky-runtime/syncthing_migration.py','scripts/build-framey-syncthing.py','ui/vendor/syncthing-0.2.7/main.py','ui/vendor/syncthing-0.2.7/watchdog.patch','ui/vendor/syncthing-0.2.7/owned_unit.rs','ui/vendor/syncthing-0.2.7/source.tar.gz','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
-          report={'headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
+          paths+=['tests/decky-runtime/syncthing_browser.py','scripts/framey-test-syncthing-browser.py','ui/framey_panel.py','ui/framey-host.js','ui/frame_steam.py','ui/vendor/syncthing-0.2.7/frontend.patch','ui/vendor/react-18.3.1.min.js','ui/vendor/react-dom-18.3.1.min.js']
+          report={'browserSetupRequested':os.environ['FRAMEY_BROWSER']=='true','headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
           result=Path(os.environ['RUNNER_TEMP'])/'flatpak-package/result.json'
           if result.exists():report['packagePass']=json.loads(result.read_text()).get('success') is True
           (Path(os.environ['RUNNER_TEMP'])/'flatpak-exact-head.json').write_text(json.dumps(report,indent=2)+'\n')
@@ -120,13 +153,14 @@ jobs:
       - uses: actions/upload-artifact@v4
         if: always()
         with:
-          name: syncthing-flatpak-package-${{ matrix.os }}
+          name: syncthing-flatpak-package-${{ matrix.os }}${{ matrix.browser && '-browser' || '' }}
           path: |
             ${{ runner.temp }}/flatpak-payload/fetch-report.json
             ${{ runner.temp }}/flatpak-generated/bundles/preparation.json
             ${{ runner.temp }}/flatpak-package/result.json
             ${{ runner.temp }}/flatpak-package/inputs.json
             ${{ runner.temp }}/flatpak-package/console.log
+            ${{ runner.temp }}/flatpak-package/browser-*.png
             ${{ runner.temp }}/flatpak-exact-head.json
             ${{ runner.temp }}/signed-package-candidate/*.json
             ${{ runner.temp }}/signed-package-candidate/*.log

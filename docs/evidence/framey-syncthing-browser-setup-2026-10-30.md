@@ -122,3 +122,46 @@ ARM64 needed two null backend probes before discovering 8384. Those backend
 fixture probes do not prove that the published UI retries; the synthetic
 manual-port case above still exercises its actual single-scan fallback.
 This additional native backend proof remains separate from browser execution.
+
+## Exact-head browser CI
+
+The dedicated Chromium workflow 41048089800 passed for #477 at
+`8b01a614b865ac9469f4a6fa7cc0605ebc31ab07`. Independent audit of artifact
+12973481694 binds its GitHub artifact digest, five exact-head metadata source
+hashes and all six runtime source hashes in each of its six cases. The
+[source-bound summary](framey-syncthing-browser-setup-ci-2026-10-30.json) retains
+case result and screenshot hashes, Chrome version, request counts and ports.
+All six captures were visually inspected: Loading for the original, Finish
+for fresh setup, Installation Method entry for migration, and the expected
+configured-state error for configured/completion/manual-port cases. The manual
+port is established by the recorded input/save sequence and port 8390, not by
+the final error capture. Browser cleanup is verified for every case.
+
+The negative original result is the workflow's required reproduction; all
+five candidate cases pass. This records the browser job only, not completion
+of #477's remaining native/e2e/main gates. All responses here remain synthetic;
+actual browser/backend integration has its separate disposable-VM record.
+
+The separate native ownership workflow 41048089307 also passed on this exact
+#477 head. Both architecture artifacts were independently checked against
+their GitHub digests and every reported source fingerprint. They show actual
+Decky discovery, owned helper lifecycle, two-way Syncthing **2.1.7** sync, actual
+systemd control, 17 service results and 18 ownership refusals. These artifacts
+do not use the signed Flatpak 1.27.3 package. That separate AMD64 job in
+41048089270 failed waiting for the forward sync file after 90 seconds. Its
+failure is retained; #477's merge gate remains closed.
+
+The exact #477 ARM64 signed-package artifact 12976035575 also passed independent
+audit of its GitHub digest, all source hashes, signatures, actual signed
+identities, lifecycle/migration results and preserving uninstall. Backend port
+discovery needed three null scans before 8384; it remains separate from the UI.
+The failed main and #477 AMD64 artifacts have identical hashes for all 13
+native runtime inputs but failed at different fixture stages. That comparison
+does not establish the sync timeout's root cause. The pending follow-up adds
+an explicit real peer-connection gate and retains its observed state before
+checking transferred bytes. The failed AMD64 result still holds #477's merge.
+
+The later refreshed head `ff663a7` passed fresh browser, ownership and signed
+AMD64/ARM64 gates and merged as #477. The [refreshed exact-head evidence](framey-syncthing-setup-ff663a7-ci-2026-10-30.md)
+records both native artifact audits and the final merge gate. The older
+failed head above remains a failed result; its cause was not established.

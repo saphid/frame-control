@@ -401,12 +401,10 @@
  }
  
  pub mod systemctl {
-@@ -258,6 +250,31 @@
-             }?;
-             let proxy = ManagerProxy::new(&conn).await?;
+@@ -260,6 +252,31 @@
              Ok(Self(conn, proxy))
-+        }
-+
+         }
+ 
 +        /// Load the real manager's unit and reject aliases, shadow fragments,
 +        /// drop-ins and stale definitions before any managed operation.
 +        pub async fn verify_managed(&self, owned: &crate::owned_unit::OwnedUnit,
@@ -430,6 +428,25 @@
 +                return Ok(());
 +            }
 +            Ok(owned.verify_loaded(&loaded)?)
-         }
- 
++        }
++
          pub async fn daemon_reload(&self) -> anyhow::Result<()> {
+             debug!("systemd: reloading daemon");
+             Ok(self.1.reload().await?)
+@@ -313,11 +330,14 @@
+ 
+         pub async fn state(&self, unit: &str) -> anyhow::Result<State> {
+             debug!("systemd: getting state for {unit}");
++            // Inactive units can be collected after Stop. Load the definition
++            // for this read without starting it, instead of treating a missing
++            // in-memory object as a failed service.
+             let unit_result = if !unit.ends_with(".service") {
+                 let unit = format!("{unit}.service");
+-                self.1.get_unit(&unit).await
++                self.1.load_unit(&unit).await
+             } else {
+-                self.1.get_unit(unit).await
++                self.1.load_unit(unit).await
+             };
+ 
+             let Ok(path) = unit_result else {

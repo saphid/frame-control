@@ -18,6 +18,8 @@ import platform
 import shutil
 import signal
 import subprocess
+import tempfile
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 ARCHES = {
@@ -244,6 +246,96 @@ def verify_candidate(service, arch, bundles, required_results):
             raise ValueError('Candidate service executed an unexpected package')
 
 
+def browser_payloads(official):
+    browser = module('syncthing_browser_render', ROOT / 'scripts/framey-test-syncthing-browser.py')
+    with tempfile.TemporaryDirectory(prefix='framey-browser-panel-') as temporary:
+        archive = Path(temporary) / 'official.zip'
+        archive.write_bytes(official)
+        bundle = browser.frontend(archive, True)
+    with patch.object(browser.framey_panel, '_owned_dist', return_value=(None, bundle, browser.DIGEST)):
+        panel = browser.framey_panel.panel(64).decode()
+    import base64
+    for route, name in [('react.js', 'vendor/react-18.3.1.min.js'),
+                        ('react-dom.js', 'vendor/react-dom-18.3.1.min.js'), ('host.js', 'framey-host.js')]:
+        data = base64.b64encode((ROOT / 'ui' / name).read_bytes()).decode()
+        panel = panel.replace(f'src="/framey-runtime/{route}"', f'src="data:text/javascript;base64,{data}"')
+    return {
+        'browser-panel.html': panel.encode(),
+        'syncthing_browser.py': (ROOT / 'tests/decky-runtime/syncthing_browser.py').read_bytes(),
+        'frame_steam.py': (ROOT / 'ui/frame_steam.py').read_bytes(),
+    }, {'frontendSha256': hashlib.sha256(bundle).hexdigest(),
+        'panelSha256': hashlib.sha256(panel.encode()).hexdigest()}
+
+
+def verify_browser(report, expected_panel):
+    for key, expected in {
+        'success': True, 'actualDeckyRpc': True, 'syntheticInput': True,
+        'browserSandboxDisabled': False, 'ownedBrowserReaped': True, 'bridgeStopped': True,
+        'realFrameContacted': False, 'hostBusExposed': False, 'installerEnabled': False,
+        'setupCommitted': True, 'discoveredApiKeySaved': True, 'savedPort': 8384,
+        'panelSha256': expected_panel,
+    }.items():
+        if type(report.get(key)) is not type(expected) or report[key] != expected:
+            raise ValueError('Missing combined browser proof: '+key)
+    if type(report.get('manualPortFallbackUsed')) is not bool:
+        raise ValueError('Missing explicit automatic/manual port path')
+    stages = report.get('stages', [])
+    if ([s.get('stage') for s in stages] != ['running', 'stopped', 'restarted', 'stopped']
+        or any(s.get('errors') != [] for s in stages)
+        or 'Private service sync' not in stages[0].get('text', '')):
+        raise ValueError('Missing visible browser lifecycle stages')
+    if any(s.get('manualPortFallbackUsed') is not report['manualPortFallbackUsed'] for s in stages):
+        raise ValueError('Inconsistent browser port path evidence')
+    observations = report.get('actualPackagedProcessObservations', [])
+    if (len(observations) != 2
+        or [o.get('stage') for o in observations] != ['running', 'restarted']
+        or any(not o.get('pids') or any(type(p) is not int or p <= 0 for p in o['pids']) for o in observations)
+        or observations[0]['pids'][0] == observations[1]['pids'][0]):
+        raise ValueError('Missing real browser-controlled process transitions')
+    renderers = report.get('sandboxedRendererPids', [])
+    if not renderers or any(len(p.get('ancestryToBrowser', [])) < 2
+                           or p['ancestryToBrowser'][0] != p.get('pid')
+                           or p.get('seccomp') != 2 or p.get('noNewPrivs') != 1 for p in renderers):
+        raise ValueError('Missing sandboxed renderer ancestry')
+    posts = [c for c in report.get('calls', []) if c.get('httpMethod') == 'POST']
+    expected_routes = {'check/start': 1, 'check/scan_port': 1, 'check/scan_api_key': 1,
+                       'check/scan_basic_auth': 1, 'reload-config': 1, 'start': 1, 'stop': 2}
+    controls = [c for c in posts if c.get('path') != '/']
+    probes = [c['status'] for c in posts if c.get('path') == '/']
+    # The published checkIfUp() explicitly polls POST / through 425 Too Early.
+    # Require its final successful probe; failed controls and unknown routes
+    # remain failures rather than treating arbitrary HTTP errors as readiness.
+    if (not 1 <= len(probes) <= 300 or probes[-1] != 200
+        or any(status != 425 for status in probes[:-1])
+        or any(c.get('path') not in {'/__decky-watchdog/'+route for route in expected_routes}
+               or c.get('status') not in (200, 204) for c in controls)
+        or {route: sum(c.get('path') == '/__decky-watchdog/'+route for c in posts)
+            for route in expected_routes} != expected_routes):
+        raise ValueError('Missing actual browser setup/control RPC routes')
+    if set(report.get('screenshots', {})) != {'running1', 'stopped2', 'restarted3', 'stopped4'}:
+        raise ValueError('Missing browser lifecycle screenshots')
+
+
+def guest_report(console, browser=False):
+    marker = 'FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' if browser else 'FRAMEY_SYSTEMD_PROBE_JSON='
+    lines = [line.partition(marker)[2] for line in console.splitlines() if marker in line]
+    if not browser:
+        if len(lines) != 1:
+            raise RuntimeError('Missing/ambiguous guest result')
+        return json.loads(lines[0])
+    # Screenshot-bearing JSON exceeds journald's line limit. Each guest record
+    # carries at most 4096 characters and must form one complete ordered set.
+    if not 1 <= len(lines) <= 4096:
+        raise RuntimeError('Missing/oversized chunked guest result')
+    chunks = [json.loads(line) for line in lines]
+    for index, chunk in enumerate(chunks):
+        if (set(chunk) != {'index', 'total', 'data'} or chunk['index'] != index
+            or chunk['total'] != len(chunks) or not isinstance(chunk['data'], str)
+            or not 1 <= len(chunk['data']) <= 4096):
+            raise RuntimeError('Incomplete/ambiguous chunked guest result')
+    return json.loads(''.join(chunk['data'] for chunk in chunks))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -264,10 +356,14 @@ def main():
     parser.add_argument('--candidate-build-report', type=Path)
     parser.add_argument('--archive', type=Path, help='Optional pinned official Syncthing plugin ZIP')
     parser.add_argument('--loader', type=Path, help='Optional pinned native Decky 3.3.0 loader')
+    parser.add_argument('--browser-setup', action='store_true',
+                        help='AMD64 only: actual browser controls with Decky and the signed package')
     args = parser.parse_args()
     arch = platform.machine()
     if platform.system() != "Linux" or arch not in ARCHES:
         parser.error("This package probe requires native AMD64 or ARM64 Linux")
+    if args.browser_setup and (arch != 'x86_64' or not args.candidate_helper):
+        parser.error('Combined browser setup currently requires AMD64 and a source-bound candidate')
     emulator, console_device, machine = ARCHES[arch]
     if shutil.which(emulator) is None:
         parser.error(emulator + " is required")
@@ -298,8 +394,14 @@ def main():
         payloads.update(extra)
     elif args.archive or args.loader:
         parser.error('Candidate archive/loader require --candidate-helper')
-    budgets = BUDGETS[arch]
-    manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets}
+    browser_inputs = None
+    if args.browser_setup:
+        browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
+        payloads.update(browser_extra)
+    budgets = ({'installSeconds': 300, 'userSeconds': 1440, 'unitSeconds': 1500, 'hostSeconds': 1560}
+               if args.browser_setup else BUDGETS[arch])
+    manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets,
+                "browserSetupRequested": args.browser_setup}
     for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
@@ -328,6 +430,14 @@ def main():
             'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
             'ui/vendor/syncthing-0.2.7/owned_unit.rs', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
         ])
+    if args.browser_setup:
+        source_paths.extend(ROOT / path for path in [
+            'scripts/framey-test-syncthing-browser.py', 'tests/decky-runtime/syncthing_browser.py',
+            'tests/decky-runtime/Containerfile.flatpak-vm', 'ui/framey_panel.py', 'ui/framey-host.js',
+            'ui/frame_decky.py', 'ui/frame_decky_store.py', 'ui/framey_compatibility.py',
+            'ui/frame_steam.py', 'ui/vendor/react-18.3.1.min.js', 'ui/vendor/react-dom-18.3.1.min.js',
+            'ui/vendor/syncthing-0.2.7/frontend.patch',
+        ])
     fingerprints = {str(path.relative_to(ROOT)): sha(path) for path in source_paths}
     spec = importlib.util.spec_from_file_location("service_vm", packer_path)
     packer = importlib.util.module_from_spec(spec)
@@ -342,6 +452,8 @@ def main():
         user_probe=user_probe.read_bytes(),
         normal_root=True,
         timeout=budgets['unitSeconds'],
+        root_size_mib=2048 if args.browser_setup else 1024,
+        browser=args.browser_setup,
     )
     (args.output / "vmlinuz").write_bytes(kernel)
     inputs = {
@@ -354,13 +466,14 @@ def main():
         "architecture": arch,
         "preparationSha256": sha(args.preparation) if args.preparation else None,
         "keySha256": KEY_SHA256,
-        "memoryMiB": 6144,
+        "memoryMiB": 8192 if args.browser_setup else 6144,
         "timeoutSeconds": budgets['hostSeconds'],
         "guestTimeouts": budgets,
         "networkDevice": False,
         "hostBusExposed": False,
         "realFrameContacted": False,
         "candidate": candidate,
+        "browserSetup": browser_inputs,
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -373,7 +486,7 @@ def main():
         "-smp",
         "2",
         "-m",
-        "6144",
+        str(inputs['memoryMiB']),
         "-nodefaults",
         "-nographic",
         "-serial",
@@ -406,14 +519,9 @@ def main():
             finally:
                 reap(process)
                 result["ownedQemuReaped"] = process.poll() is not None
-        lines = [
-            line.partition("FRAMEY_SYSTEMD_PROBE_JSON=")[2]
-            for line in console.read_text().splitlines()
-            if "FRAMEY_SYSTEMD_PROBE_JSON=" in line
-        ]
-        if code != 0 or len(lines) != 1:
-            raise RuntimeError("Missing/ambiguous guest result or nonzero QEMU exit")
-        guest = json.loads(lines[0])
+        if code != 0:
+            raise RuntimeError('Nonzero QEMU exit')
+        guest = guest_report(console.read_text(), args.browser_setup)
         result["guest"] = guest
         package = guest.get("flatpak", {})
         if guest.get('success') is not True:
@@ -439,6 +547,17 @@ def main():
                 raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
             if package.get('uninstallPreservedMigrationData') is not True:
                 raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
+        if args.browser_setup:
+            browser_result = package.get('candidateService', {}).get('browserSetup', {})
+            verify_browser(browser_result, browser_inputs['panelSha256'])
+            import base64
+            for name, encoded in browser_result['screenshots'].items():
+                if name not in ('running1', 'stopped2', 'restarted3', 'stopped4'):
+                    raise RuntimeError('Unexpected browser screenshot stage')
+                data = base64.b64decode(encoded, validate=True)
+                if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
+                    raise RuntimeError('Invalid browser screenshot')
+                (args.output / ('browser-'+name+'.png')).write_bytes(data)
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths

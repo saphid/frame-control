@@ -34,6 +34,32 @@ class PreparedPackage(unittest.TestCase):
             },
         }
 
+    def chunked_console(self):
+        report = {'success': True, 'screenshots': 'private-image-fixture' * 3000}
+        data = json.dumps(report)
+        parts = [data[offset:offset+4096] for offset in range(0, len(data), 4096)]
+        lines = ['[ 12.0] python3[42]: FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' + json.dumps(
+            {'index': index, 'total': len(parts), 'data': part})
+            for index, part in enumerate(parts)]
+        return report, lines
+
+    def test_large_browser_evidence_survives_bounded_console_records(self):
+        report, lines = self.chunked_console()
+        self.assertEqual(self.module.guest_report('\n'.join(lines), browser=True), report)
+
+    def test_chunked_guest_evidence_rejects_loss_duplicates_and_reordering(self):
+        _, lines = self.chunked_console()
+        for changed in (lines[:-1], lines + lines[-1:], lines[::-1], []):
+            with self.subTest(count=len(changed)), self.assertRaises(RuntimeError):
+                self.module.guest_report('\n'.join(changed), browser=True)
+
+    def test_native_guest_result_requires_one_unambiguous_record(self):
+        line = 'FRAMEY_SYSTEMD_PROBE_JSON={"success": true}'
+        self.assertEqual(self.module.guest_report(line), {'success': True})
+        for changed in ('', line+'\n'+line):
+            with self.assertRaises(RuntimeError):
+                self.module.guest_report(changed)
+
     def test_fingerprints_work_without_python_311_file_digest(self):
         # The checks job runs the input-refusal tests on Python 3.9.
         with tempfile.TemporaryDirectory() as temporary:
@@ -255,6 +281,84 @@ class PreparedPackage(unittest.TestCase):
                 build_report.write_text(json.dumps({**report, **mutation}))
                 with self.assertRaises(ValueError):
                     self.module.candidate_payloads(helper, build_report, None, None, arch)
+
+    def browser(self):
+        report = dict.fromkeys(('success', 'actualDeckyRpc', 'syntheticInput', 'ownedBrowserReaped',
+                                'bridgeStopped', 'setupCommitted', 'discoveredApiKeySaved'), True)
+        report.update(dict.fromkeys(('browserSandboxDisabled', 'realFrameContacted',
+                                     'hostBusExposed', 'installerEnabled'), False))
+        report.update(savedPort=8384, panelSha256='a'*64, manualPortFallbackUsed=False,
+                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync', 'manualPortFallbackUsed': False} for s in
+                              ('running', 'stopped', 'restarted', 'stopped')],
+                      actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100, 101]},
+                                                         {'stage': 'restarted', 'pids': [200, 201]}],
+                      sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301],
+                                             'seccomp': 2, 'noNewPrivs': 1}],
+                      screenshots=dict.fromkeys(('running1', 'stopped2', 'restarted3', 'stopped4'), 'fixture'),
+                      calls=[{'httpMethod': 'POST', 'path': '/__decky-watchdog/'+route, 'status': 204}
+                             for route in ('check/start', 'check/scan_port', 'check/scan_api_key',
+                                           'check/scan_basic_auth', 'reload-config', 'stop', 'start', 'stop')])
+        report['calls'].insert(-1, {'httpMethod': 'POST', 'path': '/', 'status': 200})
+        return report
+
+    def test_browser_registration_or_synthetic_only_results_cannot_pass_combined_gate(self):
+        self.module.verify_browser(self.browser(), 'a'*64)
+        mutations = [dict(actualDeckyRpc=False), dict(panelSha256='b'*64), dict(realFrameContacted=True),
+                     dict(browserSandboxDisabled=True), dict(ownedBrowserReaped=False), dict(stages=[]),
+                     dict(sandboxedRendererPids=[]), dict(calls=[]), dict(screenshots={}),
+                     dict(sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301],
+                                                 'seccomp': 0, 'noNewPrivs': 1}]),
+                     dict(actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100]},
+                                                            {'stage': 'restarted', 'pids': [100]}])]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.module.verify_browser({**self.browser(), **mutation}, 'a'*64)
+
+    def test_browser_evidence_distinguishes_manual_port_entry_from_automatic_discovery(self):
+        for manual in (False, True):
+            report = self.browser()
+            report['manualPortFallbackUsed'] = manual
+            for stage in report['stages']:
+                stage['manualPortFallbackUsed'] = manual
+            self.module.verify_browser(report, 'a'*64)
+            report['stages'][0]['manualPortFallbackUsed'] = not manual
+            with self.assertRaisesRegex(ValueError, 'port path evidence'):
+                self.module.verify_browser(report, 'a'*64)
+        for value in (None, 0, 1, 'false'):
+            report = self.browser()
+            report['manualPortFallbackUsed'] = value
+            with self.assertRaisesRegex(ValueError, 'port path'):
+                self.module.verify_browser(report, 'a'*64)
+
+    def test_browser_readiness_accepts_only_bounded_425_then_success(self):
+        for statuses in ([200], [425, 200], [425] * 9 + [200]):
+            report = self.browser()
+            controls = [c for c in report['calls'] if c['path'] != '/']
+            probes = [{'httpMethod': 'POST', 'path': '/', 'status': status} for status in statuses]
+            report['calls'] = controls[:-1] + probes + controls[-1:]
+            self.module.verify_browser(report, 'a'*64)
+
+    def test_browser_readiness_failure_or_unknown_post_is_not_success(self):
+        for statuses in ([], [425], [500], [425, 500], [200, 425], [200, 200], [425] * 300 + [200]):
+            report = self.browser()
+            report['calls'] = [c for c in report['calls'] if c['path'] != '/'] + [
+                {'httpMethod': 'POST', 'path': '/', 'status': status} for status in statuses]
+            with self.subTest(statuses=statuses), self.assertRaises(ValueError):
+                self.module.verify_browser(report, 'a'*64)
+        report = self.browser()
+        report['calls'].append({'httpMethod': 'POST', 'path': '/unexpected', 'status': 200})
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
+
+    def test_failed_browser_control_or_javascript_error_is_not_a_pass(self):
+        report = self.browser()
+        report['calls'][-1]['status'] = 500
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
+        report = self.browser()
+        report['stages'][1]['errors'] = ['Browser script failure']
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
 
 
 if __name__ == "__main__":

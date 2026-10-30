@@ -390,6 +390,17 @@ def main(signed_flatpak=False):
         def setting(name, value):
             legacy_rpc('set_setting', setting=name, value=value)
 
+        if signed_flatpak and Path('/input/browser-panel.html').exists():
+            from syncthing_browser import exercise
+            report['browserSetup'] = exercise(legacy_rpc, runtime_identity, service)
+            saved = json.loads(legacy_rpc('get_settings_json'))
+            assert saved['is_setup'] is True and saved['api_key'] == key and saved['port'] == 8384
+            assert prop(service, 'MainPID') == '0'
+            # This is newly created VM state. Reset only its profile for the
+            # independent backend scan/lifecycle regression below.
+            setting('is_setup', False)
+            setting('api_key', '')
+
         for name, value in [
             ('mode', 'flatpak'),
             ('flatpak_name', app),
@@ -446,6 +457,10 @@ def main(signed_flatpak=False):
             setting('is_setup', True)
             assert http('POST', 'reload-config')['status'] == 204
             assert http('POST', 'stop')['status'] == 204
+            # A systemctl property query can load a collected unit. Check the
+            # backend first so that query cannot conceal a false Failed state.
+            stopped = http('GET', 'state')
+            assert stopped['status'] == 200 and stopped['body'].strip() == 'stopped', stopped
             assert prop(service, 'MainPID') == '0'
             report['wizardConfigDiscovery'] = dict(
                 defaultPackageConfig=True, remainedUnconfiguredDuringScan=True,
