@@ -1,0 +1,309 @@
+{
+  "checkedAt": "2026-10-30T20:36:15.778972+00:00",
+  "sourceBase": "4783025e8e347366ee3aa5f680250c37814a258e",
+  "sourceSha256": {
+    "tests/framey_official.py": "17cf0a19cf3833a2cbcebdee56af026c6af4445c99ef026c4a8fa2efedbdcc72",
+    "tests/decky-runtime/cases.json": "828274ed75085cf30a6cbe082bc7c1e14344204d2d0dd2e821c4040d18783f18",
+    "tests/decky-runtime/check.py": "95e9d266ea6335d336c5fca16957de5476bfb9c6582f2ebe30ed58318049c2d4",
+    "tests/decky-runtime/notebook_pages.py": "00bebf7ab14bc548b81e300c3c5ae0717ce430611fdb0f15a4ca3233518b56ba",
+    "tests/test_framey_decky_runtime.py": "90965e50ab953c5cb6e9f2638ad2dbd01d0a37f48a2577aba8f18ffa9e4b5295",
+    "tests/fixtures/framey-official/19.zip": "c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff"
+  },
+  "command": "python3 scripts/framey-test-decky-runtime.py --case 19 --output /tmp/framey-notebook-native-local1-mppkd9qczt.json",
+  "report": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "cases": [
+      {
+        "id": 19,
+        "name": "Notebook",
+        "version": "0.1.5",
+        "sha256": "c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c",
+        "shim": null,
+        "calls": [
+          {
+            "method": "listPages",
+            "result": []
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 0
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 0,
+              "empty": true,
+              "data": ""
+            }
+          },
+          {
+            "method": "listPages",
+            "result": []
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 0
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 0,
+              "empty": true,
+              "data": ""
+            }
+          },
+          {
+            "method": "listPages",
+            "result": []
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 0
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 0,
+              "empty": true,
+              "data": ""
+            }
+          },
+          {
+            "method": "savePage",
+            "result": {
+              "timestamp": 1793392514093
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 0,
+              "timestamp": 1793392514093,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":4,\"y\":8},{\"x\":16,\"y\":24}],\"strokeWidth\":3,\"strokeColor\":\"#ffffff\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "savePage",
+            "result": {
+              "timestamp": 1793392514098
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 1793392514098,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":10,\"y\":20},{\"x\":30,\"y\":40}],\"strokeWidth\":4,\"strokeColor\":\"#ff0000\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "savePage",
+            "result": {
+              "timestamp": 1793392514103
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 1793392514103,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":50,\"y\":60},{\"x\":70,\"y\":80}],\"strokeWidth\":5,\"strokeColor\":\"#00ff00\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "savePage",
+            "result": {
+              "timestamp": 1793392514109
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 7,
+              "timestamp": 1793392514109,
+              "empty": true,
+              "data": ""
+            }
+          },
+          {
+            "method": "saveLastSelectedPage",
+            "result": true
+          },
+          {
+            "method": "saveLastSelectedPage",
+            "result": true
+          },
+          {
+            "method": "saveLastSelectedPage",
+            "result": true
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 0
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 7
+          },
+          {
+            "method": "loadLastSelectedPage",
+            "result": 2
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 0,
+              "timestamp": 1793392514093,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":4,\"y\":8},{\"x\":16,\"y\":24}],\"strokeWidth\":3,\"strokeColor\":\"#ffffff\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 1793392514098,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":10,\"y\":20},{\"x\":30,\"y\":40}],\"strokeWidth\":4,\"strokeColor\":\"#ff0000\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 1793392514103,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":50,\"y\":60},{\"x\":70,\"y\":80}],\"strokeWidth\":5,\"strokeColor\":\"#00ff00\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "listPages",
+            "result": [
+              {
+                "page": 7,
+                "timestamp": 1793392514109,
+                "empty": true
+              },
+              {
+                "page": 2,
+                "timestamp": 1793392514098,
+                "empty": false
+              }
+            ]
+          },
+          {
+            "method": "deletePage",
+            "result": true
+          },
+          {
+            "method": "deletePage",
+            "result": false
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 0,
+              "empty": true,
+              "data": ""
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 0,
+              "timestamp": 1793392514093,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":4,\"y\":8},{\"x\":16,\"y\":24}],\"strokeWidth\":3,\"strokeColor\":\"#ffffff\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "loadPage",
+            "result": {
+              "page": 2,
+              "timestamp": 1793392514103,
+              "empty": false,
+              "data": "[{\"paths\":[{\"x\":50,\"y\":60},{\"x\":70,\"y\":80}],\"strokeWidth\":5,\"strokeColor\":\"#00ff00\",\"drawMode\":true}]"
+            }
+          },
+          {
+            "method": "listPages",
+            "result": [
+              {
+                "page": 7,
+                "timestamp": 1793392514109,
+                "empty": true
+              }
+            ]
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Notebook",
+            "version": "0.1.5",
+            "load_type": 0,
+            "disabled": false
+          }
+        ],
+        "privatePages": {
+          "defaultAndTwoAppNamespaces": true,
+          "samePageNumberIsolated": true,
+          "strokeBytesIndependentlyReadBack": true,
+          "emptyPageMetadata": true,
+          "perAppSelectionPersistedAcrossRestart": true,
+          "pageBytesPersistedAcrossRestart": true,
+          "selectedDeletePreservedOtherPages": true,
+          "retainedFilesSha256": {
+            "434343/page": "d4735e3a265e16eee03f59718b9b5d03019c07d8b6c51f90da3a666eec13ab35",
+            "434343/2.json": "3e1961448dfe6c8262f4119190f9d7d94a97f331708515cc80837c9646aaadc9",
+            "424242/page": "7902699be42c8a8e46fbbb4501726517e86b22c56a189f7625a6da49081b2451",
+            "424242/7.json": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "0/page": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+            "0/0.json": "91e7fcc79739b7f58b24ff8f3835fb6603ad595db62152caa91cb0309e2e8b98"
+          },
+          "publishedBackendUnmodified": true,
+          "syntheticAppIds": [
+            0,
+            424242,
+            434343
+          ],
+          "browserVerified": false,
+          "realSteamGameSelectionVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false,
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.214
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            }
+          ],
+          "completeLoaderShutdownLogged": true,
+          "unchangedPublishedFiles": [
+            "main.py",
+            "plugin.json",
+            "dist/index.js",
+            "LICENSE"
+          ]
+        },
+        "result": "published legacy Decky discovery and private per-app page, selection, restart and selected-delete isolation passed; browser/game selection/Frame/VR unverified"
+      }
+    ]
+  },
+  "publishedCatalogSnapshot": "/tmp/framey-official-catalog-20261029.json",
+  "liveCatalogRefresh": "HTTP 403; no claim of a refreshed catalog",
+  "actualArchiveDownloadedAndDigestVerified": true,
+  "realFrameContacted": false
+}

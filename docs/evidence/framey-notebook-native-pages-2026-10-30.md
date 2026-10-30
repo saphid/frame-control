@@ -1,0 +1,7 @@
+# Notebook private per-app pages under published Decky
+
+The exact official Notebook 0.1.5/store 19 ZIP (`c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c`) passes actual published Decky 3.3.0 AMD64 discovery and legacy RPCs in a disposable networkless container. The production managed installer preserves the backend, manifest, frontend and license byte-for-byte. The archive matches the saved publisher catalog; refreshing the catalog returned HTTP 403, so this is not a claim about a newly refreshed store listing.
+
+The new native CI case covers the default notebook and two synthetic app IDs, different stroke data under the same page number, empty-page metadata, independent file-byte readback, per-app selected pages and data across a loader restart, and selected deletion that preserves the other app and default notes. Thirty-three real legacy RPCs pass. Both loader stops exit zero and log complete shutdowns, in 0.214 and 0.164 seconds. All data belongs to the private fixture. No existing user notes or real Frame were accessed.
+
+[The source-fingerprinted report](framey-notebook-native-pages-2026-10-30.json) records the actual calls, retained file hashes and cleanup observations. CI will repeat this case on native AMD64 and ARM64. Exact PR-head CI remains required. This native result does not prove per-game browser selection, actual Steam game transitions, background artwork, a managed backend on the real Frame, wearer-visible UI or physical controller use. Prior default-notebook real Frame evidence remains separate.

@@ -212,7 +212,43 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'steamgriddb-private-artwork':
+            if case['probe'] == 'notebook-private-pages':
+                from notebook_pages import probe
+
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for name in ('main.py', 'plugin.json', 'dist/index.js', 'LICENSE'):
+                        assert (plugin/name).read_bytes() == original.read(record['folder']+'/'+name)
+                stops = []
+
+                def stop_notebook():
+                    started = time.monotonic()
+                    backend.terminate()  # Let the loader own its child-plugin shutdown.
+                    code = backend.wait(timeout=8)
+                    assert code == 0, code
+                    stops.append(dict(returncode=code, elapsedSeconds=round(time.monotonic()-started, 3)))
+
+                def restart_notebook():
+                    nonlocal backend
+                    stop_notebook()
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                               start_new_session=True)
+                    processes.append(backend)
+                    plugins = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Notebook discovery')
+                    assert len(plugins) == 1 and plugins[0]['name'] == record['name']
+                    assert plugins[0]['version'] == record['version'] and not plugins[0]['disabled']
+
+                report['privatePages'] = probe(legacy, restart_notebook, base/'settings'/record['folder'])
+                stop_notebook()
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Shutdown finished.') == 2
+                assert not any(marker in console for marker in ('Error during shutdown:',
+                    'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending'))
+                report['privatePages'].update(ownedLoaderStops=stops, completeLoaderShutdownLogged=True,
+                    unchangedPublishedFiles=['main.py', 'plugin.json', 'dist/index.js', 'LICENSE'])
+                report['result'] = ('published legacy Decky discovery and private per-app page, selection, '
+                    'restart and selected-delete isolation passed; browser/game selection/Frame/VR unverified')
+            elif case['probe'] == 'steamgriddb-private-artwork':
                 # Exact original backend; every path is in the disposable
                 # container home. No host Steam, game or artwork is exposed.
                 import base64

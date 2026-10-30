@@ -15,8 +15,13 @@ from a local fixture so CI does not depend on the store being online.
 `117.zip` was added from the digest-verified static audit cache on 2026-10-30.
 A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
+`19.zip` was downloaded from the official CDN on 2026-10-30 and matches
+Notebook 0.1.5's digest in the saved publisher catalog. The live catalog refresh
+returned HTTP 403; no new listing/version claim follows from that download.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `19.zip` | Notebook | 0.1.5 | `c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
 | `130-v102.zip` | Games Prefix Manager upstream GitHub release asset; **not in the Decky store on 2026-10-30** | 1.0.2 | `12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6` |
