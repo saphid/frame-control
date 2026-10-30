@@ -267,6 +267,35 @@ def browser_payloads(official):
         'panelSha256': hashlib.sha256(panel.encode()).hexdigest()}
 
 
+def http_gateway_payloads():
+    import io
+    import tarfile
+    packed = io.BytesIO()
+    sources = {}
+    with tarfile.open(fileobj=packed, mode='w') as archive:
+        for path in sorted(list((ROOT/'ui').rglob('*')) +
+                           [ROOT/'apk-catalog'/name for name in ('build.py', 'reports.py', 'pick.py')]):
+            name = path.relative_to(ROOT).as_posix()
+            if path.suffix not in ('.py', '.json', '.html', '.js') and name != 'ui/local-bin/ssh':
+                continue
+            if not path.is_file() or path.is_symlink() or path.stat().st_size > 8*1024**2:
+                raise ValueError('Unexpected production HTTP UI source')
+            data = path.read_bytes()
+            sources[name] = hashlib.sha256(data).hexdigest()
+            entry = tarfile.TarInfo(name)
+            entry.size = len(data)
+            entry.mode = 0o700 if name == 'ui/local-bin/ssh' else 0o600
+            archive.addfile(entry, io.BytesIO(data))
+    data = packed.getvalue()
+    if len(data) > 32*1024**2:
+        raise ValueError('Production HTTP fixture UI exceeds its bound')
+    return {
+        'framey-http-ui.tar': data,
+        'framey-http-ui-sources.json': json.dumps(sources).encode(),
+        'syncthing_http.py': (ROOT/'tests/decky-runtime/syncthing_http.py').read_bytes(),
+    }, {'uiArchiveSha256': hashlib.sha256(data).hexdigest(), 'sourceSha256': sources}
+
+
 def verify_browser(report, expected_panel):
     for key, expected in {
         'success': True, 'actualDeckyRpc': True, 'syntheticInput': True,
@@ -354,7 +383,11 @@ def main():
     parser.add_argument('--loader', type=Path, help='Optional pinned native Decky 3.3.0 loader')
     parser.add_argument('--browser-setup', action='store_true',
                         help='AMD64 only: actual browser controls with Decky and the signed package')
+    parser.add_argument('--http-gateway', action='store_true',
+                        help='With browser setup: production local HTTP/panel dispatch through fixture CEF')
     args = parser.parse_args()
+    if args.http_gateway and not args.browser_setup:
+        parser.error('HTTP gateway probe requires --browser-setup')
     arch = platform.machine()
     if platform.system() != "Linux" or arch not in ARCHES:
         parser.error("This package probe requires native AMD64 or ARM64 Linux")
@@ -394,6 +427,10 @@ def main():
     if args.browser_setup:
         browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
         payloads.update(browser_extra)
+    http_gateway = None
+    if args.http_gateway:
+        http_payloads, http_gateway = http_gateway_payloads()
+        payloads.update(http_payloads)
     budgets = ({'installSeconds': 300, 'userSeconds': 1440, 'unitSeconds': 1500, 'hostSeconds': 1560}
                if args.browser_setup else BUDGETS[arch])
     manifest = {"bundles": bundles, "bundleChunks": {}, "timeouts": budgets,
@@ -434,6 +471,10 @@ def main():
             'ui/frame_steam.py', 'ui/vendor/react-18.3.1.min.js', 'ui/vendor/react-dom-18.3.1.min.js',
             'ui/vendor/syncthing-0.2.7/frontend.patch',
         ])
+    if args.http_gateway:
+        source_paths.extend(ROOT/name for name in http_gateway['sourceSha256']
+                            if ROOT/name not in source_paths)
+        source_paths.append(ROOT/'tests/decky-runtime/syncthing_http.py')
     fingerprints = {str(path.relative_to(ROOT)): sha(path) for path in source_paths}
     spec = importlib.util.spec_from_file_location("service_vm", packer_path)
     packer = importlib.util.module_from_spec(spec)
@@ -470,6 +511,7 @@ def main():
         "realFrameContacted": False,
         "candidate": candidate,
         "browserSetup": browser_inputs,
+        "httpGateway": http_gateway,
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -554,6 +596,22 @@ def main():
                 if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
                     raise RuntimeError('Invalid browser screenshot')
                 (args.output / ('browser-'+name+'.png')).write_bytes(data)
+        if args.http_gateway:
+            gateway = package.get('candidateService', {}).get('httpGateway', {})
+            required = ('success', 'actualDeckyRpc', 'authenticatedSyncthingRest',
+                        'serviceStartStopVerified', 'stoppedStateBeforeAndAfter',
+                        'productionHttpHandler', 'productionPanelDispatcher',
+                        'productionMethodScript', 'productionLocalSshWrapper',
+                        'ownedBrowserReaped', 'httpServerStopped', 'ownedReceiptRemoved')
+            if any(gateway.get(key) is not True for key in required):
+                raise RuntimeError('Production HTTP/panel gateway proof missing')
+            if (gateway.get('realFrameContacted') is not False
+                or gateway.get('realSteamCef') is not False
+                or gateway.get('syntheticCef') is not True
+                or gateway.get('syntheticStoreReceipt') is not True
+                or gateway.get('rejectedRequests') != dict(missingUiKey=403, staleReceipt=400,
+                    wrongPlugin=400, modernHttpCall=400, missingHttpShim=400)):
+                raise RuntimeError('HTTP gateway scope/refusal proof missing')
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths
