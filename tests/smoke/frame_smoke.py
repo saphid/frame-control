@@ -101,8 +101,13 @@ PREFLIGHT = r'''
 import json, pathlib, subprocess
 r = subprocess.run(['/opt/steamvr/bin/linuxarm64/vrcmd', '--stats'],
                    capture_output=True, text=True, timeout=8)
-try: activity = json.loads(r.stdout)[0]['activity_level'] if r.returncode == 0 else None
-except (ValueError, KeyError, IndexError, TypeError): activity = None
+try:
+    rows = json.loads(r.stdout) if r.returncode == 0 else None
+    levels = ([row.get('activity_level') for row in rows
+               if isinstance(row, dict) and row.get('operation') == 'status']
+              if isinstance(rows, list) else [])
+    activity = levels[0] if len(levels) == 1 and type(levels[0]) is int else None
+except (ValueError, TypeError): activity = None
 proximity = []
 for path in pathlib.Path('/sys/bus/iio/devices').glob('iio:device*/in_proximity_raw'):
     try: proximity.append(float(path.read_text().strip()))

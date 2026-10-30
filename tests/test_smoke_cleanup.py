@@ -1,5 +1,7 @@
 """Smoke cleanup against real local Linux processes, never a headset or SSH."""
 import sandbox  # noqa: F401
+import contextlib
+import io
 import json
 import os
 from pathlib import Path
@@ -95,6 +97,23 @@ class RealProcesses(unittest.TestCase):
 
 
 class Safety(unittest.TestCase):
+    def test_preflight_reads_only_one_steamvr_status_row(self):
+        cases = (
+            ([{'operation': 'performance', 'frame_presents': 12},
+              {'operation': 'status', 'activity_level': 3}], 3),
+            ([{'operation': 'performance', 'activity_level': 3}], None),
+            ([{'operation': 'status', 'activity_level': 3},
+              {'operation': 'status', 'activity_level': 3}], None),
+            ([{'operation': 'status', 'activity_level': True}], None),
+        )
+        for rows, expected in cases:
+            with self.subTest(rows=rows), \
+                 mock.patch('subprocess.run', return_value=mock.Mock(returncode=0, stdout=json.dumps(rows))), \
+                 mock.patch.object(Path, 'glob', return_value=[]), \
+                 contextlib.redirect_stdout(io.StringIO()) as output:
+                exec(frame_smoke.PREFLIGHT, {})
+            self.assertEqual(json.loads(output.getvalue())['activity'], expected)
+
     def test_source_revision_records_clean_checkout_and_rejects_invalid_head(self):
         head = 'a' * 40
         with mock.patch.object(frame_smoke.subprocess, 'run', side_effect=[
