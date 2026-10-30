@@ -1,0 +1,1492 @@
+{
+  "date": "2026-10-30",
+  "sourceRevision": "1847e2346aa25b886e3147190aadd12076892ef8",
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "actualBackendInBrowser": false,
+  "syntheticInput": true,
+  "cases": {
+    "original": {
+      "resultSha256": "ac1d1415afeacdd299c8d8626e860ff5d1f1869ef43e0157620540a353cdeb2e",
+      "screenshotSha256": "6e710b91f334f48fe6de0a4c762caf8a4b895395c338aa9cb52c4ca99b885117",
+      "result": {
+        "type": "test:done",
+        "welcome": false,
+        "installationMethod": false,
+        "entryInstallationMethod": false,
+        "wizardCompleted": false,
+        "error": null,
+        "configuredErrorVisible": false,
+        "text": "Syncthing\n\nLoading\u2026",
+        "syntheticInput": true,
+        "realBackend": false,
+        "calls": [
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          }
+        ],
+        "settings": {
+          "config_version": 2,
+          "mode": "flatpak",
+          "flatpak_name": "me.kozec.syncthingtk",
+          "flatpak_binary": "syncthing",
+          "service_name": "",
+          "autostart": "no",
+          "keep_running_on_desktop": false,
+          "port": 8384,
+          "api_key": "",
+          "basic_auth_user": "",
+          "basic_auth_pass": "",
+          "is_setup": false
+        },
+        "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+        "frontendSha256": "c8845ea59c4176e686b1abf9fedb1336a4e5ac26947b3db2732d926d3fc33fb4",
+        "candidate": false,
+        "migrating": false,
+        "configured": false,
+        "wizard": false,
+        "realFrameContacted": false,
+        "browserReaped": true,
+        "installerEnabled": false,
+        "browser": "Google Chrome 156.0.8078.79",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-browser.py": "bead1057c6430c18c3bfb1066ef04e083d4e4245a7090ffedc7a4a1c92462aa9",
+          "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+          "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+          "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+          "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+          "ui/vendor/syncthing-0.2.7/frontend.patch": "0596f0ef3fd57d0a1ab83305795583ba6b527de3d7cc3b4e5cb4c5cdc07171ea"
+        },
+        "sourceUnchanged": true,
+        "passed": false
+      }
+    },
+    "fresh": {
+      "resultSha256": "cbe7470073a38c0ffaab25c11da488771f4a3d5197787c138f9e522d1d387318",
+      "screenshotSha256": "1af940f784c71f2d03745a0031e2550f62444f8e6f1ad8f4887aceeb2a6403fb",
+      "result": {
+        "type": "test:done",
+        "welcome": true,
+        "installationMethod": false,
+        "entryInstallationMethod": true,
+        "wizardCompleted": true,
+        "error": null,
+        "configuredErrorVisible": false,
+        "text": "Syncthing\nBack to plugin\nWelcome\nSetup\nStarting\nPort\nAPI Key\nBasic Auth\nAutostart\nFinish\nFinish\n\nAll done! You can now start using Syncthing!\n\nGet Started",
+        "syntheticInput": true,
+        "realBackend": false,
+        "calls": [
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "mode",
+                "value": "flatpak"
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "flatpak_name",
+                "value": "me.kozec.syncthingtk"
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "flatpak_binary",
+                "value": "syncthing"
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "_wizard_force_flatpak_config_for",
+                "value": null
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "POST",
+                "path": "/__decky-watchdog/check/start",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "POST",
+                "path": "/__decky-watchdog/check/scan_port",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "port",
+                "value": 8384
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "POST",
+                "path": "/__decky-watchdog/check/scan_api_key",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "api_key",
+                "value": "private-fixture-key"
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "POST",
+                "path": "/__decky-watchdog/check/scan_basic_auth",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "basic_auth_user",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "basic_auth_pass",
+                "value": ""
+              }
+            ]
+          },
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "autostart",
+                "value": "boot"
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "keep_running_on_desktop",
+                "value": true
+              }
+            ]
+          },
+          {
+            "method": "set_setting",
+            "args": [
+              {
+                "setting": "is_setup",
+                "value": true
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "POST",
+                "path": "/__decky-watchdog/reload-config",
+                "headers": {}
+              }
+            ]
+          }
+        ],
+        "settings": {
+          "config_version": 2,
+          "mode": "flatpak",
+          "flatpak_name": "me.kozec.syncthingtk",
+          "flatpak_binary": "syncthing",
+          "service_name": "",
+          "autostart": "boot",
+          "keep_running_on_desktop": true,
+          "port": 8384,
+          "api_key": "private-fixture-key",
+          "basic_auth_user": "",
+          "basic_auth_pass": "",
+          "is_setup": true,
+          "_wizard_force_flatpak_config_for": null
+        },
+        "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+        "frontendSha256": "cac1ed7b4128802651289edd47bd8c0b32e9c237f2a3d529d311388b1c90ed71",
+        "candidate": true,
+        "migrating": false,
+        "configured": false,
+        "wizard": true,
+        "realFrameContacted": false,
+        "browserReaped": true,
+        "installerEnabled": false,
+        "browser": "Google Chrome 156.0.8078.79",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-browser.py": "bead1057c6430c18c3bfb1066ef04e083d4e4245a7090ffedc7a4a1c92462aa9",
+          "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+          "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+          "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+          "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+          "ui/vendor/syncthing-0.2.7/frontend.patch": "0596f0ef3fd57d0a1ab83305795583ba6b527de3d7cc3b4e5cb4c5cdc07171ea"
+        },
+        "sourceUnchanged": true,
+        "passed": true
+      }
+    },
+    "migrating": {
+      "resultSha256": "b3859ad7b2ebf64b1e05437a282f18ec1175144fe807089a128b68236909ff91",
+      "screenshotSha256": "b84f424dc37e316d6ae374fd40b8a78986c486047d671294a298e0222a29f32e",
+      "result": {
+        "type": "test:done",
+        "welcome": true,
+        "installationMethod": true,
+        "entryInstallationMethod": true,
+        "wizardCompleted": false,
+        "error": null,
+        "configuredErrorVisible": false,
+        "text": "Syncthing\nBack to plugin\nWelcome\nSetup\nStarting\nPort\nAPI Key\nBasic Auth\nAutostart\nFinish\nWelcome\n\nIn order to use the Syncthing plugin, you need to have Syncthing installed, either via a Flatpak you can find from the \"Discover\" store in desktop mode, via the package manager or manually.\n\nInstallation Method\nInstalled directly on the System via user service\neg. via Pacman; a Systemd user service \"syncthing\" exists.\nInstalled via \"Syncthingy\"\nThe Syncthingy background service needs to be configured.\nInstalled via the \"Syncthing GTK\" Flatpak\nID: me.kozec.syncthingtk\nInstalled via the \"Syncthing Tray\" Flatpak\nID: io.github.martchus.syncthingtray\nInstalled via another Flatpak\nInstalled via another Systemd user service\nInstalled directly on the System via system service (advanced)\na Systemd system service \"syncthing\" exists.\nInstalled via another Systemd system service (advanced)\nI have not installed Syncthing yet",
+        "syntheticInput": true,
+        "realBackend": false,
+        "calls": [
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          }
+        ],
+        "settings": {
+          "config_version": 2,
+          "mode": "flatpak",
+          "flatpak_name": "me.kozec.syncthingtk",
+          "flatpak_binary": "syncthing",
+          "service_name": "",
+          "autostart": "no",
+          "keep_running_on_desktop": false,
+          "port": 8386,
+          "api_key": "private-legacy-fixture-key",
+          "basic_auth_user": "",
+          "basic_auth_pass": "",
+          "is_setup": "migratingV2"
+        },
+        "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+        "frontendSha256": "cac1ed7b4128802651289edd47bd8c0b32e9c237f2a3d529d311388b1c90ed71",
+        "candidate": true,
+        "migrating": true,
+        "configured": false,
+        "wizard": false,
+        "realFrameContacted": false,
+        "browserReaped": true,
+        "installerEnabled": false,
+        "browser": "Google Chrome 156.0.8078.79",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-browser.py": "bead1057c6430c18c3bfb1066ef04e083d4e4245a7090ffedc7a4a1c92462aa9",
+          "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+          "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+          "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+          "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+          "ui/vendor/syncthing-0.2.7/frontend.patch": "0596f0ef3fd57d0a1ab83305795583ba6b527de3d7cc3b4e5cb4c5cdc07171ea"
+        },
+        "sourceUnchanged": true,
+        "passed": true
+      }
+    },
+    "configured": {
+      "resultSha256": "05e8e0007d3907b0f1d0b464dd0dcef7dc40928033c0cf4293686daf675506fd",
+      "screenshotSha256": "4ddcb7888417be8420c2f25dc08ed05f55e940002e4f33ec19602991bab7fc23",
+      "result": {
+        "type": "test:done",
+        "welcome": false,
+        "installationMethod": false,
+        "entryInstallationMethod": false,
+        "wizardCompleted": false,
+        "error": null,
+        "configuredErrorVisible": true,
+        "text": "Syncthing\n Error\nError\nError: State request failed. Status: 500 . Response: Managed Syncthing unit has not been created",
+        "syntheticInput": true,
+        "realBackend": false,
+        "calls": [
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "get_settings_json",
+            "args": [
+              {}
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          },
+          {
+            "method": "framey_http_fetch",
+            "args": [
+              {
+                "method": "GET",
+                "path": "/__decky-watchdog/state",
+                "headers": {}
+              }
+            ]
+          }
+        ],
+        "settings": {
+          "config_version": 2,
+          "mode": "flatpak",
+          "flatpak_name": "me.kozec.syncthingtk",
+          "flatpak_binary": "syncthing",
+          "service_name": "",
+          "autostart": "no",
+          "keep_running_on_desktop": false,
+          "port": 8384,
+          "api_key": "",
+          "basic_auth_user": "",
+          "basic_auth_pass": "",
+          "is_setup": true
+        },
+        "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+        "frontendSha256": "cac1ed7b4128802651289edd47bd8c0b32e9c237f2a3d529d311388b1c90ed71",
+        "candidate": true,
+        "migrating": false,
+        "configured": true,
+        "wizard": false,
+        "realFrameContacted": false,
+        "browserReaped": true,
+        "installerEnabled": false,
+        "browser": "Google Chrome 156.0.8078.79",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-browser.py": "bead1057c6430c18c3bfb1066ef04e083d4e4245a7090ffedc7a4a1c92462aa9",
+          "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+          "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+          "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+          "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+          "ui/vendor/syncthing-0.2.7/frontend.patch": "0596f0ef3fd57d0a1ab83305795583ba6b527de3d7cc3b4e5cb4c5cdc07171ea"
+        },
+        "sourceUnchanged": true,
+        "passed": true
+      }
+    }
+  },
+  "failedDevelopmentTrial": {
+    "sourceBound": false,
+    "phase": "wizard probe",
+    "error": "The first probe locator omitted the published button label word \"the\". No wizard pass credited. The corrected locator completed the wizard.",
+    "browserReaped": true
+  },
+  "separateAmd64BackendCi": {
+    "pullRequest": 475,
+    "workflowRun": 41033180996,
+    "artifactId": 12967238143,
+    "verification": {
+      "head": "67188e18b24429755f8954765cabdf9fed208686",
+      "architecture": "x86_64",
+      "artifactSha256": "0525c117bbb312bc80e1e1beb79188b96f419a6d62081134b6fc8f333c8a78b2",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.144,
+      "installerEnabled": false,
+      "realFrameContacted": false,
+      "combinedDeckyVerified": true,
+      "requiredLifecycleResults": 17,
+      "wizardResults": {
+        "defaultPackageConfig": true,
+        "remainedUnconfiguredDuringScan": true,
+        "discoveredDefaultPort": true,
+        "discoveredDefaultApiKey": true,
+        "scannedBasicAuth": true,
+        "persistedThroughDeckyRpc": true,
+        "setupCommittedAndReloaded": true,
+        "authenticatedRestWithDiscoveredKey": true,
+        "ownedSetupServiceStopped": true
+      },
+      "ownershipRefusals": 18,
+      "processIdentityChecks": 10,
+      "uninstallPreservedCandidateData": true
+    }
+  }
+}
