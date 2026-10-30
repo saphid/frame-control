@@ -74,6 +74,7 @@ PARENT = r'''
 const calls=[], settings={config_version:2,mode:'flatpak',flatpak_name:'me.kozec.syncthingtk',
   flatpak_binary:'syncthing',service_name:'',autostart:'no',keep_running_on_desktop:false,
   port:8384,api_key:'',basic_auth_user:'',basic_auth_pass:'',is_setup:SETUP_STATE};
+if(settings.is_setup==='migratingV2'){settings.port=8386;settings.api_key='private-legacy-fixture-key';}
 let complete=false;
 addEventListener('message', event => {
   const target=document.getElementById('panel').contentWindow;
@@ -228,10 +229,18 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                                     and settings.get('api_key') == 'private-fixture-key'
                                     and routes == expected_routes
                                     and settings.get('mode') == 'flatpak'
-                                    and settings.get('flatpak_name') == 'me.kozec.syncthingtk')
+                                    and settings.get('flatpak_name') == 'me.kozec.syncthingtk'
+                                    and calls[-2:] == [
+                                        {'method':'set_setting','args':[{'setting':'is_setup','value':True}]},
+                                        {'method':'framey_http_fetch','args':[{'method':'POST',
+                                         'path':'/__decky-watchdog/reload-config','headers':{}}]},
+                                    ])
             else:
                 report['passed'] = (report['passed'] and all(call['method'] == 'get_settings_json'
                                                            for call in report.get('calls', [])))
+                if args.migrating:
+                    report['passed'] = (report['passed'] and report['settings']['port'] == 8386
+                                        and report['settings']['api_key'] == 'private-legacy-fixture-key')
         report['passed'] = report['passed'] and report['sourceUnchanged'] and report['browserReaped']
         (args.output/'result.json').write_text(json.dumps(report,indent=2)+'\n')
         print(json.dumps(report))
