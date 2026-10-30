@@ -57,6 +57,8 @@ jobs:
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Build pinned source with owned startup and private HTTP (not installed)
         run: |
           docker pull rust:1.98.1-bookworm
