@@ -1,0 +1,13 @@
+{
+  "sourceRevision": "4c5d18e6537b05c438ffee155ce055305e33a40d",
+  "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+  "sourceSha256": {
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    "ui/framey-compatibility.json": "adc0af8e198a0e2c131c5b19172ea19e354af0074ebd1efa4d8d8a566e3ea445"
+  },
+  "actualArchiveInfoRefused": true,
+  "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog",
+  "blockInstall": true,
+  "installed": false,
+  "realFrameContacted": false
+}

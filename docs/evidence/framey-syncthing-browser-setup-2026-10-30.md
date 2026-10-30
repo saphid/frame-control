@@ -150,3 +150,18 @@ systemd control, 17 service results and 18 ownership refusals. These artifacts
 do not use the signed Flatpak 1.27.3 package. That separate AMD64 job in
 41048089270 failed waiting for the forward sync file after 90 seconds. Its
 failure is retained; #477's merge gate remains closed.
+
+The exact #477 ARM64 signed-package artifact 12976035575 also passed independent
+audit of its GitHub digest, all source hashes, signatures, actual signed
+identities, lifecycle/migration results and preserving uninstall. Backend port
+discovery needed three null scans before 8384; it remains separate from the UI.
+The failed main and #477 AMD64 artifacts have identical hashes for all 13
+native runtime inputs but failed at different fixture stages. That comparison
+does not establish the sync timeout's root cause. The pending follow-up adds
+an explicit real peer-connection gate and retains its observed state before
+checking transferred bytes. The failed AMD64 result still holds #477's merge.
+
+The later refreshed head `ff663a7` passed fresh browser, ownership and signed
+AMD64/ARM64 gates and merged as #477. The [refreshed exact-head evidence](framey-syncthing-setup-ff663a7-ci-2026-10-30.md)
+records both native artifact audits and the final merge gate. The older
+failed head above remains a failed result; its cause was not established.
