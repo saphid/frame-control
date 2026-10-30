@@ -29,3 +29,11 @@ native ownership and signed-package checks remain required. The earlier head's
 AMD64 sync failure is retained in its separate evidence; it is not cleared by
 this browser result. Syncthing stays blocked from managed installation. No real
 Frame was contacted and no release was attempted.
+
+Both fresh ownership-candidate artifacts from run `41055355149` were
+independently audited against exact head `ff663a7`: AMD64 artifact
+`12977455387` and ARM64 artifact `12977685204`. Their digests, all source
+fingerprints, 11 Rust tests, actual Decky discovery/RPC, two-way Syncthing
+2.1.7 sync, 17 actual user-service results and 18 ownership refusals passed.
+This is the separate ownership runtime, not signed Syncthing 1.27.3 Flatpak
+proof. Fresh signed-package jobs were still pending at this audit.

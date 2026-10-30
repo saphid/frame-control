@@ -86,5 +86,39 @@
   "allSixCapturesVisuallyInspected": true,
   "visualScope": "Original Loading; fresh Finish; migrating Installation Method entry; configured/finish/manual expected final state-500 view. Manual capture is final view, not the port field.",
   "overallPullRequestVerified": false,
-  "nativeChecksPending": true
+  "nativeChecksPending": true,
+  "ownershipCandidateArtifacts": [
+    {
+      "artifactId": 12977685204,
+      "artifactSha256": "cee043f0b32290465b18cb8a2da34a77218070724ae885e4890aaa852d143df4",
+      "head": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+      "architecture": "aarch64",
+      "allSourceFingerprintsVerified": true,
+      "elevenRustTestsVerified": true,
+      "ownershipAndRealSyncVerified": true,
+      "actualServiceManagerVerified": true,
+      "actualServiceResults": 17,
+      "ownershipRefusals": 18,
+      "actualRuntimeVersion": "v2.1.7",
+      "signedFlatpakProof": false,
+      "realFrameContacted": false,
+      "installerEnabled": false
+    },
+    {
+      "artifactId": 12977455387,
+      "artifactSha256": "88a72cad25683d159ee39db180b3cc3572905ad746dc8dc6f4e11b30902d46e0",
+      "head": "ff663a76d22b151abd1ecac1acbd9f62e862fc6d",
+      "architecture": "x86_64",
+      "allSourceFingerprintsVerified": true,
+      "elevenRustTestsVerified": true,
+      "ownershipAndRealSyncVerified": true,
+      "actualServiceManagerVerified": true,
+      "actualServiceResults": 17,
+      "ownershipRefusals": 18,
+      "actualRuntimeVersion": "v2.1.7",
+      "signedFlatpakProof": false,
+      "realFrameContacted": false,
+      "installerEnabled": false
+    }
+  ]
 }
