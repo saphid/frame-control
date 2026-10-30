@@ -65,6 +65,10 @@ class Unreachable(HostError):
     """The Frame, or a service on it, didn't answer: the person's to sort out, not a fault here."""
 
 
+class MissingRdpClient(HostError):
+    """Remote desktop needs a client installed on this computer."""
+
+
 def run_ssh(argv, **kwargs):
     """Run an OpenSSH tool without Windows' redirected-stderr pipe hang.
 
@@ -472,7 +476,7 @@ def open_rdp(alias, host=None):
         if which(name):
             _spawn([name, f"/v:{host}", f"/u:{RDP_USER}", "/dynamic-resolution"])
             return f"Opened FreeRDP to {host}: {RDP_LOGIN}"
-    raise HostError("No RDP client found: install Remmina or FreeRDP")
+    raise MissingRdpClient("No RDP client found: install Remmina or FreeRDP")
 
 
 def main(argv):

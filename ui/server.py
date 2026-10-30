@@ -2162,8 +2162,8 @@ def open_thing(body):
                 raise Failure("That screenshot isn't saved on this computer yet", 404)
             frame_host.reveal_path(saved)
             return {"message": f"Showed {saved.name} in {frame_host.FILE_MANAGER}"}
-    except frame_host.Unreachable as e:
-        raise Failure(str(e), 400)  # theirs to turn on; nothing failed here
+    except (frame_host.Unreachable, frame_host.MissingRdpClient) as e:
+        raise Failure(str(e), 400)  # a prerequisite to fix, not an unexpected failure
     except frame_host.HostError as e:
         raise Failure(str(e), 500)
     raise Failure("unknown target", 400)
