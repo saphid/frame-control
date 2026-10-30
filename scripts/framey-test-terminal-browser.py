@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Private AMD64 Terminal browser experiment in a networkless disposable VM.
+"""Private native Terminal browser experiment in a networkless disposable VM.
 
-Requires an existing browser rootfs and exact cached published Decky loader.
+Requires an existing native browser rootfs and a digest-pinned Decky loader.
 No production adapter, host/session mounts, network NIC or Frame is used.
 """
 import argparse
@@ -33,6 +33,7 @@ from guest_result import write_result, PORT
 report=dict(success=False,realFrameContacted=False,networkDevice=False,hostBusExposed=False)
 try:
  inputs=json.loads(Path('/input/terminal-inputs.json').read_text())
+ assert os.uname().machine==inputs['architecture'], 'Guest architecture mismatch'
  raw=Path('/input/terminal-source.tar').read_bytes()
  assert hashlib.sha256(raw).hexdigest()==inputs['sourceArchiveSha256']
  root=Path('/repo');root.mkdir(exist_ok=True)
@@ -86,24 +87,29 @@ def digest(data):
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rootfs-tar',type=Path,required=True)
-    parser.add_argument('--loader',type=Path,required=True)
+    parser.add_argument('--loader',type=Path,help='Optional cached, digest-verified native Decky 3.3.0 loader')
     parser.add_argument('--output',type=Path,required=True)
     parser.add_argument('--production-http',action='store_true',
                         help='Use unchanged production HTTP parent, SSH and event dispatcher')
     args=parser.parse_args()
-    assert sys.platform=='linux' and platform.machine()=='x86_64'
+    arch=platform.machine()
+    assert sys.platform=='linux' and arch in ('x86_64','aarch64')
     assert not args.output.exists(), 'Use a new owned evidence directory'
+    assert args.rootfs_tar.is_file() and args.rootfs_tar.stat().st_size<=2*1024**3
     names=subprocess.check_output(['git','ls-files','ui'],cwd=ROOT,text=True).splitlines()
     names += ['tests/framey_official.py','tests/fixtures/framey-official/65.zip',
               'tests/decky-runtime/check.py','tests/decky-runtime/cases.json',
               'tests/decky-runtime/terminal_lifecycle.py','tests/decky-runtime/terminal_candidate.py','tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/terminal_browser.py','tests/decky-runtime/guest_result.py',
-              'scripts/framey-test-terminal-browser.py','scripts/framey-test-syncthing-service.py']
+              'scripts/framey-test-terminal-browser.py','scripts/framey-test-syncthing-service.py',
+              'scripts/framey-test-decky-runtime.py','tests/decky-runtime/Containerfile.flatpak-vm',
+              '.github/workflows/decky-runtime.yml']
     if args.production_http:
         names += ['tests/decky-runtime/'+name for name in
                   ('terminal_http.py', 'syncthing_http.py', 'syncthing_http_parent.py')]
         names += ['apk-catalog/'+name for name in ('build.py', 'reports.py', 'pick.py')]
-    names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-amd'],cwd=ROOT,text=True).splitlines()
+    suffix={'x86_64':'amd','aarch64':'arm'}[arch]
+    names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-'+suffix],cwd=ROOT,text=True).splitlines()
     names=sorted(set(names))
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     sources={}
@@ -119,8 +125,8 @@ def main():
             sources[name]=digest(data)
             member=tarfile.TarInfo(name);member.mode=path.stat().st_mode&0o755;member.size=len(data)
             archive.addfile(member,io.BytesIO(data))
-    loader=args.loader.read_bytes()
-    assert digest(loader)=='e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181'
+    native=module('terminal_pinned_loader',ROOT/'scripts/framey-test-decky-runtime.py')
+    loader,loader_digest=native.loader_bytes(args.loader)
     sys.path[:0]=[str(ROOT/'ui'),str(ROOT/'tests')]
     import framey_panel,framey_official
     record=next(p for p in framey_official.PLUGINS if p['id']==65)
@@ -137,11 +143,12 @@ def main():
     assert '/framey-runtime/' not in panel
     codec=module('terminal_result_codec',ROOT/'tests/decky-runtime/guest_result.py')
     packer=module('terminal_vm_packer',ROOT/'scripts/framey-test-syncthing-service.py')
+    _dist,emulator,console,machine=packer.ARCHES[arch]
     inputs=dict(sourceRevision=head,sourceSha256=sources,sourceArchiveSha256=digest(raw.getvalue()),
-        loaderSha256=digest(loader),officialArchiveSha256=digest(official),frontendSha256=digest(frontend),
+        loaderSha256=loader_digest,officialArchiveSha256=digest(official),frontendSha256=digest(frontend),
         panelSha256=digest(panel.encode()),bootstrapSha256=digest(BOOTSTRAP.encode()),
         rootfsSha256=hashlib.file_digest(args.rootfs_tar.open('rb'),'sha256').hexdigest(),
-        architecture='x86_64',cpuModel='max',accelerator='tcg,thread=multi',
+        architecture=arch,cpuModel='max',accelerator='tcg,thread=multi',
         memoryMiB=6144,timeoutSeconds=720 if args.production_http else 480,
         productionHttpRequested=args.production_http,
         networkDevice=False,hostBusExposed=False,realFrameContacted=False,productionAdaptationEnabled=False,
@@ -155,10 +162,10 @@ def main():
         normal_root=True,timeout=680 if args.production_http else 440,root_size_mib=3072,browser=True)
     (args.output/'vmlinuz').write_bytes(kernel)
     packet=args.output/'guest-result.packet'
-    command=['qemu-system-x86_64','-accel',inputs['accelerator'],'-cpu',inputs['cpuModel'],
-        '-smp','2','-m','6144','-nographic','-monitor','none','-no-reboot',
+    command=[emulator,*machine,'-accel',inputs['accelerator'],'-cpu',inputs['cpuModel'],
+        '-smp','2','-m','6144','-nodefaults','-nographic','-serial','stdio','-monitor','none','-no-reboot',
         '-nic','none','-kernel',str(args.output/'vmlinuz'),'-initrd',str(args.output/'initrd.gz'),
-        '-append','console=ttyS0 rdinit=/init panic=-1 quiet',
+        '-append','console='+console+' rdinit=/init panic=-1 quiet',
         '-chardev','file,id=framey_result,path='+str(packet).replace(',',',,'),
         '-device','virtio-serial-pci,id=framey_result_bus',
         '-device','virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+codec.PORT]
@@ -171,6 +178,23 @@ def main():
         guest=codec.decode(packet.read_bytes());report['guest']=guest
         assert guest['success'] is True, guest.get('error','Private Terminal runtime failed')
         assert guest['ownedUserManagerStopped'] is True
+        assert guest['terminal']['candidate']['loaderPythonAbi']['architecture']==arch
+        if args.production_http:
+            proof=guest['terminal']['terminalBrowser']
+            assert all(proof[key] is True for key in ('success','productionParentUnchanged',
+                'productionPanelUnchanged','productionHttpHandler','productionMethodScript',
+                'productionEventScript','productionLocalSshWrapper','browserShellReaped',
+                'productionEventListenerCleanup','ownedBrowserReaped','httpServerStopped',
+                'ownedDeckyServiceStopped','originalUnitRestored','ownedBundleRemoved'))
+            assert any(row.strip()=='framey-browser-output' for row in proof['stages'][1]['terminalRows'])
+            assert proof['browserSandboxDisabled'] is False and proof['realFrameContacted'] is False
+        captures=guest['terminal']['terminalBrowser']['screenshots']
+        assert set(captures)=={'terminal','output','removed'}
+        for name,encoded in captures.items():
+            data=base64.b64decode(encoded,validate=True)
+            assert data.startswith(b'\x89PNG\r\n\x1a\n')
+            (args.output/(name+'.png')).write_bytes(data)
+        report['guestResultPacket']=dict(bytes=packet.stat().st_size,sha256=digest(packet.read_bytes()))
         report['success']=True
     finally:
         if process is not None:

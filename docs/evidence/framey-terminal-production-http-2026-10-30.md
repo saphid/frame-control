@@ -49,3 +49,19 @@ python3 scripts/framey-test-terminal-browser.py --production-http \
 
 The default runner mode retains the earlier private-bridge experiment, with
 its separate [scope and evidence](framey-terminal-integrated-browser-2026-10-30.md).
+
+## Reproducible CI follow-up
+
+The Decky workflow now includes a `terminal-browser` matrix for native AMD64
+and ARM64 workers. Each job checks out the exact PR head, builds a matching
+disposable Chromium/systemd rootfs, downloads the digest-pinned native loader,
+and runs `--production-http` in matching QEMU TCG without a network NIC or host
+bus/home. The runner binds the workflow, rootfs recipe and selected dependency
+sources to the committed input snapshot, refuses a guest/loader architecture
+mismatch, and saves the complete result packet and three standalone captures.
+
+This CI wiring is a new gate, not a claim that its ARM64 browser run passed.
+The earlier AMD64 evidence above retains its exact tested source revision.
+Both native CI artifacts must be reviewed separately; compatibility and worn
+Frame/controller limits remain unchanged. The stacked branch also includes
+#491's read-only migration cleanup repair so package CI uses that same fix.
