@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Sixth trial completes four DOM lifecycle stages but fails renderer proof. Process-title-aware matcher and diagnostic replay pending; no overall browser pass.",
+  "status": "Local Chrome reproduction confirms rewritten renderer titles. Seventh combined VM trial at 5e83391 is pending; no overall browser runtime pass.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -1102,5 +1102,66 @@
     "failures": 0,
     "elapsedSeconds": 223.362,
     "logSha256": "3d6226373b90e193da6f4037bb8a8bbb14bf09b4c6ca790d97389f51af93a4bb"
+  },
+  "hostRendererArgumentRegression": {
+    "realBackend": false,
+    "realFrameContacted": false,
+    "reapedAfterProbe": true,
+    "sourceRevision": "5e83391",
+    "observations": {
+      "ownedRendererArgumentProofs": [
+        {
+          "pid": 3401001,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --top-chrome-webui --crashpad-handler-pid=3400884 --enab'"
+        },
+        {
+          "pid": 3401013,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --crashpad-handler-pid=3400884 --enable-crash-reporter=,'"
+        },
+        {
+          "pid": 3401032,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --crashpad-handler-pid=3400884 --enable-crash-reporter=,'"
+        },
+        {
+          "pid": 3401040,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --crashpad-handler-pid=3400884 --enable-crash-reporter=,'"
+        },
+        {
+          "pid": 3401073,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --crashpad-handler-pid=3400884 --enable-crash-reporter=,'"
+        },
+        {
+          "pid": 3401094,
+          "exactNulFlag": false,
+          "wholeTitleFlag": true,
+          "seccomp2": true,
+          "noNewPrivs1": true,
+          "commandPrefix": "b'/tmp/framey-download-browser-4vgq88s3/root/opt/google/chrome/chrome --type=renderer --crashpad-handler-pid=3400884 --enable-crash-reporter=,'"
+        }
+      ]
+    },
+    "scriptSha256": "d39cf5fa4f801cca269f88a13094f0094d990877f2f178f6c8c4bfc45fc9e58d",
+    "logSha256": "12f0f61aa26fbe40741ee2b2cd9ca4464b8784b4c52d46c77483054a2160b4ae",
+    "resultSha256": "6b160e41ca3fdd24d6c4d5814ea32f5cab8a47f60ecb7e795c0a9c3d2379f6e7"
   }
 }

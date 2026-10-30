@@ -135,3 +135,10 @@ The observer now also accepts a whole renderer flag in a rewritten process
 title, records which format matched and retains Chromium argument diagnostics.
 Actual seccomp 2, no-new-privileges 1 and ancestry to the owned browser remain
 mandatory. A new replay must establish whether the argument format was the cause.
+
+A separate local Chrome reproduction observed six owned renderer descendants
+with rewritten process-title strings: none had a standalone NUL-delimited
+renderer flag, and all had the whole renderer flag after title parsing,
+seccomp 2 and no-new-privileges 1. All observed renderers were reaped. This
+used synthetic settings and no Decky backend; it confirms the observer bug
+without replacing the seventh VM trial at `5e83391`.
