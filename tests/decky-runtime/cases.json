@@ -22,7 +22,7 @@
   {
     "id": 123,
     "shim": "steam-status-verified-tls",
-    "probe": "steam-status-readonly"
+    "probe": "steam-status-private-settings"
   },
   {
     "id": 28,
