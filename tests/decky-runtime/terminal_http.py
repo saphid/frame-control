@@ -26,6 +26,21 @@ from terminal_browser import COMMAND, PROBE, screenshot
 from syncthing_service import stop_decky_service
 
 
+def started_terminal_pid(requests):
+    """Overlapping list requests may observe the same terminal before/after start."""
+    listings = [entry['response']['result'] for entry in requests
+                if entry['request'].get('method') == 'get_terminals'
+                and entry['response'].get('result')]
+    assert listings and all(len(items) == 1 for items in listings), 'Expected one terminal per listing'
+    terminals = [items[0] for items in listings]
+    assert len({item['id'] for item in terminals}) == 1, 'Terminal identity changed between listings'
+    assert all(item['is_completed'] is False for item in terminals), 'Terminal completed before input'
+    started = [item for item in terminals if item['is_started'] is True]
+    assert started and all(type(item.get('pid')) is int and item['pid'] > 0 for item in started), 'No started shell PID'
+    assert len({item['pid'] for item in started}) == 1, 'Shell PID changed between listings'
+    return started[-1]['pid']
+
+
 def cef_document(token):
     # Extend only the explicit test facade with Decky 3.3.0's event envelope.
     # Production framey-events.js owns filtering, session bounds and cursors.
@@ -284,11 +299,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                     until_ready(lambda: any(entry['request'].get('method') == 'send_terminal_buffer'
                                 and entry['httpStatus'] == 200 and entry['response'].get('result') is True
                                 for entry in requests), 'actual frontend Terminal subscription/buffer', timeout=90)
-                    terminal_lists = [entry['response']['result'] for entry in requests
-                                      if entry['request'].get('method') == 'get_terminals'
-                                      and entry['response'].get('result')]
-                    assert len(terminal_lists) == 1 and len(terminal_lists[0]) == 1
-                    shell_pid = terminal_lists[0][0]['pid']
+                    shell_pid = started_terminal_pid(requests)
                     directory = Path('/proc')/str(shell_pid)
                     assert directory.stat().st_uid == os.getuid()
                     chain = [shell_pid]
