@@ -6,14 +6,13 @@ import json
 import os
 from pathlib import Path
 import shutil
-import signal
 import subprocess
 import time
 import urllib.request
 import xml.etree.ElementTree as ET
 import zipfile
 
-from syncthing_service import ctl, prop, rpc, wait
+from syncthing_service import ctl, prop, rpc, stop_decky_service, verify_decky_log, wait
 
 
 def sha(path):
@@ -95,7 +94,8 @@ def main():
         '[Install]\nWantedBy=default.target\n'
     ).encode()
     unit.write_bytes(unit_bytes)
-    backend = unrelated = None
+    decky_unit = None
+    unrelated = None
     helper_pid = None
     logs = []
     report = dict(architecture=os.uname().machine, installerEnabled=False,
@@ -186,7 +186,21 @@ def main():
                    XDG_RUNTIME_DIR='/run/user/1100', STNOUPGRADE='1')
         log = (home / 'migration-decky.log').open('w+')
         logs.append(log)
-        backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
+        decky_unit = directory / 'frame-control-migration-decky-fixture.service'
+        assert not decky_unit.exists()
+        variables = ('UNPRIVILEGED_PATH', 'PRIVILEGED_PATH', 'CHOWN_PLUGIN_PATH',
+                     'LIVE_RELOAD', 'USE_CEF_CLOSE_WORKAROUND', 'KEEP_SYSTEMD_SERVICE',
+                     'PATH', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'STNOUPGRADE')
+        decky_unit.write_text('[Unit]\nDescription=Owned migration Decky fixture\n'
+            '[Service]\nType=exec\nKillMode=mixed\nExecStart='+json.dumps(str(loader))+'\n'
+            + ''.join('Environment='+json.dumps(key+'='+env[key])+'\n' for key in variables)
+            + 'StandardOutput=append:'+str(home/'migration-decky.log')+'\n'
+            + 'StandardError=append:'+str(home/'migration-decky.log')+'\n')
+        ctl('daemon-reload')
+        ctl('start', decky_unit.name)
+        assert prop(decky_unit.name, 'ActiveState') == 'active'
+        assert prop(decky_unit.name, 'KillMode') == 'mixed'
+        report['actualMigrationDeckyUserService'] = True
         wait(lambda: rpc('loader/get_plugins'), 'migration Decky discovery')
 
         def current_pid():
@@ -255,10 +269,11 @@ def main():
                       legacyDataRetainedAfterRestart=True, legacyIdentityAfterRestart=restarted,
                       legacyMainPidAfterRestart=restarted_pid)
     finally:
-        if backend is not None:
-            if backend.poll() is None:
-                os.killpg(backend.pid, signal.SIGTERM)
-            backend.wait(timeout=20)
+        if decky_unit is not None:
+            stop_decky_service(decky_unit.name, report)
+            decky_unit.unlink()
+            ctl('daemon-reload')
+            report['ownedMigrationDeckyServiceRemoved'] = True
         if helper_pid is not None:
             wait(lambda: not Path(f'/proc/{helper_pid}').exists(), 'migration helper reaped')
         if unrelated is not None:
@@ -273,9 +288,11 @@ def main():
             unit.unlink()
             ctl('daemon-reload')
         for log in logs:
-            log.seek(0)
-            print(log.read()[-2500:], flush=True)
-            log.close()
+            try:
+                verify_decky_log(log)
+                report['deckyShutdownLogChecked'] = True
+            finally:
+                log.close()
     assert {name: sha(runtime / name) for name in retained} == retained
     assert not managed.exists() and not receipt.exists()
     wait_for_instances(app, report)

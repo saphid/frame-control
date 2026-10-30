@@ -1,5 +1,6 @@
 """Instance cleanup tolerates registry lag, but never ignores a live entry."""
 import ast
+import io
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -105,6 +106,30 @@ class MigrationInstanceCleanup(unittest.TestCase):
         report = {}
         scope['run_cleanup'](report)
         self.assertEqual(report['remainingFlatpakApplications'], ['me.kozec.syncthingtk.other'])
+
+
+class DeckyShutdownLog(unittest.TestCase):
+    def check_log(self, text):
+        path = Path(__file__).resolve().parent/'decky-runtime/syncthing_service.py'
+        function = next(node for node in ast.parse(path.read_text()).body
+                        if isinstance(node, ast.FunctionDef) and node.name == 'verify_decky_log')
+        scope = {'print': Mock()}
+        exec(compile(ast.Module(body=[function], type_ignores=[]), str(path), 'exec'), scope)
+        return scope['verify_decky_log'](io.StringIO(text))
+
+    def test_actual_migration_shutdown_cancellation_is_not_clean(self):
+        # Retained from exact-head CI artifact 13002674726. Its unit/package
+        # summary passed, but Decky's migration loader logged this failure.
+        text = ('[main][INFO]: Error during shutdown:\n'
+                '  File "decky_loader/plugin/plugin.py", line 183, in kill_if_still_running\n'
+                '  File "asyncio/tasks.py", line 712, in sleep\n'
+                'asyncio.exceptions.CancelledError\n'
+                '[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n')
+        with self.assertRaisesRegex(AssertionError, 'Decky shutdown errors'):
+            self.check_log(text)
+
+    def test_normal_shutdown_task_cleanup_is_allowed(self):
+        self.check_log('[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n')
 
 
 class OwnedDeckyStop(unittest.TestCase):

@@ -93,6 +93,17 @@ def stop_decky_service(unit, report):
         print('FRAMEY_DECKY_STOP_JSON=' + json.dumps(state), flush=True)
 
 
+def verify_decky_log(log):
+    """A successful manager result alone does not prove plugin shutdown."""
+    log.seek(0)
+    text = log.read()
+    print(text[-3000:], flush=True)
+    errors = [marker for marker in ('Error during shutdown:',
+              'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending')
+              if marker in text]
+    assert not errors, f'Decky shutdown errors: {errors}'
+
+
 def main(signed_flatpak=False):
     assert (
         os.getuid() == 1100
@@ -815,9 +826,11 @@ def main(signed_flatpak=False):
         finally:
             # Preserve the actual loader tail even if cleanup fails.
             for log in logs:
-                log.seek(0)
-                print(log.read()[-3000:], flush=True)
-                log.close()
+                try:
+                    verify_decky_log(log)
+                    report['deckyShutdownLogChecked'] = True
+                finally:
+                    log.close()
     assert not Path(f'/proc/{helper_pid}').exists()
     if signed_flatpak:
         instances = subprocess.check_output(
