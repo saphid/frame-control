@@ -94,6 +94,37 @@ def screenshot(page):
             return response['result']['data']
 
 
+def ready_page(report):
+    """Accept only a ready panel; close every rejected owned CDP candidate."""
+    candidate = None
+    accepted = False
+    phase = 'page-connect'
+    started = time.monotonic()
+    outcome = 'not-ready'
+    try:
+        candidate = frame_steam.Page('Owned Syncthing actual backend')
+        phase = 'panel-ready'
+        accepted = bool(candidate.eval("typeof ready !== 'undefined' && ready"))
+        if accepted:
+            outcome = 'ready'
+            return candidate
+        phase = 'panel-errors'
+        report['startupErrors'] = candidate.eval('window.startupErrors')
+    except (OSError, frame_steam.Fail) as error:
+        outcome = 'failure'
+        report['lastReadinessError'] = str(error)[:1500]
+    finally:
+        if candidate is not None and not accepted:
+            candidate.sock.close()
+        attempts = report.setdefault('readinessAttempts', [])
+        if len(attempts) < 16:
+            attempts.append(dict(phase=phase, outcome=outcome,
+                                 elapsedSeconds=round(time.monotonic()-started, 3)))
+        else:
+            report['readinessTraceOverflow'] = True
+    return None
+
+
 def startup_diagnostics(browser, profile, log):
     """Bounded evidence from the owned fixture only; never change readiness."""
     report = dict(processAlive=browser.poll() is None,
@@ -219,14 +250,9 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 port = profile/'DevToolsActivePort'
                 if port.is_file():
                     frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
-                    try:
-                        page = frame_steam.Page('Owned Syncthing actual backend')
-                        if page.eval("typeof ready !== 'undefined' && ready"): break
-                        report['startupErrors'] = page.eval('window.startupErrors')
-                        page.sock.close()
-                        page = None
-                    except (OSError, frame_steam.Fail) as error:
-                        report['lastReadinessError'] = str(error)[:1500]
+                    page = ready_page(report)
+                    if page is not None:
+                        break
                 time.sleep(.2)
             assert page is not None, 'Browser CDP/panel readiness unavailable'
             first_pids = []

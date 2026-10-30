@@ -11,3 +11,26 @@ The follow-up records bounded diagnostics from the disposable owned browser afte
 Syncthing installation remains blocked. Full production-browser-parent, actual Steam CEF, real Frame visibility and controller usability remain unverified. No headset was contacted.
 
 See [the machine-readable audit](framey-syncthing-arm-browser-failure-2026-10-30.json).
+
+
+## Second exact-head failure with retained diagnostics
+
+Head `ebf75f2bb0995ab12180abfa5ec858d9753e1a3a` failed again in
+[run 41078417943/job 124140733387](https://github.com/saphid/frame-control/actions/runs/41078417943/job/124140733387).
+Artifact `12990737541` was independently audited: all 123 exact-head and 122
+input source fingerprints agree; package/migration progress does not grant a
+browser pass. There were zero RPCs, stages or captures. Chromium stayed alive,
+wrote its DevTools port file and announced its debug socket, but `/json` timed
+out. Its 395-byte stderr also records an unavailable UPower service, which is
+not established as the cause. Browser, bridge and QEMU cleanup passed.
+[The machine audit](framey-syncthing-arm-browser-readiness-2026-10-30.json)
+retains those facts and the unchanged ARM64 budgets.
+
+The next candidate fixes a separate readiness-loop bug: a connected page whose
+readiness evaluation raises could survive in the local variable and satisfy
+the final non-null check. Every rejected candidate now closes, and only a
+positive panel-ready result is returned. A bounded 16-entry phase/timing trace
+distinguishes connection delays from panel JavaScript readiness failures. This
+changes no deadline, sandbox, retry interval or package/browser pass gate. It
+is not yet a fix for the ARM64 `/json` failure; fresh native CI must establish
+that outcome. Installation and all hardware/Steam CEF claims remain blocked.

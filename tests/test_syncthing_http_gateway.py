@@ -51,6 +51,40 @@ class GatewayIsolation(unittest.TestCase):
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
 
 
+class BrowserReadyCandidate(unittest.TestCase):
+    def browser(self):
+        return load('browser_ready_candidate', ROOT/'tests/decky-runtime/syncthing_browser.py')
+
+    def test_unready_or_failed_candidate_is_closed_and_never_accepted(self):
+        browser = self.browser()
+        for replies, outcome, phase in [([False, []], 'not-ready', 'panel-errors'),
+                ([OSError('owned CDP timeout')], 'failure', 'panel-ready'),
+                ([False, OSError('owned errors timeout')], 'failure', 'panel-errors')]:
+            with self.subTest(outcome=outcome, phase=phase):
+                page = Mock(); page.eval.side_effect = replies; report = {}
+                with patch.object(browser.frame_steam, 'Page', return_value=page):
+                    self.assertIsNone(browser.ready_page(report))
+                page.sock.close.assert_called_once_with()
+                self.assertEqual(report['readinessAttempts'][0]['phase'], phase)
+                self.assertEqual(report['readinessAttempts'][0]['outcome'], outcome)
+
+    def test_ready_page_remains_owned_by_caller_and_trace_is_bounded(self):
+        browser = self.browser(); page = Mock(); page.eval.return_value = True
+        report = dict(readinessAttempts=[{} for _ in range(16)])
+        with patch.object(browser.frame_steam, 'Page', return_value=page):
+            self.assertIs(browser.ready_page(report), page)
+        page.sock.close.assert_not_called()
+        self.assertEqual(len(report['readinessAttempts']), 16)
+        self.assertTrue(report['readinessTraceOverflow'])
+
+    def test_failed_connection_records_phase_without_a_stale_page(self):
+        browser = self.browser(); report = {}
+        with patch.object(browser.frame_steam, 'Page', side_effect=OSError('owned timeout')):
+            self.assertIsNone(browser.ready_page(report))
+        self.assertEqual(report['readinessAttempts'][0]['phase'], 'page-connect')
+        self.assertEqual(report['readinessAttempts'][0]['outcome'], 'failure')
+
+
 class BrowserStartupEvidence(unittest.TestCase):
     def test_diagnostics_bound_logs_and_targets_without_retaining_target_urls(self):
         browser = load('owned_browser_diagnostics', ROOT/'tests/decky-runtime/syncthing_browser.py')
