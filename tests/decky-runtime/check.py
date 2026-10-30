@@ -428,10 +428,13 @@ def main():
                     storeBadgePosition='bc', showAnalysisButton=True, roundedCorners=False,
                     showLibraryIcons=True, libraryIconPosition='bl')
                 state = base/'settings'/record['folder']/'config.json'
-                assert not state.exists()
                 assert current('get_setting', 'settings', defaults) == defaults
+                # Published Decky shadows the bundled settings module and
+                # creates an empty config during SettingsManager startup.
+                initial = state.read_bytes()
+                assert initial == b''
                 assert current('get_setting', 'missing-private-setting', None) is None
-                assert not state.exists(), 'Reading defaults must not write settings'
+                assert state.read_bytes() == initial, 'Reading defaults must preserve config bytes'
                 info = current('get_system_info')
                 assert set(info) == {'plugin_version', 'os_name', 'os_version', 'decky_version'}
                 assert all(isinstance(value, str) and value for value in info.values()), info
@@ -459,7 +462,7 @@ def main():
                 assert current('get_setting', 'missing-private-setting', False) is False
                 assert current('get_system_info') == info
                 assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
-                report['privateSettings'] = dict(defaultReadWithoutWrite=True,
+                report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
                     settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
                     systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
