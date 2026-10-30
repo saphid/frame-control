@@ -50,7 +50,8 @@ local AMD64 replay to checkpoint `3a308783a5fc1c5404b4b9cd5ba2a118d72bbe8d`.
 Independent verification checks all 13 packed source fingerprints, 12 migration
 results, nine fresh-setup results, 17 lifecycle results and 18 ownership
 refusals, along with process identity and preserving uninstall. The owned VM
-was reaped. All 21 focused input/evidence tests pass. The earlier full server
+was reaped. All 23 focused input/evidence tests pass. A negative regression now rejects
+reuse of the initial legacy PID and process identities as restart proof. The earlier full server
 run passed 1,833 tests with 16 platform/environment skips, before the final
 pending-state assertion correction; it is not an all-platform native result.
 
@@ -72,3 +73,12 @@ install/update/remove, real Frame visuals and physical controller interaction
 remain separate gates. The VM exposes no host filesystem, bus, disk, hardware
 or network NIC; the Flatpak's host permission sees only that disposable guest.
 No real Frame was contacted. The hourly worn schedule is unchanged.
+
+The preceding combined signed-package gate (#475) subsequently passed all 16
+checks at `3ab03e9`. Both native artifacts were independently checked against
+that exact source revision ([record](framey-syncthing-signed-decky-native-ci-2026-10-30.json)).
+AMD64 discovered port 8384 on its first probe; ARM64 recorded null and then
+8384. Those bounded backend probes do not establish a browser retry. This
+follow-up still requires its own exact-head native migration CI. A separate
+private combined browser trial currently fails after Stop displays Failed;
+no browser lifecycle or VR/controller usability is credited here.
