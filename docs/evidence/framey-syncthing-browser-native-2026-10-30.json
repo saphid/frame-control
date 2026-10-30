@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Seventh guest passes all runtime checks; original driver fails readiness verifier. Corrected bounded readiness verifier passes retained evidence; fresh full driver trial required.",
+  "status": "Final 1843-test server regression passes (16 skips); fresh full driver trial at 8bbadf8 remains pending.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -1212,12 +1212,12 @@
     "runtimeVerified": false
   },
   "latestServerSuite": {
-    "sourceRevision": "b12f392921998b8d65385688ec2fe2151b11208c",
-    "tests": 1841,
+    "sourceRevision": "8bbadf8d43aa23da3293bbcfadb46f7b64c99525",
+    "tests": 1843,
     "skipped": 16,
     "failures": 0,
-    "elapsedSeconds": 223.362,
-    "logSha256": "3d6226373b90e193da6f4037bb8a8bbb14bf09b4c6ca790d97389f51af93a4bb"
+    "elapsedSeconds": 222.535,
+    "logSha256": "70d006c2ac25ad42a276fbaf1afd22bda4884b23097f0fb5dae70d7d761ee5c8"
   },
   "hostRendererArgumentRegression": {
     "realBackend": false,
@@ -1279,5 +1279,15 @@
     "scriptSha256": "d39cf5fa4f801cca269f88a13094f0094d990877f2f178f6c8c4bfc45fc9e58d",
     "logSha256": "12f0f61aa26fbe40741ee2b2cd9ca4464b8784b4c52d46c77483054a2160b4ae",
     "resultSha256": "6b160e41ca3fdd24d6c4d5814ea32f5cab8a47f60ecb7e795c0a9c3d2379f6e7"
-  }
+  },
+  "previousServerSuites": [
+    {
+      "sourceRevision": "b12f392921998b8d65385688ec2fe2151b11208c",
+      "tests": 1841,
+      "skipped": 16,
+      "failures": 0,
+      "elapsedSeconds": 223.362,
+      "logSha256": "3d6226373b90e193da6f4037bb8a8bbb14bf09b4c6ca790d97389f51af93a4bb"
+    }
+  ]
 }

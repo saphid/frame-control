@@ -153,3 +153,8 @@ in 200; it still rejects failed controls, unknown POST routes, missing readiness
 success and missing kernel sandbox fields. All 30 focused tests pass, and
 corrected offline validation accepts the retained browser evidence. The original
 failed driver result is unchanged. A fresh full driver run remains required.
+
+The final full server run at `8bbadf8`, including the readiness and kernel
+evidence verifier changes, passed 1,843 tests in 222.535 seconds with 16
+platform/environment skips and no failures. The eighth full driver trial
+runs at the same source checkpoint.
