@@ -22,7 +22,7 @@ class GatewayIsolation(unittest.TestCase):
         gateway = load('http_gateway_guard', ROOT/'tests/decky-runtime/syncthing_http.py')
         for uid, marker in [(0, 'Frame Control Flatpak VM v1\n'), (1100, 'different guest\n')]:
             with self.subTest(uid=uid, marker=marker), \
-                    patch.object(gateway.os, 'getuid', return_value=uid), \
+                    patch.object(gateway.os, 'getuid', return_value=uid, create=True), \
                     patch.object(gateway.Path, 'read_text', return_value=marker), \
                     patch.object(gateway.subprocess, 'Popen') as start, \
                     patch.dict(gateway.os.environ, {}, clear=True):
