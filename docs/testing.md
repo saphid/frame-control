@@ -1,11 +1,12 @@
 # Testing
 
-Frame Control is tested in three layers, from fast and fake to slow and real.
-A fourth, a SteamOS VM, may come later ([issue #6](https://github.com/saphid/steam-frame/issues/6)).
+Frame Control uses unit tests, Fake Frame end-to-end tests and a real-headset
+smoke test. A Windows test VM checks the packaged app. A SteamOS VM may come
+later ([issue #6](https://github.com/saphid/frame-control/issues/6)).
 
 | Layer | Runs | Needs | Covers |
 |---|---|---|---|
-| Unit tests (`tests/*.py`) | `python3 -m unittest discover -s tests` | Nothing | Parsing, validation, request guards; SSH and HTTP are mocked |
+| Unit tests (`tests/*.py`) | `python3 -m unittest discover -s tests` | Python 3 and Node.js | Parsing, validation, request guards; SSH and HTTP are mocked |
 | Fake Frame (`tests/e2e`) | `scripts/e2e.sh` | Linux with Docker | The real server and scripts against a container that behaves like a Frame |
 | Headset smoke test | `scripts/frame-smoke.sh` | A Frame on the `frame` alias | Install, launch and remove on the real device, recorded with its BUILD_ID |
 | [Windows test VM](#windows-test-vm) | `scripts/windows-vm.sh` | A Linux machine with KVM and Docker | The Windows build on a real Windows desktop, against a real Frame when needed |
@@ -70,8 +71,8 @@ node --check ui/control-center.js
 Responsive layout, actual browser rendering and keyboard/touch behavior still
 need browser verification. No Control Center test connects to a real headset.
 
-About 120 tests, a few seconds, on Python 3.9 and newer. GitHub Actions runs
-them on macOS, Windows and Linux. They don't pick up `tests/e2e`.
+GitHub Actions runs this suite on macOS and Windows with Python 3.12, and on
+Linux with Python 3.13. Unit-test discovery does not pick up `tests/e2e`.
 
 ## The fake Frame
 

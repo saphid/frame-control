@@ -32,7 +32,7 @@ On the Mac:
 To use the scripts from a checkout instead of the app:
 
 ```sh
-git clone https://github.com/saphid/steam-frame.git && cd steam-frame
+git clone https://github.com/saphid/frame-control.git && cd frame-control
 ./scripts/connect.sh              # or: ./scripts/connect.sh 192.168.1.50
 ssh frame                          # passwordless from now on
 ```
