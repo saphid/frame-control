@@ -287,8 +287,8 @@ class PreparedPackage(unittest.TestCase):
                                 'bridgeStopped', 'setupCommitted', 'discoveredApiKeySaved'), True)
         report.update(dict.fromkeys(('browserSandboxDisabled', 'realFrameContacted',
                                      'hostBusExposed', 'installerEnabled'), False))
-        report.update(savedPort=8384, panelSha256='a'*64,
-                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync'} for s in
+        report.update(savedPort=8384, panelSha256='a'*64, manualPortFallbackUsed=False,
+                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync', 'manualPortFallbackUsed': False} for s in
                               ('running', 'stopped', 'restarted', 'stopped')],
                       actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100, 101]},
                                                          {'stage': 'restarted', 'pids': [200, 201]}],
@@ -313,6 +313,22 @@ class PreparedPackage(unittest.TestCase):
         for mutation in mutations:
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 self.module.verify_browser({**self.browser(), **mutation}, 'a'*64)
+
+    def test_browser_evidence_distinguishes_manual_port_entry_from_automatic_discovery(self):
+        for manual in (False, True):
+            report = self.browser()
+            report['manualPortFallbackUsed'] = manual
+            for stage in report['stages']:
+                stage['manualPortFallbackUsed'] = manual
+            self.module.verify_browser(report, 'a'*64)
+            report['stages'][0]['manualPortFallbackUsed'] = not manual
+            with self.assertRaisesRegex(ValueError, 'port path evidence'):
+                self.module.verify_browser(report, 'a'*64)
+        for value in (None, 0, 1, 'false'):
+            report = self.browser()
+            report['manualPortFallbackUsed'] = value
+            with self.assertRaisesRegex(ValueError, 'port path'):
+                self.module.verify_browser(report, 'a'*64)
 
     def test_browser_readiness_accepts_only_bounded_425_then_success(self):
         for statuses in ([200], [425, 200], [425] * 9 + [200]):
