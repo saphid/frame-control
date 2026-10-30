@@ -631,6 +631,24 @@ def main():
                     'tags': tags, 'framey-private-false': False,
                 }
                 assert json.loads(before) == expected
+                # Exercise the actual published backup/restore RPCs against
+                # owned private files, then require restored bytes on restart.
+                backup = home/'private-tabmaster-backup.json'
+                assert current('backup_settings', str(backup)) is True
+                backup_bytes = backup.read_bytes()
+                assert json.loads(backup_bytes) == expected
+                assert current('set_tags', [{'id': 99, 'name': 'Private changed tag'}]) is None
+                dirty = state.read_bytes()
+                assert dirty != before
+                malformed = home/'private-tabmaster-invalid.json'
+                malformed.write_bytes(b'{invalid private JSON')
+                assert current('restore_settings', str(malformed)) is False
+                assert state.read_bytes() == dirty and backup.read_bytes() == backup_bytes
+                restored = current('restore_settings', str(backup))
+                assert restored is True, {'validBackupRestore': restored,
+                                          'nativeCalls': report['calls'][-5:]}
+                assert state.read_bytes() == before
+                assert backup.read_bytes() == backup_bytes
                 with zipfile.ZipFile(io.BytesIO(data)) as original:
                     original_backend = original.read(record['folder']+'/main.py')
                 assert (plugin/'main.py').read_bytes() == original_backend
