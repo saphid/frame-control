@@ -584,6 +584,51 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'nonsteam-private-shortcuts':
+                # Only this container user's synthetic Steam files are read.
+                assert str(home) == '/home/tester' and not Path('/home/deck').exists()
+                config = home/'.steam/steam/userdata/424242/config'
+                config.mkdir(parents=True)
+                shortcuts = config/'shortcuts.vdf'
+                assert current('get_all_store_mappings') == {}
+                # Independent binary VDF writer: object, string and signed int.
+                import struct
+                def field(kind, key, value):
+                    return bytes([kind])+key.encode()+b'\0'+value
+                def entry(index, appid, name, options):
+                    body = field(1, 'AppName', name.encode()+b'\0')
+                    body += field(1, 'LaunchOptions', options.encode()+b'\0')
+                    if appid is not None:
+                        body += field(2, 'appid', struct.pack('<i', appid))
+                    return field(0, str(index), body+b'\x08')
+                payload = field(0, 'shortcuts', b''.join([
+                    entry(0, -123, 'Private GOG', 'gog launch'),
+                    entry(1, 4242, 'Private Epic', 'epic launch'),
+                    entry(2, 4343, 'Private Amazon', 'amazon launch'),
+                    entry(3, 4444, 'Private Luna', 'luna launch'),
+                    entry(4, 4545, 'Private Other', 'private-launch'),
+                    entry(5, None, 'Private missing ID', 'gog launch'),
+                ])+b'\x08')+b'\x08'
+                shortcuts.write_bytes(payload)
+                expected = {
+                    '4294967173': {'store': 'gog', 'name': 'Private GOG'},
+                    '4242': {'store': 'epic', 'name': 'Private Epic'},
+                    '4343': {'store': 'amazon', 'name': 'Private Amazon'},
+                    '4444': {'store': 'amazon', 'name': 'Private Luna'},
+                    '4545': {'store': None, 'name': 'Private Other'},
+                }
+                observed = current('get_all_store_mappings')
+                assert observed == expected, {'observed': observed, 'expected': expected,
+                                               'actualHome': str(home)}
+                assert shortcuts.read_bytes() == payload
+                report['privateShortcuts'] = dict(actualUserHome=True,
+                    signedAppIdNormalized=True, storeClassification=True,
+                    missingAppIdSkipped=True, privateShortcutsPreserved=True,
+                    payloadSha256=hashlib.sha256(payload).hexdigest(),
+                    browserVerified=False, steamPageBadgesVerified=False,
+                    realFrameContacted=False, physicalControllerVerified=False)
+                report['result'] = ('published Decky API1 private shortcut mappings passed; '
+                                    'browser badges, Steam search, Frame and VR unverified')
             elif case['probe'] == 'protondb-private-settings':
                 # The exact frontend reads/writes one settings object. Keep
                 # every write inside the disposable native container home.
