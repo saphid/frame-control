@@ -29,3 +29,13 @@ separate merge gate.
 An actual 26.5 GB transfer from USB media to a Frame, end-to-end throughput,
 resume after interruption and free-space behavior remain unverified. No real
 headset or user file was touched for this change.
+
+## Fake Frame follow-up (2026-10-30)
+
+`tests/e2e/test_media_transfer.py` now sends a small local file whose path
+contains spaces through the desktop `POST /api/transfer` endpoint and checks
+its bytes in the fake Frame's `~/Downloads` after the real SSH copy. The same
+path is refused by the ordinary browser-mode server. Both tests in that e2e
+module passed in an isolated container project. This covers the HTTP-to-SSH
+route, not a real USB source, 26.5 GB throughput, interruption recovery, or
+the real headset.
