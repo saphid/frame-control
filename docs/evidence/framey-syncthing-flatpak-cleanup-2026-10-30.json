@@ -165,8 +165,73 @@
     "legacyPidAfter": 706,
     "migrationDataPreservedAfterUninstall": true
   },
-  "repairArm64CiVerified": false,
+  "repairArm64CiVerified": true,
   "mainAmd64RetryRequested": true,
   "mergeGatePass": false,
-  "registryLagReproducedByPassingRuns": false
+  "registryLagReproducedByPassingRuns": false,
+  "ciArm64": {
+    "head": "dbbee87da40075f7038706588987f592d983e81f",
+    "architecture": "aarch64",
+    "artifactSha256": "cad727bfe348bce30e1763afabe0f8a764435e508669eaa1b147323d731905c5",
+    "allSourceFingerprintsVerified": true,
+    "signedContentAndActualPackageVerified": true,
+    "requiredResults": {
+      "signedBundlesInstalled": true,
+      "packageLaunched": true,
+      "actualTwoWaySync": true,
+      "runtimeOriginGpgVerificationEnabled": true,
+      "appOriginGpgVerificationEnabled": true,
+      "actualUserServiceLifecycle": true,
+      "certificateRetained": true,
+      "syncRetainedAfterRestart": true,
+      "ownedServiceRemoved": true,
+      "ownedProcessesReaped": true,
+      "noOwnedFlatpakInstancesRemain": true,
+      "uninstallPreservedOwnedData": true
+    },
+    "commits": {
+      "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+      "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+    },
+    "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+    "stopElapsedSeconds": 0.672,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "setupPortScans": [
+      null,
+      8384
+    ],
+    "setupPortScanElapsedSeconds": 1.014,
+    "combinedDeckyVerified": true,
+    "requiredLifecycleResults": 17,
+    "wizardResults": {
+      "defaultPackageConfig": true,
+      "remainedUnconfiguredDuringScan": true,
+      "discoveredDefaultPort": true,
+      "discoveredDefaultApiKey": true,
+      "scannedBasicAuth": true,
+      "persistedThroughDeckyRpc": true,
+      "setupCommittedAndReloaded": true,
+      "authenticatedRestWithDiscoveredKey": true,
+      "ownedSetupServiceStopped": true
+    },
+    "ownershipRefusals": 18,
+    "processIdentityChecks": 10,
+    "uninstallPreservedCandidateData": true,
+    "migrationMountNamespaceAssertionSourceBound": true,
+    "migrationResults": 12,
+    "legacyPidBefore": 644,
+    "legacyPidAfter": 707,
+    "migrationDataPreservedAfterUninstall": true,
+    "workflowRun": 41050223842,
+    "artifactId": 12975488097,
+    "instanceCleanupElapsedSeconds": 1.029,
+    "remainingFlatpakApplications": []
+  },
+  "repairPrChecks": {
+    "head": "dbbee87da40075f7038706588987f592d983e81f",
+    "successful": 15,
+    "pending": 0,
+    "failed": 0
+  }
 }

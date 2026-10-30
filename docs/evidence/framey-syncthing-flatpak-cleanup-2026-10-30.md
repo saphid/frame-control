@@ -29,7 +29,10 @@ independently audited. Its backend setup needed one null scan before finding
 once more now that its containing workflow finished. The first failure remains
 retained, and no release is attempted from this commit.
 
-#478's ARM64 CI and the retry remain pending. No whole-main green or merge pass
-is credited. Syncthing installation stays blocked. No real Frame, SteamVR
+#478's exact-head ARM64 CI also passed independent audit, including signed
+identities, all lifecycle/refusal/migration results and preserving uninstall.
+Its final instance list was empty after 1.029 seconds. Both architectures are
+now audited and all 15 PR checks pass. Main's AMD64 retry remains live; no
+whole-main green or merge pass is credited. Syncthing installation stays blocked. No real Frame, SteamVR
 visuals or physical controller use were tested; the hourly worn schedule is
 unchanged.
