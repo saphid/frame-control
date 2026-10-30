@@ -226,14 +226,42 @@ window.advanceTerminal=(action,command)=>{window.terminalStage=null;
                     return page.eval('window.terminalStage')
                 stage = until_ready(advanced, 'production Terminal '+label, timeout=90)
                 assert stage['stage'] == label and not stage['errors'], stage
-                stages.append(stage); shots[label] = screenshot(page)
+                stages.append(stage)
+                if action == 'create':
+                    # A textarea appears before asynchronous configuration and
+                    # connectIO finish. Observe the real production replies;
+                    # never synthesize loaded state or skip frontend setup.
+                    until_ready(lambda: any(entry['request'].get('method') == 'send_terminal_buffer'
+                                and entry['httpStatus'] == 200 and entry['response'].get('result') is True
+                                for entry in requests), 'actual frontend Terminal subscription/buffer', timeout=90)
+                    terminal_lists = [entry['response']['result'] for entry in requests
+                                      if entry['request'].get('method') == 'get_terminals'
+                                      and entry['response'].get('result')]
+                    assert len(terminal_lists) == 1 and len(terminal_lists[0]) == 1
+                    shell_pid = terminal_lists[0][0]['pid']
+                    directory = Path('/proc')/str(shell_pid)
+                    assert directory.stat().st_uid == os.getuid()
+                    chain = [shell_pid]
+                    while chain[-1] != pid:
+                        parent = int(Path('/proc/'+str(chain[-1])+'/stat').read_text().rsplit(')', 1)[1].split()[1])
+                        assert parent > 1 and parent not in chain and len(chain) < 16
+                        chain.append(parent)
+                    report['browserShell'] = dict(pid=shell_pid, uid=os.getuid(), ancestryToDeckyService=chain)
                 if action == 'input':
-                    assert (home/'framey-browser-terminal-marker').read_bytes() == b'framey-browser-terminal\n'
-                    delivered = [event for entry in requests if entry['route'] == '/api/framey/events'
-                                 for event in entry['response'].get('events', [])]
-                    output = ''.join(event['args'][0] for event in delivered)
-                    assert '\r\nframey-browser-output\r\n' in output, output
-                    report['deliveredEvents'] = delivered
+                    def output_delivered():
+                        delivered = [event for entry in requests if entry['route'] == '/api/framey/events'
+                                     for event in entry['response'].get('events', [])]
+                        output = ''.join(event['args'][0] for event in delivered)
+                        return delivered if '\r\nframey-browser-output\r\n' in output else None
+                    report['deliveredEvents'] = until_ready(output_delivered, 'actual production event output', timeout=60)
+                    marker = (home/'framey-browser-terminal-marker').read_bytes()
+                    assert marker == b'framey-browser-terminal\n'
+                    report['privateMarkerSha256'] = hashlib.sha256(marker).hexdigest()
+                if action == 'close':
+                    until_ready(lambda: not Path('/proc/'+str(shell_pid)).exists(),
+                                'actual browser-created shell reaped', timeout=30)
+                    report['browserShellReaped'] = True
+                shots[label] = screenshot(page)
             assert cef.eval("DeckyBackend.call('loader/call_plugin_method',"+json.dumps(name)+",'get_terminals')") == []
             page.eval("document.getElementById('frameyClose').click()")
             until_ready(lambda: cef.eval('window.fixtureListeners.size===0&&window.__frameyEventBridgeV1.sessions.size===0'),
