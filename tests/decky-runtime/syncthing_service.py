@@ -423,6 +423,9 @@ def main(signed_flatpak=False):
             )
             assert authenticated['status'] == 200
             assert json.loads(authenticated['body'])['myID'] == own_id
+            # The official wizard commits setup before normal service controls
+            # become active; stop intentionally does nothing while unconfigured.
+            setting('is_setup', True)
             assert http('POST', 'stop')['status'] == 204
             assert prop(service, 'MainPID') == '0'
             report['wizardConfigDiscovery'] = dict(
@@ -431,7 +434,8 @@ def main(signed_flatpak=False):
                 scannedBasicAuth=True, persistedThroughDeckyRpc=True,
                 authenticatedRestWithDiscoveredKey=True, ownedSetupServiceStopped=True,
             )
-        setting('is_setup', True)
+        else:
+            setting('is_setup', True)
         reply = http('POST', 'reload-config')
         assert reply['status'] == 204, reply
         unit = directory / service
