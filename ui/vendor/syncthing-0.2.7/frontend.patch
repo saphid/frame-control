@@ -1,0 +1,25 @@
+--- a/index.js
++++ b/index.js
+@@ -2140,13 +2140,18 @@
+             setSettings(null);
+             let watchdogApi = new WatchdogApi();
+             try {
+-                const newState = await watchdogApi.getState();
+-                console.info(`Decky Syncthing: loaded state: ${newState}.`);
+-                setState(newState);
+                 const settingsResult = await serverApi.callPluginMethod(PLUGIN_API_GET_SETTINGS_JSON, {});
+                 if (settingsResult.success) {
+                     console.info(`Decky Syncthing: loaded settings.`);
+-                    setSettings(JSON.parse(settingsResult.result));
++                    const newSettings = JSON.parse(settingsResult.result);
++                    setSettings(newSettings);
++                    // Setup must remain reachable before an owned unit exists.
++                    // Configured profiles still surface actual state failures.
++                    if (newSettings.is_setup === true) {
++                        const newState = await watchdogApi.getState();
++                        console.info(`Decky Syncthing: loaded state: ${newState}.`);
++                        setState(newState);
++                    }
+                     setError(null);
+                 }
+                 else {
