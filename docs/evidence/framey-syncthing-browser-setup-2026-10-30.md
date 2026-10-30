@@ -111,3 +111,14 @@ browser passes do not establish a combined browser/backend pass. ARM64 browser
 execution, managed install/update/remove, gamescope, real Frame visuals and
 physical controller use remain separate gates. No real Frame was contacted;
 the hourly worn schedule is unchanged and no release is included.
+
+The migration layer #476 passed all 15 checks at
+`7a84502e01feb6a7a5f9f82c4ce27693577a2b8a` and merged as `af0433b`.
+Its AMD64 and ARM64 signed-package artifacts were independently bound to that
+exact source, signatures, signed process identities, 12 migration results,
+nine setup results, 17 lifecycle results, 18 ownership refusals and retained
+data after uninstall. The JSON retains both artifact IDs/digests and summaries.
+ARM64 needed two null backend probes before discovering 8384. Those backend
+fixture probes do not prove that the published UI retries; the synthetic
+manual-port case above still exercises its actual single-scan fallback.
+This additional native backend proof remains separate from browser execution.
