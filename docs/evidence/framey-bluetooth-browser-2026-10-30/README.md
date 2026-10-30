@@ -1,0 +1,11 @@
+# Private published Bluetooth browser replay
+
+Source `6a2175e3f7fbfd1388db54a08a5942b0e7b5e4fd`, published Bluetooth 3.1.1/store 18 and actual Decky 3.3.0 API1. This networkless AMD64 owned VM used synthetic browser activation, a private test bridge and private synthetic BlueZ objects. All 90 product input hashes and 31 published executable files were verified; complete guest packet and two clean loader shutdowns (0.886/0.727 seconds) were independently checked. All owned browser, HTTP, event, loader, bus/service, user-manager and QEMU processes were cleaned.
+
+Inspected captures show paired-device names and 73% controller battery, visible disconnected/connected state changes, disabled rows while power is off and restored state after loader restart. Actual native RPC results and BlueZ writes verify disconnect/reconnect, adapter off/on, no write from activating a powered-off row, and a refresh after the frontend loading guard clears. The refresh control is unusually wide under the host CSS; this is not a Steam CEF layout claim.
+
+Attempt 1 failed the unchanged system-bus isolation guard before any RPC. Attempt 2 failed a fixture Refresh selector after six stages. Attempt 3 clicked Refresh while the published frontend was busy and correctly failed the new-RPC assertion. This retained fourth attempt fixes only the fixture: an owned child mount namespace hides the guest system bus, and Refresh activation waits for loading to end. Product and BlueZ guards remain unchanged. All failed attempts remain retained locally and cleaned.
+
+No production HTTP parent, real Steam CEF, radio/pairing, headset, wearer-visible result or physical controller interaction is verified. Compatibility remains partial. Frozen runner/probe/verifier files preserve this exact experiment and reference local owned paths; they are evidence, not a portable supported test command. The verifier originally emits `capturesVisuallyInspected: false`; the saved verified report records the subsequent direct inspection.
+
+The raw result, all input fingerprints, full bounded packet, raw loader logs inside the result, console and four PNG captures are retained here. Current-head ARM package CI and resulting main CI remain separate merge gates.
