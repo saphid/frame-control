@@ -831,5 +831,132 @@
       "installerEnabled": false,
       "realFrameContacted": false
     }
+  },
+  "subsequentExactHeadNativeCi": {
+    "head": "7a84502e01feb6a7a5f9f82c4ce27693577a2b8a",
+    "pullRequest": "https://github.com/saphid/frame-control/pull/476",
+    "mergeCommit": "af0433ba36235e5cbd4dbcf14e6c44df591b399a",
+    "all15ChecksPassed": true,
+    "artifacts": [
+      {
+        "head": "7a84502e01feb6a7a5f9f82c4ce27693577a2b8a",
+        "architecture": "x86_64",
+        "artifactSha256": "b4e548f7e34b885673608f1d1057982be2da75499f6f2616350a040d39b69d93",
+        "allSourceFingerprintsVerified": true,
+        "signedContentAndActualPackageVerified": true,
+        "requiredResults": {
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appOriginGpgVerificationEnabled": true,
+          "actualUserServiceLifecycle": true,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        },
+        "commits": {
+          "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+        },
+        "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+        "stopElapsedSeconds": 0.137,
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "setupPortScans": [
+          8384
+        ],
+        "setupPortScanElapsedSeconds": 0.305,
+        "combinedDeckyVerified": true,
+        "requiredLifecycleResults": 17,
+        "wizardResults": {
+          "defaultPackageConfig": true,
+          "remainedUnconfiguredDuringScan": true,
+          "discoveredDefaultPort": true,
+          "discoveredDefaultApiKey": true,
+          "scannedBasicAuth": true,
+          "persistedThroughDeckyRpc": true,
+          "setupCommittedAndReloaded": true,
+          "authenticatedRestWithDiscoveredKey": true,
+          "ownedSetupServiceStopped": true
+        },
+        "ownershipRefusals": 18,
+        "processIdentityChecks": 10,
+        "uninstallPreservedCandidateData": true,
+        "migrationMountNamespaceAssertionSourceBound": true,
+        "migrationResults": 12,
+        "legacyPidBefore": 637,
+        "legacyPidAfter": 697,
+        "migrationDataPreservedAfterUninstall": true,
+        "artifactId": 12971754618,
+        "workflowRun": 41043385436,
+        "jobId": 124021391565,
+        "jobUrl": "https://github.com/saphid/frame-control/actions/runs/41043385436/job/124021391565"
+      },
+      {
+        "head": "7a84502e01feb6a7a5f9f82c4ce27693577a2b8a",
+        "architecture": "aarch64",
+        "artifactSha256": "8390db4cb92a5d126c67eaf0e9688d6d3389daab6102fe3b285f415b75f04678",
+        "allSourceFingerprintsVerified": true,
+        "signedContentAndActualPackageVerified": true,
+        "requiredResults": {
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appOriginGpgVerificationEnabled": true,
+          "actualUserServiceLifecycle": true,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "noOwnedFlatpakInstancesRemain": true,
+          "uninstallPreservedOwnedData": true
+        },
+        "commits": {
+          "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+          "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+        },
+        "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+        "stopElapsedSeconds": 0.742,
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "setupPortScans": [
+          null,
+          null,
+          8384
+        ],
+        "setupPortScanElapsedSeconds": 1.132,
+        "combinedDeckyVerified": true,
+        "requiredLifecycleResults": 17,
+        "wizardResults": {
+          "defaultPackageConfig": true,
+          "remainedUnconfiguredDuringScan": true,
+          "discoveredDefaultPort": true,
+          "discoveredDefaultApiKey": true,
+          "scannedBasicAuth": true,
+          "persistedThroughDeckyRpc": true,
+          "setupCommittedAndReloaded": true,
+          "authenticatedRestWithDiscoveredKey": true,
+          "ownedSetupServiceStopped": true
+        },
+        "ownershipRefusals": 18,
+        "processIdentityChecks": 10,
+        "uninstallPreservedCandidateData": true,
+        "migrationMountNamespaceAssertionSourceBound": true,
+        "migrationResults": 12,
+        "legacyPidBefore": 646,
+        "legacyPidAfter": 708,
+        "migrationDataPreservedAfterUninstall": true,
+        "artifactId": 12972349707,
+        "workflowRun": 41043385436,
+        "jobId": 124021391043,
+        "jobUrl": "https://github.com/saphid/frame-control/actions/runs/41043385436/job/124021391043"
+      }
+    ],
+    "scope": "Actual signed Syncthing/Decky backend migration on native AMD64 and ARM64; no combined browser/backend or physical controller evidence."
   }
 }

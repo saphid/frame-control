@@ -82,3 +82,20 @@ AMD64 discovered port 8384 on its first probe; ARM64 recorded null and then
 follow-up still requires its own exact-head native migration CI. A separate
 private combined browser trial currently fails after Stop displays Failed;
 no browser lifecycle or VR/controller usability is credited here.
+
+## Subsequent exact-head native CI
+
+This layer subsequently passed all 15 checks at
+`7a84502e01feb6a7a5f9f82c4ce27693577a2b8a` and merged in #476 as `af0433b`.
+The JSON now includes independent AMD64/ARM64 signed-package artifact audits:
+12971754618 and 12972349707 from workflow 41043385436. Both bind exact source,
+package signatures/commits, real process identities, 12 migration results,
+nine backend setup results, 17 lifecycle results, 18 ownership refusals and
+migration-data preservation after uninstall. No cancellation or skip is counted.
+
+ARM64 recorded two null discovery probes before 8384; this is bounded backend
+fixture behavior, not a published browser retry. These artifacts precede the
+separate browser/state-lookup changes and do not verify those changes on ARM64.
+The local combined browser replay is recorded separately in
+[its own evidence](framey-syncthing-browser-native-2026-10-30.md). Real Frame,
+physical controller and managed installer claims remain unverified.
