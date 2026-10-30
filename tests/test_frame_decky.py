@@ -151,12 +151,19 @@ builtins.__import__ = panel_import
             systemctl = home / 'systemctl'
             systemctl.write_text('#!/bin/sh\nexit 0\n')
             systemctl.chmod(0o700)
-            before = {p: p.read_bytes() for p in (plugin, receipt, service)}
+            os_release = home / 'os-release'
+            os_release.write_text('VERSION_ID="13"\nVARIANT_ID="vr"\nBUILD_ID="private-fixture"\n')
+            before = {p: p.read_bytes() for p in (plugin, receipt, service, os_release)}
             server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
             thread = threading.Thread(target=server.serve_forever, daemon=True)
             thread.start()
             try:
                 probe = frame_decky.PROBE.replace('8080, timeout=2', str(server.server_port)+', timeout=2')
+                # The remote runs on Linux; desktop tests also run on macOS,
+                # which has no /etc/os-release. Supply only this owned OS fixture.
+                self.assertEqual(probe.count("pathlib.Path('/etc/os-release')"), 1)
+                probe = probe.replace("pathlib.Path('/etc/os-release')",
+                                      'pathlib.Path('+repr(str(os_release))+')')
                 # The cold remote probe must not load URL/proxy/TLS helpers.
                 guard = '''import builtins
 original_import = builtins.__import__
@@ -182,6 +189,8 @@ builtins.__import__ = bounded_import
                         self.assertIs(status['managed'], True)
                         self.assertIs(status['running'], True)
                         self.assertEqual(status['arch'], os.uname().machine)
+                        self.assertEqual((status['frameOS'], status['variant'], status['build']),
+                                         ('13', 'vr', 'private-fixture'))
                         self.assertEqual(status['version'], 'v3.3.0')
                         self.assertEqual(status['plugins'][0]['name'], 'Example')
                         self.assertEqual({p: p.read_bytes() for p in before}, before)

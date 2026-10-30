@@ -1,0 +1,10 @@
+{
+  "head": "f9301c93882765144b74f9effd73cce549107b8a",
+  "job": 124331191189,
+  "run": 41133819816,
+  "logSha256": "1b72fb6645e3ce63b4c26f08608158b646f41eaf74f712ef8c60a154dd630ca3",
+  "failure": "FileNotFoundError: /etc/os-release",
+  "failedTest": "test_loopback_status_preserves_inventory_when_cef_is_unavailable",
+  "fix": "Use private os-release fixture in test; unchanged production Linux probe, real loopback CEF checks and all four response cases retained.",
+  "macosExecutionVerified": false
+}
