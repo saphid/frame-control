@@ -68,6 +68,7 @@ WINE_CELLAR_MAIN = '87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6
 WINE_CELLAR_FRONTEND = '51ffdf606e0e307f46ea45828eb94f24ce75c44ccce5f55f696aa7aec89924b6'
 WINE_CELLAR_AARCH64 = 'd668a9ac02ccce97cf601bcff86f0b2104ee85e6a1105499e66178d9d19b64a8'
 WINE_CELLAR_MANAGED_MAIN = '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
+DOWNLOAD_ALL_DIGEST = '0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'
 
 VERSION = re.compile(r'[A-Za-z0-9][A-Za-z0-9._+\-]{0,39}\Z')
 
@@ -417,6 +418,30 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==131 and digest=='0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'
+                    and folder=='decky-download-all'):
+                frontend=unpacked/'dist/index.js'
+                bundle=frontend.read_bytes()
+                if (manifest.get('name')!='Download All' or manifest.get('api_version')!=1 or flags!=[]
+                        or hashlib.sha256(bundle).hexdigest()!='af34a036e8a68e0700fd924bc4f35655df0dd6daba59cd950c60c7bb8d42c9de'):
+                    raise RuntimeError('Download All frontend differs from pinned archive')
+                bundle=bundle.replace(b'const handleDownloadAll = () => {',b'const handleDownloadAll = async () => {')
+                start=bundle.index(b'        // Find the end of the current queue')
+                end=bundle.index(b'        toaster.toast({',start)
+                # Await one bounded batch. Never report success while Steam
+                # operations are still pending or after a partial failure.
+                batch=b"""        try {
+            await SteamClient.Downloads.FrameyQueueDownloads(items.map(item => item.appid));
+        } catch (error) {
+            toaster.toast({title: "Download queue stopped", body: String(error.message || error)});
+            return;
+        }
+"""
+                managed=bundle[:start]+batch+bundle[end:]
+                managed=managed.replace(b'Added ${items.length} downloads to queue (smallest first)',
+                                        b'Submitted ${items.length} downloads to Steam (smallest first)')
+                frontend.write_bytes(managed)
+                compat_shims.append('download-all-local-queue')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()

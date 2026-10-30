@@ -6,11 +6,14 @@ ROOT = Path(__file__).parent / 'fixtures/framey-official'
 # Golden bytes after the exact managed frontend transformations. The full
 # fake-Frame transport audit must not expect the original ZIP bytes here.
 MANAGED_FRONTENDS = {
+    131: '62f1fbb5636335bde268f0461d70dc03ee7ea2d2630f0e6957dba248523cd2e9',
     50: '76674318a475e2eeea8c6df4f44a7a5da5b07fac730b13b8b117365e28c75125',
     60: '34968b88fc828708680c1b82d774e76e8e11b5413222b9c508c10e1b7c375c78',
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 131, 'name': 'Download All', 'version': '1.1.0', 'api_version': 1,
+     'folder': 'decky-download-all', 'sha256': '0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'},
     {'id': 130, 'name': 'Games Prefix Manager', 'version': '1.0.1', 'api_version': 'legacy',
      'folder': 'GamesPrefixManager', 'sha256': 'ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473'},
     {'id': 68, 'name': 'Wine Cellar', 'version': '0.2.1', 'api_version': 1,

@@ -404,7 +404,7 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         with tarfile.open(fileobj=io.BytesIO(gzip.decompress(packed))) as archive:
             names = set(archive.getnames())
         self.assertTrue({'ui/framey_panel.py','ui/framey-host.js',
-                         'ui/framey-events.js','ui/framey-running.js',
+                         'ui/framey-events.js','ui/framey-running.js','ui/framey-downloads.js',
                          'ui/vendor/react-18.3.1.min.js','ui/vendor/react-dom-18.3.1.min.js',
                          'ui/vendor/REACT-LICENSE.txt','ui/vendor/REACT-DOM-LICENSE.txt'} <= names)
 

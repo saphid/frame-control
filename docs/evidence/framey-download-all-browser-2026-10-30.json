@@ -1,0 +1,77 @@
+{
+  "type": "test:done",
+  "passed": true,
+  "scheduled": true,
+  "all": true,
+  "sizeLimit": true,
+  "partialFailure": true,
+  "calls": [
+    [
+      "queue",
+      1,
+      "0"
+    ],
+    [
+      "index",
+      1,
+      1,
+      "0"
+    ],
+    [
+      "queue",
+      2,
+      "0"
+    ],
+    [
+      "index",
+      2,
+      2,
+      "0"
+    ],
+    [
+      "resume",
+      3,
+      "0"
+    ],
+    [
+      "queue",
+      5,
+      "0"
+    ],
+    [
+      "index",
+      5,
+      3,
+      "0"
+    ],
+    [
+      "resume",
+      3,
+      "0"
+    ],
+    [
+      "queue",
+      1,
+      "0"
+    ],
+    [
+      "index",
+      1,
+      1,
+      "0"
+    ]
+  ],
+  "exactNativeCalls": true,
+  "syntheticInput": true,
+  "realSteam": false,
+  "plugin": {
+    "id": 131,
+    "name": "Download All",
+    "version": "1.1.0",
+    "api_version": 1,
+    "folder": "decky-download-all",
+    "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da"
+  },
+  "managedFrontendSha256": "62f1fbb5636335bde268f0461d70dc03ee7ea2d2630f0e6957dba248523cd2e9",
+  "browser": "Google Chrome 156.0.8078.79"
+}

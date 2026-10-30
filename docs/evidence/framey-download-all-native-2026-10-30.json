@@ -1,0 +1,31 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "cases": [
+    {
+      "id": 131,
+      "name": "Download All",
+      "version": "1.1.0",
+      "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
+      "shim": "download-all-local-queue",
+      "calls": [
+        {
+          "method": "log_from_ui",
+          "result": {
+            "success": true
+          }
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Download All",
+          "version": "1.1.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "result": "published Decky discovery and logging RPC passed; Steam queue behavior is covered by isolated CEF/frontend fixtures, not this backend"
+    }
+  ]
+}

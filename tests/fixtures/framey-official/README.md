@@ -28,6 +28,7 @@ from a local fixture so CI does not depend on the store being online.
 | `60.zip` | DeckyFileServer | 1.2.0 | `7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0` |
 | `125.zip` | Decky Localsend | 0.4.5 | `e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7` |
 | `114.zip` | Network Sentinel | 1.0.4 | `d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5` |
+| `131.zip` | Download All | 1.1.0 | `0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da` |
 | `67.zip` | Battery Tracker | 0.2.0 | `91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94` |
 | `96.zip` | Simple Timer | 1.0.0 | `973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312` |
 | `7.zip` | CSS Loader | 2.1.3 | `99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231` |

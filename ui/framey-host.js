@@ -732,6 +732,47 @@
   DFL.Router = {...DFL.Navigation,
     get RunningApps() {return runningApps;}, get MainRunningApp() {return mainRunningApp;},
   };
+  if (document.getElementById('framey-bundle')?.dataset?.downloads === '1') {
+    const listeners = new Set();
+    let timer = null, polling = null, closed = false, available = false, revision = 0;
+    const close = () => {
+      clearTimeout(timer); available = false;
+      parent.postMessage({type:'framey:downloads:close',session:cacheSession},'*');
+    };
+    const poll = () => {
+      if (closed || !listeners.size || polling) return;
+      polling = request('read',[],false,'framey:downloads').then(data => {
+        if (!data?.ready || !Array.isArray(data.items) || data.items.length > 2048 ||
+            !Number.isSafeInteger(data.revision) || data.revision < 1)
+          throw Error('Steam has not supplied its download list yet');
+        if (closed || !listeners.size) return;
+        available = true;
+        revision = data.revision;
+        if (error.textContent.startsWith('Download queue unavailable:')) error.textContent = '';
+        for (const listener of listeners) listener(true,[{remote_client_id:'0',item_data:data.items}]);
+      }).catch(failure => {
+        available = false;
+        if (!closed && listeners.size) error.textContent = 'Download queue unavailable: '+failure.message;
+      }).finally(() => {
+        polling = null;
+        if (!closed && listeners.size) timer = setTimeout(poll,2000);
+      });
+    };
+    window.SteamClient.Downloads = {
+      RegisterForDownloadItems:listener => {
+        if (typeof listener !== 'function' || listeners.size >= 8) throw Error('Invalid download listener');
+        listeners.add(listener); poll();
+        return {unregister() {listeners.delete(listener); if (!listeners.size) close();}};
+      },
+      FrameyQueueDownloads:async appids => {
+        if (closed || !available || !listeners.size) throw Error('Steam download list is unavailable');
+        const value = await request('queue',[appids,revision],false,'framey:downloads');
+        clearTimeout(timer); poll();
+        return value;
+      },
+    };
+    addEventListener('pagehide',() => {closed = true; listeners.clear(); close();});
+  }
   DFL.DialogButton.render = () => ({type: DFL.DialogButton});
   const toaster = {toast: ({title, body, subtext, icon, logo, duration, showToast=true, onClick}={}) => {
     const data = {title, body, subtext, icon, logo};

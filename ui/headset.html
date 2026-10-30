@@ -281,8 +281,12 @@ function openFrameyPanel(id,name){
   setTimeout(()=>{if(activeFrameyId===id&&byId('frameyPanelStatus').textContent==='Loading plugin panel…')
     byId('frameyPanelStatus').textContent='No compatible panel loaded. This plugin may need Steam UI features Framey cannot provide.';},12000);
 }
-let frameyEventsActive=false,frameyRunningActive=false;
+let frameyEventsActive=false,frameyRunningActive=false,frameyDownloadsActive=false;
 function closeFrameyEvents(){
+  if(frameyDownloadsActive&&activeFrameyId!==null&&frameySession)
+    api('/api/framey/downloads',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+      session:frameySession,action:'close'}).catch(()=>{});
+  frameyDownloadsActive=false;
   if(frameyRunningActive&&activeFrameyId!==null&&frameySession)
     api('/api/framey/running',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
       session:frameySession,active:false}).catch(()=>{});
@@ -379,6 +383,28 @@ window.addEventListener('message',async event=>{
     api('/api/framey/check',{kind:'input'}).catch(()=>{});return;}
   if(req.type==='framey:error'&&req.session===frameySession){
     byId('frameyPanelStatus').textContent=`Plugin panel unavailable: ${String(req.message).slice(0,200)}`;return;}
+  if(req.type==='framey:downloads:close'){
+    if(req.session===frameySession&&frameyDownloadsActive){
+      frameyDownloadsActive=false;
+      api('/api/framey/downloads',{id:activeFrameyId,receipt:activeFrameyReceipt?.sha256,
+        session:frameySession,action:'close'}).catch(()=>{});
+    }return;
+  }
+  if(req.type==='framey:downloads'){
+    if(req.session!==frameySession||activeFrameyId!==131||!Number.isSafeInteger(req.id)||req.id<1||
+      !Array.isArray(req.args)||!['read','queue'].includes(req.method)||
+      (req.method==='read'?req.args.length!==0:req.args.length!==2||!Array.isArray(req.args[0])||
+        !Number.isSafeInteger(req.args[1])||req.args[1]<1))return;
+    const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
+      reply={type:'framey:reply',id:req.id};
+    frameyDownloadsActive=true;
+    try{const data=await api('/api/framey/downloads',{id:pluginId,receipt,session,action:req.method,
+      ...(req.method==='queue'?{appids:req.args[0],revision:req.args[1]}:{})});reply.result=data.result;}
+    catch(error){reply.error=error.message;}
+    if(pluginId===activeFrameyId&&session===frameySession&&event.source===byId('frameyFrame').contentWindow)
+      event.source.postMessage(reply,'*');
+    return;
+  }
   if(req.type==='framey:running:close'){
     if(req.session===frameySession&&frameyRunningActive){
       frameyRunningActive=false;
