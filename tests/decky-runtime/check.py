@@ -1000,12 +1000,40 @@ def main():
                 copied = home/'Pictures/Screenshots/Private Game/selected.jpg'
                 assert copied.read_bytes() == marker
                 assert (home/'Pictures/Screenshots/most_recent.jpg').read_bytes() == marker
+                assert screenshots.stat().st_dev != copied.stat().st_dev, 'requires separate source/output filesystems'
+                assert legacy('copy_screenshot', app_id=4242,
+                              url='https://localhost/selected.jpg') is True
+                (screenshots/'selected.jpg').write_bytes(b'changed private original')
+                assert copied.read_bytes() == marker, 'destination must not share the source inode'
+                assert legacy('copy_screenshot', app_id=4242,
+                              url='https://localhost/selected.jpg') is False
+                assert copied.read_bytes() == marker, 'conflicting output must survive'
+                (screenshots/'selected.jpg').write_bytes(marker)
+                legacy('set_id_map_fronend', allapps=[[4242, '../../escaped']])
+                assert legacy('copy_screenshot', app_id=4242,
+                              url='https://localhost/selected.jpg') is True
+                assert not (home/'escaped/selected.jpg').exists()
+                legacy('set_id_map_fronend', allapps=[[4242, 'Private Game']])
+                external = home/'private-external.jpg'
+                external.write_bytes(b'private external marker')
+                linked = screenshots/'linked.jpg'
+                linked.symlink_to(external)
+                assert legacy('copy_screenshot', app_id=4242,
+                              url='https://localhost/linked.jpg') is False
+                assert external.read_bytes() == b'private external marker'
+                linked.unlink()
+                for app in ('*', '../*', True, -1):
+                    assert legacy('copy_screenshot', app_id=app,
+                                  url='https://localhost/selected.jpg') is False
+                report['independentState'] = {'differentFilesystems':True, 'repeatCopy':True,
+                    'sourceIndependent':True, 'titleConfined':True, 'symlinkRefused':True,
+                    'conflictingOutputPreserved':True}
                 (screenshots/'historical.jpg').write_bytes(b'Framey historical fixture\n')
                 assert legacy('aggregate_all', allapps=[[4242, 'Private Game']]) == 1
                 assert (copied.parent/'historical.jpg').read_bytes() == b'Framey historical fixture\n'
                 assert legacy('was_rescued') is False
                 report['result'] = ('discovery, backend import, empty aggregation, private screenshot '
-                                    'copy and historical aggregation passed')
+                                    'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed')
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()

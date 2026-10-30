@@ -46,6 +46,8 @@ def render(data):
         'Automatic orphan cleanup is disabled; unmatched prefixes are labeled Unidentified because non-Steam shortcut coverage is incomplete. Actual Decky RPC fixtures preserve a second user’s prefix with malformed or unreadable shortcuts. Symlink prefixes and backups containing symlinks or special files are refused. Real prefix changes, complete non-Steam names and worn VR remain unverified, so the plugin is partial. '
         'An independent cleanup audit passed and battery stayed 100 → 100. A fresh store read on 2026-10-29 confirmed all 116 catalog version/digest records unchanged.', '',
         'An [upstream Games Prefix Manager v1.0.2 preflight](evidence/framey-prefix-manager-102-2026-10-30.md) pins the separate GitHub release asset while the live Decky store still serves 1.0.1. Its exact managed copy refuses the new game-data deletion option before changing files. Published Decky 3.3.0 x86_64 checked private prefix RPCs, and local Chromium rendered the managed panel with the option hidden. The catalog row and published classification remain for store 1.0.1; v1.0.2 has no live Frame or worn-VR verification.', '',
+        'A [Shotty copy-boundary follow-up](evidence/framey-shotty-bounded-2026-10-30.md) confines output paths, refuses symlinks and ambiguous account matches, preserves conflicting images and makes independent copies across filesystems. '
+        'Published Decky 3.3.0 x86_64 verifies private selected-copy and historical-aggregation RPCs; the local runtime proof is x86_64 only, and real Frame screenshots, continuous rescue and worn/controller use remain unverified. Existing installs need Update/reinstall.', '',
         'A [Download All queue follow-up](evidence/framey-download-all-2026-10-30.md) enables only the exact managed 1.1.0 archive. '
         'An opaque local Chromium panel with synthetic Steam callbacks verifies Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failure. '
         'Published Decky 3.3.0 x86_64 verifies discovery and logging RPC only. Actual Steam queue changes, ARM64 Frame runtime, headset rendering and physical controller use remain unverified; the plugin is partial and older copies require update/reinstall.', '',
@@ -79,7 +81,7 @@ def render(data):
         'and the current public Steam ID from real Frame CEF under the shared lock. Local Chromium replayed this detached snapshot '
         'to render Deck Settings game selection, Steamback\'s empty save panel and PlayTime statistics/settings. '
         'Steamback and PlayTime used actual Decky 3.3.0 amd64 backends in an isolated container; their ARM64 backends and automatic game hooks remain unverified. '
-        'Shotty\'s frontend now starts, but its published backend fails on missing `click`; it stays broken. '
+        'Shotty initially failed on missing `click`. Its [managed Python fix](evidence/framey-shotty-python-2026-10-26.md) and [native copy RPC check](evidence/framey-shotty-rpc-2026-10-28.md) moved it to partial. '
         'A [chunked frontend follow-up](evidence/framey-deck-shelves-browser-2026-10-26.md) loaded Deck Shelves 2.0.0 '
         'through a managed JavaScript module route and rendered its settings in an opaque local Chromium panel. '
         'Its backend was denied; Steam Home shelves and worn VR remain unverified. '
