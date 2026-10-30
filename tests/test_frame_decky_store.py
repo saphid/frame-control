@@ -231,6 +231,35 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotEqual(result.returncode, 0)
         self.assertTrue(external.exists())
 
+    def test_nonsteam_badges_repairs_only_pinned_user_paths_and_preserves_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 133)
+        data = official_archive(record)
+        folder = self.folder.parent/record['folder']
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            backend = original.read(record['folder']+'/main.py')
+            for plugin_id in (42, 133):
+                with self.subTest(plugin_id=plugin_id):
+                    result = self.apply('install', data, plugin_id=plugin_id,
+                                        folder=record['folder'], version=record['version'])
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    expected = backend
+                    if plugin_id == 133:
+                        expected = expected.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                                                    b'(Path.home()/".steam/steam/userdata")')
+                        expected = expected.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                                                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                    self.assertEqual((folder/'main.py').read_bytes(), expected)
+                    for item in original.infolist():
+                        if not item.is_dir() and item.filename != record['folder']+'/main.py':
+                            self.assertEqual((folder/item.filename.split('/', 1)[1]).read_bytes(), original.read(item))
+                    receipt = json.loads((folder/'.frame-control-store.json').read_text())
+                    self.assertEqual(receipt.get('compatShims', []),
+                                     ['nonsteam-badges-user-paths'] if plugin_id == 133 else [])
+                    self.assertEqual(self.apply('remove', plugin_id=plugin_id,
+                                                folder=record['folder']).returncode, 0)
+                    self.assertFalse(folder.exists())
+
     def test_prefix_manager_is_user_scoped_with_legacy_api_and_original_license(self):
         from framey_official import PLUGINS, archive as official_archive
         record = next(p for p in PLUGINS if p['id'] == 130)
