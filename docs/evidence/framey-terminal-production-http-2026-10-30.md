@@ -117,6 +117,13 @@ The owned Terminal unit now uses that policy and the shared bounded stop
 observer, requiring inactive state, `Result=success`, zero exit status/MainPID
 and the original PID gone. A stop failure is retained and remains fatal;
 the fixture no longer treats any inactive unit as sufficient shutdown proof.
-Updated exact-head native CI and the local AMD64 replay are pending. ARM64
+The updated [local AMD64 replay audit](framey-terminal-status-trace-local-2026-10-30.json)
+at `19c351fd888ea4a3fb767dc4ac63268f85636e3a` passed all 165 fingerprints,
+14 method requests, seven event polls, native/delivered output and all three
+visually inspected captures. Its first installed-status HTTP request took
+8.162 seconds; its unchanged SSH status command took 8.103 seconds. The owned
+Decky unit stopped with mixed policy, inactive/success state, zero exit status
+and MainPID in 2.897 seconds. No observer failure or leak was observed.
+Updated exact-head native CI remains required. ARM64
 browser, real Steam CEF, managed installation and physical-controller limits
 remain unverified.
