@@ -29,8 +29,8 @@ def rpc(route, *args):
     return asyncio.run(request(route, list(args)))
 
 
-def wait(read, description):
-    end = time.monotonic() + 60
+def wait(read, description, *, timeout=60):
+    end = time.monotonic() + timeout
     last = None
     while time.monotonic() < end:
         try:
@@ -88,6 +88,7 @@ def main(signed_flatpak=False):
 
     service = 'frame-control-syncthing.service'
     backend = None
+    decky_service = None
     logs = []
     directory = home / '.config/systemd/user'
     directory.mkdir(parents=True, exist_ok=True)
@@ -362,9 +363,25 @@ def main(signed_flatpak=False):
     try:
         log = (home / 'decky.log').open('w+')
         logs.append(log)
-        backend = subprocess.Popen(
-            [str(loader)], env=env, stdout=log, stderr=log, start_new_session=True
-        )
+        if signed_flatpak and Path('/input/syncthing_http_parent.py').exists():
+            decky_service = directory/'frame-control-decky.service'
+            assert not decky_service.exists()
+            variables = ('UNPRIVILEGED_PATH', 'PRIVILEGED_PATH', 'CHOWN_PLUGIN_PATH',
+                         'LIVE_RELOAD', 'USE_CEF_CLOSE_WORKAROUND', 'KEEP_SYSTEMD_SERVICE',
+                         'PATH', 'DBUS_SESSION_BUS_ADDRESS', 'XDG_RUNTIME_DIR', 'STNOUPGRADE')
+            decky_service.write_text('[Unit]\nDescription=Owned actual Decky parent probe\n'
+                '[Service]\nType=exec\nExecStart='+json.dumps(str(loader))+'\n'
+                + ''.join('Environment='+json.dumps(key+'='+env[key])+'\n' for key in variables)
+                + 'StandardOutput=append:'+str(home/'decky.log')+'\n'
+                + 'StandardError=append:'+str(home/'decky.log')+'\n')
+            ctl('daemon-reload')
+            ctl('start', decky_service.name)
+            assert prop(decky_service.name, 'ActiveState') == 'active'
+            report['actualDeckyUserService'] = True
+        else:
+            backend = subprocess.Popen(
+                [str(loader)], env=env, stdout=log, stderr=log, start_new_session=True
+            )
         found = wait(lambda: rpc('loader/get_plugins'), 'Decky discovery')
         assert any(p['name'] == 'Syncthing' for p in found)
 
@@ -768,6 +785,14 @@ def main(signed_flatpak=False):
             if backend.poll() is None:
                 os.killpg(backend.pid, signal.SIGTERM)
             backend.wait(timeout=15)
+        if decky_service is not None:
+            decky_pid = int(prop(decky_service.name, 'MainPID'))
+            ctl('stop', decky_service.name)
+            assert prop(decky_service.name, 'MainPID') == '0'
+            assert decky_pid > 0 and not Path('/proc/'+str(decky_pid)).exists()
+            decky_service.unlink()
+            ctl('daemon-reload')
+            report['ownedDeckyServiceRemoved'] = True
         for log in logs:
             log.seek(0)
             print(log.read()[-3000:], flush=True)

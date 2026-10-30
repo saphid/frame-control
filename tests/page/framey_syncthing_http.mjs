@@ -9,22 +9,24 @@ assert.notEqual(host,source);
 const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props,children}),
   createContext:()=>({}),useState:value=>[value,()=>{}],useEffect(){},useRef:value=>({current:value}),
   useMemo:fn=>fn(),useCallback:fn=>fn};
-function fixture(enabled) {
-  const calls=[],listeners=[];
+function fixture(enabled, {defer=false, clock=null}={}) {
+  const calls=[],listeners=[],replies=[];
   let nativeCalls=0, reply={success:true,result:{status:200,body:'{"privateFixture":true}',headers:{'content-type':'application/json'}}};
   const parent={postMessage:message=>{
     if(message.type!=='framey:call')return;
     calls.push(message);
-    queueMicrotask(()=>listeners.find(x=>x.type==='message').handler({source:parent,
-      data:{type:'framey:reply',id:message.id,result:reply}}));
+    const respond=()=>listeners.find(x=>x.type==='message').handler({source:parent,
+      data:{type:'framey:reply',id:message.id,result:reply}});
+    if(defer)replies.push(respond);else queueMicrotask(respond);
   }};
   const nativeFetch=async()=>{nativeCalls++;throw Error('Native network denied');};
   const window={React,ReactDOM:{createRoot:()=>({render(){}})},location:{hash:''},fetch:nativeFetch};
   vm.runInContext(host,vm.createContext({window,parent,navigator:{language:'en'},
     document:{getElementById:id=>id==='framey-bundle'?{dataset:{syncthingHttp:enabled?'1':'0'}}:{}},
     console,URL,Blob,Headers,Response,EventTarget,Event,MessageEvent,DOMException,
-    addEventListener:(type,handler)=>listeners.push({type,handler}),setTimeout,clearTimeout}));
-  return {window,calls,nativeFetch,nativeCalls:()=>nativeCalls,setReply:value=>{reply=value;}};
+    addEventListener:(type,handler)=>listeners.push({type,handler}),setTimeout:clock?.setTimeout||setTimeout,
+    clearTimeout:clock?.clearTimeout||clearTimeout,Date:clock?.Date||Date}));
+  return {window,calls,nativeFetch,nativeCalls:()=>nativeCalls,setReply:value=>{reply=value;},replyNext:()=>{assert.ok(replies.length);replies.shift()();}};
 }
 const disabled=fixture(false);
 assert.equal(disabled.window.fetch,disabled.nativeFetch);
@@ -54,3 +56,58 @@ await assert.rejects(f.window.fetch(base+'rest/system/status'),/Owned helper una
 f.setReply({success:true,result:{status:200,body:42,headers:{'content-type':''}}});
 await assert.rejects(f.window.fetch(base+'rest/system/status'),/Invalid Syncthing/);
 assert.equal(f.nativeCalls(),0);
+
+// Preserve the exact five-request dashboard burst without backend overlap.
+const flush=async()=>{for(let i=0;i<12;i++)await Promise.resolve();};
+const serial=fixture(true,{defer:true});
+const burst=Array.from({length:5},(_,i)=>serial.window.fetch(base+'rest/config/'+i));
+assert.equal(serial.calls.length,1);
+for(let i=0;i<5;i++){
+  assert.equal(serial.calls.length,i+1);
+  serial.replyNext();await flush();
+}
+await Promise.all(burst);
+assert.deepEqual(serial.calls.map(x=>x.args[0].path),Array.from({length:5},(_,i)=>'/rest/config/'+i));
+
+// A rejected RPC frees the slot, while cancellation of an active fetch does
+// not release it until its backend reply arrives.
+const cancel=fixture(true,{defer:true}),controller=new AbortController();
+const active=cancel.window.fetch(base,{signal:controller.signal});
+const queuedController=new AbortController();
+const removed=cancel.window.fetch(base+'removed',{signal:queuedController.signal});
+const next=cancel.window.fetch(base+'next');
+const removedCheck=assert.rejects(removed,{name:'AbortError'});
+queuedController.abort();controller.abort();await flush();
+assert.equal(cancel.calls.length,1);
+cancel.replyNext();await assert.rejects(active,{name:'AbortError'});await flush();
+assert.equal(cancel.calls.length,2);assert.equal(cancel.calls[1].args[0].path,'/next');
+cancel.setReply({success:false,result:'Owned helper unavailable'});cancel.replyNext();
+await assert.rejects(next,/Owned helper unavailable/);await removedCheck;
+
+const bounded=fixture(true,{defer:true});
+const pending=Array.from({length:17},()=>bounded.window.fetch(base));
+await assert.rejects(bounded.window.fetch(base),/queue is full/);
+assert.equal(bounded.calls.length,1);
+for(let i=0;i<17;i++){bounded.replyNext();await flush();}
+await Promise.all(pending);
+
+// Queue time consumes the same 30-second deadline; expired work never sends.
+let now=0,nextTimer=0;const timers=new Map();
+const clock={Date:{now:()=>now},setTimeout:(fn,delay)=>{timers.set(++nextTimer,{fn,at:now+delay});return nextTimer;},
+  clearTimeout:id=>timers.delete(id)};
+const deadline=fixture(true,{defer:true,clock});
+const slow=deadline.window.fetch(base),expired=deadline.window.fetch(base+'expired');
+const slowCheck=assert.rejects(slow,/timed out/),expiredCheck=assert.rejects(expired,/timed out/);
+now=31000;
+for(const [id,timer] of [...timers])if(timer.at<=now){timers.delete(id);timer.fn();}
+await flush();await slowCheck;await expiredCheck;
+assert.equal(deadline.calls.length,1);assert.equal(timers.size,0);
+assert.equal(serial.nativeCalls()+cancel.nativeCalls()+bounded.nativeCalls()+deadline.nativeCalls(),0);
+
+now=0;
+const remaining=fixture(true,{defer:true,clock});
+const first=remaining.window.fetch(base),second=remaining.window.fetch(base+'second');
+now=10000;remaining.replyNext();await first;await flush();
+assert.equal(remaining.calls.length,2);
+assert.deepEqual([...timers.values()].map(timer=>timer.at),[30000]);
+remaining.replyNext();await second;await flush();assert.equal(timers.size,0);

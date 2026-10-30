@@ -1,5 +1,6 @@
 """The optional HTTP gateway must stay inside its marked disposable VM."""
 import importlib.util
+import copy
 import io
 import json
 from pathlib import Path
@@ -15,6 +16,50 @@ def load(name, path):
     module = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class GatewayProgressTransport(unittest.TestCase):
+    def emit(self, report):
+        from contextlib import redirect_stdout
+        gateway = load('gateway_progress_chunks', ROOT/'tests/decky-runtime/syncthing_http.py')
+        output = io.StringIO()
+        with redirect_stdout(output):
+            gateway.emit_gateway_progress(report)
+        lines = output.getvalue().splitlines()
+        self.assertTrue(lines)
+        self.assertTrue(all(len(line.encode()) < 8192 for line in lines))
+        chunks = [json.loads(line.removeprefix('FRAMEY_HTTP_GATEWAY_PROGRESS_CHUNK_JSON='))
+                  for line in lines]
+        self.assertEqual([v['index'] for v in chunks], list(range(len(chunks))))
+        self.assertTrue(all(v['total'] == len(chunks) for v in chunks))
+        encoded = ''.join(v['data'] for v in chunks)
+        import hashlib
+        self.assertEqual({v['sha256'] for v in chunks}, {hashlib.sha256(encoded.encode()).hexdigest()})
+        return json.loads(encoded), len(chunks)
+
+    def test_large_profile_keeps_complete_trace_and_cleanup_beyond_journal_line_limit(self):
+        report = dict(statusProcessProfiles={'records': [{'samples': [{'processes': [dict(
+            pid=1, parentPid=2, command='python3', state='R', cpuTicks=100,
+            residentPages=5000, waitChannel='0')]*12}]*3}]*39},
+            fixtureCefTrace={'records': [{'requestId': n, 'outcome': 'succeeded'} for n in range(40)]},
+            ownedBrowserReaped=True, httpServerStopped=True, ownedReceiptRemoved=True,
+            sshObserverRemoved=True)
+        self.assertGreater(len(json.dumps(report)), 49152)
+        restored, count = self.emit(report)
+        self.assertEqual(restored, report)
+        self.assertGreater(count, 1)
+
+    def test_escaped_and_unicode_data_round_trip_with_bounded_lines(self):
+        report = {'value': '\u2603"\\\n'*3000, 'ownedReceiptRemoved': True}
+        restored, _count = self.emit(report)
+        self.assertEqual(restored, report)
+
+    def test_oversized_progress_explicitly_refuses_complete_evidence_claim(self):
+        report = {'unexpected': 'x'*(2*1024**2)}
+        restored, count = self.emit(report)
+        self.assertEqual(count, 1)
+        self.assertEqual(restored, dict(progressReportOverflow=True,
+                                       encodedBytes=len(json.dumps(report))))
 
 
 class GatewayIsolation(unittest.TestCase):
@@ -48,6 +93,304 @@ class GatewayIsolation(unittest.TestCase):
                 self.assertNotIn('..', Path(member.name).parts)
                 self.assertEqual(archive.extractfile(member).read(), (ROOT/member.name).read_bytes())
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
+
+
+class ProductionBrowserParent(unittest.TestCase):
+    def driver(self):
+        return load('http_parent_driver', ROOT/'scripts/framey-test-syncthing-flatpak-package.py')
+
+    def test_optional_parent_is_packed_only_when_requested(self):
+        driver = self.driver()
+        self.assertNotIn('syncthing_http_parent.py', driver.http_gateway_payloads()[0])
+        payloads, _metadata = driver.http_gateway_payloads(browser_parent=True)
+        self.assertEqual(payloads['syncthing_http_parent.py'],
+                         (ROOT/'tests/decky-runtime/syncthing_http_parent.py').read_bytes())
+
+    def test_parent_refuses_host_before_service_or_browser_commands(self):
+        parent = load('http_parent_guard', ROOT/'tests/decky-runtime/syncthing_http_parent.py')
+        with patch.object(parent.os, 'getuid', return_value=0, create=True), \
+                patch.object(parent, 'command') as command:
+            with self.assertRaises(AssertionError):
+                parent.exercise(None, None, None, None, None, None, None)
+            command.assert_not_called()
+
+    def evidence(self):
+        report = dict.fromkeys(('success', 'syntheticInput', 'syntheticCef', 'syntheticStoreReceipt',
+            'productionParentUnchanged', 'productionPanelUnchanged', 'actualDeckyUserService',
+            'actualDeckyDiscovery', 'ownedTargetClosed'), True)
+        report.update(dict.fromkeys(('realSteamCef', 'realFrameContacted', 'managedInstallVerified',
+            'installerEnabled', 'bootstrapStateInjected', 'browserSandboxDisabled'), False))
+        report.update(childHarness=dict(installed=True, mode='owned-iframe-target', universalAccessGranted=False),
+            manualPortFallbackUsed=False, parentErrors=[],
+            stages=[dict(stage=stage, errors=[],
+                         text=('Running\nFolders\nPrivate service sync\nDevices\nowned-peer'
+                               if stage in ('running', 'restarted') else 'Stopped'),
+                         manualPortFallbackUsed=False)
+                    for stage in ('running', 'stopped', 'restarted', 'stopped')],
+            actualPackagedProcessObservations=[dict(stage='running', pids=[101, 102]),
+                                              dict(stage='restarted', pids=[201, 202])],
+            sandboxedRendererPids=[dict(seccomp=2, noNewPrivs=1, ancestryToBrowser=[310, 300])],
+            requestedAssets=['/headset', '/framey/panel/64', '/framey-runtime/host.js'],
+            screenshots=dict.fromkeys(('running1', 'stopped2', 'restarted3', 'stopped4'), 'placeholder'),
+            httpRequests=[dict(method='get_settings_json', httpStatus=200),
+                          dict(method='set_setting', httpStatus=200)] + [
+                dict(method='framey_http_fetch', path='/__decky-watchdog/'+path, httpStatus=200,
+                     backendStatus=200 if path=='state' else 204) for path in ('start', 'stop', 'state')])
+        for entry in report['httpRequests']:
+            entry.update(startedAfterSeconds=0.0, elapsedSeconds=0.1)
+        return report
+
+    def test_verifier_requires_real_service_and_unchanged_parent_without_injected_state(self):
+        driver = self.driver(); report = self.evidence()
+        driver.verify_http_parent(report)
+        for key, invalid in [('actualDeckyUserService', False), ('productionParentUnchanged', False),
+                             ('bootstrapStateInjected', True), ('realSteamCef', True)]:
+            with self.subTest(key=key), self.assertRaises(ValueError):
+                driver.verify_http_parent({**report, key: invalid})
+
+    def test_verifier_rejects_visible_error_despite_successful_stage_and_http(self):
+        report = self.evidence()
+        report['stages'][0]['text'] += '\nError: Too many Syncthing requests'
+        with self.assertRaisesRegex(ValueError, 'browser lifecycle'):
+            self.driver().verify_http_parent(report)
+
+    def test_verifier_rejects_running_or_restarted_loading_placeholders(self):
+        for index in (0, 2):
+            with self.subTest(stage=index):
+                report = self.evidence()
+                report['stages'][index]['text'] = 'Running\nFolders\nDevices'
+                with self.assertRaisesRegex(ValueError, 'browser lifecycle'):
+                    self.driver().verify_http_parent(report)
+
+    def test_verifier_rejects_reused_pid_missing_assets_and_backend_failure(self):
+        driver = self.driver()
+        changes = [lambda r:r['httpRequests'][0].update(elapsedSeconds=-1),
+                   lambda r:r['childHarness'].update(universalAccessGranted=True),
+                   lambda r:r['actualPackagedProcessObservations'][1].update(pids=[101, 202]),
+                   lambda r:r.update(requestedAssets=['/headset']),
+                   lambda r:r['httpRequests'][-1].update(backendStatus=500)]
+        for change in changes:
+            report = copy.deepcopy(self.evidence()); change(report)
+            with self.assertRaises(ValueError):
+                driver.verify_http_parent(report)
+
+
+class ScopedChildHarness(unittest.TestCase):
+    def parent(self):
+        return load('scoped_parent_harness', ROOT/'tests/decky-runtime/syncthing_http_parent.py')
+
+    def test_out_of_process_child_is_exact_url_scoped_and_detached(self):
+        parent = self.parent()
+        url = 'http://127.0.0.1:42/framey/panel/64?session=owned#owned'
+        calls = []
+        def command(_page, method, params, session_id=None):
+            calls.append((method, params, session_id))
+            if method == 'Target.getTargets':
+                return {'targetInfos': [dict(type='iframe', url=url, targetId='owned'),
+                    dict(type='iframe', url=url+'/other', targetId='unrelated')]}
+            if method == 'Target.attachToTarget':
+                self.assertEqual(params, dict(targetId='owned', flatten=True))
+                return {'sessionId': 'owned-session'}
+            if method == 'Runtime.evaluate':
+                self.assertEqual(session_id, 'owned-session')
+                return {'result': {'value': True}}
+            self.assertEqual(method, 'Target.detachFromTarget')
+            self.assertEqual(params, {'sessionId': 'owned-session'})
+            return {}
+        with patch.object(parent, 'command', command):
+            result = parent.install_child_harness(None, url, '/* DOM driver */')
+        self.assertEqual(result, dict(installed=True, mode='owned-iframe-target', universalAccessGranted=False))
+        self.assertEqual(calls[-1][0], 'Target.detachFromTarget')
+
+    def test_local_child_uses_its_frame_world_without_universal_access(self):
+        parent = self.parent(); calls = []
+        url = 'http://127.0.0.1:42/framey/panel/64'
+        def command(_page, method, params, session_id=None):
+            calls.append((method, params))
+            if method == 'Target.getTargets': return {'targetInfos': []}
+            if method == 'Page.getFrameTree':
+                return {'frameTree': {'frame': {'id': 'parent', 'url': 'http://127.0.0.1:42/headset'},
+                    'childFrames': [{'frame': {'id': 'child', 'url': url}}]}}
+            if method == 'Page.createIsolatedWorld':
+                self.assertEqual(params, dict(frameId='child', worldName='owned-panel-dom-driver'))
+                return {'executionContextId': 8}
+            self.assertEqual(method, 'Runtime.evaluate')
+            self.assertEqual(params['contextId'], 8)
+            return {'result': {'value': True}}
+        with patch.object(parent, 'command', command):
+            self.assertEqual(parent.install_child_harness(None, url, '/* DOM driver */')['mode'],
+                             'owned-frame-isolated-world')
+
+    def test_child_script_failure_still_detaches_owned_session(self):
+        parent = self.parent(); url = 'http://127.0.0.1:42/framey/panel/64'
+        command = Mock(side_effect=[{'targetInfos': [dict(type='iframe', url=url, targetId='owned')]},
+            {'sessionId': 'owned-session'}, {'exceptionDetails': {'text': 'fixture script failed'}}, {}])
+        with patch.object(parent, 'command', command), self.assertRaises(AssertionError):
+            parent.install_child_harness(None, url, '/* DOM driver */')
+        self.assertEqual(command.call_args.args[1:],
+                         ('Target.detachFromTarget', {'sessionId': 'owned-session'}))
+
+
+class PrivateSshDiagnostics(unittest.TestCase):
+    def gateway(self):
+        return load('private_ssh_diagnostics', ROOT/'tests/decky-runtime/syncthing_http.py')
+
+    def test_observer_passes_arguments_and_result_without_retaining_credentials(self):
+        import threading
+        module = self.gateway(); records = []; result = object(); call = Mock(return_value=result)
+        options = dict(stdin='private-fixture-credential', timeout=15, text=False)
+        self.assertIs(module.observe_ssh(call, records, threading.Lock(), module.time.monotonic(),
+                                        'decky-status', 'python3 -', **options), result)
+        call.assert_called_once_with('python3 -', **options)
+        self.assertEqual(records[0]['outcome'], 'success')
+        self.assertNotIn('private-fixture-credential', json.dumps(records))
+        self.assertNotIn('python3 -', json.dumps(records))
+
+    def test_observer_reraises_same_error_and_retains_only_fixed_category(self):
+        import threading
+        module = self.gateway(); records = []
+        error = RuntimeError('Timed out talking to private-fixture-credential')
+        with self.assertRaises(RuntimeError) as caught:
+            module.observe_ssh(Mock(side_effect=error), records, threading.Lock(),
+                               module.time.monotonic(), 'panel-method', 'unused')
+        self.assertIs(caught.exception, error)
+        self.assertEqual(records[0]['errorCategory'], 'ssh-timeout')
+        self.assertEqual(records[0]['outcome'], 'failure')
+        self.assertNotIn('private-fixture-credential', json.dumps(records))
+
+    def test_response_categories_do_not_expose_raw_error_or_detail(self):
+        module = self.gateway()
+        self.assertEqual(module.safe_error_category({'error':'Timed out talking to private-host',
+                          'detail':'private-fixture-key', 'offline':True}), 'ssh-timeout')
+        self.assertEqual(module.safe_error_category({'error':'unknown private-fixture-key'}), 'other')
+
+
+class StatusProcessDiagnostics(unittest.TestCase):
+    def gateway(self):
+        return load('status_process_diagnostics', ROOT/'tests/decky-runtime/syncthing_http.py')
+
+    def process(self, root, pid, parent, command='python3', children='', channel='0'):
+        folder = root/str(pid)
+        (folder/'task'/str(pid)).mkdir(parents=True)
+        fields = ['0'] * 22
+        fields[0], fields[1], fields[11], fields[12], fields[21] = 'S', str(parent), '17', '3', '12'
+        (folder/'stat').write_text(str(pid)+' ('+command+') '+' '.join(fields))
+        (folder/'wchan').write_text(channel)
+        (folder/'task'/str(pid)/'children').write_text(children)
+        (folder/'cmdline').write_text('private-fixture-credential')
+        (folder/'environ').write_text('private-fixture-credential')
+
+    def tree(self, root, children):
+        folder = root/'self/task/313'
+        folder.mkdir(parents=True)
+        (folder/'children').write_text(children)
+
+    def test_samples_only_owned_descendants_and_never_retains_commands_or_unknown_names(self):
+        import tempfile
+        module = self.gateway()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.tree(root, '101 103')
+            self.process(root, 101, 900, 'bash', '102', 'do_wait')
+            self.process(root, 102, 101, 'private-secret', channel='private-secret')
+            self.process(root, 103, 999, 'python3')  # PID reused outside our tree.
+            result = module.status_process_tree(313, root, owner_pid=900)
+        self.assertEqual([v['pid'] for v in result['processes']], [101, 102])
+        self.assertEqual([v['command'] for v in result['processes']], ['bash', 'other'])
+        self.assertEqual([v['waitChannel'] for v in result['processes']], ['do_wait', 'other'])
+        self.assertTrue(all(v['cpuTicks'] == 20 and v['residentPages'] == 12 for v in result['processes']))
+        self.assertFalse(result['truncated'])
+        self.assertNotIn('private', json.dumps(result))
+        self.assertTrue(all(set(v) == {'pid', 'parentPid', 'command', 'state', 'cpuTicks',
+                                      'residentPages', 'waitChannel'} for v in result['processes']))
+
+    def test_process_tree_is_bounded_without_changing_or_signalling_any_process(self):
+        import tempfile
+        module = self.gateway()
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            self.tree(root, ' '.join(str(pid) for pid in range(101, 121)))
+            for pid in range(101, 121):
+                self.process(root, pid, 900)
+            result = module.status_process_tree(313, root, owner_pid=900)
+        self.assertEqual(len(result['processes']), 12)
+        self.assertTrue(result['truncated'])
+
+    def test_sampler_uses_three_fixed_observations_and_stops_on_cancellation(self):
+        module = self.gateway(); sampler = module.StatusProcessSampler(10)
+        sampler.cancel = Mock()
+        sampler.cancel.wait.side_effect = [False, False, True]
+        with patch.object(module, 'status_process_tree', side_effect=[
+                dict(processes=[], truncated=False), dict(processes=[], truncated=False)]), \
+                patch.object(module.time, 'monotonic', side_effect=[12, 18]):
+            sampler.run()
+        self.assertEqual([v['elapsedSeconds'] for v in sampler.samples], [2, 8])
+        self.assertEqual([v.args[0] for v in sampler.cancel.wait.call_args_list], [2, 6, 6])
+
+    def test_unavailable_proc_samples_do_not_retain_raw_errors(self):
+        module = self.gateway(); sampler = module.StatusProcessSampler(0)
+        sampler.cancel = Mock(); sampler.cancel.wait.return_value = False
+        with patch.object(module, 'status_process_tree', side_effect=OSError('private-fixture-credential')):
+            sampler.run()
+        self.assertEqual(sampler.errors, 3)
+        self.assertEqual(sampler.samples, [])
+        self.assertNotIn('private', json.dumps(sampler.samples))
+
+    def test_owned_sampler_thread_is_reaped_without_waiting_for_a_sample(self):
+        module = self.gateway(); sampler = module.StatusProcessSampler(module.time.monotonic())
+        sampler.cancel.set(); sampler.start(); result = sampler.finish()
+        self.assertTrue(result['observerStopped'])
+        self.assertEqual(result['samples'], [])
+
+    def test_profiled_observer_preserves_exact_call_result_error_and_arguments(self):
+        import threading
+        module = self.gateway()
+        for error in (None, RuntimeError('private-fixture-credential')):
+            records = []; profiles = dict(records=[], overflow=False); result = object()
+            call = Mock(return_value=result, side_effect=error)
+            sampler = Mock(); sampler.finish.return_value = dict(samples=[], unavailableSamples=0,
+                                                                  observerStopped=True)
+            with patch.object(module, 'StatusProcessSampler', return_value=sampler):
+                def run():
+                    return module.observe_ssh(call, records, threading.Lock(), module.time.monotonic(),
+                        'decky-status', 'python3 -', stdin='private-fixture-credential', timeout=15,
+                        process_profiles=profiles)
+                if error:
+                    with self.assertRaises(RuntimeError) as caught:
+                        run()
+                    self.assertIs(caught.exception, error)
+                else:
+                    self.assertIs(run(), result)
+            call.assert_called_once_with('python3 -', stdin='private-fixture-credential', timeout=15)
+            sampler.start.assert_called_once_with(); sampler.finish.assert_called_once_with()
+            self.assertEqual(len(profiles['records']), 1)
+            self.assertTrue(profiles['records'][0]['observerStopped'])
+            self.assertNotIn('private', json.dumps(profiles))
+
+    def test_profile_overflow_never_drops_an_actual_ssh_call(self):
+        import threading
+        module = self.gateway(); profiles = dict(records=[{} for _ in range(128)], overflow=False)
+        call = Mock(return_value='unchanged'); sampler = Mock()
+        sampler.finish.return_value = dict(samples=[], unavailableSamples=0, observerStopped=True)
+        with patch.object(module, 'StatusProcessSampler', return_value=sampler):
+            result = module.observe_ssh(call, [], threading.Lock(), module.time.monotonic(),
+                                       'decky-status', 'owned', process_profiles=profiles)
+        self.assertEqual(result, 'unchanged'); call.assert_called_once_with('owned')
+        self.assertEqual(len(profiles['records']), 128)
+        self.assertTrue(profiles['overflow'])
+
+    def test_unavailable_sampler_thread_cannot_replace_the_actual_ssh_call(self):
+        import threading
+        module = self.gateway(); profiles = dict(records=[], overflow=False)
+        call = Mock(return_value='unchanged'); sampler = Mock()
+        sampler.start.side_effect = RuntimeError('private-fixture-credential')
+        with patch.object(module, 'StatusProcessSampler', return_value=sampler):
+            result = module.observe_ssh(call, [], threading.Lock(), module.time.monotonic(),
+                                       'decky-status', 'owned', process_profiles=profiles)
+        self.assertEqual(result, 'unchanged'); call.assert_called_once_with('owned')
+        sampler.finish.assert_not_called()
+        self.assertEqual(profiles['records'][0]['unavailableSamples'], 1)
+        self.assertNotIn('private', json.dumps(profiles))
 
 
 class AuthenticatedRuntimeReadiness(unittest.TestCase):

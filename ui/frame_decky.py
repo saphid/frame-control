@@ -13,16 +13,7 @@ MAX_BINARY = 80 * 1024 * 1024
 TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-.][A-Za-z0-9.-]+)?\Z")
 
 
-PROBE = r'''
-import json, os, pathlib, platform, subprocess, urllib.request
-home = pathlib.Path.home()
-managed = home / '.local/share/frame-control/decky'
-service = home / '.config/systemd/user/frame-control-decky.service'
-release = managed / '.frame-control/receipt.json'
-legacy = managed / 'settings/release.json'
-def active(name, user=False):
-    cmd = ['systemctl'] + (['--user'] if user else []) + ['is-active', name]
-    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+PLUGIN_SCAN = r'''
 def plugins(folder):
     found = []
     if folder.is_dir() and not folder.is_symlink():
@@ -45,6 +36,25 @@ def plugins(folder):
                                   if isinstance(owned.get('compatShims'), list) else []})
             except (ValueError, OSError, UnicodeError): pass
     return found
+'''
+
+
+PLUGINS_PROBE = 'import json, pathlib\n' + PLUGIN_SCAN + r'''
+print(json.dumps({'plugins':plugins(pathlib.Path.home()/'.local/share/frame-control/decky/plugins')}))
+'''
+
+
+PROBE = r'''
+import json, os, pathlib, platform, subprocess, urllib.request
+''' + PLUGIN_SCAN + r'''
+home = pathlib.Path.home()
+managed = home / '.local/share/frame-control/decky'
+service = home / '.config/systemd/user/frame-control-decky.service'
+release = managed / '.frame-control/receipt.json'
+legacy = managed / 'settings/release.json'
+def active(name, user=False):
+    cmd = ['systemctl'] + (['--user'] if user else []) + ['is-active', name]
+    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
 os_release = {}
 for line in pathlib.Path('/etc/os-release').read_text().splitlines():
     if '=' in line:
@@ -162,6 +172,11 @@ finally:
     stage.unlink(missing_ok=True)
     if transaction_lock is not None: transaction_lock.close()
 '''
+
+
+def plugin_status(ssh):
+    """Fresh managed inventory for panel receipt checks; no OS/service/CEF probes."""
+    return json.loads(ssh('python3 -', stdin=PLUGINS_PROBE, timeout=15))
 
 
 def status(ssh):
