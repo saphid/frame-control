@@ -74,6 +74,6 @@ fixture is added to the native ARM64 CI gate. No runtime is bundled.
 Before admission, verify actual Syncthing service behavior over DBus, native
 ARM64 runtime, managed install/update/remove and browser controls. Audit the original
 managed service paths and migration behavior. Automatic gamescope behavior is
-not SteamVR behavior. Browser controls, synchronization, real Frame and physical
+not SteamVR behavior. Browser controls, managed-service synchronization, real Frame and physical
 controllers remain unverified. See
 [`docs/evidence/framey-syncthing-ownership-2026-10-30.md`](../../../docs/evidence/framey-syncthing-ownership-2026-10-30.md).
