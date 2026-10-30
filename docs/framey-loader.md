@@ -53,7 +53,10 @@ storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
 available. If storage is denied or cleared, the cache lasts only for the current
-panel. Use the plugin backend for settings that must survive cache loss.
+panel. The host waits for the parent's cache reply before loading plugin code;
+if the reply is missing or invalid after five seconds, the panel shows an error
+instead of opening with empty settings that could overwrite saved values. Use
+the plugin backend for settings that must survive cache loss.
 
 Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
 events while the panel is open. The parent resolves the plugin name from its
