@@ -187,7 +187,7 @@ def observe_ssh(call, records, lock, started, kind, *args, process_profiles=None
     assert kind in ('decky-status', 'panel-method', 'headset-status', 'other')
     begin = time.monotonic()
     entry = dict(kind=kind, startedAfterSeconds=round(begin-started, 3), outcome='success')
-    sampler = StatusProcessSampler(begin) if kind == 'decky-status' and process_profiles is not None else None
+    sampler = StatusProcessSampler(begin) if kind in ('decky-status', 'panel-method') and process_profiles is not None else None
     sampler_started = False
     if sampler:
         try:
@@ -205,6 +205,7 @@ def observe_ssh(call, records, lock, started, kind, *args, process_profiles=None
             profile = (sampler.finish() if sampler_started else
                        dict(samples=[], unavailableSamples=1, observerStopped=True))
             profile['startedAfterSeconds'] = entry['startedAfterSeconds']
+            profile['kind'] = kind
             with lock:
                 if len(process_profiles['records']) < 128:
                     process_profiles['records'].append(profile)

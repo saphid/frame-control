@@ -138,12 +138,15 @@ def exercise(name, home):
         import server
         assert server.LOCAL and server.HEADSET_RUNTIME
         import frame_decky
+        import framey_panel
         previous_ssh = server.ssh
+        method_prefix = framey_panel.METHOD_SCRIPT.partition('__FRAMEY_METHOD_PAYLOAD__')[0]
         status_source = (bundle/'ui/frame_status.py').read_text()
 
         def traced_ssh(*args, **kwargs):
             source = kwargs.get('stdin')
             kind = ('decky-status' if source in (frame_decky.PROBE, frame_decky.PLUGINS_PROBE, frame_decky.PANEL_STATUS_PROBE) else
+                    'panel-method' if isinstance(source, str) and source.startswith(method_prefix) else
                     'headset-status' if source == status_source else 'other')
             return observe_ssh(previous_ssh, ssh_records, ssh_lock, started, kind, *args,
                                process_profiles=status_profiles, **kwargs)

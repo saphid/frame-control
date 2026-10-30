@@ -345,7 +345,8 @@ class StatusProcessDiagnostics(unittest.TestCase):
     def test_profiled_observer_preserves_exact_call_result_error_and_arguments(self):
         import threading
         module = self.gateway()
-        for error in (None, RuntimeError('private-fixture-credential')):
+        for kind, error in ((kind, error) for kind in ('decky-status', 'panel-method')
+                            for error in (None, RuntimeError('private-fixture-credential'))):
             records = []; profiles = dict(records=[], overflow=False); result = object()
             call = Mock(return_value=result, side_effect=error)
             sampler = Mock(); sampler.finish.return_value = dict(samples=[], unavailableSamples=0,
@@ -353,7 +354,7 @@ class StatusProcessDiagnostics(unittest.TestCase):
             with patch.object(module, 'StatusProcessSampler', return_value=sampler):
                 def run():
                     return module.observe_ssh(call, records, threading.Lock(), module.time.monotonic(),
-                        'decky-status', 'python3 -', stdin='private-fixture-credential', timeout=15,
+                        kind, 'python3 -', stdin='private-fixture-credential', timeout=15,
                         process_profiles=profiles)
                 if error:
                     with self.assertRaises(RuntimeError) as caught:
@@ -365,6 +366,7 @@ class StatusProcessDiagnostics(unittest.TestCase):
             sampler.start.assert_called_once_with(); sampler.finish.assert_called_once_with()
             self.assertEqual(len(profiles['records']), 1)
             self.assertTrue(profiles['records'][0]['observerStopped'])
+            self.assertEqual(profiles['records'][0]['kind'], kind)
             self.assertNotIn('private', json.dumps(profiles))
 
     def test_profile_overflow_never_drops_an_actual_ssh_call(self):
