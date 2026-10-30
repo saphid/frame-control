@@ -1,0 +1,73 @@
+name: Syncthing signed Flatpak payload
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/framey-fetch-syncthing-flatpak.py'
+      - 'scripts/framey-verify-syncthing-flatpak.py'
+      - 'tests/decky-runtime/Containerfile.flatpak'
+      - '.github/workflows/syncthing-flatpak.yml'
+  pull_request:
+    paths:
+      - 'scripts/framey-fetch-syncthing-flatpak.py'
+      - 'scripts/framey-verify-syncthing-flatpak.py'
+      - 'tests/decky-runtime/Containerfile.flatpak'
+      - '.github/workflows/syncthing-flatpak.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  signed-app-payload:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Fetch bounded exact published app objects (not installed)
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends python3-gi
+          /usr/bin/python3 scripts/framey-fetch-syncthing-flatpak.py --directory "$RUNNER_TEMP/flatpak-app"
+      - name: Offline signatures, complete content integrity and tamper refusal
+        env:
+          AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: |
+          audit_image="framey-flatpak-audit:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          audit_container="framey-flatpak-audit-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          trap 'docker rm -f "$audit_container" >/dev/null 2>&1 || true; docker image rm "$audit_image" >/dev/null 2>&1 || true' EXIT
+          docker build -q -t "$audit_image" -f tests/decky-runtime/Containerfile.flatpak tests/decky-runtime
+          docker run --rm --name "$audit_container" --network none --read-only --user 1100:1100 \
+            --cap-drop ALL --security-opt no-new-privileges --pids-limit 128 \
+            --tmpfs /tmp:rw,mode=1777,size=512m \
+            --mount "type=bind,source=$RUNNER_TEMP/flatpak-app/objects,target=/objects,readonly" \
+            --mount "type=bind,source=$RUNNER_TEMP/flatpak-app/flathub.flatpakrepo,target=/input/flathub.flatpakrepo,readonly" \
+            --mount "type=bind,source=$PWD/scripts/framey-verify-syncthing-flatpak.py,target=/verify.py,readonly" \
+            "$audit_image" /verify.py --objects /objects --descriptor /input/flathub.flatpakrepo \
+            > "$RUNNER_TEMP/flatpak-app/verification.json"
+          python3 - <<'PY'
+          import hashlib,json,os
+          from pathlib import Path
+          p=Path(os.environ['RUNNER_TEMP'])/'flatpak-app/verification.json'
+          r=json.loads(p.read_text())
+          assert r['payloadIntegrityVerified'] and not r['packageLaunched']
+          r['headSha']=os.environ['AUDIT_HEAD']
+          paths=['scripts/framey-fetch-syncthing-flatpak.py','scripts/framey-verify-syncthing-flatpak.py','tests/decky-runtime/Containerfile.flatpak','.github/workflows/syncthing-flatpak.yml']
+          r['sourceSha256']={f:hashlib.sha256(Path(f).read_bytes()).hexdigest() for f in paths}
+          p.write_text(json.dumps(r,indent=2)+'\n')
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: syncthing-signed-app-payload
+          path: |
+            ${{ runner.temp }}/flatpak-app/fetch-report.json
+            ${{ runner.temp }}/flatpak-app/verification.json
+          if-no-files-found: error
