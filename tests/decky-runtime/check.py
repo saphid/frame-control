@@ -306,17 +306,29 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
-            elif case['probe'] == 'steam-status-readonly':
-                # Only read private defaults. The public CM-list and 100 MB
-                # download diagnostics must never run in this runtime probe.
+            elif case['probe'] == 'steam-status-private-settings':
+                # Only change private container settings. The public CM-list
+                # and 100 MB download diagnostics must never run in this probe.
                 source = (plugin/'main.py').read_text()
                 assert source.count('ssl.create_default_context()') == 2
                 assert 'ssl.CERT_NONE' not in source and 'ssl_context.check_hostname = False' not in source
                 settings = current('get_settings')
                 assert isinstance(settings, dict) and settings['refresh_interval_seconds'] == 120, settings
-                report['result'] = ('published Decky discovery and private settings read passed; '
-                                    'both managed public diagnostic contexts retain TLS verification; '
-                                    'no public network diagnostics, Frame or VR test')
+                assert current('set_setting', 'refresh_interval_seconds', 180) is True
+                assert current('get_setting', 'refresh_interval_seconds') == 180
+                state = base/'settings'/record['folder']/'settings.json'
+                assert json.loads(state.read_text())['refresh_interval_seconds'] == 180
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert until_ready(lambda: current('get_setting', 'refresh_interval_seconds') == 180,
+                                   'private Steam Status setting after restart')
+                report['result'] = ('published Decky discovery, private setting write/read and restart '
+                                    'persistence passed; both managed public diagnostic contexts retain TLS '
+                                    'verification; no public network diagnostics, Frame or VR test')
             elif case['probe'] == 'wine-cellar-private-state':
                 helper = plugin/'bin/backend'
                 machine = 183 if __import__('platform').machine() == 'aarch64' else 62
