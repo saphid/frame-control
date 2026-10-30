@@ -19,6 +19,7 @@ PROBE = r'''
 const errors=[];
 addEventListener('error',e=>errors.push(e.message));
 addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
+addEventListener('securitypolicyviolation',e=>errors.push('CSP '+e.violatedDirective));
 const text=()=>document.getElementById('framey-root').innerText;
 const button=label=>[...document.querySelectorAll('button')].find(b=>b.textContent.trim()===label);
 const wait=async read=>{const end=Date.now()+60000;while(Date.now()<end){if(read())return;
@@ -50,7 +51,9 @@ addEventListener('message',async event=>{
 });
 '''
 PARENT = r'''
-let ready=false;window.stage=null;
+let ready=false;window.stage=null;window.startupErrors=[];
+addEventListener('error',event=>startupErrors.push(event.message));
+addEventListener('unhandledrejection',event=>startupErrors.push(String(event.reason)));
 const panel=()=>document.getElementById('panel').contentWindow;
 addEventListener('message',async event=>{
  if(event.source!==panel())return;
@@ -76,9 +79,14 @@ def exercise(legacy_rpc, runtime_identity, service):
     assert not Path('/sys/class/net/eth0').exists()
     initial = json.loads(legacy_rpc('get_settings_json'))
     assert initial['is_setup'] is False and not initial['api_key']
-    panel = Path('/input/browser-panel.html').read_text().replace('</html>', '<script>'+PROBE+'</script></html>')
+    # The parent permits embedded runtime scripts; the opaque child separately
+    # denies every network connection, including the private parent's RPC URL.
+    policy = '''<meta http-equiv="Content-Security-Policy" content="default-src 'none';
+script-src 'unsafe-inline' data: blob:; connect-src 'none'; style-src 'unsafe-inline'; img-src data:">'''
+    panel = Path('/input/browser-panel.html').read_text().replace('<html lang="en">', '<html lang="en">'+policy)
+    panel = panel.replace('</html>', '<script>'+PROBE+'</script></html>')
     document = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
-content="default-src 'none'; script-src 'unsafe-inline'; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'">
+content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; connect-src 'self'; style-src 'unsafe-inline'; img-src data:">
 <title>Owned Syncthing actual backend</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:1050px;border:0}</style>
 <iframe id="panel" sandbox="allow-scripts" src="data:text/html;base64,''' + base64.b64encode(panel.encode()).decode() + '''#fixture"></iframe><script>''' + PARENT + '</script>'
     calls, stages, screenshots, observations = [], [], {}, []
@@ -156,10 +164,11 @@ content="default-src 'none'; script-src 'unsafe-inline'; frame-src data:; connec
                     try:
                         page = frame_steam.Page('Owned Syncthing actual backend')
                         if page.eval('ready'): break
+                        report['startupErrors'] = page.eval('window.startupErrors')
                         page.sock.close()
                         page = None
-                    except (OSError, frame_steam.Fail):
-                        pass
+                    except (OSError, frame_steam.Fail) as error:
+                        report['lastReadinessError'] = str(error)[:1500]
                 time.sleep(.2)
             assert page is not None, 'Browser CDP/panel readiness unavailable'
             first_pids = []

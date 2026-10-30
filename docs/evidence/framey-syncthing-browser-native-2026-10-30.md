@@ -73,5 +73,9 @@ terminated and reaped. Neither trial contributes a runtime pass.
 
 The third trial at `04fcd58` uses the bounded Chromium exception, selects the
 power control inside the exact toolbar, and retains a failure-stage journal.
-Its runtime result remains pending. A passing result must be independently
+It failed before readiness, with no completed browser stages or RPC calls.
+The owned browser, bridge and VM were reaped. Its parent CSP omitted the
+`data:` script source needed by the embedded runtime; the test fixture now
+permits those scripts and separately denies all child network connections.
+A fresh combined trial remains required. A passing result must be independently
 bound to all packed source fingerprints before any completion claim.

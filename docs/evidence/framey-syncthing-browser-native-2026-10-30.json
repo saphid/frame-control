@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Third trial pending; no combined browser runtime result credited.",
+  "status": "Third trial failed before browser readiness; CSP correction awaits a new combined runtime result.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -98,6 +98,18 @@
         "ownedQemuReaped": true,
         "error": "Missing/ambiguous guest result or nonzero QEMU exit"
       }
+    },
+    {
+      "sourceRevision": "04fcd58",
+      "passed": false,
+      "resultSha256": "3930122386383004ec5819a091ebf8b066032388ff7f25cf2205ff43e12a128b",
+      "consoleSha256": "8abc01ea84705581a98d9b5edf5822582afdf55ef0d982296d15531ad3741c8e",
+      "error": "Browser CDP/panel readiness unavailable",
+      "completedBrowserStages": 0,
+      "completedBrowserRpcCalls": 0,
+      "ownedQemuReaped": true,
+      "ownedBrowserReaped": true,
+      "bridgeStopped": true
     }
   ],
   "serverSuite": {
