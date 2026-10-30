@@ -330,5 +330,22 @@
         }
       }
     ]
+  },
+  "localEvidenceSourceHead": "4ca1bd932a8494f90ef0377ae538be0a4cb356fe",
+  "transportFixVerification": {
+    "firstCiRun": 41014820841,
+    "firstCiJob": 123928656341,
+    "failure": "TLS handshake timeout before signature verification; no pass accepted",
+    "maximumAttempts": 3,
+    "certificateAndPermanentErrorsFailImmediately": true,
+    "transportUnitTestsPassed": 5,
+    "cachedClosureReenumerated": true,
+    "freshHttpsUrl": "https://dl.flathub.org/repo/objects/2b/e395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034.commitmeta",
+    "freshHttpsSha256": "85855fc8253b6ad12098b7fae78b7306bdfaa44474b0b8255e1e51d59686c9cf",
+    "sourceSha256": {
+      "scripts/framey-fetch-syncthing-flatpak.py": "f26c64bc34daea5d846771b4513798df963a80bf2abb3386da163f1a7f5df0a8",
+      "tests/test_syncthing_flatpak_fetch.py": "e2156b54726c9ee2bf74c7a6c1a89399560bd57cbf56944eb3cfb125660408cb",
+      ".github/workflows/syncthing-flatpak.yml": "16baa258ff6af27271807f2d43f4ab2580c7d446639b616889512598f949bb5f"
+    }
   }
 }

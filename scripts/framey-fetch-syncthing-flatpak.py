@@ -11,6 +11,8 @@ import importlib.util
 import json
 from pathlib import Path
 import threading
+import time
+import urllib.error
 import urllib.request
 
 from gi.repository import GLib
@@ -31,6 +33,27 @@ def variant(data, signature):
     return value.unpack()
 
 
+def download(url, limit):
+    """Retry only bounded transient transport failures, retaining TLS checks."""
+    for attempt in range(3):
+        try:
+            request = urllib.request.Request(url, headers={'User-Agent': 'Frame-Control-package-audit'})
+            with urllib.request.urlopen(request, timeout=45) as response:
+                data = response.read(limit + 1)
+            if len(data) > limit:
+                raise ValueError('Public input exceeds bound: ' + url)
+            return data
+        except (urllib.error.URLError, TimeoutError, ConnectionError) as error:
+            if isinstance(error, urllib.error.HTTPError):
+                transient = error.code in (429, 500, 502, 503, 504)
+            else:
+                reason = error.reason if isinstance(error, urllib.error.URLError) else error
+                transient = isinstance(reason, (TimeoutError, ConnectionError))
+            if not transient or attempt == 2:
+                raise RuntimeError('Public fetch failed for ' + url + ': ' + str(error)) from error
+            time.sleep(attempt + 1)
+
+
 def fetch(directory):
     directory.mkdir(parents=True, exist_ok=True)
     store = directory / 'objects'
@@ -38,13 +61,6 @@ def fetch(directory):
     lock, index = threading.Lock(), {}
     total = 0
 
-    def download(url, limit):
-        request = urllib.request.Request(url, headers={'User-Agent': 'Frame-Control-package-audit'})
-        with urllib.request.urlopen(request, timeout=45) as response:
-            data = response.read(limit + 1)
-        if len(data) > limit:
-            raise ValueError('Public input exceeds bound')
-        return data
 
     def get(checksum, kind):
         nonlocal total
@@ -115,7 +131,13 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--directory', type=Path, required=True, help='Public object cache; preserved')
     args = parser.parse_args()
-    report = fetch(args.directory)
+    try:
+        report = fetch(args.directory)
+    except Exception as error:
+        args.directory.mkdir(parents=True, exist_ok=True)
+        failure = {'payloadVerified': False, 'packageLaunched': False, 'error': str(error)}
+        (args.directory / 'fetch-error.json').write_text(json.dumps(failure, indent=2) + '\n')
+        raise
     (args.directory / 'fetch-report.json').write_text(json.dumps(report, indent=2) + '\n')
     print(json.dumps({key: value for key, value in report.items() if key != 'objects'}, indent=2))
 

@@ -67,6 +67,14 @@ fetches the exact published app objects and repeats the offline verification
 and all negative controls on the PR's exact head. It retains JSON artifacts.
 It does not execute either packaged binary.
 
+The first CI attempt failed during a TLS handshake while fetching a content
+object; signature verification never ran, and no pass was accepted. The fetcher
+now retries transient timeouts/connection failures and selected temporary HTTP
+errors at most three times. Certificate errors, permanent HTTP errors and
+oversized content fail immediately. Five transport tests and a fresh HTTPS
+signature-object fetch passed; failure JSON is retained by CI. The JSON separates
+the original local payload proof at `4ca1bd9` from this transport follow-up.
+
 ```sh
 /usr/bin/python3 scripts/framey-fetch-syncthing-flatpak.py --directory /path/to/public-cache
 docker build -t framey-flatpak-audit:local -f tests/decky-runtime/Containerfile.flatpak tests/decky-runtime
