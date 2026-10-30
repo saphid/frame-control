@@ -19,6 +19,7 @@ on:
       - 'ui/framey-host.js'
       - 'ui/framey_panel.py'
       - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
       - '.github/workflows/syncthing-candidate.yml'
   pull_request:
     paths:
@@ -37,6 +38,7 @@ on:
       - 'ui/framey-host.js'
       - 'ui/framey_panel.py'
       - 'ui/frame_decky_store.py'
+      - 'ui/frame_decky.py'
       - '.github/workflows/syncthing-candidate.yml'
   workflow_dispatch:
 
