@@ -495,6 +495,8 @@ def main():
     if args.browser_setup:
         browser_extra, browser_inputs = browser_payloads(payloads['official.zip'])
         payloads.update(browser_extra)
+        result_codec = module('guest_result', ROOT/'tests/decky-runtime/guest_result.py')
+        payloads['guest_result.py'] = (ROOT/'tests/decky-runtime/guest_result.py').read_bytes()
     http_gateway = None
     if args.http_gateway:
         http_payloads, http_gateway = http_gateway_payloads(args.http_browser_parent)
@@ -533,6 +535,7 @@ def main():
         ])
     if args.browser_setup:
         source_paths.extend(ROOT / path for path in [
+            'tests/decky-runtime/guest_result.py',
             'scripts/framey-test-syncthing-browser.py', 'tests/decky-runtime/syncthing_browser.py',
             'tests/decky-runtime/Containerfile.flatpak-vm', 'ui/framey_panel.py', 'ui/framey-host.js',
             'ui/frame_decky.py', 'ui/frame_decky_store.py', 'ui/framey_compatibility.py',
@@ -583,6 +586,9 @@ def main():
         "browserSetup": browser_inputs,
         "httpGateway": http_gateway,
         "httpBrowserParentRequested": args.http_browser_parent,
+        "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
+                             "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
+                            if args.browser_setup else None),
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -613,6 +619,11 @@ def main():
         f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
     ]
     console = args.output / "console.log"
+    packet_path = args.output / 'guest-result.packet'
+    if args.browser_setup:
+        command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
+                    '-device', 'virtio-serial-pci,id=framey_result_bus',
+                    '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
     result = {"success": False, "inputs": inputs}
     try:
         with console.open("w") as log:
@@ -630,7 +641,14 @@ def main():
                 result["ownedQemuReaped"] = process.poll() is not None
         if code != 0:
             raise RuntimeError('Nonzero QEMU exit')
-        guest = guest_report(console.read_text(), args.browser_setup)
+        if args.browser_setup:
+            if not packet_path.is_file() or not 0 < packet_path.stat().st_size <= result_codec.MAX_PAYLOAD+256:
+                raise RuntimeError('Missing/oversized dedicated guest result packet')
+            packet = packet_path.read_bytes()
+            guest = result_codec.decode(packet)
+            result['guestResultPacket'] = dict(bytes=len(packet), sha256=hashlib.sha256(packet).hexdigest())
+        else:
+            guest = guest_report(console.read_text())
         result["guest"] = guest
         package = guest.get("flatpak", {})
         if guest.get('success') is not True:

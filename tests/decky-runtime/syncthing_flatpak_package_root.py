@@ -80,12 +80,16 @@ except BaseException:
     traceback.print_exc()
     subprocess.run(["journalctl", "-b", "--no-pager", "-n", "100"], timeout=20)
 if browser:
-    encoded = json.dumps(report)
-    chunks = [encoded[offset:offset+4096] for offset in range(0, len(encoded), 4096)]
-    assert 1 <= len(chunks) <= 4096
-    for index, chunk in enumerate(chunks):
-        print('FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' + json.dumps(
-            {'index': index, 'total': len(chunks), 'data': chunk}), flush=True)
+    # A separate owned write-only channel avoids journald/console loss and
+    # interleaving. Never reconstruct success from partial log fragments.
+    import sys
+    sys.path.insert(0, '/input')
+    from guest_result import PORT, write_result
+    ports = [p for p in Path('/sys/class/virtio-ports').glob('vport*p*')
+             if (p/'name').read_text().strip() == PORT]
+    assert len(ports) == 1, 'Dedicated guest result port unavailable'
+    with (Path('/dev')/ports[0].name).open('wb', buffering=0) as stream:
+        write_result(stream, report)
 else:
     print("FRAMEY_SYSTEMD_PROBE_JSON=" + json.dumps(report), flush=True)
 subprocess.run(

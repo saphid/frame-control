@@ -14,6 +14,7 @@ on:
       - 'tests/decky-runtime/syncthing_migration.py'
       - 'tests/decky-runtime/syncthing_http.py'
       - 'tests/decky-runtime/syncthing_http_parent.py'
+      - 'tests/decky-runtime/guest_result.py'
       - 'tests/test_syncthing_http_gateway.py'
       - 'apk-catalog/build.py'
       - 'apk-catalog/reports.py'
@@ -33,6 +34,7 @@ on:
       - 'tests/decky-runtime/syncthing_migration.py'
       - 'tests/decky-runtime/syncthing_http.py'
       - 'tests/decky-runtime/syncthing_http_parent.py'
+      - 'tests/decky-runtime/guest_result.py'
       - 'tests/test_syncthing_http_gateway.py'
       - 'apk-catalog/build.py'
       - 'apk-catalog/reports.py'
@@ -153,6 +155,7 @@ jobs:
           paths+=['tests/decky-runtime/syncthing_browser.py','scripts/framey-test-syncthing-browser.py','ui/framey_panel.py','ui/framey-host.js','ui/frame_steam.py','ui/vendor/syncthing-0.2.7/frontend.patch','ui/vendor/react-18.3.1.min.js','ui/vendor/react-dom-18.3.1.min.js']
           paths+=['tests/decky-runtime/syncthing_http.py','scripts/framey-test-decky-runtime.py','scripts/framey-test-syncthing-runtime.py']
           if os.environ['FRAMEY_BROWSER']=='true':
+              paths+=['tests/decky-runtime/guest_result.py']
               _payloads, metadata=runpy.run_path('scripts/framey-test-syncthing-flatpak-package.py')['http_gateway_payloads'](os.environ['FRAMEY_PARENT']=='true')
               paths+=list(metadata['sourceSha256'])
           if os.environ['FRAMEY_PARENT']=='true':paths+=['tests/decky-runtime/syncthing_http_parent.py']
@@ -172,6 +175,7 @@ jobs:
             ${{ runner.temp }}/flatpak-package/result.json
             ${{ runner.temp }}/flatpak-package/inputs.json
             ${{ runner.temp }}/flatpak-package/console.log
+            ${{ runner.temp }}/flatpak-package/guest-result.packet
             ${{ runner.temp }}/flatpak-package/browser-*.png
             ${{ runner.temp }}/flatpak-package/http-parent-*.png
             ${{ runner.temp }}/flatpak-exact-head.json
