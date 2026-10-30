@@ -43,7 +43,8 @@ addEventListener('message',async event=>{
    if(controls.length!==4)throw Error('Unexpected dashboard controls');
    controls[3].click();
    const target=event.data.action==='start'?'Running':'Stopped';
-   await wait(()=>text().includes(target));
+   await wait(()=>{if(text().includes('Failed'))throw Error('Actual dashboard reported Failed after '+event.data.action);
+    return text().includes(target);});
    stage(event.data.action==='start'?'restarted':'stopped');
   }
  }catch(e){stage('failed');parent.postMessage({type:'test:failure',error:e.message},'*');}
@@ -71,6 +72,16 @@ addEventListener('message',async event=>{
 window.advance=action=>{if(!ready)throw Error('Panel not ready');window.stage=null;
  panel().postMessage({type:'test:advance',action},'*');};
 '''
+
+
+def screenshot(page):
+    page.next_id += 1
+    page._send(json.dumps({'id': page.next_id, 'method': 'Page.captureScreenshot',
+                           'params': {'format': 'png'}}))
+    while True:
+        response = json.loads(page._recv())
+        if response.get('id') == page.next_id:
+            return response['result']['data']
 
 
 def exercise(legacy_rpc, runtime_identity, service):
@@ -163,7 +174,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                     frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
                     try:
                         page = frame_steam.Page('Owned Syncthing actual backend')
-                        if page.eval('ready'): break
+                        if page.eval("typeof ready !== 'undefined' && ready"): break
                         report['startupErrors'] = page.eval('window.startupErrors')
                         page.sock.close()
                         page = None
@@ -195,14 +206,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                     first_pids = pids
                     observations.append({'stage': label, 'pids': pids})
                 name = label+str(len(stages))
-                page.next_id += 1
-                page._send(json.dumps({'id': page.next_id, 'method': 'Page.captureScreenshot',
-                                       'params': {'format': 'png'}}))
-                while True:
-                    response = json.loads(page._recv())
-                    if response.get('id') == page.next_id:
-                        break
-                screenshots[name] = response['result']['data']
+                screenshots[name] = screenshot(page)
             renderers = []
             for process in Path('/proc').iterdir():
                 try:
@@ -228,9 +232,23 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
     except BaseException:
+        # GetUnit is read-only and does not load a collected inactive unit.
+        lookup = subprocess.run(
+            ['busctl', '--user', 'call', 'org.freedesktop.systemd1',
+             '/org/freedesktop/systemd1', 'org.freedesktop.systemd1.Manager',
+             'GetUnit', 's', service], capture_output=True, text=True, timeout=10,
+        )
+        report['failureUnitLookup'] = {'returncode': lookup.returncode,
+                                     'stdout': lookup.stdout.strip(), 'stderr': lookup.stderr.strip()}
+        report['failureSystemdProperties'] = {
+            field: prop(service, field) for field in
+            ('MainPID', 'ActiveState', 'SubState', 'Result', 'ExecMainCode', 'ExecMainStatus', 'LoadState')
+        }
         if page:
             try:
                 report['lastStage'] = page.eval('window.stage')
+                print('FRAMEY_BROWSER_FAILURE_SCREENSHOT_JSON='+json.dumps(
+                    {'png': screenshot(page)}), flush=True)
             except (OSError, frame_steam.Fail):
                 report['lastStageUnavailable'] = True
         raise

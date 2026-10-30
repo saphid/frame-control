@@ -86,3 +86,20 @@ settings calls. This small reproduction used synthetic settings and no sandbox
 disable flags; it supplies no actual-backend or Frame usability proof.
 The fourth combined trial runs at `86311dc`, with the corrected test-only
 parent policy and the explicit child `connect-src 'none'` policy.
+
+The fourth trial at `86311dc` failed after the first Running DOM stage.
+Its actual backend RPCs completed setup and returned real folder/device data;
+the DOM contained `Private service sync`. Stop returned 204, but subsequent
+state requests led the dashboard to display `Failed`, rather than `Stopped`.
+The browser, bridge and VM were reaped. All 25 packed source fingerprints
+were independently verified. This is a partial failed result, not a lifecycle
+pass or wearer-visible proof. The retained journal does not establish whether
+systemd had a failed unit or the backend could no longer find a stopped unit.
+A diagnostic replay now retains read-only GetUnit results before systemctl
+queries, selected service properties and a failure screenshot. It fails
+promptly on a Failed dashboard rather than accepting that as Stopped.
+
+Host evidence validation also now rejects reuse of the initial legacy PID as
+restart proof; the regression failed before the fix and passes afterward.
+Migration-data preserving uninstall remains required in normal candidate mode
+as well as browser mode. All 25 focused input/evidence tests pass.

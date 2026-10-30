@@ -135,6 +135,13 @@ class PreparedPackage(unittest.TestCase):
             with self.subTest(routes=routes), self.assertRaises(ValueError):
                 self.module.verify_migration(report, 'x86_64', bundles)
 
+    def test_migration_cannot_reuse_the_initial_process_as_restart_proof(self):
+        report = self.migration()
+        report['legacyMainPidAfterRestart'] = report['legacyMainPidBefore']
+        report['legacyIdentityAfterRestart'] = copy.deepcopy(report['legacyIdentityBefore'])
+        with self.assertRaises(ValueError):
+            self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+
     def candidate(self):
         required = ('ownedCleanup', 'actualStopJobReapedRuntime', 'realDeckyRpcRest')
         report = dict.fromkeys(required, True)

@@ -183,6 +183,8 @@ def verify_migration(report, arch, bundles):
         raise ValueError('Missing actual legacy migration preservation/control proof')
     if report.get('pendingSetupRoutes') != {'GET state': 500, 'POST start': 204, 'POST stop': 204}:
         raise ValueError('Missing pending migration refusal/no-op proof')
+    if report.get('legacyMainPidBefore') == report.get('legacyMainPidAfterRestart'):
+        raise ValueError('Missing new legacy service PID after restart')
     for key, main_key in (('legacyIdentityBefore', 'legacyMainPidBefore'),
                           ('legacyIdentityAfterRestart', 'legacyMainPidAfterRestart')):
         processes = report.get(key, [])
@@ -514,6 +516,8 @@ def main():
                              packer.REQUIRED_SERVICE_RESULTS)
             if package.get('uninstallPreservedCandidateData') is not True:
                 raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
+            if package.get('uninstallPreservedMigrationData') is not True:
+                raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
         if args.browser_setup:
             browser_result = package.get('candidateService', {}).get('browserSetup', {})
             verify_browser(browser_result, browser_inputs['panelSha256'])
@@ -525,8 +529,6 @@ def main():
                 if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
                     raise RuntimeError('Invalid browser screenshot')
                 (args.output / ('browser-'+name+'.png')).write_bytes(data)
-            if package.get('uninstallPreservedMigrationData') is not True:
-                raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths
