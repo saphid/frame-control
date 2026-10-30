@@ -120,3 +120,9 @@ and combined replay remain required. Screenshot-bearing final reports use
 bounded 4096-character records rather than one potentially truncated journal
 line; the host refuses missing, duplicate or reordered records. All 28 focused
 input/evidence tests pass.
+
+At checkpoint `b12f392`, the full server suite passed 1,841 tests in
+223.362 seconds, with 16 platform/environment skips and no failures. The
+changed AMD64 helper built offline from locked dependencies and passed all
+11 ownership/service-file tests. This is build evidence, not an ARM64 or
+browser runtime pass. The sixth combined trial uses that source-bound helper.

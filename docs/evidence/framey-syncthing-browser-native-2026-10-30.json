@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Fifth trial confirms false Failed display for a collected inactive/successful unit. Candidate state lookup fix and fresh combined replay pending.",
+  "status": "Candidate state lookup fix built for AMD64; 1841 server tests pass (16 skips); sixth combined runtime at b12f392 remains pending.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -624,5 +624,44 @@
     ],
     "scriptSha256": "3ffbb3a1718f71c8522a86d4cf429ffa9c09d1d3c82f8154993f511c13cdd391",
     "resultSha256": "bb7f35c558eb540611668bbaf1c0427d69f5898fb31681a553a95e4f36ca9190"
+  },
+  "stateLookupBuild": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+    "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13377600,
+        "sha256": "bef65e425ff895dd40e932fdae424376988e6abed17a9527e4eda383002a578d",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "latestServerSuite": {
+    "sourceRevision": "b12f392921998b8d65385688ec2fe2151b11208c",
+    "tests": 1841,
+    "skipped": 16,
+    "failures": 0,
+    "elapsedSeconds": 223.362,
+    "logSha256": "3d6226373b90e193da6f4037bb8a8bbb14bf09b4c6ca790d97389f51af93a4bb"
   }
 }
