@@ -81,7 +81,13 @@ def main():
             parser.error('Unknown official plugin case')
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
-    report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest, 'cases': []}
+    inputs = ['scripts/framey-test-decky-runtime.py', 'tests/decky-runtime/check.py',
+              'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
+              'tests/framey_official.py', 'ui/frame_decky_store.py',
+              '.github/workflows/decky-runtime.yml']
+    report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,
+              'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()
+                               for name in inputs}, 'cases': []}
     try:
         subprocess.run(['docker', 'build', '-q', '-t', tag, '-f', str(ROOT/'tests/decky-runtime/Containerfile'),
                         str(ROOT/'tests/decky-runtime')], check=True, timeout=300)
