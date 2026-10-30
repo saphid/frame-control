@@ -825,6 +825,37 @@ class StoreTransaction(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(error, result.stderr)
             self.assertFalse((self.folder.parent / plugin['folder']).exists())
+    def test_tabmaster_restore_repair_preserves_other_bytes_and_rejects_changed_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = official_archive(plugin)
+        args = dict(plugin_id=61, folder=plugin['folder'], version=plugin['version'])
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['tabmaster-json-file-restore'])
+        old = b'        data = json.loads(settings_file)\n'
+        new = (b'        data = json.load(settings_file)\n'
+               b'        if not isinstance(data, dict):\n          return False\n')
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            original_main = bundle.read(plugin['folder']+'/main.py')
+            for name in bundle.namelist():
+                if name.endswith('/'):
+                    continue
+                original = bundle.read(name)
+                expected = original.replace(old, new) if name.endswith('/main.py') else original
+                self.assertEqual((folder/Path(name).relative_to(plugin['folder'])).read_bytes(), expected, name)
+        self.assertEqual(json.loads((folder/'plugin.json').read_text())['api_version'], 1)
+        self.assertEqual(self.apply('remove', **args).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(plugin['folder']+'/different-version.txt', 'changed archive')
+        result = self.apply('install', changed.getvalue(), **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((folder/'main.py').read_bytes(), original_main)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 96)

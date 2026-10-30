@@ -838,6 +838,18 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
                 compat_shims.append('deckyfileserver-directory-entry')
+            # TabMaster 2.15.1 passes a file object to json.loads, so every
+            # restore fails. Read its JSON stream and refuse non-object state.
+            if int(plugin_id)==61 and digest=='e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5' and folder=='TabMaster':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347':
+                    raise RuntimeError('TabMaster backend differs from pinned archive')
+                old=b'        data = json.loads(settings_file)\n'
+                if source.count(old)!=1: raise RuntimeError('TabMaster restore source changed')
+                new=b'        data = json.load(settings_file)\n        if not isinstance(data, dict):\n          return False\n'
+                main.write_bytes(source.replace(old,new))
+                compat_shims.append('tabmaster-json-file-restore')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.

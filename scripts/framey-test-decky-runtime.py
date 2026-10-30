@@ -99,7 +99,8 @@ def main():
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
-                    (65, '--reproduce-terminal-import-regression')]
+                    (65, '--reproduce-terminal-import-regression'),
+                    (61, '--reproduce-tabmaster-restore-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
