@@ -1,5 +1,10 @@
 [
   {
+    "id": 14,
+    "shim": null,
+    "probe": "protondb-private-settings"
+  },
+  {
     "id": 143,
     "shim": null,
     "probe": "desktop-apps-private-entries"
@@ -118,7 +123,9 @@
   {
     "id": 53,
     "shim": "shotty-click-app-dir",
-    "additionalShims": ["shotty-bounded-copies"],
+    "additionalShims": [
+      "shotty-bounded-copies"
+    ],
     "probe": "screenshots"
   },
   {

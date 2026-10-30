@@ -453,6 +453,59 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'protondb-private-settings':
+                # The exact frontend reads/writes one settings object. Keep
+                # every write inside the disposable native container home.
+                defaults = dict(size='regular', position='tl', labelTypeOnHover='off',
+                    disableSubmit=False, enableLibraryBadge=True, enableStoreBadge=True,
+                    storeBadgePosition='bc', showAnalysisButton=True, roundedCorners=False,
+                    showLibraryIcons=True, libraryIconPosition='bl')
+                state = base/'settings'/record['folder']/'config.json'
+                assert current('get_setting', 'settings', defaults) == defaults
+                # Published Decky shadows the bundled settings module and
+                # creates an empty config during SettingsManager startup.
+                initial = state.read_bytes()
+                assert initial == b''
+                assert current('get_setting', 'missing-private-setting', None) is None
+                assert state.read_bytes() == initial, 'Reading defaults must preserve config bytes'
+                info = current('get_system_info')
+                assert set(info) == {'plugin_version', 'os_name', 'os_version', 'decky_version'}
+                assert all(isinstance(value, str) and value for value in info.values()), info
+                os_release = dict(line.split('=', 1) for line in
+                    Path('/etc/os-release').read_text().splitlines() if '=' in line)
+                assert info['os_name'] == os_release['NAME'].strip('"')
+                assert info['os_version'] == os_release['VERSION_ID'].strip('"')
+                first = dict(defaults, size='compact', position='br', enableLibraryBadge=False)
+                assert current('set_setting', 'settings', first) is None
+                assert current('get_setting', 'settings', defaults) == first
+                assert json.loads(state.read_text()) == {'settings': first}
+                saved = dict(first, enableStoreBadge=False, roundedCorners=True)
+                assert current('set_setting', 'settings', saved) is None
+                before = state.read_bytes()
+                assert json.loads(before) == {'settings': saved}
+                os.killpg(backend.pid, signal.SIGTERM)
+                backend.wait(timeout=8)
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
+                assert current('get_setting', 'settings', defaults) == saved
+                assert current('get_setting', 'missing-private-setting', False) is False
+                assert current('get_system_info') == info
+                assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
+                    frontendSettingsObject=True, settingsPersistedToDisk=True,
+                    settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
+                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    settingsSha256=hashlib.sha256(before).hexdigest(),
+                    badgeRenderingVerified=False, browserVerified=False,
+                    realSteamCef=False, realFrameContacted=False,
+                    physicalControllerVerified=False)
+                report['result'] = ('published Decky API2 discovery, private frontend settings '
+                    'write/read and loader-restart persistence, false values and container OS '
+                    'metadata passed; badge rendering, browser, Frame and VR unverified')
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.
