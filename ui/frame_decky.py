@@ -143,7 +143,9 @@ try:
                                     '/sbin', '/bin'))
             text = ('[Unit]\nDescription=Decky Loader (Frame Control experimental user install)\n'
               'After=default.target\n[Service]\nType=simple\nRestart=on-failure\n'
-              'RestartSec=5\nExecStart='+str(binary)+'\n'
+              # The packaged loader forwards SIGTERM to its Python child.
+              # Signal its main process once; keep cgroup-wide final cleanup.
+              'RestartSec=5\nKillMode=mixed\nExecStart='+str(binary)+'\n'
               'Environment=UNPRIVILEGED_PATH='+str(base)+'\n'
               'Environment=PRIVILEGED_PATH='+str(base)+'\n'
               'Environment=CHOWN_PLUGIN_PATH=0\nEnvironment=LIVE_RELOAD=0\n'

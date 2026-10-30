@@ -279,6 +279,7 @@ def main():
         'scripts/framey-test-syncthing-runtime.py',
         'scripts/framey-test-decky-runtime.py',
         'ui/vendor/syncthing-0.2.7/main.py',
+        'ui/frame_decky.py',
         'ui/vendor/syncthing-0.2.7/watchdog.patch',
         'ui/vendor/syncthing-0.2.7/owned_unit.rs',
     ]
@@ -426,6 +427,11 @@ def main():
             service = report['candidateService']
             if (
                 any(service.get(key) is not True for key in REQUIRED_SERVICE_RESULTS)
+                or service.get('actualDeckyUserService') is not True
+                or service.get('ownedDeckyServiceRemoved') is not True
+                or service.get('ownedDeckyStop', {}).get('result') != 'success'
+                or service.get('ownedDeckyStop', {}).get('killMode') != 'mixed'
+                or service.get('ownedDeckyStop', {}).get('execMainStatus') != '0'
                 or service.get('flatpakPackageVerified') is not False
                 or service.get('realFrameContacted') is not False
             ):
