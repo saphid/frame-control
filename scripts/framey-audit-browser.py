@@ -159,7 +159,7 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
   notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE,
-  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=PREFIX_FIXTURE;
+  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false;
 window.wineFixtureCalls=[];let wineSocketNext=0;const wineSessions=new Map();
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
@@ -413,12 +413,12 @@ def main():
                                         'The exact digest-checked managed frontend runs in an opaque iframe.')
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Games Prefix Manager replays one private row in its managed panel; every write and network call is blocked.')
+                    page = page.replace('prefixFixture=false', 'prefixFixture=true')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
                 page = page.replace('THEME_MUSIC_FIXTURE', 'true' if args.theme_music_settings_fixture else 'false')
                 page = page.replace('WINE_FIXTURE', 'true' if args.wine_cellar_fixture else 'false')
-                page = page.replace('PREFIX_FIXTURE', 'true' if args.prefix_manager_102_fixture else 'false')
                 page = page.replace('WINE_STATE', json.dumps(wine_state).replace('<', '\\u003c'))
                 body = page.replace(
                     'LIBRARY_DATA', json.dumps(library).replace('<', '\\u003c')).replace(
