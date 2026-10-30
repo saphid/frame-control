@@ -350,6 +350,14 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 report['statusFailureDiagnostic'] = diagnose(frame_decky.PANEL_STATUS_PROBE, home)
             except Exception:
                 report['statusFailureDiagnosticUnavailable'] = True
+        method_failed = any(entry['kind'] == 'panel-method' and entry['outcome'] == 'failure'
+                            for entry in ssh_records)
+        if not report['success'] and method_failed and previous_ssh is not None:
+            try:
+                from terminal_status_diagnostic import diagnose_method
+                report['methodFailureDiagnostic'] = diagnose_method(framey_panel.METHOD_SCRIPT, name, home)
+            except Exception:
+                report['methodFailureDiagnosticUnavailable'] = True
         if page:
             if not report['success']:
                 try:

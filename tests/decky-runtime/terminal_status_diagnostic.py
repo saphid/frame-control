@@ -35,21 +35,23 @@ def summarize_stderr(raw):
                 lastImports=imports[-20:], sampledFrames=frames[-60:])
 
 
-def collect(source, directory, *, timeout=35, sample_seconds=5):
+def collect(source, directory, *, timeout=35, sample_seconds=5, result_kind='status'):
     """Capture only bounded summaries; every child belongs to this invocation."""
     assert 0 < len(source.encode()) <= 256 * 1024
     assert 0 < timeout <= 35 and 0 < sample_seconds <= 5
-    compile(source, '<decky-read-only-status>', 'exec')
+    assert result_kind in ('status', 'method')
+    label = '<decky-read-only-'+result_kind+'>'
+    compile(source, label, 'exec')
     # The original source is executed verbatim; import timing and faulthandler
     # are diagnostic additions to the invocation, explicitly reported below.
     wrapper = ('import faulthandler\n'
                'faulthandler.dump_traceback_later('+repr(sample_seconds)+', repeat=True)\n'
-               'try:\n exec(compile('+repr(source)+', "<decky-read-only-status>", "exec"), {})\n'
+               'try:\n exec(compile('+repr(source)+', '+repr(label)+', "exec"), {})\n'
                'finally:\n faulthandler.cancel_dump_traceback_later()\n')
     began = time.monotonic()
     report = dict(diagnosticOnly=True, invocationModified=True,
                   productionReplayReplaced=False, productionDeadlineChanged=False,
-                  sourceSha256=hashlib.sha256(source.encode()).hexdigest(),
+                  sourceSha256=hashlib.sha256(source.encode()).hexdigest(), resultKind=result_kind,
                   timeoutSeconds=timeout, timedOut=False, ownedProcessReaped=False)
     process = None
     with tempfile.TemporaryFile() as output, tempfile.TemporaryFile() as errors:
@@ -83,14 +85,27 @@ def collect(source, directory, *, timeout=35, sample_seconds=5):
         report.update(summarize_stderr(stderr))
         try:
             value = json.loads(stdout)
-            if isinstance(value, dict):
+            if result_kind == 'method':
+                if isinstance(value, dict) and isinstance(value.get('result'), list):
+                    report['methodResultSummary'] = dict(terminalCount=len(value['result']))
+                else:
+                    report['methodResultUnavailable'] = True
+            elif isinstance(value, dict):
                 report['statusSummary'] = {key: value[key] for key in ('managed', 'running', 'cef')
                                           if type(value.get(key)) is bool}
                 if isinstance(value.get('plugins'), list):
                     report['statusSummary']['pluginCount'] = len(value['plugins'])
         except (ValueError, UnicodeError):
-            report['statusJsonUnavailable'] = True
+            report['methodJsonUnavailable' if result_kind == 'method' else 'statusJsonUnavailable'] = True
     return report
+
+
+def read_only_method_source(template, name):
+    """Only list terminals; never replay create, input, remove or another method."""
+    assert name == 'Decky Terminal'
+    assert template.count('__FRAMEY_METHOD_PAYLOAD__') == 1
+    payload = dict(name=name, method='get_terminals', args=[], legacy=False)
+    return template.replace('__FRAMEY_METHOD_PAYLOAD__', repr(json.dumps(payload)))
 
 
 def diagnose(source, home):
@@ -100,4 +115,16 @@ def diagnose(source, home):
     report = collect(source, home)
     report.update(afterFailedProductionReplay=True, realFrameContacted=False,
                   physicalControllerVerified=False)
+    return report
+
+
+def diagnose_method(template, name, home):
+    assert os.getuid() == 1100 and home == Path('/home/tester')
+    assert Path('/framey-owned-vm').read_bytes() == b'Frame Control Flatpak VM v1\n'
+    assert not Path('/sys/class/net/eth0').exists()
+    source = read_only_method_source(template, name)
+    report = collect(source, home, result_kind='method')
+    report.update(afterFailedProductionReplay=True, readOnlyMethod='get_terminals',
+                  productionTemplateSha256=hashlib.sha256(template.encode()).hexdigest(),
+                  realFrameContacted=False, physicalControllerVerified=False)
     return report
