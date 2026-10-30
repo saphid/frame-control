@@ -141,3 +141,12 @@ The negative original result is the workflow's required reproduction; all
 five candidate cases pass. This records the browser job only, not completion
 of #477's remaining native/e2e/main gates. All responses here remain synthetic;
 actual browser/backend integration has its separate disposable-VM record.
+
+The separate native ownership workflow 41048089307 also passed on this exact
+#477 head. Both architecture artifacts were independently checked against
+their GitHub digests and every reported source fingerprint. They show actual
+Decky discovery, owned helper lifecycle, two-way Syncthing **2.1.7** sync, actual
+systemd control, 17 service results and 18 ownership refusals. These artifacts
+do not use the signed Flatpak 1.27.3 package. That separate AMD64 job in
+41048089270 failed waiting for the forward sync file after 90 seconds. Its
+failure is retained; #477's merge gate remains closed.
