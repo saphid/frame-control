@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Fourth trial reached real Running dashboard DOM but Stop showed Failed; no combined browser lifecycle pass. Diagnostic replay required.",
+  "status": "Fifth trial confirms false Failed display for a collected inactive/successful unit. Candidate state lookup fix and fresh combined replay pending.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -343,6 +343,254 @@
         "bridgeStopped": true
       },
       "ownedQemuReaped": true
+    },
+    {
+      "sourceRevision": "56a42da",
+      "passed": false,
+      "all25SourceFingerprintsVerified": true,
+      "resultSha256": "435c67ab721ec6354e0cd8e0f0b2809e0db02c68c12ee95253eb650ab4a0bdba",
+      "consoleSha256": "67f01645462284c58b12d8b0fa1bdda12e24fec31e7bc2502b566fd69b7c2e6a",
+      "error": "Stopped unit was not loaded; backend mapped lookup failure to Failed",
+      "progress": {
+        "success": false,
+        "syntheticInput": true,
+        "actualDeckyRpc": true,
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "browserSandboxDisabled": false,
+        "panelSha256": "d6ac52879310d080d1f005f3c42436e625b66bc1f3b622725e936cf22d5b4bc3",
+        "lastReadinessError": "no Owned Syncthing actual backend page; Steam may still be starting",
+        "startupErrors": [],
+        "failureUnitLookup": {
+          "returncode": 1,
+          "stdout": "",
+          "stderr": "Call failed: Unit frame-control-syncthing.service not loaded."
+        },
+        "failureSystemdProperties": {
+          "MainPID": "0",
+          "ActiveState": "inactive",
+          "SubState": "dead",
+          "Result": "success",
+          "ExecMainCode": "0",
+          "ExecMainStatus": "0",
+          "LoadState": "loaded"
+        },
+        "lastStage": {
+          "type": "test:stage",
+          "stage": "failed",
+          "text": "Syncthing\n Failed",
+          "errors": []
+        },
+        "stages": [
+          {
+            "type": "test:stage",
+            "stage": "running",
+            "text": "Syncthing\n Running\nFolders\nPrivate service sync\nDevices\nframey-owned-vm\nowned-peer",
+            "errors": []
+          }
+        ],
+        "calls": [
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "set_setting",
+            "setting": "mode"
+          },
+          {
+            "method": "set_setting",
+            "setting": "flatpak_name"
+          },
+          {
+            "method": "set_setting",
+            "setting": "_wizard_force_flatpak_config_for"
+          },
+          {
+            "method": "set_setting",
+            "setting": "flatpak_binary"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/start",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/scan_port",
+            "status": 200
+          },
+          {
+            "method": "set_setting",
+            "setting": "port"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/scan_api_key",
+            "status": 200
+          },
+          {
+            "method": "set_setting",
+            "setting": "api_key"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/scan_basic_auth",
+            "status": 200
+          },
+          {
+            "method": "set_setting",
+            "setting": "basic_auth_user"
+          },
+          {
+            "method": "set_setting",
+            "setting": "basic_auth_pass"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "set_setting",
+            "setting": "autostart"
+          },
+          {
+            "method": "set_setting",
+            "setting": "keep_running_on_desktop"
+          },
+          {
+            "method": "set_setting",
+            "setting": "is_setup"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/reload-config",
+            "status": 204
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/config/folders",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/stats/folder",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/system/status",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/config/devices",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/stats/device",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/db/status?folder=framey-private",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/stop",
+            "status": 204
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/config/folders",
+            "status": 425
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/stats/folder",
+            "status": 425
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/system/status",
+            "status": 425
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/stats/device",
+            "status": 425
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/rest/config/devices",
+            "status": 425
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "GET",
+            "path": "/__decky-watchdog/state",
+            "status": 200
+          }
+        ],
+        "ownedBrowserReaped": true,
+        "bridgeStopped": true
+      },
+      "ownedQemuReaped": true,
+      "failureScreenshotSha256": "11fd8bfb15b50d717b31149ae1e296ee516e8d4c7dd6298381b2430515c05db1"
     }
   ],
   "serverSuite": {

@@ -302,6 +302,26 @@ def verify_browser(report, expected_panel):
         raise ValueError('Missing browser lifecycle screenshots')
 
 
+def guest_report(console, browser=False):
+    marker = 'FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' if browser else 'FRAMEY_SYSTEMD_PROBE_JSON='
+    lines = [line.partition(marker)[2] for line in console.splitlines() if marker in line]
+    if not browser:
+        if len(lines) != 1:
+            raise RuntimeError('Missing/ambiguous guest result')
+        return json.loads(lines[0])
+    # Screenshot-bearing JSON exceeds journald's line limit. Each guest record
+    # carries at most 4096 characters and must form one complete ordered set.
+    if not 1 <= len(lines) <= 4096:
+        raise RuntimeError('Missing/oversized chunked guest result')
+    chunks = [json.loads(line) for line in lines]
+    for index, chunk in enumerate(chunks):
+        if (set(chunk) != {'index', 'total', 'data'} or chunk['index'] != index
+            or chunk['total'] != len(chunks) or not isinstance(chunk['data'], str)
+            or not 1 <= len(chunk['data']) <= 4096):
+            raise RuntimeError('Incomplete/ambiguous chunked guest result')
+    return json.loads(''.join(chunk['data'] for chunk in chunks))
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -485,14 +505,9 @@ def main():
             finally:
                 reap(process)
                 result["ownedQemuReaped"] = process.poll() is not None
-        lines = [
-            line.partition("FRAMEY_SYSTEMD_PROBE_JSON=")[2]
-            for line in console.read_text().splitlines()
-            if "FRAMEY_SYSTEMD_PROBE_JSON=" in line
-        ]
-        if code != 0 or len(lines) != 1:
-            raise RuntimeError("Missing/ambiguous guest result or nonzero QEMU exit")
-        guest = json.loads(lines[0])
+        if code != 0:
+            raise RuntimeError('Nonzero QEMU exit')
+        guest = guest_report(console.read_text(), args.browser_setup)
         result["guest"] = guest
         package = guest.get("flatpak", {})
         if guest.get('success') is not True:

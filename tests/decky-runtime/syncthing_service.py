@@ -457,6 +457,10 @@ def main(signed_flatpak=False):
             setting('is_setup', True)
             assert http('POST', 'reload-config')['status'] == 204
             assert http('POST', 'stop')['status'] == 204
+            # A systemctl property query can load a collected unit. Check the
+            # backend first so that query cannot conceal a false Failed state.
+            stopped = http('GET', 'state')
+            assert stopped['status'] == 200 and stopped['body'].strip() == 'stopped', stopped
             assert prop(service, 'MainPID') == '0'
             report['wizardConfigDiscovery'] = dict(
                 defaultPackageConfig=True, remainedUnconfiguredDuringScan=True,

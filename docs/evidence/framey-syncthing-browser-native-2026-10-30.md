@@ -103,3 +103,20 @@ Host evidence validation also now rejects reuse of the initial legacy PID as
 restart proof; the regression failed before the fix and passes afterward.
 Migration-data preserving uninstall remains required in normal candidate mode
 as well as browser mode. All 25 focused input/evidence tests pass.
+
+The fifth trial at `56a42da` confirms the false failure after Stop. Read-only
+GetUnit returned `Unit frame-control-syncthing.service not loaded`; subsequent
+systemctl reads returned MainPID 0, inactive/dead, Result success and exit
+status 0. The backend state path used GetUnit and mapped lookup errors to
+Failed. The [retained screenshot](framey-syncthing-browser-failed-stop-2026-10-30.png)
+was visually inspected and shows Failed. This is a desktop VM capture, not
+a Frame mirror or wearer/controller proof. All 25 input fingerprints match
+the checkpoint, and its browser, bridge and QEMU were reaped.
+
+The uninstalled candidate now loads the selected unit definition for a state
+read without starting it, retaining the existing ownership checks. The native
+fixture additionally requires Stopped after a successful stop. A fresh build
+and combined replay remain required. Screenshot-bearing final reports use
+bounded 4096-character records rather than one potentially truncated journal
+line; the host refuses missing, duplicate or reordered records. All 28 focused
+input/evidence tests pass.

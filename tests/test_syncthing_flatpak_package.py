@@ -34,6 +34,32 @@ class PreparedPackage(unittest.TestCase):
             },
         }
 
+    def chunked_console(self):
+        report = {'success': True, 'screenshots': 'private-image-fixture' * 3000}
+        data = json.dumps(report)
+        parts = [data[offset:offset+4096] for offset in range(0, len(data), 4096)]
+        lines = ['[ 12.0] python3[42]: FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' + json.dumps(
+            {'index': index, 'total': len(parts), 'data': part})
+            for index, part in enumerate(parts)]
+        return report, lines
+
+    def test_large_browser_evidence_survives_bounded_console_records(self):
+        report, lines = self.chunked_console()
+        self.assertEqual(self.module.guest_report('\n'.join(lines), browser=True), report)
+
+    def test_chunked_guest_evidence_rejects_loss_duplicates_and_reordering(self):
+        _, lines = self.chunked_console()
+        for changed in (lines[:-1], lines + lines[-1:], lines[::-1], []):
+            with self.subTest(count=len(changed)), self.assertRaises(RuntimeError):
+                self.module.guest_report('\n'.join(changed), browser=True)
+
+    def test_native_guest_result_requires_one_unambiguous_record(self):
+        line = 'FRAMEY_SYSTEMD_PROBE_JSON={"success": true}'
+        self.assertEqual(self.module.guest_report(line), {'success': True})
+        for changed in ('', line+'\n'+line):
+            with self.assertRaises(RuntimeError):
+                self.module.guest_report(changed)
+
     def test_fingerprints_work_without_python_311_file_digest(self):
         # The checks job runs the input-refusal tests on Python 3.9.
         with tempfile.TemporaryDirectory() as temporary:

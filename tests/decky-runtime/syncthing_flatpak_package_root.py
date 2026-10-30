@@ -14,6 +14,7 @@ if (
 ):
     raise RuntimeError("Only the private Flatpak VM may run this bootstrap")
 report = {"success": False, "realFrameContacted": False, "hostBusExposed": False}
+browser = False
 try:
     assert Path("/proc/1/comm").read_text().strip() == "systemd"
     # Separate bounded guest-only data filesystem; retain OSTree's default
@@ -78,7 +79,15 @@ except BaseException:
     report["success"] = False
     traceback.print_exc()
     subprocess.run(["journalctl", "-b", "--no-pager", "-n", "100"], timeout=20)
-print("FRAMEY_SYSTEMD_PROBE_JSON=" + json.dumps(report), flush=True)
+if browser:
+    encoded = json.dumps(report)
+    chunks = [encoded[offset:offset+4096] for offset in range(0, len(encoded), 4096)]
+    assert 1 <= len(chunks) <= 4096
+    for index, chunk in enumerate(chunks):
+        print('FRAMEY_SYSTEMD_PROBE_CHUNK_JSON=' + json.dumps(
+            {'index': index, 'total': len(chunks), 'data': chunk}), flush=True)
+else:
+    print("FRAMEY_SYSTEMD_PROBE_JSON=" + json.dumps(report), flush=True)
 subprocess.run(
     [
         "systemd-run",
