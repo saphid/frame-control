@@ -75,6 +75,49 @@ regression and reports `flatpakPackageVerified: false`. Both workflows check
 out the exact PR head. Artifacts/source fingerprints and failed results are
 retained; workflow definitions or older artifacts do not establish a pass.
 
+## ARM64 CI failure and discovery retry scope
+
+At exact head `67188e18b24429755f8954765cabdf9fed208686`, run
+[41033180996](https://github.com/saphid/frame-control/actions/runs/41033180996)
+passed the AMD64 combined gate but failed ARM64 at the assertion that the
+first port scan returned 8384. The original fixture did not record that
+returned value. The [failure record](framey-syncthing-signed-decky-arm-failure-2026-10-30.json)
+binds artifact 12967544563 to the exact sources. Its partial result passed
+signed package launch, two-way sync, service restart and process cleanup;
+it does **not** pass the combined Decky setup/lifecycle gate. QEMU was reaped.
+
+Systemd running state does not establish GUI/API readiness. Startup timing
+is the current hypothesis, not a proven diagnosis from the old assertion.
+The revised fixture uses the existing 60-second bounded guest readiness wait
+to repeat null port results and transient request errors. HTTP status errors
+and unexpected non-null ports fail immediately. Every returned port and the
+elapsed time are retained in the report and console, including on failure.
+Only an actual 8384 discovery followed by the original key scan and
+authenticated REST proof can pass. The verifier rejects missing, incomplete
+or wrong-port retry journals. The published browser performs one scan and
+falls back to manual port entry
+when it finds no port. The repeated backend scans here are fixture readiness
+probes, not a browser interaction replay. They do not prove first-attempt
+scan success, the manual-entry fallback or browser startup behavior.
+
+Both native combined CI jobs must pass again on the new exact head. The
+installer stays blocked; no release or hardware verification is credited.
+
+A local AMD64 replay at `eb99b6f835c2b1df491679dd44ab19f87b7938a7`
+passed all nine setup results, 17 lifecycle checks, 18 ownership refusals,
+ten process identity observations and preserving uninstall. All 12 packed
+source fingerprints independently matched that checkpoint. Its first port
+scan returned 8384 in 0.296 seconds; no retry was needed. Owned stop took
+0.152 seconds and external transition took 1.015 seconds. QEMU and owned
+processes were reaped. This does not reproduce or resolve ARM64 readiness.
+The JSON retains that verification, attempt journal and source bindings.
+
+At the same checkpoint, 19 focused package tests passed and the complete
+server suite ran 1,832 tests in 221.212 seconds with 16 platform/environment
+skips and no failures. Subsequent changes correct comments/documentation;
+these local results are scoped to the recorded checkpoint. Exact-head CI
+remains required before merging.
+
 ## Evidence and admission limits
 
 The [JSON record](framey-syncthing-signed-decky-2026-10-30.json) contains the
