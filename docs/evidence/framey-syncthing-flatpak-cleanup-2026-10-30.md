@@ -25,14 +25,18 @@ the behavioral regression test supplies the transient/persistent cases.
 
 Main's unchanged ARM64 signed-package job passed and its artifact was
 independently audited. Its backend setup needed one null scan before finding
-8384; that does not prove a UI retry. Main's failed AMD64 job has been requested
-once more now that its containing workflow finished. The first failure remains
-retained, and no release is attempted from this commit.
+8384; that does not prove a UI retry. Main's failed AMD64 job passed its single retry. Its new artifact independently
+passed exact-source, signed-package, lifecycle, refusal and migration audit.
+The first failure remains retained, and no release is attempted from this
+commit.
 
 #478's exact-head ARM64 CI also passed independent audit, including signed
 identities, all lifecycle/refusal/migration results and preserving uninstall.
 Its final instance list was empty after 1.029 seconds. Both architectures are
-now audited and all 15 PR checks pass. Main's AMD64 retry remains live; no
-whole-main green or merge pass is credited. Syncthing installation stays blocked. No real Frame, SteamVR
+now audited and all 15 PR checks passed. Exact main `af0433b` had all 11 checks
+green before merge. The final gate rechecked the fetched main, exact PR head,
+all checks, clean mergeability and absence of feedback/unresolved threads.
+#478 merged as `cb53efed70db011bf7ad8ae906e4a88d2dcb72ff` at
+12:25:27 UTC. Fresh CI on that new main is required before the next merge. Syncthing installation stays blocked. No real Frame, SteamVR
 visuals or physical controller use were tested; the hourly worn schedule is
 unchanged.
