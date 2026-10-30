@@ -87,6 +87,37 @@ class BrowserReadyCandidate(unittest.TestCase):
         self.assertEqual(report['readinessAttempts'][0]['outcome'], 'failure')
 
 
+class BrowserParentErrors(unittest.TestCase):
+    def test_shipped_panel_error_is_retained_only_from_owned_iframe_and_is_bounded(self):
+        import shutil
+        import subprocess
+        browser = load('owned_browser_parent_errors', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is required for fixture JavaScript behavior')
+        harness = r"""
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const owned={},handlers=[];
+const context={document:{getElementById:()=>({contentWindow:owned})},
+ addEventListener:(type,handler)=>handlers.push({type,handler})};
+context.window=context;vm.createContext(context);vm.runInContext(SOURCE,context);
+const message=handlers.find(v=>v.type==='message').handler;
+(async()=>{
+ await message({source:{},data:{type:'framey:error',message:'foreign'}});
+ assert.equal(context.startupErrors.length,0);
+ await message({source:owned,data:{type:'framey:error',message:'module startup failed'}});
+ assert.deepEqual(Array.from(context.startupErrors),['module startup failed']);
+ for(let i=0;i<25;i++)await message({source:owned,data:{type:'framey:error',message:'x'.repeat(2000)}});
+ assert.equal(context.startupErrors.length,16);
+ assert.equal(context.startupErrors.at(-1).length,1000);
+ assert.equal(vm.runInContext('ready',context),false);
+})().catch(error=>{console.error(error);process.exitCode=1;});
+"""
+        result = subprocess.run([node, '-e', harness.replace('SOURCE', json.dumps(browser.PARENT))],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+
+
 class BrowserStartupEvidence(unittest.TestCase):
     def test_diagnostics_bound_logs_and_targets_without_retaining_target_urls(self):
         browser = load('owned_browser_diagnostics', ROOT/'tests/decky-runtime/syncthing_browser.py')

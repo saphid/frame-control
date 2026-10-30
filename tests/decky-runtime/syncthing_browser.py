@@ -71,6 +71,10 @@ addEventListener('message',async event=>{
  const req=event.data||{};
  if(req.type==='framey:cache:init'){panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
  if(req.type==='framey:ready'){ready=true;return;}
+ if(req.type==='framey:error'){
+  if(startupErrors.length<16)startupErrors.push(String(req.message||'Panel startup failed').slice(0,1000));
+  return;
+ }
  if(req.type==='test:stage'){window.stage=req;return;}
  if(req.type==='test:failure'){window.failure=req.error;return;}
  if(req.type!=='framey:call')return;
@@ -116,10 +120,12 @@ def ready_page(report):
     finally:
         if candidate is not None and not accepted:
             candidate.sock.close()
+        attempt = dict(phase=phase, outcome=outcome,
+                       elapsedSeconds=round(time.monotonic()-started, 3))
+        report['lastReadinessAttempt'] = attempt
         attempts = report.setdefault('readinessAttempts', [])
         if len(attempts) < 16:
-            attempts.append(dict(phase=phase, outcome=outcome,
-                                 elapsedSeconds=round(time.monotonic()-started, 3)))
+            attempts.append(attempt)
         else:
             report['readinessTraceOverflow'] = True
     return None

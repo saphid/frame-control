@@ -1,0 +1,129 @@
+{
+  "head": "ce69eaf1eb383a25ddb8e1a5eb502249b388e7fc",
+  "runId": 41084788607,
+  "jobId": 124162979768,
+  "artifactId": 12993527868,
+  "artifactSha256": "3f3df1bdaa9a854dec91fbfba7b51b4ed3506cba7eb219764b723dbf5a6985af",
+  "allExactHeadSourceFingerprintsVerified": true,
+  "exactHeadSourceCount": 123,
+  "inputSourceCount": 122,
+  "architecture": "aarch64",
+  "success": false,
+  "rootCauseEstablished": false,
+  "browserStages": 0,
+  "browserRpcCalls": 0,
+  "captures": 0,
+  "readinessAttempts": [
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 5.087
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 3.764
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 1.201
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 0.689
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 1.771
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 0.622
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 0.771
+    },
+    {
+      "phase": "page-connect",
+      "outcome": "failure",
+      "elapsedSeconds": 1.37
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 12.146
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.569
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.343
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.321
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.328
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.427
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.362
+    },
+    {
+      "phase": "panel-errors",
+      "outcome": "not-ready",
+      "elapsedSeconds": 0.397
+    }
+  ],
+  "readinessTraceOverflow": true,
+  "startupErrors": [],
+  "startupDiagnostics": {
+    "processAlive": true,
+    "returnCode": null,
+    "devToolsPortFilePresent": true,
+    "stderrBytes": 395,
+    "stderrTail": "\nDevTools listening on ws://127.0.0.1:33485/devtools/browser/0071b7f5-4b20-4c78-9bc5-8e3c70eff2a6\n[877:877:1030/163026.955772:ERROR:dbus/object_proxy.cc:572] Failed to call method: org.freedesktop.DBus.Properties.GetAll: object_path= /org/freedesktop/UPower/devices/DisplayDevice: org.freedesktop.DBus.Error.ServiceUnknown: The name org.freedesktop.UPower was not provided by any .service files\n",
+    "targetsUnavailable": true
+  },
+  "lastReadinessError": "Steam's UI isn't answering on http://127.0.0.1:33485/json (timed out); is Steam running?",
+  "ownedBrowserReaped": true,
+  "bridgeStopped": true,
+  "ownedQemuReaped": true,
+  "browserSandboxDisabled": false,
+  "realFrameContacted": false,
+  "installerEnabled": false,
+  "actualSteamCef": false,
+  "physicalControllerVerified": false,
+  "diagnosticFollowup": {
+    "fullRegression": {
+      "tests": 1864,
+      "seconds": 222.781,
+      "skips": 16,
+      "failures": 0,
+      "logSha256": "57d5865f51c4dde7e2eb1c7034624ae686b69bf428458baab58a722ee7954c17"
+    },
+    "focusedHttpTests": 15,
+    "oldParentRedReproduced": true,
+    "redLogSha256": "37dcf3f3fad62659265c59a5d25f80ca5ca61019365cbbd5755840eb7c1deb74"
+  }
+}
