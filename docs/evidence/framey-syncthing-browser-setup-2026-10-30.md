@@ -51,7 +51,7 @@ checkpoint `1847e2346aa25b886e3147190aadd12076892ef8`, Chrome
 
 These are synthetic DOM clicks/change events in Chromium, not physical pointer
 or controller input. The [image](framey-syncthing-browser-setup-2026-10-30.png)
-shows the fresh wizard's Finish page. Get Started/back navigation, remaining
+shows the fresh wizard's Finish page at the initial checkpoint. Remaining
 installation choices, cancellation, live folders/devices and real backend
 integration with these browser controls remain unverified.
 
@@ -59,8 +59,28 @@ The earlier probe's button locator omitted the word “the” and failed before
 selecting an installation method. That development failure is identified
 separately and contributes no wizard pass.
 
+## Completion navigation follow-up
+
+A further source-bound trial at `d993f5d` clicked Get Started after Finish. The
+route returned to the plugin, but the published delayed call to
+`Navigation.OpenQuickAccessMenu(QuickAccessTab.Decky)` raised an uncaught error:
+the isolated panel has no Steam quick-access menu API or tab enum.
+
+The candidate now uses its existing NavigateBack route without that Steam-menu
+call. At checkpoint `af4d98e8ffe429fff7943697322810aa431ce16e`, all five cases
+passed independent fingerprint/cleanup checks: the expected published setup
+failure, fresh setup, migrated entry, configured-state failure, and wizard
+completion/navigation without browser errors. The fixed frontend SHA-256 is
+`6abfd4861c74f730f9d29d00bfc478e8967f9f56c4ea84a442aac41a0d62972f`.
+
+The completion case deliberately returns the synthetic state-500 response
+after navigating back. It verifies that the configured error UI is reachable
+and the unavailable Steam call is gone; it does not prove a running service or
+combined browser/backend behavior. Both the failed trial and final cases are
+retained in the JSON. No host-wide menu API or native ownership guard changes.
+
 The dedicated browser workflow checks the exact PR head, reproduces the
-published failure, runs the three candidate cases and retains source-bound
+published failure, runs the four candidate cases and retains source-bound
 reports/screenshots. Its presence is not proof of a successful CI run; native
 and browser CI for this follow-up remain pending.
 
