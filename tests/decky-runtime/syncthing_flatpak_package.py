@@ -425,6 +425,16 @@ def main():
     assert APP not in instances and not forced
     report["noOwnedFlatpakInstancesRemain"] = True
     if Path('/input/candidate-inputs.json').exists():
+        migration = subprocess.run(
+            ['python3', '/input/syncthing_migration.py'],
+            capture_output=True, text=True, timeout=360,
+        )
+        print(migration.stdout, flush=True)
+        print(migration.stderr[-12000:], flush=True)
+        lines = [line.partition('FRAMEY_MIGRATION_JSON=')[2]
+                 for line in migration.stdout.splitlines() if 'FRAMEY_MIGRATION_JSON=' in line]
+        assert migration.returncode == 0 and len(lines) == 1
+        report['candidateMigration'] = json.loads(lines[0])
         candidate = subprocess.run(
             ['python3', '/input/syncthing_service.py', '--signed-flatpak'],
             capture_output=True, text=True, timeout=360,
@@ -449,6 +459,12 @@ def main():
         assert (runtime / 'owned-marker').read_text() == 'retain private runtime'
         assert hashlib.sha256((runtime / 'sync/reverse.txt').read_bytes()).hexdigest() == candidate['reverseSha256']
         report['uninstallPreservedCandidateData'] = True
+    if 'candidateMigration' in report:
+        migration = report['candidateMigration']
+        runtime = Path(migration['retainedRuntime'])
+        assert all(hashlib.sha256((runtime / name).read_bytes()).hexdigest() == expected
+                   for name, expected in migration['retainedFilesSha256'].items())
+        report['uninstallPreservedMigrationData'] = True
     report["uninstallPreservedOwnedData"] = True
     print("FRAMEY_FLATPAK_USER_JSON=" + json.dumps(report), flush=True)
 

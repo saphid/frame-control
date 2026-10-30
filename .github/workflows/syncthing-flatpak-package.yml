@@ -9,6 +9,7 @@ on:
       - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
+      - 'tests/decky-runtime/syncthing_migration.py'
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
@@ -20,6 +21,7 @@ on:
       - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
+      - 'tests/decky-runtime/syncthing_migration.py'
       - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
@@ -109,7 +111,7 @@ jobs:
           from pathlib import Path
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           assert head==os.environ['AUDIT_HEAD']
-          paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/syncthing_service.py','scripts/build-framey-syncthing.py','ui/vendor/syncthing-0.2.7/main.py','ui/vendor/syncthing-0.2.7/watchdog.patch','ui/vendor/syncthing-0.2.7/owned_unit.rs','ui/vendor/syncthing-0.2.7/source.tar.gz','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
+          paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/syncthing_service.py','tests/decky-runtime/syncthing_migration.py','scripts/build-framey-syncthing.py','ui/vendor/syncthing-0.2.7/main.py','ui/vendor/syncthing-0.2.7/watchdog.patch','ui/vendor/syncthing-0.2.7/owned_unit.rs','ui/vendor/syncthing-0.2.7/source.tar.gz','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
           report={'headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
           result=Path(os.environ['RUNNER_TEMP'])/'flatpak-package/result.json'
           if result.exists():report['packagePass']=json.loads(result.read_text()).get('success') is True

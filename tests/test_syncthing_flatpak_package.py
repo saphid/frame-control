@@ -86,6 +86,62 @@ class PreparedPackage(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.module.prepared_bundles(report, "x86_64")
 
+    def migration(self):
+        report = dict.fromkeys(self.module.MIGRATION_REQUIRED, True)
+        report.update(architecture='x86_64', installerEnabled=False,
+                      realFrameContacted=False, flatpakPackageVerified=True,
+                      packagedBinarySha256='b' * 64, legacyMainPidBefore=150,
+                      legacyMainPidAfterRestart=250,
+                      pendingSetupRoutes={'GET state': 500, 'POST start': 204, 'POST stop': 204})
+        for key, main, pid in [('legacyIdentityBefore', 150, 151),
+                               ('legacyIdentityAfterRestart', 250, 251)]:
+            report[key] = [dict(pid=pid, ancestryToMainPid=[pid, main],
+                                executableSha256='b' * 64,
+                                appCommit=self.module.COMMITS['x86_64']['app'],
+                                runtimeCommit=self.module.COMMITS['x86_64']['runtime'])]
+        return report
+
+    def test_migration_requires_preservation_before_explicit_control(self):
+        report = self.migration()
+        bundles = self.prepared('x86_64')['bundles']
+        self.module.verify_migration(report, 'x86_64', bundles)
+        for mutation in (dict(pendingSetupPreservedLiveLegacy=False),
+                         dict(configCertificateDataPreserved=False),
+                         dict(explicitExternalControlAndAuth=False),
+                         dict(ownedProcessesReaped=False), dict(installerEnabled=True)):
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.module.verify_migration({**report, **mutation}, 'x86_64', bundles)
+
+    def test_migration_rejects_unsigned_wrong_process_or_missing_restart_proof(self):
+        bundles = self.prepared('x86_64')['bundles']
+        for key in ('legacyIdentityBefore', 'legacyIdentityAfterRestart'):
+            for mutation in (dict(appCommit='0' * 64), dict(executableSha256='0' * 64),
+                             dict(ancestryToMainPid=[151, 999])):
+                report = self.migration()
+                report[key][0].update(mutation)
+                with self.subTest(key=key, mutation=mutation), self.assertRaises(ValueError):
+                    self.module.verify_migration(report, 'x86_64', bundles)
+        report = self.migration()
+        del report['legacyIdentityAfterRestart']
+        with self.assertRaises(ValueError):
+            self.module.verify_migration(report, 'x86_64', bundles)
+
+    def test_migration_requires_missing_unit_refusal_and_control_noops(self):
+        bundles = self.prepared('x86_64')['bundles']
+        for routes in (None, {'GET state': 200, 'POST start': 204, 'POST stop': 204},
+                       {'GET state': 500, 'POST start': 500, 'POST stop': 204}):
+            report = self.migration()
+            report['pendingSetupRoutes'] = routes
+            with self.subTest(routes=routes), self.assertRaises(ValueError):
+                self.module.verify_migration(report, 'x86_64', bundles)
+
+    def test_migration_cannot_reuse_the_initial_process_as_restart_proof(self):
+        report = self.migration()
+        report['legacyMainPidAfterRestart'] = report['legacyMainPidBefore']
+        report['legacyIdentityAfterRestart'] = copy.deepcopy(report['legacyIdentityBefore'])
+        with self.assertRaises(ValueError):
+            self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+
     def candidate(self):
         required = ('ownedCleanup', 'actualStopJobReapedRuntime', 'realDeckyRpcRest')
         report = dict.fromkeys(required, True)

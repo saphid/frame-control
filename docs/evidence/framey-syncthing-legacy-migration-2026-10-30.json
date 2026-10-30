@@ -1,0 +1,835 @@
+{
+  "date": "2026-10-30",
+  "sourceRevision": "3a308783a5fc1c5404b4b9cd5ba2a118d72bbe8d",
+  "localArchitecture": "x86_64",
+  "success": true,
+  "sourceFingerprintsVerified": 13,
+  "resultSha256": "b9b8045bc3b69c5aba5e9335092ddde173274511ac41922d4eb6b2f8b7b75391",
+  "consoleSha256": "ab98402d45441a6794b48053a29ee4d374406fe9e35e8d9e7418aaa33eafcc8b",
+  "ownedQemuReaped": true,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "migration": {
+    "architecture": "x86_64",
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "flatpakPackageVerified": true,
+    "actualLegacySignedPackage": true,
+    "legacyIdentityBefore": [
+      {
+        "pid": 649,
+        "ancestryToMainPid": [
+          649,
+          648,
+          639
+        ],
+        "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      {
+        "pid": 657,
+        "ancestryToMainPid": [
+          657,
+          649,
+          648,
+          639
+        ],
+        "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      }
+    ],
+    "legacyMainPidBefore": 639,
+    "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+    "retainedFilesSha256": {
+      "config.xml": "9456a6491bdf603f38fb449a07ded4c27e0b231909ff7a73d71f97f740540689",
+      "cert.pem": "49abbb9e9ec4098073b0303b8a684df4a9afd81fb2fd757d56ddc9fd2480048b",
+      "key.pem": "dd4f06383ecd1ce2d5ca96e7701bf324178bd844045a239c06bffff1f7c48416",
+      "sync/retained.txt": "20b246a130b0e12dca88b8190ac417d6e3f19c88dbf07121a15be1017a9ebb27"
+    },
+    "v1SettingsMigratedAndPersisted": true,
+    "pendingSetupPreservedLiveLegacy": true,
+    "pendingSetupRoutes": {
+      "GET state": 500,
+      "POST start": 204,
+      "POST stop": 204
+    },
+    "legacyUnitAndEnablementPreserved": true,
+    "configCertificateDataPreserved": true,
+    "unrelatedHelperPreserved": true,
+    "explicitExternalControlAndAuth": true,
+    "actualLegacyStopRestart": true,
+    "legacyDataRetainedAfterRestart": true,
+    "legacyIdentityAfterRestart": [
+      {
+        "pid": 709,
+        "ancestryToMainPid": [
+          709,
+          708,
+          699
+        ],
+        "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      {
+        "pid": 717,
+        "ancestryToMainPid": [
+          717,
+          709,
+          708,
+          699
+        ],
+        "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      }
+    ],
+    "legacyMainPidAfterRestart": 699,
+    "ownedProcessesReaped": true,
+    "ownedLegacyFixtureRemoved": true,
+    "noOwnedFlatpakInstancesRemain": true,
+    "retainedRuntime": "/home/tester/migration-legacy-state"
+  },
+  "combinedReplayVerification": {
+    "success": true,
+    "sourceRevision": "3a308783a5fc1c5404b4b9cd5ba2a118d72bbe8d",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": true,
+    "sourceFingerprints": 13,
+    "resultSha256": "b9b8045bc3b69c5aba5e9335092ddde173274511ac41922d4eb6b2f8b7b75391",
+    "consoleSha256": "ab98402d45441a6794b48053a29ee4d374406fe9e35e8d9e7418aaa33eafcc8b",
+    "defaultConfigPath": "/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml",
+    "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+    "requiredLifecycleResults": 17,
+    "ownershipRefusals": 18,
+    "stopRpcElapsedSeconds": 0.133,
+    "externalTransitionRpcElapsedSeconds": 0.992,
+    "processIdentityChecks": 10,
+    "uninstallPreservedCandidateData": true,
+    "ownedQemuReaped": true,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "wizardConfigDiscovery": {
+      "defaultPackageConfig": true,
+      "remainedUnconfiguredDuringScan": true,
+      "discoveredDefaultPort": true,
+      "discoveredDefaultApiKey": true,
+      "scannedBasicAuth": true,
+      "persistedThroughDeckyRpc": true,
+      "setupCommittedAndReloaded": true,
+      "authenticatedRestWithDiscoveredKey": true,
+      "ownedSetupServiceStopped": true
+    }
+  },
+  "inputs": {
+    "rootfsTarSha256": "c9796e29a96fedc2639e5893d3019caa125a7980662c0acf401e98235e8d731d",
+    "rootfsTarBytes": 366236672,
+    "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+    "initrdSha256": "a0836dd0419a3c4985b43ba7d491b14f20f0cc5d870e542eeba3d841895fcc4b",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-flatpak-package.py": "5483b8ffb50f91905c349aab988427347d22585923e9acdf1ca5c54eae9e376e",
+      "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+      "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+      "tests/decky-runtime/syncthing_flatpak_package.py": "0f243a2bb8c0816383e87efdd82e0f22f559da339f222a3dcba01c8c4e8297fe",
+      "tests/decky-runtime/syncthing_service.py": "101825934a6f7c25b4c2cace557e82baf2efc539dcf731df6c57f2af0bc38cc1",
+      "tests/decky-runtime/syncthing_migration.py": "4f871c41f9c5384069bfcdce3c4abc0c93822705f9a95292b5660a643abde4a2",
+      "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+      "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+      "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0"
+    },
+    "bundles": {
+      "app": {
+        "sha256": "d79338cc03f765959f317e60c8d23b375e0033259e7334e0bb84e310011618eb",
+        "bytes": 9872520,
+        "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+      },
+      "runtime": {
+        "sha256": "5cf985cb7bfb39d4d5d4876b2a78232e6ed91240cd4a4f3d309191c1e29e8d72",
+        "bytes": 292381320,
+        "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      }
+    },
+    "architecture": "x86_64",
+    "preparationSha256": "c8e5e65cc247675948824c2af481c5eccc5987efcf3a6eabaf70932cad99cbe0",
+    "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+    "memoryMiB": 6144,
+    "timeoutSeconds": 960,
+    "guestTimeouts": {
+      "installSeconds": 300,
+      "userSeconds": 840,
+      "unitSeconds": 900,
+      "hostSeconds": 960
+    },
+    "networkDevice": false,
+    "hostBusExposed": false,
+    "realFrameContacted": false,
+    "candidate": {
+      "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+      "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+      "patchSha256": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+      "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+      "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "installerEnabled": false,
+      "architecture": "x86_64",
+      "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+      "buildReportSha256": "a57a051fb5bcdd52557fc1491b1c97cf31cf3cad9e4fa4808e42c11aa051635e",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "decky": "v3.3.0",
+      "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+    }
+  },
+  "guest": {
+    "success": true,
+    "realFrameContacted": false,
+    "hostBusExposed": false,
+    "pid1": "systemd",
+    "userBusPresent": true,
+    "flatpak": {
+      "realFrameContacted": false,
+      "architecture": "x86_64",
+      "flatpakVersion": "Flatpak 1.16.6",
+      "signedBundlesInstalled": true,
+      "packageLaunched": true,
+      "actualTwoWaySync": true,
+      "installerEnabled": false,
+      "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+      "runtimeInstallElapsedSeconds": 123.677,
+      "runtimeInstallLog": "Installing runtime/org.gnome.Platform/x86_64/49",
+      "runtimeInstalledCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+      "runtimeOriginGpgVerificationEnabled": true,
+      "appEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+      "appInstallElapsedSeconds": 9.716,
+      "appInstallLog": "Installing app/me.kozec.syncthingtk/x86_64/stable",
+      "appInstalledCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+      "appOriginGpgVerificationEnabled": true,
+      "installedSignatures": {
+        "app": true,
+        "runtime": true
+      },
+      "userOverrides": "",
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "flatpakInfo": "[Application]\nname=me.kozec.syncthingtk\nruntime=runtime/org.gnome.Platform/x86_64/49\n\n[Instance]\ninstance-id=2571954571\ninstance-path=/home/tester/.var/app/me.kozec.syncthingtk\napp-path=/home/tester/.local/share/flatpak/app/me.kozec.syncthingtk/x86_64/stable/2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034/files\napp-commit=2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034\nruntime-path=/home/tester/.local/share/flatpak/runtime/org.gnome.Platform/x86_64/49/2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d/files\nruntime-commit=2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nbranch=stable\narch=x86_64\nflatpak-version=1.16.6\nsession-bus-proxy=true\nsystem-bus-proxy=true\nextra-args=--usb-list=;--usb-list=;\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Environment]\nALSA_CONFIG_PATH=/usr/share/alsa/alsa-flatpak.conf\nGI_TYPELIB_PATH=/app/lib/girepository-1.0\nGST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0\nXDG_DATA_DIRS=/app/share:/usr/share:/usr/share/runtime/share:/run/host/user-share:/run/host/share\nALSA_CONFIG_DIR=/usr/share/alsa\n__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=/etc/egl/egl_external_platform.d:/usr/lib/x86_64-linux-gnu/GL/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d\nPYTHONUSERBASE=/var/data/python",
+      "mountNamespaceOutside": "mnt:[4026531841]",
+      "mountNamespaceInside": "mnt:[4026532120]",
+      "serviceMainPid": 502,
+      "apiKeyErrorStatus": 403,
+      "serviceStopElapsedSeconds": 0.223,
+      "actualUserServiceLifecycle": true,
+      "serviceRestartPid": 559,
+      "certificateRetained": true,
+      "syncRetainedAfterRestart": true,
+      "forwardSha256": "4c17df9c90053c119aee0b5d7a33c79c374944fb252cdebbd03f2aba85897ef2",
+      "reverseSha256": "17fb3e94f39e81227f4539e16e4456c64a27208ff80ffdac77808e7b4183337e",
+      "ownedServiceRemoved": true,
+      "ownedProcessesReaped": true,
+      "forcedTermination": false,
+      "noOwnedFlatpakInstancesRemain": true,
+      "candidateMigration": {
+        "architecture": "x86_64",
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "flatpakPackageVerified": true,
+        "actualLegacySignedPackage": true,
+        "legacyIdentityBefore": [
+          {
+            "pid": 649,
+            "ancestryToMainPid": [
+              649,
+              648,
+              639
+            ],
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "pid": 657,
+            "ancestryToMainPid": [
+              657,
+              649,
+              648,
+              639
+            ],
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        ],
+        "legacyMainPidBefore": 639,
+        "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "retainedFilesSha256": {
+          "config.xml": "9456a6491bdf603f38fb449a07ded4c27e0b231909ff7a73d71f97f740540689",
+          "cert.pem": "49abbb9e9ec4098073b0303b8a684df4a9afd81fb2fd757d56ddc9fd2480048b",
+          "key.pem": "dd4f06383ecd1ce2d5ca96e7701bf324178bd844045a239c06bffff1f7c48416",
+          "sync/retained.txt": "20b246a130b0e12dca88b8190ac417d6e3f19c88dbf07121a15be1017a9ebb27"
+        },
+        "v1SettingsMigratedAndPersisted": true,
+        "pendingSetupPreservedLiveLegacy": true,
+        "pendingSetupRoutes": {
+          "GET state": 500,
+          "POST start": 204,
+          "POST stop": 204
+        },
+        "legacyUnitAndEnablementPreserved": true,
+        "configCertificateDataPreserved": true,
+        "unrelatedHelperPreserved": true,
+        "explicitExternalControlAndAuth": true,
+        "actualLegacyStopRestart": true,
+        "legacyDataRetainedAfterRestart": true,
+        "legacyIdentityAfterRestart": [
+          {
+            "pid": 709,
+            "ancestryToMainPid": [
+              709,
+              708,
+              699
+            ],
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "pid": 717,
+            "ancestryToMainPid": [
+              717,
+              709,
+              708,
+              699
+            ],
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        ],
+        "legacyMainPidAfterRestart": 699,
+        "ownedProcessesReaped": true,
+        "ownedLegacyFixtureRemoved": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "retainedRuntime": "/home/tester/migration-legacy-state"
+      },
+      "candidateService": {
+        "architecture": "x86_64",
+        "flatpakPackageVerified": true,
+        "realFrameContacted": false,
+        "systemdManagerActual": true,
+        "defaultPackagePaths": "Configuration file:\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml\n\nDevice private key & certificate files:\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/key.pem\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/cert.pem\n\nGUI / API HTTPS private key & certificate files:\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/https-key.pem\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/https-cert.pem\n\nDatabase location:\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/index-v0.14.0.db\n\nLog file:\n\t-\n\nGUI override directory:\n\t/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/gui\n\nDefault sync folder directory:\n\t/home/tester/Sync\n\n",
+        "defaultConfigPath": "/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml",
+        "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+        "actualPackagedServiceProcesses": [
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 881,
+            "syncthingPid": 891,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-2300752401.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-2300752401.scope"
+            ],
+            "ancestryToMainPid": [
+              891,
+              890,
+              881
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 881,
+            "syncthingPid": 900,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-2300752401.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-2300752401.scope"
+            ],
+            "ancestryToMainPid": [
+              900,
+              891,
+              890,
+              881
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1062,
+            "syncthingPid": 1072,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "ancestryToMainPid": [
+              1072,
+              1071,
+              1062
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1062,
+            "syncthingPid": 1081,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "ancestryToMainPid": [
+              1081,
+              1072,
+              1071,
+              1062
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1062,
+            "syncthingPid": 1072,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "ancestryToMainPid": [
+              1072,
+              1071,
+              1062
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1062,
+            "syncthingPid": 1081,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-3353847431.scope"
+            ],
+            "ancestryToMainPid": [
+              1081,
+              1072,
+              1071,
+              1062
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1143,
+            "syncthingPid": 1153,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1920462303.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1920462303.scope"
+            ],
+            "ancestryToMainPid": [
+              1153,
+              1152,
+              1143
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "frame-control-syncthing.service",
+            "mainPid": 1143,
+            "syncthingPid": 1162,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/frame-control-syncthing.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1920462303.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1920462303.scope"
+            ],
+            "ancestryToMainPid": [
+              1162,
+              1153,
+              1152,
+              1143
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "framey-owned-external.service",
+            "mainPid": 1189,
+            "syncthingPid": 1199,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/framey-owned-external.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1887385526.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1887385526.scope"
+            ],
+            "ancestryToMainPid": [
+              1199,
+              1198,
+              1189
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          },
+          {
+            "unit": "framey-owned-external.service",
+            "mainPid": 1189,
+            "syncthingPid": 1207,
+            "controlGroup": "/user.slice/user-1100.slice/user@1100.service/app.slice/framey-owned-external.service",
+            "executableSha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+            "launcherCgroups": [
+              "0::/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1887385526.scope"
+            ],
+            "applicationCgroups": [
+              "/user.slice/user-1100.slice/user@1100.service/app.slice/app-flatpak-me.kozec.syncthingtk-1887385526.scope"
+            ],
+            "ancestryToMainPid": [
+              1207,
+              1199,
+              1198,
+              1189
+            ],
+            "mountNamespace": "mnt:[4026532126]",
+            "appCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+            "runtimeCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        ],
+        "wizardConfigDiscovery": {
+          "defaultPackageConfig": true,
+          "remainedUnconfiguredDuringScan": true,
+          "discoveredDefaultPort": true,
+          "discoveredDefaultApiKey": true,
+          "scannedBasicAuth": true,
+          "persistedThroughDeckyRpc": true,
+          "setupCommittedAndReloaded": true,
+          "authenticatedRestWithDiscoveredKey": true,
+          "ownedSetupServiceStopped": true
+        },
+        "ownedUnitLoadedByActualSystemd": true,
+        "rejectedManagedDefinitions": {
+          "drop-in": {
+            "mainPidBefore": 952,
+            "mainPidAfter": 952,
+            "fragmentPath": "/home/tester/.config/systemd/user/frame-control-syncthing.service",
+            "id": "frame-control-syncthing.service",
+            "names": "frame-control-syncthing.service",
+            "dropInPaths": "/home/tester/.config/systemd/user/frame-control-syncthing.service.d/private-foreign.conf",
+            "refused": {
+              "GET state": 500,
+              "POST start": 500,
+              "POST stop": 500,
+              "POST check/start": 500,
+              "POST reload-config": 500,
+              "POST external transition": 500
+            },
+            "unitAndReceiptPreserved": true,
+            "legacyPidPreserved": 759,
+            "legacyStillEnabled": true
+          },
+          "shadow fragment": {
+            "mainPidBefore": 1011,
+            "mainPidAfter": 1011,
+            "fragmentPath": "/home/tester/.config/systemd/user.control/frame-control-syncthing.service",
+            "id": "frame-control-syncthing.service",
+            "names": "frame-control-syncthing.service",
+            "dropInPaths": "",
+            "refused": {
+              "GET state": 500,
+              "POST start": 500,
+              "POST stop": 500,
+              "POST check/start": 500,
+              "POST reload-config": 500,
+              "POST external transition": 500
+            },
+            "unitAndReceiptPreserved": true,
+            "legacyPidPreserved": 759,
+            "legacyStillEnabled": true
+          },
+          "loaded alias": {
+            "mainPidBefore": 759,
+            "mainPidAfter": 759,
+            "fragmentPath": "/home/tester/.config/systemd/user/decky-syncthing.service",
+            "id": "decky-syncthing.service",
+            "names": "decky-syncthing.service frame-control-syncthing.service",
+            "dropInPaths": "",
+            "refused": {
+              "GET state": 500,
+              "POST start": 500,
+              "POST stop": 500,
+              "POST check/start": 500,
+              "POST reload-config": 500,
+              "POST external transition": 500
+            },
+            "unitAndReceiptPreserved": true,
+            "legacyPidPreserved": 759,
+            "legacyStillEnabled": true
+          }
+        },
+        "dropInOverridePreserved": true,
+        "shadowFragmentPreserved": true,
+        "realSyncthingManagedPid": true,
+        "realDeckyRpcRest": true,
+        "deckyApiKeyErrorStatus": 403,
+        "managedServiceTwoWaySync": true,
+        "forwardSha256": "c7efcf812e3b857987733e2bce522cf5c31863d99bc85fa98795a45f6b2b2092",
+        "reverseSha256": "0922306fdcaa591f1aea0ee3808f96799d0f365216889507925a99a326232e3d",
+        "pendingReloadRefused": true,
+        "stopRpcElapsedSeconds": 0.133,
+        "actualStopJobReapedRuntime": true,
+        "legacyRunningUnitPreserved": true,
+        "retainedCertificateAndMarker": true,
+        "actualEnableDisableLinks": true,
+        "externalTransitionRpcElapsedSeconds": 0.992,
+        "ownedTransitionRemovedOnlyCandidateUnit": true,
+        "actualExternalUserServiceControl": true,
+        "retainedSyncAcrossServiceTransition": true,
+        "loadedAliasPreserved": true,
+        "peerExitStatus": -15,
+        "noOwnedFlatpakInstancesRemain": true,
+        "retainedCertificateSha256": "7553e4b537f575a5f7ec0dd2bccfce6f427e37d742a20e2564a344dac0deef29",
+        "ownedCleanup": true
+      },
+      "candidateInputs": {
+        "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+        "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+        "patchSha256": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+        "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+        "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+        "installerEnabled": false,
+        "architecture": "x86_64",
+        "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+        "buildReportSha256": "a57a051fb5bcdd52557fc1491b1c97cf31cf3cad9e4fa4808e42c11aa051635e",
+        "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+        "decky": "v3.3.0",
+        "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+      },
+      "uninstallPreservedCandidateData": true,
+      "uninstallPreservedMigrationData": true,
+      "uninstallPreservedOwnedData": true
+    }
+  },
+  "failedDevelopmentTrials": [
+    {
+      "date": "2026-10-30",
+      "sourceRevision": "d6e81a6e727f049352321368e66dee62a4f4cf22",
+      "success": false,
+      "failure": "The migration fixture incorrectly expected GET state to succeed before any managed unit existed. The candidate refuses this missing unit. No migration pass credited.",
+      "ownedQemuReaped": true,
+      "realFrameContacted": false,
+      "inputs": {
+        "rootfsTarSha256": "c9796e29a96fedc2639e5893d3019caa125a7980662c0acf401e98235e8d731d",
+        "rootfsTarBytes": 366236672,
+        "kernelSha256": "4336c75fc1a6a58e7bda66cbe9f4042f88064e7abc93faaea9e2aceb19459561",
+        "initrdSha256": "040bff3ffa77baa5255dba38acc53b3fde537eaf1d1242e11a40374534038531",
+        "sourceSha256": {
+          "scripts/framey-test-syncthing-flatpak-package.py": "303b618d8a49b292e50a32839f85db94b5be2ae0b45380010a88d16502abe09d",
+          "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+          "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+          "tests/decky-runtime/syncthing_flatpak_package.py": "0f243a2bb8c0816383e87efdd82e0f22f559da339f222a3dcba01c8c4e8297fe",
+          "tests/decky-runtime/syncthing_service.py": "101825934a6f7c25b4c2cace557e82baf2efc539dcf731df6c57f2af0bc38cc1",
+          "tests/decky-runtime/syncthing_migration.py": "cfcaf821efc736d9a7bf32bac6edef50ccad50b65068a817afc630137559fba4",
+          "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+          "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+          "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+          "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+          "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+          "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+          "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0"
+        },
+        "bundles": {
+          "app": {
+            "sha256": "d79338cc03f765959f317e60c8d23b375e0033259e7334e0bb84e310011618eb",
+            "bytes": 9872520,
+            "commit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034"
+          },
+          "runtime": {
+            "sha256": "5cf985cb7bfb39d4d5d4876b2a78232e6ed91240cd4a4f3d309191c1e29e8d72",
+            "bytes": 292381320,
+            "commit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+          }
+        },
+        "architecture": "x86_64",
+        "preparationSha256": "c8e5e65cc247675948824c2af481c5eccc5987efcf3a6eabaf70932cad99cbe0",
+        "keySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+        "memoryMiB": 6144,
+        "timeoutSeconds": 960,
+        "guestTimeouts": {
+          "installSeconds": 300,
+          "userSeconds": 840,
+          "unitSeconds": 900,
+          "hostSeconds": 960
+        },
+        "networkDevice": false,
+        "hostBusExposed": false,
+        "realFrameContacted": false,
+        "candidate": {
+          "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+          "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+          "patchSha256": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+          "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+          "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+          "installerEnabled": false,
+          "architecture": "x86_64",
+          "helperSha256": "8902ad2f65c73cd1d08888722f9dba070c7486ab01fb1b7fa6a034a3e0446035",
+          "buildReportSha256": "a57a051fb5bcdd52557fc1491b1c97cf31cf3cad9e4fa4808e42c11aa051635e",
+          "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+          "decky": "v3.3.0",
+          "officialArchiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+        }
+      },
+      "resultSha256": "2c0b56f138bd763c1d2c0b6bb7e6cc9c5ab9efc8766fafb9ec7d075bfb137676",
+      "consoleSha256": "a5b6696316232a6b752d64473c22baf4dae7a911b7cce5c14be7f68be6add14c",
+      "guestFailure": {
+        "success": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "partial": {
+          "realFrameContacted": false,
+          "architecture": "x86_64",
+          "flatpakVersion": "Flatpak 1.16.6",
+          "signedBundlesInstalled": true,
+          "packageLaunched": true,
+          "actualTwoWaySync": true,
+          "installerEnabled": false,
+          "runtimeEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "runtimeInstallElapsedSeconds": 123.158,
+          "runtimeInstallLog": "Installing runtime/org.gnome.Platform/x86_64/49",
+          "runtimeInstalledCommit": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+          "runtimeOriginGpgVerificationEnabled": true,
+          "appEmbeddedKeySha256": "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa",
+          "appInstallElapsedSeconds": 9.804,
+          "appInstallLog": "Installing app/me.kozec.syncthingtk/x86_64/stable",
+          "appInstalledCommit": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+          "appOriginGpgVerificationEnabled": true,
+          "installedSignatures": {
+            "app": true,
+            "runtime": true
+          },
+          "userOverrides": "",
+          "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+          "flatpakInfo": "[Application]\nname=me.kozec.syncthingtk\nruntime=runtime/org.gnome.Platform/x86_64/49\n\n[Instance]\ninstance-id=3120016242\ninstance-path=/home/tester/.var/app/me.kozec.syncthingtk\napp-path=/home/tester/.local/share/flatpak/app/me.kozec.syncthingtk/x86_64/stable/2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034/files\napp-commit=2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034\nruntime-path=/home/tester/.local/share/flatpak/runtime/org.gnome.Platform/x86_64/49/2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d/files\nruntime-commit=2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d\nbranch=stable\narch=x86_64\nflatpak-version=1.16.6\nsession-bus-proxy=true\nsystem-bus-proxy=true\nextra-args=--usb-list=;--usb-list=;\n\n[Context]\nshared=network;ipc;\nsockets=x11;wayland;fallback-x11;\nfilesystems=host;\n\n[Session Bus Policy]\norg.kde.StatusNotifierWatcher=talk\n\n[Environment]\nALSA_CONFIG_PATH=/usr/share/alsa/alsa-flatpak.conf\nGI_TYPELIB_PATH=/app/lib/girepository-1.0\nGST_PLUGIN_SYSTEM_PATH=/app/lib/gstreamer-1.0:/usr/lib/extensions/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/codecs-extra/lib/gstreamer-1.0:/usr/lib/x86_64-linux-gnu/gstreamer-1.0\nXDG_DATA_DIRS=/app/share:/usr/share:/usr/share/runtime/share:/run/host/user-share:/run/host/share\nALSA_CONFIG_DIR=/usr/share/alsa\n__EGL_EXTERNAL_PLATFORM_CONFIG_DIRS=/etc/egl/egl_external_platform.d:/usr/lib/x86_64-linux-gnu/GL/egl/egl_external_platform.d:/usr/share/egl/egl_external_platform.d\nPYTHONUSERBASE=/var/data/python",
+          "mountNamespaceOutside": "mnt:[4026531841]",
+          "mountNamespaceInside": "mnt:[4026532120]",
+          "serviceMainPid": 502,
+          "apiKeyErrorStatus": 403,
+          "serviceStopElapsedSeconds": 0.209,
+          "actualUserServiceLifecycle": true,
+          "serviceRestartPid": 559,
+          "certificateRetained": true,
+          "syncRetainedAfterRestart": true,
+          "forwardSha256": "4c17df9c90053c119aee0b5d7a33c79c374944fb252cdebbd03f2aba85897ef2",
+          "reverseSha256": "17fb3e94f39e81227f4539e16e4456c64a27208ff80ffdac77808e7b4183337e",
+          "ownedServiceRemoved": true,
+          "ownedProcessesReaped": true,
+          "forcedTermination": false,
+          "noOwnedFlatpakInstancesRemain": true
+        }
+      },
+      "failureAssertion": "syncthing_migration.py:201 expected 200 for GET /__decky-watchdog/state before any managed unit had been created"
+    }
+  ],
+  "mainPackageAudits": {
+    "x86_64": {
+      "head": "759468214a4f21700cf184338edb658a7fe675b0",
+      "architecture": "x86_64",
+      "artifactSha256": "b3dbd19f72dccf6b36c90f8dc0716f750525c696a2e0950bb517705183206ea8",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.149,
+      "installerEnabled": false,
+      "realFrameContacted": false
+    },
+    "aarch64": {
+      "head": "759468214a4f21700cf184338edb658a7fe675b0",
+      "architecture": "aarch64",
+      "artifactSha256": "659d2c575537fd510f40d000f0f9fc26f0b35978e562110cb085b80ea1b6e66c",
+      "allSourceFingerprintsVerified": true,
+      "signedContentAndActualPackageVerified": true,
+      "requiredResults": {
+        "signedBundlesInstalled": true,
+        "packageLaunched": true,
+        "actualTwoWaySync": true,
+        "runtimeOriginGpgVerificationEnabled": true,
+        "appOriginGpgVerificationEnabled": true,
+        "actualUserServiceLifecycle": true,
+        "certificateRetained": true,
+        "syncRetainedAfterRestart": true,
+        "ownedServiceRemoved": true,
+        "ownedProcessesReaped": true,
+        "noOwnedFlatpakInstancesRemain": true,
+        "uninstallPreservedOwnedData": true
+      },
+      "commits": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9"
+      },
+      "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-arm64) flatbld@f9c7a45a62fa 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+      "stopElapsedSeconds": 0.622,
+      "installerEnabled": false,
+      "realFrameContacted": false
+    }
+  }
+}
