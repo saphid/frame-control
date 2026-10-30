@@ -11082,7 +11082,7 @@
         "https://github.com/mpcallahan/DeckyHourNotifications"
       ],
       "status": "partial",
-      "reason": "Silent labeled timer create/ticks/pause/cancel, preset save/cancel-confirm/delete and stopwatch start/lap/pause/reset/reopen pass in local Chromium with the official Decky 3.3.0 ARM64 backend. Audio, alarms/reminders, suspend inhibition, Steam overlays and worn VR remain unverified; notifications require the panel to stay open.",
+      "reason": "Silent labeled timer create/ticks/pause/cancel, preset save/cancel-confirm/delete and stopwatch start/lap/pause/reset/reopen pass in local Chromium with the official Decky 3.3.0 ARM64 backend. Audio, alarms/reminders, suspend inhibition, Steam overlays and worn VR remain unverified; notifications require the panel to stay open. Exact managed installs repair paused timers that incorrectly tick or disappear after a backend restart; private native AMD64 lifecycle checks pass. Update/reinstall is required. The repair is unverified on ARM64 and in a browser.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11171,7 +11171,19 @@
         "mode": "local opaque-iframe Chromium with receipt-bound official ARM64 backend RPC/events; private silent data only",
         "frontendReady": true,
         "status": "partial"
-      }
+      },
+      "nativeLifecycleFollowUp": {
+        "evidence": "docs/evidence/framey-alarme-native-lifecycle-2026-10-30.md",
+        "mode": "published Decky 3.3.0 AMD64 discovery/RPC/events in a networkless disposable container; private silent data only",
+        "shim": "alarme-paused-restart",
+        "status": "partial",
+        "arm64Verified": false,
+        "browserRetested": false,
+        "physicalControllerVerified": false
+      },
+      "requiredShims": [
+        "alarme-paused-restart"
+      ]
     },
     {
       "id": 125,

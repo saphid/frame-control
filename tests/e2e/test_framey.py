@@ -204,6 +204,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
+                if plugin['id'] == 124:
+                    self.assertEqual(found[0]['compatShims'], ['alarme-paused-restart'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     'cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39')
                 if plugin['id'] == 117:
                     self.assertEqual(found[0]['compatShims'], ['deckyparty-user-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
