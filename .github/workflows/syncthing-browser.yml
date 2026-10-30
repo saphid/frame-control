@@ -65,6 +65,8 @@ jobs:
             --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/configured" --candidate --configured
           python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
             --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/finish-navigation" --candidate --wizard --finish-navigation
+          python3 scripts/framey-test-syncthing-browser.py --archive "$RUNNER_TEMP/syncthing.zip" \
+            --browser "$browser" --output "$RUNNER_TEMP/syncthing-browser/manual-port" --candidate --wizard --manual-port --finish-navigation
       - name: Bind browser evidence to exact head
         if: always()
         env:

@@ -50,11 +50,21 @@ addEventListener('message', async event => {
     button().click();
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  let wizardCompleted=false, finishNavigation=false, error=null;
+  let wizardCompleted=false, finishNavigation=false, manualPortFallbackVisible=false, error=null;
   const installationMethod=document.getElementById('framey-root').innerText.includes('Installation Method');
   try {
     if(welcome && wizard){
       [...document.querySelectorAll('button')].find(b=>b.textContent.includes('"Syncthing GTK" Flatpak')).click();
+      if(event.data.manualPort){
+        await wait(()=>document.getElementById('framey-root').innerText.includes('Please enter the web UI port'));
+        manualPortFallbackVisible=true;
+        const input=document.querySelector('input');
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'8390');
+        input.dispatchEvent(new Event('input',{bubbles:true}));
+        input.dispatchEvent(new Event('change',{bubbles:true}));
+        await new Promise(resolve=>setTimeout(resolve,50));
+        [...document.querySelectorAll('button')].find(b=>b.textContent.trim()==='Continue').click();
+      }
       await wait(()=>document.getElementById('framey-root').innerText.includes('Almost done!'));
       const select=document.querySelector('select');
       select.value=[...select.options].find(o=>o.textContent.startsWith('At boot')).value;
@@ -74,7 +84,7 @@ addEventListener('message', async event => {
   }catch(err){error=err.message;}
   const text = document.getElementById('framey-root').innerText;
   parent.postMessage({type:'test:done', welcome, installationMethod: text.includes('Installation Method'),
-    entryInstallationMethod:installationMethod,wizardCompleted,finishNavigation,error,browserErrors,
+    entryInstallationMethod:installationMethod,wizardCompleted,finishNavigation,manualPortFallbackVisible,error,browserErrors,
     configuredErrorVisible:configured&&text.includes('State request failed. Status: 500'),
     text: text.slice(0,2500), syntheticInput:true, realBackend:false}, '*');
 });
@@ -91,7 +101,7 @@ addEventListener('message', event => {
   const req=event.data||{};
   if(req.type==='framey:cache:init'){target.postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
   if(req.type==='framey:ready'){target.postMessage({type:'test:run',configured:CONFIGURED,wizard:WIZARD,
-    finishNavigation:FINISH_NAVIGATION},'*');return;}
+    finishNavigation:FINISH_NAVIGATION,manualPort:MANUAL_PORT},'*');return;}
   if(req.type==='test:done'){
     complete=true;
     document.getElementById('result').textContent=JSON.stringify({...req,calls,settings});return;
@@ -104,7 +114,7 @@ addEventListener('message', event => {
   else if(req.method==='set_setting' && WIZARD){settings[req.args[0].setting]=req.args[0].value;result={success:true,result:null};}
   else if(req.method==='framey_http_fetch' && WIZARD && req.legacy && req.args[0]?.method==='POST'){
     const values={'/__decky-watchdog/check/start':{success:true},
-      '/__decky-watchdog/check/scan_port':{port:8384},
+      '/__decky-watchdog/check/scan_port':{port:MANUAL_PORT?null:8384},
       '/__decky-watchdog/check/scan_api_key':{api_key:'private-fixture-key'},
       '/__decky-watchdog/check/scan_basic_auth':{basic_auth_user:null},
       '/__decky-watchdog/reload-config':null};
@@ -152,11 +162,14 @@ def main():
     profiles.add_argument('--configured', action='store_true')
     parser.add_argument('--wizard', action='store_true')
     parser.add_argument('--finish-navigation', action='store_true')
+    parser.add_argument('--manual-port', action='store_true')
     args = parser.parse_args()
     if args.wizard and args.configured:
         parser.error('Wizard replay requires an incomplete setup profile')
     if args.finish_navigation and not args.wizard:
         parser.error('Finish navigation requires --wizard')
+    if args.manual_port and not args.wizard:
+        parser.error('Manual port fallback requires --wizard')
     source_hashes = fingerprints()
     args.output.mkdir(parents=True, exist_ok=False)
     bundle = frontend(args.archive, args.candidate)
@@ -170,6 +183,7 @@ def main():
     parent = PARENT.replace('SETUP_STATE', json.dumps('migratingV2' if args.migrating else args.configured))
     parent = parent.replace('CONFIGURED', json.dumps(args.configured)).replace('WIZARD', json.dumps(args.wizard))
     parent = parent.replace('FINISH_NAVIGATION', json.dumps(args.finish_navigation))
+    parent = parent.replace('MANUAL_PORT', json.dumps(args.manual_port))
     document = '''<!doctype html><meta charset="utf-8"><meta http-equiv="Content-Security-Policy"
 content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src data:; style-src 'unsafe-inline'; img-src data:">
 <title>Private Syncthing setup fixture</title><style>body{margin:0;background:#0d1925;color:white}iframe{width:1200px;height:950px;border:0}pre{white-space:pre-wrap}</style>
@@ -219,7 +233,7 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                     browser.kill(); browser.wait(timeout=5)
         report.update(archiveSha256=DIGEST, frontendSha256=hashlib.sha256(bundle).hexdigest(),
                       candidate=args.candidate, migrating=args.migrating, configured=args.configured,
-                      wizard=args.wizard,finishNavigationRequested=args.finish_navigation,realFrameContacted=False,
+                      wizard=args.wizard,finishNavigationRequested=args.finish_navigation,manualPortRequested=args.manual_port,realFrameContacted=False,
                       browserReaped=browser.poll() is not None, installerEnabled=False)
         report['browser'] = subprocess.check_output([str(args.browser.resolve()), '--version'], text=True).strip()
         report['sourceSha256'] = source_hashes
@@ -252,6 +266,11 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                                     and settings.get('flatpak_name') == 'me.kozec.syncthingtk'
                                     and len(completion) == 1 and len(reloads) == 1
                                     and completion[0] < reloads[0])
+                if args.manual_port:
+                    report['passed'] = (report['passed'] and report.get('manualPortFallbackVisible') is True
+                                        and settings.get('port') == 8390
+                                        and {'method':'set_setting','args':[{'setting':'port','value':8390}]} in calls
+                                        and report.get('browserErrors') == [])
                 if args.finish_navigation:
                     report['passed'] = (report['passed'] and report.get('finishNavigation') is True
                                         and report.get('browserErrors') == [])
