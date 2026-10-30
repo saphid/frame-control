@@ -1969,5 +1969,43 @@
       }
     },
     "independentAuditorSha256": "787317f4bd309b6e4ee79781f9571f27c87c30d855aa5655904d08505cb5d135"
+  },
+  "stateLookupArm64CrossBuild": {
+    "report": {
+      "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+      "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+      "patchSha256": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+      "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+      "pythonSha256": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+      "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+      "builds": [
+        {
+          "architecture": "aarch64",
+          "elfMachine": 183,
+          "bytes": 12302232,
+          "sha256": "32ff28224294ca035d3f98d400f7166f9b1304b8e9d3a2e4d8b48a9fed6af2a6",
+          "command": [
+            "cargo",
+            "build",
+            "--frozen",
+            "--offline",
+            "--release",
+            "--target",
+            "aarch64-unknown-linux-gnu",
+            "-j2"
+          ],
+          "executed": false,
+          "serviceFileTestsExecuted": false
+        }
+      ],
+      "installerEnabled": false,
+      "runtimeVerified": false
+    },
+    "buildReportSha256": "9ab45b45bd8fb0f0acabc2a561b3d3d9bd57e5422a93080f23378158a27fae21",
+    "buildLogSha256": "78031f64fb49371f7507c6f28fe91094b114ecd5105cc585894baefa934aa4ea",
+    "binaryIndependentlyVerified": true,
+    "nativeExecution": false,
+    "runtimeVerified": false
   }
 }

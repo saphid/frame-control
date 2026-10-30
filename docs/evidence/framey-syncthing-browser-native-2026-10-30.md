@@ -196,3 +196,10 @@ The eighth full driver at `8bbadf8` passed with the corrected strict verifier.
 Its independent audit and four inspected captures are summarized above. The
 original seventh-trial failed result remains unchanged; no failed, cancelled
 or skipped gate has been treated as a pass.
+
+The changed helper also cross-builds for ARM64 from the same source/patch and
+locked public dependency cache in an isolated, networkless frozen build.
+Independent verification checks its ELF machine 183, source/image/lock and
+binary digests. The JSON retains the build report and log hashes. This helper
+was not executed, and cross compilation does not establish native unit tests
+or ARM64 runtime behavior. Those exact-head CI gates remain required.
