@@ -292,11 +292,13 @@ class PreparedPackage(unittest.TestCase):
                               ('running', 'stopped', 'restarted', 'stopped')],
                       actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100, 101]},
                                                          {'stage': 'restarted', 'pids': [200, 201]}],
-                      sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301]}],
+                      sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301],
+                                             'seccomp': 2, 'noNewPrivs': 1}],
                       screenshots=dict.fromkeys(('running1', 'stopped2', 'restarted3', 'stopped4'), 'fixture'),
                       calls=[{'httpMethod': 'POST', 'path': '/__decky-watchdog/'+route, 'status': 204}
                              for route in ('check/start', 'check/scan_port', 'check/scan_api_key',
                                            'check/scan_basic_auth', 'reload-config', 'stop', 'start', 'stop')])
+        report['calls'].insert(-1, {'httpMethod': 'POST', 'path': '/', 'status': 200})
         return report
 
     def test_browser_registration_or_synthetic_only_results_cannot_pass_combined_gate(self):
@@ -304,11 +306,33 @@ class PreparedPackage(unittest.TestCase):
         mutations = [dict(actualDeckyRpc=False), dict(panelSha256='b'*64), dict(realFrameContacted=True),
                      dict(browserSandboxDisabled=True), dict(ownedBrowserReaped=False), dict(stages=[]),
                      dict(sandboxedRendererPids=[]), dict(calls=[]), dict(screenshots={}),
+                     dict(sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301],
+                                                 'seccomp': 0, 'noNewPrivs': 1}]),
                      dict(actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100]},
                                                             {'stage': 'restarted', 'pids': [100]}])]
         for mutation in mutations:
             with self.subTest(mutation=mutation), self.assertRaises(ValueError):
                 self.module.verify_browser({**self.browser(), **mutation}, 'a'*64)
+
+    def test_browser_readiness_accepts_only_bounded_425_then_success(self):
+        for statuses in ([200], [425, 200], [425] * 9 + [200]):
+            report = self.browser()
+            controls = [c for c in report['calls'] if c['path'] != '/']
+            probes = [{'httpMethod': 'POST', 'path': '/', 'status': status} for status in statuses]
+            report['calls'] = controls[:-1] + probes + controls[-1:]
+            self.module.verify_browser(report, 'a'*64)
+
+    def test_browser_readiness_failure_or_unknown_post_is_not_success(self):
+        for statuses in ([], [425], [500], [425, 500], [200, 425], [200, 200], [425] * 300 + [200]):
+            report = self.browser()
+            report['calls'] = [c for c in report['calls'] if c['path'] != '/'] + [
+                {'httpMethod': 'POST', 'path': '/', 'status': status} for status in statuses]
+            with self.subTest(statuses=statuses), self.assertRaises(ValueError):
+                self.module.verify_browser(report, 'a'*64)
+        report = self.browser()
+        report['calls'].append({'httpMethod': 'POST', 'path': '/unexpected', 'status': 200})
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
 
     def test_failed_browser_control_or_javascript_error_is_not_a_pass(self):
         report = self.browser()

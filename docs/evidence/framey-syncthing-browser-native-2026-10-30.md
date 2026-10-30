@@ -142,3 +142,14 @@ renderer flag, and all had the whole renderer flag after title parsing,
 seccomp 2 and no-new-privileges 1. All observed renderers were reaped. This
 used synthetic settings and no Decky backend; it confirms the observer bug
 without replacing the seventh VM trial at `5e83391`.
+
+The seventh VM guest at `5e83391` passed browser stages, signed PID transitions,
+actual renderer ancestry/seccomp/no-new-privileges, migration, sync and
+preserving uninstall. The original driver still failed: its verifier rejected
+nine POST `/` readiness responses of 425 followed by 200. The published
+frontend documents this exact checkIfUp behavior and retries while 425 means
+Too Early. The corrected verifier requires a bounded 425 sequence terminating
+in 200; it still rejects failed controls, unknown POST routes, missing readiness
+success and missing kernel sandbox fields. All 30 focused tests pass, and
+corrected offline validation accepts the retained browser evidence. The original
+failed driver result is unchanged. A fresh full driver run remains required.

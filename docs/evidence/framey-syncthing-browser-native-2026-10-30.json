@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Local Chrome reproduction confirms rewritten renderer titles. Seventh combined VM trial at 5e83391 is pending; no overall browser runtime pass.",
+  "status": "Seventh guest passes all runtime checks; original driver fails readiness verifier. Corrected bounded readiness verifier passes retained evidence; fresh full driver trial required.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -1030,6 +1030,122 @@
         "bridgeStopped": true
       },
       "ownedQemuReaped": true
+    },
+    {
+      "sourceRevision": "5e83391",
+      "passed": false,
+      "guestSuccess": true,
+      "all25SourceFingerprintsVerified": true,
+      "resultSha256": "80892c0702204982233f65b0346a04724657edbd4c88d97e9e636c017320304e",
+      "consoleSha256": "120130134c5596c5a88d14945f3bf6fbc62f15b48d01ed9f71ef35e1ce8f22f2",
+      "error": "Host verifier rejected published checkIfUp 425 readiness probes before final 200",
+      "readinessStatuses": [
+        425,
+        425,
+        425,
+        425,
+        425,
+        425,
+        425,
+        425,
+        425,
+        200
+      ],
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "sandboxedRendererPids": [
+        {
+          "pid": 952,
+          "ancestryToBrowser": [
+            952,
+            888,
+            886,
+            864
+          ],
+          "commandLineStyle": "process-title",
+          "seccomp": 2,
+          "noNewPrivs": 1
+        },
+        {
+          "pid": 963,
+          "ancestryToBrowser": [
+            963,
+            888,
+            886,
+            864
+          ],
+          "commandLineStyle": "process-title",
+          "seccomp": 2,
+          "noNewPrivs": 1
+        },
+        {
+          "pid": 964,
+          "ancestryToBrowser": [
+            964,
+            888,
+            886,
+            864
+          ],
+          "commandLineStyle": "process-title",
+          "seccomp": 2,
+          "noNewPrivs": 1
+        },
+        {
+          "pid": 991,
+          "ancestryToBrowser": [
+            991,
+            888,
+            886,
+            864
+          ],
+          "commandLineStyle": "process-title",
+          "seccomp": 2,
+          "noNewPrivs": 1
+        }
+      ],
+      "actualPackagedProcessObservations": [
+        {
+          "stage": "running",
+          "pids": [
+            1030,
+            1040,
+            1048
+          ]
+        },
+        {
+          "stage": "restarted",
+          "pids": [
+            1118,
+            1132,
+            1140
+          ]
+        }
+      ],
+      "screenshots": {
+        "running1": {
+          "sha256": "56bb76ac0f940e60e5eda420e09fd3bba1fb1448cc2f48b3e9ba8766b6db0d3c",
+          "bytes": 32587
+        },
+        "stopped2": {
+          "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+          "bytes": 14978
+        },
+        "restarted3": {
+          "sha256": "56bb76ac0f940e60e5eda420e09fd3bba1fb1448cc2f48b3e9ba8766b6db0d3c",
+          "bytes": 32587
+        },
+        "stopped4": {
+          "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+          "bytes": 14978
+        }
+      },
+      "ownedQemuReaped": true,
+      "ownedBrowserReaped": true,
+      "bridgeStopped": true
     }
   ],
   "serverSuite": {

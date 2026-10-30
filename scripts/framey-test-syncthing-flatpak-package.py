@@ -289,12 +289,22 @@ def verify_browser(report, expected_panel):
         or observations[0]['pids'][0] == observations[1]['pids'][0]):
         raise ValueError('Missing real browser-controlled process transitions')
     renderers = report.get('sandboxedRendererPids', [])
-    if not renderers or any(not p.get('ancestryToBrowser') or p['ancestryToBrowser'][0] != p.get('pid') for p in renderers):
+    if not renderers or any(len(p.get('ancestryToBrowser', [])) < 2
+                           or p['ancestryToBrowser'][0] != p.get('pid')
+                           or p.get('seccomp') != 2 or p.get('noNewPrivs') != 1 for p in renderers):
         raise ValueError('Missing sandboxed renderer ancestry')
     posts = [c for c in report.get('calls', []) if c.get('httpMethod') == 'POST']
     expected_routes = {'check/start': 1, 'check/scan_port': 1, 'check/scan_api_key': 1,
                        'check/scan_basic_auth': 1, 'reload-config': 1, 'start': 1, 'stop': 2}
-    if (any(c.get('status') not in (200, 204) for c in posts)
+    controls = [c for c in posts if c.get('path') != '/']
+    probes = [c['status'] for c in posts if c.get('path') == '/']
+    # The published checkIfUp() explicitly polls POST / through 425 Too Early.
+    # Require its final successful probe; failed controls and unknown routes
+    # remain failures rather than treating arbitrary HTTP errors as readiness.
+    if (not 1 <= len(probes) <= 300 or probes[-1] != 200
+        or any(status != 425 for status in probes[:-1])
+        or any(c.get('path') not in {'/__decky-watchdog/'+route for route in expected_routes}
+               or c.get('status') not in (200, 204) for c in controls)
         or {route: sum(c.get('path') == '/__decky-watchdog/'+route for c in posts)
             for route in expected_routes} != expected_routes):
         raise ValueError('Missing actual browser setup/control RPC routes')
