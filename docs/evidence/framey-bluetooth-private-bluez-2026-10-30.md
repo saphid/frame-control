@@ -34,7 +34,7 @@ private bus and service are reaped before a successful report is emitted.
 
 The three existing runtime-coverage regressions, compilation and diff checks
 pass. This adds the actual-runtime fixture to both native CI architectures;
-**exact-head CI and ARM64 results remain required**. The compatibility row
+**fresh exact-head CI remains required after the current main refresh**. The compatibility row
 remains partial. No new browser, real Steam CEF, actual adapter permissions,
 radio connections, pairing, Frame display or physical-controller claim is made.
 
@@ -44,3 +44,11 @@ Reproduce on native Linux AMD64 or ARM64:
 python3 scripts/framey-test-decky-runtime.py --case 18 \
   --output /tmp/new-owned-bluetooth-report.json
 ```
+
+Both native CI architectures passed at historical head 3132115db3262a7666185175c0accd88748b23d0: 34 probes and 31 official archive digests per architecture, including this case's 13 actual API1 RPCs. The [native CI audit](framey-bluetooth-private-bluez-native-ci-2026-10-30.json) binds both completed jobs, artifact digests and actual checkout trees. Its [e2e audit](framey-bluetooth-private-bluez-e2e-2026-10-30.json) confirms the same complete source tree passed the integration suite.
+
+All four historical signed-package artifacts also passed independent source, signature, actual runtime, two-way sync, migration, lifecycle and preservation audits. These test the shared runtime and do not add Bluetooth hardware scope: [AMD64](framey-bluetooth-signed-package-ci-amd-2026-10-30.json), [ARM64](framey-bluetooth-signed-package-ci-arm-2026-10-30.json), [browser HTTP](framey-bluetooth-signed-package-ci-http-2026-10-30.json), and [production-parent HTTP](framey-bluetooth-signed-package-ci-parent-2026-10-30.json). All distinct browser captures were visually inspected. The guest's complete loader-log checks passed; raw loader logs are not retained in these package artifacts for independent inspection. Both observed mixed-policy Decky stops reach inactive/success with zero PID and exit status.
+
+The branch is now normally merged with main d89291e. The conflict resolution keeps both this BlueZ case and the published Terminal import regression; release verification changes are retained. Historical green results above do not qualify this refreshed head for merge. Its fresh core/e2e/native/package gates and resulting main CI remain mandatory. No real Frame or radio was contacted.
+
+The refreshed AMD64 private native replay also passes all 13 RPCs and clean shutdown. Its [working-tree fingerprint report](framey-bluetooth-refreshed-native-local-2026-10-30.json) binds all seven native runner inputs after resolving the merge. It supplies local confirmation; fresh exact-head CI remains required.
