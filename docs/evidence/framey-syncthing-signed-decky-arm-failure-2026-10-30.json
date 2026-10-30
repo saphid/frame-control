@@ -41,7 +41,7 @@
   },
   "failure": "syncthing_service.py:408 asserted scanned_port == 8384. The original fixture did not record the returned port or retry it; combined Decky service proof is incomplete.",
   "interpretation": "Service-running state is insufficient to prove GUI/API readiness. Startup timing is a hypothesis until the retry journal establishes it.",
-  "correction": "Bounded replay of only null port scan results via the existing wizard Retry route; reject HTTP failures and unexpected non-null ports immediately, retain attempts and elapsed time. No fabricated port or API key.",
+  "correction": "Bounded backend discovery probes using the existing guest readiness wait, recording every returned port and elapsed time. HTTP status errors and unexpected non-null ports fail immediately. The browser performs one scan then offers manual port entry, which this retry fixture does not verify. No fabricated port or API key.",
   "installerEnabled": false,
   "realFrameContacted": false
 }

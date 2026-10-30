@@ -403,8 +403,8 @@ def main(signed_flatpak=False):
             assert reply['status'] == 200 and json.loads(reply['body'])['success'] is True
             runtime_identity(service)
             # Running systemd state does not establish GUI/API readiness.
-            # Replay the wizard's Retry action only for a not-yet-found port;
-            # retain every result instead of crediting first-attempt discovery.
+            # Probe eventual backend discovery without claiming a browser replay;
+            # retain returned ports instead of crediting first-attempt discovery.
             port_scans = []
             scan_started = time.monotonic()
 
