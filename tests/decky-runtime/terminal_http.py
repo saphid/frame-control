@@ -128,8 +128,18 @@ def exercise(name, home):
     temporary = tempfile.TemporaryDirectory(prefix='framey-terminal-http-')
     try:
         ctl('daemon-reload'); ctl('start', unit.name)
-        pid = int(ctl('show', unit.name, '--property=MainPID', '--value').stdout.strip())
-        assert pid > 0 and Path('/proc/'+str(pid)+'/exe').resolve() == base/'PluginLoader'
+        # Type=simple can report started before env has exec'd PluginLoader.
+        # Keep the executable identity requirement and bound readiness instead
+        # of treating the first systemctl return as completed exec.
+        def owned_loader_pid():
+            value = int(ctl('show', unit.name, '--property=MainPID', '--value').stdout.strip())
+            if value <= 0:
+                return False
+            try:
+                return value if Path('/proc/'+str(value)+'/exe').resolve() == base/'PluginLoader' else False
+            except (OSError, RuntimeError):
+                return False
+        pid = until_ready(owned_loader_pid, 'owned Decky loader executable', timeout=15)
         report['deckyMainPid'] = pid
         def token_ready():
             with urllib.request.urlopen('http://127.0.0.1:1337/auth/token', timeout=2) as response:

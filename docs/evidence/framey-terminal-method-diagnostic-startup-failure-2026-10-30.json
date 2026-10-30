@@ -1,0 +1,31 @@
+{
+  "head": "5bd9ab628fc031bdae7a86df667d7e8a0aed9def",
+  "sourceFingerprintsVerified": 166,
+  "resultSha256": "84699f96f821ea5acd21ca306872ad2b7dff02bc859ce5e0a91060884fdefb68",
+  "guestPacketSha256": "a461764c0b53290108a5eb88b33a4eb01350fd2d3c163082eb6d16b81451d3d7",
+  "fullPacketVerified": true,
+  "runnerExitStatus": 1,
+  "success": false,
+  "failure": "Immediate owned loader executable assertion before browser setup",
+  "exactStartupRaceCauseProven": false,
+  "methodDiagnosticReached": false,
+  "productionMethodCallsReached": 0,
+  "ownedDeckyStop": {
+    "mainPidBefore": 338,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 2.297
+  },
+  "rawStderrHasShutdownCancellation": true,
+  "errorFreeConsoleClaimed": false,
+  "ownedBundleRemoved": true,
+  "originalUnitRestored": true,
+  "ownedUserManagerStopped": true,
+  "ownedQemuReaped": true,
+  "realFrameContacted": false
+}
