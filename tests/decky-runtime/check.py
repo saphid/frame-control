@@ -208,12 +208,12 @@ def main():
                 credential = state['password']
                 assert state['enabled'] is True and isinstance(credential,str) and credential
 
-                def http(path, password=None, data=None):
+                def http(path, password=None, data=None, method=None):
                     headers = {'Cookie':'cppwd='+password} if password else {}
                     if data is not None:
                         headers['Content-Type'] = 'application/octet-stream'
                     request = urllib.request.Request('http://127.0.0.1:3923/'+path,
-                        headers=headers, data=data, method='PUT' if data is not None else 'GET')
+                        headers=headers, data=data, method=method or ('PUT' if data is not None else 'GET'))
                     return urllib.request.urlopen(request, timeout=2).read()
 
                 assert until_ready(lambda: http('fixture-download.bin',credential), 'private Copyparty download') == marker
@@ -239,18 +239,34 @@ def main():
                 legacy('set_enabled', enabled=True)
                 credential = legacy('get_status')['password']
                 assert until_ready(lambda: http('fixture-upload.bin',credential), 'restarted Copyparty') == uploaded
+                http('fixture-upload.bin',credential,method='DELETE')
+                assert not (home/'fixture-upload.bin').exists()
+                assert (home/'fixture-download.bin').read_bytes() == marker
                 unrelated = subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True)
                 processes.append(unrelated)
                 rpc('loader/reload_plugin',record['name'])
-                until_ready(lambda: legacy('is_enabled') is False and closed() and not server_pids(),
-                            'plugin reload cleanup')
+                # The reload RPC queues work. Do not race a legacy RPC against
+                # the wrapper whose response listener Decky is shutting down.
+                def reload_finished():
+                    output = (home/'runtime.log').read_text()
+                    return (output.count('Loaded DeckyParty File Manager') == 2 and
+                            'Unloaded DeckyParty File Manager' in output)
+                until_ready(reload_finished, 'actual plugin reload completion')
+                until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
+                assert legacy('is_enabled') is False
                 assert unrelated.poll() is None
                 unrelated.terminate()
                 unrelated.wait(timeout=3)
+                log.flush()
+                log.seek(0)
+                lifecycle_log = log.read()
+                assert 'Unloaded DeckyParty File Manager' in lifecycle_log
+                assert 'Sending SIGKILL' not in lifecycle_log
                 report['independentState'] = {'privateDownload':True, 'privateUpload':True,
+                    'privateDelete':True,
                     'anonymousAndWrongPasswordRefused':True, 'disabledChildReaped':True,
                     'reloadStoppedServer':True, 'unrelatedChildUntouched':True}
-                report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload, '
+                report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload/delete, '
                     'disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified')
             elif case['probe'] == 'download-all-logging':
                 assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}

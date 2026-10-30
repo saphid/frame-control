@@ -10400,12 +10400,13 @@
         "https://github.com/9001/copyparty"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; privileged file operations and backend are unverified. No file changes were run.",
+      "reason": "Exact managed 1.0.0 runs the unchanged Copyparty helper as the actual service user without sudo, isolates its temporary cache, and reaps its owned process session on disable/unload. Published Decky 3.3.0 x86_64 passes authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup with an unrelated child preserved. Existing copies need Update/reinstall. Native ARM64 CI, LAN/HTTPS, external media, the real Frame backend, panel controls and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 x86_64 private file-server lifecycle"
       ],
       "browser": {
         "id": 117,
@@ -10423,13 +10424,23 @@
         "folder": "Decky-CP"
       },
       "backend": "Python",
-      "hardware": "sudo",
+      "hardware": "System Python 3; user service. No privileged operation is needed for the adapted launch.",
       "uiSurfaces": [],
       "fakeFrame": {
         "id": 117,
         "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "requiredShims": [
+        "deckyparty-user-lifecycle"
+      ],
+      "backendFollowUp": {
+        "evidence": "docs/evidence/framey-deckyparty-lifecycle-2026-10-30.md",
+        "compatShim": "deckyparty-user-lifecycle",
+        "actualDeckyX86": true,
+        "actualFrameBackend": false,
+        "mode": "owned disposable Docker volume, loopback HTTP and actual plugin reload; network/device/session isolated"
       }
     },
     {

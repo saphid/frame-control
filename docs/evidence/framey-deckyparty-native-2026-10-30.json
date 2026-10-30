@@ -1,0 +1,94 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "cases": [
+    {
+      "id": 117,
+      "name": "DeckyParty File Manager",
+      "version": "1.0.0",
+      "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+      "shim": "deckyparty-user-lifecycle",
+      "calls": [
+        {
+          "method": "is_enabled",
+          "result": false
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": false,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": false,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": true,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": true,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "is_enabled",
+          "result": false
+        }
+      ],
+      "discovered": [
+        {
+          "name": "DeckyParty File Manager",
+          "version": "1.0.0",
+          "load_type": 0,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "privateDownload": true,
+        "privateUpload": true,
+        "privateDelete": true,
+        "anonymousAndWrongPasswordRefused": true,
+        "disabledChildReaped": true,
+        "reloadStoppedServer": true,
+        "unrelatedChildUntouched": true
+      },
+      "result": "discovery, original Copyparty authenticated private listing/download/upload/delete, disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified"
+    }
+  ]
+}

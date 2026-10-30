@@ -939,7 +939,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=main.read_text(encoding='utf-8')
                 if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
                     raise RuntimeError('DeckyParty Python source mismatch')
-                source='import pwd\n'+source
+                source='import pwd\nimport signal\n'+source
                 a=source.index('    @staticmethod\n    def _get_home_dir(')
                 b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
                 source=source[:a]+"""    @staticmethod
@@ -961,11 +961,17 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
         if process is None:
             return
         if process.poll() is None:
-            process.terminate()
+            try:
+                os.killpg(process.pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
             try:
                 process.wait(timeout=3)
             except subprocess.TimeoutExpired:
-                process.kill()
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
                 process.wait(timeout=3)
         else:
             process.wait()
@@ -975,7 +981,13 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=source.replace('        env = os.environ.copy()',
                     '        env = os.environ.copy()\n'
                     '        for key in ("LD_LIBRARY_PATH", "PYTHONHOME", "PYTHONPATH"):\n'
-                    '            env.pop(key, None)')
+                    '            env.pop(key, None)\n'
+                    '        temporary = Path(decky_plugin.DECKY_PLUGIN_RUNTIME_DIR) / "copyparty-tmp"\n'
+                    '        temporary.mkdir(mode=0o700, parents=True, exist_ok=True)\n'
+                    '        if temporary.is_symlink() or temporary.stat().st_uid != os.getuid():\n'
+                    '            raise ValueError("Copyparty temporary directory must be owned")\n'
+                    '        env["TMPDIR"] = str(temporary)')
+                source=source.replace('            env=env,\n', '            env=env,\n            start_new_session=True,\n')
                 source=source.replace('    async def set_enabled(self, enabled):',
                     '    async def set_enabled(self, enabled):\n'
                     '        if type(enabled) is not bool:\n'
@@ -989,11 +1001,17 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
         Plugin._enabled = False
         task = Plugin._runner_task
         Plugin._runner_task = None
+        logger.info("Stopping owned Copyparty runner")
         if task is not None:
             task.cancel()
-            await asyncio.gather(task, return_exceptions=True)
+            try:
+                await task
+            except asyncio.CancelledError:
+                pass
+        logger.info("Stopping owned Copyparty process")
         Plugin._stop_process()
         Plugin._password = None
+        logger.info("Owned Copyparty process stopped")
 """
                 compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')

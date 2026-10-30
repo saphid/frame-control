@@ -16,6 +16,7 @@ decky = types.ModuleType('decky_plugin')
 decky.logger = logging.getLogger('deckyparty-contract')
 decky.DECKY_PLUGIN_DIR = str(folder)
 decky.DECKY_PLUGIN_LOG_DIR = str(folder)
+decky.DECKY_PLUGIN_RUNTIME_DIR = str(folder/'private-runtime')
 sys.modules['decky_plugin'] = decky
 spec = importlib.util.spec_from_file_location('deckyparty', folder/'main.py')
 module = importlib.util.module_from_spec(spec)
@@ -41,7 +42,7 @@ class Lifecycle(unittest.IsolatedAsyncioTestCase):
             self.assertIn(str(Path.home())+'::A,'+Plugin._get_user(), command)
 
     async def test_disable_reaps_only_owned_process(self):
-        own = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])
+        own = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'], start_new_session=True)
         other = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(30)'])
         try:
             Plugin._proc = own
@@ -66,11 +67,25 @@ class Lifecycle(unittest.IsolatedAsyncioTestCase):
         process.poll.return_value = None
         process.wait.side_effect = [subprocess.TimeoutExpired('private child', 3), 0]
         Plugin._proc = process
-        Plugin._stop_process()
-        process.terminate.assert_called_once()
-        process.kill.assert_called_once()
+        process.pid = 424242
+        with patch.object(module.os, 'killpg') as kill:
+            Plugin._stop_process()
+        self.assertEqual(kill.call_args_list, [unittest.mock.call(process.pid,module.signal.SIGTERM),
+                                               unittest.mock.call(process.pid,module.signal.SIGKILL)])
         self.assertEqual(process.wait.call_count, 2)
         self.assertIsNone(Plugin._proc)
+
+    async def test_child_environment_and_owned_temporary_files(self):
+        with patch.dict(os.environ, {'LD_LIBRARY_PATH':'private-loader-libs','PYTHONHOME':'private-loader-home',
+                                     'PYTHONPATH':'private-loader-modules'}):
+            with patch.object(module.subprocess,'Popen') as spawn:
+                Plugin._start_process()
+                _, options = spawn.call_args
+                self.assertTrue(options['start_new_session'])
+                for key in ('LD_LIBRARY_PATH','PYTHONHOME','PYTHONPATH'):
+                    self.assertNotIn(key,options['env'])
+                self.assertEqual(options['env']['TMPDIR'],str(folder/'private-runtime/copyparty-tmp'))
+        Plugin._proc = None
 
     async def test_repeated_main_has_one_runner_and_unload_awaits_it(self):
         plugin = Plugin()

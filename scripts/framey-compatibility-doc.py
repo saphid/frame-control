@@ -40,6 +40,9 @@ def render(data):
         'python3 scripts/framey-audit-browser.py --cache /tmp/framey-archives',
         '```', '',
         'Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.', '',
+        'A [DeckyParty lifecycle follow-up](evidence/framey-deckyparty-lifecycle-2026-10-30.md) runs the exact official 1.0.0 helper as the actual service user without sudo, isolates its temporary cache and reaps its owned process session. '
+        'Published Decky 3.3.0 x86_64 verifies authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup. '
+        'The fixture uses an owned disposable disk volume; Copyparty\'s refusal to upload into tmpfs remains intact. Native ARM64 CI, LAN/HTTPS, external media, real Frame backend, panel controls and worn/controller use remain unverified. Existing copies need Update/reinstall. '
         'A [Games Prefix Manager follow-up](evidence/framey-prefix-manager-2026-10-29.md) enables only the exact managed 1.0.1 archive as a user-service plugin. '
         'It reads the actual user home and current Steam library format, bounds prefix deletion, preserves separate backups and reports refused actions in the panel. App IDs appearing in multiple rows are refused without backup or deletion. '
         'Published Decky 3.3.0 x86_64 and local Chromium verify only disposable prefix backups/deletions; a locked real ARM64 Frame service verifies discovery and read-only listing. '
