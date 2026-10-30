@@ -1,0 +1,25 @@
+{
+  "success": false,
+  "head": "232c6aa62f83013ad96250b4b134c1ce0e826a79",
+  "exactSourceFingerprintsVerified": 124,
+  "packetBytes": 7540,
+  "packetSha256": "9990a0603a3b21f6e83e027ff7bbee128d552fe2336233f54ec2874339edd0ff",
+  "resultSha256": "85dbaa7c25736cbc92f651bdaab62209db2e26f969baa5a3b943ec210b6dc856",
+  "consoleSha256": "0bd19c78863e8e9d1aabefdfbab5bb78ac7c5d1938c642065c96934f1c22e347",
+  "ownedQemuReaped": true,
+  "ownedDeckyStop": {
+    "mainPidBefore": 853,
+    "timeoutStopUSec": "1min 30s",
+    "activeState": "failed",
+    "result": "exit-code",
+    "mainPidAfter": 0,
+    "elapsedSeconds": 2.034
+  },
+  "loaderShutdownError": "asyncio.exceptions.CancelledError in Decky plugin shutdown",
+  "migrationRegistryEmpty": true,
+  "migrationRegistryDrainSeconds": 0.331,
+  "duplicateSignalCauseProven": false,
+  "packagePass": false,
+  "realFrameContacted": false,
+  "limit": "The owned Decky unit failed with Result=exit-code after 2.034 seconds. Loader cancellation errors were retained. The packet contains partial package/migration results only; it does not prove a successful production-parent package run. Signal-policy causality remains unproven."
+}

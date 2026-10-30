@@ -1,0 +1,21 @@
+{
+  "success": false,
+  "run": 41099306702,
+  "job": 124213203773,
+  "artifact": 13000705963,
+  "head": "7071b3cf093b5aa8b8c243e35b0185097d1361b1",
+  "artifactSha256": "e5e78035236cbcee1b25848cf1527cdc94b98441366ef6b5384fa696efb8928c",
+  "exactSourceFingerprintsVerified": 127,
+  "vmSourceFingerprintsVerified": 124,
+  "packetBytes": 7539,
+  "packetSha256": "c7f81291039330c928a08ff78cc75e3ba4e4122c01bb3f812fb82a242d6ff292",
+  "ownedQemuReaped": true,
+  "packagePass": false,
+  "error": "subprocess.TimeoutExpired: Command '['systemctl', '--user', 'stop', 'frame-control-decky.service']' timed out after 35 seconds",
+  "migrationRegistryEmpty": true,
+  "migrationRegistryDrainSeconds": 0.181,
+  "ownedDeckyServiceStopVerified": false,
+  "rootCauseEstablished": false,
+  "realFrameContacted": false,
+  "limit": "The 35-second systemctl command expired. The unit job result and owned loader tail were not retained; neither a clean delayed stop nor a hung/forced stop is established."
+}
