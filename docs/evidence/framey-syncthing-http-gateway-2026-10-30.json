@@ -1,5 +1,5 @@
 {
-  "runtimePass": false,
+  "runtimePass": true,
   "installerEnabled": false,
   "realFrameContacted": false,
   "failedDevelopmentTrials": [
@@ -226,7 +226,6 @@
       "ownedQemuReaped": true
     }
   ],
-  "pendingRuntimeRevision": "a8d1187d96bc4c4b58172959a0b85c9fe418b62c",
   "fullServerRegression": {
     "sourceRevision": "ce5190f",
     "tests": 1852,
@@ -234,5 +233,184 @@
     "failures": 0,
     "elapsedSeconds": 227.55,
     "logSha256": "07a2dbb87134ed7a14be96f2c7a253d97c0f3667a3fda63ef045a66eae24f811"
-  }
+  },
+  "successfulLocalTrial": {
+    "success": true,
+    "sourceRevision": "a8d1187d96bc4c4b58172959a0b85c9fe418b62c",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": true,
+    "sourceFingerprints": 122,
+    "resultSha256": "bed309be4b5824d67b6f1fcccaa5aaed14690c348a2682295dc7641c3ddbc571",
+    "consoleSha256": "a4627b77e959c77453941e505988908e85013a754f11fdb8cab88aa8de1010f3",
+    "defaultConfigPath": "/home/tester/.var/app/me.kozec.syncthingtk/.local/state/syncthing/config.xml",
+    "packagedBinarySha256": "04a55cdd8087653ea148b1c49049eaf4972f308b7b0e5a2bdf3968d37c440ef7",
+    "requiredLifecycleResults": 17,
+    "ownershipRefusals": 18,
+    "stopRpcElapsedSeconds": 0.142,
+    "externalTransitionRpcElapsedSeconds": 0.992,
+    "processIdentityChecks": 16,
+    "uninstallPreservedCandidateData": true,
+    "ownedQemuReaped": true,
+    "installerEnabled": false,
+    "realFrameContacted": false,
+    "wizardConfigDiscovery": {
+      "defaultPackageConfig": true,
+      "remainedUnconfiguredDuringScan": true,
+      "discoveredDefaultPort": true,
+      "discoveredDefaultApiKey": true,
+      "scannedBasicAuth": true,
+      "persistedThroughDeckyRpc": true,
+      "setupCommittedAndReloaded": true,
+      "authenticatedRestWithDiscoveredKey": true,
+      "ownedSetupServiceStopped": true
+    },
+    "httpGateway": {
+      "success": true,
+      "realFrameContacted": false,
+      "syntheticCef": true,
+      "syntheticStoreReceipt": true,
+      "realSteamCef": false,
+      "managedInstallVerified": false,
+      "installerEnabled": false,
+      "browserSandboxDisabled": false,
+      "productionHttpHandler": true,
+      "productionPanelDispatcher": true,
+      "productionMethodScript": true,
+      "productionLocalSshWrapper": true,
+      "uiSourceFingerprints": 105,
+      "rejectedRequests": {
+        "missingUiKey": 403,
+        "staleReceipt": 400,
+        "wrongPlugin": 400,
+        "modernHttpCall": 400,
+        "missingHttpShim": 400
+      },
+      "actualSignedProcessPids": [
+        1393,
+        1407,
+        1415
+      ],
+      "actualDeckyRpc": true,
+      "authenticatedSyncthingRest": true,
+      "serviceStartStopVerified": true,
+      "stoppedStateBeforeAndAfter": true,
+      "requests": [
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 403,
+          "authenticated": false,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 400,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 400,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 400,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 400,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "get_settings_json",
+          "httpStatus": 200,
+          "authenticated": true
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "POST",
+          "path": "/__decky-watchdog/start"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/rest/system/status"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/rest/system/status"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "POST",
+          "path": "/__decky-watchdog/stop"
+        },
+        {
+          "method": "framey_http_fetch",
+          "httpStatus": 200,
+          "authenticated": true,
+          "httpMethod": "GET",
+          "path": "/__decky-watchdog/state"
+        }
+      ],
+      "ownedBrowserReaped": true,
+      "httpServerStopped": true,
+      "ownedReceiptRemoved": true
+    },
+    "browserStages": [
+      "running",
+      "stopped",
+      "restarted",
+      "stopped"
+    ],
+    "manualPortFallbackUsed": false,
+    "screenshots": {
+      "running1": "3e99550a9f19e3460db224068492ff5d0b633f5f016707b3c64ec54e58e516e1",
+      "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+      "restarted3": "3e99550a9f19e3460db224068492ff5d0b633f5f016707b3c64ec54e58e516e1",
+      "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+    },
+    "syntheticCef": true,
+    "syntheticStoreReceipt": true,
+    "managedInstallVerified": false,
+    "realSteamCef": false,
+    "physicalControllerVerified": false,
+    "migrationResults": 12,
+    "screenshotsIndependentlyInspected": true,
+    "visualScope": "Fixture browser with synthetic DOM input; browser lifecycle uses the private RPC bridge. Separate HTTP probe uses fixture SharedJSContext and a synthetic store receipt."
+  },
+  "unverified": [
+    "actual Steam CEF",
+    "production browser parent over HTTP",
+    "external SSH transport",
+    "managed install/update/remove",
+    "ARM64 browser and new HTTP path",
+    "real Frame visuals",
+    "physical controller interaction"
+  ]
 }

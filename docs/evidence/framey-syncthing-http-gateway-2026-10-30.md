@@ -71,12 +71,31 @@ HTTP server, bridge and synthetic receipt were cleaned up. The new probe waits
 for authenticated REST readiness before requiring signed process identity;
 only expected 425/502 readiness responses may retry, and authentication or
 unknown HTTP failures still fail. Five focused HTTP tests and 34 package/input/
-evidence/cleanup tests pass. The third trial at `a8d1187` is running; no whole
-HTTP probe pass is credited. The expanded full server regression at `ce5190f`
+evidence/cleanup tests pass. The third trial at exact revision
+`a8d1187d96bc4c4b58172959a0b85c9fe418b62c` passed the whole probe and an
+independent audit of all 122 source fingerprints. The expanded full server regression at `ce5190f`
 passed 1,852 tests in 227.550 seconds, with the same 16 skips and no failures.
 
-No runtime pass is credited yet. Even a passing probe will leave actual Steam
-CEF, the production browser parent over HTTP, external SSH transport, managed
-install/update/remove, native ARM64 execution of this new path, real Frame
-visuals and physical controller use unverified. No real Frame is contacted and
-the hourly worn schedule is unchanged.
+All four retained captures were independently inspected and show Running →
+Stopped → Running → Stopped. This trial used automatic port discovery
+(`manualPortFallbackUsed=false`); it does not establish the manual fallback.
+The browser lifecycle still uses its private RPC bridge. The separate HTTP
+phase exercised the unchanged production dispatch with 105 production source
+fingerprints, all five expected refusals, authenticated signed-service REST,
+start/stop, and cleanup. Its signed Syncthing process identities matched the
+package. All 17 lifecycle checks, 18 ownership refusals, 12 migration checks,
+preserving uninstall and owned QEMU cleanup passed. Result SHA-256:
+`bed309be4b5824d67b6f1fcccaa5aaed14690c348a2682295dc7641c3ddbc571`.
+The JSON companion records the independent audit and capture digests; both
+failed development trials remain recorded above and in that companion.
+
+The unpublished CI follow-up requests `--browser-setup --http-gateway` in its
+AMD64 browser job, binds packed production source hashes to the checked-out
+head and keeps the two native package jobs. No CI pass for this new path is
+credited yet; ARM64 still runs signed-package checks without this browser/HTTP
+probe.
+
+Actual Steam CEF, the production browser parent over HTTP, external SSH
+transport, managed install/update/remove, native ARM64 execution of this new
+path, real Frame visuals and physical controller use remain unverified. No
+real Frame was contacted and the hourly worn schedule is unchanged.
