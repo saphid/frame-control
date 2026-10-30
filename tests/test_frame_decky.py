@@ -1,6 +1,7 @@
 """Decky release validation and the removable user-service transaction."""
 import sandbox  # noqa: F401
 import hashlib
+import http.server
 import io
 import json
 import os
@@ -8,6 +9,7 @@ import secrets
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -42,6 +44,81 @@ class DeckyRelease(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'Steam Frame'):
                 frame_decky.change(lambda *a, **k: json.dumps(state), 'install')
             download.assert_not_called()
+
+
+@unittest.skipIf(os.name == 'nt', 'remote status script runs on Linux')
+class DeckyStatusProbe(unittest.TestCase):
+    def test_loopback_status_preserves_inventory_when_cef_is_unavailable(self):
+        replies = []
+        requests = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                code, body = replies.pop(0)
+                self.send_response(code)
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            base = home / '.local/share/frame-control/decky'
+            plugin = base / 'plugins/Example/plugin.json'
+            plugin.parent.mkdir(parents=True)
+            plugin.write_text(json.dumps({'name': 'Example', 'author': 'Test'}))
+            receipt = base / '.frame-control/receipt.json'
+            receipt.parent.mkdir()
+            receipt.write_text(json.dumps({'managedBy': 'Frame Control', 'version': 'v3.3.0'}))
+            service = home / '.config/systemd/user/frame-control-decky.service'
+            service.parent.mkdir(parents=True)
+            service.write_text('owned service canary\n')
+            systemctl = home / 'systemctl'
+            systemctl.write_text('#!/bin/sh\nexit 0\n')
+            systemctl.chmod(0o700)
+            before = {p: p.read_bytes() for p in (plugin, receipt, service)}
+            server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                probe = frame_decky.PROBE.replace('8080, timeout=2', str(server.server_port)+', timeout=2')
+                # The cold remote probe must not load URL/proxy/TLS helpers.
+                guard = '''import builtins
+original_import = builtins.__import__
+def bounded_import(name, *args, **kwargs):
+    if name in ('urllib.request', 'platform'):
+        raise AssertionError('cold status import: '+name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = bounded_import
+'''
+                targets = json.dumps([{'title': 'SharedJSContext',
+                                       'url': 'http://steamloopback.host/index.html'}]).encode()
+                for code, body, expected in ((200, targets, True), (200, b'[]', False),
+                                             (503, targets, False), (200, b'invalid json', False)):
+                    with self.subTest(code=code, body=body):
+                        replies.append((code, body))
+                        result = subprocess.run([sys.executable, '-'], input=guard+probe,
+                            capture_output=True, text=True, timeout=15,
+                            env={**os.environ, 'HOME': folder,
+                                 'PATH': folder+os.pathsep+os.environ['PATH']})
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        status = json.loads(result.stdout)
+                        self.assertIs(status['cef'], expected)
+                        self.assertIs(status['managed'], True)
+                        self.assertIs(status['running'], True)
+                        self.assertEqual(status['arch'], os.uname().machine)
+                        self.assertEqual(status['version'], 'v3.3.0')
+                        self.assertEqual(status['plugins'][0]['name'], 'Example')
+                        self.assertEqual({p: p.read_bytes() for p in before}, before)
+                self.assertEqual(requests, ['/json/list']*4)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+                self.assertFalse(thread.is_alive())
 
 
 @unittest.skipIf(os.name == 'nt', 'remote service script runs on Linux')
