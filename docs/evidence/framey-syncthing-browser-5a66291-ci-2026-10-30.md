@@ -38,5 +38,6 @@ discovery; manual fallback was not exercised.
 This is a private-bridge desktop browser test. It does not verify the production
 browser parent over HTTP, actual Steam CEF, managed installation, ARM64 browser,
 real Frame or physical controllers. The separate parent-browser trial remains
-failed/pending; installation stays blocked. Current main and #479 signed ARM64
-results remain required before merge, and no release is credited here.
+failed/pending; installation stays blocked. The [completed native audits](framey-syncthing-native-merge-479-2026-10-30.md)
+subsequently verified both signed ARM64 results before #479 merged. No release
+is credited here.
