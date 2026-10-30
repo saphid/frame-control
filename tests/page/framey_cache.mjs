@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const html=readFileSync(new URL('../../ui/headset.html',import.meta.url),'utf8');
 const parentSource=html.match(/<script>([\s\S]*?)<\/script>/)[1].split('refresh();refreshGames();')[0];
 const hostSource=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8')
-  .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
+  .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__waitForSeed = waitForSeed;\n})();');
 assert.match(hostSource,/framey:cache:init/);
 const values=new Map();
 const localStorage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
@@ -24,8 +24,8 @@ let session=vm.runInContext('frameySession',parent);
 const firstURL=new URL(el('frameyFrame').src,'http://127.0.0.1');
 const onParent=parentListeners.find(x=>x.type==='message').fn;
 
-function iframe(){
-  const listeners=[];const queued=[];let live=false;
+function iframe({delaySeed=false}={}){
+  const listeners=[];const queued=[];const timers=[];let live=false;
   const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},createElement:()=>({}),isValidElement:()=>true},
     ReactDOM:{createRoot:()=>({render(){}})}};
   const proxy={postMessage:message=>listeners.find(x=>x.type==='message')?.fn({source:hostParent,data:message})};
@@ -33,12 +33,17 @@ function iframe(){
   const hostParent={postMessage:message=>live?onParent({source:proxy,data:message}):queued.push(message)};
   const context=vm.createContext({window:frameWindow,document:{getElementById:()=>({})},
     navigator:{language:'en'},parent:hostParent,DOMException,
-    addEventListener:(type,fn)=>listeners.push({type,fn}),setTimeout(){},clearTimeout(){}});
+    addEventListener:(type,fn)=>listeners.push({type,fn}),
+    setTimeout:(callback,ms)=>{timers.push({callback,ms,active:true});return timers.length;},
+    clearTimeout:id=>{if(timers[id-1])timers[id-1].active=false;}});
   vm.runInContext(hostSource,context);
-  for(const message of queued)onParent({source:proxy,data:message});
   live=true;
+  const flushSeed=()=>{for(const message of queued)onParent({source:proxy,data:message});queued.length=0;};
+  if(!delaySeed)flushSeed();
   const send=message=>onParent({source:proxy,data:message});
-  return {storage:frameWindow.localStorage,steamStorage:frameWindow.SteamClient.Storage,send};
+  return {storage:frameWindow.localStorage,steamStorage:frameWindow.SteamClient.Storage,
+    waitForSeed:frameWindow.__waitForSeed,timers,flushSeed,send,receive:message=>
+      listeners.find(x=>x.type==='message').fn({source:hostParent,data:message})};
 }
 let first=iframe();
 assert.equal(first.storage.getItem('status-cache'),null);
@@ -70,3 +75,30 @@ reopened.send({type:'framey:cache:save',session:oldSession,entries:{poison:'yes'
 assert.equal(values.get('framey-plugin-cache-v1:14'),savedCache);
 reopened.storage.clear();
 assert.equal(values.get('framey-plugin-cache-v1:14'),'{}');
+
+// A delayed parent reply must not open the plugin with empty settings and
+// later overwrite a retained snapshot. A missing reply fails visibly.
+values.set('framey-plugin-cache-v1:14','{"saved":"true"}');
+const delayed=iframe({delaySeed:true});
+let settled=false;
+const delayedWait=delayed.waitForSeed().then(()=>{settled=true;});
+await Promise.resolve();
+assert.equal(settled,false);
+assert.equal(delayed.timers[0].ms,5000);
+delayed.flushSeed();
+await delayedWait;
+assert.equal(delayed.storage.getItem('saved'),'true');
+assert.equal(delayed.timers[0].active,false);
+
+const missing=iframe({delaySeed:true});
+const failure=assert.rejects(missing.waitForSeed(),/storage did not initialize/);
+missing.timers[0].callback();
+await failure;
+missing.flushSeed();
+assert.equal(missing.storage.getItem('saved'),null,'a late reply must not resurrect a failed panel');
+
+const invalid=iframe({delaySeed:true});
+const invalidFailure=assert.rejects(invalid.waitForSeed(),/storage returned invalid data/);
+invalid.receive({type:'framey:cache:seed',session,entries:{huge:'x'.repeat(65537)}});
+await invalidFailure;
+assert.equal(invalid.storage.length,0);

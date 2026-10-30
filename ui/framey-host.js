@@ -70,8 +70,22 @@
   const cache = new Map();
   const cacheLimit = 128 * 1024;
   const cacheSession = window.location?.hash.slice(1) || '';
-  let acceptSeed;
-  const seeded = new Promise(resolve => {acceptSeed = resolve;});
+  let acceptSeed, rejectSeed;
+  const seeded = new Promise((resolve, reject) => {acceptSeed = resolve; rejectSeed = reject;});
+  // Starting with an empty cache before the parent replies can overwrite a
+  // plugin's saved settings. The parent answers even when its storage is
+  // unavailable, in which case an empty seed is intentional.
+  async function waitForSeed() {
+    let timer;
+    try {
+      await Promise.race([seeded, new Promise((_, reject) => {
+        timer = setTimeout(() => {
+          acceptSeed = rejectSeed = null;
+          reject(Error('Framey plugin storage did not initialize'));
+        }, 5000);
+      })]);
+    } finally {clearTimeout(timer);}
+  }
   const storage = {
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
@@ -96,7 +110,6 @@
   // driver in an opaque iframe. Let it detect the bounded localStorage driver.
   Object.defineProperty(window, 'indexedDB', {configurable:true, value:undefined});
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
-  setTimeout(() => {acceptSeed?.(); acceptSeed = null;}, 1000); // Open if storage is unavailable.
 
   function request(method, args, legacy=false, type='framey:call') {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
@@ -246,12 +259,17 @@
     if (event.source === parent && event.data?.type === 'framey:cache:seed' &&
         event.data.session === cacheSession && acceptSeed) {
       const entries = event.data.entries;
-      if (entries && typeof entries === 'object' && !Array.isArray(entries)) {
-        for (const [key, value] of Object.entries(entries))
-          if (key.length <= 256 && typeof value === 'string' && value.length <= 65536)
-            cache.set(key, value);
+      const pairs = entries && typeof entries === 'object' && !Array.isArray(entries)
+        ? Object.entries(entries) : null;
+      if (!pairs || pairs.length > 64 ||
+          pairs.some(([key, value]) => key.length > 256 || typeof value !== 'string' || value.length > 65536) ||
+          JSON.stringify(entries).length > cacheLimit)
+        rejectSeed(Error('Framey plugin storage returned invalid data'));
+      else {
+        for (const [key, value] of pairs) cache.set(key, value);
+        acceptSeed();
       }
-      acceptSeed(); acceptSeed = null;
+      acceptSeed = rejectSeed = null;
       return;
     }
     if (event.source !== parent || !event.data || event.data.type !== 'framey:reply') return;
@@ -931,7 +949,7 @@
   });
   async function start() {
     try {
-      await seeded;
+      await waitForSeed();
       const bundleNode = document.getElementById('framey-bundle');
       const bytes = Uint8Array.from(atob(bundleNode.textContent), c=>c.charCodeAt(0));
       const bundleText = new TextDecoder().decode(bytes);
