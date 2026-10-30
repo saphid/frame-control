@@ -11840,13 +11840,15 @@
         "https://github.com/SteamDeckHomebrew/decky-plugin-template.git",
         "https://github.com/bentemple/decky-download-all"
       ],
-      "status": "broken",
-      "reason": "Initializer succeeds; Steam download registration is absent, so the primary action is unavailable.",
+      "status": "partial",
+      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 x86_64 verifies discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "managed Chromium queue fixtures (synthetic Steam only)",
+        "published Decky 3.3.0 x86_64 discovery/logging RPC"
       ],
       "browser": {
         "id": 131,
@@ -11883,7 +11885,12 @@
         "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "requiredShims": [
+        "download-all-local-queue"
+      ],
+      "missingShimStatus": "broken",
+      "runtimeEvidence": "docs/evidence/framey-download-all-2026-10-30.md"
     },
     {
       "id": 132,

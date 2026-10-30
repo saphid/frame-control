@@ -131,6 +131,7 @@ def panel(plugin_id):
     encoded = base64.b64encode(bundle).decode('ascii')
     module = f' data-module="/framey/module/{plugin_id}/{receipt}/index.js"' if b'./chunks/' in bundle else ''
     wine_socket = ' data-wine-socket="1"' if plugin_id == 68 and receipt == frame_decky_store.WINE_CELLAR_DIGEST else ''
+    downloads = ' data-downloads="1"' if plugin_id == 131 and receipt == frame_decky_store.DOWNLOAD_ALL_DIGEST else ''
     return ('''<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Framey plugin</title><style>body{font:21px/1.4 system-ui;background:#0d1925;color:#f3f7fa;margin:0;padding:20px}
 button,select,input{font:inherit;min-height:52px;background:#23618c;color:#fff;border:1px solid #72baf0;border-radius:9px;padding:8px}
@@ -145,7 +146,7 @@ label{display:grid;gap:6px;margin:10px 0}small{color:#b9c9d6}
 .framey-dialog{position:fixed;inset:12px;margin:0;z-index:100;overflow:auto;box-shadow:0 0 0 24px #0d1925e6}
 .framey-dialog[hidden]{display:none}</style>
 <p id="framey-error" role="status"></p><div id="framey-toasts" aria-live="polite"></div><div id="framey-root"></div><div id="framey-modal"></div>
-<script id="framey-bundle" type="application/json"''' + module + wine_socket + '''>''' + encoded + '''</script>
+<script id="framey-bundle" type="application/json"''' + module + wine_socket + downloads + '''>''' + encoded + '''</script>
 <script src="/framey-runtime/react.js"></script><script src="/framey-runtime/react-dom.js"></script>
 <script src="/framey-runtime/host.js"></script></html>''').encode()
 
@@ -293,4 +294,28 @@ def poll_running(ssh, plugin_id, session, active, cursor=0, receipt=None):
     expression = '(' + source + ')(' + json.dumps(payload) + ')'
     script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
         '__FRAMEY_STEAM_LIMIT__', str(256*1024))
+    return json.loads(ssh('python3 -', stdin=script, timeout=25))
+
+
+def downloads(ssh, plugin_id, session, action, appids=None, revision=None, receipt=None):
+    """Only the exact managed Download All panel may change local download queues."""
+    if type(plugin_id) is not int or plugin_id != 131 or receipt != frame_decky_store.DOWNLOAD_ALL_DIGEST:
+        raise PanelError('Download controls require the pinned Download All panel')
+    if not isinstance(session, str) or not SESSION.fullmatch(session) or action not in ('read', 'queue', 'close'):
+        raise PanelError('Invalid download panel request')
+    if action == 'queue':
+        if (not isinstance(appids, list) or not 1 <= len(appids) <= 2048 or
+                any(type(appid) is not int or not 1 <= appid <= 4294967295 for appid in appids) or
+                len(set(appids)) != len(appids) or type(revision) is not int or not 1 <= revision <= 9007199254740991):
+            raise PanelError('Choose unique local download app IDs')
+    elif appids is not None or revision is not None:
+        raise PanelError('Download reads do not accept action arguments')
+    plugin = _current_plugin(ssh, plugin_id, receipt)
+    if 'download-all-local-queue' not in plugin.get('compatShims', []):
+        raise PanelError('Update or reinstall Download All before opening its panel')
+    source = Path(__file__).with_name('framey-downloads.js').read_text(encoding='utf-8')
+    expression = '(' + source + ')(' + json.dumps({'session':session, 'action':action,
+                                                'appids':appids, 'revision':revision}) + ')'
+    script = STEAM_READ_SCRIPT.replace('__FRAMEY_STEAM_READ__', repr(expression)).replace(
+        '__FRAMEY_STEAM_LIMIT__', str(1024*1024))
     return json.loads(ssh('python3 -', stdin=script, timeout=25))
