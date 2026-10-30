@@ -2,9 +2,10 @@
 
 Syncthing 0.2.7 (official store ID 64) remains **broken and blocked from
 installation**. This follows the [signed app audit](framey-syncthing-flatpak-payload-2026-10-30.md).
-It advances runtime-content verification and records a failed disposable-VM
-installation. It does not establish package launch, Framey service control,
-Decky/browser controls, gamescope, VR or controller usability.
+It verifies signed runtime content and actual AMD64 Flatpak package launch,
+private user-service control and two-way sync in a disposable VM. Framey
+managed installation, Decky/browser integration, native ARM64 package execution,
+gamescope, VR and controller usability remain unverified.
 
 ## Matching signed runtime
 
@@ -80,23 +81,112 @@ A fresh guest using those bundles still returned **exit -11 (SIGSEGV)** while
 installing the runtime, before the exact-installed-commit or retained-signature
 checks. Removing the update URL did not resolve the crash. Its root cause
 remains unconfirmed; neither app installation nor launch is credited. The VM
-reported failure and was reaped. The locally retained experimental harness is
-fingerprinted in JSON; it is not a committed or CI-executed runtime fixture.
+reported failure and was reaped. The experimental source and failed run are retained separately from the
+repository probe described below.
 
 No TLS/GPG check, bubblewrap sandbox, kernel security setting or OSTree
 free-space protection was disabled. Failed attempts are retained, and no pass
-is inferred from the valid downloaded payload. No app binary was launched.
+is inferred from the valid downloaded payload. Those failed attempts did not
+launch the app.
 
-## Next gates
+## Resolved extra-key cleanup crash
 
-Resolve the isolated Flatpak installation failure without weakening security,
-then require real package launch and two-way sync through actual service
-control. Repeat the complete runtime/package test on native ARM64. The existing
-candidate service fixtures use a launcher shim and Syncthing 2.1.7; those passes
-do not prove this signed Syncthing 1.27.3 package works.
+Debian debug symbols with the same ELF build ID,
+`aefb455637ce5753dea536eb90be4b4bd2f37ebf`, resolve the captured application
+frames to `bundle_data_free` and `flatpak_transaction_finalize`. The matching
+Flatpak 1.16.6 source stores the explicit extra key in a `GBytes`, then calls
+`g_clear_object` on it during transaction cleanup. The JSON records the debug
+information and source hashes. This explains the observed extra-key cleanup
+crash; removing the origin URL alone did not remove that path.
 
-Framey managed install/update/remove, existing-service migration, browser
-controls and the locked real Frame smoke/worn visual/controller checks remain
-pending. No real Frame was contacted. Only owned test processes, containers
-and images were cleaned; public cached objects and pre-existing data were
-preserved. The compatibility rating and installer block stay unchanged.
+The working fixture uses Flatpak's standard **embedded bundle key** path. It
+first requires the entire exact bundle digest, normal-form OSTree delta
+metadata, the expected target commit and the embedded public key's exact
+SHA-256. It omits the redundant `--gpg-file` argument, leaves each origin's
+`gpg-verify` enabled, and independently verifies each installed commit using
+libostree with the pinned public key. No signature check or sandbox protection
+is disabled, and no Flatpak binary is patched. Both installed commits match
+the pinned signed payloads; there are no user Flatpak overrides.
+
+The first launch run reports **Syncthing v1.27.3**, the expected app/runtime
+commits in `/.flatpak-info`, and different inside/outside mount namespace IDs.
+It then fails on a fixture flag borrowed from the 2.1.7 shim tests:
+`generate --no-port-probing` is unsupported by this package. That failure is
+retained and does not count as a service or sync pass.
+
+## Actual package service and sync
+
+Removing that unsupported fixture flag allows the full experimental AMD64
+package run to pass. Both peers execute the installed package through actual
+Flatpak, with new private configuration/data in the guest and only loopback
+transport. Discovery, relay/NAT use, telemetry, upgrades and browser opening
+are disabled in those new test configurations. API authentication and peer
+certificates remain enabled.
+
+The probe requires exact forward and reverse file bytes, an unauthenticated
+REST response of 403, actual systemd user-service MainPID, stop to MainPID 0,
+a different PID after restart, retained certificate/data and successful sync
+after restart. The experimental service stop completed in 0.226 seconds.
+It then removes only its fixture unit, reaps both owned peers without forced
+termination, requires no remaining package instances and uninstalls the app
+without deleting the owned data marker. The VM powers off and is reaped.
+
+This unit is a **private package fixture**, not the Framey ownership candidate
+or managed installer. The existing candidate service tests use a launcher shim
+and Syncthing 2.1.7; their native AMD64/ARM64 passes remain separate evidence.
+
+## Repeatable repository probe
+
+`scripts/framey-test-syncthing-flatpak-package.py` repeats the package gates
+using the committed guest probes and the shared service-VM packer. It requires
+Linux AMD64, Python 3.11+, QEMU TCG, a disposable rootfs export and the exact
+bundles/key recorded above. The shared packer supports an ordinary guest root
+for bubblewrap; existing shim fixtures retain their previous initramfs path.
+No host filesystem is extracted or ownership changed.
+
+`tests/decky-runtime/Containerfile.flatpak-vm` builds the guest rootfs with
+systemd, UID 1100, Flatpak, OSTree GI bindings and a Debian kernel. Export a
+new stopped container to a private tar file, then remove only that container
+and the image created for the audit. A retained export is reusable; its full
+SHA-256 is recorded for every probe. The bundles are derived offline with
+`flatpak build-bundle --arch=x86_64 --gpg-keys=/input/flathub-key.gpg`, adding
+`--runtime` for the GNOME runtime, from a verified OSTree repository with the
+exact refs/commits above. Do not add an update URL. The wrapper refuses any
+bundle/key digest that differs from the audited inputs.
+
+```sh
+python3 scripts/framey-test-syncthing-flatpak-package.py \
+  --rootfs-tar /path/to/private-rootfs.tar \
+  --bundles /path/to/audited-bundles \
+  --key /path/to/flathub-key.gpg \
+  --output /path/to/new-evidence-directory
+```
+
+The wrapper refuses an existing output directory, retains failure JSON/console
+logs, enforces a 960-second VM limit and checks every required result before
+success. QEMU has 6 GiB RAM, two virtual CPUs, no NIC, host disk/home/bus or
+headset devices. A marked guest bootstrap is required before any service or
+shutdown command. Nineteen ownership/transport/guard tests passed locally,
+including refusal of the package bootstrap on a host with UID 0 mocked.
+The package probe is a manual runtime test; ordinary CI does not execute it.
+
+The repository runner passed all required gates on AMD64. Its full JSON and
+exact source/rootfs/kernel/initrd/bundle fingerprints are recorded separately
+from the experimental pass. It stopped the service in 0.184 seconds,
+retained the certificate and synced bytes after restart, removed its unit,
+reaped all owned processes/VM and preserved its data marker after uninstall.
+These results are local runtime evidence; package execution is not claimed
+from ordinary CI.
+
+## Remaining gates
+
+Repeat complete runtime installation and package/service/sync verification on
+native ARM64. Then connect this actual package to the Framey ownership
+candidate and test managed install/update/remove, existing-service migration
+and Decky/browser controls. These package results do not admit Syncthing to
+the managed installer or improve its compatibility rating yet.
+
+The locked real Frame smoke/worn visual/controller checks remain pending.
+No real Frame was contacted. Only owned test processes, containers and images
+were cleaned; public cached objects and pre-existing data were preserved.
+Release v0.4.56 is unchanged.

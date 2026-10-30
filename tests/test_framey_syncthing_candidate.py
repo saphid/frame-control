@@ -179,6 +179,14 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
                 runpy.run_path(str(ROOT/'tests/decky-runtime/syncthing_service_root.py'))
             command.assert_not_called()
 
+    def test_package_vm_bootstrap_refuses_host_before_any_commands(self):
+        with patch('os.getuid', return_value=0), \
+                patch('pathlib.Path.is_file', return_value=False), \
+                patch('subprocess.run') as command:
+            with self.assertRaisesRegex(RuntimeError, 'Only the private Flatpak VM'):
+                runpy.run_path(str(ROOT/'tests/decky-runtime/syncthing_flatpak_package_root.py'))
+            command.assert_not_called()
+
     async def test_http_rpc_caps_concurrent_requests(self):
         self.owner.http_inflight = 4
         with self.assertRaisesRegex(ValueError, 'Too many'):
