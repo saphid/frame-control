@@ -4963,12 +4963,13 @@
         "https://github.com/user-attachments/assets"
       ],
       "status": "partial",
-      "reason": "Local routes initialize after parameter-route support; no shell commands were run.",
+      "reason": "Local frontend routes initialize in fixtures. The published Decky 3.3.0 AMD64 backend import fails on missing termios; private dependency/lifecycle trials do not establish production shell or VR usability. ARM64 remains unverified (docs/evidence/framey-terminal-native-import-failure-2026-10-30.md).",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native AMD64 import failure"
       ],
       "browser": {
         "id": 65,

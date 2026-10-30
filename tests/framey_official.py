@@ -14,6 +14,8 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 19, 'name': 'Notebook', 'version': '0.1.5', 'api_version': 'legacy',
      'folder': 'SDH-Notebook', 'sha256': 'c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c'},
+    {'id': 65, 'name': 'Decky Terminal', 'version': '0.5.3', 'api_version': 1,
+     'folder': 'decky-terminal', 'sha256': '7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872'},
     {'id': 143, 'name': 'Desktop Apps', 'version': '0.1.0', 'api_version': 1,
      'folder': 'decky-desktop-apps', 'sha256': '33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577'},
     {'id': 117, 'name': 'DeckyParty File Manager', 'version': '1.0.0', 'api_version': 'legacy',
