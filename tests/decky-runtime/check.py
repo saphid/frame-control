@@ -68,6 +68,7 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-nonsteam-path-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
@@ -106,6 +107,10 @@ def main():
         assert receipt.get('compatShims', []) == expected_shims, receipt
     else:
         assert record['id'] == 96
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_nonsteam_path_regression:
+        assert record['id'] == 133
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
     # Exercise the production manifest's API convention, never import Plugin ourselves.
@@ -183,7 +188,8 @@ def main():
         env['FRAMEY_BATTERY_ROOT'] = str(supply.parent)
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
-              'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
+              'sha256': record['sha256'],
+              'shim': None if args.reproduce_nonsteam_path_regression else case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
         try:
             if case['probe'] == 'mpris':
@@ -618,17 +624,86 @@ def main():
                     '4545': {'store': None, 'name': 'Private Other'},
                 }
                 observed = current('get_all_store_mappings')
-                assert observed == expected, {'observed': observed, 'expected': expected,
-                                               'actualHome': str(home)}
+                assert observed == ({} if args.reproduce_nonsteam_path_regression else expected), {
+                    'observed': observed, 'expected': expected, 'actualHome': str(home)}
                 assert shortcuts.read_bytes() == payload
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    original_backend = original.read(record['folder']+'/main.py')
+                    installed_backend = (plugin/'main.py').read_bytes()
+                    assert (installed_backend == original_backend) is args.reproduce_nonsteam_path_regression
+                    unchanged = {}
+                    for item in original.infolist():
+                        if item.is_dir() or item.filename == record['folder']+'/main.py':
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        raw = (plugin/name).read_bytes()
+                        assert raw == original.read(item)
+                        unchanged[name] = hashlib.sha256(raw).hexdigest()
+                if not args.reproduce_nonsteam_path_regression:
+                    shortcuts.write_bytes(b'invalid private binary vdf')
+                    assert current('get_all_store_mappings') == {}
+                    assert shortcuts.read_bytes() == b'invalid private binary vdf'
+                    shortcuts.write_bytes(payload)
+                    assert current('get_all_store_mappings') == expected
+                stops = []
+                def stop_shortcut_loader():
+                    def identity(pid):
+                        try:
+                            fields = Path('/proc/'+str(pid)+'/stat').read_text().rsplit(')', 1)[1].split()
+                            return int(fields[1]), int(fields[19])
+                        except (FileNotFoundError, ProcessLookupError):
+                            return None
+                    snapshot = {int(p.name): identity(int(p.name)) for p in Path('/proc').iterdir() if p.name.isdigit()}
+                    owned = {backend.pid}
+                    while True:
+                        children = {pid for pid,value in snapshot.items() if value and value[0] in owned}
+                        if children <= owned:
+                            break
+                        owned |= children
+                    identities = {pid: snapshot[pid] for pid in owned}
+                    assert all(identities.values()) and len(identities) >= 2
+                    started = time.monotonic()
+                    backend.send_signal(signal.SIGTERM)
+                    assert backend.wait(timeout=8) == 0
+                    assert all(identity(pid) != value for pid,value in identities.items())
+                    stops.append(dict(returncode=backend.returncode, elapsedSeconds=time.monotonic()-started,
+                        signaledOnlyOwnedLoader=True, ownedProcessIdentitiesReaped=True,
+                        ownedProcessCount=len(identities)))
+                stop_shortcut_loader()
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Non-Steam Badges discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                assert current('get_all_store_mappings') == ({} if args.reproduce_nonsteam_path_regression else expected)
+                assert shortcuts.read_bytes() == payload
+                stop_shortcut_loader()
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
+                for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                               'Task was destroyed but it is pending', 'Bad file descriptor'):
+                    assert marker not in console, marker
                 report['privateShortcuts'] = dict(actualUserHome=True,
-                    signedAppIdNormalized=True, storeClassification=True,
-                    missingAppIdSkipped=True, privateShortcutsPreserved=True,
+                    originalBackendUnmodified=args.reproduce_nonsteam_path_regression,
+                    originalBackendSha256=hashlib.sha256(original_backend).hexdigest(),
+                    installedBackendSha256=hashlib.sha256(installed_backend).hexdigest(),
+                    signedAppIdNormalized=not args.reproduce_nonsteam_path_regression,
+                    storeClassification=not args.reproduce_nonsteam_path_regression,
+                    missingAppIdSkipped=not args.reproduce_nonsteam_path_regression,
+                    malformedVdfRefused=not args.reproduce_nonsteam_path_regression,
+                    mappingsPreservedAcrossLoaderRestart=not args.reproduce_nonsteam_path_regression,
+                    originalHardcodedHomeFailureReproduced=args.reproduce_nonsteam_path_regression,
+                    privateShortcutsPreserved=True, unchangedArchiveFiles=unchanged,
                     payloadSha256=hashlib.sha256(payload).hexdigest(),
+                    ownedLoaderStops=stops, loaderConsole=console,
+                    loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                    loaderConsoleErrorFree=False,
                     browserVerified=False, steamPageBadgesVerified=False,
+                    steamSearchVerified=False, activeSteamAccountSelectionVerified=False,
                     realFrameContacted=False, physicalControllerVerified=False)
-                report['result'] = ('published Decky API1 private shortcut mappings passed; '
-                                    'browser badges, Steam search, Frame and VR unverified')
+                report['result'] = (('original hardcoded-home empty mapping failure reproduced' if args.reproduce_nonsteam_path_regression
+                                    else 'published Decky API1 private shortcut mappings and restart persistence passed')+
+                                    '; browser badges, active Steam account, Steam search, Frame and VR unverified')
             elif case['probe'] == 'protondb-private-settings':
                 # The exact frontend reads/writes one settings object. Keep
                 # every write inside the disposable native container home.

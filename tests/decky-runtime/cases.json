@@ -1,7 +1,7 @@
 [
   {
     "id": 133,
-    "shim": null,
+    "shim": "nonsteam-badges-user-paths",
     "probe": "nonsteam-private-shortcuts"
   },
   {
