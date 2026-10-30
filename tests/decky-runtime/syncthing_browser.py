@@ -94,6 +94,43 @@ def screenshot(page):
             return response['result']['data']
 
 
+def startup_diagnostics(browser, profile, log):
+    """Bounded evidence from the owned fixture only; never change readiness."""
+    report = dict(processAlive=browser.poll() is None,
+                  returnCode=browser.returncode,
+                  devToolsPortFilePresent=(profile/'DevToolsActivePort').is_file())
+    try:
+        with log.open('rb') as stream:
+            stream.seek(0, 2)
+            report['stderrBytes'] = stream.tell()
+            stream.seek(max(0, stream.tell()-2048))
+            tail = stream.read(2048)
+        # The disposable browser has no user session, secrets or external
+        # network. Preserve its final diagnostic lines, with a strict bound.
+        report['stderrTail'] = ''.join(chr(value) if 32 <= value < 127 or value == 10
+                                       else '?' for value in tail)
+    except OSError:
+        report['stderrUnavailable'] = True
+    if report['devToolsPortFilePresent']:
+        try:
+            with frame_steam.urllib.request.urlopen(frame_steam.CDP, timeout=2) as reply:
+                encoded = reply.read(65537)
+            if len(encoded) > 65536:
+                report['targetReportTooLarge'] = True
+            else:
+                targets = json.loads(encoded)
+                assert isinstance(targets, list)
+                report['targetCount'] = len(targets)
+                report['targets'] = [dict(type=str(target.get('type', ''))[:32],
+                    title=str(target.get('title', ''))[:80],
+                    urlKind=('loopback-http' if str(target.get('url', '')).startswith('http://127.0.0.1:')
+                             else 'data' if str(target.get('url', '')).startswith('data:') else 'other'))
+                    for target in targets[:8] if isinstance(target, dict)]
+        except (OSError, ValueError, AssertionError):
+            report['targetsUnavailable'] = True
+    return report
+
+
 def exercise(legacy_rpc, runtime_identity, service):
     from syncthing_service import prop
     assert os.getuid() == 1100 and Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
@@ -257,6 +294,8 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
     except BaseException:
+        if browser:
+            report['startupDiagnostics'] = startup_diagnostics(browser, profile, Path.home()/'browser.log')
         # GetUnit is read-only and does not load a collected inactive unit.
         lookup = subprocess.run(
             ['busctl', '--user', 'call', 'org.freedesktop.systemd1',

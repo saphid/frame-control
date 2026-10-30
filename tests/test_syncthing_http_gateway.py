@@ -4,6 +4,7 @@ import io
 import json
 from pathlib import Path
 import tarfile
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
@@ -48,6 +49,54 @@ class GatewayIsolation(unittest.TestCase):
                 self.assertNotIn('..', Path(member.name).parts)
                 self.assertEqual(archive.extractfile(member).read(), (ROOT/member.name).read_bytes())
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
+
+
+class BrowserStartupEvidence(unittest.TestCase):
+    def test_diagnostics_bound_logs_and_targets_without_retaining_target_urls(self):
+        browser = load('owned_browser_diagnostics', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=None)
+        process.poll.return_value = None
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            log = profile/'browser.log'
+            log.write_bytes(b'x'*5000+b'\nprivate startup failure\x00\n')
+            targets = [dict(type='page',title='Owned Syncthing actual backend',
+                            url='http://127.0.0.1:12345/private?fixture-key=omitted')]*12
+            with patch.object(browser.frame_steam.urllib.request, 'urlopen',
+                              return_value=io.BytesIO(json.dumps(targets).encode())) as request:
+                result = browser.startup_diagnostics(process,profile,log)
+            self.assertTrue(result['processAlive'])
+            self.assertEqual(result['stderrBytes'],log.stat().st_size)
+            self.assertEqual(len(result['stderrTail']),2048)
+            self.assertTrue(result['stderrTail'].endswith('private startup failure?\n'))
+            self.assertEqual(result['targetCount'],12)
+            self.assertEqual(len(result['targets']),8)
+            self.assertEqual(result['targets'][0]['urlKind'],'loopback-http')
+            self.assertNotIn('fixture-key',json.dumps(result))
+            self.assertEqual(request.call_args.kwargs,{'timeout':2})
+
+    def test_unavailable_diagnostics_do_not_replace_the_original_failure(self):
+        browser = load('owned_browser_diagnostics_failure', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=7)
+        process.poll.return_value = 7
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            failure = AssertionError('original readiness failure')
+            try:
+                try:
+                    raise failure
+                except AssertionError:
+                    with patch.object(browser.frame_steam.urllib.request,'urlopen',side_effect=OSError):
+                        result = browser.startup_diagnostics(process,profile,profile/'absent.log')
+                    raise
+            except AssertionError as actual:
+                self.assertIs(actual,failure)
+            self.assertFalse(result['processAlive'])
+            self.assertEqual(result['returnCode'],7)
+            self.assertTrue(result['stderrUnavailable'])
+            self.assertTrue(result['targetsUnavailable'])
 
 
 class AuthenticatedRuntimeReadiness(unittest.TestCase):
