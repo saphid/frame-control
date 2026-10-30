@@ -1,0 +1,96 @@
+{
+  "runtimePass": false,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "failedDevelopmentTrials": [
+    {
+      "sourceRevision": "88271c97308e70cfabdaafcede0e75cc38aadc29",
+      "success": false,
+      "allSourceFingerprintsVerified": 122,
+      "httpGatewayReached": false,
+      "failure": "Browser waited for automatic discovery after visible manual port fallback",
+      "browserProgress": {
+        "success": false,
+        "syntheticInput": true,
+        "actualDeckyRpc": true,
+        "installerEnabled": false,
+        "realFrameContacted": false,
+        "hostBusExposed": false,
+        "browserSandboxDisabled": false,
+        "panelSha256": "d6ac52879310d080d1f005f3c42436e625b66bc1f3b622725e936cf22d5b4bc3",
+        "lastReadinessError": "no Owned Syncthing actual backend page; Steam may still be starting",
+        "startupErrors": [],
+        "failureUnitLookup": {
+          "returncode": 0,
+          "stdout": "o \"/org/freedesktop/systemd1/unit/frame_2dcontrol_2dsyncthing_2eservice\"",
+          "stderr": ""
+        },
+        "failureSystemdProperties": {
+          "MainPID": "1035",
+          "ActiveState": "active",
+          "SubState": "running",
+          "Result": "success",
+          "ExecMainCode": "0",
+          "ExecMainStatus": "0",
+          "LoadState": "loaded"
+        },
+        "lastStage": {
+          "type": "test:stage",
+          "stage": "failed",
+          "text": "Syncthing\nBack to plugin\nWelcome\nSetup\nStarting\nPort\nAPI Key\nBasic Auth\nAutostart\nFinish\nPort\n\nThe port of Syncthing could not be detected. Please enter the web UI port that Syncthing listens under.\n\nSyncthing Port\nContinue",
+          "errors": []
+        },
+        "stages": [],
+        "calls": [
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "get_settings_json"
+          },
+          {
+            "method": "set_setting",
+            "setting": "mode"
+          },
+          {
+            "method": "set_setting",
+            "setting": "flatpak_name"
+          },
+          {
+            "method": "set_setting",
+            "setting": "flatpak_binary"
+          },
+          {
+            "method": "set_setting",
+            "setting": "_wizard_force_flatpak_config_for"
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/start",
+            "status": 200
+          },
+          {
+            "method": "framey_http_fetch",
+            "httpMethod": "POST",
+            "path": "/__decky-watchdog/check/scan_port",
+            "status": 200
+          },
+          {
+            "method": "get_settings_json"
+          }
+        ],
+        "actualPackagedProcessObservations": [],
+        "ownedBrowserReaped": true,
+        "bridgeStopped": true
+      },
+      "resultSha256": "71fee2773533263ee1ae039f9e90bea8f987b554eb12abdc65e71171833dbea3",
+      "consoleSha256": "a69cc306e072e61acbd5d37e58058acf70638a47c818b49e2ea297ba4a8d3023",
+      "ownedQemuReaped": true,
+      "failureScreenshotTruncated": true
+    }
+  ]
+}

@@ -44,8 +44,21 @@ commands/environment changes, and the source bundle includes unchanged
 production dispatch, local SSH and catalogue imports. The existing 22 package
 input/evidence tests also pass. Full server regression at `f870ceb` passed 1,845 tests in 227.444 seconds,
 with 16 skips and no failures.
-The first combined HTTP gateway VM trial is running at `88271c9`; the following
-commit adds only the two tests, with no packed runtime source changes.
+The first combined trial at `88271c9` failed before reaching the HTTP gateway:
+the real browser reached the manual-port fallback after one scan returned no
+port. The fixture waited only for automatic discovery and timed out. Its 122
+source fingerprints match that exact revision; QEMU, Chromium and the private
+bridge were reaped. The browser progress report records an active service and
+the rendered Port input. The failure screenshot was truncated by the guest
+journal and is not credited as visual evidence.
+
+The combined browser probe now enters the known private fixture port through
+the rendered input when that supported fallback appears. It records whether
+manual entry was needed, and failed captures use bounded chunks. The new trial
+also incorporates the pending bounded instance-registry cleanup repair. These
+are test-fixture changes; they do not turn a backend scan retry into a UI retry
+or claim automatic discovery. The second trial is running; no new pass is
+credited.
 
 No runtime pass is credited yet. Even a passing probe will leave actual Steam
 CEF, the production browser parent over HTTP, external SSH transport, managed
