@@ -31,6 +31,9 @@ PW = pwd.getpwnam(USER)
 HOME = fs.HOME
 KEYS = '/keys'                                  # shared with the host container
 HARNESS_KEY = KEYS + '/id_ed25519_frame'
+# Keys trusted beside the harness key: the Frame simulator (tests/fakeframe/sim)
+# mounts your own public key here so `ssh frame-sim` works. Absent in the e2e tests.
+EXTRA_KEYS = '/etc/fakeframe/authorized_keys.extra'
 AUTH_KEYS = HOME + '/.ssh/authorized_keys'
 BALLAST = fs.DEVKIT_GAMES + '/.fakeframe-ballast'
 # Written here; compose mounts the same volumes over /sys/class/power_supply and /sys/class/thermal.
@@ -49,9 +52,10 @@ USAGE = """fakeframe-ctl COMMAND
   runtime NAME installed|missing   NAME: proton-experimental, proton-stable,
                               SteamLinuxRuntime_4-arm64, SteamLinuxRuntime_4, lepton
   battery KEY=VALUE...        e.g. capacity=15 status=Discharging current_now=-900000
-  keys harness|none           authorized_keys: only the harness key, or empty
+  keys harness|none           authorized_keys: only the harness key (and the simulator's
+                              extra keys), or empty
   authorized-keys             what ~/.ssh/authorized_keys holds now
-  reset                       default state, nothing installed, harness key only
+  reset                       default state, nothing installed, harness keys only
   state | calls [TOOL] | ping"""
 
 _lock = threading.RLock()
@@ -282,6 +286,9 @@ def set_keys(which):
     if which == 'harness':
         with open(HARNESS_KEY + '.pub') as f:
             text = f.read()
+        if os.path.isfile(EXTRA_KEYS):
+            with open(EXTRA_KEYS) as f:
+                text = text.rstrip('\n') + '\n' + f.read()
     write(AUTH_KEYS, text)
     os.chmod(AUTH_KEYS, 0o600)
 

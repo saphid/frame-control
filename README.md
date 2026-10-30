@@ -361,8 +361,12 @@ Frame's software fits together, all checked against a real headset and labelled
 ```sh
 python3 -m unittest discover -s tests   # server tests; no headset needed
 scripts/e2e.sh                          # end-to-end against a fake Frame (Linux with Docker)
+scripts/frame-sim.sh up                 # a fake Frame on 127.0.0.1 to try changes on (Docker)
 cd app && npm install && npm start      # run the app from the checkout
 ```
+
+The [Frame simulator](docs/testing.md#frame-simulator) shows up in the app's
+Devices as `frame-sim`, so a change can be tried without the headset.
 
 The server is Python stdlib only; the app is Electron. GitHub Actions runs the
 tests on macOS, Windows and Linux, and a `v*` tag builds all three installers

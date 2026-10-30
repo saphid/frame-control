@@ -5,6 +5,7 @@ apk-catalog/data/index-v2*.json*
 compat-db/.env.lakebed.server
 compat-db/.lakebed/
 tests/smoke/results/
+tests/smoke/results-sim/
 mac/bin/
 
 # Shared desktop streaming controller build products

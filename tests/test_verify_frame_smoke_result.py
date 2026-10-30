@@ -15,7 +15,7 @@ SHA = 'a' * 40
 
 def result():
     steps = [{'step': name, 'ok': True} for name in sorted(gate.REQUIRED_STEPS)]
-    return {'source': {'commit': SHA, 'clean': True}, 'lock_released': True, 'steps': steps,
+    return {'source': {'commit': SHA, 'clean': True}, 'simulated': False, 'lock_released': True, 'steps': steps,
             'passed': len(steps), 'skipped': 0, 'failed': 0,
             'preflight': {'activity': 3, 'proximity': [2.3125], 'battery': [100]}}
 
@@ -36,6 +36,14 @@ class VerifyFrameSmokeResult(unittest.TestCase):
                     data['steps'].pop()
                     data['passed'] -= 1
                 with self.assertRaises(ValueError):
+                    gate.verify(data, SHA)
+
+    def test_rejects_simulator_or_unmarked_result(self):
+        for simulated in (True, None):
+            with self.subTest(simulated=simulated):
+                data = result()
+                data['simulated'] = simulated
+                with self.assertRaisesRegex(ValueError, 'fake Frame'):
                     gate.verify(data, SHA)
 
     def test_rejects_skipped_launch_even_when_counts_claim_success(self):
