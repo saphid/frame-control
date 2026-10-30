@@ -91,7 +91,7 @@ assert.equal(bounded.calls.length,1);
 for(let i=0;i<17;i++){bounded.replyNext();await flush();}
 await Promise.all(pending);
 
-// Queue time consumes the same 30-second deadline; expired work never sends.
+// Queue waiting and active RPCs each remain bounded; expired waiting work never sends.
 let now=0,nextTimer=0;const timers=new Map();
 const clock={Date:{now:()=>now},setTimeout:(fn,delay)=>{timers.set(++nextTimer,{fn,at:now+delay});return nextTimer;},
   clearTimeout:id=>timers.delete(id)};
@@ -104,10 +104,25 @@ await flush();await slowCheck;await expiredCheck;
 assert.equal(deadline.calls.length,1);assert.equal(timers.size,0);
 assert.equal(serial.nativeCalls()+cancel.nativeCalls()+bounded.nativeCalls()+deadline.nativeCalls(),0);
 
+// The real production-parent replay completes a six-read burst in over
+// 30 seconds even though each RPC succeeds quickly. Queue waiting must not
+// leave the later dashboard reads only the remainder of another call's budget.
+now=0;
+const dashboard=fixture(true,{defer:true,clock});
+const dashboardReads=Array.from({length:6},(_,i)=>dashboard.window.fetch(base+'rest/dashboard/'+i));
+const dashboardResult=Promise.all(dashboardReads);dashboardResult.catch(()=>{});
+for(let i=0;i<6;i++){
+  now+=5500;
+  for(const [id,timer] of [...timers])if(timer.at<=now){timers.delete(id);timer.fn();}
+  await flush();dashboard.replyNext();await flush();
+}
+await dashboardResult;
+assert.equal(now,33000);assert.equal(dashboard.calls.length,6);assert.equal(timers.size,0);
+
 now=0;
 const remaining=fixture(true,{defer:true,clock});
 const first=remaining.window.fetch(base),second=remaining.window.fetch(base+'second');
 now=10000;remaining.replyNext();await first;await flush();
 assert.equal(remaining.calls.length,2);
-assert.deepEqual([...timers.values()].map(timer=>timer.at),[30000]);
+assert.deepEqual([...timers.values()].map(timer=>timer.at),[40000]);
 remaining.replyNext();await second;await flush();assert.equal(timers.size,0);

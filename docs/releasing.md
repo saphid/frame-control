@@ -62,10 +62,26 @@ count. So a build reaches people only when you publish it, after testing it.
    release verification, independent package checks, and all four tagged
    installer builds have passed. Hold the release if any gate is failed,
    cancelled, skipped, still running, or unverified. The publisher also reads
-   the exact commit's GitHub CI, native Decky runtime gate, and tagged build
+   the exact commit's GitHub CI, native Decky runtime gate, signed Syncthing
+   package jobs (AMD64, ARM64, browser HTTP and production-parent HTTP), and tagged build
    job records and refuses to
    publish unless every required job succeeded; it cannot prove physical
    headset or installer behavior on its own.
+
+   The signed-package workflow uses path filters, so a version-only commit
+   may need an explicit run while `main` still points to the release commit:
+
+   ```sh
+   gh workflow run syncthing-flatpak-package.yml --ref main
+   ```
+
+   The signed-package gate requires successful jobs at the exact release commit on
+   `main`, from a push or manual dispatch. PR results, another branch, or an
+   older commit do not satisfy it. Every matching main checks, native Decky,
+   signed-package and tagged installer run and attempt must pass;
+   a later success does not conceal a failure, cancellation or skip. The
+   signed-package evidence verifies the isolated candidate, not a managed installation or
+   wearer-visible Syncthing controls.
 
    Supply the saved smoke result to the publisher. Both its dry run and publish
    command reject a result from another or dirty commit, incomplete title or
@@ -84,7 +100,8 @@ count. So a build reaches people only when you publish it, after testing it.
    ```
 
    The script checks that the tag is on GitHub, that exact-commit main CI
-   (including e2e), native amd64/ARM64 Decky runtime checks, and the tagged
+   (including e2e), native amd64/ARM64 Decky runtime checks, signed Syncthing
+   AMD64/ARM64, browser HTTP and production-parent HTTP package checks, and the tagged
    release workflow are green with no failed, cancelled, skipped or running
    jobs in any exact-tag push run or attempt, and that all ten installers are
    attached, each with the SHA-256 digest GitHub records. It checks the saved
