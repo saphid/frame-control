@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -943,7 +943,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -951,7 +951,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -4888,7 +4888,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "flatpak; gamescope",
-      "nativePort": "Earlier uninstalled ownership/private HTTP candidate passed released Decky 3.3.0 AMD64/ARM64 CI. Pinned Syncthing v2.1.7 AMD64/ARM64 private two-way sync, restart and actual REST reads through Decky RPC passed #465 native CI; service setup stays disabled in runtime tests. A separate unit name and exact-byte ownership receipt guard candidate service files before DBus. The installer still refuses this archive. Actual DBus/systemd service behavior, unit migration/resolution, managed lifecycle, browser and Frame/UI gates remain pending (docs/evidence/framey-syncthing-service-files-2026-10-30.md).",
+      "nativePort": "Uninstalled ownership/private HTTP and real Syncthing v2.1.7 two-way sync passed released Decky 3.3.0 native AMD64/ARM64 CI (#465/#466). Separate unit/receipt guards preserve unowned service files. A networkless AMD64 VM now exercises actual systemd/DBus service start/stop, enable links, two-way sync and explicit external-service transition; ARM64 service-VM CI remains pending. The fixture substitutes a Flatpak launcher, so actual packaging, managed install/update/remove, overrides/migration, browser and Frame/UI gates remain pending. The installer still refuses this archive (docs/evidence/framey-syncthing-service-vm-2026-10-30.md).",
       "uiSurfaces": [
         "local/Steam routes"
       ],
@@ -9721,7 +9721,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
