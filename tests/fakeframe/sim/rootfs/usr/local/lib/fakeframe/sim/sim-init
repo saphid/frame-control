@@ -1,0 +1,56 @@
+#!/usr/bin/env python3
+"""The Frame simulator's entrypoint: set up what the e2e fake doesn't have, then
+run the fake Frame's own supervisor (init.py) in its place.
+
+- SSH host keys kept in a volume, so rebuilding the image doesn't make ssh (and
+  Frame Control's host-key pin) see a different "headset".
+- Default simulator state, /dev/video99 and the proximity sensor (simstate.apply).
+- A child that rewrites the headset view's text every second (clock, battery,
+  running title), since ffmpeg's drawtext re-reads it each frame.
+"""
+import glob
+import os
+import shutil
+import sys
+import time
+
+sys.path.insert(0, '/usr/local/lib/fakeframe/sim')
+import scene  # noqa: E402
+import simstate as ss  # noqa: E402
+
+HOST_KEYS = '/var/lib/fakeframe-sim/hostkeys'
+
+
+def host_keys():
+    os.makedirs(HOST_KEYS, mode=0o700, exist_ok=True)
+    kept = glob.glob(HOST_KEYS + '/ssh_host_*')
+    if kept:
+        for path in kept:
+            shutil.copy2(path, '/etc/ssh/')
+    else:
+        for path in glob.glob('/etc/ssh/ssh_host_*'):
+            shutil.copy2(path, HOST_KEYS)
+
+
+def main():
+    host_keys()
+    if os.path.exists(ss.STATE):
+        os.unlink(ss.STATE)             # a fresh start, as the fake Frame's own state is
+    with ss.update():
+        pass
+    os.chmod(ss.DIR, 0o777)            # root and steamos both replace its files
+    ss.apply()
+    scene.text()
+    if os.fork() == 0:
+        os.setsid()
+        while True:
+            time.sleep(1)
+            try:
+                scene.text()
+            except Exception as e:  # keep drawing; the fake's state may be mid-reset
+                print(f'sim-init: screen text: {type(e).__name__}: {e}', flush=True)
+    os.execv('/usr/bin/python3', ['python3', '/usr/local/lib/fakeframe/init.py'])
+
+
+if __name__ == '__main__':
+    main()

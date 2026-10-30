@@ -53,6 +53,10 @@ GAME_LOGS = '/var/log/fakeframe'
 # reaper is bash with that command line: it waits for the game and exits with its status.
 REAPER = fs.STEAM_ROOT + '/ubuntu12_32/reaper'
 REAPER_SH = 'while [ "$1" != "--" ]; do shift; done; shift; "$@" & wait $!'
+# The Frame simulator (tests/fakeframe/sim) puts a launcher here that runs arm64
+# programs through qemu-user on an x86-64 computer, as the Frame runs x86-64 ones
+# through FEX. The e2e fake has none: programs run natively or not at all.
+LAUNCHER = '/usr/local/lib/fakeframe/launcher'
 
 # The 403 text /register returned while Steam wasn't on "Pair new host"
 # (docs/ssh.md, verified 2026-09-26). approve-ssh-key passes the Steam
@@ -272,7 +276,8 @@ def add_launch(record):
         os.makedirs(GAME_LOGS, exist_ok=True)
         with open(f'{GAME_LOGS}/{label}.log', 'ab') as log:
             try:
-                argv = [REAPER, '-c', REAPER_SH, 'reaper', 'SteamLaunch', f"AppId={record['appid']}", '--', path]
+                argv = [REAPER, '-c', REAPER_SH, 'reaper', 'SteamLaunch', f"AppId={record['appid']}", '--',
+                        *([LAUNCHER] if os.path.exists(LAUNCHER) else []), path]
                 proc = subprocess.Popen(argv, executable='/bin/bash', cwd=cwd if os.path.isdir(cwd) else HOME,
                                         env={**os.environ, **env}, stdin=subprocess.DEVNULL, stdout=log, stderr=log,
                                         start_new_session=True)
