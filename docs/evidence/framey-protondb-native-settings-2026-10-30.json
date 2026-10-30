@@ -1,0 +1,163 @@
+{
+  "sourceRevision": "f24e1a4b2dc87b5a2062b6101a9a3072749555c7",
+  "nativeRuntimeLocal": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "cases": [
+      {
+        "id": 14,
+        "name": "ProtonDB Badges",
+        "version": "1.3.4",
+        "sha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_setting",
+            "result": {
+              "size": "regular",
+              "position": "tl",
+              "labelTypeOnHover": "off",
+              "disableSubmit": false,
+              "enableLibraryBadge": true,
+              "enableStoreBadge": true,
+              "storeBadgePosition": "bc",
+              "showAnalysisButton": true,
+              "roundedCorners": false,
+              "showLibraryIcons": true,
+              "libraryIconPosition": "bl"
+            }
+          },
+          {
+            "method": "get_setting",
+            "result": null
+          },
+          {
+            "method": "get_system_info",
+            "result": {
+              "plugin_version": "1.3.4",
+              "os_name": "Debian GNU/Linux",
+              "os_version": "13",
+              "decky_version": "v3.3.0"
+            }
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "size": "compact",
+              "position": "br",
+              "labelTypeOnHover": "off",
+              "disableSubmit": false,
+              "enableLibraryBadge": false,
+              "enableStoreBadge": true,
+              "storeBadgePosition": "bc",
+              "showAnalysisButton": true,
+              "roundedCorners": false,
+              "showLibraryIcons": true,
+              "libraryIconPosition": "bl"
+            }
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "size": "compact",
+              "position": "br",
+              "labelTypeOnHover": "off",
+              "disableSubmit": false,
+              "enableLibraryBadge": false,
+              "enableStoreBadge": false,
+              "storeBadgePosition": "bc",
+              "showAnalysisButton": true,
+              "roundedCorners": true,
+              "showLibraryIcons": true,
+              "libraryIconPosition": "bl"
+            }
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "get_system_info",
+            "result": {
+              "plugin_version": "1.3.4",
+              "os_name": "Debian GNU/Linux",
+              "os_version": "13",
+              "decky_version": "v3.3.0"
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "ProtonDB Badges",
+            "version": "1.3.4",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateSettings": {
+          "defaultReadPreservesEmptyConfig": true,
+          "frontendSettingsObject": true,
+          "settingsPersistedToDisk": true,
+          "settingsPersistedAcrossLoaderRestart": true,
+          "falseValuesPreserved": true,
+          "systemInfoMatchesPrivateContainer": true,
+          "noProductionChanges": true,
+          "settingsSha256": "fd655e2d2aff2d5442e7c10e37051b023eb93fe4cfea49562072beb702e04135",
+          "badgeRenderingVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API2 discovery, private frontend settings write/read and loader-restart persistence, false values and container OS metadata passed; badge rendering, browser, Frame and VR unverified"
+      }
+    ]
+  },
+  "sourceSha256": {
+    "tests/decky-runtime/check.py": "c3c3bfb0bc054a450c539ece2b6ab61caf297191a5b2269c00a4a4a6c3bacfb6",
+    "tests/decky-runtime/cases.json": "979aca09065ddee2240560c66d142b276768181b84059ac5c38030bba7c313d5",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+    "tests/framey_official.py": "bc33a07983146a7240d773de21c69b3132eda95af6268ea0adf204c3c3b55961",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    "tests/fixtures/framey-official/14.zip": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358"
+  },
+  "publishedArchiveMemberSha256": {
+    "protondb-decky/main.py": "07ae28331b7d1ab55a6303636026dadd7e5523fde84d95c62899fed6e1c133ba",
+    "protondb-decky/settings.py": "a9afe79c1e18a9dc1821124bdbcda4361f762a7361dcf5a73f656bc54e639989",
+    "protondb-decky/dist/index.js": "593e75e6089424f718e7197f94251960b4a26a23b8e72fae9b5780fbd396b8f1"
+  },
+  "runLogSha256": "b50451f28ca35d74627852ea36e0e5661a6aa004cfcc0d0f67e58a07bc4991db",
+  "fixtureCorrection": {
+    "failedRevision": "7bcba1e",
+    "failedLogSha256": "5e906cebf8fc91a88c3446bfaef05a8f688e4f7e78fcbd41f6f0469e1ca0ef8d",
+    "reason": "Incorrect fixture assumption that a missing settings config stays absent; pinned Decky SettingsManager creates an empty file on initialization and shadows the bundled settings module",
+    "upstreamCommit": "67196adfa9b299f20dfb0cc932e88a169417b7d5",
+    "upstreamSettingsSha256": "f6bd5ba2e35b75cc4b1ae0df395691da1bffd18b131e0a145addbe4c6098c7f5",
+    "productionChanged": false
+  },
+  "validation": {
+    "nativeCoverageTests": 3,
+    "officialFixtureTests": 5,
+    "fullServerRegression": "Fresh PR CI required"
+  },
+  "limits": {
+    "arm64RuntimeVerified": false,
+    "browserVerified": false,
+    "badgeRenderingVerified": false,
+    "realSteamCef": false,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false,
+    "productionChanged": false,
+    "compatibilityStatusChanged": false
+  }
+}
