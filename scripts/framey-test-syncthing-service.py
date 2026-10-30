@@ -43,6 +43,10 @@ REQUIRED_SERVICE_RESULTS = (
     'actualExternalUserServiceControl',
     'retainedSyncAcrossServiceTransition',
     'ownedCleanup',
+    'dropInOverridePreserved',
+    'shadowFragmentPreserved',
+    'pendingReloadRefused',
+    'loadedAliasPreserved',
 )
 
 

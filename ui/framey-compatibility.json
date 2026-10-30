@@ -4888,7 +4888,7 @@
       },
       "backend": "Python + native payload",
       "hardware": "flatpak; gamescope",
-      "nativePort": "Uninstalled ownership/private HTTP and real Syncthing v2.1.7 two-way sync passed released Decky 3.3.0 native AMD64/ARM64 CI (#465/#466). Separate unit/receipt guards preserve unowned service files. A networkless AMD64 VM now exercises actual systemd/DBus service start/stop, enable links, two-way sync and explicit external-service transition; ARM64 service-VM CI remains pending. The fixture substitutes a Flatpak launcher, so actual packaging, managed install/update/remove, overrides/migration, browser and Frame/UI gates remain pending. The installer still refuses this archive (docs/evidence/framey-syncthing-service-vm-2026-10-30.md).",
+      "nativePort": "Uninstalled candidate passed released Decky 3.3.0 ownership/private HTTP, real Syncthing v2.1.7 two-way sync and actual systemd/DBus service VMs on native AMD64/ARM64 (#467). A loaded-identity follow-up refuses drop-ins, shadow fragments, aliases and pending edits, preserving real replacement PIDs in the AMD64 fixture; its native ARM64 CI remains pending. The Flatpak launcher is substituted, so actual packaging, managed install/update/remove, migration, browser and Frame/UI gates remain pending. The installer still refuses this archive (docs/evidence/framey-syncthing-loaded-unit-2026-10-30.md).",
       "uiSurfaces": [
         "local/Steam routes"
       ],

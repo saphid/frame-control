@@ -310,6 +310,93 @@ def main():
             and int(prop(legacy.name, 'MainPID')) == legacy_pid
         )
         report['ownedUnitLoadedByActualSystemd'] = True
+
+        def refused_control(label, pid):
+            original_unit, original_receipt = unit.read_bytes(), receipt.read_bytes()
+            refused = {}
+            for method, route in [
+                ('GET', 'state'),
+                ('POST', 'start'),
+                ('POST', 'stop'),
+                ('POST', 'check/start'),
+                ('POST', 'reload-config'),
+            ]:
+                reply = http(method, route)
+                assert reply['status'] == 500, (label, route, reply)
+                refused[method + ' ' + route] = reply['status']
+                assert int(prop(service, 'MainPID')) == pid, (label, route)
+                assert Path(f'/proc/{pid}/exe').resolve() == Path('/usr/bin/sleep')
+                assert (
+                    unit.read_bytes() == original_unit
+                    and receipt.read_bytes() == original_receipt
+                )
+                assert legacy.read_bytes() == original_legacy
+                assert int(prop(legacy.name, 'MainPID')) == legacy_pid
+            # A transition may not stop the replaced managed process or disable
+            # the explicitly selected private legacy service before refusal.
+            setting('mode', 'systemd')
+            setting('service_name', legacy.name)
+            reply = http('POST', 'reload-config')
+            assert reply['status'] == 500, (label, 'external transition', reply)
+            refused['POST external transition'] = reply['status']
+            assert int(prop(service, 'MainPID')) == pid
+            assert int(prop(legacy.name, 'MainPID')) == legacy_pid
+            assert ctl('is-enabled', legacy.name) == 'enabled'
+            assert (
+                unit.read_bytes() == original_unit
+                and receipt.read_bytes() == original_receipt
+            )
+            setting('mode', 'flatpak')
+            setting('service_name', '')
+            report.setdefault('rejectedManagedDefinitions', {})[label] = {
+                'mainPidBefore': pid,
+                'mainPidAfter': int(prop(service, 'MainPID')),
+                'fragmentPath': prop(service, 'FragmentPath'),
+                'id': prop(service, 'Id'),
+                'names': prop(service, 'Names'),
+                'dropInPaths': prop(service, 'DropInPaths'),
+                'refused': refused,
+                'unitAndReceiptPreserved': True,
+                'legacyPidPreserved': legacy_pid,
+                'legacyStillEnabled': True,
+            }
+
+        foreign_bytes = b'[Service]\nExecStart=\nExecStart=/usr/bin/sleep infinity\n'
+        dropin = directory / (service + '.d')
+        dropin.mkdir()
+        override = dropin / 'private-foreign.conf'
+        override.write_bytes(foreign_bytes)
+        ctl('daemon-reload')
+        ctl('start', service)
+        foreign_pid = int(prop(service, 'MainPID'))
+        assert foreign_pid > 0 and str(override) in prop(service, 'DropInPaths')
+        assert prop(service, 'FragmentPath') == str(unit)
+        refused_control('drop-in', foreign_pid)
+        assert override.read_bytes() == foreign_bytes
+        report['dropInOverridePreserved'] = True
+        ctl('stop', service)  # Only this fixture created the private sleep process.
+        override.unlink()
+        dropin.rmdir()
+        ctl('daemon-reload')
+        assert http('POST', 'reload-config')['status'] == 204
+
+        control_directory = home / '.config/systemd/user.control'
+        control_directory.mkdir(mode=0o700)
+        shadow = control_directory / service
+        shadow.write_bytes(b'[Service]\nExecStart=/usr/bin/sleep infinity\n')
+        ctl('daemon-reload')
+        assert prop(service, 'FragmentPath') == str(shadow)
+        ctl('start', service)
+        foreign_pid = int(prop(service, 'MainPID'))
+        assert foreign_pid > 0
+        refused_control('shadow fragment', foreign_pid)
+        assert shadow.read_bytes() == b'[Service]\nExecStart=/usr/bin/sleep infinity\n'
+        report['shadowFragmentPreserved'] = True
+        ctl('stop', service)
+        shadow.unlink()
+        ctl('daemon-reload')
+        assert http('POST', 'reload-config')['status'] == 204
+
         reply = http('POST', 'start')
         assert reply['status'] == 204, reply
 
@@ -349,6 +436,20 @@ def main():
         report['managedServiceTwoWaySync'] = True
         report['forwardSha256'] = hashlib.sha256(incoming.read_bytes()).hexdigest()
         report['reverseSha256'] = hashlib.sha256(returned.read_bytes()).hexdigest()
+        # A pending definition change must not be mistaken for the definition
+        # currently running. Do not reload it or signal the live sync process.
+        dropin.mkdir()
+        override.write_bytes(foreign_bytes)
+        assert prop(service, 'NeedDaemonReload') == 'yes'
+        reply = http('POST', 'stop')
+        assert reply['status'] == 500, reply
+        assert int(prop(service, 'MainPID')) == first
+        assert Path(f'/proc/{first}/exe').resolve() == Path('/input/syncthing')
+        assert override.read_bytes() == foreign_bytes
+        override.unlink()
+        dropin.rmdir()
+        ctl('daemon-reload')
+        report['pendingReloadRefused'] = True
         began = time.monotonic()
         reply = http('POST', 'stop')
         elapsed = round(time.monotonic() - began, 3)
@@ -446,6 +547,19 @@ def main():
         )
         report['actualExternalUserServiceControl'] = True
         report['retainedSyncAcrossServiceTransition'] = True
+        # Recreate the owned unit, then prove a higher-priority alias cannot
+        # redirect candidate operations to the already-running legacy fixture.
+        setting('mode', 'flatpak')
+        setting('service_name', '')
+        assert http('POST', 'reload-config')['status'] == 204
+        shadow.symlink_to(legacy)
+        ctl('daemon-reload')
+        assert prop(service, 'Id') == legacy.name
+        assert int(prop(service, 'MainPID')) == legacy_pid
+        refused_control('loaded alias', legacy_pid)
+        assert shadow.is_symlink() and shadow.resolve() == legacy
+        assert legacy.read_bytes() == original_legacy
+        report['loadedAliasPreserved'] = True
     finally:
         ctl('stop', service, check=False)
         ctl('stop', 'framey-owned-external.service', check=False)

@@ -45,6 +45,16 @@ pub struct OwnedUnit {
     _lock: File,
 }
 
+/// Properties read afresh from the actual systemd manager, not from disk.
+pub struct LoadedUnit {
+    pub id: String,
+    pub fragment: String,
+    pub names: Vec<String>,
+    pub drop_ins: Vec<String>,
+    pub load_state: String,
+    pub needs_reload: bool,
+}
+
 impl OwnedUnit {
     pub fn open(home: &Path) -> io::Result<Self> {
         let root = home.canonicalize()?;
@@ -92,6 +102,19 @@ impl OwnedUnit {
 
     pub fn require(&self) -> io::Result<()> {
         if self.exists()? { Ok(()) } else { Err(refused("Managed Syncthing unit has not been created")) }
+    }
+
+    /// A receipt does not prove what the service manager would control. Keep
+    /// overrides and aliases intact, and refuse rather than adopting them.
+    pub fn verify_loaded(&self, loaded: &LoadedUnit) -> io::Result<()> {
+        self.require()?;
+        let name = format!("{UNIT}.service");
+        if loaded.load_state != "loaded" || loaded.id != name ||
+            loaded.names != [name] || Path::new(&loaded.fragment) != self.unit ||
+            !loaded.drop_ins.is_empty() || loaded.needs_reload {
+            return Err(refused("Loaded Syncthing unit differs from owned fragment or has overrides; preserved"));
+        }
+        Ok(())
     }
 
     pub fn write(&self, contents: &[u8]) -> io::Result<()> {
@@ -170,6 +193,50 @@ mod tests {
     }
     impl Drop for Home { fn drop(&mut self) { fs::remove_dir_all(&self.0).unwrap(); } }
     fn bytes() -> Vec<u8> { render("/usr/bin/flatpak", "me.kozec.syncthingtk", "syncthing").unwrap() }
+
+    fn loaded(home: &Home) -> LoadedUnit {
+        LoadedUnit { id:format!("{UNIT}.service"), fragment:home.unit().to_str().unwrap().to_owned(),
+            names:vec![format!("{UNIT}.service")], drop_ins:vec![], load_state:"loaded".to_owned(),
+            needs_reload:false }
+    }
+
+    #[test]
+    fn loaded_unit_requires_receipt_and_exact_manager_identity() {
+        let home = Home::new();
+        let owned = OwnedUnit::open(&home.0).unwrap();
+        assert!(owned.verify_loaded(&loaded(&home)).is_err());
+        owned.write(&bytes()).unwrap();
+        owned.verify_loaded(&loaded(&home)).unwrap();
+        let mut foreign = loaded(&home);
+        foreign.fragment = "/run/user/1100/systemd/user/frame-control-syncthing.service".to_owned();
+        assert!(owned.verify_loaded(&foreign).is_err());
+        foreign = loaded(&home);
+        foreign.id = "foreign.service".to_owned();
+        assert!(owned.verify_loaded(&foreign).is_err());
+        assert_eq!(fs::read(home.unit()).unwrap(), bytes());
+    }
+
+    #[test]
+    fn dropins_aliases_stale_and_unloaded_units_are_refused() {
+        let home = Home::new();
+        let owned = OwnedUnit::open(&home.0).unwrap();
+        owned.write(&bytes()).unwrap();
+        let mut changed = loaded(&home);
+        changed.drop_ins.push("/private/override.conf".to_owned());
+        assert!(owned.verify_loaded(&changed).is_err());
+        changed = loaded(&home);
+        changed.names.push("foreign-alias.service".to_owned());
+        assert!(owned.verify_loaded(&changed).is_err());
+        changed = loaded(&home);
+        changed.needs_reload = true;
+        assert!(owned.verify_loaded(&changed).is_err());
+        for state in ["not-found", "error", "masked", "merged"] {
+            changed = loaded(&home);
+            changed.load_state = state.to_owned();
+            assert!(owned.verify_loaded(&changed).is_err());
+        }
+        assert_eq!(fs::read(home.unit()).unwrap(), bytes());
+    }
 
     #[test]
     fn own_create_update_remove_preserves_legacy_unit_and_lock() {
