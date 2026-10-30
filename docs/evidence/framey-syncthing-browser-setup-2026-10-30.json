@@ -1481,5 +1481,277 @@
         "passed": false
       }
     }
+  },
+  "manualPortFallbackFollowup": {
+    "sourceRevision": "df46f0f634313fc3ad68d1c4f1a7ef389982e02a",
+    "sourceFingerprintsIndependentlyVerified": true,
+    "resultSha256": "e21a36047049577bf13b0607993e07263870ed51ac4c0927184c8a23eeb9bf0e",
+    "screenshotSha256": "090a662dffce1a5af858c3ec787751fbed4f411cb225d0f44fbd20d83c91b300",
+    "scope": "One synthetic null port scan; actual published fallback DOM, synthetic entry of 8390, setup completion and return to a deliberately synthetic state-500 UI. No real backend. Screenshot shows the final configured error, not the manual field.",
+    "result": {
+      "type": "test:done",
+      "welcome": true,
+      "installationMethod": false,
+      "entryInstallationMethod": true,
+      "wizardCompleted": true,
+      "finishNavigation": true,
+      "manualPortFallbackVisible": true,
+      "error": null,
+      "browserErrors": [],
+      "configuredErrorVisible": false,
+      "text": "Syncthing\n Error\nError\nError: State request failed. Status: 500 . Response: Managed Syncthing unit has not been created",
+      "syntheticInput": true,
+      "realBackend": false,
+      "calls": [
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "mode",
+              "value": "flatpak"
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "flatpak_name",
+              "value": "me.kozec.syncthingtk"
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "flatpak_binary",
+              "value": "syncthing"
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "_wizard_force_flatpak_config_for",
+              "value": null
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "POST",
+              "path": "/__decky-watchdog/check/start",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "POST",
+              "path": "/__decky-watchdog/check/scan_port",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "port",
+              "value": 8390
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "POST",
+              "path": "/__decky-watchdog/check/scan_api_key",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "api_key",
+              "value": "private-fixture-key"
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "POST",
+              "path": "/__decky-watchdog/check/scan_basic_auth",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "basic_auth_user",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "basic_auth_pass",
+              "value": ""
+            }
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "autostart",
+              "value": "boot"
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "keep_running_on_desktop",
+              "value": true
+            }
+          ]
+        },
+        {
+          "method": "set_setting",
+          "args": [
+            {
+              "setting": "is_setup",
+              "value": true
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "POST",
+              "path": "/__decky-watchdog/reload-config",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "get_settings_json",
+          "args": [
+            {}
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "GET",
+              "path": "/__decky-watchdog/state",
+              "headers": {}
+            }
+          ]
+        },
+        {
+          "method": "framey_http_fetch",
+          "args": [
+            {
+              "method": "GET",
+              "path": "/__decky-watchdog/state",
+              "headers": {}
+            }
+          ]
+        }
+      ],
+      "settings": {
+        "config_version": 2,
+        "mode": "flatpak",
+        "flatpak_name": "me.kozec.syncthingtk",
+        "flatpak_binary": "syncthing",
+        "service_name": "",
+        "autostart": "boot",
+        "keep_running_on_desktop": true,
+        "port": 8390,
+        "api_key": "private-fixture-key",
+        "basic_auth_user": "",
+        "basic_auth_pass": "",
+        "is_setup": true,
+        "_wizard_force_flatpak_config_for": null
+      },
+      "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+      "frontendSha256": "6abfd4861c74f730f9d29d00bfc478e8967f9f56c4ea84a442aac41a0d62972f",
+      "candidate": true,
+      "migrating": false,
+      "configured": false,
+      "wizard": true,
+      "finishNavigationRequested": true,
+      "manualPortRequested": true,
+      "realFrameContacted": false,
+      "browserReaped": true,
+      "installerEnabled": false,
+      "browser": "Google Chrome 156.0.8078.79",
+      "sourceSha256": {
+        "scripts/framey-test-syncthing-browser.py": "a916825418fda2e5d21fbbe1a302e2826950e7b81d186ea69a633deb3d5253bb",
+        "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+        "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+        "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+        "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+        "ui/vendor/syncthing-0.2.7/frontend.patch": "3c92e2e391af1b3bafbda77dd5852f0d1e9145c7f1bf59e70b49fd7f9e9c31cd"
+      },
+      "sourceUnchanged": true,
+      "passed": true
+    }
   }
 }

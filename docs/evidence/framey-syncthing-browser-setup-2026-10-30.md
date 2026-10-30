@@ -79,8 +79,29 @@ and the unavailable Steam call is gone; it does not prove a running service or
 combined browser/backend behavior. Both the failed trial and final cases are
 retained in the JSON. No host-wide menu API or native ownership guard changes.
 
+## Manual port fallback
+
+The ARM64 backend trial in #475 failed its first port-scan assertion. The
+published frontend actually performs one port scan and offers manual entry
+when it returns null. Bounded native fixture retries do not exercise that UI.
+
+At checkpoint `df46f0f634313fc3ad68d1c4f1a7ef389982e02a`, a new synthetic
+browser case returns a null scan result. Chromium displays the published
+manual port instructions, accepts DOM input of **8390** instead of the initial
+8384, saves that exact value through the host bridge, completes setup, and
+returns to the configured error view without browser errors. The recorded
+call sequence contains exactly one port scan; it cannot pass by silently
+retrying discovery or accepting the default port. All six source fingerprints
+independently match the committed checkpoint; the browser was reaped.
+
+This report is included in the JSON. Its screenshot shows the final synthetic
+configured-state error, not the manual port field. The selected port and API
+key are fixture values and were never tested against a real backend. First
+scan readiness, combined browser/backend behavior and physical controller
+interaction remain unverified.
+
 The dedicated browser workflow checks the exact PR head, reproduces the
-published failure, runs the four candidate cases and retains source-bound
+published failure, runs the five candidate cases and retains source-bound
 reports/screenshots. Its presence is not proof of a successful CI run; native
 and browser CI for this follow-up remain pending.
 
