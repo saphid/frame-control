@@ -4528,12 +4528,13 @@
         "https://github.com/Tormak9970/TabMaster.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium rendered the QAM and navigable Overview/Filters documentation with an actual Decky 3.3.0 amd64 backend. Library-tab editing remains unavailable: Steam login/library patches and MobX reactions have no target. ARM64 and worn VR unverified.",
+      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A separate native AMD64 fixture verifies private per-user settings, shared-tab filtering and loader-restart persistence; its retained console has an unattributed shutdown JSON diagnostic. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64, browser/backend settings integration, backups/restores and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 AMD64 private settings/restart fixture"
       ],
       "browser": {
         "id": 61,
@@ -4574,7 +4575,8 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-tabmaster-native-settings-2026-10-30.md"
     },
     {
       "id": 62,
