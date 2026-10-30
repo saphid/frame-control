@@ -2,7 +2,7 @@
 
 The exact published Decky Terminal 0.5.3/store 65 archive (`7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872`) failed its first isolated AMD64 native test under published Decky 3.3.0. The unmodified backend imports `pty`, which imports `tty`, then fails with `ModuleNotFoundError: No module named 'termios'`. The discovery list alone did not establish a functioning backend. No RPC method succeeded and no terminal command ran.
 
-This is an unpublished failing development probe. It does not enable a production adaptation or change compatibility policy. Original source also contains a synchronous `send_signal` awaited by resize and an empty unload handler, but at this initial failure neither proposed lifecycle defect had been reproduced through live RPC because import failed first. Later private-dependency trials below record their narrower results.
+This initial result came from an unpublished failing development probe. It does not enable a production adaptation or change compatibility policy. Original source also contains a synchronous `send_signal` awaited by resize and an empty unload handler, but at this initial failure neither proposed lifecycle defect had been reproduced through live RPC because import failed first. Later private-dependency trials below record their narrower results.
 
 The loader digest is `e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181`. The runner used its ordinary network/device/session-isolated disposable container and removed its own container/image after failure. No host home, headset, user session or physical input was used. The prospective probe contains only fixed commands writing its private container home.
 
@@ -56,3 +56,22 @@ production adaptation and physical controllers remain unverified.
 hashes](framey-terminal-lifecycle-failures-2026-10-30.json) retain the failed
 resize/input and reload-identity trials. All commands wrote only fixed private
 container fixtures; the owned runner removed its containers and images.
+
+
+## Repeatable original-import regression gate
+
+The focused follow-up adds the exact original archive as a negative regression
+in the native Decky runner, separate from the managed-case inventory. It
+requires the original `termios` import traceback, unchanged published backend
+sources, zero backend RPCs and zero PTY/input commands. Both native CI jobs
+check out the exact PR head and emit seven code/workflow source fingerprints.
+No candidate dependency or lifecycle adaptation is included.
+
+The complete local AMD64 run at `526473f` passed all 34 probes: the previous 33
+and the expected original Terminal failure. Its pinned loader/archive hashes,
+seven source fingerprints and Terminal result were independently audited.
+[Local audit](framey-terminal-native-regression-2026-10-30.json) explicitly
+records that this was not a GitHub workflow result. Fresh exact-head native
+AMD64/ARM64 CI and the other PR checks remain required before merging. This
+negative result establishes the import blocker, not functioning Terminal UI,
+managed shell behavior or physical-controller usability.
