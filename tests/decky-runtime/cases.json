@@ -1,5 +1,10 @@
 [
   {
+    "id": 131,
+    "shim": "download-all-local-queue",
+    "probe": "download-all-logging"
+  },
+  {
     "id": 130,
     "shim": "prefix-manager-user-paths",
     "probe": "prefix-manager"

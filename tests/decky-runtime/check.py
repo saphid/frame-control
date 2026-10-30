@@ -176,7 +176,12 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'prefix-manager':
+            if case['probe'] == 'download-all-logging':
+                assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}
+                assert 'FrameyQueueDownloads' in (plugin/'dist/index.js').read_text()
+                report['result'] = ('published Decky discovery and logging RPC passed; '
+                                    'Steam queue behavior is covered by isolated CEF/frontend fixtures, not this backend')
+            elif case['probe'] == 'prefix-manager':
                 # Only tmpfs fixtures exist here: never a host Steam prefix.
                 assert manifest.get('flags') == [] and 'api_version' not in manifest
                 assert legacy('get_games') == []

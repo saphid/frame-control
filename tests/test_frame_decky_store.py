@@ -254,6 +254,25 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(self.apply('remove', plugin_id=130, folder=record['folder']).returncode, 0)
         self.assertFalse(folder.exists())
 
+    def test_download_all_awaits_the_scoped_batch_and_reports_failures(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 131)
+        result = self.apply('install', official_archive(record), plugin_id=131,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['download-all-local-queue'])
+        with zipfile.ZipFile(io.BytesIO(official_archive(record))) as original:
+            for name in ('main.py', 'LICENSE'):
+                self.assertEqual((folder/name).read_bytes(), original.read(record['folder']+'/'+name))
+        frontend = folder/'dist/index.js'
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_download_all.mjs'),
+                                 str(frontend)], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.apply('remove', plugin_id=131, folder=record['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+
     def test_prefix_manager_102_release_asset_disables_game_data_delete(self):
         from framey_official import PREFIX_MANAGER_102, archive as official_archive
         record = PREFIX_MANAGER_102
