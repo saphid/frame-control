@@ -8,4 +8,4 @@ Attempt 1 failed the unchanged system-bus isolation guard before any RPC. Attemp
 
 No production HTTP parent, real Steam CEF, radio/pairing, headset, wearer-visible result or physical controller interaction is verified. Compatibility remains partial. Frozen runner/probe/verifier files preserve this exact experiment and reference local owned paths; they are evidence, not a portable supported test command. The verifier originally emits `capturesVisuallyInspected: false`; the saved verified report records the subsequent direct inspection.
 
-The raw result, all input fingerprints, full bounded packet, raw loader logs inside the result, console and four PNG captures are retained here. Current-head ARM package CI and resulting main CI remain separate merge gates.
+The raw result, all input fingerprints, full bounded packet, raw loader logs inside the result, console and four PNG captures are retained here. All four package variants subsequently passed at this historical source; see the adjacent completed-source audit. After the normal main refresh, fresh exact-head CI and resulting main CI remain separate merge gates.
