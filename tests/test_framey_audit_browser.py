@@ -27,19 +27,28 @@ class ReceiptBoundAudit(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the mock fetch check')
     def test_speed_test_replay_accepts_only_bounded_fixture_requests(self):
         script = r'''
+const mark=stage=>console.error(`${performance.now().toFixed(1)}ms ${stage}`);
+mark('node started');
 const assert=require('node:assert/strict');
 const vm=require('node:vm');
 const fs=require('node:fs');
 const window={};
-vm.runInNewContext(fs.readFileSync(0,'utf8'),
-  {window,URL,Response,DOMException,Uint8Array,setTimeout,Error,Number,Math,Promise});
+const source=fs.readFileSync(0,'utf8');
+mark('fixture input read');
+const context={window,URL,Response,DOMException,Uint8Array,setTimeout,Error,Number,Math,Promise};
+mark('Response initialized');
+vm.runInNewContext(source,context);
+mark('fetch fixture installed');
 (async()=>{
   assert.equal(await (await window.fetch('https://speed.cloudflare.com/cdn-cgi/trace')).text(),
     'colo=SYD\\n');
+  mark('trace body read');
   const response=await window.fetch('https://speed.cloudflare.com/__down?bytes=999999999');
   assert.equal((await response.arrayBuffer()).byteLength,100000);
+  mark('bounded download body read');
   assert.equal(await (await window.fetch('https://speed.cloudflare.com/__up',
     {method:'POST'})).text(),'ok');
+  mark('upload body read');
   for(const [url,options] of [
     ['https://speed.cloudflare.com.evil/__down?bytes=10',{}],
     ['https://speed.cloudflare.com/unknown',{}],
@@ -49,10 +58,17 @@ vm.runInNewContext(fs.readFileSync(0,'utf8'),
   }
   assert.deepEqual(JSON.parse(JSON.stringify(window.__speedTestMock)),
     {trace:1,down:1,up:1,other:4});
+  mark('all assertions passed; resources='+JSON.stringify(process.getActiveResourcesInfo()));
 })().catch(error=>{console.error(error);process.exitCode=1});
 '''
-        result = subprocess.run(['node', '-e', script], input=audit.SPEED_TEST_FETCH,
-                                capture_output=True, text=True, timeout=10)
+        try:
+            result = subprocess.run(['node', '-e', script], input=audit.SPEED_TEST_FETCH,
+                                    capture_output=True, text=True, timeout=10)
+        except subprocess.TimeoutExpired as error:
+            # Keep the deadline and expose the last completed boundary;
+            # a timeout alone cannot identify startup, body reads, or shutdown.
+            self.fail(f'Speed Test fixture exceeded {error.timeout}s; '
+                      f'stdout={error.stdout!r}; stages={error.stderr!r}')
         self.assertEqual(result.returncode, 0, result.stderr)
 
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
