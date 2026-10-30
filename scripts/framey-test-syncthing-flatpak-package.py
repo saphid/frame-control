@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run exact signed Syncthing packages in an owned, networkless AMD64 VM.
+"""Run exact signed Syncthing packages in an owned, networkless native VM.
 
 Inputs are a disposable Debian rootfs export with systemd, Flatpak, OSTree GI
 and a kernel, plus locally generated bundles of the pinned published commits.
@@ -19,6 +19,20 @@ import signal
 import subprocess
 
 ROOT = Path(__file__).resolve().parents[1]
+ARCHES = {
+    "x86_64": ("qemu-system-x86_64", "ttyS0", []),
+    "aarch64": ("qemu-system-aarch64", "ttyAMA0", ["-machine", "virt"]),
+}
+COMMITS = {
+    "x86_64": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+    },
+    "aarch64": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9",
+    },
+}
 MARKER = b"Frame Control Flatpak VM v1\n"
 KEY_SHA256 = "8bdc20abc4e19c0796460beb5bfe0e7aa4138716999e19c6f2dbdd78cc41aeaa"
 BUNDLES = {
@@ -62,6 +76,30 @@ def reap(process):
             process.wait(timeout=5)
 
 
+def prepared_bundles(preparation, arch):
+    if (
+        preparation.get("architecture") != arch
+        or preparation.get("commits") != COMMITS[arch]
+        or preparation.get("keySha256") != KEY_SHA256
+        or preparation.get("payloadIntegrityVerified") is not True
+        or any(
+            preparation.get("signatures", {}).get(kind, 0) < 1
+            for kind in ("app", "runtime")
+        )
+    ):
+        raise ValueError("Incomplete or mismatched preparation proof")
+    bundles = preparation["bundles"]
+    if set(bundles) != {"app", "runtime"}:
+        raise ValueError("Unexpected prepared bundle set")
+    for kind, expected in bundles.items():
+        if (
+            expected.get("commit") != COMMITS[arch][kind]
+            or not 0 < expected.get("bytes", 0) <= 384 * 1024**2
+        ):
+            raise ValueError("Unexpected prepared bundle commit or size")
+    return bundles
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -73,18 +111,37 @@ def main():
         required=True,
         help="New evidence directory; existing directories are refused",
     )
+    parser.add_argument(
+        "--preparation",
+        type=Path,
+        help="Offline preparation.json for locally generated exact-commit bundles",
+    )
     args = parser.parse_args()
-    if platform.system() != "Linux" or platform.machine() != "x86_64":
-        parser.error("This package probe currently requires native AMD64 Linux")
-    if shutil.which("qemu-system-x86_64") is None:
-        parser.error("qemu-system-x86_64 is required")
+    arch = platform.machine()
+    if platform.system() != "Linux" or arch not in ARCHES:
+        parser.error("This package probe requires native AMD64 or ARM64 Linux")
+    emulator, console_device, machine = ARCHES[arch]
+    if shutil.which(emulator) is None:
+        parser.error(emulator + " is required")
     if args.rootfs_tar.stat().st_size > 2 * 1024**3:
         parser.error("Guest rootfs exceeds 2 GiB")
     if args.key.stat().st_size > 64 * 1024 or sha(args.key) != KEY_SHA256:
         parser.error("Unexpected Flathub public key")
     payloads = {"flathub-key.gpg": args.key.read_bytes()}
-    manifest = {"bundles": BUNDLES, "bundleChunks": {}}
-    for kind, expected in BUNDLES.items():
+    bundles = BUNDLES
+    preparation = None
+    if args.preparation:
+        if args.preparation.stat().st_size > 256 * 1024:
+            parser.error("Oversized preparation report")
+        preparation = json.loads(args.preparation.read_text())
+        try:
+            bundles = prepared_bundles(preparation, arch)
+        except ValueError as error:
+            parser.error(str(error))
+    elif arch != "x86_64":
+        parser.error("ARM64 requires an exact signed offline --preparation report")
+    manifest = {"bundles": bundles, "bundleChunks": {}}
+    for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
         if path.stat().st_size != expected["bytes"] or sha(path) != expected["sha256"]:
             parser.error("Unexpected pinned " + kind + " bundle")
@@ -126,7 +183,9 @@ def main():
         "kernelSha256": hashlib.sha256(kernel).hexdigest(),
         "initrdSha256": sha(args.output / "initrd.gz"),
         "sourceSha256": fingerprints,
-        "bundles": BUNDLES,
+        "bundles": bundles,
+        "architecture": arch,
+        "preparationSha256": sha(args.preparation) if args.preparation else None,
         "keySha256": KEY_SHA256,
         "memoryMiB": 6144,
         "timeoutSeconds": 960,
@@ -136,7 +195,8 @@ def main():
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
-        "qemu-system-x86_64",
+        emulator,
+        *machine,
         "-accel",
         "tcg,thread=multi",
         "-cpu",
@@ -159,7 +219,7 @@ def main():
         "-initrd",
         str(args.output / "initrd.gz"),
         "-append",
-        "console=ttyS0 rdinit=/init panic=-1 systemd.show_status=false",
+        f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
     ]
     console = args.output / "console.log"
     result = {"success": False, "inputs": inputs}
@@ -187,6 +247,8 @@ def main():
         guest = json.loads(lines[0])
         result["guest"] = guest
         package = guest.get("flatpak", {})
+        if package.get("architecture") != arch:
+            raise RuntimeError("Guest architecture does not match the native host")
         if guest.get("success") is not True or any(
             package.get(key) is not True for key in REQUIRED
         ):
@@ -203,6 +265,8 @@ def main():
             for path in source_paths
         ):
             raise RuntimeError("Probe sources changed during execution")
+        if args.preparation and sha(args.preparation) != inputs["preparationSha256"]:
+            raise RuntimeError("Preparation changed during execution")
         if sha(args.rootfs_tar) != rootfs_sha:
             raise RuntimeError("Guest rootfs changed during execution")
         result["success"] = True

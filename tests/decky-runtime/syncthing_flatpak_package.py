@@ -19,10 +19,17 @@ from gi.repository import Gio, OSTree, GLib
 
 APP = "me.kozec.syncthingtk"
 PROGRESS = {}
+ARCH = os.uname().machine
 EXPECTED = {
-    "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
-    "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
-}
+    "x86_64": {
+        "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+        "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d",
+    },
+    "aarch64": {
+        "app": "b5116b67092a6d3bdeb202a0308c2d2ec8f53b980e75e88992781a01aa8937c0",
+        "runtime": "c3daeced6f88f9c4ffc4f88c798c48fffd395d873fc0d36b7fc73b753d7f59c9",
+    },
+}[ARCH]
 
 
 def command(args, timeout=180):
@@ -142,7 +149,7 @@ def main():
         )
         report[kind + "InstallLog"] = log[-1000:]
         bundle.unlink()  # Only the assembled input created by this fixture.
-        target = APP if kind == "app" else "runtime/org.gnome.Platform/x86_64/49"
+        target = APP if kind == "app" else "runtime/org.gnome.Platform/" + ARCH + "/49"
         actual = flat("info", "--user", "--show-commit", target)
         assert actual == EXPECTED[kind], (kind, actual)
         report[kind + "InstalledCommit"] = actual

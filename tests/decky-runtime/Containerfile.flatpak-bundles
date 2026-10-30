@@ -1,0 +1,9 @@
+# Offline signature/content verification and local bundle generation only.
+FROM debian:trixie-slim
+RUN apt-get update && apt-get install -y --no-install-recommends \
+      flatpak ostree python3 python3-gi gir1.2-ostree-1.0 ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd -m -u 1100 -s /bin/sh tester
+USER tester
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1 LC_ALL=C.UTF-8
+ENTRYPOINT ["python3"]
