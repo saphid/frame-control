@@ -212,9 +212,12 @@ class OwnedWatchdog:
         process, runtime = self.process, self.runtime
         if self.closed or process is None or process.poll() is not None or runtime is None:
             raise RuntimeError("Owned Syncthing watchdog is unavailable")
-        # Upstream setup deliberately sleeps up to eleven seconds while checking
-        # service startup. Keep it within the host's 25-second RPC budget.
-        timeout = 20 if parsed.path == '/__decky-watchdog/check/start' else 5
+        # Setup waits up to eleven seconds; service transitions can also wait
+        # for a real Syncthing shutdown. Stay within the host's 25-second RPC
+        # budget while retaining the short timeout for reads and scan probes.
+        lifecycle = {'/__decky-watchdog/check/start', '/__decky-watchdog/start',
+                     '/__decky-watchdog/stop', '/__decky-watchdog/reload-config'}
+        timeout = 20 if method == 'POST' and parsed.path in lifecycle else 5
         connection = http.client.HTTPConnection('localhost', timeout=timeout)
         stream = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
         stream.settimeout(timeout)

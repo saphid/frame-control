@@ -5,6 +5,7 @@ import importlib.util
 import logging
 import os
 from pathlib import Path
+import runpy
 import signal
 import subprocess
 import sys
@@ -50,8 +51,8 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
 
             def do_GET(self):
                 requests.append((self.command, self.path, dict(self.headers)))
-                if self.path == '/__decky-watchdog/check/start':
-                    # Upstream's setup check deliberately waits 4–11 seconds.
+                if self.path in ('/__decky-watchdog/check/start', '/__decky-watchdog/reload-config'):
+                    # Setup and normal connected-peer shutdown exceed 5s.
                     import time
                     time.sleep(5.1)
                 code, body, length = 200, b'{"privateFixture":true}', None
@@ -140,6 +141,43 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
         self.private_http()
         response = self.owner.fetch('POST', '/__decky-watchdog/check/start', {})
         self.assertEqual(response['status'], 204)
+
+    async def test_service_transition_can_outlast_normal_socket_timeout(self):
+        self.private_http()
+        response = self.owner.fetch('POST', '/__decky-watchdog/reload-config', {})
+        self.assertEqual(response['status'], 204)
+
+    async def test_only_service_lifecycle_calls_receive_longer_socket_budget(self):
+        self.owner.runtime = tempfile.TemporaryDirectory(prefix='framey-syncthing-test-')
+        self.owner.process = Mock(pid=424242)
+        self.owner.process.poll.return_value = None
+        with patch.object(self.module.http.client, 'HTTPConnection') as connection, \
+                patch.object(self.module.socket, 'socket') as stream:
+            response = connection.return_value.getresponse.return_value
+            response.read.return_value = b''
+            response.length = 0
+            response.getheader.return_value = ''
+            for method, path, budget in [
+                    ('POST', '/__decky-watchdog/'+route, 20)
+                    for route in ('start', 'stop', 'reload-config', 'check/start')]+[
+                    ('GET', '/__decky-watchdog/state', 5),
+                    ('GET', '/rest/system/version', 5),
+                    ('POST', '/__decky-watchdog/check/scan_port', 5),
+                    ('POST', '/', 5)]:
+                with self.subTest(method=method, path=path):
+                    self.owner.fetch(method, path, {})
+                    connection.assert_called_with('localhost', timeout=budget)
+                    stream.return_value.settimeout.assert_called_with(budget)
+
+    def test_service_vm_bootstrap_refuses_host_before_any_commands(self):
+        # Even UID 0 must fail outside the owned guest, without reaching the
+        # guest-only service or shutdown commands in its exception path.
+        with patch('os.getuid', return_value=0), \
+                patch('pathlib.Path.is_file', return_value=False), \
+                patch('subprocess.run') as command:
+            with self.assertRaisesRegex(RuntimeError, 'only inside the owned service VM'):
+                runpy.run_path(str(ROOT/'tests/decky-runtime/syncthing_service_root.py'))
+            command.assert_not_called()
 
     async def test_http_rpc_caps_concurrent_requests(self):
         self.owner.http_inflight = 4

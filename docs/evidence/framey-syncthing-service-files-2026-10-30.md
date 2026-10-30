@@ -68,9 +68,17 @@ conversion; both were corrected before the successful helper/RPC run. Review
 also tightened newly created directory modes and added the ninth regression.
 
 The [machine-readable local report](framey-syncthing-service-files-2026-10-30.json)
-records the completed checks and exact input fingerprints. The helper cross-compiled successfully for ARM64 as well. That binary was not
-executed locally; native ARM64 checks for this new ownership patch must pass in
-CI before merge.
+records the completed local checks and exact input fingerprints. The helper
+cross-compiled successfully for ARM64 as well; that binary was not executed locally.
+
+The final ownership head `8892ccac2ffac7c125f6575c8b7ee8d3e16e40fc`
+subsequently passed all 15 checks before #466 merged as
+`4329334887f1608dab727a76a5d1b083768754d7`. Workflow `41009027176`
+produced native AMD64 artifact `12956996815` and native ARM64 artifact
+`12956572922`. Both were independently matched to committed source hashes,
+helper/build/loader fingerprints, nine executed filesystem tests, ownership/RPC
+results, real two-way sync, HTTP 403, completion 100 and owned cleanup. These
+native container tests still did not provide a real service manager.
 
 The preceding runtime-only head
 `5fe2428d5351aa9fd49c88039d57108fb6c77671` passed all 15 checks, including real
@@ -89,10 +97,13 @@ exited 0, but that parsing result is not service runtime proof. No precise
 single root cause is claimed. Owned processes/container/image were cleaned;
 no host security or cgroup settings were changed.
 
-No real DBus/systemd service control is verified here. Loaded unit identity,
+No real DBus/systemd service control was verified by this preflight. Loaded unit identity,
 drop-ins, aliases, enable links, Flatpak package ownership, external-service
 selection, migration from existing services and full managed install/update/
 remove still need an appropriate owned service-manager fixture. A receipt on
 disk alone does not establish which unit systemd would load. Browser controls,
 real Frame runtime, wearer-visible panels and physical controllers also remain
 unverified. Existing files and services must not be migrated speculatively.
+
+The subsequent [service VM evidence](framey-syncthing-service-vm-2026-10-30.md)
+records a separate actual systemd/DBus fixture and its narrower remaining limits.
