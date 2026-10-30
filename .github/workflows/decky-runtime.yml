@@ -33,3 +33,21 @@ jobs:
           name: decky-runtime-${{ matrix.os }}
           path: ${{ runner.temp }}/decky-runtime.json
           if-no-files-found: warn
+
+  terminal-candidate:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Test-only Terminal candidate with published Decky 3.3.0
+        run: python3 scripts/framey-test-decky-runtime.py --case 65 --terminal-candidate --output "$RUNNER_TEMP/terminal-candidate.json"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terminal-candidate-${{ matrix.os }}
+          path: ${{ runner.temp }}/terminal-candidate.json
+          if-no-files-found: warn
