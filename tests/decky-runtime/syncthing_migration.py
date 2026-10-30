@@ -197,14 +197,23 @@ def main():
         assert migrated['flatpak_binary'] == 'syncthing' and migrated['autostart'] == 'gamescope'
         assert migrated['port'] == 8386 and migrated['api_key'] == key
         assert migrated['keep_running_on_desktop'] is True
+        pending_routes = {}
         for verb, route in [('GET', 'state'), ('POST', 'start'), ('POST', 'stop')]:
-            assert http(verb, '/__decky-watchdog/' + route)['status'] == (200 if verb == 'GET' else 204)
+            response = http(verb, '/__decky-watchdog/' + route)
+            # No owned managed unit exists while migration awaits completion.
+            # State must refuse that missing unit; start/stop remain no-ops.
+            expected = 500 if verb == 'GET' else 204
+            assert response['status'] == expected, (verb, route, response)
+            if verb == 'GET':
+                assert 'Managed Syncthing unit has not been created' in response['body']
+            pending_routes[verb + ' ' + route] = response['status']
             assert int(prop(unit.name, 'MainPID')) == legacy_pid
             assert unit.read_bytes() == unit_bytes and ctl('is-enabled', unit.name) == 'enabled'
             assert identity(legacy_pid) == before_identity
             assert {name: sha(runtime / name) for name in retained} == retained
             assert not managed.exists() and not receipt.exists() and unrelated.poll() is None
         report.update(v1SettingsMigratedAndPersisted=True, pendingSetupPreservedLiveLegacy=True,
+                      pendingSetupRoutes=pending_routes,
                       legacyUnitAndEnablementPreserved=True, configCertificateDataPreserved=True,
                       unrelatedHelperPreserved=True)
         # Explicitly choose the existing service; no service is adopted while

@@ -91,7 +91,8 @@ class PreparedPackage(unittest.TestCase):
         report.update(architecture='x86_64', installerEnabled=False,
                       realFrameContacted=False, flatpakPackageVerified=True,
                       packagedBinarySha256='b' * 64, legacyMainPidBefore=150,
-                      legacyMainPidAfterRestart=250)
+                      legacyMainPidAfterRestart=250,
+                      pendingSetupRoutes={'GET state': 500, 'POST start': 204, 'POST stop': 204})
         for key, main, pid in [('legacyIdentityBefore', 150, 151),
                                ('legacyIdentityAfterRestart', 250, 251)]:
             report[key] = [dict(pid=pid, ancestryToMainPid=[pid, main],
@@ -124,6 +125,15 @@ class PreparedPackage(unittest.TestCase):
         del report['legacyIdentityAfterRestart']
         with self.assertRaises(ValueError):
             self.module.verify_migration(report, 'x86_64', bundles)
+
+    def test_migration_requires_missing_unit_refusal_and_control_noops(self):
+        bundles = self.prepared('x86_64')['bundles']
+        for routes in (None, {'GET state': 200, 'POST start': 204, 'POST stop': 204},
+                       {'GET state': 500, 'POST start': 500, 'POST stop': 204}):
+            report = self.migration()
+            report['pendingSetupRoutes'] = routes
+            with self.subTest(routes=routes), self.assertRaises(ValueError):
+                self.module.verify_migration(report, 'x86_64', bundles)
 
     def candidate(self):
         required = ('ownedCleanup', 'actualStopJobReapedRuntime', 'realDeckyRpcRest')

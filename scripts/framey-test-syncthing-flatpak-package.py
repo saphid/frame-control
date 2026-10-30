@@ -179,6 +179,8 @@ def verify_migration(report, arch, bundles):
         or report.get('flatpakPackageVerified') is not True
         or any(report.get(key) is not True for key in MIGRATION_REQUIRED)):
         raise ValueError('Missing actual legacy migration preservation/control proof')
+    if report.get('pendingSetupRoutes') != {'GET state': 500, 'POST start': 204, 'POST stop': 204}:
+        raise ValueError('Missing pending migration refusal/no-op proof')
     for key, main_key in (('legacyIdentityBefore', 'legacyMainPidBefore'),
                           ('legacyIdentityAfterRestart', 'legacyMainPidAfterRestart')):
         processes = report.get(key, [])
