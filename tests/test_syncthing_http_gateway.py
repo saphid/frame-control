@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 import tarfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -48,3 +48,30 @@ class GatewayIsolation(unittest.TestCase):
                 self.assertNotIn('..', Path(member.name).parts)
                 self.assertEqual(archive.extractfile(member).read(), (ROOT/member.name).read_bytes())
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
+
+
+class AuthenticatedRuntimeReadiness(unittest.TestCase):
+    def gateway(self):
+        return load('gateway_readiness', ROOT/'tests/decky-runtime/syncthing_http.py')
+
+    def test_too_early_and_bad_gateway_require_eventual_authenticated_success(self):
+        fetch = Mock(side_effect=[{'status': 425}, {'status': 502},
+                                  {'status': 200, 'body': '{"myID":"owned-fixture"}'}])
+        def wait(ready, _description):
+            self.assertIs(ready(), False)
+            self.assertIs(ready(), False)
+            return ready()
+        result = self.gateway().wait_authenticated_rest(fetch, 'private-fixture-key', wait)
+        self.assertEqual(result['status'], 200)
+        fetch.assert_called_with('GET', '/rest/system/status', {'X-API-Key': 'private-fixture-key'})
+
+    def test_authentication_or_unknown_http_failure_is_not_readiness(self):
+        for status in (401, 403, 500, 503):
+            with self.subTest(status=status), self.assertRaises(AssertionError):
+                self.gateway().wait_authenticated_rest(lambda *_args: {'status': status},
+                                                       'fixture', lambda ready, _description: ready())
+
+    def test_http_success_requires_actual_runtime_identity(self):
+        with self.assertRaises((AssertionError, KeyError)):
+            self.gateway().wait_authenticated_rest(lambda *_args: {'status': 200, 'body': '{}'},
+                                                   'fixture', lambda ready, _description: ready())

@@ -32,6 +32,17 @@ return new Promise((resolve,reject)=>{
 });}};</script>'''
 
 
+def wait_authenticated_rest(fetch, api_key, wait):
+    def ready():
+        response = fetch('GET', '/rest/system/status', {'X-API-Key': api_key})
+        if response['status'] in (425, 502):
+            return False
+        assert response['status'] == 200, response['status']
+        assert json.loads(response['body'])['myID']
+        return response
+    return wait(ready, 'HTTP gateway authenticated signed runtime readiness')
+
+
 def exercise(runtime_identity, service):
     assert os.getuid() == 1100 and Path('/framey-owned-vm').read_text() == 'Frame Control Flatpak VM v1\n'
     assert not Path('/sys/class/net/eth0').exists()
@@ -175,8 +186,8 @@ def exercise(runtime_identity, service):
             state = fetch('GET', '/__decky-watchdog/state')
             assert state['status'] == 200 and state['body'].strip() == 'stopped'
             assert fetch('POST', '/__decky-watchdog/start')['status'] == 204
+            response = wait_authenticated_rest(fetch, saved['api_key'], wait)
             pids = runtime_identity(service)
-            response = fetch('GET', '/rest/system/status', {'X-API-Key': saved['api_key']})
             assert response['status'] == 200 and json.loads(response['body'])['myID']
             assert fetch('GET', '/rest/system/status')['status'] == 403
             assert fetch('POST', '/__decky-watchdog/stop')['status'] == 204
@@ -189,6 +200,7 @@ def exercise(runtime_identity, service):
                           serviceStartStopVerified=True, stoppedStateBeforeAndAfter=True,
                           requests=requests, success=True)
     finally:
+        report.update(requests=requests, rejectedRequests=denied)
         if page:
             page.sock.close()
         if browser:
