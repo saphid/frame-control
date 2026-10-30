@@ -60,6 +60,8 @@ jobs:
             browser: false
           - os: ubuntu-latest
             browser: true
+          - os: ubuntu-24.04-arm
+            browser: true
     runs-on: ${{ matrix.os }}
     timeout-minutes: 75
     steps:
