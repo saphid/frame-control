@@ -71,6 +71,10 @@ addEventListener('message',async event=>{
  const req=event.data||{};
  if(req.type==='framey:cache:init'){panel().postMessage({type:'framey:cache:seed',session:req.session,entries:{}},'*');return;}
  if(req.type==='framey:ready'){ready=true;return;}
+ if(req.type==='framey:error'){
+  if(startupErrors.length<16)startupErrors.push(String(req.message||'Panel startup failed').slice(0,1000));
+  return;
+ }
  if(req.type==='test:stage'){window.stage=req;return;}
  if(req.type==='test:failure'){window.failure=req.error;return;}
  if(req.type!=='framey:call')return;
@@ -92,6 +96,76 @@ def screenshot(page):
         response = json.loads(page._recv())
         if response.get('id') == page.next_id:
             return response['result']['data']
+
+
+def ready_page(report):
+    """Accept only a ready panel; close every rejected owned CDP candidate."""
+    candidate = None
+    accepted = False
+    phase = 'page-connect'
+    started = time.monotonic()
+    outcome = 'not-ready'
+    try:
+        candidate = frame_steam.Page('Owned Syncthing actual backend')
+        phase = 'panel-ready'
+        accepted = bool(candidate.eval("typeof ready !== 'undefined' && ready"))
+        if accepted:
+            outcome = 'ready'
+            return candidate
+        phase = 'panel-errors'
+        report['startupErrors'] = candidate.eval('window.startupErrors')
+    except (OSError, frame_steam.Fail) as error:
+        outcome = 'failure'
+        report['lastReadinessError'] = str(error)[:1500]
+    finally:
+        if candidate is not None and not accepted:
+            candidate.sock.close()
+        attempt = dict(phase=phase, outcome=outcome,
+                       elapsedSeconds=round(time.monotonic()-started, 3))
+        report['lastReadinessAttempt'] = attempt
+        attempts = report.setdefault('readinessAttempts', [])
+        if len(attempts) < 16:
+            attempts.append(attempt)
+        else:
+            report['readinessTraceOverflow'] = True
+    return None
+
+
+def startup_diagnostics(browser, profile, log):
+    """Bounded evidence from the owned fixture only; never change readiness."""
+    report = dict(processAlive=browser.poll() is None,
+                  returnCode=browser.returncode,
+                  devToolsPortFilePresent=(profile/'DevToolsActivePort').is_file())
+    try:
+        with log.open('rb') as stream:
+            stream.seek(0, 2)
+            report['stderrBytes'] = stream.tell()
+            stream.seek(max(0, stream.tell()-2048))
+            tail = stream.read(2048)
+        # The disposable browser has no user session, secrets or external
+        # network. Preserve its final diagnostic lines, with a strict bound.
+        report['stderrTail'] = ''.join(chr(value) if 32 <= value < 127 or value == 10
+                                       else '?' for value in tail)
+    except OSError:
+        report['stderrUnavailable'] = True
+    if report['devToolsPortFilePresent']:
+        try:
+            with frame_steam.urllib.request.urlopen(frame_steam.CDP, timeout=2) as reply:
+                encoded = reply.read(65537)
+            if len(encoded) > 65536:
+                report['targetReportTooLarge'] = True
+            else:
+                targets = json.loads(encoded)
+                assert isinstance(targets, list)
+                report['targetCount'] = len(targets)
+                report['targets'] = [dict(type=str(target.get('type', ''))[:32],
+                    title=str(target.get('title', ''))[:80],
+                    urlKind=('loopback-http' if str(target.get('url', '')).startswith('http://127.0.0.1:')
+                             else 'data' if str(target.get('url', '')).startswith('data:') else 'other'))
+                    for target in targets[:8] if isinstance(target, dict)]
+        except (OSError, ValueError, AssertionError):
+            report['targetsUnavailable'] = True
+    return report
 
 
 def exercise(legacy_rpc, runtime_identity, service):
@@ -182,14 +256,9 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                 port = profile/'DevToolsActivePort'
                 if port.is_file():
                     frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
-                    try:
-                        page = frame_steam.Page('Owned Syncthing actual backend')
-                        if page.eval("typeof ready !== 'undefined' && ready"): break
-                        report['startupErrors'] = page.eval('window.startupErrors')
-                        page.sock.close()
-                        page = None
-                    except (OSError, frame_steam.Fail) as error:
-                        report['lastReadinessError'] = str(error)[:1500]
+                    page = ready_page(report)
+                    if page is not None:
+                        break
                 time.sleep(.2)
             assert page is not None, 'Browser CDP/panel readiness unavailable'
             first_pids = []
@@ -257,6 +326,8 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                           sandboxedRendererPids=renderers, actualPackagedProcessObservations=observations,
                           stages=stages, calls=calls, screenshots=screenshots, success=True)
     except BaseException:
+        if browser:
+            report['startupDiagnostics'] = startup_diagnostics(browser, profile, Path.home()/'browser.log')
         # GetUnit is read-only and does not load a collected inactive unit.
         lookup = subprocess.run(
             ['busctl', '--user', 'call', 'org.freedesktop.systemd1',

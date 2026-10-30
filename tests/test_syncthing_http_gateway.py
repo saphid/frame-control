@@ -2,12 +2,15 @@
 import importlib.util
 import io
 import json
+import sys
 from pathlib import Path
 import tarfile
+import tempfile
 import unittest
 from unittest.mock import Mock, patch
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT/'ui'))
 
 
 def load(name, path):
@@ -48,6 +51,119 @@ class GatewayIsolation(unittest.TestCase):
                 self.assertNotIn('..', Path(member.name).parts)
                 self.assertEqual(archive.extractfile(member).read(), (ROOT/member.name).read_bytes())
             self.assertEqual(archive.getmember('ui/local-bin/ssh').mode, 0o700)
+
+
+class BrowserReadyCandidate(unittest.TestCase):
+    def browser(self):
+        return load('browser_ready_candidate', ROOT/'tests/decky-runtime/syncthing_browser.py')
+
+    def test_unready_or_failed_candidate_is_closed_and_never_accepted(self):
+        browser = self.browser()
+        for replies, outcome, phase in [([False, []], 'not-ready', 'panel-errors'),
+                ([OSError('owned CDP timeout')], 'failure', 'panel-ready'),
+                ([False, OSError('owned errors timeout')], 'failure', 'panel-errors')]:
+            with self.subTest(outcome=outcome, phase=phase):
+                page = Mock(); page.eval.side_effect = replies; report = {}
+                with patch.object(browser.frame_steam, 'Page', return_value=page):
+                    self.assertIsNone(browser.ready_page(report))
+                page.sock.close.assert_called_once_with()
+                self.assertEqual(report['readinessAttempts'][0]['phase'], phase)
+                self.assertEqual(report['readinessAttempts'][0]['outcome'], outcome)
+
+    def test_ready_page_remains_owned_by_caller_and_trace_is_bounded(self):
+        browser = self.browser(); page = Mock(); page.eval.return_value = True
+        report = dict(readinessAttempts=[{} for _ in range(16)])
+        with patch.object(browser.frame_steam, 'Page', return_value=page):
+            self.assertIs(browser.ready_page(report), page)
+        page.sock.close.assert_not_called()
+        self.assertEqual(len(report['readinessAttempts']), 16)
+        self.assertTrue(report['readinessTraceOverflow'])
+
+    def test_failed_connection_records_phase_without_a_stale_page(self):
+        browser = self.browser(); report = {}
+        with patch.object(browser.frame_steam, 'Page', side_effect=OSError('owned timeout')):
+            self.assertIsNone(browser.ready_page(report))
+        self.assertEqual(report['readinessAttempts'][0]['phase'], 'page-connect')
+        self.assertEqual(report['readinessAttempts'][0]['outcome'], 'failure')
+
+
+class BrowserParentErrors(unittest.TestCase):
+    def test_shipped_panel_error_is_retained_only_from_owned_iframe_and_is_bounded(self):
+        import shutil
+        import subprocess
+        browser = load('owned_browser_parent_errors', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is required for fixture JavaScript behavior')
+        harness = r"""
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const owned={},handlers=[];
+const context={document:{getElementById:()=>({contentWindow:owned})},
+ addEventListener:(type,handler)=>handlers.push({type,handler})};
+context.window=context;vm.createContext(context);vm.runInContext(SOURCE,context);
+const message=handlers.find(v=>v.type==='message').handler;
+(async()=>{
+ await message({source:{},data:{type:'framey:error',message:'foreign'}});
+ assert.equal(context.startupErrors.length,0);
+ await message({source:owned,data:{type:'framey:error',message:'module startup failed'}});
+ assert.deepEqual(Array.from(context.startupErrors),['module startup failed']);
+ for(let i=0;i<25;i++)await message({source:owned,data:{type:'framey:error',message:'x'.repeat(2000)}});
+ assert.equal(context.startupErrors.length,16);
+ assert.equal(context.startupErrors.at(-1).length,1000);
+ assert.equal(vm.runInContext('ready',context),false);
+})().catch(error=>{console.error(error);process.exitCode=1;});
+"""
+        result = subprocess.run([node, '-e', harness.replace('SOURCE', json.dumps(browser.PARENT))],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stdout+result.stderr)
+
+
+class BrowserStartupEvidence(unittest.TestCase):
+    def test_diagnostics_bound_logs_and_targets_without_retaining_target_urls(self):
+        browser = load('owned_browser_diagnostics', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=None)
+        process.poll.return_value = None
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            log = profile/'browser.log'
+            log.write_bytes(b'x'*5000+b'\nprivate startup failure\x00\n')
+            targets = [dict(type='page',title='Owned Syncthing actual backend',
+                            url='http://127.0.0.1:12345/private?fixture-key=omitted')]*12
+            with patch.object(browser.frame_steam.urllib.request, 'urlopen',
+                              return_value=io.BytesIO(json.dumps(targets).encode())) as request:
+                result = browser.startup_diagnostics(process,profile,log)
+            self.assertTrue(result['processAlive'])
+            self.assertEqual(result['stderrBytes'],log.stat().st_size)
+            self.assertEqual(len(result['stderrTail']),2048)
+            self.assertTrue(result['stderrTail'].endswith('private startup failure?\n'))
+            self.assertEqual(result['targetCount'],12)
+            self.assertEqual(len(result['targets']),8)
+            self.assertEqual(result['targets'][0]['urlKind'],'loopback-http')
+            self.assertNotIn('fixture-key',json.dumps(result))
+            self.assertEqual(request.call_args.kwargs,{'timeout':2})
+
+    def test_unavailable_diagnostics_do_not_replace_the_original_failure(self):
+        browser = load('owned_browser_diagnostics_failure', ROOT/'tests/decky-runtime/syncthing_browser.py')
+        process = Mock(returncode=7)
+        process.poll.return_value = 7
+        with tempfile.TemporaryDirectory() as temporary:
+            profile = Path(temporary)
+            (profile/'DevToolsActivePort').write_text('12345\n')
+            failure = AssertionError('original readiness failure')
+            try:
+                try:
+                    raise failure
+                except AssertionError:
+                    with patch.object(browser.frame_steam.urllib.request,'urlopen',side_effect=OSError):
+                        result = browser.startup_diagnostics(process,profile,profile/'absent.log')
+                    raise
+            except AssertionError as actual:
+                self.assertIs(actual,failure)
+            self.assertFalse(result['processAlive'])
+            self.assertEqual(result['returnCode'],7)
+            self.assertTrue(result['stderrUnavailable'])
+            self.assertTrue(result['targetsUnavailable'])
 
 
 class AuthenticatedRuntimeReadiness(unittest.TestCase):

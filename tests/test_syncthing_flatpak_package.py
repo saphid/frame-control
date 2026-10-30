@@ -1,11 +1,14 @@
 """Prepared bundles cannot bypass exact architecture/commit/signature gates."""
 
 import copy
+import ast
 import hashlib
 import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import sys
+from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
 
@@ -20,6 +23,40 @@ class PreparedPackage(unittest.TestCase):
         spec = importlib.util.spec_from_file_location("flatpak_package", path)
         cls.module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(cls.module)
+
+    def test_arm64_browser_reaches_native_prerequisite_check(self):
+        class PrerequisiteReached(Exception):
+            pass
+
+        argv = ['probe', '--rootfs-tar', '/unused/rootfs', '--bundles', '/unused/bundles',
+                '--key', '/unused/key', '--output', '/unused/output',
+                '--candidate-helper', '/unused/helper', '--browser-setup']
+        with patch.object(sys, 'argv', argv), \
+                patch.object(self.module.platform, 'system', return_value='Linux'), \
+                patch.object(self.module.platform, 'machine', return_value='aarch64'), \
+                patch.object(self.module.shutil, 'which', side_effect=PrerequisiteReached):
+            with self.assertRaises(PrerequisiteReached):
+                self.module.main()
+
+    def test_browser_budget_matches_guest_without_extending_native_arm64_limits(self):
+        path = Path(__file__).parent/'decky-runtime/syncthing_flatpak_package_root.py'
+        expected = next(node.value for node in ast.walk(ast.parse(path.read_text()))
+                        if isinstance(node, ast.Assign) and any(
+                            isinstance(target, ast.Name) and target.id == 'expected_user_limit'
+                            for target in node.targets))
+        for arch, browser, seconds in [('x86_64', False, 840), ('x86_64', True, 1440),
+                                       ('aarch64', False, 2400), ('aarch64', True, 2400)]:
+            with self.subTest(arch=arch, browser=browser):
+                limits = self.module.probe_budgets(arch, browser)
+                guest_os = SimpleNamespace(uname=lambda: SimpleNamespace(machine=arch))
+                guest_limit = eval(compile(ast.Expression(expected), str(path), 'eval'),
+                                   {'os': guest_os, 'browser': browser})
+                self.assertEqual(limits['userSeconds'], seconds)
+                self.assertEqual(limits['userSeconds'], guest_limit)
+                self.assertLess(limits['userSeconds'], limits['unitSeconds'])
+                self.assertLess(limits['unitSeconds'], limits['hostSeconds'])
+        self.assertEqual(self.module.probe_budgets('aarch64', True),
+                         self.module.BUDGETS['aarch64'])
 
     def prepared(self, arch):
         return {
