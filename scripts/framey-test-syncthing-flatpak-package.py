@@ -265,6 +265,41 @@ def browser_payloads(official):
         'panelSha256': hashlib.sha256(panel.encode()).hexdigest()}
 
 
+def verify_browser(report, expected_panel):
+    for key, expected in {
+        'success': True, 'actualDeckyRpc': True, 'syntheticInput': True,
+        'browserSandboxDisabled': False, 'ownedBrowserReaped': True, 'bridgeStopped': True,
+        'realFrameContacted': False, 'hostBusExposed': False, 'installerEnabled': False,
+        'setupCommitted': True, 'discoveredApiKeySaved': True, 'savedPort': 8384,
+        'panelSha256': expected_panel,
+    }.items():
+        if type(report.get(key)) is not type(expected) or report[key] != expected:
+            raise ValueError('Missing combined browser proof: '+key)
+    stages = report.get('stages', [])
+    if ([s.get('stage') for s in stages] != ['running', 'stopped', 'restarted', 'stopped']
+        or any(s.get('errors') != [] for s in stages)
+        or 'Private service sync' not in stages[0].get('text', '')):
+        raise ValueError('Missing visible browser lifecycle stages')
+    observations = report.get('actualPackagedProcessObservations', [])
+    if (len(observations) != 2
+        or [o.get('stage') for o in observations] != ['running', 'restarted']
+        or any(not o.get('pids') or any(type(p) is not int or p <= 0 for p in o['pids']) for o in observations)
+        or observations[0]['pids'][0] == observations[1]['pids'][0]):
+        raise ValueError('Missing real browser-controlled process transitions')
+    renderers = report.get('sandboxedRendererPids', [])
+    if not renderers or any(not p.get('ancestryToBrowser') or p['ancestryToBrowser'][0] != p.get('pid') for p in renderers):
+        raise ValueError('Missing sandboxed renderer ancestry')
+    posts = [c for c in report.get('calls', []) if c.get('httpMethod') == 'POST']
+    expected_routes = {'check/start': 1, 'check/scan_port': 1, 'check/scan_api_key': 1,
+                       'check/scan_basic_auth': 1, 'reload-config': 1, 'start': 1, 'stop': 2}
+    if (any(c.get('status') not in (200, 204) for c in posts)
+        or {route: sum(c.get('path') == '/__decky-watchdog/'+route for c in posts)
+            for route in expected_routes} != expected_routes):
+        raise ValueError('Missing actual browser setup/control RPC routes')
+    if set(report.get('screenshots', {})) != {'running1', 'stopped2', 'restarted3', 'stopped4'}:
+        raise ValueError('Missing browser lifecycle screenshots')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -481,12 +516,7 @@ def main():
                 raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
         if args.browser_setup:
             browser_result = package.get('candidateService', {}).get('browserSetup', {})
-            if (browser_result.get('success') is not True
-                or browser_result.get('actualDeckyRpc') is not True
-                or browser_result.get('browserSandboxDisabled') is not False
-                or browser_result.get('ownedBrowserReaped') is not True
-                or browser_result.get('bridgeStopped') is not True):
-                raise RuntimeError('Combined sandboxed browser/backend proof is incomplete')
+            verify_browser(browser_result, browser_inputs['panelSha256'])
             import base64
             for name, encoded in browser_result['screenshots'].items():
                 if name not in ('running1', 'stopped2', 'restarted3', 'stopped4'):

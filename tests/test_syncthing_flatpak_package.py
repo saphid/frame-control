@@ -249,6 +249,44 @@ class PreparedPackage(unittest.TestCase):
                 with self.assertRaises(ValueError):
                     self.module.candidate_payloads(helper, build_report, None, None, arch)
 
+    def browser(self):
+        report = dict.fromkeys(('success', 'actualDeckyRpc', 'syntheticInput', 'ownedBrowserReaped',
+                                'bridgeStopped', 'setupCommitted', 'discoveredApiKeySaved'), True)
+        report.update(dict.fromkeys(('browserSandboxDisabled', 'realFrameContacted',
+                                     'hostBusExposed', 'installerEnabled'), False))
+        report.update(savedPort=8384, panelSha256='a'*64,
+                      stages=[{'stage': s, 'errors': [], 'text': 'Private service sync'} for s in
+                              ('running', 'stopped', 'restarted', 'stopped')],
+                      actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100, 101]},
+                                                         {'stage': 'restarted', 'pids': [200, 201]}],
+                      sandboxedRendererPids=[{'pid': 300, 'ancestryToBrowser': [300, 301]}],
+                      screenshots=dict.fromkeys(('running1', 'stopped2', 'restarted3', 'stopped4'), 'fixture'),
+                      calls=[{'httpMethod': 'POST', 'path': '/__decky-watchdog/'+route, 'status': 204}
+                             for route in ('check/start', 'check/scan_port', 'check/scan_api_key',
+                                           'check/scan_basic_auth', 'reload-config', 'stop', 'start', 'stop')])
+        return report
+
+    def test_browser_registration_or_synthetic_only_results_cannot_pass_combined_gate(self):
+        self.module.verify_browser(self.browser(), 'a'*64)
+        mutations = [dict(actualDeckyRpc=False), dict(panelSha256='b'*64), dict(realFrameContacted=True),
+                     dict(browserSandboxDisabled=True), dict(ownedBrowserReaped=False), dict(stages=[]),
+                     dict(sandboxedRendererPids=[]), dict(calls=[]), dict(screenshots={}),
+                     dict(actualPackagedProcessObservations=[{'stage': 'running', 'pids': [100]},
+                                                            {'stage': 'restarted', 'pids': [100]}])]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation), self.assertRaises(ValueError):
+                self.module.verify_browser({**self.browser(), **mutation}, 'a'*64)
+
+    def test_failed_browser_control_or_javascript_error_is_not_a_pass(self):
+        report = self.browser()
+        report['calls'][-1]['status'] = 500
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
+        report = self.browser()
+        report['stages'][1]['errors'] = ['Browser script failure']
+        with self.assertRaises(ValueError):
+            self.module.verify_browser(report, 'a'*64)
+
 
 if __name__ == "__main__":
     unittest.main()

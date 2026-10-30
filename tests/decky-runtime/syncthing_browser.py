@@ -38,7 +38,7 @@ addEventListener('message',async event=>{
    await wait(()=>text().includes('Running')&&text().includes('Private service sync')&&text().includes('Devices'));
    stage('running');
   }else{
-   const controls=[...document.getElementById('framey-root').querySelectorAll('button')];
+   const controls=[...document.querySelector('[flow-children="horizontal"]').querySelectorAll(':scope > button')];
    if(controls.length!==4)throw Error('Unexpected dashboard controls');
    controls[3].click();
    const target=event.data.action==='start'?'Running':'Stopped';
@@ -135,7 +135,8 @@ content="default-src 'none'; script-src 'unsafe-inline'; frame-src data:; connec
     temporary = tempfile.TemporaryDirectory(prefix='framey-owned-browser-')
     report = {'success': False, 'syntheticInput': True, 'actualDeckyRpc': True,
               'installerEnabled': False, 'realFrameContacted': False,
-              'hostBusExposed': False, 'browserSandboxDisabled': False}
+              'hostBusExposed': False, 'browserSandboxDisabled': False,
+              'panelSha256': hashlib.sha256(Path('/input/browser-panel.html').read_bytes()).hexdigest()}
     try:
         profile = Path(temporary.name)
         command = ['/usr/bin/chromium', '--headless', '--disable-gpu', '--no-first-run',
