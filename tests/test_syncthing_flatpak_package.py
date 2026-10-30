@@ -94,6 +94,12 @@ class PreparedPackage(unittest.TestCase):
             realFrameContacted=False, noOwnedFlatpakInstancesRemain=True,
             packagedBinarySha256='b' * 64,
             deckyApiKeyErrorStatus=403,
+            wizardConfigDiscovery=dict.fromkeys((
+                'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
+                'discoveredDefaultPort', 'discoveredDefaultApiKey', 'scannedBasicAuth',
+                'persistedThroughDeckyRpc', 'authenticatedRestWithDiscoveredKey',
+                'ownedSetupServiceStopped',
+            ), True),
             rejectedManagedDefinitions={name: {
                 'mainPidBefore': 120, 'mainPidAfter': 120,
                 'unitAndReceiptPreserved': True, 'legacyStillEnabled': True,
@@ -110,6 +116,18 @@ class PreparedPackage(unittest.TestCase):
             } for _ in range(3)],
         )
         return report, required
+
+    def test_setup_requires_discovery_and_authenticated_use_without_preset_key(self):
+        for field in ('discoveredDefaultApiKey', 'authenticatedRestWithDiscoveredKey',
+                      'remainedUnconfiguredDuringScan', 'ownedSetupServiceStopped'):
+            report, required = self.candidate()
+            report['wizardConfigDiscovery'][field] = False
+            with self.subTest(field=field), self.assertRaises(ValueError):
+                self.verify(report, required)
+        report, required = self.candidate()
+        del report['wizardConfigDiscovery']
+        with self.assertRaises(ValueError):
+            self.verify(report, required)
 
     def verify(self, report, required):
         self.module.verify_candidate(report, 'x86_64',

@@ -171,6 +171,14 @@ def verify_candidate(service, arch, bundles, required_results):
         or service.get('deckyApiKeyErrorStatus') != 403
         or any(service.get(key) is not True for key in required_results)):
         raise ValueError('Incomplete actual-package candidate lifecycle proof')
+    wizard = service.get('wizardConfigDiscovery', {})
+    if any(wizard.get(key) is not True for key in (
+        'defaultPackageConfig', 'remainedUnconfiguredDuringScan',
+        'discoveredDefaultPort', 'discoveredDefaultApiKey', 'scannedBasicAuth',
+        'persistedThroughDeckyRpc', 'authenticatedRestWithDiscoveredKey',
+        'ownedSetupServiceStopped',
+    )):
+        raise ValueError('Missing actual-package setup discovery proof')
     definitions = service.get('rejectedManagedDefinitions', {})
     routes = {'GET state', 'POST start', 'POST stop', 'POST check/start',
               'POST reload-config', 'POST external transition'}

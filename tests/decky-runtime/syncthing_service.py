@@ -393,10 +393,45 @@ def main(signed_flatpak=False):
         for name, value in [
             ('mode', 'flatpak'),
             ('flatpak_name', app),
-            ('is_setup', True),
             ('autostart', 'no'),
         ]:
             setting(name, value)
+        if signed_flatpak:
+            initial = json.loads(legacy_rpc('get_settings_json'))
+            assert initial['is_setup'] is False and initial['api_key'] == ''
+            reply = http('POST', 'check/start')
+            assert reply['status'] == 200 and json.loads(reply['body'])['success'] is True
+            runtime_identity(service)
+            reply = http('POST', 'check/scan_port')
+            assert reply['status'] == 200
+            scanned_port = json.loads(reply['body'])['port']
+            assert scanned_port == 8384
+            setting('port', scanned_port)
+            reply = http('POST', 'check/scan_api_key')
+            assert reply['status'] == 200
+            scanned_key = json.loads(reply['body'])['api_key']
+            assert scanned_key == key, 'Setup did not discover the signed package API key'
+            setting('api_key', scanned_key)
+            reply = http('POST', 'check/scan_basic_auth')
+            assert reply['status'] == 200 and json.loads(reply['body'])['basic_auth_user'] is None
+            saved = json.loads(legacy_rpc('get_settings_json'))
+            assert saved['is_setup'] is False
+            assert saved['port'] == scanned_port and saved['api_key'] == scanned_key
+            authenticated = legacy_rpc(
+                'framey_http_fetch', method='GET', path='/rest/system/status',
+                headers={'X-API-Key': scanned_key},
+            )
+            assert authenticated['status'] == 200
+            assert json.loads(authenticated['body'])['myID'] == own_id
+            assert http('POST', 'stop')['status'] == 204
+            assert prop(service, 'MainPID') == '0'
+            report['wizardConfigDiscovery'] = dict(
+                defaultPackageConfig=True, remainedUnconfiguredDuringScan=True,
+                discoveredDefaultPort=True, discoveredDefaultApiKey=True,
+                scannedBasicAuth=True, persistedThroughDeckyRpc=True,
+                authenticatedRestWithDiscoveredKey=True, ownedSetupServiceStopped=True,
+            )
+        setting('is_setup', True)
         reply = http('POST', 'reload-config')
         assert reply['status'] == 204, reply
         unit = directory / service
