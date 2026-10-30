@@ -1,6 +1,6 @@
 """Actual Decky and Syncthing service control; only inside the owned service VM."""
 
-import asyncio, hashlib, json, os, shutil, signal, subprocess, time, urllib.request, xml.etree.ElementTree as ET, zipfile
+import asyncio, configparser, hashlib, json, os, shutil, signal, subprocess, sys, time, urllib.request, xml.etree.ElementTree as ET, zipfile
 from pathlib import Path
 import websockets
 from websockets.exceptions import WebSocketException
@@ -63,13 +63,29 @@ def prop(unit, key):
     return ctl('show', unit, '--property=' + key, '--value')
 
 
-def main():
+def main(signed_flatpak=False):
     assert (
         os.getuid() == 1100
         and Path('/framey-owned-vm').read_text().strip()
-        == 'Frame Control service VM v1'
+        == ('Frame Control Flatpak VM v1' if signed_flatpak else 'Frame Control service VM v1')
     )
     home = Path.home()
+    app = 'me.kozec.syncthingtk' if signed_flatpak else 'org.framey.Syncthing'
+    version = 'v1.27.3' if signed_flatpak else 'v2.1.7'
+    launcher = (
+        ['/usr/bin/flatpak', 'run', '--die-with-parent', '--env=STNOUPGRADE=1',
+         '--command=syncthing', app]
+        if signed_flatpak else ['/input/syncthing']
+    )
+
+    def generate(directory=None):
+        command = launcher + ['generate']
+        if directory is not None:
+            command += ['--home', str(directory)]
+        if not signed_flatpak:
+            command += ['--no-port-probing']
+        subprocess.run(command, check=True, capture_output=True, timeout=60)
+
     service = 'frame-control-syncthing.service'
     backend = None
     logs = []
@@ -84,14 +100,24 @@ def main():
     ctl('start', legacy.name)
     legacy_pid = int(prop(legacy.name, 'MainPID'))
     original_legacy = legacy.read_bytes()
-    runtime = home / 'runtime'
-    runtime.mkdir()
-    subprocess.run(
-        ['/input/syncthing', 'generate', '--home', str(runtime), '--no-port-probing'],
-        check=True,
-        capture_output=True,
-        timeout=40,
-    )
+    if signed_flatpak:
+        # Use the package's actual default; the candidate unit adds no --home.
+        paths = subprocess.check_output(launcher + ['--paths'], text=True, timeout=40)
+        lines = paths.splitlines()
+        config_path = Path(lines[lines.index('Configuration file:') + 1].strip())
+        runtime = config_path.parent
+        assert runtime.is_relative_to(home / '.var/app' / app)
+        assert config_path.name == 'config.xml' and not config_path.exists()
+        generate()
+        assert config_path.is_file()
+        packaged_binary_sha = subprocess.check_output(
+            ['/usr/bin/flatpak', 'run', '--command=sha256sum', app, '/app/bin/syncthing'],
+            text=True, timeout=40,
+        ).split()[0]
+    else:
+        runtime = home / 'runtime'
+        runtime.mkdir()
+        generate(runtime)
     tree = ET.parse(runtime / 'config.xml')
     root = tree.getroot()
     for folder in root.findall('folder'):
@@ -114,12 +140,7 @@ def main():
     tree.write(runtime / 'config.xml', encoding='utf-8', xml_declaration=True)
     peer_home = home / 'peer'
     peer_home.mkdir()
-    subprocess.run(
-        ['/input/syncthing', 'generate', '--home', str(peer_home), '--no-port-probing'],
-        check=True,
-        capture_output=True,
-        timeout=40,
-    )
+    generate(peer_home)
     peer_tree = ET.parse(peer_home / 'config.xml')
     peer_root = peer_tree.getroot()
     for folder in peer_root.findall('folder'):
@@ -185,8 +206,7 @@ def main():
     peer_log = (home / 'peer.log').open('w+')
     logs.append(peer_log)
     peer = subprocess.Popen(
-        [
-            '/input/syncthing',
+        launcher + [
             'serve',
             '--home',
             str(peer_home),
@@ -202,12 +222,15 @@ def main():
     cert = (runtime / 'cert.pem').read_bytes()
     (runtime / 'owned-marker').write_text('retain private runtime')
     tools = home / 'bin'
-    tools.mkdir()
+    tools.mkdir(exist_ok=True)
     shim = tools / 'flatpak'
-    shim.write_text(
-        "#!/usr/bin/python3\nimport os,sys\nassert sys.argv[1:]==['run','--die-with-parent','--command=syncthing','org.framey.Syncthing','--no-browser','--no-restart']\nos.execv('/input/syncthing',['/input/syncthing','serve','--home','/home/tester/runtime','--no-browser','--no-restart','--no-upgrade'])\n"
-    )
-    shim.chmod(0o700)
+    if not signed_flatpak:
+        shim.write_text(
+            "#!/usr/bin/python3\nimport os,sys\nassert sys.argv[1:]==['run','--die-with-parent','--command=syncthing','org.framey.Syncthing','--no-browser','--no-restart']\nos.execv('/input/syncthing',['/input/syncthing','serve','--home','/home/tester/runtime','--no-browser','--no-restart','--no-upgrade'])\n"
+        )
+        shim.chmod(0o700)
+    else:
+        assert not shim.exists() and shutil.which('flatpak') == '/usr/bin/flatpak'
     base = home / 'decky'
     plugins = base / 'plugins'
     plugins.mkdir(parents=True)
@@ -251,10 +274,91 @@ def main():
     )
     report = {
         'architecture': os.uname().machine,
-        'flatpakPackageVerified': False,
+        'flatpakPackageVerified': signed_flatpak,
         'realFrameContacted': False,
         'systemdManagerActual': True,
     }
+    if signed_flatpak:
+        report.update(defaultPackagePaths=paths, defaultConfigPath=str(config_path),
+                      packagedBinarySha256=packaged_binary_sha)
+
+    def runtime_identity(unit):
+        main_pid = int(prop(unit, 'MainPID'))
+        assert main_pid > 0
+        if not signed_flatpak:
+            assert Path(f'/proc/{main_pid}/exe').resolve() == Path('/input/syncthing')
+            assert unit in Path(f'/proc/{main_pid}/cgroup').read_text()
+            return [main_pid]
+        group = prop(unit, 'ControlGroup')
+        assert group.startswith('/') and group != '/'
+        # Flatpak moves its process tree into its own transient app scope.
+        # Bind the executable to systemd's actual MainPID through ancestry;
+        # requiring the service cgroup alone would miss the real application.
+        parents = {}
+        for process in Path('/proc').iterdir():
+            if process.name.isdecimal():
+                try:
+                    parents[int(process.name)] = int(
+                        (process / 'stat').read_text().rsplit(') ', 1)[1].split()[1]
+                    )
+                except FileNotFoundError:
+                    pass
+
+        def lineage(pid):
+            chain = []
+            while pid > 1 and pid not in chain:
+                chain.append(pid)
+                if pid == main_pid:
+                    return chain
+                pid = parents.get(pid, 0)
+            return []
+
+        launcher_groups = Path(f'/proc/{main_pid}/cgroup').read_text().splitlines()
+        identities = []
+        diagnostic = []
+        for process in Path('/proc').iterdir():
+            if not process.name.isdecimal() or not lineage(int(process.name)):
+                continue
+            try:
+                executable = os.readlink(process / 'exe')
+                diagnostic.append({'pid': int(process.name),
+                                   'exe': executable,
+                                   'cgroup': (process / 'cgroup').read_text()})
+                if executable != '/app/bin/syncthing':
+                    continue
+                groups = [line.split(':', 2)[2] for line in (process / 'cgroup').read_text().splitlines()]
+                launcher_paths = [line.split(':', 2)[2] for line in launcher_groups]
+                assert all(g != '/' for g in groups)
+                assert any(g == outer or g.startswith(outer + '/')
+                           for g in groups for outer in launcher_paths)
+                digest = hashlib.file_digest((process / 'exe').open('rb'), 'sha256').hexdigest()
+                assert digest == packaged_binary_sha
+                namespace = os.readlink(process / 'ns/mnt')
+                assert namespace != os.readlink('/proc/self/ns/mnt')
+                info = configparser.ConfigParser()
+                info.read(process / 'root/.flatpak-info')
+                assert info['Application']['name'] == app
+                assert info['Instance']['app-commit'] == json.loads(
+                    Path('/input/flatpak-inputs.json').read_text()
+                )['bundles']['app']['commit']
+                identities.append(int(process.name))
+                report.setdefault('actualPackagedServiceProcesses', []).append({
+                    'unit': unit, 'mainPid': main_pid, 'syncthingPid': int(process.name),
+                    'controlGroup': group, 'executableSha256': digest,
+                    'launcherCgroups': launcher_groups, 'applicationCgroups': groups,
+                    'ancestryToMainPid': lineage(int(process.name)),
+                    'mountNamespace': namespace,
+                    'appCommit': info['Instance']['app-commit'],
+                    'runtimeCommit': info['Instance']['runtime-commit'],
+                })
+            except FileNotFoundError as error:
+                diagnostic.append({'pid': int(process.name), 'missing': str(error)})
+                continue
+        # v1.27.3 may retain a launcher/monitor as well as its server process.
+        # Every matching process must satisfy the same executable/namespace,
+        # signed commit and ancestry proof; all are checked after stop.
+        assert identities, diagnostic
+        return [main_pid, *identities]
     try:
         log = (home / 'decky.log').open('w+')
         logs.append(log)
@@ -288,7 +392,7 @@ def main():
 
         for name, value in [
             ('mode', 'flatpak'),
-            ('flatpak_name', 'org.framey.Syncthing'),
+            ('flatpak_name', app),
             ('is_setup', True),
             ('autostart', 'no'),
         ]:
@@ -411,14 +515,18 @@ def main():
 
         assert (
             json.loads(wait(rest, 'service-managed real Syncthing')['body'])['version']
-            == 'v2.1.7'
+            == version
         )
         first = int(prop(service, 'MainPID'))
         assert first > 0
-        assert Path(f'/proc/{first}/exe').resolve() == Path('/input/syncthing')
-        assert service in Path(f'/proc/{first}/cgroup').read_text()
+        running_pids = runtime_identity(service)
         report['realSyncthingManagedPid'] = True
         report['realDeckyRpcRest'] = True
+        if signed_flatpak:
+            denied = legacy_rpc('framey_http_fetch', method='GET',
+                                path='/rest/system/version', headers={})
+            assert denied['status'] == 403, denied
+            report['deckyApiKeyErrorStatus'] = denied['status']
         transfer = b'Frame Control private service transfer\n' * 37
         reverse = b'Frame Control private service reverse\n' * 29
         (runtime / 'sync/forward.txt').write_bytes(transfer)
@@ -444,7 +552,7 @@ def main():
         reply = http('POST', 'stop')
         assert reply['status'] == 500, reply
         assert int(prop(service, 'MainPID')) == first
-        assert Path(f'/proc/{first}/exe').resolve() == Path('/input/syncthing')
+        assert runtime_identity(service) == running_pids
         assert override.read_bytes() == foreign_bytes
         override.unlink()
         dropin.rmdir()
@@ -459,7 +567,11 @@ def main():
             prop(service, 'ActiveState') == 'inactive'
             and prop(service, 'MainPID') == '0'
         )
-        assert not Path(f'/proc/{first}').exists()
+        assert all(not Path(f'/proc/{pid}').exists() for pid in running_pids)
+        if signed_flatpak:
+            assert len(subprocess.check_output(
+                ['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=20,
+            ).splitlines()) == 1  # Only the separate private peer remains.
         report['stopRpcElapsedSeconds'] = elapsed
         report['actualStopJobReapedRuntime'] = True
         assert (runtime / 'cert.pem').read_bytes() == cert and (
@@ -491,15 +603,21 @@ def main():
         assert reply['status'] == 204, reply
         assert (
             json.loads(wait(rest, 'retained managed restart')['body'])['version']
-            == 'v2.1.7'
+            == version
         )
+        restarted_pids = runtime_identity(service)
+        assert restarted_pids[0] != first
         assert (
             returned.read_bytes() == reverse
             and (runtime / 'cert.pem').read_bytes() == cert
         )
         external = directory / 'framey-owned-external.service'
+        external_command = launcher + [
+            'serve', '--home=' + str(runtime), '--no-browser', '--no-restart', '--no-upgrade',
+        ]
         external.write_text(
-            '[Unit]\nDescription=Owned external Syncthing fixture\n[Service]\nExecStart=/input/syncthing serve --home=/home/tester/runtime --no-browser --no-restart --no-upgrade\n[Install]\nWantedBy=default.target\n'
+            '[Unit]\nDescription=Owned external Syncthing fixture\n[Service]\nExecStart='
+            + ' '.join(external_command) + '\n[Install]\nWantedBy=default.target\n'
         )
         ctl('daemon-reload')
         setting('mode', 'systemd')
@@ -528,18 +646,18 @@ def main():
             json.loads(wait(rest, 'actual external Syncthing service')['body'])[
                 'version'
             ]
-            == 'v2.1.7'
+            == version
         )
         external_pid = int(prop(external.name, 'MainPID'))
-        assert (
-            external_pid > 0
-            and external.name in Path(f'/proc/{external_pid}/cgroup').read_text()
-        )
+        assert external_pid > 0
+        if not signed_flatpak:
+            assert external.name in Path(f'/proc/{external_pid}/cgroup').read_text()
+        external_pids = runtime_identity(external.name)
         reply = http('POST', 'stop')
         assert reply['status'] == 204, reply
         assert (
             prop(external.name, 'MainPID') == '0'
-            and not Path(f'/proc/{external_pid}').exists()
+            and all(not Path(f'/proc/{pid}').exists() for pid in external_pids)
         )
         assert (
             returned.read_bytes() == reverse
@@ -567,17 +685,30 @@ def main():
         if peer.poll() is None:
             os.killpg(peer.pid, signal.SIGTERM)
         peer.wait(timeout=30)
-        assert peer.returncode == 0
+        assert peer.returncode in ((0, -signal.SIGTERM) if signed_flatpak else (0,))
+        report['peerExitStatus'] = peer.returncode
         if backend is not None:
             if backend.poll() is None:
                 os.killpg(backend.pid, signal.SIGTERM)
             backend.wait(timeout=15)
         for log in logs:
+            log.seek(0)
+            print(log.read()[-3000:], flush=True)
             log.close()
     assert not Path(f'/proc/{helper_pid}').exists()
+    if signed_flatpak:
+        instances = subprocess.check_output(
+            ['/usr/bin/flatpak', 'ps', '--columns=application'], text=True, timeout=20,
+        )
+        assert app not in instances
+        report['noOwnedFlatpakInstancesRemain'] = True
+        report['retainedCertificateSha256'] = hashlib.sha256(
+            (runtime / 'cert.pem').read_bytes()
+        ).hexdigest()
     report['ownedCleanup'] = True
     print('FRAMEY_USER_SERVICE_JSON=' + json.dumps(report), flush=True)
 
 
 if __name__ == '__main__':
-    main()
+    assert sys.argv[1:] in ([], ['--signed-flatpak'])
+    main(signed_flatpak=sys.argv[1:] == ['--signed-flatpak'])

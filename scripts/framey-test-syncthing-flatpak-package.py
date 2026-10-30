@@ -4,7 +4,8 @@
 Inputs are a disposable Debian rootfs export with systemd, Flatpak, OSTree GI
 and a kernel, plus locally generated bundles of the pinned published commits.
 No host filesystem, bus, disk, device or network NIC is exposed to the guest.
-This tests the actual package, not the Framey installer or Decky integration.
+An optional source-bound candidate helper also tests actual Decky service RPC.
+The managed installer and real Frame remain outside this disposable VM.
 """
 
 import argparse
@@ -62,8 +63,11 @@ REQUIRED = (
 
 
 def sha(path):
+    digest = hashlib.sha256()
     with path.open("rb") as source:
-        return hashlib.file_digest(source, "sha256").hexdigest()
+        for chunk in iter(lambda: source.read(1024 * 1024), b''):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def reap(process):
@@ -100,6 +104,93 @@ def prepared_bundles(preparation, arch):
     return bundles
 
 
+def module(name, path):
+    spec = importlib.util.spec_from_file_location(name, path)
+    value = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(value)
+    return value
+
+
+def candidate_payloads(helper_path, report_path, archive_path, loader_path, arch):
+    build = module('syncthing_build', ROOT / 'scripts/build-framey-syncthing.py')
+    native = module('native_decky', ROOT / 'scripts/framey-test-decky-runtime.py')
+    runtime = module('syncthing_runtime', ROOT / 'scripts/framey-test-syncthing-runtime.py')
+    if report_path.stat().st_size > 256 * 1024 or helper_path.stat().st_size > 40 * 1024**2:
+        raise ValueError('Oversized candidate input')
+    report = json.loads(report_path.read_text())
+    assets = ROOT / 'ui/vendor/syncthing-0.2.7'
+    required = {
+        'sourceCommit': build.SOURCE_COMMIT,
+        'sourceArchiveSha256': sha(assets / 'source.tar.gz'),
+        'patchSha256': sha(assets / 'watchdog.patch'),
+        'ownedUnitSha256': sha(assets / 'owned_unit.rs'),
+        'pythonSha256': sha(assets / 'main.py'),
+        'installerEnabled': False,
+    }
+    if any(report.get(key) != value for key, value in required.items()):
+        raise ValueError('Candidate build is not bound to the current sources')
+    builds = [item for item in report.get('builds', []) if item.get('architecture') == arch]
+    helper = helper_path.read_bytes()
+    elf = {'x86_64': 62, 'aarch64': 183}[arch]
+    if (len(builds) != 1 or builds[0].get('sha256') != hashlib.sha256(helper).hexdigest()
+        or builds[0].get('bytes') != len(helper)
+        or builds[0].get('serviceFileTestsExecuted') is not True
+        or helper[:4] != b'\x7fELF' or int.from_bytes(helper[18:20], 'little') != elf):
+        raise ValueError('Candidate helper/build architecture or digest mismatch')
+    loader, loader_sha = native.loader_bytes(loader_path)
+    official = (archive_path.read_bytes() if archive_path else runtime.download(
+        'https://cdn.tzatzikiweeb.moe/file/steam-deck-homebrew/versions/' + runtime.DIGEST + '.zip',
+        50 * 1024**2,
+    ))
+    if hashlib.sha256(official).hexdigest() != runtime.DIGEST:
+        raise ValueError('Pinned official plugin archive mismatch')
+    evidence = {
+        **required, 'architecture': arch, 'helperSha256': sha(helper_path),
+        'buildReportSha256': sha(report_path), 'loaderSha256': loader_sha,
+        'decky': native.RELEASE, 'officialArchiveSha256': runtime.DIGEST,
+    }
+    return {
+        'watchdog': helper, 'PluginLoader': loader, 'official.zip': official,
+        'main.py': (assets / 'main.py').read_bytes(),
+        'syncthing_service.py': (ROOT / 'tests/decky-runtime/syncthing_service.py').read_bytes(),
+        'candidate-inputs.json': json.dumps(evidence).encode(),
+    }, evidence
+
+
+def verify_candidate(service, arch, bundles, required_results):
+    if (service.get('architecture') != arch
+        or service.get('flatpakPackageVerified') is not True
+        or service.get('realFrameContacted') is not False
+        or service.get('noOwnedFlatpakInstancesRemain') is not True
+        or service.get('deckyApiKeyErrorStatus') != 403
+        or any(service.get(key) is not True for key in required_results)):
+        raise ValueError('Incomplete actual-package candidate lifecycle proof')
+    definitions = service.get('rejectedManagedDefinitions', {})
+    routes = {'GET state', 'POST start', 'POST stop', 'POST check/start',
+              'POST reload-config', 'POST external transition'}
+    if set(definitions) != {'drop-in', 'shadow fragment', 'loaded alias'}:
+        raise ValueError('Missing candidate ownership refusal cases')
+    for value in definitions.values():
+        if (value.get('mainPidBefore', 0) <= 0
+            or value.get('mainPidBefore') != value.get('mainPidAfter')
+            or value.get('unitAndReceiptPreserved') is not True
+            or value.get('legacyStillEnabled') is not True
+            or value.get('refused') != dict.fromkeys(routes, 500)):
+            raise ValueError('Ownership refusal failed to preserve the live process')
+    processes = service.get('actualPackagedServiceProcesses', [])
+    if len(processes) < 3:
+        raise ValueError('Missing packaged process identity checks')
+    for process in processes:
+        if (process.get('appCommit') != bundles['app']['commit']
+            or process.get('runtimeCommit') != bundles['runtime']['commit']
+            or process.get('executableSha256') != service.get('packagedBinarySha256')
+            or process.get('mainPid', 0) <= 0 or process.get('syncthingPid', 0) <= 0
+            or not process.get('ancestryToMainPid')
+            or process['ancestryToMainPid'][0] != process['syncthingPid']
+            or process['ancestryToMainPid'][-1] != process['mainPid']):
+            raise ValueError('Candidate service executed an unexpected package')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rootfs-tar", type=Path, required=True)
@@ -116,6 +207,10 @@ def main():
         type=Path,
         help="Offline preparation.json for locally generated exact-commit bundles",
     )
+    parser.add_argument('--candidate-helper', type=Path)
+    parser.add_argument('--candidate-build-report', type=Path)
+    parser.add_argument('--archive', type=Path, help='Optional pinned official Syncthing plugin ZIP')
+    parser.add_argument('--loader', type=Path, help='Optional pinned native Decky 3.3.0 loader')
     args = parser.parse_args()
     arch = platform.machine()
     if platform.system() != "Linux" or arch not in ARCHES:
@@ -140,6 +235,16 @@ def main():
             parser.error(str(error))
     elif arch != "x86_64":
         parser.error("ARM64 requires an exact signed offline --preparation report")
+    candidate = None
+    if args.candidate_helper or args.candidate_build_report:
+        if not (args.candidate_helper and args.candidate_build_report and args.preparation):
+            parser.error('Candidate integration requires helper, build report and preparation')
+        extra, candidate = candidate_payloads(
+            args.candidate_helper, args.candidate_build_report, args.archive, args.loader, arch,
+        )
+        payloads.update(extra)
+    elif args.archive or args.loader:
+        parser.error('Candidate archive/loader require --candidate-helper')
     manifest = {"bundles": bundles, "bundleChunks": {}}
     for kind, expected in bundles.items():
         path = args.bundles / (kind + ".flatpak")
@@ -155,12 +260,19 @@ def main():
                 )
         manifest["bundleChunks"][kind] = chunks
     payloads["flatpak-inputs.json"] = json.dumps(manifest).encode()
-    assert sum(map(len, payloads.values())) < 384 * 1024**2
+    assert sum(map(len, payloads.values())) < 480 * 1024**2
     args.output.mkdir(parents=True, exist_ok=False)
     packer_path = ROOT / "scripts/framey-test-syncthing-service.py"
     root_probe = ROOT / "tests/decky-runtime/syncthing_flatpak_package_root.py"
     user_probe = ROOT / "tests/decky-runtime/syncthing_flatpak_package.py"
     source_paths = [Path(__file__).resolve(), packer_path, root_probe, user_probe]
+    if candidate:
+        source_paths.extend(ROOT / path for path in [
+            'tests/decky-runtime/syncthing_service.py', 'scripts/build-framey-syncthing.py',
+            'scripts/framey-test-decky-runtime.py', 'scripts/framey-test-syncthing-runtime.py',
+            'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
+            'ui/vendor/syncthing-0.2.7/owned_unit.rs', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
+        ])
     fingerprints = {str(path.relative_to(ROOT)): sha(path) for path in source_paths}
     spec = importlib.util.spec_from_file_location("service_vm", packer_path)
     packer = importlib.util.module_from_spec(spec)
@@ -192,6 +304,7 @@ def main():
         "networkDevice": False,
         "hostBusExposed": False,
         "realFrameContacted": False,
+        "candidate": candidate,
     }
     (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
     command = [
@@ -247,6 +360,8 @@ def main():
         guest = json.loads(lines[0])
         result["guest"] = guest
         package = guest.get("flatpak", {})
+        if guest.get('success') is not True:
+            raise RuntimeError('Guest package probe failed; inspect retained partial result and console')
         if package.get("architecture") != arch:
             raise RuntimeError("Guest architecture does not match the native host")
         if guest.get("success") is not True or any(
@@ -260,6 +375,11 @@ def main():
             or package.get("apiKeyErrorStatus") != 403
         ):
             raise RuntimeError("Package cleanup/authentication gate failed")
+        if candidate:
+            verify_candidate(package.get('candidateService', {}), arch, bundles,
+                             packer.REQUIRED_SERVICE_RESULTS)
+            if package.get('uninstallPreservedCandidateData') is not True:
+                raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
         if any(
             sha(path) != fingerprints[str(path.relative_to(ROOT))]
             for path in source_paths
