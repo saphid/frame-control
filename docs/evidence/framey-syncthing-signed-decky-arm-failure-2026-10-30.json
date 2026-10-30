@@ -1,0 +1,47 @@
+{
+  "headSha": "67188e18b24429755f8954765cabdf9fed208686",
+  "workflowRun": 41033180996,
+  "job": 123987774729,
+  "artifact": 12967544563,
+  "artifactSha256": "91fc14cd1f4d861d02a2690bacc62f618db7705917ce043091d66212a86df295",
+  "allSourceFingerprintsVerified": true,
+  "exactHead": {
+    "headSha": "67188e18b24429755f8954765cabdf9fed208686",
+    "architecture": "aarch64",
+    "sourceSha256": {
+      "scripts/framey-prepare-syncthing-flatpak.py": "c4317b618e28f148d51ec4c3394d82b7fb1f031c35b0a96b674c9b9899419b1a",
+      "scripts/framey-test-syncthing-flatpak-package.py": "c2fe8c51608b620d4ace4ca30ba0e5d1ba187bf6017f8e9f639de32ef23b8ed5",
+      "scripts/framey-test-syncthing-service.py": "9ca5466d872571b983e5eddbc93f1ac9a9d9b91045f259c46c3efe27bce3cc82",
+      "tests/decky-runtime/syncthing_flatpak_package.py": "9db217441e55056411dea92b8e6f17a8ce6131d47dd22d20b2f711d60ce9c916",
+      "tests/decky-runtime/syncthing_flatpak_package_root.py": "5db2dc0ff1a56f761efad1de2d5e31f7a807e676e0172bda34130ad87d0efacb",
+      "tests/decky-runtime/syncthing_service.py": "101825934a6f7c25b4c2cace557e82baf2efc539dcf731df6c57f2af0bc38cc1",
+      "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "2676b385c201614ee891f7c69fb6348e0fa444b1bf9a09b7d2f8c18187562bc0",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+      "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+      "tests/decky-runtime/Containerfile.flatpak-bundles": "58a8e6ef0e3b18d83f9bff165482ad62e2ec317903e75b8ae9cd9329a142146e",
+      "tests/decky-runtime/Containerfile.flatpak-vm": "fcf5874a330ee0bfcd8a44b19532cffe1ba6fc0f700276abd0d476708a2c0ed6",
+      ".github/workflows/syncthing-flatpak-package.yml": "742521c7ffe6ab214c53a6b10b96ce046861938283c0ccb4bec62289206bff87"
+    },
+    "packagePass": false
+  },
+  "combinedGatePassed": false,
+  "ownedQemuReaped": true,
+  "partialPackageResults": {
+    "architecture": "aarch64",
+    "signedBundlesInstalled": true,
+    "packageLaunched": true,
+    "actualTwoWaySync": true,
+    "actualUserServiceLifecycle": true,
+    "certificateRetained": true,
+    "syncRetainedAfterRestart": true,
+    "ownedProcessesReaped": true,
+    "noOwnedFlatpakInstancesRemain": true
+  },
+  "failure": "syncthing_service.py:408 asserted scanned_port == 8384. The original fixture did not record the returned port or retry it; combined Decky service proof is incomplete.",
+  "interpretation": "Service-running state is insufficient to prove GUI/API readiness. Startup timing is a hypothesis until the retry journal establishes it.",
+  "correction": "Bounded backend discovery probes using the existing guest readiness wait, recording every returned port and elapsed time. HTTP status errors and unexpected non-null ports fail immediately. The browser performs one scan then offers manual port entry, which this retry fixture does not verify. No fabricated port or API key.",
+  "installerEnabled": false,
+  "realFrameContacted": false
+}

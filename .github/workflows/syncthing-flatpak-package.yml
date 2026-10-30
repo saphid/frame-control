@@ -5,14 +5,22 @@ on:
     branches: [main]
     paths:
       - 'scripts/framey-*syncthing*.py'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
+      - 'tests/decky-runtime/syncthing_service.py'
+      - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
   pull_request:
     paths:
       - 'scripts/framey-*syncthing*.py'
+      - 'scripts/build-framey-syncthing.py'
+      - 'scripts/framey-test-decky-runtime.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
+      - 'tests/decky-runtime/syncthing_service.py'
+      - 'ui/vendor/syncthing-0.2.7/**'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
@@ -66,7 +74,7 @@ jobs:
             --mount "type=bind,source=$RUNNER_TEMP/flatpak-generated,target=/output" \
             "$audit_image" /scripts/framey-prepare-syncthing-flatpak.py bundle \
             --architecture "$(uname -m)" --directory /payload --output /output/bundles
-      - name: Actual native package, systemd service, two-way sync and preserving uninstall
+      - name: Actual native package with Decky RPC, owned service, sync and preserving uninstall
         run: |
           vm_image="framey-flatpak-vm:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           vm_container="framey-flatpak-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -80,11 +88,16 @@ jobs:
             -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
           docker create --name "$vm_container" --network none --cap-drop ALL --entrypoint /bin/true "$vm_image"
           docker export "$vm_container" > "$RUNNER_TEMP/flatpak-rootfs.tar"
+          docker pull rust:1.98.1-bookworm
+          python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
+            --architectures "$(uname -m)" --output "$RUNNER_TEMP/signed-package-candidate"
           python3 scripts/framey-test-syncthing-flatpak-package.py \
             --rootfs-tar "$RUNNER_TEMP/flatpak-rootfs.tar" \
             --bundles "$RUNNER_TEMP/flatpak-generated/bundles" \
             --key "$RUNNER_TEMP/flatpak-generated/bundles/flathub-key.gpg" \
             --preparation "$RUNNER_TEMP/flatpak-generated/bundles/preparation.json" \
+            --candidate-helper "$RUNNER_TEMP/signed-package-candidate/$(uname -m).watchdog" \
+            --candidate-build-report "$RUNNER_TEMP/signed-package-candidate/build-report.json" \
             --output "$RUNNER_TEMP/flatpak-package"
       - name: Bind evidence to exact checked-out head
         if: always()
@@ -96,7 +109,7 @@ jobs:
           from pathlib import Path
           head=subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
           assert head==os.environ['AUDIT_HEAD']
-          paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
+          paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/syncthing_service.py','scripts/build-framey-syncthing.py','ui/vendor/syncthing-0.2.7/main.py','ui/vendor/syncthing-0.2.7/watchdog.patch','ui/vendor/syncthing-0.2.7/owned_unit.rs','ui/vendor/syncthing-0.2.7/source.tar.gz','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
           report={'headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
           result=Path(os.environ['RUNNER_TEMP'])/'flatpak-package/result.json'
           if result.exists():report['packagePass']=json.loads(result.read_text()).get('success') is True
@@ -113,4 +126,6 @@ jobs:
             ${{ runner.temp }}/flatpak-package/inputs.json
             ${{ runner.temp }}/flatpak-package/console.log
             ${{ runner.temp }}/flatpak-exact-head.json
+            ${{ runner.temp }}/signed-package-candidate/*.json
+            ${{ runner.temp }}/signed-package-candidate/*.log
           if-no-files-found: error

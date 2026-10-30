@@ -4,8 +4,10 @@ Syncthing remains **broken and blocked from managed installation**. The
 [AMD64 package audit](framey-syncthing-flatpak-runtime-2026-10-30.md) proves
 actual package launch, private service control and two-way sync locally.
 This follow-up makes the same gate repeatable on native AMD64 and ARM64 CI.
-A new workflow definition is not a passing runtime result. Native package CI
-remains unverified until the exact-head artifacts prove every required gate.
+Both native jobs at exact PR #472 head `3fcda281e24dcb11897cabcc8de8db261a105244`
+now pass. Their retained artifacts were independently checked against the
+committed sources and all required results; see [native CI evidence](framey-syncthing-native-ci-2026-10-30.json).
+This establishes package execution, not combined Decky or managed installation.
 
 ## Exact signed inputs
 
@@ -107,7 +109,8 @@ completed in 0.215 seconds. The exact preparation/source/rootfs/kernel/initrd/bu
 fingerprints and all required results are retained. Its owned VM was reaped;
 both offline containers and only the image created for this audit were removed.
 Public caches and pre-existing data remain. ARM64 bundle preparation on this
-AMD64 host is static evidence only; native ARM64 runtime remains unverified.
+AMD64 host was static evidence only; native ARM64 runtime was subsequently
+verified by the exact-head CI replay below.
 
 ## First native CI result and bounded retry
 
@@ -130,9 +133,21 @@ systemd unit 2,460 seconds and the outer owned emulator 2,520 seconds. The
 workflow has a 75-minute ceiling including preparation/build work. AMD64 keeps
 its existing 300/840/900/960-second limits. Timeout diagnostics retain the actual
 command, elapsed time and captured output; a failed guest is reported before
-testing its completed architecture field. ARM64 remains unverified until an
-exact-new-head job and its retained evidence pass. This budget change alone
-does not establish that the installation succeeds.
+testing its completed architecture field. A budget change alone does not
+establish that installation succeeds.
+
+## Verified native retry
+
+[Run 41026287920](https://github.com/saphid/frame-control/actions/runs/41026287920)
+completed successfully on both AMD64 and ARM64 at exact head `3fcda28`. Independent
+artifact verification matched every committed source fingerprint, pinned
+app/runtime commits, embedded key and signatures. Both actual packages passed
+version/namespace checks, authenticated two-way sync, service restart, retained
+certificate/data, cleanup and preserving uninstall, without forced termination.
+Stop took 0.102 seconds on AMD64 and 0.716 seconds on ARM64. The artifact IDs,
+ZIP digests, source fingerprints and guest results are retained in the
+[native CI record](framey-syncthing-native-ci-2026-10-30.json). The earlier
+ARM64 failure remains recorded separately.
 
 Native ARM64 package execution is not established by an AMD64 run, ARM64
 metadata/downloads or cross-building an image. Even successful package CI

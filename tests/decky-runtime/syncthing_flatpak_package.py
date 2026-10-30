@@ -424,10 +424,31 @@ def main():
     instances = flat("ps", "--columns=application")
     assert APP not in instances and not forced
     report["noOwnedFlatpakInstancesRemain"] = True
+    if Path('/input/candidate-inputs.json').exists():
+        candidate = subprocess.run(
+            ['python3', '/input/syncthing_service.py', '--signed-flatpak'],
+            capture_output=True, text=True, timeout=360,
+        )
+        print(candidate.stdout, flush=True)
+        print(candidate.stderr[-12000:], flush=True)
+        lines = [line.partition('FRAMEY_USER_SERVICE_JSON=')[2]
+                 for line in candidate.stdout.splitlines()
+                 if 'FRAMEY_USER_SERVICE_JSON=' in line]
+        assert candidate.returncode == 0 and len(lines) == 1
+        report['candidateService'] = json.loads(lines[0])
+        assert APP not in flat('ps', '--columns=application')
+        report['candidateInputs'] = json.loads(Path('/input/candidate-inputs.json').read_text())
     marker = home / ".var/app" / APP / "preserved-owned-marker"
     marker.write_text("private fixture data")
     flat("uninstall", "--user", "--assumeyes", "--noninteractive", APP, timeout=120)
     assert marker.read_text() == "private fixture data"
+    if 'candidateService' in report:
+        candidate = report['candidateService']
+        runtime = Path(candidate['defaultConfigPath']).parent
+        assert hashlib.sha256((runtime / 'cert.pem').read_bytes()).hexdigest() == candidate['retainedCertificateSha256']
+        assert (runtime / 'owned-marker').read_text() == 'retain private runtime'
+        assert hashlib.sha256((runtime / 'sync/reverse.txt').read_bytes()).hexdigest() == candidate['reverseSha256']
+        report['uninstallPreservedCandidateData'] = True
     report["uninstallPreservedOwnedData"] = True
     print("FRAMEY_FLATPAK_USER_JSON=" + json.dumps(report), flush=True)
 
