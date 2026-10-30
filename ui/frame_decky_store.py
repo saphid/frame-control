@@ -939,7 +939,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=main.read_text(encoding='utf-8')
                 if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
                     raise RuntimeError('DeckyParty Python source mismatch')
-                source='import pwd\nimport signal\n'+source
+                source='from __future__ import annotations\nimport pwd\nimport signal\n'+source
                 a=source.index('    @staticmethod\n    def _get_home_dir(')
                 b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
                 source=source[:a]+"""    @staticmethod

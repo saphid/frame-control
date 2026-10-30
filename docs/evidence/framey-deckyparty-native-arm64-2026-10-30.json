@@ -1,0 +1,98 @@
+{
+  "workflowRun": "https://github.com/saphid/frame-control/actions/runs/40999192658",
+  "headCommit": "bdeb347e20c11fc22723f82337ce5fc0500e4acb",
+  "runAttempt": 1,
+  "artifactId": 12952274825,
+  "decky": "v3.3.0",
+  "architecture": "aarch64",
+  "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+  "cases": [
+    {
+      "id": 117,
+      "name": "DeckyParty File Manager",
+      "version": "1.0.0",
+      "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+      "shim": "deckyparty-user-lifecycle",
+      "calls": [
+        {
+          "method": "is_enabled",
+          "result": false
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": false,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": false,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": true,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "set_enabled",
+          "result": null
+        },
+        {
+          "method": "get_status",
+          "result": {
+            "enabled": true,
+            "password": "[private fixture credential omitted]",
+            "url": null,
+            "home": "/home/tester",
+            "user": "tester"
+          }
+        },
+        {
+          "method": "is_enabled",
+          "result": false
+        }
+      ],
+      "discovered": [
+        {
+          "name": "DeckyParty File Manager",
+          "version": "1.0.0",
+          "load_type": 0,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "privateDownload": true,
+        "privateUpload": true,
+        "privateDelete": true,
+        "anonymousAndWrongPasswordRefused": true,
+        "disabledChildReaped": true,
+        "reloadStoppedServer": true,
+        "unrelatedChildUntouched": true
+      },
+      "result": "discovery, original Copyparty authenticated private listing/download/upload/delete, disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified"
+    }
+  ]
+}

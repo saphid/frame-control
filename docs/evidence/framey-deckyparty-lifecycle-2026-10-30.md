@@ -21,6 +21,10 @@ checks its Python source hash and changes the backend to:
 - Use the actual UID's username and current home, invoking the original helper
   with `/usr/bin/python3`. Loader-specific Python/library environment variables
   are removed only from the owned child's environment.
+- Defer annotation evaluation so the managed backend also imports under the
+  host's minimum Python 3.9. The first CI head failed there on upstream's
+  `str | None` annotation; the corrected install and seven lifecycle contracts
+  pass in a read-only, network-isolated Python 3.9 container.
 - Keep Copyparty's temporary extraction cache inside plugin runtime storage,
   avoiding the shared global `/tmp/pe-copyparty.*` cache cleanup.
 - Start the helper in its own process session, terminate only that process
@@ -67,19 +71,25 @@ response listener. Credentials generated inside the fixture are omitted from
 the committed report. Containers, anonymous volumes and the runner's image
 are removed by the harness.
 
-The same case is registered for native AMD64/ARM64 CI; this local evidence
-proves x86_64 only. Three fake-Frame HTTP/SSH install/update/remove tests passed
+The same case passed [native AMD64/ARM64 CI](https://github.com/saphid/frame-control/actions/runs/40999192658)
+on head `bdeb347e20c11fc22723f82337ce5fc0500e4acb`, first attempt.
+The [ARM64 artifact excerpt](framey-deckyparty-native-arm64-2026-10-30.json)
+identifies the exact workflow/head/loader and records the same independent
+file-operation and lifecycle checks. That head's Python 3.9 failure was fixed
+afterward; the new exact-head CI remains a merge gate.
+Three fake-Frame HTTP/SSH install/update/remove tests passed
 in 72.393 seconds and their uniquely named project/volumes were removed.
 The full local suite passed **1,774 tests, 16 skips, zero failures** in
 209.697 seconds. The first run found the missing runtime-probe inventory entry;
 that entry was added before this passing run. Fifteen compatibility lookup/doc
 checks also pass after updating the table; generated docs and diff checks pass.
-The optional full-catalog audit was not run. No new frontend behavior or browser
+The subsequent [full-catalog transport audit](framey-catalog-transport-2026-10-30.md)
+also passes all 116 pinned archives. No new frontend behavior or browser
 evidence is claimed.
 
 ## Limits
 
-DeckyParty stays **partial**. New ARM64 CI must pass before merge. Real Frame
+DeckyParty stays **partial**. New exact-head CI must pass before merge. Real Frame
 managed execution, LAN/HTTPS behavior, external media, real user files,
 panel enable/password presentation, wearer-visible rendering and physical
 controller use remain unverified. No real Frame was contacted. The separate

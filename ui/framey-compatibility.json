@@ -10400,13 +10400,13 @@
         "https://github.com/9001/copyparty"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.0.0 runs the unchanged Copyparty helper as the actual service user without sudo, isolates its temporary cache, and reaps its owned process session on disable/unload. Published Decky 3.3.0 x86_64 passes authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup with an unrelated child preserved. Existing copies need Update/reinstall. Native ARM64 CI, LAN/HTTPS, external media, the real Frame backend, panel controls and worn/controller use remain unverified.",
+      "reason": "Exact managed 1.0.0 runs the unchanged Copyparty helper as the actual service user without sudo, isolates its temporary cache, and reaps its owned process session on disable/unload. Published Decky 3.3.0 AMD64/ARM64 pass authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup with an unrelated child preserved. Existing copies need Update/reinstall. LAN/HTTPS, external media, the real Frame backend, panel controls and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "isolated Decky 3.3.0 x86_64 private file-server lifecycle"
+        "isolated Decky 3.3.0 AMD64/ARM64 private file-server lifecycle"
       ],
       "browser": {
         "id": 117,
@@ -10440,7 +10440,8 @@
         "compatShim": "deckyparty-user-lifecycle",
         "actualDeckyX86": true,
         "actualFrameBackend": false,
-        "mode": "owned disposable Docker volume, loopback HTTP and actual plugin reload; network/device/session isolated"
+        "mode": "owned disposable Docker volume, loopback HTTP and actual plugin reload; network/device/session isolated",
+        "actualDeckyArm64": true
       }
     },
     {
