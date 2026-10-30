@@ -3,7 +3,7 @@
   "installerEnabled": false,
   "realFrameContacted": false,
   "runtimePass": false,
-  "status": "Third trial failed before browser readiness; CSP correction awaits a new combined runtime result.",
+  "status": "CSP readiness regression passes with synthetic backend; fourth combined VM trial at 86311dc remains pending.",
   "rootfsTarSha256": "bd23ea5337a1a5fecd7be8624478d4c50b5258d2b8044fd2cfa900de2f117fc9",
   "builderImageId": "sha256:8ffb5906249afd55935604f4899820d992bab4921bc804331986719ca149ddde",
   "failedDevelopmentTrials": [
@@ -119,5 +119,29 @@
     "failures": 0,
     "elapsedSeconds": 223.328,
     "logSha256": "df0049576ad320b56f5c3a1951203054c4adbe39a07abf5a70223625f064ebab"
+  },
+  "cspReadinessRegression": {
+    "sourceRevision": "86311dc",
+    "realBackend": false,
+    "realFrameContacted": false,
+    "results": [
+      {
+        "embeddedScriptsAllowed": false,
+        "ready": false,
+        "calls": [],
+        "sandboxDisabled": false
+      },
+      {
+        "embeddedScriptsAllowed": true,
+        "ready": true,
+        "calls": [
+          "get_settings_json",
+          "get_settings_json"
+        ],
+        "sandboxDisabled": false
+      }
+    ],
+    "scriptSha256": "3ffbb3a1718f71c8522a86d4cf429ffa9c09d1d3c82f8154993f511c13cdd391",
+    "resultSha256": "bb7f35c558eb540611668bbaf1c0427d69f5898fb31681a553a95e4f36ca9190"
   }
 }

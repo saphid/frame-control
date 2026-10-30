@@ -79,3 +79,10 @@ The owned browser, bridge and VM were reaped. Its parent CSP omitted the
 permits those scripts and separately denies all child network connections.
 A fresh combined trial remains required. A passing result must be independently
 bound to all packed source fingerprints before any completion claim.
+
+A local Chrome readiness regression reproduced the CSP failure with zero RPC
+calls. Allowing the embedded scripts reached ready and made two initial
+settings calls. This small reproduction used synthetic settings and no sandbox
+disable flags; it supplies no actual-backend or Frame usability proof.
+The fourth combined trial runs at `86311dc`, with the corrected test-only
+parent policy and the explicit child `connect-src 'none'` policy.
