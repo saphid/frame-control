@@ -84,6 +84,16 @@ class Compatibility(unittest.TestCase):
         result = compatibility.lookup(release['id'], release['sha256'], release['version'])
         self.assertEqual(result['status'], 'unverified')
 
+    def test_old_radiyo_copy_requires_child_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 24)
+        old = dict(storeId=24, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['radiyo-verified-tls'])
+        updated = dict(old, compatShims=['radiyo-verified-tls', 'radiyo-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall this managed plugin', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+
     def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
         installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),

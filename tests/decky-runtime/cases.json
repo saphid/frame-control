@@ -101,7 +101,10 @@
   {
     "id": 24,
     "shim": "radiyo-verified-tls",
-    "probe": "radio-local"
+    "probe": "radio-local",
+    "additionalShims": [
+      "radiyo-ipc-eof"
+    ]
   },
   {
     "id": 132,
