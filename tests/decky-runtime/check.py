@@ -142,6 +142,10 @@ def main():
         new = "            logger.info(f'FRAMEY_PRIVATE_UNLOAD task={self.dropped_task!r} same_loop={self.dropped_task.get_loop() is asyncio.get_running_loop()} current={asyncio.current_task()!r}')\n            cancelled = self.dropped_task.cancel()\n            logger.info(f'FRAMEY_PRIVATE_UNLOAD cancel={cancelled!r} task={self.dropped_task!r}')"
         assert source.count(old) == 1
         source = source.replace(old, new)
+        old_ready = '        logger.info("Started background task for dropped games checking")'
+        new_ready = old_ready + "\n        import signal, time\n        framey_loop = asyncio.get_running_loop()\n        framey_original_signal = framey_loop._signal_handlers[signal.SIGTERM]._callback\n        def framey_private_signal():\n            logger.info(f'FRAMEY_PRIVATE_SIGTERM pid={os.getpid()} at={time.monotonic()}')\n            framey_original_signal()\n        framey_loop.add_signal_handler(signal.SIGTERM, framey_private_signal)"
+        assert source.count(old_ready) == 1
+        source = source.replace(old_ready,new_ready)
         old_close = "            await self.db.close()"
         new_close = "            import threading, traceback\n            def framey_private_threads():\n                logger.info(f'FRAMEY_PRIVATE_THREADS {[(t.name,t.ident,t.is_alive()) for t in threading.enumerate()]!r}')\n                for ident,frame in sys._current_frames().items():\n                    logger.info('FRAMEY_PRIVATE_STACK '+str(ident)+' '+''.join(traceback.format_stack(frame)))\n            asyncio.get_running_loop().call_later(.2,framey_private_threads)\n            logger.info('FRAMEY_PRIVATE_BEFORE_DB_CLOSE')\n            await self.db.close()\n            logger.info('FRAMEY_PRIVATE_AFTER_DB_CLOSE')"
         assert source.count(old_close) == 1
