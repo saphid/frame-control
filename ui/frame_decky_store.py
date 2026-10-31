@@ -265,6 +265,12 @@ def apply_script(plugin_id, digest):
     if plugin_id == 93 and digest == '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SETTINGS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 117 and digest == '193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECKYPARTY_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 61 and digest == 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_TABMASTER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 63 and digest == '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_FREE_LOADER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -937,8 +943,19 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 old=b'        data = json.loads(settings_file)\n'
                 if source.count(old)!=1: raise RuntimeError('TabMaster restore source changed')
                 new=b'        data = json.load(settings_file)\n        if not isinstance(data, dict):\n          return False\n'
-                main.write_bytes(source.replace(old,new))
+                ipc=globals().get('FRAMEY_TABMASTER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing TabMaster child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('TabMaster child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+source.replace(old,new))
                 compat_shims.append('tabmaster-json-file-restore')
+                compat_shims.append('tabmaster-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
@@ -1110,7 +1127,16 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=main.read_text(encoding='utf-8')
                 if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
                     raise RuntimeError('DeckyParty Python source mismatch')
-                source='from __future__ import annotations\nimport pwd\nimport signal\n'+source
+                ipc=globals().get('FRAMEY_DECKYPARTY_IPC_SOURCE')
+                if not isinstance(ipc,str): raise RuntimeError('Missing DeckyParty child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('DeckyParty IPC helper collides with archive')
+                ipc_helper.parent.mkdir(exist_ok=True)
+                ipc_helper.write_text(ipc)
+                source=('from __future__ import annotations\n'
+                    'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                    '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    'import pwd\nimport signal\n'+source)
                 a=source.index('    @staticmethod\n    def _get_home_dir(')
                 b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
                 source=source[:a]+"""    @staticmethod
@@ -1199,6 +1225,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('deckyparty-user-lifecycle')
+                compat_shims.append('deckyparty-ipc-eof')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's
