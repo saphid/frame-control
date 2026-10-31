@@ -647,6 +647,18 @@ container, private tmpfs home and temporary files. Nothing contacts the headset
 or its shared lock. Failed/timed-out containers and the private image tag are
 removed by the runner.
 
+Each completed native case retains `runtimeConsole.text` and its SHA-256 after
+final fixture cleanup, plus process return codes and any forced-kill escalation.
+Probe or cleanup exceptions print the complete available console to stderr and
+do not emit a successful case result. Five tests exercise long output, normal
+shutdown, a failed probe, forced cleanup, cleanup exceptions and parent-owned
+child shutdown; four use real subprocesses. The fixture sends SIGTERM only to
+the owned Decky loader and waits eight seconds for its unload protocol. Auxiliary
+fixtures retain group cleanup, and bounded group SIGKILL escalation remains
+recorded. `cleanShutdownVerified: false` explicitly prevents treating captured
+output or a zero loader exit as clean plugin shutdown. Case-specific lifecycle
+gates still apply.
+
 Every `compat_shims.append` in the managed installer must have a case in
 `tests/decky-runtime/cases.json`. Add each affected pinned official archive and
 a safe public-method probe when introducing a shim. Ordinary unit tests reject

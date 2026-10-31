@@ -60,3 +60,48 @@ AMD64 replay does not qualify that matrix. Exact final-head CI/e2e/native and
 all triggered package gates remain required. Compatibility stays partial; no
 Steam library editing, browser/backend integration, backup/restore, managed
 Frame, wearer/controller or release proof is added.
+
+## Catalog diagnostic wording correction
+
+The compatibility row previously called the unattributed JSON diagnostic a
+shutdown diagnostic. Remove that phase attribution: the retained settings replays
+do not localize it. The separate instrumented AMD64 observation in
+[the startup diagnostic record](framey-tabmaster-json-startup-2026-10-31.md)
+traces one empty settings read before initialization/shutdown; it does not
+establish the cause or phase of every occurrence or ARM64 behavior. Historical
+raw reports are retained without rewriting their bytes.
+
+This correction changes the TabMaster reason and its generated documentation
+only; no compatibility status, install policy, runtime source, archive or
+observed result is promoted. Current hosted results remain bound to their
+exact tested head. The correction is carried by the normal main refresh below;
+final exact-head gates remain required before merge.
+
+## Refresh onto main d3ae60e
+
+Normally merged main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` into
+the correction at source `d340158d1e12dba40f9690c53985f8d86e200925`.
+That main's hosted jobs were still pending at the time of this local replay;
+integration does not qualify main or authorize a merge. No history was rewritten.
+
+All 31 main probe bodies and the complete prior TabMaster probe remain unchanged.
+All 116 catalog install/status policies, the other 115 complete catalog records
+and production store/input/IPC sources match main. The TabMaster reason drops
+the unsupported shutdown-phase attribution. All 92 focused host tests passed;
+the generated compatibility document and diff checks passed.
+
+A fresh isolated AMD64 replay with digest-pinned published Decky 3.3.0 passes
+the 40 settings RPCs, private settings/restart assertions, original archive and
+backend pins, and all 15 current native-source fingerprints. Both parent-only
+loader stops return zero. The integrated generic cleanup records both loaders
+as already exited; it does not claim another signal or clean plugin shutdown.
+The complete available console and its hash are retained, including one JSON
+diagnostic whose phase/cause this replay does not establish. No full process
+snapshot was retained; PID/start-time reaping remains a source-bound assertion.
+
+The [refresh audit](framey-tabmaster-maind3ae60e-refresh-2026-10-31.json)
+and [raw native report](framey-tabmaster-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+record the exact source and limits. Hosted checks/e2e, native AMD64/ARM64 and all
+triggered package modes must be requalified at the final head. Earlier artifacts
+remain historical. Compatibility stays partial; no headset or release proof
+is added.
