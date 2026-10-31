@@ -217,7 +217,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
                                      hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 117:
-                    self.assertEqual(found[0]['compatShims'], ['deckyparty-user-lifecycle'])
+                    self.assertEqual(found[0]['compatShims'], ['deckyparty-user-lifecycle', 'deckyparty-ipc-eof'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     'ace5c277fc010ebc102ba731c479a478e11aa004f763755c8e5b298a4a2c0734')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                         helper_hash = hashlib.sha256(bundle.read('Decky-CP/bin/copyparty-sfx.py')).hexdigest()
