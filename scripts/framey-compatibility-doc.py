@@ -56,7 +56,6 @@ def render(data):
         'A [Shotty copy-boundary follow-up](evidence/framey-shotty-bounded-2026-10-30.md) confines output paths, refuses symlinks and ambiguous account matches, preserves conflicting images and makes independent copies across filesystems. '
         'Published Decky 3.3.0 x86_64 verifies private selected-copy and historical-aggregation RPCs; the local runtime proof is x86_64 only, and real Frame screenshots, continuous rescue and worn/controller use remain unverified. Existing installs need Update/reinstall.', '',
         'A [Shotty unload follow-up](evidence/framey-shotty-unload-2026-10-31.md) applies the existing child-local IPC EOF repair only to the exact managed 0.1.0 archive. Local published Decky 3.3.0 AMD64 verifies two clean parent-only stops, restart and a prior-source forced-kill negative. Fresh ARM64 unload and full hosted qualification remain pending; Shotty stays partial. Update/reinstall is required.', '',
-
         'A [Download All queue follow-up](evidence/framey-download-all-2026-10-30.md) enables only the exact managed 1.1.0 archive. '
         'An opaque local Chromium panel with synthetic Steam callbacks verifies Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failure. '
         'Published Decky 3.3.0 AMD64 and ARM64 verify discovery and logging RPC only. Actual Steam queue changes, ARM64 Frame runtime, headset rendering and physical controller use remain unverified; the plugin is partial and older copies require update/reinstall.', '',
