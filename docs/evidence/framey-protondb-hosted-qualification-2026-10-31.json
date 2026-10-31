@@ -1,0 +1,125 @@
+{
+  "at": "2026-10-31T18:59:37.562684+00:00",
+  "head": "7f7e4ea0592f0abcfcf2087be57cd4b1e742d2ac",
+  "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "hostedChecks": 18,
+  "artifacts": 8,
+  "uniqueSources": 149,
+  "verifiedHashBindings": 1363,
+  "nativeArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "casesEach": 46,
+  "protondbRpcsEach": [
+    10,
+    6
+  ],
+  "timerRpcsEach": [
+    31,
+    10,
+    18
+  ],
+  "hostedE2e": {
+    "tests": 53,
+    "skips": 1,
+    "testSeconds": 241.638,
+    "skip": "optional full catalog cache not mounted"
+  },
+  "nativeSummary": {
+    "x86_64": {
+      "repaired": {
+        "originalBackend": false,
+        "successfulRpcs": 10,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": true,
+          "result": {
+            "plugin_version": "1.3.4",
+            "os_name": "Debian GNU/Linux",
+            "os_version": "13",
+            "decky_version": "v3.3.0"
+          },
+          "seconds": 0.003
+        },
+        "stopSeconds": [
+          0.214,
+          0.185
+        ],
+        "forcedPluginKills": 0,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": true
+      },
+      "original": {
+        "originalBackend": true,
+        "successfulRpcs": 6,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": false,
+          "error": "TimeoutError",
+          "seconds": 8.011
+        },
+        "stopSeconds": [
+          5.297
+        ],
+        "forcedPluginKills": 2,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": false
+      }
+    },
+    "aarch64": {
+      "repaired": {
+        "originalBackend": false,
+        "successfulRpcs": 10,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": true,
+          "result": {
+            "plugin_version": "1.3.4",
+            "os_name": "Debian GNU/Linux",
+            "os_version": "13",
+            "decky_version": "v3.3.0"
+          },
+          "seconds": 0.003
+        },
+        "stopSeconds": [
+          0.185,
+          0.185
+        ],
+        "forcedPluginKills": 0,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": true
+      },
+      "original": {
+        "originalBackend": true,
+        "successfulRpcs": 6,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": false,
+          "error": "TimeoutError",
+          "seconds": 8.007
+        },
+        "stopSeconds": [
+          5.302
+        ],
+        "forcedPluginKills": 2,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": false
+      }
+    }
+  },
+  "allFourPackageModesVerified": true,
+  "packageBrowserScope": "Package/Syncthing controls, not ProtonDB badge UI",
+  "feedbackClearAtReview": true,
+  "sourcePreservesUnrelatedMainBehavior": true,
+  "sharedFreeLoaderStopDefaultBehaviorPreserved": true,
+  "mainCi": "running at review",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "originalIntermittentArmFailureCauseProven": false,
+  "rawSha256": "db4482e15e9a47c7080ed8eb164cf797b07a8f73a1f3a5b127b83ad5cba4fd6e",
+  "rawBytes": 181334,
+  "rawRetention": "Native reports/source audits/logs/inventory/verifiers retained; full package reports/packets/images remain linked hosted artifacts and local state."
+}
