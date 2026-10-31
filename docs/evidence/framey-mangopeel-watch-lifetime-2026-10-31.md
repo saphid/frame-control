@@ -137,6 +137,43 @@ hosted ARM64, AMD64, complete CI/e2e/ownership and all package modes remain
 required. It does not yet prove the ARM64 root cause resolved. Earlier passing
 heads remain historical; no failed gate is waived and no release is published.
 
+## Refresh onto qualified main012f874
+
+Qualified main `012f874906bd122c29e75a0c9d572980b41a1085` was merged normally
+at `77dbb3f51f4bd107e2b1cd7a6f390bf998c48e96`, without rewriting branch history.
+Regenerating the compatibility document resolved its context conflict while
+preserving main’s newer Wine/Shotty entries and the existing MangoPeel row.
+All 31 main probe bodies (36 dispatch branches), all 116 catalog policies and
+the other 115 complete catalog records remain unchanged. The exact MangoPeel
+watch replacement, IPC prelude, native probe and published archive are retained.
+Main’s production sources differ only by the existing MangoPeel adaptation.
+
+All 97 focused store, compatibility, runtime-coverage, IPC, Wine lifecycle and
+Wine unload-evidence tests pass. A fresh local published Decky 3.3.0 AMD64 replay
+matches all 15 source fingerprints, the published loader/archive, the installed
+backend independently reconstructed from the original bytes plus the exact
+repair, and the current main IPC adapter. The private profile writes, actual
+kernel inotify callbacks, replacement watch, reload and parent-only final loader
+shutdown pass. The loader returns zero; the two plugin stops require no forced
+kill. Complete available case-specific reload/final-shutdown console bytes are
+retained and hashed. This is scoped to that private path, not a global clean
+shutdown claim or a full general loader console. Profile/process preservation
+assertions are bound to the verified source; separate complete snapshots are
+not retained. No owned containers or image tags remain.
+
+[Refresh audit](framey-mangopeel-main012f874-refresh-2026-10-31.json) and
+[raw reports, source audit and unit log](framey-mangopeel-main012f874-refresh-2026-10-31-raw.json.gz)
+retain this result. The earlier private AMD64/ARM64 pass at `a9612745` stays
+historical; it does not qualify the refreshed head. Fresh hosted checks/e2e,
+the full native matrix (41 probes / 34 archive pins / 15 source fingerprints on
+each architecture), ownership and every triggered package mode remain required.
+The earlier failed ARM64 result also remains historical negative evidence.
+
+This local refresh is held unpublished while #514’s remaining ARM64 package
+and next main qualification are pending, to avoid triggering a known temporary
+base twice. It is not merge or release qualification. A later main transition
+requires normal integration and fresh proof; no old hosted artifact substitutes.
+
 ## Limits
 
 The fixture process supplies a private `MANGOHUD_CONFIGFILE` through real `/proc`
