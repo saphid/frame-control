@@ -1,8 +1,8 @@
 """Synthetic PlayTime sessions through the published loader; no Steam session."""
 import base64
+from contextlib import closing
 import hashlib
 import io
-import json
 import os
 from pathlib import Path
 import signal
@@ -33,7 +33,7 @@ def exercise(call, plugin, archive, record, base, backend, loader, env, log,
     snapshots, stops = [], []
 
     def rows(user):
-        with sqlite3.connect(paths[user].as_uri()+'?mode=ro', uri=True) as db:
+        with closing(sqlite3.connect(paths[user].as_uri()+'?mode=ro', uri=True)) as db:
             return {table: db.execute(query).fetchall() for table, query in {
                 'games': 'SELECT game_id,name FROM game_dict ORDER BY game_id',
                 'sessions': 'SELECT game_id,duration FROM play_time ORDER BY rowid',
@@ -138,10 +138,13 @@ def exercise(call, plugin, archive, record, base, backend, loader, env, log,
     stop(restarted)
     databases = {}
     for user, path in paths.items():
-        assert not path.with_name(path.name+'-wal').exists()
-        payload = path.read_bytes()
+        # Read a self-contained committed snapshot, including any WAL pages.
+        # The read-only observer does not checkpoint or change plugin data.
+        with closing(sqlite3.connect(path.as_uri()+'?mode=ro', uri=True)) as db:
+            payload = db.serialize()
         databases[user] = {'sha256': hashlib.sha256(payload).hexdigest(),
-                           'base64': base64.b64encode(payload).decode()}
+                           'base64': base64.b64encode(payload).decode(),
+                           'kind': 'read-only SQLite serialized snapshot'}
     assert not (runtime/'storage.db').exists(), 'the fixture must not create a legacy database'
     log.flush()
     log.seek(0)
