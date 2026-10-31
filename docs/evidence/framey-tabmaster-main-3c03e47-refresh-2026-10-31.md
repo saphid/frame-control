@@ -44,7 +44,7 @@ and original TabMaster consoles; no globally clean/error-free runtime is claimed
 ## Tests and source preservation
 
 The full server suite reports **1,948 tests**, **16
-platform/optional skips**, no failures, in **250.248 seconds.
+platform/optional skips**, no failures, in **250.248 seconds**.
 All **18 website tests** pass without skips. After adding the helper-hash
 assertion, one new isolated HTTP/SSH installer run passes all **37 pinned
 fixtures**, no skips. It requires TabMaster's exact receipt, backend and helper
