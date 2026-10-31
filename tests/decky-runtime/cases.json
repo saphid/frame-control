@@ -71,6 +71,7 @@
   {
     "id": 93,
     "shim": "deck-settings-verified-tls",
+    "additionalShims": ["deck-settings-ipc-eof"],
     "probe": "deck-settings-readonly"
   },
   {
@@ -138,7 +139,7 @@
   },
   {
     "id": 63,
-    "shim": null,
+    "shim": "free-loader-ipc-eof",
     "probe": "free-loader"
   },
   {
@@ -168,7 +169,10 @@
   {
     "id": 96,
     "shim": "simple-timer-lifecycle",
-    "probe": "timer-lifecycle"
+    "probe": "timer-lifecycle",
+    "additionalShims": [
+      "simple-timer-ipc-eof"
+    ]
   },
   {
     "id": 60,

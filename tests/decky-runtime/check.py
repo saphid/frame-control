@@ -70,6 +70,9 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
@@ -149,6 +152,37 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == '5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_deck_settings_unload_regression:
+        assert record['id'] == 93
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_bytes()
+        if source.startswith(prefix):
+            source = source[len(prefix):]
+            (plugin/'py_modules/framey_decky_ipc.py').unlink()
+        # Preserve the existing TLS repair in this previous-managed negative.
+        assert hashlib.sha256(source).hexdigest() == 'eb067334d66a47cf6abbafa9ade1754d5e56089da9315473055a5de78a923f7e'
+        (plugin/'main.py').write_bytes(source)
+    if args.reproduce_free_loader_unload_regression:
+        assert record['id'] == 63
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        original = managed[len(prefix):]
+        assert hashlib.sha256(original).hexdigest() == '2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364'
+        (plugin/'main.py').write_bytes(original)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_timer_unload_regression:
+        assert record['id'] == 96 and not args.reproduce_timer_regression
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'd3dbcd73cce1ecd48d4fade93923ffc2574f94b381d55dfee1fbb5d91f12984a'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
@@ -1091,9 +1125,24 @@ def main():
                     secure.shutdown()
                     secure.server_close()
                     worker.join(timeout=3)
-                report['result'] = ('published Decky discovery and read-only system/storage RPCs passed; '
-                                    'managed upload helper rejected self-signed loopback HTTPS; '
-                                    'real uploads, reports, settings writes, Frame and VR unverified')
+                report['uploadTlsNegative'] = dict(selfSignedRejected=True,
+                    httpRequestsReceived=len(hits),
+                    installedMethodAstSha256=hashlib.sha256(ast.dump(method, include_attributes=False).encode()).hexdigest(),
+                    realUploadVerified=False)
+                import deck_settings_private
+                deck_settings_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, regression=args.reproduce_deck_settings_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_deck_settings_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_deck_settings_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedTlsRepairPreserved=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed Deck Settings source requires forced stop after IPC disconnect; expected negative only'
+                    if args.reproduce_deck_settings_unload_regression else
+                    'read-only RPCs, verified TLS, original unload hook and two clean parent-only stops/restart passed; '
+                    'real uploads, reports, settings writes, Frame and VR unverified')
             elif case['probe'] == 'theme-music-settings':
                 # The official plugin can search/download media and patch Steam
                 # game pages. This case exercises only private settings in a
@@ -1255,17 +1304,21 @@ def main():
                 assert (settings_dir/'deal_db.json').is_file()
                 current('settings_setSetting', 'larger_text', True)
                 assert current('settings_read')['larger_text'] is True
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(lambda: current('settings_read')['larger_text'],
-                                   'private Free Loader setting after restart') is True
-                assert current('read_deals') == {}
-                report['result'] = ('discovery, default settings, empty local deals, '
-                    'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
+                import free_loader_private
+                free_loader_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, settings_dir,
+                    regression=args.reproduce_free_loader_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_free_loader_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_free_loader_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        originalSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('original Free Loader source requires forced stop; expected negative only'
+                    if args.reproduce_free_loader_unload_regression else
+                    'discovery, private settings/cache/hidden-state persistence and two clean parent-only stops passed; '
+                    'feed, notifications, browser and Frame unverified')
             elif case['probe'] == 'game-sync-config':
                 # Exercise private settings and read-only selections. This plugin also exposes
                 # rclone cloud sync and arbitrary process signals; neither
@@ -1638,10 +1691,25 @@ def main():
                     until_ready(lambda: rpc('loader/call_plugin_method', record['name'],
                         'settings_getSetting', 'subtle_mode', False), 'restarted instance RPC')
 
-                report['lifecycle'] = probe(record['name'], restart, home/'runtime.log',
-                                            args.reproduce_timer_regression)
-                report['result'] = ('upstream timer lifecycle regressions reproduced' if args.reproduce_timer_regression
-                    else 'discovery, cancel, replace, completion and persistent restart passed')
+                if args.reproduce_timer_regression:
+                    report['lifecycle'] = probe(record['name'], restart, home/'runtime.log', True)
+                    report['result'] = 'upstream timer lifecycle regressions reproduced; expected negative only'
+                else:
+                    import timer_private
+                    timer_private.probe(backend, loader, env, log, processes, rpc, until_ready, report,
+                        base/'settings'/record['folder']/'settings.json',
+                        regression=args.reproduce_timer_unload_regression)
+                    report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                    report['ipcAdapterSha256'] = (None if args.reproduce_timer_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    if args.reproduce_timer_unload_regression:
+                        report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                            previousManagedSourceRestored=True, forcedPluginKills=1,
+                            qualifiedCompatibilityPass=False)
+                    report['result'] = ('prior managed timer source requires forced stop; expected negative only'
+                        if args.reproduce_timer_unload_regression else
+                        'discovery, cancel, replace, completion, persistent restart and four clean parent-only stops passed; '
+                        'no new browser or Frame proof')
             elif args.reproduce_bound_method_regression:
                 response = rpc('loader/call_legacy_plugin_method', record['name'], 'sp_list_media_players', {})
                 assert response['success'] is False and 'self' in response['result'], response
