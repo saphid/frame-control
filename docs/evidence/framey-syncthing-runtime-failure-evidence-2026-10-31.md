@@ -71,3 +71,34 @@ match base main `8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c`. No real Frame,
 Steam CEF, worn view, physical controller or release is verified by this work.
 
 [Results, source fingerprints, negative injection and limits](framey-syncthing-runtime-failure-evidence-2026-10-31.json).
+
+## Current-main refresh
+
+Frozen source `6c149a70cd23312adfda6ed2351a21fbe31f182d` normally merges
+verified main `dd12031f55ccbcba01aa07296080495df1935af1`. The previously green
+head `a39ca82529258b66c915f006197314afe96ad71f` did not contain current main:
+its combined tree would add 31 files, including helper/runtime changes. Its
+hosted evidence remains historical, rather than qualification of this refresh.
+The test change still leaves production and catalog bytes identical to main.
+
+All 26 selected host tests pass after correcting two nonexistent module names
+in the initial local command. The corrected test log and the initial selection
+error are retained locally; no repository test failed in that initial command.
+A full local AMD64 raw-peer replay uses the pinned Decky 3.3.0 loader, Syncthing
+v2.1.7 archive and current main's helper. All five input source hashes, the
+three helper build source hashes and every executable/archive digest were
+independently checked before accepting the reused helper build.
+
+The replay verifies the literal transfer bytes and their hashes in both
+directions, persistence after a peer restart, all nine proxy HTTP statuses and
+wrong-key 403. The loader exits zero, stops Syncthing in 0.1 seconds and emits
+one shutdown completion; its full console contains none of the five forbidden
+shutdown diagnostics. Both inner and outer console hashes were verified.
+Owned helper and peers were reaped; the container and private image tag were
+removed. This raw-peer test has no service bus and adds no systemd, browser,
+managed-install, real Frame or release proof. Final-head hosted AMD64/ARM64,
+e2e and every other triggered check remain required before merge.
+
+The machine record retains this replay under `currentMainRefresh`, separate
+from all earlier successes and observed failures. Syncthing remains blocked
+and unselected.
