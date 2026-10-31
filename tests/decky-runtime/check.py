@@ -1593,8 +1593,12 @@ def main():
                 assert len(undone) == 1 and undone[0].read_bytes() == b'new', undone
                 assert legacy('do_restore', save_info=undo) is None
                 assert save.read_bytes() == b'new'
-                report['result'] = ('published Decky discovery and private save discovery, backup, restore and undo '
-                    'passed with independent bytes; real Steam saves, Frame and VR unverified')
+                from steamback_private import probe
+                probe(backend, loader, env, log, processes, legacy, rpc, until_ready,
+                      report, base/'data'/record['folder'], save)
+                report['result'] = ('published Decky discovery, private save backup/restore/undo, '
+                    'byte preservation, original unload hook and restart passed; '
+                    'real Steam saves, automatic triggers, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
                 def call(method, *values):
                     result = rpc('loader/call_plugin_method', record['name'], method, *values)
