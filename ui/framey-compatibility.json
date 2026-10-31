@@ -694,7 +694,7 @@
         "https://github.com/sponsors/bschelst"
       ],
       "status": "partial",
-      "reason": "Settings render locally and read-only get_setting RPC returned the default through real Decky 3.3.0 on ARM64 Frame. Steam game-page badges have no patch target; live writes and VR controls unverified.",
+      "reason": "Settings rendered locally and a read-only get_setting RPC returned the default through real Decky 3.3.0 on ARM64 Frame in earlier evidence. A later private ARM64 fixture exposed forced shutdown. The exact archive now gets a child IPC EOF adapter; settings/metadata code remains unchanged and update/reinstall is required. Exact-head CI, ARM64 shutdown and managed Frame qualification are pending. Steam game-page badges have no patch target; live user writes and worn VR/controller usability remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -748,7 +748,10 @@
         "errors": [
           "Transient CEF reconnect during Decky frontend injection; succeeded on retry."
         ]
-      }
+      },
+      "requiredShims": [
+        "protondb-ipc-eof"
+      ]
     },
     {
       "id": 16,

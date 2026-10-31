@@ -29,7 +29,8 @@ def descendants(parent):
         owned.update(added)
 
 
-def stop(backend, log, *, disconnect):
+def stop(backend, log, *, disconnect,
+         plugin_stop_marker='Plugin Free Loader (v1.6.0) has been stopped in '):
     children = descendants(backend.pid)
     assert children, 'the private loader must own its children'
     before = Path(log.name).read_text()
@@ -76,7 +77,7 @@ def stop(backend, log, *, disconnect):
     clean = (backend.returncode == 0 and not remaining and not forced and not errors
              and all(child['returncode'] == 0 for child in adopted)
              and console.count('[main][INFO]: Shutdown finished.') == 1
-             and 'Plugin Free Loader (v1.6.0) has been stopped in ' in console)
+             and plugin_stop_marker in console)
     observation = dict(loaderPid=backend.pid, descendantsBefore=children,
         exactDescendantsRemaining=remaining, adoptedChildExits=adopted, parentOnlySignal=True,
         loaderReturncode=backend.returncode, seconds=round(time.monotonic()-started, 3),

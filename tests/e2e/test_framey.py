@@ -271,6 +271,16 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies', 'shotty-ipc-eof'])
+                if plugin['id'] == 14:
+                    expected_shims = ['protondb-ipc-eof']
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], expected_shims)
+                    self.assertEqual(found[0]['compatShims'], expected_shims)
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '495e8b68e2fb8795fcdecd41ce245ac6252bffbebbe4c966b0900066fa22a3ba')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 63:
                     expected_shims = ['free-loader-ipc-eof']
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
