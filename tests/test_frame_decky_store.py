@@ -223,7 +223,11 @@ class StoreTransaction(unittest.TestCase):
         module = types.ModuleType('private_ludusavi_dependency')
         logger = logging.getLogger('private-ludusavi-dependency')
         with patch.dict(sys.modules, decky=types.SimpleNamespace(logger=logger)):
-            exec(compile((folder/'py_modules/ludusavi.py').read_bytes(), 'managed-ludusavi.py', 'exec'), module.__dict__)
+            # Published plugin annotations require Python 3.10 at evaluation
+            # time. This host-side probe also runs on 3.9; Decky's native
+            # runtime separately executes the unchanged annotation syntax.
+            source = 'from __future__ import annotations\n' + (folder/'py_modules/ludusavi.py').read_text()
+            exec(compile(source, 'managed-ludusavi.py', 'exec'), module.__dict__)
         with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
             missing = module.Ludusavi(['not-present'])
         self.assertIsNone(missing.bin_path)
