@@ -217,7 +217,119 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'terminal-import-regression':
+            if case['probe'] == 'deck-progress-private-tags':
+                # Only private SQLite settings/manual tags are exercised. Do
+                # not call Steam sync, HLTB search or automatic tagging RPCs.
+                initial = until_ready(lambda: current('get_settings').get('settings'),
+                                      'private Deck Progress database')
+                assert initial == dict(auto_tag_enabled=True, in_progress_threshold=30,
+                    cache_ttl=7200, source_installed=True, source_non_steam=True, source_all_owned=True)
+                assert current('get_game_tag', '424242') == dict(success=True, tag=None)
+                settings = dict(auto_tag_enabled=False, in_progress_threshold=75,
+                    cache_ttl=1800, source_installed=False, framey_private_label='Private tags')
+                assert current('update_settings', settings) == dict(success=True)
+                updated = current('get_settings')
+                assert updated['success'] is True
+                for key, value in settings.items():
+                    assert updated['settings'][key] == value
+                assert current('set_manual_tag', {'appid':'424242', 'tag':'completed'}) == dict(success=True)
+                assert current('set_manual_tag', '434343', 'mastered') == dict(success=True)
+                def tag(appid, expected):
+                    result = current('get_game_tag', appid)
+                    assert result['success'] is True
+                    assert result['tag']['appid'] == appid and result['tag']['tag'] == expected
+                    assert result['tag']['is_manual'] is True
+                    return result['tag']
+                first, other = tag('424242', 'completed'), tag('434343', 'mastered')
+                for params, error in [({'appid':'424242', 'tag':'invalid'}, 'Invalid tag'),
+                                      ({'appid':'', 'tag':'dropped'}, 'Missing appid'),
+                                      ({'appid':'424242'}, 'Missing tag')]:
+                    result = current('set_manual_tag', params)
+                    assert result['success'] is False and error in result['error']
+                assert tag('424242', 'completed') == first
+                databases = list(base.rglob('game_tracker.db'))
+                assert len(databases) == 1
+                database = databases[0]
+                assert database.is_relative_to(home) and not database.is_symlink()
+                def rows():
+                    with sqlite3.connect(database.as_uri()+'?mode=ro', uri=True) as db:
+                        return dict(tags=db.execute(
+                            'SELECT appid,tag,is_manual FROM game_tags ORDER BY appid').fetchall(),
+                            settings=db.execute('SELECT key,value FROM settings ORDER BY key').fetchall())
+                before = rows()
+                assert before['tags'] == [('424242','completed',1),('434343','mastered',1)]
+                raw_settings = dict(before['settings'])
+                assert raw_settings['auto_tag_enabled'] == 'false'
+                assert raw_settings['in_progress_threshold'] == '75'
+                assert raw_settings['framey_private_label'] == 'Private tags'
+                stops = []
+                def stop_progress_loader():
+                    def identity(pid):
+                        try:
+                            fields = Path('/proc/'+str(pid)+'/stat').read_text().rsplit(')',1)[1].split()
+                            return int(fields[1]), int(fields[19])
+                        except (FileNotFoundError, ProcessLookupError):
+                            return None
+                    snapshot = {int(p.name):identity(int(p.name)) for p in Path('/proc').iterdir() if p.name.isdigit()}
+                    owned = {backend.pid}
+                    while True:
+                        children = {pid for pid,value in snapshot.items() if value and value[0] in owned}
+                        if children <= owned:
+                            break
+                        owned |= children
+                    identities = {pid:snapshot[pid] for pid in owned}
+                    assert len(identities) >= 2 and all(identities.values())
+                    started = time.monotonic()
+                    backend.send_signal(signal.SIGTERM)
+                    assert backend.wait(timeout=8) == 0
+                    assert all(identity(pid) != value for pid,value in identities.items())
+                    stops.append(dict(returncode=backend.returncode,elapsedSeconds=time.monotonic()-started,
+                        signaledOnlyOwnedLoader=True,ownedProcessIdentitiesReaped=True,
+                        ownedProcessCount=len(identities)))
+                stop_progress_loader()
+                assert rows() == before
+                stopped_database_sha = hashlib.sha256(database.read_bytes()).hexdigest()
+                backend = subprocess.Popen([str(loader)],env=env,stdout=log,stderr=log,start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda:rpc('loader/get_plugins'),'restarted Deck Progress discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                restored = until_ready(lambda:current('get_settings').get('settings'),'restarted private database')
+                assert restored == updated['settings']
+                assert tag('424242','completed') == first and tag('434343','mastered') == other
+                assert current('remove_tag', {'appid':'424242'}) == dict(success=True)
+                assert current('get_game_tag','424242') == dict(success=True,tag=None)
+                assert tag('434343','mastered') == other
+                final = rows()
+                assert final['tags'] == [('434343','mastered',1)] and final['settings'] == before['settings']
+                stop_progress_loader()
+                assert rows() == final
+                unchanged = {}
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if not item.is_dir():
+                            name = item.filename.split('/',1)[1]
+                            raw = (plugin/name).read_bytes()
+                            assert raw == original.read(item)
+                            unchanged[name] = hashlib.sha256(raw).hexdigest()
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
+                for marker in ('Import failed:', 'Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                               'Task was destroyed but it is pending', 'Bad file descriptor'):
+                    assert marker not in console, marker
+                report['privateTags'] = dict(settingsBeforeRestart=before,settingsAfterSelectedDelete=final,
+                    settingsAndManualTagsPersistedAcrossRestart=True,invalidTagAndMissingArgumentsRefused=True,
+                    selectedDeletePreservedOtherTag=True,independentReadonlySqliteReadback=True,
+                    databaseRelativePath=str(database.relative_to(home)),stoppedDatabaseSha256=stopped_database_sha,
+                    finalDatabaseSha256=hashlib.sha256(database.read_bytes()).hexdigest(),
+                    unchangedPublishedFiles=unchanged,ownedLoaderStops=stops,loaderConsole=console,
+                    loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                    jsonDecodeDiagnosticCount=console.count('Expecting value: line 1 column 1 (char 0)'),
+                    loaderConsoleErrorFree=False,steamLibraryVerified=False,automaticTaggingVerified=False,
+                    hltbSearchVerified=False,browserVerified=False,realFrameContacted=False,physicalControllerVerified=False)
+                report['result'] = ('published Decky API1 private settings/manual tags, invalid-input refusals, '
+                    'SQLite readback and restart persistence passed; Steam, automatic tags, HLTB, browser and Frame unverified')
+            elif case['probe'] == 'terminal-import-regression':
                 # Discovery also lists a backend whose import failed. Require
                 # the precise original failure without attempting backend calls.
                 failure = "ModuleNotFoundError: No module named 'termios'"
