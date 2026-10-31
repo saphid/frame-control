@@ -279,8 +279,9 @@
       "tests/e2e/test_framey.py": "6c8d0f9ce3b5e7e60640f2fe157e1fcc1dc3ec2f1cad59cc55a2c5efbf5da96d",
       "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
       "ui/frame_decky_store.py": "18b3ead3d3799762c8a28c97bc0bb5f4a2940dd64064497ab6bbae7394ea654d",
-      "ui/framey-compatibility.json": "59ac084a7d43395fcd9c48a660f735cd7f9ccce7ea5f1922c9c36fc15f08db32"
+      "ui/framey-compatibility.json": "3c50002d85f04a4cde82cde4800acc7639e02ff22281b291e08a023cc9df8df7"
     },
-    "scope": "Only official Non-Steam Badges managed installation, receipt/backend digest, partial status and removal in owned fake-Frame; no native RPC/browser/hardware claim."
+    "scope": "Only official Non-Steam Badges managed installation, receipt/backend digest, partial status and removal in owned fake-Frame; no native RPC/browser/hardware claim.",
+    "catalogFormattingAfterTest": "The final catalog preserves Unicode literally instead of equivalent JSON escapes. All 116 parsed records are identical to the tested catalog; the recorded source hash is the tested escaped representation."
   }
 }
