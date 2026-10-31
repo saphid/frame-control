@@ -4746,7 +4746,7 @@
         "https://github.com/jwhitlow45/free-loader.git"
       ],
       "status": "partial",
-      "reason": "The exact archive's byte-identical duplicate ZIP members pass guarded install/remove. Actual Decky 3.3.0 in private network-isolated amd64 and ARM64 containers discovers the plugin, reads default settings and empty local deals, and retains a settings change after restart. Live deal-feed refresh, notifications, Steam store integration, real Frame ARM64 service and worn VR remain unverified; no feed request was made.",
+      "reason": "The exact archive's identical duplicate ZIP members pass guarded install/remove. Earlier private AMD64/ARM64 Decky probes verified settings and empty cache, but the ARM64 console exposed forced unload after restart. An exact-archive child IPC repair leaves the backend/cache logic unchanged; update/reinstall required. Fresh final-head CI, ARM64 shutdown and managed Frame qualification remain pending. Live feeds, notifications, Steam integration and worn VR remain unverified; no feed request was made.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4792,7 +4792,10 @@
         "hostCommit": "d963305",
         "frontendReady": true,
         "backendScope": "isolated official Python settings/defaults and empty local-deals read with a Decky stub"
-      }
+      },
+      "requiredShims": [
+        "free-loader-ipc-eof"
+      ]
     },
     {
       "id": 64,

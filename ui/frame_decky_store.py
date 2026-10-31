@@ -259,6 +259,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 61 and digest == 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_TABMASTER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 63 and digest == '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_FREE_LOADER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -884,6 +887,24 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
                 compat_shims.append('deckyfileserver-directory-entry')
+            # Exact Free Loader child EOF must yield so its original unload
+            # hook can run; settings/feed/cache implementations stay unchanged.
+            if int(plugin_id)==63 and digest=='05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a' and folder=='free-loader':
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364':
+                    raise RuntimeError('Free Loader backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_FREE_LOADER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Free Loader child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Free Loader child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('free-loader-ipc-eof')
             # TabMaster 2.15.1 passes a file object to json.loads, so every
             # restore fails. Read its JSON stream and refuse non-object state.
             if int(plugin_id)==61 and digest=='e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5' and folder=='TabMaster':

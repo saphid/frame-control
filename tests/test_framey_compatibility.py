@@ -95,6 +95,15 @@ class Compatibility(unittest.TestCase):
         result = compatibility.lookup(release['id'], release['sha256'], release['version'])
         self.assertEqual(result['status'], 'unverified')
 
+    def test_free_loader_old_receipt_requires_current_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 63)
+        base = dict(storeId=63, version=plugin['version'], sha256=plugin['sha256'])
+        installed = {'plugins': [base, dict(base, compatShims=['free-loader-ipc-eof'])]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 2)
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
         installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),
