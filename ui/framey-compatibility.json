@@ -12314,7 +12314,7 @@
         "https://github.com/sponsors/santojon"
       ],
       "status": "partial",
-      "reason": "The exact chunked frontend renders settings in opaque local Chromium. The official Python backend now passes published Decky 3.3.0 x86_64 discovery, private shelf settings save/readback and persistence after a loader restart in a network-isolated container. Steam Home shelf injection has no verified target in the isolated panel; real Frame ARM64 settings, worn VR and physical controller use remain unverified.",
+      "reason": "The exact chunked frontend renders settings in opaque local Chromium. The official Python backend now passes published Decky 3.3.0 x86_64 discovery, private shelf settings save/readback and persistence after a loader restart in a network-isolated container. Steam Home shelf injection has no verified target in the isolated panel; real Frame ARM64 settings, worn VR and physical controller use remain unverified. Exact managed copies repair the reproduced child IPC EOF unload failure; Update/reinstall is required. Private AMD64 shutdown tests do not prove Steam Home or headset usability.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -12350,6 +12350,7 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
+      "requiredShims": ["deck-shelves-ipc-eof"],
       "chunkedFollowUp": {
         "evidence": "docs/evidence/framey-deck-shelves-browser-2026-10-26.md",
         "mode": "exact archive in opaque local Chromium; backend and network denied",
