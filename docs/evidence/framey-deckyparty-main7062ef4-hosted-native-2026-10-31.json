@@ -1,0 +1,69 @@
+{
+  "at": "2026-10-31T20:30:04.795773+00:00",
+  "head": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+  "runId": 41238231141,
+  "native": [
+    {
+      "architecture": "x86_64",
+      "artifactId": 13056309737,
+      "cases": 47,
+      "rpcs": 590,
+      "nativeSourceFingerprints": 21,
+      "publishedLoaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "reportSha256": "c7550ae1738ef50ce29da596597972b6a9ccded92c88f325e1a45e4a3f99a12e",
+      "deckypartyRepairedReloadSeconds": [
+        0.365,
+        0.366,
+        0.366
+      ],
+      "deckypartyNegativeReloadSeconds": 5.28,
+      "deckypartyFinalStopSeconds": [
+        0.164,
+        0.214
+      ]
+    },
+    {
+      "architecture": "aarch64",
+      "artifactId": 13056369493,
+      "cases": 47,
+      "rpcs": 590,
+      "nativeSourceFingerprints": 21,
+      "publishedLoaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "reportSha256": "66986a80717439e9e5f42bf2eb70a5c4da56be6433b404aef79d007003d4debc",
+      "deckypartyRepairedReloadSeconds": [
+        0.362,
+        0.362,
+        0.362
+      ],
+      "deckypartyNegativeReloadSeconds": 5.276,
+      "deckypartyFinalStopSeconds": [
+        0.164,
+        0.164
+      ]
+    }
+  ],
+  "allPublishedZipDigestsVerified": true,
+  "allNativeInputsBoundToExactHead": true,
+  "deckypartyRpcs": [
+    15,
+    8
+  ],
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "fullCiAndPackagesQualified": false,
+  "globalCleanRuntime": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "published": false,
+  "rawSha256": "79d16a7fd159efffe7f8fcecfdeaca862212fd79d49697fd4050ee78422733b9",
+  "rawBytes": 140832,
+  "publicationContext": "This qualification was prepared before the documentation update; recorded pending/incomplete gate fields retain their historical scope."
+}
