@@ -1,0 +1,899 @@
+{
+  "mainEquivalentFailure": {
+    "at": "2026-10-31T15:34:08.228617+00:00",
+    "main": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "observationSource": "e0bdbb48abfc0627cb712c3aaba56bbc68b67c9e",
+    "scopedTabmasterRuntimeAndInstallerMatchMain": true,
+    "previousManagedBackendSha256": "4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356",
+    "rpcCount": 47,
+    "positiveForcedKills": 1,
+    "stopSeconds": [
+      5.223247996997088,
+      0.16381488228216767
+    ],
+    "consoleSha256": "80b564bfb968af849aeaa3a0186c8819d6b2b5f231324100d82dfa2245037521",
+    "cleanShutdownQualified": false,
+    "ownerPr": 525,
+    "physicalFrameContacted": false
+  },
+  "installerSourceRevision": "f8e70df56d30063c09c19a71d622b90135c014c6",
+  "helperAssertionChange": {
+    "head": "f8e70df56d30063c09c19a71d622b90135c014c6",
+    "parent": "3e1b595422c9f22394bcd9c88f76c79f8146eeb8",
+    "e2eSha256": "ffcb0dca31e90155f383faef88b2c629e11d6b18bec9989d415285f05a02acc1",
+    "onlyTwoAssertionsLinesAdded": true
+  },
+  "deckSettingsControlAudit": {
+    "at": "2026-10-31T15:34:17.509910+00:00",
+    "sourceRevision": "3e1b595422c9f22394bcd9c88f76c79f8146eeb8",
+    "architecture": "x86_64",
+    "freeLoader": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "stopSeconds": [
+          0.214,
+          0.246
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "stopSeconds": [
+          5.244
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsDecoded": true
+      }
+    ],
+    "deckSettings": [
+      {
+        "negative": false,
+        "rpcs": 6,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351156170"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351156205"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351156205"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351156218"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.235,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793460812.281538"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351156497"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351156538"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351156538"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351156551"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          }
+        ]
+      },
+      {
+        "negative": true,
+        "rpcs": 3,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351157016"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351157056"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351157056"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351157073"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.228,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793460820.7881691"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+            "cleanShutdownVerified": false
+          }
+        ]
+      }
+    ],
+    "deckSettingsTlsPreserved": true,
+    "freeLoaderPrivateDataPreserved": true,
+    "allScopedConsolesHashed": true,
+    "realFrameContacted": false
+  },
+  "deckSettingsRpcCounts": [
+    6,
+    3
+  ],
+  "historicalStrictRedNotRerun": true,
+  "freeLoaderCases": [
+    {
+      "originalBackend": false,
+      "rpcs": 11,
+      "cleanShutdownVerified": true,
+      "stopSeconds": [
+        0.214,
+        0.246
+      ],
+      "forcedKills": 0,
+      "privateSnapshotsDecoded": true
+    },
+    {
+      "originalBackend": true,
+      "rpcs": 7,
+      "cleanShutdownVerified": false,
+      "stopSeconds": [
+        5.244
+      ],
+      "forcedKills": 1,
+      "privateSnapshotsDecoded": true
+    }
+  ],
+  "freeLoaderNativeInputsMatch": true,
+  "sourceIntegrationAudit": {
+    "at": "2026-10-31T15:33:08.777822+00:00",
+    "sourceRevision": "3e1b595422c9f22394bcd9c88f76c79f8146eeb8",
+    "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "priorHead": "e513671e432d1dc300486a9809b1e2f3220117a3",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorTabMasterBodyAndHelpersPreserved": true,
+    "priorTabMasterBodyPreserved": true,
+    "freeLoaderRuntimeBodyMatchesMain": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorTabMasterInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderAndDeckSettingsRuntimeFixturesMatchMain": true,
+    "mainOther115CompleteCatalogRowsPreserved": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleAndInventoryUnchanged": true,
+    "all116InstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "mainOther33NativeCasesPreserved": true,
+    "mainRunnerPreservedWithOneNewControl": true,
+    "mainOtherE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "6cd57ffacc6758ad004c20ddc0f7cdaa549d1cd38e08c57ee801fb65c4a591d5",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "d1b2b70ede161df40d013f5541a30bbc1f6adbef7556090f1bfbce337d4775a4",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "332b743e1a139a2b7d2d2e6a1a8c912618437c5fe8403cedeaa5ad4c23b1ba9b",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "1919425eb03ec3b1ecd8ae9f4d1783301c3e24c35b4509aac43e36201d05b419",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 18
+  },
+  "at": "2026-10-31T15:38:37.388944+00:00",
+  "sourceRevision": "3e1b595422c9f22394bcd9c88f76c79f8146eeb8",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "redSourceRevision": "dade4536663b5473a0f4ce4db6dd0352f6474252",
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "6cd57ffacc6758ad004c20ddc0f7cdaa549d1cd38e08c57ee801fb65c4a591d5",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "d1b2b70ede161df40d013f5541a30bbc1f6adbef7556090f1bfbce337d4775a4",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "332b743e1a139a2b7d2d2e6a1a8c912618437c5fe8403cedeaa5ad4c23b1ba9b",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "1919425eb03ec3b1ecd8ae9f4d1783301c3e24c35b4509aac43e36201d05b419",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "originalArchiveSha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
+  "originalBackendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+  "previousBackendSha256": "4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356",
+  "managedBackendSha256": "68b2aa6701cc0868113f69f8cb26c0a16cd93e45876ab1deb79a5938548b439a",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "d54db5ed12d78276b7c022b36531d3997584e6dff3fe6af350f359ec9752cf4e",
+    "package.json": "9634b722eb9106a941183311f0f47fc2d01199b1edf8187e5d00b1a05cb7a443",
+    "plugin.json": "a98925fc236f73d0c43313a1687c71c5d21172ef923724002b4796d3926c7204",
+    "README.md": "16fc2b311d230516ee7cc9d4244d5bfdfd533f43ca89f43399edf682dfa13041",
+    "dist/index.js": "ffce0de0b7415ec6044d2af63a4fee00dc0f332000ad6b26d84c322e017f94f2",
+    "dist/index.js.map": "4b7aaceda51d7bc0d90fb9b31dc270acf1160bb57c2c3752deb6bbcebc0d977d"
+  },
+  "strictTestRejectedPreviousManagedBackend": true,
+  "redFailure": {
+    "loaderPid": 9,
+    "returncode": 0,
+    "elapsedSeconds": 5.223458671011031,
+    "signaledOnlyOwnedLoader": true,
+    "ownedProcessCount": 5,
+    "ownedProcessIdentitiesReaped": true,
+    "descendantsBefore": {
+      "10": {
+        "state": "S",
+        "parent": 9,
+        "start": "350160395"
+      },
+      "19": {
+        "state": "S",
+        "parent": 10,
+        "start": "350160424"
+      },
+      "20": {
+        "state": "S",
+        "parent": 10,
+        "start": "350160424"
+      },
+      "21": {
+        "state": "S",
+        "parent": 20,
+        "start": "350160434"
+      }
+    },
+    "exactDescendantsRemaining": {},
+    "adoptedChildExits": [
+      {
+        "pid": 19,
+        "returncode": 0
+      },
+      {
+        "pid": 20,
+        "returncode": 0
+      }
+    ],
+    "fixtureClosedUnixPeers": [
+      "/tmp/plugin_socket_1793450854.4722567"
+    ],
+    "forcedPluginKills": 1,
+    "originalUnloadHookCompleted": false,
+    "errors": [],
+    "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\n[plugin][WARNING]: Plugin TabMaster (v2.15.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "920215ffab9b9ae7c1bed4e961d2436c882f92cfb480056906929814e9e89a72",
+    "cleanShutdownVerified": false
+  },
+  "cases": [
+    {
+      "backendSha256": "68b2aa6701cc0868113f69f8cb26c0a16cd93e45876ab1deb79a5938548b439a",
+      "rpcCount": 47,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": true,
+      "originalValidBackupRestoreRefused": false,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 0.21431630430743098,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351148979"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351149022"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351149022"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351149033"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793460740.446349"
+            ],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "7cbb81cfaef6c4c8367d318f207b441f4973e206f81b2e5c133de59385373424",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.21372121712192893,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351149314"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351149357"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351149357"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351149373"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": true,
+        "expectedRegression": false
+      },
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "jsonDecodeDiagnosticCount": 1
+    },
+    {
+      "backendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+      "rpcCount": 48,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "set_tags",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": false,
+      "originalValidBackupRestoreRefused": true,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 0.21411854168400168,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351149712"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351149754"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351149754"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351149767"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "7cbb81cfaef6c4c8367d318f207b441f4973e206f81b2e5c133de59385373424",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.21407111920416355,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351150038"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351150067"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351150067"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351150077"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": true,
+        "expectedRegression": false
+      },
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "jsonDecodeDiagnosticCount": 1
+    },
+    {
+      "backendSha256": "4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356",
+      "rpcCount": 47,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": true,
+      "originalValidBackupRestoreRefused": false,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 5.223296740092337,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351150418"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351150452"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351150452"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351150465"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793460754.7417774"
+            ],
+            "forcedPluginKills": 1,
+            "originalUnloadHookCompleted": false,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\n[plugin][WARNING]: Plugin TabMaster (v2.15.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "920215ffab9b9ae7c1bed4e961d2436c882f92cfb480056906929814e9e89a72",
+            "cleanShutdownVerified": false
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.16378793213516474,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351151252"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351151288"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351151288"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351151299"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": false,
+        "expectedRegression": true
+      },
+      "consoleSha256": "80b564bfb968af849aeaa3a0186c8819d6b2b5f231324100d82dfa2245037521",
+      "jsonDecodeDiagnosticCount": 0
+    }
+  ],
+  "repairedCleanStopsVerified": true,
+  "previousManagedForcedKillReproduced": true,
+  "restoreRepairPreserved": true,
+  "other36NativeDispatchBodiesPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "fullUnitTests": 1948,
+  "fullUnitSeconds": 250.248,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 45,
+    "archivePins": 34,
+    "sourceFingerprints": 18
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Focused native AMD64 only; exact-head hosted CI/e2e/native AMD64+ARM64/PC/ownership/all triggered package modes and current-main/feedback/mergeability/integration gates remain required.",
+    "Generic runtimeConsole.cleanShutdownVerified remains false by design; TabMaster lifecycle stops enforce actual plugin unload and no forced kill.",
+    "Reproduction proves IPC peer EOF can cause the observed failure; the exact socket history of the earlier intermittent failure was not retained.",
+    "Repaired and original-source consoles each retain one unattributed JSON diagnostic; no blanket error-free console claim.",
+    "Installer test verifies 37 pinned install/receipt/removal transactions without executing official backends; not the full e2e or catalog suite.",
+    "No browser/backend settings integration, library-tab editing, real Frame, Steam CEF, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "936de4b6fe3e9b42ac2f3ecc2db5a9ac31890e52d59dfdee93d84419eafaaa08",
+  "rawGzipSha256": "967e3f4507e72226158c735cec726902bf4b9c2111587865b58e968e27b04340"
+}
