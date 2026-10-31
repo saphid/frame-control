@@ -54,3 +54,28 @@ historical. The refreshed head requires fresh full hosted qualification,
 including both native architectures and every triggered package variant.
 No real Frame was contacted, and no wearer-visible or controller check was
 performed. This refresh does not establish the failed package path as fixed.
+
+## Refresh onto main 8ebe9ac
+
+Normal merge `3ae2c60845840ca9f64fa67ceadc58f01d2b78f5` incorporates main
+`8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c`, including the PC keyboard shortcuts
+and exact Deck Progress IPC EOF repair. Conflicts preserve both independent
+plugins' positive and unchanged-original negative cases. The keyboard page,
+server and IPC helper are byte-identical to main. All 116 version/digest/status/
+installer policies and the other 115 complete compatibility records are preserved.
+
+The [refresh evidence](framey-nonsteam-badges-main8ebe-refresh-2026-10-31.json)
+retains fresh local AMD64 published Decky 3.3.0 observations at that frozen source:
+five repaired and three original Non-Steam RPCs, four zero-exit parent-only stops,
+and both complete consoles. The Deck Progress positive and original cases also
+pass: 36 RPC results, four independently decoded SQLite snapshots, no forced
+plugin kill for the repair and the expected two forced kills for the original.
+All eight runtime fingerprints per report match the frozen source. Both unique
+runner images and their ancestor containers are absent. The 60 store tests,
+17 compatibility tests and three native inventory tests pass locally.
+
+Prior full hosted qualification at `6339489` is historical. This refreshed head
+requires fresh native AMD64/ARM64, full e2e, ownership and every triggered package
+mode, plus exact current-main/feedback/mergeability gates. No real Frame, badge
+injection, browser/backend integration, active Steam account, live search,
+wearer-visible view or controller check was performed. No release is published.
