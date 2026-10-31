@@ -1,16 +1,18 @@
 {
-  "at": "2026-10-31T17:21:57.716148+00:00",
-  "sourceRevision": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+  "at": "2026-10-31T17:27:16.340926+00:00",
+  "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
   "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
   "nativeAudit": {
-    "sourceRevision": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+    "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
     "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
     "sourceAudit": {
-      "at": "2026-10-31T17:17:53.252852+00:00",
-      "sourceRevision": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+      "at": "2026-10-31T17:22:53.943772+00:00",
+      "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
       "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
       "priorHead": "b0b798c4189a471f1b98b09946120770ad68d47c",
       "normalMerge": true,
+      "integrationSource": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+      "helperOnlyRemovesOneTrailingNewline": true,
       "wholeMainCheckerAstPreserved": true,
       "priorSteambackTopLevelNegativePreserved": true,
       "mainTimerHelpersByteIdentical": true,
@@ -37,7 +39,7 @@
         "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
         "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
         "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
-        "tests/decky-runtime/steamback_private.py": "1285b8d126870aaf23b1898fce2b1c27329ebd29a63659fa2866d4e4c2ada4f3",
+        "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
         "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
         "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
         "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
@@ -61,7 +63,7 @@
       "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
       "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
       "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
-      "tests/decky-runtime/steamback_private.py": "1285b8d126870aaf23b1898fce2b1c27329ebd29a63659fa2866d4e4c2ada4f3",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
       "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
       "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
       "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
@@ -85,22 +87,22 @@
               "10": {
                 "state": "S",
                 "parent": 9,
-                "start": "351782137"
+                "start": "351813763"
               },
               "19": {
                 "state": "S",
                 "parent": 10,
-                "start": "351782168"
+                "start": "351813792"
               },
               "20": {
                 "state": "S",
                 "parent": 10,
-                "start": "351782168"
+                "start": "351813792"
               },
               "21": {
                 "state": "S",
                 "parent": 20,
-                "start": "351782179"
+                "start": "351813803"
               }
             },
             "exactDescendantsRemaining": {},
@@ -116,9 +118,9 @@
             ],
             "parentOnlySignal": true,
             "loaderReturncode": 0,
-            "seconds": 0.215,
+            "seconds": 0.214,
             "fixtureClosedUnixPeers": [
-              "/tmp/plugin_socket_1793467071.911118"
+              "/tmp/plugin_socket_1793467388.152172"
             ],
             "forcedPluginKills": 0,
             "errors": [],
@@ -132,22 +134,22 @@
               "24": {
                 "state": "S",
                 "parent": 23,
-                "start": "351782450"
+                "start": "351814076"
               },
               "33": {
                 "state": "S",
                 "parent": 24,
-                "start": "351782480"
+                "start": "351814104"
               },
               "34": {
                 "state": "S",
                 "parent": 24,
-                "start": "351782480"
+                "start": "351814104"
               },
               "35": {
                 "state": "S",
                 "parent": 34,
-                "start": "351782492"
+                "start": "351814114"
               }
             },
             "exactDescendantsRemaining": {},
@@ -163,7 +165,7 @@
             ],
             "parentOnlySignal": true,
             "loaderReturncode": 0,
-            "seconds": 0.215,
+            "seconds": 0.185,
             "fixtureClosedUnixPeers": [],
             "forcedPluginKills": 0,
             "errors": [],
@@ -176,21 +178,21 @@
           {
             "before": {
               "runtime": {
-                "saves2/save_777_1793467074043/save.dat": {
+                "saves2/save_777_1793467390311/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467074043.json": {
-                  "sha256": "628cc87ddc4e28e7f673e738bb6acd0162031c9e468f8fadc3886b5a3a07ab94",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwNzQwNDMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467074046/save.dat": {
+                "saves2/undo_777_1793467390325/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467074046.json": {
-                  "sha256": "f7c9e986421f28e0bf6be30eb74f11ca292e9e87cac870726f20fa0a9559e4d5",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQ2LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwNzQwNDYiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -202,21 +204,21 @@
             },
             "after": {
               "runtime": {
-                "saves2/save_777_1793467074043/save.dat": {
+                "saves2/save_777_1793467390311/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467074043.json": {
-                  "sha256": "628cc87ddc4e28e7f673e738bb6acd0162031c9e468f8fadc3886b5a3a07ab94",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwNzQwNDMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467074046/save.dat": {
+                "saves2/undo_777_1793467390325/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467074046.json": {
-                  "sha256": "f7c9e986421f28e0bf6be30eb74f11ca292e9e87cac870726f20fa0a9559e4d5",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQ2LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwNzQwNDYiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -230,21 +232,21 @@
           {
             "before": {
               "runtime": {
-                "saves2/save_777_1793467074043/save.dat": {
+                "saves2/save_777_1793467390311/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467074043.json": {
-                  "sha256": "628cc87ddc4e28e7f673e738bb6acd0162031c9e468f8fadc3886b5a3a07ab94",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwNzQwNDMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467074046/save.dat": {
+                "saves2/undo_777_1793467390325/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467074046.json": {
-                  "sha256": "f7c9e986421f28e0bf6be30eb74f11ca292e9e87cac870726f20fa0a9559e4d5",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQ2LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwNzQwNDYiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -256,21 +258,21 @@
             },
             "after": {
               "runtime": {
-                "saves2/save_777_1793467074043/save.dat": {
+                "saves2/save_777_1793467390311/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467074043.json": {
-                  "sha256": "628cc87ddc4e28e7f673e738bb6acd0162031c9e468f8fadc3886b5a3a07ab94",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwNzQwNDMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467390311.json": {
+                  "sha256": "a0625614ba55cba6c9de3ab2e44842446523dcdaf9690b81564093544bbe7a94",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzExLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTAzMTEiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467074046/save.dat": {
+                "saves2/undo_777_1793467390325/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467074046.json": {
-                  "sha256": "f7c9e986421f28e0bf6be30eb74f11ca292e9e87cac870726f20fa0a9559e4d5",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDc0MDQ2LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwNzQwNDYiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467390325.json": {
+                  "sha256": "492b794f04b396f59b6faaddfaa539de30015aa82624136a28eb15b021bb6eb7",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MzkwMzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTAzMjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -282,7 +284,7 @@
             }
           }
         ],
-        "consoleSha256": "7a7971cb94596b22177de99d1f254cbff0ffe8d8e799f5b63348ba313a845ede"
+        "consoleSha256": "653d9888c8159579e64f18a685fc2b1fdc241dad7fbac9464a8a892a82af2918"
       },
       {
         "negative": true,
@@ -294,22 +296,22 @@
               "10": {
                 "state": "S",
                 "parent": 9,
-                "start": "351782803"
+                "start": "351814424"
               },
               "19": {
                 "state": "S",
                 "parent": 10,
-                "start": "351782832"
+                "start": "351814454"
               },
               "20": {
                 "state": "S",
                 "parent": 10,
-                "start": "351782832"
+                "start": "351814454"
               },
               "21": {
                 "state": "S",
                 "parent": 20,
-                "start": "351782843"
+                "start": "351814467"
               }
             },
             "exactDescendantsRemaining": {},
@@ -325,9 +327,9 @@
             ],
             "parentOnlySignal": true,
             "loaderReturncode": 0,
-            "seconds": 5.225,
+            "seconds": 5.224,
             "fixtureClosedUnixPeers": [
-              "/tmp/plugin_socket_1793467078.554555"
+              "/tmp/plugin_socket_1793467394.7724223"
             ],
             "forcedPluginKills": 1,
             "errors": [],
@@ -340,21 +342,21 @@
           {
             "before": {
               "runtime": {
-                "saves2/save_777_1793467080713/save.dat": {
+                "saves2/save_777_1793467396924/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467080713.json": {
-                  "sha256": "e9cccf704a65ecbca0c729da91a9c0723be2e5e88f1598aef9dcc7630f748114",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDgwNzEzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwODA3MTMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467396924.json": {
+                  "sha256": "f8bdca76021e958221b6cb0d5f9f8b874a5b73279b8f835507916f2df5dcee58",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI0LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTY5MjQiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467080725/save.dat": {
+                "saves2/undo_777_1793467396927/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467080725.json": {
-                  "sha256": "6b039663815a52aa096d50bec2e9c11b696188cf947e68504f8e15067c32d152",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDgwNzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwODA3MjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467396927.json": {
+                  "sha256": "cba77c7721f692bf4dad5aa3413c842dd4363283e6c06cc7e66141d5418b8263",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI3LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTY5MjciLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -366,21 +368,21 @@
             },
             "after": {
               "runtime": {
-                "saves2/save_777_1793467080713/save.dat": {
+                "saves2/save_777_1793467396924/save.dat": {
                   "sha256": "cba06b5736faf67e54b07b561eae94395e774c517a7d910a54369e1263ccfbd4",
                   "base64": "b2xk"
                 },
-                "saves2/save_777_1793467080713.json": {
-                  "sha256": "e9cccf704a65ecbca0c729da91a9c0723be2e5e88f1598aef9dcc7630f748114",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDgwNzEzLAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjcwODA3MTMiLAogImlzX3VuZG8iOiBmYWxzZQp9"
+                "saves2/save_777_1793467396924.json": {
+                  "sha256": "f8bdca76021e958221b6cb0d5f9f8b874a5b73279b8f835507916f2df5dcee58",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI0LAogImZpbGVuYW1lIjogInNhdmVfNzc3XzE3OTM0NjczOTY5MjQiLAogImlzX3VuZG8iOiBmYWxzZQp9"
                 },
-                "saves2/undo_777_1793467080725/save.dat": {
+                "saves2/undo_777_1793467396927/save.dat": {
                   "sha256": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
                   "base64": "bmV3"
                 },
-                "saves2/undo_777_1793467080725.json": {
-                  "sha256": "6b039663815a52aa096d50bec2e9c11b696188cf947e68504f8e15067c32d152",
-                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3MDgwNzI1LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjcwODA3MjUiLAogImlzX3VuZG8iOiB0cnVlCn0="
+                "saves2/undo_777_1793467396927.json": {
+                  "sha256": "cba77c7721f692bf4dad5aa3413c842dd4363283e6c06cc7e66141d5418b8263",
+                  "base64": "ewogImdhbWVfaW5mbyI6IHsKICAiZ2FtZV9pZCI6IDc3NywKICAiaW5zdGFsbF9yb290IjogIi9ob21lL3Rlc3Rlci8ubG9jYWwvc2hhcmUvU3RlYW0iLAogICJzYXZlX2dhbWVzX3Jvb3RzIjogewogICAiL2hvbWUvdGVzdGVyLy5sb2NhbC9zaGFyZS9TdGVhbS91c2VyZGF0YS80MjQyNDIvNzc3L3JlbW90ZSI6ICIiCiAgfQogfSwKICJ0aW1lc3RhbXAiOiAxNzkzNDY3Mzk2OTI3LAogImZpbGVuYW1lIjogInVuZG9fNzc3XzE3OTM0NjczOTY5MjciLAogImlzX3VuZG8iOiB0cnVlCn0="
                 }
               },
               "remote": {
@@ -392,7 +394,7 @@
             }
           }
         ],
-        "consoleSha256": "68fe63b016bf26eb65f0aaa0637c68d8e1959047cabec2bed6aebae78c619175"
+        "consoleSha256": "6fd20b5211b2215499347589cb8c21736f807e8830cfba33823be42a4dda9425"
       }
     ],
     "installedSource": {
@@ -436,7 +438,7 @@
     "realFrameContacted": false
   },
   "timerControl": {
-    "sourceRevision": "5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1",
+    "sourceRevision": "9fbb0890a9e44bf60ce8281971f7727e9c8b2976",
     "sourceSha256": {
       "scripts/framey-test-decky-runtime.py": "678c4405824fb13c098051253d2d4fd98085c267ab5cdf5c087def87c5bfd41d",
       "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
@@ -446,7 +448,7 @@
       "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
       "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
       "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
-      "tests/decky-runtime/steamback_private.py": "1285b8d126870aaf23b1898fce2b1c27329ebd29a63659fa2866d4e4c2ada4f3",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
       "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
       "tests/decky-runtime/cases.json": "3f093ff4d3fd7b7f7279096aaecc3cf365c46e8ac0006ea89392778d5065474a",
       "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
@@ -464,7 +466,7 @@
         "caseIndex": 0,
         "rpcs": 31,
         "events": 30,
-        "consoleSha256": "ffe7f9012e59c14f6dfb9c4e3f8045538a7301def53f1397e70839acdaf8539d",
+        "consoleSha256": "1dfd1e5815c0883b4e37034be4940c9ab5773d10c9043de1f85cb2b2ccb4afca",
         "positiveScopedCleanShutdownVerified": true,
         "expectedNegative": false
       },
@@ -472,7 +474,7 @@
         "caseIndex": 1,
         "rpcs": 10,
         "events": 14,
-        "consoleSha256": "d672e862f2f8a70c125b211c71a8862a990b6cb5d2afdae1fbdd716edd50050e",
+        "consoleSha256": "99a450aa06b6246692af82cdd94005452f4353c14d6ca88ed825350505fb8846",
         "positiveScopedCleanShutdownVerified": false,
         "expectedNegative": true
       },
@@ -480,24 +482,24 @@
         "caseIndex": 2,
         "rpcs": 18,
         "events": 24,
-        "consoleSha256": "754418c91f6f57104fe1e8f3a5e649a439d51d274bada729ab4145e4e5736bc1",
+        "consoleSha256": "1ba776a57206b6dc31e610cc4d94797d98b1f9ba00768a92d04a1ff5d7c86130",
         "positiveScopedCleanShutdownVerified": false,
         "expectedNegative": true
       }
     ],
     "repairedStopSeconds": [
-      0.235,
-      0.215,
+      0.185,
       0.214,
-      0.215
+      0.225,
+      0.185
     ],
-    "negativeStopSeconds": 5.245,
+    "negativeStopSeconds": 5.256,
     "settingsSnapshotsDecodedAndHashed": true,
     "runtimeOwnedContainersAndImagesAbsent": true,
     "realFrameContacted": false
   },
   "fullUnitTests": 1952,
-  "fullUnitSeconds": 255.507,
+  "fullUnitSeconds": 254.261,
   "fullUnitSkips": 16,
   "siteTests": 18,
   "installerFixtures": 37,
@@ -510,6 +512,6 @@
   "realFrameContacted": false,
   "mergeQualified": false,
   "releaseQualified": false,
-  "rawJsonSha256": "9790b66355a4c394150cc58077557e5b8cd6c23be0c80400bfaeb73f317b54dd",
-  "rawGzipSha256": "e5666e4b580f65a695cad9da4c303e57cd2577a555260525a1e6e2822a126993"
+  "rawJsonSha256": "e4503aa41a4774724069cedcdbceb9ba24b6ffe0f6fc1ccf5ff8e5acb79e9b80",
+  "rawGzipSha256": "94bda91b2a1c3ed418122e3ea5f0199c1daccc19f260d05e3bffb47132de46c8"
 }

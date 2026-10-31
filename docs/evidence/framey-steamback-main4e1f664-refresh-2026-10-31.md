@@ -1,7 +1,12 @@
 # Steamback integration after the Simple Timer merge
 
 PR #527 normally merges main `4e1f664be47b99fcf88c84d1280126c39d6753b4` into prior head
-`b0b798c4189a471f1b98b09946120770ad68d47c` at tested source `5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1`.
+`b0b798c4189a471f1b98b09946120770ad68d47c` at tested source `9fbb0890a9e44bf60ce8281971f7727e9c8b2976`.
+Integration source `5e26b5d14a9c7cbbcef0869f5e4f455b4b520df1` performed the normal merge.
+A final range check then caught one pre-existing trailing blank line in the
+lifecycle helper. Source `9fbb0890a9e44bf60ce8281971f7727e9c8b2976` removes that line; all native fingerprints
+and tests in this record belong to this corrected source.
+
 Overlapping native-input lists, original-source negative controls and exact
 installer dispatches retain both complete Steamback and Simple Timer branches.
 No history was rewritten. Compatibility stays **partial**; existing managed
@@ -13,10 +18,10 @@ Digest-verified published Decky 3.3.0 AMD64 discovers exact store 46 Steamback
 1.0.0-1, archive `ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3`.
 Repaired/original controls complete **11/9 literal legacy RPCs** for private save
 discovery, backup, restore and undo. The repaired controlled-peer-EOF and restarted
-ordinary stops complete in **0.215/0.215 seconds**, with the original
+ordinary stops complete in **0.214/0.185 seconds**, with the original
 `Steamback exiting!` hook, no forced kills, owned identities reaped, two zero
 adopted exits and unrelated sibling preserved. The original-source negative
-force-stops after **5.225 seconds** without that hook. It is not a
+force-stops after **5.224 seconds** without that hook. It is not a
 compatibility pass.
 
 Every stop independently snapshots private runtime and remote trees before/after
@@ -28,12 +33,12 @@ the published save engine is preserved beneath only the EOF prefix.
 
 The merged Simple Timer control completes **31/10/18 RPCs** with persistent
 settings and event assertions. Its four repaired stops complete in
-**0.235/0.215/0.214/0.215 seconds** with original unload hooks and no forced kill.
+**0.185/0.214/0.225/0.185 seconds** with original unload hooks and no forced kill.
 The original timer state failures and previous-managed forced stop remain expected
 negatives. Both reports match all **20 native source fingerprints**.
 
 Full server suite: **1,952 tests**, **16 platform/optional skips**,
-no failures, **255.507 seconds**. Website: **18 tests**, no skips. One isolated
+no failures, **254.261 seconds**. Website: **18 tests**, no skips. One isolated
 production HTTP/SSH installer method passes all **37 pinned fixtures**, with
 exact Steamback/Timer receipt/backend/helper and removal assertions. Owned
 containers, volumes, network and image tags were removed and absence independently
@@ -44,8 +49,9 @@ only Steamback's exact prior additions/restoring its main probe body. Main's
 Timer negative is structurally identical to main. It also preserves main's other
 36 runtime bodies, other 33 native cases, other 115 complete catalog rows, all
 116 status/install policies, other installer/payload/e2e branches, shared adapter
-and Timer helpers. The prior Steamback probe/helper and top-level negative are
-unchanged. Generated docs and diff checks pass.
+and Timer helpers. The prior Steamback probe/top-level negative are unchanged. Its lifecycle helper
+removes only one trailing blank line, with identical AST; all checks below were
+rerun on the resulting source. Generated docs and diff checks pass.
 
 ## Limits and remaining gates
 
