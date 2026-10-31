@@ -104,15 +104,17 @@ class Compatibility(unittest.TestCase):
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
 
-    def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
+    def test_old_simple_timer_copy_requires_current_ipc_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
-        installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),
-                                  dict(storeId=96, version=plugin['version'], sha256=plugin['sha256'],
-                                       compatShims=['simple-timer-lifecycle'])]}
+        base = dict(storeId=96, version=plugin['version'], sha256=plugin['sha256'])
+        installed = {'plugins': [base, dict(base, compatShims=['simple-timer-lifecycle']),
+            dict(base, compatShims=['simple-timer-lifecycle', 'simple-timer-ipc-eof'])]}
         result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
-        self.assertEqual(result[0]['compatibility']['status'], 'partial')
-        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
-        self.assertEqual(result[1]['compatibility']['status'], 'works')
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
+        for old in result[:2]:
+            self.assertIn('Update or reinstall', old['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[2]['compatibility']['reason'])
+        self.assertIn('worn VR unverified', result[2]['compatibility']['reason'])
 
     def test_fileserver_old_copy_requires_current_panel_update(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
