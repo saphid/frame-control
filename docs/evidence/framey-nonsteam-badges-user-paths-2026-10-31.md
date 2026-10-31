@@ -11,3 +11,22 @@ The [audit](framey-nonsteam-badges-user-paths-2026-10-31.json) verifies all seve
 A focused owned fake-Frame replay also passes managed installation, exact adapted-backend digest and shim receipt, partial compatibility status, and removal. Its test and cleanup exit zero; an independent check finds none of its containers, volumes or image tags. This is install/remove coverage, not browser or native RPC evidence.
 
 Non-Steam Badges stays **partial**. Active Steam account selection, frontend/backend integration, Steam-page badge injection, ARM64, a managed Frame installation, wearer-visible UI and physical controllers remain unverified. Live search is not exercised; the upstream search method retains its existing `ssl._create_unverified_context` behavior unchanged. No public request or system security change was performed. No real Frame, active user session, hourly schedule or pre-existing data was touched.
+
+
+## Current-main refresh
+
+The branch normally merged main `358e423a62300689543e2083d5213af763c03a46`
+at frozen source `372c75b0f099f4ef58697a6450829468163fefe2`, after all original
+workflows and package audits completed. Those earlier CI results are historical
+and do not qualify the refreshed head. The [refresh audit](framey-nonsteam-badges-main358-refresh-2026-10-31.json)
+and [native replay](framey-nonsteam-badges-main358-native-2026-10-31.json)
+retain the fresh AMD64 observations: five repaired RPCs, three unchanged-original
+negative RPCs and four parent-only zero-exit stops. The merged Bluetooth fixture
+also passes its 13 RPCs with results matching current main. All seven runtime
+inputs match the frozen source. The 59 store, 17 compatibility and three runtime
+coverage tests pass; all 116 catalog policies and the other 115 complete records
+match current main. Both owned images and their ancestor containers are absent.
+
+Fresh exact-head CI, ARM64, full e2e and every triggered package variant remain
+required before merge. This refresh adds no Steam-page badge, active-account,
+live-search, real Frame, wearer-visible or controller claim.
