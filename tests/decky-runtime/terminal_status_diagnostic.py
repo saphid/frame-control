@@ -18,7 +18,13 @@ import time
 
 def summarize_stderr(raw):
     imports, frames = [], []
+    fatal_error, fatal_frames = None, []
     for line in raw.decode(errors='replace').splitlines():
+        match = re.fullmatch(r'Fatal Python error: (Segmentation fault|Aborted|Bus error|'
+                             r'Floating point exception|Illegal instruction)', line)
+        if match:
+            fatal_error = match.group(1)
+            fatal_frames = []
         match = re.fullmatch(r'import time:\s+(\d+)\s+\|\s+(\d+)\s+\|\s+([A-Za-z0-9_.]+)', line)
         if match:
             own, total, module = match.groups()
@@ -29,10 +35,14 @@ def summarize_stderr(raw):
             filename, number, function = match.groups()
             filename = Path(filename).name
             if re.fullmatch(r'[A-Za-z0-9_.<>-]{1,100}', filename):
-                frames.append(dict(file=filename, line=int(number), function=function[:100]))
+                frame = dict(file=filename, line=int(number), function=function[:100])
+                frames.append(frame)
+                if fatal_error is not None:
+                    fatal_frames.append(frame)
     return dict(importRecordCount=len(imports),
                 slowestImports=sorted(imports, key=lambda row: row['cumulativeMicroseconds'], reverse=True)[:30],
-                lastImports=imports[-20:], sampledFrames=frames[-60:])
+                lastImports=imports[-20:], sampledFrames=frames[-60:],
+                fatalError=fatal_error, fatalFrames=fatal_frames[-60:])
 
 
 def collect(source, directory, *, timeout=35, sample_seconds=5, result_kind='status'):
@@ -45,6 +55,7 @@ def collect(source, directory, *, timeout=35, sample_seconds=5, result_kind='sta
     # The original source is executed verbatim; import timing and faulthandler
     # are diagnostic additions to the invocation, explicitly reported below.
     wrapper = ('import faulthandler\n'
+               'faulthandler.enable(all_threads=True)\n'
                'faulthandler.dump_traceback_later('+repr(sample_seconds)+', repeat=True)\n'
                'try:\n exec(compile('+repr(source)+', '+repr(label)+', "exec"), {})\n'
                'finally:\n faulthandler.cancel_dump_traceback_later()\n')

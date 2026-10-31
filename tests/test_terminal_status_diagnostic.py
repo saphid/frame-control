@@ -5,6 +5,7 @@ import importlib.util
 import json
 import os
 from pathlib import Path
+import signal
 import tempfile
 import unittest
 from unittest.mock import patch
@@ -100,3 +101,38 @@ class StatusDiagnostic(unittest.TestCase):
         self.assertEqual(report['sampledFrames'], [dict(file='request.py', line=7, function='open')])
         self.assertEqual(report['slowestImports'][0]['module'], 'urllib.request')
         self.assertNotIn('private-canary', json.dumps(report))
+
+    @unittest.skipUnless(os.name == 'posix', 'Owned diagnostic child signal lifecycle')
+    def test_fatal_signal_retains_sanitized_stack_and_reaps_owned_child(self):
+        source = ('import os, resource, signal\n'
+                  'resource.setrlimit(resource.RLIMIT_CORE, (0, 0))\n'
+                  'private = "private-canary"\n'
+                  'os.kill(os.getpid(), signal.SIGSEGV)\n')
+        with tempfile.TemporaryDirectory() as directory:
+            report = diagnostic.collect(source, directory, result_kind='method',
+                                        timeout=5, sample_seconds=1)
+        self.assertEqual(report['exitStatus'], -signal.SIGSEGV)
+        self.assertEqual(report['fatalError'], 'Segmentation fault')
+        self.assertIn(dict(file='<decky-read-only-method>', line=4, function='<module>'),
+                      report['fatalFrames'])
+        self.assertTrue(report['ownedProcessReaped'])
+        self.assertFalse(report['timedOut'])
+        self.assertFalse(report['productionReplayReplaced'])
+        self.assertFalse(report['productionDeadlineChanged'])
+        self.assertTrue(report['methodJsonUnavailable'])
+        self.assertNotIn('private-canary', json.dumps(report))
+
+    def test_fatal_summary_accepts_only_known_headers_and_omits_private_values(self):
+        report = diagnostic.summarize_stderr(
+            b'Fatal Python error: private-canary\n'
+            b'Fatal Python error: Segmentation fault\n'
+            b'Current thread 0x123456 (most recent call first):\n'
+            b'  File "/private-canary/lib/crash.py", line 8 in fail\n'
+            b'    password="private-canary"\n'
+            b'Extension modules: private-canary\n')
+        self.assertEqual(report['fatalError'], 'Segmentation fault')
+        self.assertEqual(report['fatalFrames'], [dict(file='crash.py', line=8, function='fail')])
+        self.assertNotIn('private-canary', json.dumps(report))
+        self.assertNotIn('0x123456', json.dumps(report))
+        self.assertIsNone(diagnostic.summarize_stderr(
+            b'Fatal Python error: Segmentation fault private-canary\n')['fatalError'])
