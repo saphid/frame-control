@@ -201,6 +201,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 expected = MANAGED_FRONTENDS.get(plugin['id'], expected)
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 61:
+                    self.assertEqual(found[0]['compatShims'], ['tabmaster-json-file-restore'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertNotIn('Update or reinstall', found[0]['compatibility']['reason'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356')
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
@@ -238,7 +244,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      frame_decky_store.FILESERVER_BINARIES[arch])
                 if plugin['id'] == 68:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['wine-cellar-native-bridge'])
+                    self.assertEqual(receipt['compatShims'], ['wine-cellar-native-bridge', 'wine-cellar-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
@@ -264,7 +270,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies'])
+                    self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies', 'shotty-ipc-eof'])
                 if plugin['id'] == 132:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])

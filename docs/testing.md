@@ -38,6 +38,10 @@ handling, route cancellation, and intended-headset start/status guards.
 `tests/page/pad_queue.mjs` and `tests/page/ctrl_gestures.mjs` execute the page's
 real queue and gesture functions in Node. These are offline tests; their
 acknowledgements do not prove that a real application received input.
+`tests/test_keyboard_chords.py` also executes the production typing-tool browser
+handlers through server validation, gamescope translation and the libei key-call
+boundary, with HTTP/SSH transport and the final device stubbed. It checks modifier holds, shortcut
+menus and focus-loss releases; see [keyboard support](keyboard-input.md).
 See [the 2026-10-24 PR #66 evidence](evidence/pad-gamescope-2026-10-24.md)
 for the real focused-panel click/key observation, cleanup and remaining limits.
 
@@ -642,6 +646,18 @@ mounts, capabilities or writable repository. Each case has its own unprivileged
 container, private tmpfs home and temporary files. Nothing contacts the headset
 or its shared lock. Failed/timed-out containers and the private image tag are
 removed by the runner.
+
+Each completed native case retains `runtimeConsole.text` and its SHA-256 after
+final fixture cleanup, plus process return codes and any forced-kill escalation.
+Probe or cleanup exceptions print the complete available console to stderr and
+do not emit a successful case result. Five tests exercise long output, normal
+shutdown, a failed probe, forced cleanup, cleanup exceptions and parent-owned
+child shutdown; four use real subprocesses. The fixture sends SIGTERM only to
+the owned Decky loader and waits eight seconds for its unload protocol. Auxiliary
+fixtures retain group cleanup, and bounded group SIGKILL escalation remains
+recorded. `cleanShutdownVerified: false` explicitly prevents treating captured
+output or a zero loader exit as clean plugin shutdown. Case-specific lifecycle
+gates still apply.
 
 Every `compat_shims.append` in the managed installer must have a case in
 `tests/decky-runtime/cases.json`. Add each affected pinned official archive and

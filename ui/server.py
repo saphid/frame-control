@@ -1365,7 +1365,7 @@ INPUT_BATCH_LIMIT = 200  # events per request
 
 
 def input_event(event):
-    """A KDE Connect remote-input body with only the fields it knows, in range."""
+    """Validate text/tap input and physical Linux key press/release events."""
     if not isinstance(event, dict):
         raise Failure("each input event must be an object", 400)
     out = {}
@@ -1390,6 +1390,15 @@ def input_event(event):
         if isinstance(special, bool) or not isinstance(special, int) or not 1 <= special <= 32:
             raise Failure("specialKey must be a whole number from 1 to 32", 400)
         out["specialKey"] = special
+    if "keyCode" in event:
+        code = event["keyCode"]
+        if isinstance(code, bool) or not isinstance(code, int) or not 0 < code < 768:
+            raise Failure("keyCode must be a Linux key code", 400)
+        if not isinstance(event.get("down"), bool):
+            raise Failure("keyCode needs a boolean down state", 400)
+        if "key" in out or "specialKey" in out or any(out.get(m) for m in ("ctrl", "alt", "shift", "super")):
+            raise Failure("keyCode cannot also contain text, specialKey or modifier flags", 400)
+        out.update(keyCode=code, down=event["down"])
     if not set(out) - {"ctrl", "alt", "shift", "super"}:
         raise Failure("input event has nothing to do", 400)
     return out
@@ -1757,6 +1766,10 @@ def pad_events(events, kde=False):
                    + [{"key": c, "down": False} for c in reversed(mods)])
     for e in events:
         mods = [code for name, code in PAD_MODS if e.get(name)]
+        if "keyCode" in e:
+            # Physical keys have their own ordered press/release stream. Never
+            # hand these stateful events to KDE Connect's text-only tap route.
+            out.append({"key": e["keyCode"], "down": e["down"]})
         if "dx" in e or "dy" in e:
             if not e.get("scroll"):
                 out.append({k: e[k] for k in ("dx", "dy") if k in e})
@@ -1878,7 +1891,10 @@ def pad_status(status, pending=False):
     with _kde_lock:
         if _kde_error:
             return {**status, "state": "error", "message": _kde_error}
-        if (_kde_queue or pending) and status.get("state") != "error":
+        # Accepted Unicode may still be landing after its sender queue empties.
+        # Keep the page polling (and physical modifier capture blocked) until
+        # the existing typing estimate settles.
+        if (_kde_queue or pending or time.time() < _kde_until) and status.get("state") != "error":
             return {**status, "queued": len(_kde_queue) or 1}
     return status
 

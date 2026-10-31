@@ -70,6 +70,15 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(result[1]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
+    def test_old_tabmaster_copy_requires_restore_fix(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 61)
+        old = dict(storeId=61, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['tabmaster-json-file-restore'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertTrue(result[0]['compatibility']['reason'].startswith('Update or reinstall'))
+        self.assertFalse(result[1]['compatibility']['reason'].startswith('Update or reinstall'))
+
     def test_old_prefix_manager_copy_requires_user_service_adaptation(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 130)
         old = dict(storeId=130, version=plugin['version'], sha256=plugin['sha256'])
@@ -153,6 +162,16 @@ class Compatibility(unittest.TestCase):
         updated = dict(old, compatShims=['game-sync-bounded-selection'])
         result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
+    def test_shotty_previous_copy_requires_unload_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 53)
+        old = dict(storeId=53, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['shotty-click-app-dir', 'shotty-bounded-copies'])
+        updated = dict(old, compatShims=old['compatShims']+['shotty-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall this managed plugin', result[0]['compatibility']['reason'])
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
