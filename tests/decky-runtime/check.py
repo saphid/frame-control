@@ -70,6 +70,7 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
@@ -162,6 +163,16 @@ def main():
         original = managed[len(prefix):]
         assert hashlib.sha256(original).hexdigest() == '2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364'
         (plugin/'main.py').write_bytes(original)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_timer_unload_regression:
+        assert record['id'] == 96 and not args.reproduce_timer_regression
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'd3dbcd73cce1ecd48d4fade93923ffc2574f94b381d55dfee1fbb5d91f12984a'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
@@ -1658,10 +1669,25 @@ def main():
                     until_ready(lambda: rpc('loader/call_plugin_method', record['name'],
                         'settings_getSetting', 'subtle_mode', False), 'restarted instance RPC')
 
-                report['lifecycle'] = probe(record['name'], restart, home/'runtime.log',
-                                            args.reproduce_timer_regression)
-                report['result'] = ('upstream timer lifecycle regressions reproduced' if args.reproduce_timer_regression
-                    else 'discovery, cancel, replace, completion and persistent restart passed')
+                if args.reproduce_timer_regression:
+                    report['lifecycle'] = probe(record['name'], restart, home/'runtime.log', True)
+                    report['result'] = 'upstream timer lifecycle regressions reproduced; expected negative only'
+                else:
+                    import timer_private
+                    timer_private.probe(backend, loader, env, log, processes, rpc, until_ready, report,
+                        base/'settings'/record['folder']/'settings.json',
+                        regression=args.reproduce_timer_unload_regression)
+                    report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                    report['ipcAdapterSha256'] = (None if args.reproduce_timer_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    if args.reproduce_timer_unload_regression:
+                        report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                            previousManagedSourceRestored=True, forcedPluginKills=1,
+                            qualifiedCompatibilityPass=False)
+                    report['result'] = ('prior managed timer source requires forced stop; expected negative only'
+                        if args.reproduce_timer_unload_regression else
+                        'discovery, cancel, replace, completion, persistent restart and four clean parent-only stops passed; '
+                        'no new browser or Frame proof')
             elif args.reproduce_bound_method_regression:
                 response = rpc('loader/call_legacy_plugin_method', record['name'], 'sp_list_media_players', {})
                 assert response['success'] is False and 'self' in response['result'], response
