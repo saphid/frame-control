@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 130 and digest == PREFIX_MANAGER_102_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 36 and digest == 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STEAMGRIDDB_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -701,6 +704,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 manifest['flags']=[]
                 (unpacked/'plugin.json').write_text(json.dumps(manifest))
                 compat_shims.append('prefix-manager-user-paths')
+                if digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6':
+                    previous=main.read_bytes()
+                    if hashlib.sha256(previous).hexdigest()!='96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478':
+                        raise RuntimeError('Prefix Manager 1.0.2 managed safeguards differ from tested source')
+                    ipc=globals().get('FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE')
+                    if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Prefix Manager 1.0.2 child IPC EOF repair')
+                    modules=unpacked/'py_modules'
+                    modules.mkdir(exist_ok=True)
+                    helper=modules/'framey_decky_ipc.py'
+                    if helper.exists(): raise RuntimeError('Prefix Manager 1.0.2 child IPC helper collides with archive')
+                    compile(ipc,str(helper),'exec')
+                    helper.write_text(ipc,encoding='utf-8')
+                    main.write_bytes((b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+previous)
+                    compat_shims.append('prefix-manager-102-ipc-eof')
             if wine_cellar:
                 helper=unpacked/'bin/backend'
                 source=unpacked/'main.py'
