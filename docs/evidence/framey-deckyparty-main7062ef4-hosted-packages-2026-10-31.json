@@ -1,0 +1,78 @@
+{
+  "at": "2026-10-31T21:03:44.804970+00:00",
+  "head": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+  "qualifiedPackageModes": 4,
+  "uniqueSources": 128,
+  "verifiedHashBindings": 1281,
+  "packages": [
+    {
+      "artifact": 13057421952,
+      "architecture": "aarch64",
+      "headSha": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+      "sourceHashes": 26,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": false,
+      "productionParent": false
+    },
+    {
+      "artifact": 13057066874,
+      "architecture": "x86_64",
+      "headSha": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+      "sourceHashes": 26,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": false,
+      "productionParent": false
+    },
+    {
+      "artifact": 13057361191,
+      "architecture": "x86_64",
+      "headSha": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+      "sourceHashes": 127,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": true,
+      "productionParent": false,
+      "packetVerified": true,
+      "httpRequests": 13,
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "realSteamCef": false
+    },
+    {
+      "artifact": 13057660053,
+      "architecture": "x86_64",
+      "headSha": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+      "sourceHashes": 128,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": true,
+      "productionParent": true,
+      "packetVerified": true,
+      "httpRequests": 16,
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "realSteamCef": false,
+      "parentRequests": 65,
+      "maxParentRequestSeconds": 7.582,
+      "productionIframeUnchanged": true,
+      "parentErrors": []
+    }
+  ],
+  "allOriginalZipAndMemberDigestsVerified": true,
+  "published": false,
+  "rawSha256": "54b530e6dddbd87b89f80ff63a93c163995f02acc18f4da1bcecffa9e074378b",
+  "rawBytes": 778994,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "publicationContext": "This qualification was prepared before the documentation update; recorded pending/incomplete gate fields retain their historical scope."
+}
