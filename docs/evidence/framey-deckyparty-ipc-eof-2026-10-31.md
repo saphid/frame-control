@@ -60,3 +60,30 @@ Fresh exact-head hosted checks/e2e, native AMD64/ARM64 and triggered package gat
 remain required. No new browser replay, LAN/HTTPS, external-media, managed Frame,
 real Steam CEF, wearer-visible UI or physical-controller proof was performed.
 No headset or hourly schedule was accessed and no release was published.
+
+## Refresh onto merged TabMaster main
+
+After #500 qualified and merged, normally merged current main
+`0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` at tested source
+`45f57b14811997bdedac47fbead080c541a36215`. There were no conflicts and no
+history rewrite. The exact DeckyParty repair/helper/regression is retained,
+as are main's complete TabMaster probe, all other probe bodies, all 34 native
+case records (only DeckyParty gains its additional shim), published archive
+inventory and shared IPC/console sources. All 116 status/install policies and
+the other 115 complete catalog records match this main.
+
+The refreshed source passes all 85 focused tests and a new isolated AMD64
+published-Decky replay. All 16 source fingerprints match this source. Fifteen
+repaired and eight prior-source RPCs, private file operations, three explicit
+closed-peer reloads, the prior-source forced-kill/server-survival negative,
+owned survivor cleanup and both final parent-only zero-exit stops independently
+pass. The backend/adapter pins are unchanged. Complete available consoles and
+the full unit output are retained in the new [refresh audit](framey-deckyparty-main0082d79-refresh-2026-10-31.json)
+and [raw report](framey-deckyparty-main0082d79-refresh-2026-10-31-raw.json.gz);
+the original evidence above is preserved.
+
+This targeted replay does not qualify the full 42-probe/34-archive/16-source
+hosted matrix. Current main 0082d79 and the final PR head need their own hosted
+CI/e2e/native/package qualification; previous-head artifacts remain historical.
+Compatibility stays partial. No new browser, LAN, managed Frame, wearer/controller
+or release proof is added, and no headset or hourly schedule was accessed.
