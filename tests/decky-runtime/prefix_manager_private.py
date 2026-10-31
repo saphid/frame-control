@@ -76,7 +76,9 @@ def stop(backend, log, *, disconnect, after_disconnect=None):
     forced = console.count('Sending SIGKILL!')
     errors = [m for m in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
               'Task was destroyed but it is pending', 'Bad file descriptor') if m in console]
-    unloads = console.count('Unloaded Games Prefix Manager (v1.0.2)')
+    # This published plugin has no _unload hook. Decky's successful stop line
+    # is its completion marker; never mistake a missing custom hook for a failure.
+    unloads = console.count('[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in ')
     clean = (backend.returncode == 0 and elapsed < 5 and not remaining and not forced and not errors
              and all(c['returncode'] == 0 for c in adopted) and unloads == 1
              and console.count('[main][INFO]: Shutdown finished.') == 1)
