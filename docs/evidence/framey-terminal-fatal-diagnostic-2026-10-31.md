@@ -21,8 +21,8 @@ The overlapping Terminal and Bluetooth fixture bodies were preserved by AST
 comparison. At frozen source `d53c1ac5e8871282a5106b2815f6ad9536381f72`, an owned,
 networkless AMD64 QEMU VM passed the actual production HTTP parent, method/event
 flow, private PTY input/output, resize, remove/reload and configuration checks.
-Its 20 requests succeeded; four real backend events delivered the private
-output. All 166 source fingerprints, bootstrap and complete guest-result packet
+Its 20 HTTP requests succeeded (14 method calls and six event polls); four
+real backend events delivered the private output. All 166 source fingerprints, bootstrap and complete guest-result packet
 were independently verified. The Decky service stopped with exit zero in 2.89
 seconds; the owned QEMU was reaped. The [audit](framey-terminal-fatal-diagnostic-2026-10-31.json)
 records these bounds. The terminal/output/removed captures were inspected; the

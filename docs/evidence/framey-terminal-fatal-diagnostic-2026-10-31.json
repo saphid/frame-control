@@ -849,9 +849,13 @@
       "Task was destroyed but it is pending": 0
     },
     "inputRootfsTarDigestRevalidatedAfterReplay": true,
-    "realMethodHttpRequestCount": 20,
     "deliveredBackendEventCount": 4,
-    "driverAndQemuIndependentlyAbsent": true
+    "driverAndQemuIndependentlyAbsent": true,
+    "productionHttpRequestCount": 20,
+    "productionHttpRequestCountsByRoute": {
+      "/api/framey/method": 14,
+      "/api/framey/events": 6
+    }
   },
   "sourceArchiveCopiedFromFrozenCommit": true,
   "all116CatalogRecordsMatchMain": true,
