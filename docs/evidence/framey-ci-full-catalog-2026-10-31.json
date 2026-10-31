@@ -1,0 +1,58 @@
+{
+  "at": "2026-10-31T18:52:57.728312+00:00",
+  "testedBaseCommit": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "a7e8d48268dd6e16ade83c46833193ea5afdd239b8389563ad380b6c8e1519ac",
+    "scripts/e2e.sh": "1661182f988ad5178ae0cd1357e6bfdb1181be83467895a715d51b6b67c70c3e",
+    "scripts/framey-cache-catalog.py": "f67c4d9ba3ff2bc2e2f20811f49c703d0e80775253088f3c273f8a1298a7c4e4",
+    "tests/test_framey_catalog_cache.py": "a5707f17698439a0f82fb4fee7910397ed341af4ff3c83052a2dd8ea33ec5e0f",
+    "tests/e2e/test_framey_catalog.py": "108cdaa3e64c56324a01f7ad256f14f80a0a6819c0de7413afe50e143860d34b",
+    "tests/e2e/test_framey.py": "db0414cad4c95711456b21193dbc227fd030610d22b3fce9852bba977c2a7ce7",
+    "tests/e2e/harness.py": "98f9ee59e79281d803e87e56f66dc8ca2edab401a99009bb077d47da815bf9dc",
+    "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f",
+    "tests/fakeframe/Containerfile": "55c56a8d047f50d9c892028c373d228bd674c2b364b4322d82765a4e26ab0804",
+    "tests/fakeframe/host.Containerfile": "6faccc39e4765050f57e82ce4ba1e66609a6a3fb4c23fc4461c846d39e0fd933",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "14762b547042e4fa5cf0bb960181ded4c6221f04dd94515345f53c221bde17ed",
+    "ui/framey-compatibility.json": "c9745e9563639b37d582bd62d5a8c447a958b22e73174bf07898a115c1d6cebb"
+  },
+  "server": {
+    "tests": 1959,
+    "skips": 16,
+    "seconds": 255.668
+  },
+  "cacheRegressionTests": 7,
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 401.796
+  },
+  "coldCache": {
+    "records": 116,
+    "fixtures": 37,
+    "cdn": 79
+  },
+  "restoredCache": {
+    "records": 116,
+    "verifiedEveryHit": true
+  },
+  "catalogOutcomes": {
+    "blocked": 47,
+    "installed-removed": 69
+  },
+  "actualReadOnlyMountVerified": true,
+  "resultCopyVerified": true,
+  "missingResultRefusedWithExit2": true,
+  "ownedCleanupVerified": true,
+  "preexistingImageTagsRestored": true,
+  "preexistingSimulatorContinuityVerified": true,
+  "collectorInitialExit": 1,
+  "collectorCorrection": "Initial full State equality included rolling Health.Log timestamps. Tests and cleanup succeeded. Independent readback verifies the same running healthy simulator container, with start time predating this run; no restart during this interval.",
+  "actionlint": "v1.7.7 exit0, no diagnostics",
+  "hostedCI": false,
+  "hostedArm64": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "rawSha256": "7e597754e226bd1c8a274277ce5701f2ec2f4126dde40f52bcd6b3c6207f2278",
+  "rawBytes": 73194
+}
