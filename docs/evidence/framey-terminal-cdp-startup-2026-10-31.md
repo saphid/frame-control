@@ -67,3 +67,18 @@ release and does not resolve the earlier ARM64 production timeout.
 Captures: [initial pane](framey-terminal-cdp-startup-2026-10-31-terminal.png),
 [output](framey-terminal-cdp-startup-2026-10-31-output.png),
 [removed](framey-terminal-cdp-startup-2026-10-31-removed.png).
+
+## Windows archive-test correction
+
+The Windows job for head `14b960aa` failed one of 1,952 tests (308 skips):
+the new manifest test collected `tests\decky-runtime\runtime_console.py`,
+then compared it with forward-slash archive member names. Its GitHub merge
+checkout `0931d65f` has the same tree as that head. Source `93026f2a` changes
+only the test to use `Path.as_posix()` for relative archive paths. The local
+manifest test passes all four architecture/archive-mode subcases, and the
+four CDP tests pass. All 168 previously tested runtime fingerprints are
+unchanged; native/e2e runs were not repeated for this test-only correction.
+Fresh hosted Windows execution is still required; it was not run locally.
+[Correction audit and failure excerpt](framey-terminal-windows-paths-2026-10-31.json)
+retain the exact source, test logs, failed job reference and unchanged-runtime
+check. The earlier ARM64 production timeout remains unresolved.
