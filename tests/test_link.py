@@ -1144,7 +1144,9 @@ class Connecting(unittest.TestCase):
         self.link.connect(["start"])
         line = err.getvalue()
         self.assertIn("frame_link: login failed: The Frame didn't accept this computer's SSH key.", line)
-        self.assertIn("addresses: hostname unresolved; hostname->ipv4", line)
+        # SSH can reject the answering address while the other DNS probe is
+        # still pending. Its timing does not change what the log must scrub.
+        self.assertRegex(line, r"addresses: hostname (?:waiting|resolving|unresolved); hostname->ipv4")
         for leaked in ("steamdeck-jane", "127.0.0.1", "localhost"):
             self.assertNotIn(leaked, line)
         self.assertEqual(self.link.last_failure["stage"], "login")

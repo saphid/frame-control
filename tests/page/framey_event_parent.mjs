@@ -160,3 +160,16 @@ assert.equal(timeouts.has(closeTimer),false,'closing the panel cancels a held sc
 const replyCount=replies.length;
 el('frameyScrollUp').onclick();
 assert.equal(replies.length,replyCount);
+
+// Terminal output names survive the production parent unchanged and receipt-bound.
+vm.runInContext('deckyState={running:true,plugins:[{storeId:65,sha256:"'+'a'.repeat(64)+'",version:"0.5.3"}]};openFrameyPanel(65,"Decky Terminal")',context);
+session=vm.runInContext('frameySession',context);
+const terminalEvent='terminal_output#private-pty';
+const terminalSubscription=send({type:'framey:events',id:90,session,args:[[terminalEvent],0]});
+assert.equal(requests.at(-1).path,'/api/framey/events');
+assert.equal(requests.at(-1).body.id,65);
+assert.equal(requests.at(-1).body.receipt,'a'.repeat(64));
+assert.deepEqual(Array.from(requests.at(-1).body.events),[terminalEvent]);
+requests.at(-1).resolve({ok:true,json:async()=>({events:[{event:terminalEvent,args:['private output']}],cursor:1})});
+await terminalSubscription;
+assert.equal(replies.at(-1).result.events[0].event,terminalEvent);
