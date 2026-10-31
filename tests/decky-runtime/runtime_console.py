@@ -1,7 +1,8 @@
 """Retain native fixture output after owned process cleanup, including failures.
 
-This records the existing process-group cleanup policy. Retained output and
-cleanup completion are diagnostics, not a clean Decky/plugin shutdown gate.
+Signal the owned Decky loader so it can unload its children. Auxiliary fixtures
+retain process-group cleanup. Output and return codes remain diagnostics, not
+a clean Decky/plugin shutdown gate.
 """
 from contextlib import contextmanager
 import hashlib
@@ -13,7 +14,7 @@ import sys
 
 
 @contextmanager
-def capture_runtime(log, report, processes, *, stop_timeout=4, stdout=None, stderr=None):
+def capture_runtime(log, report, processes, *, loader=None, stop_timeout=8, stdout=None, stderr=None):
     stdout = sys.stdout if stdout is None else stdout
     stderr = sys.stderr if stderr is None else stderr
     probe_completed = False
@@ -25,13 +26,19 @@ def capture_runtime(log, report, processes, *, stop_timeout=4, stdout=None, stde
     finally:
         try:
             for process in reversed(processes):
-                stop = dict(pid=process.pid, signaledProcessGroup=False, forcedKill=False)
+                is_loader = loader is not None and process.args == [str(loader)]
+                stop = dict(pid=process.pid, signaledProcessGroup=False, forcedKill=False,
+                            loader=is_loader, parentOnlySignal=False)
                 stops.append(stop)
                 try:
                     if process.poll() is None:
                         try:
-                            os.killpg(process.pid, signal.SIGTERM)
-                            stop['signaledProcessGroup'] = True
+                            if is_loader:
+                                process.send_signal(signal.SIGTERM)
+                                stop['parentOnlySignal'] = True
+                            else:
+                                os.killpg(process.pid, signal.SIGTERM)
+                                stop['signaledProcessGroup'] = True
                         except ProcessLookupError:
                             continue
                         try:
