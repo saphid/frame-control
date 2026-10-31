@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 117 and digest == '193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECKYPARTY_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -1040,7 +1043,16 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=main.read_text(encoding='utf-8')
                 if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
                     raise RuntimeError('DeckyParty Python source mismatch')
-                source='from __future__ import annotations\nimport pwd\nimport signal\n'+source
+                ipc=globals().get('FRAMEY_DECKYPARTY_IPC_SOURCE')
+                if not isinstance(ipc,str): raise RuntimeError('Missing DeckyParty child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('DeckyParty IPC helper collides with archive')
+                ipc_helper.parent.mkdir(exist_ok=True)
+                ipc_helper.write_text(ipc)
+                source=('from __future__ import annotations\n'
+                    'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                    '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    'import pwd\nimport signal\n'+source)
                 a=source.index('    @staticmethod\n    def _get_home_dir(')
                 b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
                 source=source[:a]+"""    @staticmethod
@@ -1129,6 +1141,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('deckyparty-user-lifecycle')
+                compat_shims.append('deckyparty-ipc-eof')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's

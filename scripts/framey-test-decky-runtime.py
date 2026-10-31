@@ -83,6 +83,7 @@ def main():
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/runtime_console.py',
+              'tests/decky-runtime/deckyparty_private.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
@@ -108,7 +109,8 @@ def main():
                     (65, '--reproduce-terminal-import-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),
                     (68, '--reproduce-wine-cellar-unload-regression'),
-                    (53, '--reproduce-shotty-unload-regression')]
+                    (53, '--reproduce-shotty-unload-regression'),
+                    (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]

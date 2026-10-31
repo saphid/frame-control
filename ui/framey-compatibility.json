@@ -10417,7 +10417,7 @@
         "https://github.com/9001/copyparty"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.0.0 runs the unchanged Copyparty helper as the actual service user without sudo, isolates its temporary cache, and reaps its owned process session on disable/unload. Published Decky 3.3.0 AMD64/ARM64 pass authenticated private listing/download/upload/delete, refusal of anonymous/wrong-password reads, disable/restart and actual plugin reload cleanup with an unrelated child preserved. Existing copies need Update/reinstall. LAN/HTTPS, external media, the real Frame backend, panel controls and worn/controller use remain unverified.",
+      "reason": "Exact managed 1.0.0 runs the unchanged Copyparty helper as the actual service user without sudo, isolates its temporary cache, reaps its owned process session, and repairs child IPC EOF so unload can run. Earlier AMD64/ARM64 private file operations passed, but an intermittent forced-kill reload was reproduced in hosted AMD64 and unchanged-main local tests. Fresh local AMD64 verifies three reloads and a parent-only stop with the repair; fresh ARM64 and full hosted qualification remain pending. Existing copies need Update/reinstall. LAN/HTTPS, external media, the real Frame backend, panel controls and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -10450,7 +10450,8 @@
         "result": "installed-removed"
       },
       "requiredShims": [
-        "deckyparty-user-lifecycle"
+        "deckyparty-user-lifecycle",
+        "deckyparty-ipc-eof"
       ],
       "backendFollowUp": {
         "evidence": "docs/evidence/framey-deckyparty-lifecycle-2026-10-30.md",
@@ -10458,7 +10459,9 @@
         "actualDeckyX86": true,
         "actualFrameBackend": false,
         "mode": "owned disposable Docker volume, loopback HTTP and actual plugin reload; network/device/session isolated",
-        "actualDeckyArm64": true
+        "actualDeckyArm64": true,
+        "ipcEofEvidence": "docs/evidence/framey-deckyparty-ipc-eof-2026-10-31.md",
+        "ipcEofArm64Verified": false
       }
     },
     {
