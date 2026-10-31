@@ -15,10 +15,14 @@ from a local fixture so CI does not depend on the store being online.
 `117.zip` was added from the digest-verified static audit cache on 2026-10-30.
 A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
+`66.zip` was added from the digest-verified repository-pinned audit cache on
+2026-10-31. No fresh live store metadata was read for this addition.
+
 `134.zip` was downloaded from the official CDN on 2026-10-31 and matched the existing catalog digest. This is not a fresh full-store metadata claim.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `66.zip` | PlayTime | 3.2.5 | `10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |

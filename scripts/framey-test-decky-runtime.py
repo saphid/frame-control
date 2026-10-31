@@ -85,6 +85,7 @@ def main():
               'tests/decky-runtime/runtime_console.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
+              'tests/decky-runtime/playtime_private.py',
               'tests/decky-runtime/ludusavi_private.py',
               'tests/decky-runtime/wine_cellar_private.py',
               'tests/decky-runtime/shotty_private.py', 'ui/framey_shotty.py',
