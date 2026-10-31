@@ -1,0 +1,319 @@
+{
+  "at": "2026-10-31T04:24:11.315684+00:00",
+  "scope": "Exact managed Ludusavi1.2.2 dependency discovery only",
+  "baseCommit": "8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c",
+  "nativeSourceCommit": "b074df8d1ee98e9e339fa5cb3a1629def13e7cf0",
+  "browserSourceCommit": "3622cc4bc6354e572b9add19fffaeeb52b5060c7",
+  "native": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "9d37893a8a5d823ab00d8a32d87f67dc0b15b5ceb2ce43740b52772e79ba5a5a",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "adc47db4847e77a526e35798d0c9b8c208923c2e4bb481ec8ad6390cd95dd12b",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "b7287761a5df9e669b33ef5cb38e998f0626817027fb6a43ac64c88ef679b2e3",
+      "tests/framey_official.py": "7483873a1db44b310b0fd1c7057b68d028b674e2a53693f0bbbf74317184f242",
+      "ui/frame_decky_store.py": "c8e24af778cbf4792e59ff34d94f1d09199562dba64d4566478dd259c3df3f45",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 103,
+        "name": "Decky Ludusavi",
+        "version": "1.2.2",
+        "sha256": "8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88",
+        "shim": "ludusavi-dependency-discovery",
+        "calls": [
+          {
+            "method": "get_ludusavi_version",
+            "result": {
+              "bin_path": null,
+              "version": ""
+            }
+          },
+          {
+            "method": "get_ludusavi_version",
+            "result": {
+              "bin_path": [
+                "ludusavi"
+              ],
+              "version": "ludusavi private-fixture 0.0\n"
+            }
+          },
+          {
+            "method": "get_ludusavi_version",
+            "result": {
+              "bin_path": null,
+              "version": ""
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "Decky Ludusavi",
+            "version": "1.2.2",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "dependencyDiscovery": {
+          "onlyHelperModified": true,
+          "managedArchiveMemberSha256": {
+            "LICENSE": "708a5b37ed16f1eafaa9d4f08196b197b5e6e7d63566e1cf0847f1f963a64007",
+            "main.py": "00fcd7029ab4ba9fac0e872899a6dcadd6d05a8cc8892542b5abd2db967eac48",
+            "package.json": "aad606b4bf81620aa796074d4149e0df7f063c72c4596a4bed4d90071dfbe613",
+            "plugin.json": "0d9c10a4af826cc1aabfb3ab620d97e310202f37a54be5ef2517571dca3f4d34",
+            "README.md": "63b591e30eec4c2f2a166c8da142ccaab5a4f2204f1f1e86910de5f30e477d5c",
+            "dist/index.js.map": "7eeb72cbb43a6373f93dfbc24ced811ceea987b87dac2b3aa973c15c930fcada",
+            "dist/index.js": "c57fb1bf11c644ca032f00f8fd83ea520119b619e2fae0cae1fb7cede4bc8784",
+            "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/ludusavi.py": "c5be450c93b9df7a33bb30f8336c351c750f03cb2e4b354ffacb25eab78b0678",
+            "py_modules/config.py": "43e6125f1e6ad03ad6d37f6c43fe77e4639a73044f9fb83807de0d27cc3ca103"
+          },
+          "originalHelperSha256": "c34c829b7f8d0ac5254b54a3fa1050738cf7b56392e84ee2c6892ea6f6c69d46",
+          "managedHelperSha256": "c5be450c93b9df7a33bb30f8336c351c750f03cb2e4b354ffacb25eab78b0678",
+          "states": [
+            {
+              "stage": "missing",
+              "result": {
+                "bin_path": null,
+                "version": ""
+              }
+            },
+            {
+              "stage": "slow-first-candidate-fallback",
+              "result": {
+                "bin_path": [
+                  "ludusavi"
+                ],
+                "version": "ludusavi private-fixture 0.0\n"
+              },
+              "elapsedSeconds": 6.815181015059352,
+              "timedOutChildReaped": true
+            },
+            {
+              "stage": "managed-missing-after-restart",
+              "result": {
+                "bin_path": null,
+                "version": ""
+              }
+            }
+          ],
+          "originalMissingDependencyFailure": "{'type': -1, 'id': 1, 'error': {'name': 'Exception', 'message': \"'Ludusavi' object has no attribute 'version'\", 'traceback': 'Traceback (most recent call last):\\n  File \"decky_loader/wsrouter.py\", line 70, in _call_route\\n  File \"decky_loader/loader.py\", line 232, in handle_plugin_method_call\\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\\nException: \\'Ludusavi\\' object has no attribute \\'version\\'\\n'}}",
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.31473829923197627,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 19,
+                  "returncode": 0
+                },
+                {
+                  "pid": 20,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21409147884696722,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 37,
+                  "returncode": 0
+                },
+                {
+                  "pid": 38,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.2138699321076274,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 54,
+                  "returncode": 0
+                },
+                {
+                  "pid": 55,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.26415864937007427,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 72,
+                  "returncode": 0
+                },
+                {
+                  "pid": 73,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            }
+          ],
+          "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-ludusavi\n[loader][INFO]: Loaded Decky Ludusavi (v1.2.2)\n[Errno 2] No such file or directory: 'flatpak'\n[Errno 2] No such file or directory: 'ludusavi'\n[Errno 2] No such file or directory: 'ludusavi.exe'\nUsing Binary: None\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Decky Ludusavi (v1.2.2)\n[plugin][INFO]: Stopping response listener for Decky Ludusavi (v1.2.2)\nCalling Loader unload function for Decky Ludusavi (v1.2.2).\nAttempting to unload with plugin Decky Ludusavi (v1.2.2)'s \"_unload\" function.\n\nUnloaded Decky Ludusavi (v1.2.2)\n\n[plugin][INFO]: Plugin Decky Ludusavi (v1.2.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-ludusavi\n[loader][INFO]: Loaded Decky Ludusavi (v1.2.2)\nCommand '['flatpak', 'run', 'com.github.mtkennerly.ludusavi', '--version']' timed out after 5 seconds\nNone\nUsing Binary: ('ludusavi',)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Decky Ludusavi (v1.2.2)\n[plugin][INFO]: Stopping response listener for Decky Ludusavi (v1.2.2)\nCalling Loader unload function for Decky Ludusavi (v1.2.2).\nAttempting to unload with plugin Decky Ludusavi (v1.2.2)'s \"_unload\" function.\n\nUnloaded Decky Ludusavi (v1.2.2)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Decky Ludusavi (v1.2.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-ludusavi\n[loader][INFO]: Loaded Decky Ludusavi (v1.2.2)\n[Errno 2] No such file or directory: 'flatpak'\n[Errno 2] No such file or directory: 'ludusavi'\n[Errno 2] No such file or directory: 'ludusavi.exe'\nUsing Binary: None\n[loader][ERROR]: Method get_ludusavi_version of plugin Decky Ludusavi (v1.2.2) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: 'Ludusavi' object has no attribute 'version'\n\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Decky Ludusavi (v1.2.2)\n[plugin][INFO]: Stopping response listener for Decky Ludusavi (v1.2.2)\nCalling Loader unload function for Decky Ludusavi (v1.2.2).\nAttempting to unload with plugin Decky Ludusavi (v1.2.2)'s \"_unload\" function.\n\nUnloaded Decky Ludusavi (v1.2.2)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Decky Ludusavi (v1.2.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-ludusavi\n[loader][INFO]: Loaded Decky Ludusavi (v1.2.2)\n[Errno 2] No such file or directory: 'flatpak'\n[Errno 2] No such file or directory: 'ludusavi'\n[Errno 2] No such file or directory: 'ludusavi.exe'\nUsing Binary: None\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Decky Ludusavi (v1.2.2)\n[plugin][INFO]: Stopping response listener for Decky Ludusavi (v1.2.2)\nCalling Loader unload function for Decky Ludusavi (v1.2.2).\nAttempting to unload with plugin Decky Ludusavi (v1.2.2)'s \"_unload\" function.\n\nUnloaded Decky Ludusavi (v1.2.2)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Decky Ludusavi (v1.2.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "loaderConsoleSha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+          "publishedDeckyRpcVerified": true,
+          "fakeExecutablesOnly": true,
+          "actualLudusaviVerified": false,
+          "backupRestoreVerified": false,
+          "cloudSyncVerified": false,
+          "browserVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky missing dependency report, bounded slow discovery, private executable fallback, restart and original negative regression passed; real Ludusavi backup/restore/cloud, browser and VR unverified"
+      }
+    ]
+  },
+  "browser": {
+    "success": true,
+    "observations": [
+      {
+        "id": 103,
+        "name": "Decky Ludusavi",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "warn",
+            "message": "Framey Steam library unavailable Read-only compatibility audit: live Steam API blocked"
+          },
+          {
+            "kind": "warn",
+            "message": "Framey Steam running context unavailable Read-only compatibility audit: live running context blocked"
+          },
+          {
+            "kind": "warn",
+            "message": "Framey Steam running context unavailable Read-only compatibility audit: live running context blocked"
+          }
+        ],
+        "methods": [
+          "get_config",
+          "get_ludusavi_version"
+        ],
+        "rootText": "No Recent Games\nGlobal Config\nAuto-Sync Feature Enabled\nLudusavi\nLudusavi not found. Plugin functionality limited.\nInstall Ludusavi from 'Discover' in Desktop mode. If issue persists, ask for help on GitHub or Discord.",
+        "library": "unavailable",
+        "running": "unavailable"
+      }
+    ],
+    "browserVersion": "Chromium 156.0.8078.73",
+    "browserSha256": "7bd6a2bd99304f8ed217e3bd12c8785b7b6ea3ba901ffc37b6de6292e3d35dd4",
+    "browserSandboxDisabled": false,
+    "sandboxedRenderers": [
+      {
+        "pid": 1875451,
+        "ancestryToOwnedBrowser": [
+          1875451,
+          1875371,
+          1875368,
+          1875357
+        ],
+        "seccomp": 2,
+        "noNewPrivs": 1
+      },
+      {
+        "pid": 1875462,
+        "ancestryToOwnedBrowser": [
+          1875462,
+          1875371,
+          1875368,
+          1875357
+        ],
+        "seccomp": 2,
+        "noNewPrivs": 1
+      },
+      {
+        "pid": 1875463,
+        "ancestryToOwnedBrowser": [
+          1875463,
+          1875371,
+          1875368,
+          1875357
+        ],
+        "seccomp": 2,
+        "noNewPrivs": 1
+      },
+      {
+        "pid": 1875501,
+        "ancestryToOwnedBrowser": [
+          1875501,
+          1875371,
+          1875368,
+          1875357
+        ],
+        "seccomp": 2,
+        "noNewPrivs": 1
+      }
+    ],
+    "screenshotSha256": "72cc081f93b682afc80af0c8215797709d9269b0c5550d275147c3933c67409e",
+    "frontendSha256": "c57fb1bf11c644ca032f00f8fd83ea520119b619e2fae0cae1fb7cede4bc8784",
+    "nativeBackendConnected": false,
+    "inMemoryReplies": true,
+    "realLudusaviVerified": false,
+    "backupRestoreVerified": false,
+    "realFrameContacted": false,
+    "physicalControllerVerified": false,
+    "ownedBrowserReaped": true,
+    "ownedServerReaped": true,
+    "sourceSha256": {
+      "scripts/framey-audit-browser.py": "fc07dbfd8673449a5e6eb55871fcac92b93a7676d3b5c00ec4aab13ee322dd87",
+      "ui/framey-host.js": "55288618ee047d160fdac4cbf970cea408238f98c0b20ee84b0c0a3c5a9a48e6",
+      "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+      "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d"
+    },
+    "screenshotVisuallyInspected": true
+  },
+  "rawProofSha256": {
+    "native-final.json": "965b67871722334a24b4b92cab28430148ce3156d8496475447de963aa6a3cb2",
+    "native-final.log": "f53e55c8d6210bae6dfd38a005f7c17ae636c693e4728127fa2eee6a1fa62921",
+    "browser-verified.json": "9c76976af1f81727e493c0bd5ab84169e3894777393946843dd6c72ea4038ad0",
+    "browser.log": "90cd3eab80696c53ecf0f1788d9a45c8380e8714b37aadaf3723a906590d92e0",
+    "browser-server.log": "8e40bf5a91373c43b7a8b5ff6f622d25d5012fc4e74f58def97f3d824b146610",
+    "store-final.log": "53e2dc94a72d12d03aa1f6105b867e4b6e444d85476e271becc287ba9ec6a4a7"
+  },
+  "audit": {
+    "allNineNativeSourcesMatch": true,
+    "allTenArchiveMembersChecked": true,
+    "onlyHelperModified": true,
+    "threeLiteralRpcResults": true,
+    "originalRemoteFailureRetained": true,
+    "fourParentOnlyStopsExitZero": true,
+    "ownedImageAndContainersCleaned": true,
+    "ownedBrowserProcessesReaped": true,
+    "compatibilityRows": 116,
+    "only103ReasonChanged": true,
+    "classificationAndInstallerPolicyUnchanged": true,
+    "store130Version": "1.0.1"
+  },
+  "limits": [
+    "Native local AMD64 only; final-head hosted native AMD64/ARM64, e2e and triggered package modes pending",
+    "Browser replies synthetic; no native frontend/backend integration",
+    "No real Ludusavi/Flatpak/backup/restore/cloud/save data/game lifecycle",
+    "Other commands and unload lifecycle unverified",
+    "No real Frame, worn view or physical controller",
+    "No release"
+  ]
+}
