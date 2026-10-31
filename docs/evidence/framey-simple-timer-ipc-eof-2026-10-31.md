@@ -14,6 +14,25 @@ The prior managed source negative control removes only the IPC prefix/helper and
 
 The first repaired attempt passed its active stop, then exposed a fixture assertion copied from legacy plugins: Simple Timer publishes frontend load type **1**, not 0. The corrected test checks its exact published discovery record. That failed fixture console is retained rather than presented as a runtime success.
 
+## HTTP/SSH receipt follow-up
+
+Source `a10634f58ecd57bfb547c3050b170e134d34c768` corrects stale transport
+expectations: both timer lifecycle/IPC shims must appear in the receipt, and the
+compatibility status is partial. The test checks the installed managed backend
+and IPC helper SHA-256 values. It preserves the tighter compatibility claim.
+
+One real HTTP installer/fake Frame SSH method covering all 37 pinned plugin
+fixtures passes with zero skips. All owned containers, volumes, network and
+image tags are removed. Production/native-probe sources are unchanged, and all
+17 retained native source fingerprints match. This establishes installation
+bytes, receipt and removal; the fake Frame does not execute official backends.
+Neither the full e2e suite nor real-headset behavior was tested here. Fresh
+final-head hosted gates remain required.
+
+[Receipt audit](framey-simple-timer-receipt-e2e-2026-10-31.json) and
+[complete local log, test source and cleanup records](framey-simple-timer-receipt-e2e-2026-10-31-raw.json.gz)
+retain the result.
+
 ## Scope and limits
 
 The table changes Simple Timer from works to partial because the earlier usability evidence did not qualify this discovered shutdown defect. Previous Chromium plus actual ARM64 Decky evidence stays historical. No refreshed browser, managed Frame install, wearer-visible UI, physical controller, sound or suspend proof is claimed. Sound/suspend remain unsupported; alerts still require an open panel.
