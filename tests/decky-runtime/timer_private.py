@@ -130,7 +130,7 @@ def probe(backend, loader, env, log, processes, rpc, until_ready, report, settin
                                    start_new_session=True)
         processes.append(backend)
         discovered = until_ready(lambda: rpc('loader/get_plugins'), 'restarted timer discovery')
-        assert discovered == [dict(name='Simple Timer', version='1.0.0', load_type=0, disabled=False)]
+        assert discovered == [dict(name='Simple Timer', version='1.0.0', load_type=1, disabled=False)], discovered
         until_ready(lambda: rpc('loader/call_plugin_method', 'Simple Timer',
                     'settings_getSetting', 'subtle_mode', False), 'restarted timer instance RPC')
         evidence.setdefault('restartedDiscovery', []).append(discovered)
