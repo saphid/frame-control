@@ -229,13 +229,13 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
 BOOT_ARTIFACTS = ('vmlinuz', 'initrd.gz')
 
 
-def remove_boot_artifacts(folder, names=BOOT_ARTIFACTS):
-    """Delete regenerated VM boot images from a run folder; keep all evidence.
+def remove_boot_artifacts(folder):
+    """Delete only the regenerated VM boot images from a run folder.
 
     Returns {name: bytes} for each removed file. Directories are never touched.
     """
     removed = {}
-    for name in names:
+    for name in BOOT_ARTIFACTS:
         path = Path(folder) / name
         try:
             info = path.lstat()

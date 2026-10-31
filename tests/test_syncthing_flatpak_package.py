@@ -1,5 +1,6 @@
 """Prepared bundles cannot bypass exact architecture/commit/signature gates."""
 
+import contextlib
 import copy
 import hashlib
 import importlib.util
@@ -460,22 +461,37 @@ class RunArtifactCleanup(unittest.TestCase):
             item.start()
             self.addCleanup(item.stop)
 
-    def qemu(self, code=0, console='', during=None):
+    def qemu(self, code=0, console='', during=None, running=False):
+        """Fake QEMU; a running child exits only when reap() signals its group."""
+        exited = [] if running else [code]
+        self.group_signals = []
+
+        def killpg(_pid, signum):
+            self.group_signals.append(signum)
+            exited.append(-signum)
+
         def popen(command, stdout, **_kwargs):
             # Boot images exist while the owned VM runs.
             self.assertTrue(all((self.output / name).is_file() for name in self.BOOT))
             stdout.write(console)
             if during:
                 during()
-            process = Mock(pid=0)
-            process.wait.return_value = code
-            process.poll.return_value = code
+            process = Mock(pid=4242)
+            process.poll.side_effect = lambda: exited[-1] if exited else None
+            process.wait.side_effect = lambda timeout=None: exited[-1]
             return process
-        return patch.object(self.module.subprocess, 'Popen', side_effect=popen)
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(patch.object(self.module.subprocess, 'Popen', side_effect=popen))
+        stack.enter_context(patch.object(self.module.os, 'killpg', side_effect=killpg, create=True))
+        return stack
 
     def run_main(self, *extra):
         with patch.object(sys, 'argv', self.argv + list(extra)):
             self.module.main()
+
+    def result(self):
+        return json.loads((self.output / 'result.json').read_text())
 
     def assert_evidence_without_boot_images(self):
         names = {path.name for path in self.output.iterdir()}
@@ -491,25 +507,56 @@ class RunArtifactCleanup(unittest.TestCase):
         console = 'FRAMEY_SYSTEMD_PROBE_JSON=' + json.dumps({'success': True, 'flatpak': package}) + '\n'
         with self.qemu(console=console), patch('builtins.print'):
             self.run_main()
-        self.assertIs(json.loads((self.output / 'result.json').read_text())['success'], True)
+        self.assertIs(self.result()['success'], True)
         self.assert_evidence_without_boot_images()
 
     def test_failed_run_removes_boot_images_and_keeps_evidence(self):
         with self.qemu(code=1), self.assertRaises(RuntimeError):
             self.run_main()
-        result = json.loads((self.output / 'result.json').read_text())
-        self.assertEqual((result['success'], result['error']), (False, 'Nonzero QEMU exit'))
+        self.assertEqual((self.result()['success'], self.result()['error']), (False, 'Nonzero QEMU exit'))
         self.assert_evidence_without_boot_images()
 
-    def test_terminated_run_reaps_and_removes_boot_images(self):
+    def test_failed_packing_still_writes_a_failure_result(self):
+        with tarfile.open(self.folder / 'rootfs.tar', 'w') as archive:
+            member = tarfile.TarInfo('./etc/os-release')
+            archive.addfile(member, io.BytesIO(b''))
+        with self.qemu(), self.assertRaises(ValueError):
+            self.run_main()
+        self.assertEqual(self.result(), {'success': False, 'inputs': None, 'error': 'Guest kernel is absent'})
+        self.assertEqual({path.name for path in self.output.iterdir()}, {'result.json'})
+
+    def assert_terminated_with_running_qemu_reaped(self, deliver):
         previous = signal.getsignal(signal.SIGTERM)
-        with self.qemu(during=lambda: os.kill(os.getpid(), signal.SIGTERM)), \
-                self.assertRaises(SystemExit) as raised:
+        with self.qemu(running=True, during=deliver), self.assertRaises(SystemExit) as raised:
             self.run_main()
         self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
         self.assertIs(signal.getsignal(signal.SIGTERM), previous)
-        self.assertIs(json.loads((self.output / 'result.json').read_text())['success'], False)
+        self.assertEqual(self.group_signals, [signal.SIGTERM])
+        result = self.result()
+        self.assertEqual((result['success'], result['ownedQemuReaped']), (False, True))
         self.assert_evidence_without_boot_images()
+
+    def test_sigterm_while_qemu_starts_is_deferred_then_child_is_reaped(self):
+        # Portable: invoke the installed handler directly as QEMU is being registered.
+        self.assert_terminated_with_running_qemu_reaped(
+            lambda: signal.getsignal(signal.SIGTERM)(signal.SIGTERM, None))
+
+    @unittest.skipIf(os.name == 'nt', 'OS-delivered SIGTERM terminates the process on Windows')
+    def test_os_delivered_sigterm_while_qemu_starts_reaps_child(self):
+        self.assert_terminated_with_running_qemu_reaped(lambda: os.kill(os.getpid(), signal.SIGTERM))
+
+    def test_termination_handler_raises_unless_deferred(self):
+        termination = self.module.Termination()
+        with self.assertRaises(SystemExit) as raised:
+            termination(signal.SIGTERM, None)
+        self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        with self.assertRaises(SystemExit):
+            with termination.deferred():
+                termination(signal.SIGTERM, None)
+                registered = True
+        self.assertTrue(registered)
+        with self.module.Termination().deferred():
+            pass
 
     def test_keep_flag_retains_boot_images_for_debugging(self):
         with self.qemu(code=1), self.assertRaises(RuntimeError):
@@ -517,15 +564,16 @@ class RunArtifactCleanup(unittest.TestCase):
         self.assertTrue(self.BOOT <= {path.name for path in self.output.iterdir()})
         self.assertIs(json.loads((self.output / 'inputs.json').read_text())['bootArtifactsRetained'], True)
 
-    def test_remove_boot_artifacts_only_deletes_named_files(self):
+    def test_remove_boot_artifacts_only_deletes_boot_image_files(self):
         folder = self.folder / 'evidence'
         (folder / 'initrd.gz').mkdir(parents=True)
         (folder / 'vmlinuz').write_bytes(b'12345')
         (folder / 'result.json').write_text('{}')
+        with self.assertRaises(TypeError):
+            self.packer.remove_boot_artifacts(folder, ('result.json', '../outside'))
         self.assertEqual(self.packer.remove_boot_artifacts(folder), {'vmlinuz': 5})
         self.assertEqual({path.name for path in folder.iterdir()}, {'initrd.gz', 'result.json'})
         self.assertEqual(self.packer.remove_boot_artifacts(self.folder / 'missing'), {})
-
 
 if __name__ == "__main__":
     unittest.main()

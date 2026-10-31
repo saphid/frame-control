@@ -9,6 +9,7 @@ The managed installer and real Frame remain outside this disposable VM.
 """
 
 import argparse
+import contextlib
 import hashlib
 import importlib.util
 import json
@@ -96,8 +97,28 @@ def reap(process):
             process.wait(timeout=5)
 
 
-def terminate(signum, _frame):
-    raise SystemExit(128 + signum)
+class Termination:
+    """SIGTERM handler raising SystemExit, deferred while a child is registered."""
+
+    def __init__(self):
+        self.deferring = False
+        self.pending = None
+
+    def __call__(self, signum, _frame):
+        if self.deferring:
+            self.pending = signum
+            return
+        raise SystemExit(128 + signum)
+
+    @contextlib.contextmanager
+    def deferred(self):
+        self.deferring = True
+        try:
+            yield
+        finally:
+            self.deferring = False
+            if self.pending is not None:
+                raise SystemExit(128 + self.pending)
 
 
 def prepared_bundles(preparation, arch):
@@ -563,97 +584,98 @@ def main():
     spec.loader.exec_module(packer)
     rootfs_sha = sha(args.rootfs_tar)
     # Every run regenerates multi-hundred-MB VM boot images in its evidence folder.
-    # Remove them however the run ends; inputs.json keeps their digests. SIGTERM
-    # (e.g. a job timeout) is turned into SystemExit so QEMU is reaped too.
-    previous_sigterm = signal.signal(signal.SIGTERM, terminate)
+    # Whatever ends the run, result.json is written, any owned QEMU is reaped and
+    # then the images are removed; inputs.json keeps their digests. SIGTERM (e.g.
+    # a job timeout) becomes SystemExit, deferred while QEMU is being registered.
+    termination = Termination()
+    previous_sigterm = signal.signal(signal.SIGTERM, termination)
+    result = {"success": False, "inputs": None}
+    process = None
     try:
-        kernel = packer.pack(
-            args.rootfs_tar,
-            args.output / "initrd.gz",
-            payloads,
-            marker=MARKER,
-            bootstrap=root_probe.read_bytes(),
-            user_probe=user_probe.read_bytes(),
-            normal_root=True,
-            timeout=budgets['unitSeconds'],
-            root_size_mib=2048 if args.browser_setup else 1024,
-            browser=args.browser_setup,
-        )
-        (args.output / "vmlinuz").write_bytes(kernel)
-        inputs = {
-            "rootfsTarSha256": rootfs_sha,
-            "rootfsTarBytes": args.rootfs_tar.stat().st_size,
-            "kernelSha256": hashlib.sha256(kernel).hexdigest(),
-            "initrdSha256": sha(args.output / "initrd.gz"),
-            "bootArtifactsRetained": args.keep_boot_artifacts,
-            "sourceSha256": fingerprints,
-            "bundles": bundles,
-            "architecture": arch,
-            "preparationSha256": sha(args.preparation) if args.preparation else None,
-            "keySha256": KEY_SHA256,
-            "memoryMiB": 8192 if args.browser_setup else 6144,
-            "timeoutSeconds": budgets['hostSeconds'],
-            "guestTimeouts": budgets,
-            "networkDevice": False,
-            "hostBusExposed": False,
-            "realFrameContacted": False,
-            "candidate": candidate,
-            "browserSetup": browser_inputs,
-            "httpGateway": http_gateway,
-            "httpBrowserParentRequested": args.http_browser_parent,
-            "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
-                                 "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
-                                if args.browser_setup else None),
-        }
-        (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
-        command = [
-            emulator,
-            *machine,
-            "-accel",
-            "tcg,thread=multi",
-            "-cpu",
-            "max",
-            "-smp",
-            "2",
-            "-m",
-            str(inputs['memoryMiB']),
-            "-nodefaults",
-            "-nographic",
-            "-serial",
-            "stdio",
-            "-monitor",
-            "none",
-            "-nic",
-            "none",
-            "-no-reboot",
-            "-kernel",
-            str(args.output / "vmlinuz"),
-            "-initrd",
-            str(args.output / "initrd.gz"),
-            "-append",
-            f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
-        ]
-        console = args.output / "console.log"
-        packet_path = args.output / 'guest-result.packet'
-        if args.browser_setup:
-            command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
-                        '-device', 'virtio-serial-pci,id=framey_result_bus',
-                        '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
-        result = {"success": False, "inputs": inputs}
         try:
+            kernel = packer.pack(
+                args.rootfs_tar,
+                args.output / "initrd.gz",
+                payloads,
+                marker=MARKER,
+                bootstrap=root_probe.read_bytes(),
+                user_probe=user_probe.read_bytes(),
+                normal_root=True,
+                timeout=budgets['unitSeconds'],
+                root_size_mib=2048 if args.browser_setup else 1024,
+                browser=args.browser_setup,
+            )
+            (args.output / "vmlinuz").write_bytes(kernel)
+            inputs = {
+                "rootfsTarSha256": rootfs_sha,
+                "rootfsTarBytes": args.rootfs_tar.stat().st_size,
+                "kernelSha256": hashlib.sha256(kernel).hexdigest(),
+                "initrdSha256": sha(args.output / "initrd.gz"),
+                "bootArtifactsRetained": args.keep_boot_artifacts,
+                "sourceSha256": fingerprints,
+                "bundles": bundles,
+                "architecture": arch,
+                "preparationSha256": sha(args.preparation) if args.preparation else None,
+                "keySha256": KEY_SHA256,
+                "memoryMiB": 8192 if args.browser_setup else 6144,
+                "timeoutSeconds": budgets['hostSeconds'],
+                "guestTimeouts": budgets,
+                "networkDevice": False,
+                "hostBusExposed": False,
+                "realFrameContacted": False,
+                "candidate": candidate,
+                "browserSetup": browser_inputs,
+                "httpGateway": http_gateway,
+                "httpBrowserParentRequested": args.http_browser_parent,
+                "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
+                                     "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
+                                    if args.browser_setup else None),
+            }
+            result["inputs"] = inputs
+            (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
+            command = [
+                emulator,
+                *machine,
+                "-accel",
+                "tcg,thread=multi",
+                "-cpu",
+                "max",
+                "-smp",
+                "2",
+                "-m",
+                str(inputs['memoryMiB']),
+                "-nodefaults",
+                "-nographic",
+                "-serial",
+                "stdio",
+                "-monitor",
+                "none",
+                "-nic",
+                "none",
+                "-no-reboot",
+                "-kernel",
+                str(args.output / "vmlinuz"),
+                "-initrd",
+                str(args.output / "initrd.gz"),
+                "-append",
+                f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
+            ]
+            console = args.output / "console.log"
+            packet_path = args.output / 'guest-result.packet'
+            if args.browser_setup:
+                command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
+                            '-device', 'virtio-serial-pci,id=framey_result_bus',
+                            '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
             with console.open("w") as log:
-                process = subprocess.Popen(
-                    command,
-                    stdin=subprocess.DEVNULL,
-                    stdout=log,
-                    stderr=subprocess.STDOUT,
-                    start_new_session=True,
-                )
-                try:
-                    code = process.wait(timeout=budgets['hostSeconds'])
-                finally:
-                    reap(process)
-                    result["ownedQemuReaped"] = process.poll() is not None
+                with termination.deferred():
+                    process = subprocess.Popen(
+                        command,
+                        stdin=subprocess.DEVNULL,
+                        stdout=log,
+                        stderr=subprocess.STDOUT,
+                        start_new_session=True,
+                    )
+                code = process.wait(timeout=budgets['hostSeconds'])
             if code != 0:
                 raise RuntimeError('Nonzero QEMU exit')
             if args.browser_setup:
@@ -742,7 +764,12 @@ def main():
             result["error"] = str(error)
             raise
         finally:
-            (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+            try:
+                if process is not None:
+                    reap(process)
+                    result["ownedQemuReaped"] = process.poll() is not None
+            finally:
+                (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         print(json.dumps(result), flush=True)
     finally:
         signal.signal(signal.SIGTERM, previous_sigterm)
