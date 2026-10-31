@@ -1,0 +1,35 @@
+{
+  "at": "2026-10-30T21:55:54.842418+00:00",
+  "pr": 497,
+  "head": "f411ab59974a306eaa1db81c5d647f3665e73ee8",
+  "failedRun": 41129662192,
+  "failedWindowsJob": 124317049737,
+  "failure": "Speed Test mock Node subprocess exceeded unchanged 10-second deadline; no stage diagnostics were present.",
+  "rootCauseEstablished": false,
+  "main": "e26ae7fea77c7c8702fdcfc694f4f0186f80cf43",
+  "passingMainWindowsJob": 124322238705,
+  "sameCommittedTestBytes": true,
+  "committedTestSha256": "394478a028b18d8f60338f3895fb0745b77f371f8e9210a6687e09d067289384",
+  "failedRunnerNode": "24.22.1",
+  "localNode": "24.15.0",
+  "localFocusedTestsPassed": 7,
+  "localControlledTimeoutRemainsFailureAndRetainsStage": true,
+  "localStageLog": "22.9ms node started\n27.2ms fixture input read\n51.2ms Response initialized\n52.1ms fetch fixture installed\n67.0ms trace body read\n79.9ms bounded download body read\n92.7ms upload body read\n118.5ms all assertions passed; resources=[\"PipeWrap\"]\n",
+  "productionChanged": false,
+  "assertionsChanged": false,
+  "timeoutSeconds": 10,
+  "localDiagnosticOnly": true,
+  "freshWindowsValidation": false,
+  "originalFailedResultPreserved": true,
+  "logs": {
+    "failedPr": {
+      "path": "/tmp/framey-pr497-f411ab5-windows-failure-mppkd9qczt.log",
+      "sha256": "ac24c34ccfbf53f9773cb14543b54c8687482d12ac888f73e0bc8b60bb2e5fc9"
+    },
+    "passingMain": {
+      "path": "/tmp/framey-main-e26ae7f-windows-mppkd9qczt.log",
+      "sha256": "c750b7bd4bf26ee5adfc9d60a9d321c52bebd51118a5736b4764654fd2d8b276"
+    }
+  },
+  "realFrameContacted": false
+}
