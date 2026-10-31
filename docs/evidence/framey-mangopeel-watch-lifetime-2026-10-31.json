@@ -131,5 +131,134 @@
     "real Frame",
     "worn/controller behavior"
   ],
-  "realFrameContacted": false
+  "realFrameContacted": false,
+  "refreshAgainstMain": {
+    "baseMain": "3978edf7c8ca9d71c87015029983dd1f93ea76f1",
+    "previousHead": "5d17bb6530ef8350109b4da9df21c75ef55e9f75",
+    "historyRewritten": false,
+    "conflictsResolved": [
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/framey_official.py",
+      "tests/test_framey_decky_runtime.py"
+    ],
+    "nativeSources": {
+      "scripts/framey-test-decky-runtime.py": "6805279cf2033503b5961470924b19d455a25d9861a12c1c2a6477d0fb035ae5",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "fa9342898d084146358e53a987f13fbc6d42f2a3337390d74c1d806dd8e106d3",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "eb26db9ece1bc07e0a8a8f21061cb14b6bda1ca625ff8de866bde1b8415d981f",
+      "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+      "tests/framey_official.py": "51d891946a47d5a9e26e1149b13475927a254969a97f61bada7d3f38548c0c18",
+      "ui/frame_decky_store.py": "cfd0278bd28a04f4ecf60d9c69393802c30202300fd8eefb6009a161fee20a49",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "mangopeelNativeAMD64": {
+      "decky": "v3.3.0",
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "sourceSha256": {
+        "scripts/framey-test-decky-runtime.py": "6805279cf2033503b5961470924b19d455a25d9861a12c1c2a6477d0fb035ae5",
+        "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+        "tests/decky-runtime/check.py": "fa9342898d084146358e53a987f13fbc6d42f2a3337390d74c1d806dd8e106d3",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "eb26db9ece1bc07e0a8a8f21061cb14b6bda1ca625ff8de866bde1b8415d981f",
+        "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+        "tests/framey_official.py": "51d891946a47d5a9e26e1149b13475927a254969a97f61bada7d3f38548c0c18",
+        "ui/frame_decky_store.py": "cfd0278bd28a04f4ecf60d9c69393802c30202300fd8eefb6009a161fee20a49",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "cases": [
+        {
+          "id": 56,
+          "name": "MangoPeel",
+          "version": "0.0.7",
+          "sha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+          "shim": "mangopeel-watch-lifetime",
+          "calls": [
+            {
+              "method": "get_steamIndex",
+              "result": 1
+            },
+            {
+              "method": "get_steamChannel",
+              "result": "main"
+            },
+            {
+              "method": "SetOverwriteConfig",
+              "result": true
+            },
+            {
+              "method": "SetOverwriteConfigs",
+              "result": true
+            },
+            {
+              "method": "get_steamIndex",
+              "result": 2
+            },
+            {
+              "method": "ReloadConfigPath",
+              "result": true
+            },
+            {
+              "method": "get_steamIndex",
+              "result": 2
+            },
+            {
+              "method": "get_steamIndex",
+              "result": 2
+            },
+            {
+              "method": "get_steamIndex",
+              "result": 3
+            }
+          ],
+          "discovered": [
+            {
+              "name": "MangoPeel",
+              "version": "0.0.7",
+              "load_type": 1,
+              "disabled": false
+            }
+          ],
+          "privateMangoPeel": {
+            "privateSelectedProfileWrite": true,
+            "privateMultiProfileWrite": true,
+            "actualInotifyCallback": true,
+            "replacementWatchActive": true,
+            "reloadWithoutForcedKill": true,
+            "ownedLoaderShutdownClean": true,
+            "loaderExitCode": 0,
+            "reloadAndShutdownConsole": "[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.1s\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[loader][INFO]: Loaded MangoPeel (v0.0.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('MangoPeel', '0.0.7', 1, True, 15000)}\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n",
+            "profilePreservedAcrossReload": true,
+            "unrelatedProfileAndProcessPreserved": true,
+            "syntheticMangoappProcess": true,
+            "actualMangoHudOverlay": false,
+            "browserVerified": false,
+            "realFrameContacted": false,
+            "physicalControllerVerified": false
+          },
+          "managedBackendSha256": "b0f08ffa9ca3b7a86de8dca2c97a1135a982203f33cfedc9b0e43eb5bf13d938",
+          "result": "published Decky discovery, private MangoHud profile writes, actual inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, browser, actual Frame and worn/controller behavior unverified"
+        }
+      ]
+    },
+    "deckProgressReportSha256": "bb1ad00a3cb727e11ddc3632355f0c3d998602f5e3f5f4736bd90bbbec64eb39",
+    "deckProgressRpcsIndependentlyVerified": 36,
+    "deckProgressSnapshotsIndependentlyDecoded": 4,
+    "deckProgressPositiveZeroForcedKills": true,
+    "deckProgressOriginalTwoForcedKillsRetained": true,
+    "deckProgressFullRawConsoleRetainedLocally": true,
+    "serverTests": {
+      "tests": 1923,
+      "skips": 16,
+      "seconds": 243.627,
+      "passed": true,
+      "logSha256": "16e1e156a09945a0cfcf47afb4082d9a8af00d2d7b15eaa72bb7303ae275b55c"
+    },
+    "allOther115CatalogRowsUnchanged": true,
+    "all116IdVersionDigestStatusAndInstallerPoliciesUnchanged": true,
+    "freshExactHeadHostedQualificationRequired": true,
+    "realFrameContacted": false
+  }
 }

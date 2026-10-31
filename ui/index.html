@@ -1611,6 +1611,26 @@
         <button data-pad-key="12" title="Enter">Enter</button>
       </span>
     </div>
+    <div class="row" style="margin-top:10px">
+      <label for="padShortcut">Send shortcut to headset</label>
+      <select id="padShortcut">
+        <option value="copy">Ctrl+C — Copy</option>
+        <option value="paste">Ctrl+V — Paste headset clipboard</option>
+        <option value="undo">Ctrl+Z — Undo</option>
+        <option value="switch">Alt+Tab — Switch window</option>
+        <option value="terminal">Ctrl+Alt+T — Open terminal</option>
+        <option value="super">Super / Windows / Command</option>
+        <optgroup label="Function keys">
+          <option>F1</option><option>F2</option><option>F3</option><option>F4</option>
+          <option>F5</option><option>F6</option><option>F7</option><option>F8</option>
+          <option>F9</option><option>F10</option><option>F11</option><option>F12</option>
+        </optgroup>
+      </select>
+      <button id="padSendShortcut" class="small">Send shortcut</button>
+    </div>
+    <div class="hint">Esc stops mouse/keyboard capture; use the Esc button above to send it to the headset.
+      Your computer may keep Alt+Tab, Super/Command or function-key shortcuts. Use Send shortcut when a key does not reach
+      the headset. Command sends Linux Super here; use Ctrl or the shortcut menu for copy/paste.</div>
     <div class="hint">Types and points in whichever panel has focus in the headset, through Valve's own input path: nothing to
       install and no internet needed. Accents and emoji go through KDE Connect, which comes with Frame Control and starts
       the first time you type one (it copies Valve's build for the Frame, 3.6 MB, into your home folder there). <a href="#" data-about>Licences</a></div>
@@ -6494,7 +6514,7 @@ document.addEventListener("focusin", e => document.body.classList.toggle("typing
 document.addEventListener("focusout", () => document.body.classList.remove("typing"));
 
 // ---- keyboard and trackpad: events go to the Frame through gamescope (ui/frame_touch.py); accents and emoji through KDE Connect ----
-const pad = { state: "off", queue: [], sending: false, poll: null, captured: false };
+const pad = { state: "off", queue: [], sending: false, poll: null, captured: false, keys: new Set() };
 const PAD_STATES = {
   off: "", starting: "Connecting…", installing: "Setting up (first time only)…",
   pairing: "Pairing with KDE Connect…", waiting: "Waiting for queued text…", ready: "On",
@@ -6508,6 +6528,7 @@ const TOUCH = matchMedia("(hover: none)").matches;
 
 function padShow(status) {
   pad.state = status.state || "off";
+  pad.queued = status.queued || 0;
   const ready = pad.state === "ready";
   const busy = !ready && pad.state !== "off" && pad.state !== "error";
   $("padState").textContent = pad.state === "error" ? "" : PAD_STATES[pad.state] || "";
@@ -6516,6 +6537,7 @@ function padShow(status) {
   $("padArea").classList.toggle("off", !ready);
   $("padBody").hidden = pad.state === "off";
   $("padIntro").hidden = pad.state !== "off";
+  $("padSendShortcut").disabled = !ready || !!pad.queued;
   $("padHint").textContent = pad.state === "error" ? status.message || "Couldn't reach the Frame."
     : !ready ? (busy ? PAD_STATES[pad.state] : "Turn on to use this as a trackpad for the Frame.")
     : TOUCH ? "Drag to move the pointer · tap to click · two fingers to scroll · two-finger tap to right-click"
@@ -6545,10 +6567,11 @@ const isMove = e => Object.keys(e).every(k => k === "dx" || k === "dy");
 function padSend(event) {
   // While it reconnects, keys and clicks wait in the queue; pointer moves would be stale.
   // A button release is always kept, so a drag never leaves the button held on the Frame.
-  const room = pad.queue.length < 200 || event.singlerelease;
+  const releasing = event.singlerelease || (event.keyCode && event.down === false);
+  const room = pad.queue.length < 200 || releasing;
   const reconnecting = ["starting", "pairing", "installing", "waiting"].includes(pad.state) && room;
   // Even after an error: a button pressed on the Frame must be let go once it's back.
-  const release = event.singlerelease && pad.state !== "off";
+  const release = releasing && pad.state !== "off";
   if (pad.state !== "ready" && !(reconnecting && !isMove(event)) && !release) return;
   const last = pad.queue[pad.queue.length - 1];
   if (last && isMove(last) && isMove(event)) { last.dx = (last.dx || 0) + (event.dx || 0); last.dy = (last.dy || 0) + (event.dy || 0); }
@@ -6559,11 +6582,12 @@ function padSend(event) {
 // the keys and clicks for when it's back, but not pointer moves, which would be stale.
 // Button releases are kept whatever the queue's length.
 function padKeep(events) {
-  pad.queue = [...events, ...pad.queue].filter(e => !isMove(e)).filter((e, i) => i < 200 || e.singlerelease);
+  pad.queue = [...events, ...pad.queue].filter(e => !isMove(e)).filter((e, i) => i < 200 || e.singlerelease || (e.keyCode && e.down === false));
 }
 function padReset() {
   clearTimeout(pad.poll); pad.poll = null;
   pad.queue = []; pad.sending = false; pad.held = false; pad.captured = false;
+  pad.keys.clear();  // the old route's input agent is stopped before a headset switch
   touches.clear(); gesture = null; padType.value = ''; padType.blur();
   window.frameApp?.captureKeys?.(false);
   if (document.pointerLockElement === $('padArea')) document.exitPointerLock();
@@ -6591,13 +6615,72 @@ async function padFlush() {
     }
   }
 }
+const PAD_MODIFIERS = [["ctrlKey", [29, 97]], ["altKey", [56, 100]], ["shiftKey", [42, 54]], ["metaKey", [125, 126]]];
+const PAD_MODIFIER_CODES = new Set(PAD_MODIFIERS.flatMap(([, codes]) => codes));
+const PAD_SHORTCUTS = { copy: [29, 46], paste: [29, 47], undo: [29, 44], switch: [56, 15], terminal: [29, 56, 20], super: [125] };
 function padKey(e) {
-  const mods = { ...(e.ctrlKey || (IS_MAC && e.metaKey) ? { ctrl: true } : {}), ...(e.altKey ? { alt: true } : {}),
-                 ...(!IS_MAC && e.metaKey ? { super: true } : {}) };
+  const mods = { ...(e.ctrlKey ? { ctrl: true } : {}), ...(e.altKey ? { alt: true } : {}),
+                 ...(e.metaKey ? { super: true } : {}) };
   if (PAD_SPECIAL[e.key]) return { specialKey: PAD_SPECIAL[e.key], ...mods, ...(e.shiftKey ? { shift: true } : {}) };
-  if (e.key.length === 1) return { key: e.key, ...mods };  // already shifted, so no shift flag
+  if (e.key.length === 1) {
+    // Shortcut letters follow the physical key, not Caps Lock or an Alt-produced character.
+    if (Object.keys(mods).length) return { key: /^Key[A-Z]$/.test(e.code) ? e.code.slice(3).toLowerCase() : e.key,
+      ...mods, ...(e.shiftKey ? { shift: true } : {}) };
+    return { key: e.key };  // plain text is already shifted
+  }
   return null;
 }
+function padKeyState(code, down) {
+  if (pad.keys.has(code) === down) return;
+  padSend({ keyCode: code, down });
+  if (down) pad.keys.add(code); else pad.keys.delete(code);
+}
+function padReleaseKeys() {
+  // Release ordinary keys before modifiers, including when keyup was swallowed by the OS.
+  const held = [...pad.keys].reverse();
+  for (const code of held.filter(c => !PAD_MODIFIER_CODES.has(c))) padKeyState(code, false);
+  for (const code of held.filter(c => PAD_MODIFIER_CODES.has(c))) padKeyState(code, false);
+}
+function padStopCapture() {
+  padReleaseKeys();
+  if (pad.held) { padSend({ singlerelease: true }); pad.held = false; }
+  pad.captured = false;
+  window.frameApp?.captureKeys?.(false);
+  if (document.pointerLockElement === $("padArea")) document.exitPointerLock();
+  $("padArea").classList.remove("captured");
+}
+function padPhysicalKey(e, down) {
+  const code = EVDEV[e.code];
+  if (!code || (!down && !pad.keys.has(code))) return;
+  if (down && (!pad.captured || pad.state !== "ready" || e.isComposing)) return;
+  if (code === 1 && down) { padStopCapture(); return; }  // browser's Esc releases pointer lock
+  e.preventDefault(); e.stopImmediatePropagation();
+  if (down) {
+    for (const [flag, codes] of PAD_MODIFIERS) {
+      if (codes.includes(code)) continue;
+      if (e[flag] && !codes.some(c => pad.keys.has(c))) padKeyState(codes[0], true);
+      else if (!e[flag]) for (const c of codes) if (pad.keys.has(c)) padKeyState(c, false);
+    }
+  }
+  padKeyState(code, down);
+  // macOS may swallow a letter's keyup while Command is held, without a blur.
+  if (!down && (code === 125 || code === 126) && !e.metaKey) {
+    for (const held of [...pad.keys]) if (!PAD_MODIFIER_CODES.has(held)) padKeyState(held, false);
+  }
+}
+function padKeyboardBusy() {
+  if (!pad.queued && !pad.sending && !pad.queue.length) return false;
+  $("padHint").textContent = "Wait for queued input to finish before capturing keys or sending a shortcut.";
+  return true;
+}
+function padShortcut(name) {
+  const codes = PAD_SHORTCUTS[name] || (/^F([1-9]|1[0-2])$/.test(name) ? [EVDEV[name]] : null);
+  if (!codes || pad.state !== "ready" || padKeyboardBusy()) return;
+  // The menu sends a complete chord, so no modifier remains held afterwards.
+  codes.forEach(code => padSend({ keyCode: code, down: true }));
+  [...codes].reverse().forEach(code => padSend({ keyCode: code, down: false }));
+}
+$("padSendShortcut").onclick = () => padShortcut($("padShortcut").value);
 
 // Touch: one finger moves, a quick tap clicks; two fingers scroll, or right-click when tapped.
 const PAD_SPEED = 1.6, PAD_SCROLL_STEP = 18;
@@ -6610,7 +6693,10 @@ $("padArea").addEventListener("pointerdown", e => {
     if (pad.captured) return;  // mousedown and mouseup below send the clicks
     // Lock the pointer to the pad and pass the whole mouse and keyboard through; where
     // that isn't allowed, the mouse drags like a finger on a trackpad instead.
-    if (e.button === 0 && !pad.noLock && $("padArea").requestPointerLock) { $("padArea").requestPointerLock(); return; }
+    if (e.button === 0 && !pad.noLock && $("padArea").requestPointerLock) {
+      if (!padKeyboardBusy()) $("padArea").requestPointerLock();
+      return;
+    }
     // Only the left button drags and taps like a finger; the others are clicks of their own.
     if (e.button === 1 || e.button === 2) { padSend(e.button === 2 ? { rightclick: true } : { middleclick: true }); return; }
     if (e.button !== 0) return;
@@ -6656,7 +6742,7 @@ document.addEventListener("pointerlockchange", () => {
   pad.captured = document.pointerLockElement === $("padArea");
   window.frameApp?.captureKeys?.(pad.captured);  // the desktop app's menu shortcuts go to the Frame too
   // Esc or switching windows mid-drag: let go of the button on the Frame as well.
-  if (!pad.captured && pad.held) { padSend({ singlerelease: true }); pad.held = false; }
+  if (!pad.captured) padStopCapture();
   $("padArea").classList.toggle("captured", pad.captured);
   padShow({ state: pad.state });
 });
@@ -6674,12 +6760,11 @@ $("padArea").addEventListener("wheel", e => {
   if (e.deltaY) padSend({ scroll: true, dy: e.deltaY > 0 ? -1 : 1 });
 }, { passive: false });
 // Capture phase, so the page's own shortcuts (tabs 1-4, R, zoom) don't also fire.
-window.addEventListener("keydown", e => {
-  if (!pad.captured) return;
-  e.preventDefault(); e.stopImmediatePropagation();
-  const event = padKey(e);
-  if (event) padSend(event);
-}, true);
+window.addEventListener("keydown", e => padPhysicalKey(e, true), true);
+window.addEventListener("keyup", e => padPhysicalKey(e, false), true);
+window.addEventListener("blur", padStopCapture);
+window.addEventListener("pagehide", padStopCapture);
+document.addEventListener("visibilitychange", () => { if (document.hidden) padStopCapture(); });
 
 // The text field: each keystroke goes to the Frame. While focused it holds one space,
 // so Backspace always has something to delete; empty otherwise, to show its prompt.
@@ -6706,6 +6791,17 @@ function padText(text) {
   });
 }
 padType.addEventListener("keydown", e => {
+  if (e.isComposing) return;
+  if (e.getModifierState?.("AltGraph")) return;  // let beforeinput deliver layout-produced text
+  if (e.ctrlKey || e.altKey || e.metaKey) {
+    const event = padKey(e);
+    if (event) {
+      e.preventDefault(); e.stopPropagation();
+      if (pad.state === "off" || pad.state === "error") padStart();
+      padSend(event);
+    }
+    return;
+  }
   const special = PAD_SPECIAL[e.key];
   // Text and deletions arrive as beforeinput; this takes the keys that don't edit the field.
   if (!special || e.key === "Backspace" || e.key === "Delete" || e.isComposing) return;

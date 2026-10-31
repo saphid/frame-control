@@ -1,0 +1,53 @@
+{
+  "date": "2026-10-31",
+  "baseCommit": "8b56eeaf9c9bfb0ca82fc1706145e8e2a95bb766",
+  "sourceSha256": {
+    "ui/index.html": "ae864f88cd32e246788f71d71e8bbe96282e950ad3d0e0721a7562a456d28e07",
+    "ui/server.py": "ccdf981376a8f910e6fb423f3fed3bd3b314bbb8cb02ed427365031286989f10",
+    "tests/page/pad_keyboard.cjs": "c3278702a2071634f8c821d07e1bfaca91f6676b452969f3f81cc91add6cf54b",
+    "tests/page/pad_queue.mjs": "f95426de1ccf0468b185e9ec3d72519786508d1f7d4ad2394d6b566e864c0a5f",
+    "tests/test_keyboard_chords.py": "24a929be85f96e908093d3d7c3ed20cb6634ec091193861fc3c76da25678581e",
+    "tests/ui_review.cjs": "9bb96e6a0d1f84c5dd256eb1533c005e05ebdec5c276c7796d77739a4f665307"
+  },
+  "independentExpectedSequences": 66,
+  "realLayers": [
+    "browser keyboard/shortcut/focus handlers",
+    "server.remote_input",
+    "server.input_event",
+    "server.pad_events",
+    "frame_touch.apply",
+    "Gamescope.key"
+  ],
+  "stubbedBoundaries": [
+    "DOM/events and HTTP collection in the Node fixture",
+    "long-lived SSH agent transport (events dispatched directly)",
+    "final libei device/frame calls and pacing",
+    "typing-status/timing bookkeeping in the vector test (separately tested)"
+  ],
+  "simulatorImage": "sha256:4d43e1f772f604770b6fe1d1d3e189abad5f5615f9fb53ae1320d63fadfa2eb7",
+  "simulatorRun": "5 focused unittest methods passed; network none; repository mounted read-only; disposable container removed",
+  "realHeadsetTested": false,
+  "browserRenderingTested": false,
+  "hostOSInterceptionTested": false,
+  "realCompositorTested": false,
+  "nativeDeckyApplicability": "No Decky loader, plugin or compatibility policy changes",
+  "localUnitSuite": {
+    "tests": 1914,
+    "skipped": 16,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 246.101,
+    "python": "3.12.3",
+    "node": "24.15.0"
+  },
+  "localE2eSuite": {
+    "tests": 53,
+    "skipped": 1,
+    "failures": 0,
+    "errors": 0,
+    "seconds": 266.225,
+    "scope": "independent disposable Fake Frame Compose project; no compositor input proof",
+    "frameImage": "sha256:4d43e1f772f604770b6fe1d1d3e189abad5f5615f9fb53ae1320d63fadfa2eb7",
+    "hostImage": "sha256:fc66e43f066478d41c53036c97b3fe5ad569bf42a3f9115707b0cdd293252354"
+  }
+}

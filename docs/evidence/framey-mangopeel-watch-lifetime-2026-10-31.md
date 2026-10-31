@@ -45,6 +45,32 @@ launcher once and requires exit zero; those earlier results remain recorded,
 not treated as passing. Its helpers, containers and temporary runtime images
 are owned by the probe and cleaned by its runner.
 
+## Refresh against current main
+
+Main `3978edf7c8ca9d71c87015029983dd1f93ea76f1` is merged into the
+MangoPeel branch without rewriting history. Four additive inventory/dispatcher
+conflicts retain both MangoPeel and Deck Progress, including Deck Progress's
+unchanged-original unload negative control. All other 115 catalog rows and all
+116 ID/version/digest/status/installer policies match that main.
+
+On this merged source, native AMD64 MangoPeel again passes actual profile/watch
+RPCs, clean reload and parent-only zero-exit loader shutdown. All nine runtime
+source hashes were checked; the installed backend was independently reconstructed
+from the exact original ZIP plus the one watch-class replacement. Every other
+MangoPeel backend byte matches. The affected Deck Progress managed/original cases
+also pass their expected controls: 36 literal RPC results, four independently
+decoded SQLite snapshots, no managed forced kills and two original forced kills.
+The full local reports/consoles were retained and their source hashes verified;
+these targeted probes are not a fresh full native-inventory qualification.
+
+The refreshed server suite passes 1,923 tests with 16 platform/optional skips in
+243.627 seconds. All three runtime-coverage tests and the generated compatibility
+document check pass. Historical hosted results at head `5d17bb6` remain scoped to
+that head. Fresh exact-head hosted native AMD64/ARM64, e2e, ownership, every
+triggered package mode, current-main and feedback/mergeability gates remain
+required. These local tests do not establish overlay, browser, Frame or controller
+usability and publish no release.
+
 ## Limits
 
 The fixture process supplies a private `MANGOHUD_CONFIGFILE` through real `/proc`
