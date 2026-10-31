@@ -6,6 +6,7 @@ only offline signature and fsck verification establish payload integrity.
 """
 import argparse
 from concurrent.futures import ThreadPoolExecutor
+import errno
 import hashlib
 import importlib.util
 import json
@@ -48,7 +49,9 @@ def download(url, limit):
                 transient = error.code in (429, 500, 502, 503, 504)
             else:
                 reason = error.reason if isinstance(error, urllib.error.URLError) else error
-                transient = isinstance(reason, (TimeoutError, ConnectionError))
+                transient = isinstance(reason, (TimeoutError, ConnectionError)) or (
+                    isinstance(reason, OSError) and reason.errno == errno.ENETUNREACH
+                )
             if not transient or attempt == 2:
                 raise RuntimeError('Public fetch failed for ' + url + ': ' + str(error)) from error
             time.sleep(attempt + 1)
