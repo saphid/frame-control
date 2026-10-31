@@ -1,0 +1,464 @@
+{
+  "at": "2026-10-31T13:12:56.932558+00:00",
+  "sourceRevision": "a7a044988e11fe5088da55690dcdf5e97e711740",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "redSourceRevision": "fa9d4180667b5925a51ac65e6c89d2547985ab30",
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "fe933364304cfcd1ebc528189d1e10d0e8b677936478c474674c7dcf0d59ff93",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "3d3d5643643d6d5c54d4d0421c266be8901b063f075b42cc0bb53481233c6198",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "2c93b6aaca38e2b242c3affc2b6c239e9bc6774f3116c2208ca3bc6f0ecb3c31",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "84d57921a364be7ea7641f4e9f3c7b7c4f293b54e2870626c7317ece39ef3386",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "originalArchiveSha256": "12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6",
+  "originalBackendSha256": "265e64b688f55d5468a29c484462d277a6a06d72ba6d6ea0920790dc34ca79fd",
+  "previousManagedBackendSha256": "96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478",
+  "managedBackendSha256": "24d4dbe23ff5b4322b46c36650fcf09577ca6c7607083dfcec3d56770ef748dc",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "priorManagedSafeguardsByteIdenticalBelowPrefix": true,
+  "otherManaged102FilesPreserved": {
+    "plugin.json": "48f8eec29a52f84174a19f2a35c0271606141f5969c45a9aac5112faea57e541",
+    "README.md": "284ae9fc9680b6ca8b2e7b1511292c2e33f4b9d2d505140f22ce39540da999a1",
+    "package.json": "8cbb0d2051d70c47378baeeaa4aa7d964658de1227fc0e878b574bd3ff685c18",
+    "assets/icon.jpg": "3c6c78adc121381e0aa108b0bee670bdac4d16779b4b575a6c220171edd923d9",
+    "dist/index.js": "2935cf40573094200ef7b8a910760970100715823c0e058a5cfbb1d2158a58f5"
+  },
+  "liveStore101AllInstalledFilesPreserved": {
+    "LICENSE": "4783d347807a864a7b10d34b3e82cf3a668143d855b31bc6dfd1d7e14d17674c",
+    "plugin.json": "f1fe9a1f69718624b34dbd0ab68043f7af02ba0e1c27c56cf1552a2daa6d18a1",
+    "README.md": "284ae9fc9680b6ca8b2e7b1511292c2e33f4b9d2d505140f22ce39540da999a1",
+    ".frame-control-store.json": "58bd6e106da08a24acb346513fae29a4e6484954ec11ca20c8c2843cccc09de8",
+    "package.json": "a3e4ccc88e6f05aa00dc2c2f43b915b565e702459727bbda22a1e2cd290284c3",
+    "main.py": "5118a1aeae00b0979d501e8e5cdb6c27bf27cae1f3cf5af581f0fb44345519a1",
+    "dist/index.js": "87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a"
+  },
+  "all116CatalogRowsAndPoliciesUnchanged": true,
+  "github102CatalogStatus": "unverified",
+  "liveStoreVersion": "1.0.1",
+  "redFailure": "Post-peer-EOF get_games timed out; cleanup logged one forced plugin kill. No completed 1.0.2 red case report.",
+  "cases": [
+    {
+      "version": "1.0.1",
+      "rpcCount": 39,
+      "rpcMethods": [
+        "get_games",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "cleanup_orphans",
+        "delete_prefix",
+        "get_games"
+      ],
+      "backendSha256": null,
+      "ipcAdapterSha256": null,
+      "independentState": {
+        "backupBytesMatch": true,
+        "oldBackupPreserved": true,
+        "outsideMarkerPreserved": true,
+        "symlinkAndTraversalRejected": true,
+        "privatePrefixesRemoved": true,
+        "bulkCleanupAlwaysRefused": true,
+        "secondUserPrefixPreserved": true,
+        "malformedAndUnreadableShortcutsPreserved": true,
+        "ambiguousLibraryPrefixesPreserved": true
+      },
+      "lifecycle": null,
+      "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7"
+    },
+    {
+      "version": "1.0.2",
+      "rpcCount": 42,
+      "rpcMethods": [
+        "get_games",
+        "get_games",
+        "delete_prefix",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "cleanup_orphans",
+        "delete_prefix",
+        "get_games",
+        "get_games",
+        "get_games"
+      ],
+      "backendSha256": "24d4dbe23ff5b4322b46c36650fcf09577ca6c7607083dfcec3d56770ef748dc",
+      "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "independentState": {
+        "backupBytesMatch": true,
+        "oldBackupPreserved": true,
+        "outsideMarkerPreserved": true,
+        "symlinkAndTraversalRejected": true,
+        "privatePrefixesRemoved": true,
+        "bulkCleanupAlwaysRefused": true,
+        "secondUserPrefixPreserved": true,
+        "malformedAndUnreadableShortcutsPreserved": true,
+        "ambiguousLibraryPrefixesPreserved": true
+      },
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 0.21379769686609507,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "350302047"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "350302084"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "350302084"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "350302096"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793452271.067109"
+            ],
+            "forcedPluginKills": 0,
+            "pluginUnloadCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\nCalling Loader unload function for Games Prefix Manager (v1.0.2).\nAttempting to unload with plugin Games Prefix Manager (v1.0.2)'s \"_unload\" function.\n\nCould not find \"_unload\" in Games Prefix Manager (v1.0.2)'s main.py\n\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "bf4118cd1278dabad340cf6a7cc7c3c52b231e7f593a103154f1cf93b4880757",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 23,
+            "returncode": 0,
+            "elapsedSeconds": 0.21387693425640464,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "24": {
+                "state": "S",
+                "parent": 23,
+                "start": "350302379"
+              },
+              "33": {
+                "state": "S",
+                "parent": 24,
+                "start": "350302418"
+              },
+              "34": {
+                "state": "S",
+                "parent": 24,
+                "start": "350302418"
+              },
+              "35": {
+                "state": "S",
+                "parent": 34,
+                "start": "350302430"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 33,
+                "returncode": 0
+              },
+              {
+                "pid": 34,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "pluginUnloadCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\nCalling Loader unload function for Games Prefix Manager (v1.0.2).\nAttempting to unload with plugin Games Prefix Manager (v1.0.2)'s \"_unload\" function.\n\nCould not find \"_unload\" in Games Prefix Manager (v1.0.2)'s main.py\n\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "bf4118cd1278dabad340cf6a7cc7c3c52b231e7f593a103154f1cf93b4880757",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "emptyLibraryReadbacks": [
+          [],
+          []
+        ],
+        "backupSha256Before": {
+          "4242-t7e2crg6.zip": "d56f2f02e99cc462f40c88236769ab0f2a60758b746a20388b4a9006a53403d3",
+          "4242-38ovl2oa.zip": "d56f2f02e99cc462f40c88236769ab0f2a60758b746a20388b4a9006a53403d3"
+        },
+        "backupsPreserved": true,
+        "outsideMarkerPreserved": true,
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": true,
+        "expectedRegression": false,
+        "customUnloadHookPresent": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false,
+        "restartedDiscovery": [
+          {
+            "name": "Games Prefix Manager",
+            "version": "1.0.2",
+            "load_type": 0,
+            "disabled": false
+          }
+        ]
+      },
+      "consoleSha256": "9f433b6e9c3f113e6e309f6614a9327d40624af96a931d8a29c216b28f12669c"
+    },
+    {
+      "version": "1.0.2",
+      "rpcCount": 40,
+      "rpcMethods": [
+        "get_games",
+        "get_games",
+        "delete_prefix",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "cleanup_orphans",
+        "cleanup_orphans",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "delete_prefix",
+        "get_games",
+        "delete_prefix",
+        "get_games",
+        "cleanup_orphans",
+        "delete_prefix",
+        "get_games"
+      ],
+      "backendSha256": "96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478",
+      "ipcAdapterSha256": null,
+      "independentState": {
+        "backupBytesMatch": true,
+        "oldBackupPreserved": true,
+        "outsideMarkerPreserved": true,
+        "symlinkAndTraversalRejected": true,
+        "privatePrefixesRemoved": true,
+        "bulkCleanupAlwaysRefused": true,
+        "secondUserPrefixPreserved": true,
+        "malformedAndUnreadableShortcutsPreserved": true,
+        "ambiguousLibraryPrefixesPreserved": true
+      },
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 5.223609044216573,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "350302746"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "350302781"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "350302781"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "350302793"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793452278.0389912"
+            ],
+            "forcedPluginKills": 1,
+            "pluginUnloadCompleted": false,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\n[plugin][WARNING]: Plugin Games Prefix Manager (v1.0.2) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "8932d7d5eaacd7a4c30dfd575f1f94d97fce2b06c80125d1cfcc912572b17be6",
+            "cleanShutdownVerified": false
+          }
+        ],
+        "emptyLibraryReadbacks": [],
+        "backupSha256Before": {
+          "4242-mmb11tl3.zip": "b2a4a8c983af8988ea7a8423d16d3d4ba54edfaabd250c58fd964bdf2e85616f",
+          "4242-wqebqqlc.zip": "b2a4a8c983af8988ea7a8423d16d3d4ba54edfaabd250c58fd964bdf2e85616f"
+        },
+        "backupsPreserved": true,
+        "outsideMarkerPreserved": true,
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": false,
+        "expectedRegression": true,
+        "customUnloadHookPresent": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false
+      },
+      "consoleSha256": "5d1b443a8c1bc841ab0b7e1b26bfc021175265f3f9bcfb60587c847deec24c65"
+    }
+  ],
+  "repairedCleanStopsVerified": true,
+  "previousManagedForcedKillReproduced": true,
+  "customUnloadHookPresent": false,
+  "other36NativeDispatchBodiesPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "fullUnitTests": 1942,
+  "fullUnitSeconds": 253.928,
+  "fullUnitSkips": 16,
+  "fullUnitSourceRevision": "50924649399f0318029c88dc6983e022c3631c06",
+  "siteTests": 18,
+  "installerSourceRevision": "fa2d4ccdaf820d63caa269f7ab975e0fba07d41f",
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Focused native AMD64 only; exact-head hosted CI/e2e/native AMD64+ARM64/PC/package and current-main/feedback/mergeability/integration gates remain required.",
+    "The full server suite preceded two lifecycle assertion corrections; the final focused native run exercises the corrected helper. Production installer bytes did not change.",
+    "Generic runtimeConsole.cleanShutdownVerified is not a plugin lifecycle qualification. The repaired 1.0.2 case uses strict parent-only stops; the old managed negative intentionally requires a forced kill.",
+    "Peer EOF reproduces a matching failure; the earlier intermittent positive failure did not retain its socket history, so its exact cause is not proved.",
+    "HTTP/SSH installer fixture covers 37 pinned store archives including 1.0.1, not GitHub1.0.2 or official backend execution.",
+    "No full native matrix, ARM64, browser refresh, real Frame, wearer/controller or release proof this turn."
+  ],
+  "rawJsonSha256": "b1302fcca96c2666e522b92bf93e501eeca8e349d5e3f0ae05cb493c44dc2ba3",
+  "rawGzipSha256": "9b8cc8e0a5230785df069367c661644eb4975e80dcedcec5e60feadd5d63f1f6"
+}
