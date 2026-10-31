@@ -87,3 +87,30 @@ hosted matrix. Current main 0082d79 and the final PR head need their own hosted
 CI/e2e/native/package qualification; previous-head artifacts remain historical.
 Compatibility stays partial. No new browser, LAN, managed Frame, wearer/controller
 or release proof is added, and no headset or hourly schedule was accessed.
+
+## Hosted native and HTTP receipt follow-up
+
+Historical head `98b79348ab7d5e832ed6348f4d1c90ffcd8da784` completed native
+run `41190867595`. Independent AMD64 and ARM64 audits verify GitHub artifact
+digests, exact successful jobs/checkouts/steps, all 42 probe records, 34 archive
+pins, 16 source fingerprints and all 42 complete available console hashes per
+architecture. Each repaired DeckyParty case makes 15 RPCs and completes three
+closed-peer reloads in about 0.36 seconds each. The prior-source case makes
+eight RPCs and reproduces a forced reload kill after about 5.28 seconds, leaving
+its exact owned server for fixture cleanup. Both final parent-only stops exit
+zero. The ARM64 positive Battery Tracker probe still records one forced plugin
+kill; #519 tracks that separate defect. No global clean-shutdown claim follows.
+
+Source `1a83b63f839739bdd689f22f1101589ab24d6d8a` corrects the transport test's
+old single-shim receipt assertion and verifies the installed managed backend and
+IPC helper SHA-256 values. One real HTTP/SSH method covering all 37 pinned plugin
+fixtures passes with zero skips in an owned fake Frame and host. All owned
+containers, volumes, network and image tags are removed. This test executes the
+installer, not the official backends. The full e2e suite did not run locally.
+
+All 16 native source fingerprints remain identical to the audited historical
+head, but new exact-head hosted qualification is still mandatory. The
+[combined audit](framey-deckyparty-receipt-e2e-2026-10-31.json) and
+[raw native payloads, local test/source and cleanup records](framey-deckyparty-receipt-e2e-2026-10-31-raw.json.gz)
+retain the evidence. Offline IP-discovery errors remain in native consoles;
+LAN/HTTPS, browser, managed Frame and wearer/controller use remain unverified.
