@@ -142,3 +142,13 @@ CI/e2e, ownership, package modes and native AMD64/ARM64 qualification. The full
 native inventory now contains 41 probes and 34 published archive pins, with
 twelve source fingerprints; the targeted local replay does not qualify that
 full matrix. No real Frame or visible Steam badge behavior was tested.
+
+## Refresh onto Shotty main
+
+Main `1c1e4f588735dc3119f67f90ca8c33d3a90563cd` was merged normally at tested source `3e4e5f93451de458a1a1f5c7f472dee428d4d30e`. The Non-Steam implementation diff is unchanged. All other 115 complete catalog records, shared IPC implementation, Wine runtime sources, Shotty helper and both published archives match current main. All 31 existing main native probe bodies remain identical at AST level; the additional probe is Non-Steam’s private shortcut case. Compatibility stays partial.
+
+All 79 focused host tests pass (18 compatibility, 61 store), as do generated docs, diff checks and coverage of 34 declared native cases. No new local native run is claimed after this refresh. Fresh exact-head CI/e2e, native/runtime/package evidence, exact current-main CI and final integration/feedback/rules review remain gates.
+
+The previous head `392b81162d6d0ec9842d5c0f5cb4823601403804` completed all 18 checks and five triggered workflows. Its independently audited native AMD64/ARM64 evidence retains 41 probes, 34 published archive pins and 12 source fingerprints per architecture. All four package modes now pass immutable-digest, job/checkout, source and full guest-result audits; twelve HTTP/production-parent captures were visually inspected and bound to ZIP members. The production-parent warning remains visible and names below its iframe viewport are not claimed visible. These results qualify the named historical head only.
+
+[Source and historical-artifact audit](framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.json), [focused host log](framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.log). Existing raw-peer shutdown evidence limits remain: strict private-service shutdown passes, but the older raw-peer runner lacks complete successful-console/clean zero-exit qualification. Browser badge injection, active Steam account selection, integrated browser/backend behavior, real Frame and wearer/controller usability remain unverified.
