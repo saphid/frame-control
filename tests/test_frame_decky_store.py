@@ -1032,14 +1032,26 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / plugin['folder']
         self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text())['compatShims'],
-                         ['simple-timer-lifecycle'])
+                         ['simple-timer-lifecycle', 'simple-timer-ipc-eof'])
         self.assertEqual(json.loads((folder / 'plugin.json').read_text())['api_version'], 1)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as original:
             self.assertEqual((folder / 'LICENSE').read_bytes(), original.read('simple-timer/LICENSE'))
         # Backend behavior is verified separately by the real Decky lifecycle gate.
         result = self.apply('remove', plugin_id=96, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_simple_timer_missing_ipc_payload_cannot_publish_an_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 96)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=96,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Simple Timer child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
 
     def test_changed_simple_timer_digest_does_not_get_pinned_repair(self):
         from framey_official import PLUGINS, archive as official_archive

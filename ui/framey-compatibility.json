@@ -7733,8 +7733,8 @@
         "https://github.com/decktools-xyz/simple-timer",
         "https://github.com/decktools-xyz/simple-timer.git"
       ],
-      "status": "works",
-      "reason": "Verified for silent in-panel session timers: Chromium Begin/Cancel/countdown/toast with real ARM64 Decky 3.3.0; repaired cancel, replace, completion and active/canceled/expired restarts pass actual loader RPC/events. Update/reinstall required. Sound and suspend unsupported; alerts require an open panel; worn VR unverified.",
+      "status": "partial",
+      "reason": "Silent in-panel timers were previously verified in Chromium with real ARM64 Decky 3.3.0. Current-main native probes exposed forced unload with an active timer. The exact-archive child IPC repair preserves timer logic; update/reinstall required. Fresh hosted AMD64/ARM64 shutdown, browser and managed Frame qualification is pending. Sound and suspend unsupported; alerts require an open panel; worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7784,7 +7784,8 @@
         "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
       },
       "requiredShims": [
-        "simple-timer-lifecycle"
+        "simple-timer-lifecycle",
+        "simple-timer-ipc-eof"
       ],
       "lifecycle": {
         "evidence": "docs/evidence/framey-simple-timer-2026-10-26.md",
