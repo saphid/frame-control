@@ -881,6 +881,18 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
                 compat_shims.append('deckyfileserver-directory-entry')
+            # AlarMe 1.6.3 restarts tasks (or deletes elapsed deadlines) even
+            # for paused timers. Keep frozen timers untouched at startup.
+            if int(plugin_id)==124 and digest=='17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe' and folder=='alarme-decky-plugin':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27':
+                    raise RuntimeError('AlarMe backend differs from pinned archive')
+                old=b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
+                if source.count(old)!=1: raise RuntimeError('AlarMe paused timer startup changed')
+                new=old.replace(b'            remaining =', b'            if timer.get("paused", False):\r\n                continue\r\n            remaining =')
+                main.write_bytes(source.replace(old,new))
+                compat_shims.append('alarme-paused-restart')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.

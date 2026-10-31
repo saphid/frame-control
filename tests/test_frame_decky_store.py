@@ -912,6 +912,27 @@ class StoreTransaction(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(error, result.stderr)
             self.assertFalse((self.folder.parent / plugin['folder']).exists())
+    def test_alarme_restart_repair_is_limited_to_the_exact_published_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 124)
+        data = official_archive(plugin)
+        args = dict(plugin_id=124, folder=plugin['folder'], version=plugin['version'])
+        result = self.apply('install', data, **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent / plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['alarme-paused-restart'])
+        self.assertEqual(json.loads((folder/'plugin.json').read_text())['api_version'], 1)
+        self.assertEqual(self.apply('remove', **args).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            original_main = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', 'unrecognized payload')
+        result = self.apply('install', changed.getvalue(), **args)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((folder/'main.py').read_bytes(), original_main)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 96)

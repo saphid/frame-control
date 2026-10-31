@@ -1,0 +1,202 @@
+{
+  "sourceRevision": "3ec43ad6a5af1df55a8190015f7802cc18190511",
+  "mode": "historical exact-head native positive and original-negative restart evidence; fresh merged-head CI required",
+  "reports": {
+    "amd": {
+      "head": "3ec43ad6a5af1df55a8190015f7802cc18190511",
+      "runId": 41121658583,
+      "jobId": 124289021478,
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "archiveSha256": "c27e84c4374f9c4351dc4294ae5ca6cf8b44786ac9a765621468b4b5a2205692",
+      "nativeCasesCompleted": 35,
+      "officialArchiveDigestsVerified": 31,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "alarmePositiveAndOriginalNegativeVerified": true,
+      "alarmeLifecycles": [
+        {
+          "timerPauseResumeCancel": true,
+          "singleSilentCompletion": true,
+          "pausedTimerRestartPreserved": true,
+          "originalPausedRestartTicks": false,
+          "elapsedPausedDeadlinePreservedAndResumed": true,
+          "originalElapsedPausedTimerDeleted": false,
+          "presetDeduplicatedAndRestarted": true,
+          "stopwatchLapsAndPausedRestart": true,
+          "ownedFixtureStateCleaned": true,
+          "publishedBackendUnmodified": false,
+          "realFrameContacted": false,
+          "soundVerified": false,
+          "sleepInhibitionVerified": false,
+          "browserVerified": false,
+          "physicalControllerVerified": false,
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.214
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.214
+            }
+          ],
+          "completeLoaderShutdownLogged": true,
+          "unchangedPublishedFiles": [
+            "LICENSE",
+            "plugin.json",
+            "dist/index.js"
+          ],
+          "backendSha256": "cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39"
+        },
+        {
+          "timerPauseResumeCancel": true,
+          "singleSilentCompletion": true,
+          "pausedTimerRestartPreserved": false,
+          "originalPausedRestartTicks": true,
+          "elapsedPausedDeadlinePreservedAndResumed": false,
+          "originalElapsedPausedTimerDeleted": true,
+          "presetDeduplicatedAndRestarted": true,
+          "stopwatchLapsAndPausedRestart": true,
+          "ownedFixtureStateCleaned": true,
+          "publishedBackendUnmodified": true,
+          "realFrameContacted": false,
+          "soundVerified": false,
+          "sleepInhibitionVerified": false,
+          "browserVerified": false,
+          "physicalControllerVerified": false,
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.214
+            }
+          ],
+          "completeLoaderShutdownLogged": true,
+          "unchangedPublishedFiles": [
+            "LICENSE",
+            "plugin.json",
+            "dist/index.js"
+          ],
+          "backendSha256": "ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27"
+        }
+      ],
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "artifactId": 13009037682,
+      "githubArtifactDigestVerified": true,
+      "workflowStatusAtAudit": "completed",
+      "workflowConclusionAtAudit": "success",
+      "checkoutCommit": "e0e379bcfcca12b32969a1db5726f16dcbeb15f0",
+      "checkoutTree": "527cff6f390cafa21ce09df5d2721959c56f69cd",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "e740543344fbad776d94e3942c7e834fb3064515751ac5cd443f988a2f52ead3",
+      "sourceFingerprintsEmbeddedInNativeReport": false
+    },
+    "arm": {
+      "head": "3ec43ad6a5af1df55a8190015f7802cc18190511",
+      "runId": 41121658583,
+      "jobId": 124289021992,
+      "architecture": "aarch64",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "archiveSha256": "b1d48e07ded4c761d0b5c48aa067052823c6516d72d0a2c8843ed66c5f00ceca",
+      "nativeCasesCompleted": 35,
+      "officialArchiveDigestsVerified": 31,
+      "exactCompletedJobVerified": true,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "alarmePositiveAndOriginalNegativeVerified": true,
+      "alarmeLifecycles": [
+        {
+          "timerPauseResumeCancel": true,
+          "singleSilentCompletion": true,
+          "pausedTimerRestartPreserved": true,
+          "originalPausedRestartTicks": false,
+          "elapsedPausedDeadlinePreservedAndResumed": true,
+          "originalElapsedPausedTimerDeleted": false,
+          "presetDeduplicatedAndRestarted": true,
+          "stopwatchLapsAndPausedRestart": true,
+          "ownedFixtureStateCleaned": true,
+          "publishedBackendUnmodified": false,
+          "realFrameContacted": false,
+          "soundVerified": false,
+          "sleepInhibitionVerified": false,
+          "browserVerified": false,
+          "physicalControllerVerified": false,
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            }
+          ],
+          "completeLoaderShutdownLogged": true,
+          "unchangedPublishedFiles": [
+            "LICENSE",
+            "plugin.json",
+            "dist/index.js"
+          ],
+          "backendSha256": "cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39"
+        },
+        {
+          "timerPauseResumeCancel": true,
+          "singleSilentCompletion": true,
+          "pausedTimerRestartPreserved": false,
+          "originalPausedRestartTicks": true,
+          "elapsedPausedDeadlinePreservedAndResumed": false,
+          "originalElapsedPausedTimerDeleted": true,
+          "presetDeduplicatedAndRestarted": true,
+          "stopwatchLapsAndPausedRestart": true,
+          "ownedFixtureStateCleaned": true,
+          "publishedBackendUnmodified": true,
+          "realFrameContacted": false,
+          "soundVerified": false,
+          "sleepInhibitionVerified": false,
+          "browserVerified": false,
+          "physicalControllerVerified": false,
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.164
+            }
+          ],
+          "completeLoaderShutdownLogged": true,
+          "unchangedPublishedFiles": [
+            "LICENSE",
+            "plugin.json",
+            "dist/index.js"
+          ],
+          "backendSha256": "ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27"
+        }
+      ],
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "artifactId": 13009421610,
+      "githubArtifactDigestVerified": true,
+      "workflowStatusAtAudit": "completed",
+      "workflowConclusionAtAudit": "success",
+      "checkoutCommit": "e0e379bcfcca12b32969a1db5726f16dcbeb15f0",
+      "checkoutTree": "527cff6f390cafa21ce09df5d2721959c56f69cd",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "c829cffcb2a283eb2e6d6f9f23b5c8cd3c603233d6839be2e4b8ce2b81a3aee0",
+      "sourceFingerprintsEmbeddedInNativeReport": false
+    }
+  },
+  "nativeReportHasEmbeddedSourceFingerprints": false,
+  "sourceBoundByActualCheckoutTree": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}
