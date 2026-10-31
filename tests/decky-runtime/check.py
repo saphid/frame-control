@@ -854,40 +854,20 @@ def main():
                 assert backup.read_bytes() == backup_bytes
                 stops = []
 
+                unrelated = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
+                                             start_new_session=True)
+                processes.append(unrelated)
+
                 def stop_tabmaster_loader():
-                    # Match managed KillMode=mixed: let the loader stop its
-                    # children before considering the group's cleanup fallback.
-                    def identity(pid):
-                        try:
-                            fields = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
-                            return int(fields[1]), int(fields[19])
-                        except (FileNotFoundError, ProcessLookupError):
-                            return None
-                    snapshot = {int(path.name): identity(int(path.name))
-                                for path in Path('/proc').iterdir() if path.name.isdigit()}
-                    owned = {backend.pid}
-                    while True:
-                        children = {pid for pid, value in snapshot.items()
-                                    if value and value[0] in owned}
-                        if children <= owned:
-                            break
-                        owned |= children
-                    identities = {pid: snapshot[pid] for pid in owned}
-                    assert all(identities.values()) and len(identities) >= 2
-                    started = time.monotonic()
-                    backend.send_signal(signal.SIGTERM)
-                    assert backend.wait(timeout=8) == 0
-                    elapsed = time.monotonic()-started
-                    assert all(identity(pid) != value for pid, value in identities.items()), identities
-                    log.flush()
-                    text = (home/'runtime.log').read_text()
-                    for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
-                                   'Task was destroyed but it is pending', 'Bad file descriptor'):
-                        assert marker not in text, marker
-                    stops.append({'returncode': backend.returncode, 'elapsedSeconds': elapsed,
-                                  'signaledOnlyOwnedLoader': True,
-                                  'ownedProcessIdentitiesReaped': True,
-                                  'ownedProcessCount': len(identities)})
+                    import tabmaster_private
+                    observation = tabmaster_private.stop(backend, log,
+                        disconnect=not stops and not args.reproduce_tabmaster_restore_regression)
+                    stops.append(observation)
+                    report['tabmasterLifecycle'] = dict(stops=stops,
+                        unrelatedSiblingPreserved=unrelated.poll() is None,
+                        cleanShutdownVerified=all(s['cleanShutdownVerified'] for s in stops))
+                    assert unrelated.poll() is None, 'unrelated sibling must survive loader shutdown'
+                    assert observation['cleanShutdownVerified'], observation
 
                 stop_tabmaster_loader()
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
