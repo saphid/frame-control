@@ -186,6 +186,9 @@ def main():
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
         try:
+            if case['probe'] == 'bluetooth-private-bluez':
+                import bluetooth_bluez
+                private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
             if case['probe'] == 'mpris':
                 bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork',
                     '--address='+env['DBUS_SESSION_BUS_ADDRESS']], env=env, stdout=log, stderr=log,
@@ -334,6 +337,12 @@ def main():
                     hltbSearchVerified=False,browserVerified=False,realFrameContacted=False,physicalControllerVerified=False)
                 report['result'] = ('published Decky API1 private settings/manual tags, invalid-input refusals, '
                     'SQLite readback and restart persistence passed; Steam, automatic tags, HLTB, browser and Frame unverified')
+            elif case['probe'] == 'bluetooth-private-bluez':
+                report['privateBluez'] = bluetooth_bluez.exercise(
+                    current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
+                report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '
+                    'paired-device filtering, adapter selection, alias/battery replies, connection/power '
+                    'round trips and clean shutdown passed; actual radio, pairing, browser and VR unverified')
             elif case['probe'] == 'terminal-import-regression':
                 # Discovery also lists a backend whose import failed. Require
                 # the precise original failure without attempting backend calls.
