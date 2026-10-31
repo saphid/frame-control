@@ -781,7 +781,9 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / record['folder']
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['battery-tracker-user-supply'])
+        self.assertEqual(receipt['compatShims'], ['battery-tracker-user-supply', 'battery-tracker-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         self.assertEqual(json.loads((folder / 'plugin.json').read_text())['flags'], [])
         source = (folder / 'main.py').read_text()
         self.assertNotIn('/sys/class/power_supply/BAT1/', source)
@@ -819,7 +821,11 @@ class StoreTransaction(unittest.TestCase):
         decky = types.ModuleType('decky_plugin')
         decky.logger = logging.getLogger('battery-tracker-test')
         decky.DECKY_PLUGIN_RUNTIME_DIR = str(runtime)
-        with patch.dict(sys.modules, {'decky_plugin': decky}), patch.dict(os.environ, {'FRAMEY_BATTERY_ROOT': str(supply.parent)}):
+        # This host test covers recorder/SQLite behavior; the native fixture
+        # executes the actual published child socket implementation.
+        ipc = types.ModuleType('framey_decky_ipc')
+        ipc.install = lambda: None
+        with patch.dict(sys.modules, {'decky_plugin': decky, 'framey_decky_ipc': ipc}), patch.dict(os.environ, {'FRAMEY_BATTERY_ROOT': str(supply.parent)}):
             spec = importlib.util.spec_from_file_location('framey_battery_tracker_test', folder / 'main.py')
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
