@@ -1,5 +1,10 @@
 [
   {
+    "id": 103,
+    "shim": "ludusavi-dependency-discovery",
+    "probe": "ludusavi-dependency-discovery"
+  },
+  {
     "id": 134,
     "shim": "deck-progress-ipc-eof",
     "probe": "deck-progress-private-tags"

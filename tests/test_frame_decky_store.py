@@ -204,6 +204,56 @@ class StoreTransaction(unittest.TestCase):
         finally:
             source.unlink(missing_ok=True)
 
+    def test_ludusavi_dependency_discovery_is_exact_archive_scoped(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 103)
+        data = official_archive(record)
+        result = self.apply('install', data, plugin_id=103, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['ludusavi-dependency-discovery'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for item in original.infolist():
+                if item.is_dir():
+                    continue
+                relative = item.filename.split('/', 1)[1]
+                if relative != 'py_modules/ludusavi.py':
+                    self.assertEqual((folder/relative).read_bytes(), original.read(item), relative)
+        module = types.ModuleType('private_ludusavi_dependency')
+        logger = logging.getLogger('private-ludusavi-dependency')
+        with patch.dict(sys.modules, decky=types.SimpleNamespace(logger=logger)):
+            # Published plugin annotations require Python 3.10 at evaluation
+            # time. This host-side probe also runs on 3.9; Decky's native
+            # runtime separately executes the unchanged annotation syntax.
+            source = 'from __future__ import annotations\n' + (folder/'py_modules/ludusavi.py').read_text()
+            exec(compile(source, 'managed-ludusavi.py', 'exec'), module.__dict__)
+        with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
+            missing = module.Ludusavi(['not-present'])
+        self.assertIsNone(missing.bin_path)
+        self.assertEqual(missing.version, '')
+        with patch.object(module.subprocess, 'check_output', side_effect=[
+                subprocess.TimeoutExpired(['slow'], 5), 'private version\n']) as launch:
+            found = module.Ludusavi(['slow', 'fixture'])
+        self.assertEqual(found.bin_path, ('fixture',))
+        self.assertEqual(found.version, 'private version\n')
+        self.assertTrue(all(call.kwargs['timeout'] == 5 for call in launch.call_args_list))
+        with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
+            found.__init__(['no-longer-present'])
+        self.assertIsNone(found.bin_path)
+        self.assertEqual(found.version, '')
+        self.assertEqual(self.apply('remove', plugin_id=103, folder=record['folder']).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/changed.txt', 'different archive')
+        result = self.apply('install', changed.getvalue(), plugin_id=103, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'py_modules/ludusavi.py').read_bytes(),
+                             original.read(record['folder']+'/py_modules/ludusavi.py'))
+        self.assertEqual(self.apply('remove', plugin_id=103, folder=record['folder']).returncode, 0)
+
     def test_install_update_remove_only_owned_folder(self):
         first, _ = archive()
         result = self.apply('install', first)
