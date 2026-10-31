@@ -20,6 +20,8 @@ import urllib.request
 import zipfile
 import io
 
+from runtime_console import capture_runtime
+
 import websockets
 from websockets.exceptions import WebSocketException
 
@@ -191,7 +193,7 @@ def main():
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
-        try:
+        with capture_runtime(log, report, processes):
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
@@ -1529,27 +1531,6 @@ def main():
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()
-            print(json.dumps(report))
-        except Exception:
-            log.flush()
-            log.seek(0)
-            print(log.read()[-12000:], file=sys.stderr)
-            raise
-        finally:
-            for process in reversed(processes):
-                if process.poll() is None:
-                    try:
-                        os.killpg(process.pid, signal.SIGTERM)
-                    except ProcessLookupError:
-                        continue
-                    try:
-                        process.wait(timeout=4)
-                    except subprocess.TimeoutExpired:
-                        try:
-                            os.killpg(process.pid, signal.SIGKILL)
-                        except ProcessLookupError:
-                            pass
-                        process.wait(timeout=4)
 
 
 if __name__ == '__main__':
