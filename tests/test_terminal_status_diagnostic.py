@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import signal
 import tempfile
+import threading
 import unittest
 from unittest.mock import patch
 
@@ -16,6 +17,86 @@ spec = importlib.util.spec_from_file_location('terminal_status_diagnostic',
     ROOT/'tests/decky-runtime/terminal_status_diagnostic.py')
 diagnostic = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(diagnostic)
+
+
+class RequestDrain(unittest.TestCase):
+    def test_late_failed_http_request_is_recorded_before_diagnostics(self):
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        import urllib.error
+        import urllib.request
+
+        activity = diagnostic.RequestActivity()
+        started, release, draining = threading.Event(), threading.Event(), threading.Event()
+        records, observed, drain_result = [], [], []
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, *_):
+                pass
+
+            def handle(self):
+                with activity.track():
+                    super().handle()
+
+            def do_GET(self):
+                started.set()
+                if not release.wait(5):
+                    raise RuntimeError('Test did not release its owned request')
+                records.append(dict(kind='panel-method', outcome='failure', errorCategory='ssh-timeout'))
+                self.send_response(503)
+                self.end_headers()
+
+        server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+        server.daemon_threads = True
+        serving = threading.Thread(target=server.serve_forever, kwargs=dict(poll_interval=.01))
+        serving.start()
+
+        def fetch():
+            try:
+                urllib.request.urlopen('http://127.0.0.1:'+str(server.server_port), timeout=5).close()
+            except urllib.error.HTTPError as error:
+                observed.append(error.code)
+                error.close()
+
+        def finish():
+            draining.set()
+            drain_result.append(activity.drain(5))
+            observed.append(any(entry['outcome'] == 'failure' for entry in records))
+
+        client = threading.Thread(target=fetch)
+        finalizer = threading.Thread(target=finish)
+        try:
+            client.start()
+            self.assertTrue(started.wait(5))
+            # This is the old failure: reading the trace before the active
+            # production request ends misses the method diagnostic trigger.
+            self.assertFalse(records)
+            server.shutdown(); server.server_close(); serving.join(5)
+            self.assertFalse(serving.is_alive())
+            finalizer.start()
+            self.assertTrue(draining.wait(5))
+            self.assertFalse(drain_result)
+            release.set()
+        finally:
+            release.set()
+            server.shutdown(); server.server_close()
+            for thread in (client, finalizer, serving):
+                if thread.ident is not None:
+                    thread.join(6)
+                    self.assertFalse(thread.is_alive())
+        self.assertTrue(drain_result[0]['drained'])
+        self.assertEqual(drain_result[0]['pendingHandlers'], 0)
+        self.assertCountEqual(observed, [503, True])
+
+    def test_drain_is_bounded_and_exception_releases_owned_handler(self):
+        activity = diagnostic.RequestActivity()
+        with self.assertRaisesRegex(RuntimeError, 'owned test failure'):
+            with activity.track():
+                report = activity.drain(0)
+                self.assertFalse(report['drained'])
+                self.assertEqual(report['pendingHandlers'], 1)
+                self.assertFalse(report['productionDeadlineChanged'])
+                raise RuntimeError('owned test failure')
+        self.assertTrue(activity.drain(0)['drained'])
 
 
 class StatusDiagnostic(unittest.TestCase):

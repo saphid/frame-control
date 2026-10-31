@@ -4,6 +4,7 @@ This runs after the real production replay has already failed. Its modified
 Python invocation never substitutes for that replay or changes its deadline.
 Raw status replies, stderr, paths and stack source lines are not retained.
 """
+from contextlib import contextmanager
 import hashlib
 import json
 import os
@@ -13,7 +14,35 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 import time
+
+
+class RequestActivity:
+    """Drain owned HTTP handlers before deciding which failed calls to profile."""
+    def __init__(self):
+        self.condition = threading.Condition()
+        self.active = 0
+
+    @contextmanager
+    def track(self):
+        with self.condition:
+            self.active += 1
+        try:
+            yield
+        finally:
+            with self.condition:
+                self.active -= 1
+                self.condition.notify_all()
+
+    def drain(self, timeout=35):
+        # The caller must first stop accepting requests and close the parent
+        # target. Existing production calls keep their original deadlines.
+        assert 0 <= timeout <= 35
+        with self.condition:
+            drained = self.condition.wait_for(lambda: self.active == 0, timeout)
+            return dict(drained=drained, pendingHandlers=self.active,
+                        timeoutSeconds=timeout, productionDeadlineChanged=False)
 
 
 def summarize_stderr(raw):

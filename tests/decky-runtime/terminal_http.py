@@ -24,6 +24,7 @@ from syncthing_http import CEF as RPC_CEF, observe_ssh, panel_command_kind, safe
 from syncthing_http_parent import command, install_child_harness, sandboxed_renderers
 from terminal_browser import COMMAND, PROBE, screenshot
 from syncthing_service import stop_decky_service
+from terminal_status_diagnostic import RequestActivity
 
 
 def started_terminal_pid(requests):
@@ -123,6 +124,7 @@ def exercise(name, home):
     stages, shots, requests, assets = [], {}, [], []
     status_requests, ssh_records, ssh_lock = [], [], threading.Lock()
     status_profiles = dict(records=[], overflow=False)
+    request_activity = RequestActivity()
     previous_ssh = None
     started = time.monotonic()
     temporary = tempfile.TemporaryDirectory(prefix='framey-terminal-http-')
@@ -164,6 +166,10 @@ def exercise(name, home):
         # and exceptions pass through without caching, retries or bypasses.
         server.ssh = traced_ssh
         class Handler(server.Handler):
+            def handle(self):
+                with request_activity.track():
+                    super().handle()
+
             def log_message(self, *_):
                 pass
 
@@ -350,24 +356,6 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 fixtureCefTrace=cef.eval('({records:fixtureRpcTrace,overflow:fixtureTraceOverflow,socketCount:fixtureSocketCount,nativeEvents:fixtureNativeEvents})'))
     finally:
         report.update(stages=stages, screenshots=shots, requests=requests, assets=assets)
-        # Never run before the real request: warming imports here cannot make
-        # the original replay pass. Its exception and failed outcome persist.
-        status_failed = any(entry['kind'] == 'decky-status' and entry['outcome'] == 'failure'
-                            for entry in ssh_records)
-        if not report['success'] and status_failed and previous_ssh is not None:
-            try:
-                from terminal_status_diagnostic import diagnose
-                report['statusFailureDiagnostic'] = diagnose(frame_decky.PANEL_STATUS_PROBE, home)
-            except Exception:
-                report['statusFailureDiagnosticUnavailable'] = True
-        method_failed = any(entry['kind'] == 'panel-method' and entry['outcome'] == 'failure'
-                            for entry in ssh_records)
-        if not report['success'] and method_failed and previous_ssh is not None:
-            try:
-                from terminal_status_diagnostic import diagnose_method
-                report['methodFailureDiagnostic'] = diagnose_method(framey_panel.METHOD_SCRIPT, name, home)
-            except Exception:
-                report['methodFailureDiagnosticUnavailable'] = True
         if page:
             if not report['success']:
                 try:
@@ -376,9 +364,35 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 except (OSError, frame_steam.Fail):
                     report['parentFailureUnavailable'] = True
             page.sock.close()
+        if cef and report.get('parentTargetId'):
+            report['ownedTargetClosed'] = command(cef, 'Target.closeTarget', dict(targetId=report['parentTargetId']))['success']
+        if httpd:
+            httpd.shutdown(); httpd.server_close(); worker.join(timeout=8)
+            report['httpServerStopped'] = not worker.is_alive()
+        # A failing request can still be in flight when the DOM wait expires.
+        # Stop new parent polling and drain unchanged handlers before reading
+        # the trace. Keep the separate CEF facade alive for read-only profiling.
+        report['requestDrain'] = request_activity.drain()
+        diagnostics_ready = report['requestDrain']['drained']
+        # Never run before the real request: warming imports here cannot make
+        # the original replay pass. Its exception and failed outcome persist.
+        status_failed = any(entry['kind'] == 'decky-status' and entry['outcome'] == 'failure'
+                            for entry in ssh_records)
+        if not report['success'] and diagnostics_ready and status_failed and previous_ssh is not None:
+            try:
+                from terminal_status_diagnostic import diagnose
+                report['statusFailureDiagnostic'] = diagnose(frame_decky.PANEL_STATUS_PROBE, home)
+            except Exception:
+                report['statusFailureDiagnosticUnavailable'] = True
+        method_failed = any(entry['kind'] == 'panel-method' and entry['outcome'] == 'failure'
+                            for entry in ssh_records)
+        if not report['success'] and diagnostics_ready and method_failed and previous_ssh is not None:
+            try:
+                from terminal_status_diagnostic import diagnose_method
+                report['methodFailureDiagnostic'] = diagnose_method(framey_panel.METHOD_SCRIPT, name, home)
+            except Exception:
+                report['methodFailureDiagnosticUnavailable'] = True
         if cef:
-            if report.get('parentTargetId'):
-                report['ownedTargetClosed'] = command(cef, 'Target.closeTarget', dict(targetId=report['parentTargetId']))['success']
             cef.sock.close()
         if browser:
             if browser.poll() is None:
@@ -386,9 +400,6 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 try: browser.wait(timeout=10)
                 except subprocess.TimeoutExpired: os.killpg(browser.pid, signal.SIGKILL); browser.wait(timeout=10)
             report['ownedBrowserReaped'] = browser.poll() is not None
-        if httpd:
-            httpd.shutdown(); httpd.server_close(); worker.join(timeout=8)
-            report['httpServerStopped'] = not worker.is_alive()
         if previous_ssh is not None:
             server.ssh = previous_ssh
             report['sshObserverRemoved'] = server.ssh is previous_ssh
@@ -418,6 +429,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         print('FRAMEY_TERMINAL_BROWSER_JSON='+json.dumps(report), file=sys.stderr, flush=True)
         if stop_error is not None:
             raise stop_error
+    assert report['requestDrain']['drained'], report['requestDrain']
     assert all(report[key] for key in ('ownedTargetClosed', 'ownedBrowserReaped', 'httpServerStopped',
                'ownedDeckyServiceStopped', 'originalUnitRestored', 'ownedBundleRemoved', 'sshObserverRemoved'))
     return report
