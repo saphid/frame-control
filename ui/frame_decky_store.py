@@ -440,7 +440,7 @@ try:
                 source=source.replace('        self._set_env()\n',
                     '        self.bin_path = None\n        self.version = ""\n        self._set_env()\n',1)
                 source=source.replace('                text=True,\n',
-                    '                text=True,\n                timeout=2,\n',1)
+                    '                text=True,\n                timeout=5,\n',1)
                 source=source.replace('except subprocess.CalledProcessError as e:',
                     'except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:',1)
                 helper.write_text(source)

@@ -105,7 +105,7 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
     found = {'bin_path': ['ludusavi'], 'version': 'ludusavi private-fixture 0.0\n'}
     assert call('get_ludusavi_version') == found
     elapsed = time.monotonic()-started
-    assert 2 <= elapsed < 12, elapsed
+    assert 5 <= elapsed < 15, elapsed
     slow_pid = int(pidfile.read_text())
     assert not (Path('/proc')/str(slow_pid)).exists(), 'timed-out discovery child must be reaped'
     states.append({'stage': 'slow-first-candidate-fallback', 'result': found,

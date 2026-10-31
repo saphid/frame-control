@@ -229,11 +229,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertIsNone(missing.bin_path)
         self.assertEqual(missing.version, '')
         with patch.object(module.subprocess, 'check_output', side_effect=[
-                subprocess.TimeoutExpired(['slow'], 2), 'private version\n']) as launch:
+                subprocess.TimeoutExpired(['slow'], 5), 'private version\n']) as launch:
             found = module.Ludusavi(['slow', 'fixture'])
         self.assertEqual(found.bin_path, ('fixture',))
         self.assertEqual(found.version, 'private version\n')
-        self.assertTrue(all(call.kwargs['timeout'] == 2 for call in launch.call_args_list))
+        self.assertTrue(all(call.kwargs['timeout'] == 5 for call in launch.call_args_list))
         with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
             found.__init__(['no-longer-present'])
         self.assertIsNone(found.bin_path)
