@@ -126,7 +126,7 @@
   },
   {
     "id": 46,
-    "shim": null,
+    "shim": "steamback-ipc-eof",
     "probe": "steamback-private-save"
   },
   {
