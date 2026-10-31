@@ -320,5 +320,123 @@
       "progress": "95644c811f442deec69c3382a084f009d4df414cfaceaba1e0fcdbc8dafd4a02",
       "ludusavi": "1ce4eb04c7dbc25e2891ee16e8a0813be97264001f47c2ddbed323e936ce63d2"
     }
+  },
+  "arm64FailureAndIpcCandidate": {
+    "at": "2026-10-31T06:31:24.145116+00:00",
+    "scope": "MangoPeel0.0.7 child IPC repair candidate after actual ARM64 final-unload failure",
+    "failedHead": "555f9642e687b9049cd2f314c711e616b9cbba0c",
+    "failedArmJob": 124464760801,
+    "failedArmLogSha256": "504c68e1964d40fe27f0b1c511f61c0b7f6f67bb5adfe88bab12338e914bbf14",
+    "audit": {
+      "tenSourceHashesVerified": true,
+      "managedMainIndependentlyReconstructedFromPreviousWatchSourceAndFixedPrelude": true,
+      "managedMainSha256": "743702383ee805ec02bd8d434a3c99196b1e2a7503b5df7ebaa6ad30a19182bd",
+      "unchangedExistingIpcHelperSha256": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "completeMangopeelReloadAndShutdownConsoleAudited": true,
+      "noForcedPluginKill": true,
+      "loaderReturncode": 0,
+      "all116CatalogPoliciesPreserved": true,
+      "other115CatalogRowsUnchanged": true,
+      "ownedRuntimeImageAndContainersCleaned": true
+    },
+    "tests": {
+      "store": 62,
+      "compatibility": 17,
+      "ipc": 4,
+      "runtimeCoverage": 3
+    },
+    "realFrameContacted": false,
+    "limits": [
+      "Fresh hosted ARM64 positive is pending; prior actual ARM64 failure remains unqualified, not dismissed as flaky",
+      "Local AMD64 positive only; exact final-head native/e2e/ownership/package/CI pending",
+      "No claim that a passing AMD64 run proves the ARM64 root cause fixed",
+      "No real overlay, integrated browser, headset or controller verification",
+      "General fixture cleanup remains unqualified",
+      "No release"
+    ],
+    "nativeSourceCommit": "f64a7190ceeb666f453ff77af941ae87a5395575",
+    "failedArmExactJobAndCheckoutVerified": true,
+    "nativeReportSha256": "2a8fae8900c54cefa3015942cd6f04408fb943b663d1b7358e1a268e50aae6e2",
+    "nativeSourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "5222f97c02dcdd994aabd57faf5a75dfdc7efbea14ade9e1487f389c7828c014",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "98d265c23f37a2a46421a1f7623aa984604cab372104735b561ad5c0c05c0771",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "0b398569505dd57d13b4add6d6fa12f51ee7f7dc832208a0e5881f2c5320cb1b",
+      "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+      "tests/framey_official.py": "325fff9205d7aa196d06ae62e40ddedf0ae99a58a516e9d3a8acbd874fb89736",
+      "ui/frame_decky_store.py": "dbc064f9360ccc7187f59deb4c73b7ecc0cc6c93f71221dfa4d6a782a932db75",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "mangopeelCase": {
+      "id": 56,
+      "name": "MangoPeel",
+      "version": "0.0.7",
+      "sha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+      "shim": "mangopeel-watch-lifetime",
+      "calls": [
+        {
+          "method": "get_steamIndex",
+          "result": 1
+        },
+        {
+          "method": "get_steamChannel",
+          "result": "main"
+        },
+        {
+          "method": "SetOverwriteConfig",
+          "result": true
+        },
+        {
+          "method": "SetOverwriteConfigs",
+          "result": true
+        },
+        {
+          "method": "get_steamIndex",
+          "result": 2
+        },
+        {
+          "method": "ReloadConfigPath",
+          "result": true
+        },
+        {
+          "method": "get_steamIndex",
+          "result": 2
+        },
+        {
+          "method": "get_steamIndex",
+          "result": 3
+        }
+      ],
+      "discovered": [
+        {
+          "name": "MangoPeel",
+          "version": "0.0.7",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "privateMangoPeel": {
+        "privateSelectedProfileWrite": true,
+        "privateMultiProfileWrite": true,
+        "actualInotifyCallback": true,
+        "replacementWatchActive": true,
+        "reloadWithoutForcedKill": true,
+        "ownedLoaderShutdownClean": true,
+        "loaderExitCode": 0,
+        "reloadAndShutdownConsole": "[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.1s\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[loader][INFO]: Loaded MangoPeel (v0.0.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('MangoPeel', '0.0.7', 1, True, 15000)}\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n",
+        "profilePreservedAcrossReload": true,
+        "unrelatedProfileAndProcessPreserved": true,
+        "syntheticMangoappProcess": true,
+        "actualMangoHudOverlay": false,
+        "browserVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false
+      },
+      "managedBackendSha256": "743702383ee805ec02bd8d434a3c99196b1e2a7503b5df7ebaa6ad30a19182bd",
+      "childIpcRepairSha256": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "result": "published Decky discovery, private MangoHud profile writes, actual inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, browser, actual Frame and worn/controller behavior unverified"
+    }
   }
 }

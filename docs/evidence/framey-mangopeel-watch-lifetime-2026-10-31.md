@@ -10,9 +10,10 @@ The managed adaptation is limited to store ID 56, archive SHA-256
 `71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1`
 and original backend SHA-256
 `cb80b8563e4d1a0b58e2b35a16189db9f41a4dc1da563811353a56dd495fa976`.
-It replaces only the `Inotify` class. All backend bytes outside that class were
-independently compared and preserved. Updated managed installs record
-`mangopeel-watch-lifetime`; existing installs need Update/reinstall.
+It replaces the `Inotify` class and adds a scoped child-IPC EOF prelude and
+adapter. All other published backend bytes were independently compared and
+preserved. Updated managed installs record `mangopeel-watch-lifetime` and
+`mangopeel-ipc-eof`; existing watch-only installs need Update/reinstall.
 
 The reader uses a nonblocking, close-on-exec descriptor and bounded readiness
 waits. Callbacks run on its owned thread instead of detached debounce timers.
@@ -101,6 +102,40 @@ Earlier hosted and full-suite results remain historical. Fresh final-head CI,
 e2e, native AMD64/ARM64, ownership and all triggered package modes remain
 required. These private backend probes establish no actual overlay, integrated
 browser, real headset or controller behavior. No release was published.
+
+## ARM64 failure and scoped IPC follow-up
+
+The fresh hosted ARM64 run at `555f9642e687b9049cd2f314c711e616b9cbba0c`
+failed its final-shutdown assertion: reload stopped MangoPeel in 0.1 seconds,
+but final unload reached Decky's five-second deadline and required SIGKILL.
+The [failed job](https://github.com/saphid/frame-control/actions/runs/41176405202/job/124464760801)
+is retained as a failure. The passing local AMD64 run did not qualify ARM64.
+
+The follow-up adds the existing child-process EOF adapter used for the exact
+managed Deck Progress archive. Decky 3.3.0's original IPC loop can spin on an
+empty closed-peer read without yielding. The adapter ends that connection's
+loop and preserves subsequent connections and normal dispatch. Its source is
+unchanged. Only the exact MangoPeel archive receives the adapter and import
+prelude; other archives and the parent loader are untouched. The watch-class
+replacement is unchanged. A new receipt marker makes watch-only copies request
+an update while retaining the partial compatibility classification.
+
+At frozen source `f64a7190ceeb666f453ff77af941ae87a5395575`,
+local checks pass: 62 store tests, 17 compatibility tests, four IPC behavior
+tests and three runtime-coverage tests. They include changed-archive refusal,
+published-byte preservation, old-receipt update guidance, EOF starvation,
+partial frames and subsequent connections. Native AMD64 again passes actual
+kernel-watch updates, private profile writes, reload and parent-only final
+shutdown with loader exit zero, two 0.1-second plugin stops and no forced kill.
+Ten source hashes, the unchanged adapter hash, the installed backend reconstructed
+from the prior watch-only source plus the fixed prelude, and the complete
+case-specific console were independently checked. Owned runtime resources were
+cleaned.
+
+This is a candidate repair for the observed ARM64 failure. Fresh final-head
+hosted ARM64, AMD64, complete CI/e2e/ownership and all package modes remain
+required. It does not yet prove the ARM64 root cause resolved. Earlier passing
+heads remain historical; no failed gate is waived and no release is published.
 
 ## Limits
 
