@@ -61,3 +61,9 @@ Tested source `60710bf8a987502148ab2f5fb801f2c87a1addd3` adds the HTTP installer
 Production/native probe sources remain identical to `7840a8fb`, with all 16 fingerprints independently checked. The final evidence commit changes documentation only. Historical native results do not qualify a new SHA: every fresh final-head hosted gate, exact current-main integration and feedback review remain required. No feed, notifications, Steam store, browser, managed Frame or wearer/controller proof was added.
 
 [Receipt and hosted-native audit](framey-free-loader-receipt-e2e-2026-10-31.json) · [complete local log, native reports/consoles and hosted job logs](framey-free-loader-receipt-e2e-2026-10-31-raw.json.gz).
+
+A [current-main integration audit](framey-free-loader-main-refresh-2026-10-31.md)
+preserves main's TabMaster repair and replays both native cases plus the
+37-archive HTTP installer test. It also audits the later exact-head ARM64
+Free Loader job at `f0d2b754`. Fresh final-head hosted gates remain required;
+this adds no managed Frame, wearer/controller or release proof.
