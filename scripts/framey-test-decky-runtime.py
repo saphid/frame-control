@@ -105,6 +105,7 @@ def main():
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
+                    (96, '--reproduce-timer-unload-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (65, '--reproduce-terminal-import-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),

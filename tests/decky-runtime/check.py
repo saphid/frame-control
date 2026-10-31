@@ -70,6 +70,7 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
@@ -137,6 +138,16 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == '5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_timer_unload_regression:
+        assert record['id'] == 96 and not args.reproduce_timer_regression
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'd3dbcd73cce1ecd48d4fade93923ffc2574f94b381d55dfee1fbb5d91f12984a'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
@@ -1584,10 +1595,19 @@ def main():
                 else:
                     import timer_private
                     timer_private.probe(backend, loader, env, log, processes, rpc, until_ready, report,
-                        base/'settings'/record['folder']/'settings.json')
+                        base/'settings'/record['folder']/'settings.json',
+                        regression=args.reproduce_timer_unload_regression)
                     report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
-                    report['result'] = ('discovery, cancel, replace, completion and persistent restart passed; '
-                        'four clean parent-only stops and private EOF disconnect passed; no new browser or Frame proof')
+                    report['ipcAdapterSha256'] = (None if args.reproduce_timer_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    if args.reproduce_timer_unload_regression:
+                        report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                            previousManagedSourceRestored=True, forcedPluginKills=1,
+                            qualifiedCompatibilityPass=False)
+                    report['result'] = ('prior managed timer source requires forced stop; expected negative only'
+                        if args.reproduce_timer_unload_regression else
+                        'discovery, cancel, replace, completion, persistent restart and four clean parent-only stops passed; '
+                        'no new browser or Frame proof')
             elif args.reproduce_bound_method_regression:
                 response = rpc('loader/call_legacy_plugin_method', record['name'], 'sp_list_media_players', {})
                 assert response['success'] is False and 'self' in response['result'], response
