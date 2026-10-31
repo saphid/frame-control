@@ -1416,6 +1416,9 @@ def main():
                     secure.shutdown()
                     secure.server_close()
                     worker.join(timeout=3)
+                import radiyo_private
+                radiyo_private.probe(backend, loader, env, log, processes, legacy, rpc,
+                                     until_ready, report, regression=False)
                 report['result'] = ('discovery, loopback HTTP fetch/redirect and self-signed HTTPS rejection passed; '
                     'external stations, trusted HTTPS, playback, real Frame and VR unverified')
             elif case['probe'] == 'desktop-apps-private-entries':
