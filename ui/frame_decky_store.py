@@ -259,6 +259,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 46 and digest == 'ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STEAMBACK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 93 and digest == '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SETTINGS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1029,8 +1032,20 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
         decky.logger.info("Simple Timer has been unloaded.")
 
 """+source[b:]
+                ipc=globals().get('FRAMEY_SIMPLE_TIMER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Simple Timer child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Simple Timer child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
+                compat_shims.append('simple-timer-ipc-eof')
             # Game Sync's selection count must stay inside its configured root,
             # including when a selected file or walked directory is a symlink.
             if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
