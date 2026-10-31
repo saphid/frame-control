@@ -1532,6 +1532,10 @@ def main():
                 assert legacy('aggregate_all', allapps=[[4242, 'Private Game']]) == 1
                 assert (copied.parent/'historical.jpg').read_bytes() == b'Framey historical fixture\n'
                 assert legacy('was_rescued') is False
+                import shotty_private
+                report['shottyLifecycle'] = shotty_private.probe(backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, regression=True)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
                 report['result'] = ('discovery, backend import, empty aggregation, private screenshot '
                                     'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed')
             log.flush()

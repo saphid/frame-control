@@ -86,6 +86,7 @@ def main():
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
               'tests/decky-runtime/wine_cellar_private.py',
+              'tests/decky-runtime/shotty_private.py', 'ui/framey_shotty.py',
               'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz',
               'ui/vendor/wine-cellar-0.2.1/main.py.gz',
               '.github/workflows/decky-runtime.yml']
