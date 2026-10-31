@@ -1,0 +1,57 @@
+{
+  "at": "2026-10-31T23:49:07.903977+00:00",
+  "pr": 529,
+  "testedSource": "85c8719604a062371b0205c45400f21dbc97ddf5",
+  "integratedMain": "9c749eb2ac1707229759adb1c42f69079e8df19d",
+  "normalMergeParents": [
+    "7c25b863e0b8f11b510c07a17789b908d0f427ca",
+    "9c749eb2ac1707229759adb1c42f69079e8df19d"
+  ],
+  "sourceInputs": 23,
+  "serverTests": 1966,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 7,
+  "localNativePluginIds": [
+    14,
+    63,
+    130
+  ],
+  "protonDbRpcs": [
+    10,
+    6
+  ],
+  "settingsSnapshotsIndependentlyDecoded": true,
+  "repairedOriginalUnloadHooksVerified": true,
+  "twoCleanParentOnlyStopsAndRestartPersistenceVerified": true,
+  "originalTimeoutAndForcedKillVerified": true,
+  "freeLoaderRpcs": [
+    11,
+    7
+  ],
+  "sharedStopHelperDefaultRuntimeVerified": true,
+  "historicalIntermittentArmFailureCauseProven": false,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 396.485,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "a29789468cf5e75fc1ea49608b022083aa6633e8c83047a00d84a6eeee973608",
+  "rawBytes": 54501
+}
