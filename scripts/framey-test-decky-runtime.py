@@ -86,6 +86,7 @@ def main():
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
               'tests/decky-runtime/wine_cellar_private.py',
+              'tests/decky-runtime/shotty_private.py', 'ui/framey_shotty.py',
               'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz',
               'ui/vendor/wine-cellar-0.2.1/main.py.gz',
               '.github/workflows/decky-runtime.yml']
@@ -106,7 +107,8 @@ def main():
                     (65, '--reproduce-terminal-import-regression'),
                     (133, '--reproduce-nonsteam-path-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),
-                    (68, '--reproduce-wine-cellar-unload-regression')]
+                    (68, '--reproduce-wine-cellar-unload-regression'),
+                    (53, '--reproduce-shotty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]

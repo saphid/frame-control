@@ -72,6 +72,7 @@ def main():
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -131,6 +132,16 @@ def main():
                     (ROOT/'ui/vendor/wine-cellar-0.2.1/main.py').read_bytes())
         assert (plugin/'main.py').read_bytes() == expected, 'installed Wine Cellar source must match the tested lifecycle'
         assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+    if args.reproduce_shotty_unload_regression:
+        assert record['id'] == 53
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -1652,8 +1663,30 @@ def main():
                 assert legacy('aggregate_all', allapps=[[4242, 'Private Game']]) == 1
                 assert (copied.parent/'historical.jpg').read_bytes() == b'Framey historical fixture\n'
                 assert legacy('was_rescued') is False
+                import shotty_private
+                report['shottyLifecycle'] = shotty_private.probe(backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, regression=args.reproduce_shotty_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['shottyLifecycle']['unchangedPublishedFiles'] = {}
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if item.is_dir() or item.filename == record['folder']+'/main.py':
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        digest = hashlib.sha256(original.read(item)).hexdigest()
+                        assert hashlib.sha256((plugin/name).read_bytes()).hexdigest() == digest
+                        report['shottyLifecycle']['unchangedPublishedFiles'][name] = digest
+                report['shottyLifecycle']['ipcAdapterSha256'] = (None if args.reproduce_shotty_unload_regression
+                    else hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_shotty_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
                 report['result'] = ('discovery, backend import, empty aggregation, private screenshot '
-                                    'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed')
+                    'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed; '
+                    + ('prior managed source requires forced plugin stop; expected negative only'
+                       if args.reproduce_shotty_unload_regression else
+                       'two parent-only clean loader stops and restart passed; no real Steam library or VR proof'))
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()
