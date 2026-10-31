@@ -221,7 +221,7 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['mangopeel-watch-lifetime'])
+        self.assertEqual(receipt['compatShims'], ['mangopeel-watch-lifetime', 'mangopeel-ipc-eof'])
         source = (folder/'main.py').read_text()
         compile(source, str(folder/'main.py'), 'exec')
         # Execute the installed watch class without the plugin's global logger
@@ -279,6 +279,50 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove', plugin_id=56, folder=record['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_mangopeel_ipc_repair_is_scoped_to_exact_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 56)
+        data = official_archive(record)
+        result = self.apply('install', data, plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
+        prefix = ('# Frame Control: repair child IPC EOF for the exact MangoPeel 0.0.7 archive.\n'
+                  'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\n'
+                  'del _framey_install_ipc_eof\n').encode()
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for member in original.infolist():
+                if member.is_dir():
+                    continue
+                name = member.filename.split('/', 1)[1]
+                actual = (folder/name).read_bytes()
+                if name == 'main.py':
+                    self.assertTrue(actual.startswith(prefix))
+                    old = original.read(member).decode()
+                    # The EOF prelude and watch class are the only changes.
+                    self.assertEqual(actual[len(prefix):].split(b'class Inotify:', 1)[0],
+                                     old.split('class Inotify:', 1)[0].encode())
+                    self.assertEqual(actual.split(b'class MangoPeel:', 1)[1],
+                                     old.split('class MangoPeel:', 1)[1].encode())
+                    compile(actual, str(folder/name), 'exec')
+                else:
+                    self.assertEqual(actual, original.read(member), name)
+        self.assertEqual(self.apply('remove', plugin_id=56, folder=record['folder']).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/new-version.txt', 'different archive')
+        result = self.apply('install', changed.getvalue(), plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'main.py').read_bytes(), original.read(record['folder']+'/main.py'))
+        self.assertEqual(self.apply('remove', plugin_id=56, folder=record['folder']).returncode, 0)
 
     def test_ludusavi_dependency_discovery_is_exact_archive_scoped(self):
         from framey_official import PLUGINS, archive as official_archive

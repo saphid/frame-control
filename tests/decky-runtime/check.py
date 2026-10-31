@@ -233,6 +233,7 @@ def main():
                 report['privateMangoPeel'] = mangopeel.exercise(
                     current, rpc, backend, log, private_mango, until_ready)
                 report['managedBackendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['childIpcRepairSha256'] = hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()
                 report['result'] = ('published Decky discovery, private MangoHud profile writes, actual '
                     'inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, '
                     'browser, actual Frame and worn/controller behavior unverified')

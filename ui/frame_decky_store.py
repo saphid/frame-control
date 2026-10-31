@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 56 and digest == '71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_MANGOPEEL_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -1056,8 +1059,16 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
 
 
 """+source[b:]
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                (modules/'framey_decky_ipc.py').write_text(FRAMEY_MANGOPEEL_IPC_SOURCE)
+                source=('# Frame Control: repair child IPC EOF for the exact MangoPeel 0.0.7 archive.\n'
+                        'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\n'
+                        'del _framey_install_ipc_eof\n')+source
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('mangopeel-watch-lifetime')
+                compat_shims.append('mangopeel-ipc-eof')
             # Game Sync's selection count must stay inside its configured root,
             # including when a selected file or walked directory is a symlink.
             if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
