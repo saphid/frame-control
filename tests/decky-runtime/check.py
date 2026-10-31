@@ -1206,17 +1206,12 @@ def main():
                 assert (settings_dir/'deal_db.json').is_file()
                 current('settings_setSetting', 'larger_text', True)
                 assert current('settings_read')['larger_text'] is True
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(lambda: current('settings_read')['larger_text'],
-                                   'private Free Loader setting after restart') is True
-                assert current('read_deals') == {}
-                report['result'] = ('discovery, default settings, empty local deals, '
-                    'private setting write/read and restart persistence passed; feed, notifications and VR unverified')
+                import free_loader_private
+                free_loader_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, settings_dir)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['result'] = ('discovery, private settings/cache/hidden-state persistence and '
+                    'two clean parent-only stops passed; feed, notifications, browser and Frame unverified')
             elif case['probe'] == 'game-sync-config':
                 # Exercise private settings and read-only selections. This plugin also exposes
                 # rclone cloud sync and arbitrary process signals; neither
