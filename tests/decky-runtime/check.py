@@ -1578,10 +1578,16 @@ def main():
                     until_ready(lambda: rpc('loader/call_plugin_method', record['name'],
                         'settings_getSetting', 'subtle_mode', False), 'restarted instance RPC')
 
-                report['lifecycle'] = probe(record['name'], restart, home/'runtime.log',
-                                            args.reproduce_timer_regression)
-                report['result'] = ('upstream timer lifecycle regressions reproduced' if args.reproduce_timer_regression
-                    else 'discovery, cancel, replace, completion and persistent restart passed')
+                if args.reproduce_timer_regression:
+                    report['lifecycle'] = probe(record['name'], restart, home/'runtime.log', True)
+                    report['result'] = 'upstream timer lifecycle regressions reproduced; expected negative only'
+                else:
+                    import timer_private
+                    timer_private.probe(backend, loader, env, log, processes, rpc, until_ready, report,
+                        base/'settings'/record['folder']/'settings.json')
+                    report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                    report['result'] = ('discovery, cancel, replace, completion and persistent restart passed; '
+                        'four clean parent-only stops and private EOF disconnect passed; no new browser or Frame proof')
             elif args.reproduce_bound_method_regression:
                 response = rpc('loader/call_legacy_plugin_method', record['name'], 'sp_list_media_players', {})
                 assert response['success'] is False and 'self' in response['result'], response
