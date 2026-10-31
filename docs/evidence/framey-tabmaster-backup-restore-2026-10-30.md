@@ -117,3 +117,16 @@ The final head needs fresh checks/e2e, native AMD64/ARM64, ownership and every
 triggered package mode, plus exact-main and #500-base qualification. Prior-head
 hosted evidence is historical. Compatibility stays partial; no new browser,
 Steam, managed Frame, wearer/controller or release proof is claimed.
+
+
+## Current-main integration and complete package audit, 31 October 2026
+
+After every workflow on head `9cf28143f0b18216129579a737b503ed3a03f511` completed, current main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` was merged normally at `4f8bf676053b353399e58ebb03c33ec553f02a76`. The entire merge tree is identical to the old head: `968161584d0999dbea786f2a6eaf20cab06c11d5`. No production, test, catalog or workflow bytes change in this merge. Local tests are therefore not repeated. The following evidence commit adds only documentation; exact final-head hosted qualification is still required.
+
+The [integration/package audit](framey-tabmaster-restore-main0082d79-refresh-2026-10-31.json) and [raw audit records and source inventories](framey-tabmaster-restore-main0082d79-refresh-2026-10-31-raw.json.gz) verify all 15 native, 14 ownership and all four complete package source inventories against the merged source. Historical native AMD64/ARM64, checks/e2e and ownership evidence remains bound to its original exact head; identical bytes do not turn those old run SHAs into new-head passes.
+
+All four modes of package workflow `41188198598` are independently audited: AMD64, ARM64, standalone browser HTTP and production-parent HTTP. GitHub artifact ZIP digests, exact completed jobs/checkouts, every successful job step, signed app/runtime pins and full content, native package launch, actual private two-way sync, owned-service lifecycle, strict source-bound owner shutdown, migrations, preservation/refusals and cleanup pass. Plain native modes decode the retained console result; HTTP modes independently verify complete checksummed virtio guest packets. Package fixture raw Decky console is not separately retained, so an independent full-console/global clean plugin claim is unavailable.
+
+All twelve retained capture payloads match their hashes and contain five unique images, each visually inspected. Standalone Running shows the private sync folder and both `framey-owned-vm`/`owned-peer` rows; Stopped is visible after shutdown. Production-parent Running shows the folder but clips device rows at the iframe bottom. Its published broken/non-ARM64 warning remains, and Stopped is visible. These are isolated Chromium/CEF/receipt/systemd fixtures, not real Steam or Frame usability evidence. Syncthing remains blocked/unselected.
+
+No existing review, issue comment or review thread remains to address in the snapshot; main has no active ruleset or classic protection checks. User-required merge/release gates still apply. Main native and checks/e2e are independently audited; its package gate remains pending. The refreshed final head must pass checks/e2e, native AMD64/ARM64, ownership and every triggered package mode before final integration/merge review. No headset/hourly schedule was accessed, and no release is qualified.
