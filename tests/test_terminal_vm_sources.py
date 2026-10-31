@@ -23,7 +23,7 @@ class TerminalVmSources(unittest.TestCase):
             for name in names:
                 path = entry.with_name(name.split('.')[0]+'.py')
                 if path.is_file():
-                    local_imports.add(str(path.relative_to(ROOT)))
+                    local_imports.add(path.relative_to(ROOT).as_posix())
         self.assertIn('tests/decky-runtime/runtime_console.py', local_imports)
         for arch in ('x86_64', 'aarch64'):
             for production_http in (False, True):
