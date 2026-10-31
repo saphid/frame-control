@@ -152,3 +152,40 @@ All 79 focused host tests pass (18 compatibility, 61 store), as do generated doc
 The previous head `392b81162d6d0ec9842d5c0f5cb4823601403804` completed all 18 checks and five triggered workflows. Its independently audited native AMD64/ARM64 evidence retains 41 probes, 34 published archive pins and 12 source fingerprints per architecture. All four package modes now pass immutable-digest, job/checkout, source and full guest-result audits; twelve HTTP/production-parent captures were visually inspected and bound to ZIP members. The production-parent warning remains visible and names below its iframe viewport are not claimed visible. These results qualify the named historical head only.
 
 [Source and historical-artifact audit](framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.json), [focused host log](framey-nonsteam-badges-main1c1e4f5-refresh-2026-10-31.log). Existing raw-peer shutdown evidence limits remain: strict private-service shutdown passes, but the older raw-peer runner lacks complete successful-console/clean zero-exit qualification. Browser badge injection, active Steam account selection, integrated browser/backend behavior, real Frame and wearer/controller usability remain unverified.
+
+
+## Refresh onto main d3ae60e with complete available console retention
+
+Main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` was merged normally at
+`79d9128614b68334dacc54624def9ffb2f136de8`, without conflicts or rewriting
+history. All 31 main probe conditions (36 branch bodies), the complete Non-Steam
+probe and production repair, all 116 catalog policies and the other 115 complete
+catalog rows are preserved. Main's keyboard/input, IPC and native-console sources
+remain unchanged. Main's package gates are still incomplete.
+
+All 94 focused store, compatibility, runtime-coverage, native-console and Wine
+unload-evidence tests pass. A fresh isolated published Decky 3.3.0 AMD64 replay
+independently verifies all 15 source hashes, the published loader/archive,
+all unchanged archive members and the installed backend reconstructed from the
+original plus the exact actual-user path replacements. Five repaired RPCs and
+three unchanged-original RPCs match literal expectations. Private signed app-ID
+normalization, store classification, malformed-VDF refusal and restart persistence
+pass; the original still returns empty mappings for the actual user's shortcut
+fixture. Four parent-only loader stops return zero.
+
+Complete available post-cleanup consoles and hashes are retained for both cases.
+Generic cleanup records already-exited loaders without claiming another signal.
+JSON diagnostics remain unattributed; an error-free console and global clean
+plugin shutdown remain unverified. Preservation/reaping assertions are source-bound;
+complete independent filesystem/process snapshots were not retained. No new owned
+runtime containers or image tags remain.
+
+[Current refresh audit](framey-nonsteam-badges-maind3ae60e-refresh-2026-10-31.json)
+and [raw report, source audit and full unit log](framey-nonsteam-badges-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+retain this result. Fresh exact-head hosted checks/e2e, full native AMD64/ARM64
+matrix (42 probes / 34 archive pins / 15 source hashes per architecture),
+ownership and all triggered package modes remain required. Previous-head hosted
+successes are historical. No new browser/e2e run, visible Steam badge, active-account
+selection, live Steam search, managed Frame or wearer/controller proof is claimed.
+Compatibility stays partial; no headset or hourly schedule was accessed and no
+release was published.
