@@ -74,6 +74,7 @@ def main():
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -105,6 +106,11 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_steamgriddb_unload_regression:
+        assert record['id'] == 36
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
     if not args.reproduce_timer_regression:
         expected_shims = ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])
@@ -425,7 +431,7 @@ def main():
                 report['result'] = ('original published Terminal import regression reproduced; '
                                     'discovery is not backend usability; no PTY or input executed')
             elif case['probe'] == 'steamgriddb-private-artwork':
-                # Exact original backend; every path is in the disposable
+                # Every path is in the disposable
                 # container home. No host Steam, game or artwork is exposed.
                 import base64
                 artwork = base64.b64decode(
@@ -505,18 +511,22 @@ def main():
                     worker.join(timeout=3)
                 assert requests == ['/private.png']*3
                 assert not worker.is_alive()
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
-                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
-                assert current('get_setting', 'framey-private', None) == saved
-                assert state.read_bytes() == before
-                assert current('get_local_start') == str(home)
-                assert shortcuts.read_bytes() == shortcuts_bytes(str(icon))
+                import steamgriddb_private
+                regression = args.reproduce_steamgriddb_unload_regression
+
+                def verify_restarted_artwork():
+                    assert current('get_setting', 'framey-private', None) == saved
+                    assert state.read_bytes() == before
+                    assert current('get_local_start') == str(home)
+                    assert shortcuts.read_bytes() == shortcuts_bytes(str(icon))
+
+                report['steamgriddbLifecycle'] = steamgriddb_private.probe(
+                    backend, loader, env, log, processes, rpc, until_ready, report['discovered'],
+                    [state, shortcuts, icon, cache, remote_cache], verify_restarted_artwork,
+                    regression=regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 report['privateArtwork'] = dict(settingsPersistedAcrossLoaderRestart=True,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     artworkSha256=hashlib.sha256(artwork).hexdigest(),
@@ -527,9 +537,15 @@ def main():
                     externalArtworkServiceVerified=False, steamContextMenuVerified=False,
                     browserVerified=False, realSteamCef=False,
                     realFrameContacted=False, physicalControllerVerified=False)
-                report['result'] = ('published Decky API1 discovery, private settings/restart, '
+                report['privateArtwork']['settingsPersistedAcrossLoaderRestart'] = not regression
+                report['result'] = ('published Decky API1 discovery, private settings, '
                     'local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID '
-                    'normalization passed; Steam context menu, external service, browser and VR unverified')
+                    'normalization passed; '+('original backend forced stop reproduced; expected negative only'
+                        if regression else 'two parent-only clean stops and restart passed')+
+                    '; Steam context menu, external service, browser and VR unverified')
+                if regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        originalBackendRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
             elif case['probe'] == 'deckyparty-private-files':
                 assert legacy('is_enabled') is False
                 marker = b'Framey private Copyparty download fixture\n'
