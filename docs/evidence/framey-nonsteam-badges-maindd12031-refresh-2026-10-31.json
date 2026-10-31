@@ -1,0 +1,433 @@
+{
+  "at": "2026-10-31T06:15:34.849712+00:00",
+  "frozenSource": "9db3c6c5da68b9505c3fb7b8391e5e59556c1f75",
+  "mergedMain": "dd12031f55ccbcba01aa07296080495df1935af1",
+  "normalMerge": true,
+  "previousFailedHead": "d8aac9de3e796fb9ff7a6c0a68e67f5bf6b24ab3",
+  "previousFailedJob": 124443207697,
+  "oldFailureBoundary": "owned helper shutdown not ready in raw-peer probe",
+  "oldFailureRootCauseStillUnproven": true,
+  "scope": {
+    "source": "9db3c6c5da68b9505c3fb7b8391e5e59556c1f75",
+    "main": "dd12031f55ccbcba01aa07296080495df1935af1",
+    "all116VersionDigestStatusInstallPoliciesPreserved": true,
+    "other115CompleteRowsPreserved": true,
+    "mainBytesPreserved": [
+      "ui/framey_decky_ipc.py",
+      "ui/vendor/syncthing-0.2.7/main.py",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs",
+      "scripts/framey-test-syncthing-runtime.py",
+      "tests/decky-runtime/syncthing_runtime.py",
+      "scripts/framey-test-syncthing-candidate.py",
+      "tests/decky-runtime/syncthing_candidate.py"
+    ],
+    "oldFailure": "pr503-ownership-failure272.log",
+    "oldFailureBoundary": "owned helper shutdown not ready after raw-peer loader group SIGTERM",
+    "causeStillNotProven": true
+  },
+  "native": {
+    "source": "9db3c6c5da68b9505c3fb7b8391e5e59556c1f75",
+    "reports": {
+      "pr503-main-dd12031-native272-amd64.json": "85a305857a29ed0af784c963f6ae4b0ef4eb53d19dcdbbe3599a0b97b64f2cef",
+      "pr503-main-dd12031-control134-272.json": "3ba4b897dbe627c387500a29a43f40265797a57cc6df2a270d3c12d16bd4f295",
+      "pr503-main-dd12031-control103-272.json": "4930b55bbfe5a147a4be774f32461f1733e92b20e11e9cfc2ea238b9e8d576a5"
+    },
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "43fd652b6a7d7c8dafb13b0feeac201153a7108822ed103329d3a7f85c9904e5",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "a3f0dfda5bf68dea4dc65dde249edbb2153fd8604c425b810268d8fc4c5e189c",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "6cc8da3ac845ca9b969fb9d969b3a20c172f27c4a9fb90b4902f0f8c3df1ba36",
+      "tests/framey_official.py": "87ae38d824418fcacbdb3f7d99c113d27412f63240354e82490b9f4b5c6650ab",
+      "ui/frame_decky_store.py": "78526c5e5007bb20125f4d103d451f86676830202cb3a72a357d0929b4bbd62f",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "allNineSourceFingerprintsPerReportVerified": true,
+    "nonsteamNative": {
+      "decky": "v3.3.0",
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "sourceSha256": {
+        "scripts/framey-test-decky-runtime.py": "43fd652b6a7d7c8dafb13b0feeac201153a7108822ed103329d3a7f85c9904e5",
+        "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+        "tests/decky-runtime/check.py": "a3f0dfda5bf68dea4dc65dde249edbb2153fd8604c425b810268d8fc4c5e189c",
+        "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+        "tests/decky-runtime/cases.json": "6cc8da3ac845ca9b969fb9d969b3a20c172f27c4a9fb90b4902f0f8c3df1ba36",
+        "tests/framey_official.py": "87ae38d824418fcacbdb3f7d99c113d27412f63240354e82490b9f4b5c6650ab",
+        "ui/frame_decky_store.py": "78526c5e5007bb20125f4d103d451f86676830202cb3a72a357d0929b4bbd62f",
+        "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+        ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+      },
+      "cases": [
+        {
+          "id": 133,
+          "name": "Non-Steam Badges",
+          "version": "0.1.0",
+          "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+          "shim": "nonsteam-badges-user-paths",
+          "calls": [
+            {
+              "method": "get_all_store_mappings",
+              "result": {}
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {
+                "4294967173": {
+                  "store": "gog",
+                  "name": "Private GOG"
+                },
+                "4242": {
+                  "store": "epic",
+                  "name": "Private Epic"
+                },
+                "4343": {
+                  "store": "amazon",
+                  "name": "Private Amazon"
+                },
+                "4444": {
+                  "store": "amazon",
+                  "name": "Private Luna"
+                },
+                "4545": {
+                  "store": null,
+                  "name": "Private Other"
+                }
+              }
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {}
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {
+                "4294967173": {
+                  "store": "gog",
+                  "name": "Private GOG"
+                },
+                "4242": {
+                  "store": "epic",
+                  "name": "Private Epic"
+                },
+                "4343": {
+                  "store": "amazon",
+                  "name": "Private Amazon"
+                },
+                "4444": {
+                  "store": "amazon",
+                  "name": "Private Luna"
+                },
+                "4545": {
+                  "store": null,
+                  "name": "Private Other"
+                }
+              }
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {
+                "4294967173": {
+                  "store": "gog",
+                  "name": "Private GOG"
+                },
+                "4242": {
+                  "store": "epic",
+                  "name": "Private Epic"
+                },
+                "4343": {
+                  "store": "amazon",
+                  "name": "Private Amazon"
+                },
+                "4444": {
+                  "store": "amazon",
+                  "name": "Private Luna"
+                },
+                "4545": {
+                  "store": null,
+                  "name": "Private Other"
+                }
+              }
+            }
+          ],
+          "discovered": [
+            {
+              "name": "Non-Steam Badges",
+              "version": "0.1.0",
+              "load_type": 1,
+              "disabled": false
+            }
+          ],
+          "privateShortcuts": {
+            "actualUserHome": true,
+            "originalBackendUnmodified": false,
+            "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+            "installedBackendSha256": "17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970",
+            "signedAppIdNormalized": true,
+            "storeClassification": true,
+            "missingAppIdSkipped": true,
+            "malformedVdfRefused": true,
+            "mappingsPreservedAcrossLoaderRestart": true,
+            "originalHardcodedHomeFailureReproduced": false,
+            "privateShortcutsPreserved": true,
+            "unchangedArchiveFiles": {
+              "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+              "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+              "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+              "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+              "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+              "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+              "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+              "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+              "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+            "ownedLoaderStops": [
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.21481263590976596,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              },
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.21404554415494204,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              }
+            ],
+            "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: Unterminated cstring (offset: 1)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "loaderConsoleSha256": "f36939e4aa182a3836aead693eb27576025c9475885e74ec96e0fbb2df385c32",
+            "loaderConsoleErrorFree": false,
+            "browserVerified": false,
+            "steamPageBadgesVerified": false,
+            "steamSearchVerified": false,
+            "activeSteamAccountSelectionVerified": false,
+            "realFrameContacted": false,
+            "physicalControllerVerified": false
+          },
+          "result": "published Decky API1 private shortcut mappings and restart persistence passed; browser badges, active Steam account, Steam search, Frame and VR unverified"
+        },
+        {
+          "id": 133,
+          "name": "Non-Steam Badges",
+          "version": "0.1.0",
+          "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+          "shim": null,
+          "calls": [
+            {
+              "method": "get_all_store_mappings",
+              "result": {}
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {}
+            },
+            {
+              "method": "get_all_store_mappings",
+              "result": {}
+            }
+          ],
+          "discovered": [
+            {
+              "name": "Non-Steam Badges",
+              "version": "0.1.0",
+              "load_type": 1,
+              "disabled": false
+            }
+          ],
+          "privateShortcuts": {
+            "actualUserHome": true,
+            "originalBackendUnmodified": true,
+            "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+            "installedBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+            "signedAppIdNormalized": false,
+            "storeClassification": false,
+            "missingAppIdSkipped": false,
+            "malformedVdfRefused": false,
+            "mappingsPreservedAcrossLoaderRestart": false,
+            "originalHardcodedHomeFailureReproduced": true,
+            "privateShortcutsPreserved": true,
+            "unchangedArchiveFiles": {
+              "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+              "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+              "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+              "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+              "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+              "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+              "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+              "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+              "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+            },
+            "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+            "ownedLoaderStops": [
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.16398948803544044,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              },
+              {
+                "returncode": 0,
+                "elapsedSeconds": 0.21410661516711116,
+                "signaledOnlyOwnedLoader": true,
+                "ownedProcessIdentitiesReaped": true,
+                "ownedProcessCount": 5
+              }
+            ],
+            "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "loaderConsoleSha256": "84f1bf62d71d74878d4836d7670617b423f5331ab6986258d23ed7de2c4a3b5f",
+            "loaderConsoleErrorFree": false,
+            "browserVerified": false,
+            "steamPageBadgesVerified": false,
+            "steamSearchVerified": false,
+            "activeSteamAccountSelectionVerified": false,
+            "realFrameContacted": false,
+            "physicalControllerVerified": false
+          },
+          "result": "original hardcoded-home empty mapping failure reproduced; browser badges, active Steam account, Steam search, Frame and VR unverified"
+        }
+      ]
+    },
+    "nonsteamEightLiteralRpcsVerified": true,
+    "nonsteamFourParentOnlyZeroExitStops": true,
+    "nonsteamPublishedMembersPreserved": true,
+    "nonsteamFullConsoleHashesVerified": true,
+    "progress": {
+      "reportSha256": "3ba4b897dbe627c387500a29a43f40265797a57cc6df2a270d3c12d16bd4f295",
+      "rpcs": 36,
+      "sqliteSnapshotsIndependentlyDecoded": 4,
+      "positiveForcedKills": 0,
+      "negativeForcedKills": 2,
+      "fullConsoleHashesVerified": true
+    },
+    "ludusavi": {
+      "reportSha256": "4930b55bbfe5a147a4be774f32461f1733e92b20e11e9cfc2ea238b9e8d576a5",
+      "literalRpcs": 3,
+      "exactPublishedMembersVerified": true,
+      "parentOnlyStops": 4,
+      "originalMissingDependencyFailureVerified": true,
+      "slowTimeoutReaped": true
+    },
+    "realFrameContacted": false
+  },
+  "localRawPeerRuntime": {
+    "runtime": "v2.1.7",
+    "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "independentState": {
+      "twoWaySync": true,
+      "runtimeRestartPreservedFiles": true,
+      "realRestProxy": true,
+      "realApiKeyErrorPreserved": true,
+      "completionPercent": 100,
+      "deckyShutdownStoppedOwnedHelper": true,
+      "allOwnedProcessesReaped": true
+    },
+    "markerBytes": 3239,
+    "markerSha256": "39fd6ed70748fda5b97fd6b75eeebe1ed9e1a077662c40fd813624420989320e",
+    "reverseBytes": 1677,
+    "reverseSha256": "ebc4a5eb1748124f2cb2ab2f419ae3eea04e5d6c5eee94de06661729f35e5fc7",
+    "realDeckyRpcProxy": {
+      "/rest/system/status": 200,
+      "/rest/system/version": 200,
+      "/rest/config/options": 200,
+      "/rest/config/devices": 200,
+      "/rest/stats/device": 200,
+      "/rest/config/folders": 200,
+      "/rest/stats/folder": 200,
+      "/rest/db/status?folder=framey-private": 200,
+      "/rest/system/connections": 200
+    },
+    "apiKeyErrorStatus": 403,
+    "installerEnabled": false,
+    "syncthingStopBudgetSeconds": 25,
+    "serviceManagerVerified": false,
+    "systemdBus": "absent; service setup stays disabled",
+    "realFrameContacted": false,
+    "runtimeStopElapsedUpperBoundsSeconds": [
+      10.085,
+      10.085
+    ],
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeArchiveUrl": "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-linux-amd64-v2.1.7.tar.gz",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+      "tests/decky-runtime/syncthing_runtime.py": "2f9e98c227329c472c88fa42eebebc2f2ba65d91cc3a384f7828f69e5e41fabf",
+      "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    }
+  },
+  "build": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+    "ownedUnitSha256": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "pythonSha256": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+    "builderImage": "sha256:93ce27a88655056a51dbdd8f5f2d7ddc071c7b0070fb288a37b5a285fc83971e",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 13376904,
+        "sha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false,
+        "serviceFileTestsExecuted": true
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "buildRustUnitTests": 11,
+  "rawPeerLimit": "The previous group-signal helper disappearance boundary now passes. Full raw peer/Decky consoles and a clean loader exit are not retained or independently established by this older runner; PR513 owns that stricter evidence gate.",
+  "focusedTests": {
+    "count": 131,
+    "passed": true,
+    "seconds": 31.401,
+    "logSha256": "1b7b5353c47c4c0567aed4415fd1e74b0fb20c26e53be3525f6ccba8a79a0f3d"
+  },
+  "fakeFrameE2E": {
+    "project": "framey-pr503-272-b1ed7240ce",
+    "source": "9db3c6c5da68b9505c3fb7b8391e5e59556c1f75",
+    "at": "2026-10-31T06:12:37.728761+00:00",
+    "target": "test_framey.FrameyFlow.test_pinned_official_plugins_install_and_remove",
+    "realFrameContacted": false,
+    "fakeframe-frame": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+    "fakeframe-host": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b",
+    "testReturncode": 0,
+    "cleanupReturncode": 0
+  },
+  "fakeFrameLogSha256": "f6f9362c3a9a257f1fe31973936c03858b5958bd3ec24de5d3e7ba427204f357",
+  "ownedFakeFrameResourcesAbsent": true,
+  "ownedRuntimeImageAncestorContainersAbsent": true,
+  "otherLogSha256": {
+    "pr503-main-dd12031-native272-amd64.log": "fd4017bb37ec8749a898a7ced8026c80bb5a46a943a834a8342e749c3a3951dd",
+    "pr503-main-dd12031-control134-272.log": "0980a465a11e41ac27f6428a6428fa41a01820143c0f43486f8425f46e302663",
+    "pr503-main-dd12031-control103-272.log": "722af86846c9947ccf4f78af8a7ce54b2d0391ecb13f04cb0e17554dd8607df8",
+    "pr503-main-dd12031-syncthing-runtime272.log": "d3bdb2fe36e681bf7ae84a08bdd08a2257a99c3ff492b1d438442f8225626725"
+  },
+  "fullHostedFinalHeadQualificationPending": true,
+  "freshArm64Unverified": true,
+  "realFrameContacted": false
+}

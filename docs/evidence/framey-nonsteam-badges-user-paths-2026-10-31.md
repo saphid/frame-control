@@ -79,3 +79,37 @@ requires fresh native AMD64/ARM64, full e2e, ownership and every triggered packa
 mode, plus exact current-main/feedback/mergeability gates. No real Frame, badge
 injection, browser/backend integration, active Steam account, live search,
 wearer-visible view or controller check was performed. No release is published.
+
+## Refresh onto main dd12031f
+
+The prior head `d8aac9de3e796fb9ff7a6c0a68e67f5bf6b24ab3` failed AMD64
+ownership job `124443207697`: its raw-peer probe still found the helper after
+loader shutdown. That failed head was not rerun unchanged. Normal merge
+`9db3c6c5da68b9505c3fb7b8391e5e59556c1f75` incorporates current main
+`dd12031f55ccbcba01aa07296080495df1935af1`, including #508's owner-death
+repair and Ludusavi discovery. Additive conflicts retain both plugin cases.
+
+The [fresh audit](framey-nonsteam-badges-maindd12031-refresh-2026-10-31.json)
+qualifies that frozen source locally on AMD64: 131 focused tests pass;
+Non-Steam Badges retains eight exact repaired/original RPCs, four parent-only
+zero-exit stops, private-file preservation and both complete console hashes.
+Deck Progress retains 36 RPCs and four independently decoded SQLite snapshots;
+Ludusavi retains three literal results, bounded slow discovery, its original
+failure and four parent-only zero-exit stops. All nine fingerprints per native
+report match the merged source. All 116 catalog version/digest/status/install
+policies and the other 115 complete records match main.
+
+The actual Syncthing raw-peer boundary also passes with a freshly built,
+source-verified helper and eleven Rust ownership tests: two-way sync, restart,
+authenticated Decky HTTP reads, API-key refusal, helper disappearance and owned
+process reaping. This older runner signals the loader process group and does
+not retain complete successful peer/Decky consoles or establish a clean loader
+exit. The prior failure's full cause remains unproven; #513 owns the stricter
+evidence gate. This does not qualify a Syncthing installer or service manager.
+
+The isolated fake-Frame pinned-official install/remove test passes. Its owned
+containers, volumes and network are absent, as are ancestor containers for all
+four local native/runtime images. Fresh final-head hosted AMD64/ARM64, full
+e2e, ownership and every package mode remain required. No real Frame, browser
+badge injection, active account selection, live search or controller check was
+performed, and compatibility stays partial.
