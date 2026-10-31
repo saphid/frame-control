@@ -1528,15 +1528,14 @@ def main():
                 assert len(saved['shelves']) == 1 and saved['shelves'][0]['title'] == 'Private Test', saved
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['state']['shelves'][0]['id'] == shelf['id']
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                restored = until_ready(lambda: current('get_settings')['shelves'],
-                                       'private shelf after restart')
-                assert restored[0]['id'] == shelf['id'] and restored[0]['title'] == shelf['title'], restored
+                import deck_shelves_private
+
+                def verify_restarted_shelves():
+                    assert current('get_settings') == saved
+
+                report['deckShelvesLifecycle'] = deck_shelves_private.probe(
+                    backend, loader, env, log, processes, rpc, until_ready, report['discovered'],
+                    [state, state.with_suffix('.json.bak')], verify_restarted_shelves)
                 report['result'] = ('published Decky discovery, private shelf settings and restart persistence passed; '
                     'Steam Home injection, real Frame and VR unverified')
             elif case['probe'] == 'storage-cleaner':
