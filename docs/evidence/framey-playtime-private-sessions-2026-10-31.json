@@ -1,0 +1,505 @@
+{
+  "sourceCommit": "b61a7382bebfb8df16eef47347f0b567996eb1f5",
+  "scope": "Local isolated AMD64 only; synthetic private users and sessions; no automatic recording, browser or real Frame proof",
+  "encoding": "Only finalDatabases base64 values transformed to deterministic gzipBase64 (mtime=0); sha256 remains over decompressed SQLite bytes",
+  "audit": {
+    "at": "2026-10-31T03:34:20.170584+00:00",
+    "sourceCommit": "b61a7382bebfb8df16eef47347f0b567996eb1f5",
+    "rawReportSha256": "544f6296e138c14ea81ea10e0c2d9a28c2369baf4d903926e48e55a14ec9be2c",
+    "runnerLogSha256": "9c7f626dab2516668a91e29978646c9857663197ed6bdf778da08131c7141a39",
+    "sourceHashes": 8,
+    "backendHashes": 40,
+    "rpcCalls": 22,
+    "sqlStageReadbacks": 6,
+    "databases": [
+      {
+        "user": "76561198000000001",
+        "sha256": "ece0f50c5fb99d1304890ee0cea2bb421f3aa65f34480ee5507a3e20cd1b3026",
+        "bytes": 114688,
+        "integrity": "ok",
+        "rows": {
+          "games": [
+            [
+              "424242",
+              "Private Alice game"
+            ]
+          ],
+          "sessions": [
+            [
+              "424242",
+              300
+            ]
+          ],
+          "totals": [
+            [
+              "424242",
+              300
+            ]
+          ],
+          "tracking": []
+        }
+      },
+      {
+        "user": "76561198000000002",
+        "sha256": "00e740f473644b869e7cad94ce8f1ba48a35dac8c35aa1708784b2a00217d107",
+        "bytes": 114688,
+        "integrity": "ok",
+        "rows": {
+          "games": [
+            [
+              "424242",
+              "Private Bob game"
+            ]
+          ],
+          "sessions": [
+            [
+              "424242",
+              600
+            ]
+          ],
+          "totals": [
+            [
+              "424242",
+              600
+            ]
+          ],
+          "tracking": []
+        }
+      }
+    ],
+    "cleanParentOnlyStops": 2,
+    "cleanup": {
+      "successfulImageId": "sha256:03168818dbfb7b2ae4d7523cc22f202429778d204ba738050cc31cddc56ced55",
+      "imageAbsent": true,
+      "ancestorContainersAbsent": true,
+      "liveSuccessfulContainerConfigCaptured": false
+    },
+    "realFrameContacted": false,
+    "earlierFailuresRetained": [
+      "original-native-failure.json",
+      "second-native-failure.json"
+    ]
+  },
+  "runtime": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "f6410326c767cf0afc301b9874e10411d54120c8b84e541c41c299b3b4dc6d4c",
+      "tests/decky-runtime/check.py": "40493620ca19be51985e1999a9e79bd4699c7aedd04aefc3e173f5805fdc4d76",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "c51c0379fb2725ada2fdbe525cd15463dd59310546e8dfa014f6f0a913c1c0ef",
+      "tests/framey_official.py": "c922c4ef60fe87d395303329609fa0f596c3e99a533f205bbbac316d8cfbdbda",
+      "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+      "tests/decky-runtime/playtime_private.py": "c8337d550ea2ca5ea27e49279566617dd76e4b762c471cac6ece6dec5ac2f061",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 66,
+        "name": "PlayTime",
+        "version": "3.2.5",
+        "sha256": "10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f",
+        "shim": null,
+        "calls": [
+          {
+            "method": "has_min_required_python_version",
+            "result": true
+          },
+          {
+            "method": "get_current_user",
+            "result": null
+          },
+          {
+            "method": "set_current_user",
+            "result": null
+          },
+          {
+            "method": "get_current_user",
+            "result": "76561198000000001"
+          },
+          {
+            "method": "fetch_playtime_information",
+            "result": []
+          },
+          {
+            "method": "add_time",
+            "result": null
+          },
+          {
+            "method": "get_game",
+            "result": {
+              "game": {
+                "id": "424242",
+                "name": "Private Alice game"
+              },
+              "totalTime": 300
+            }
+          },
+          {
+            "method": "set_game_tracking_status",
+            "result": true
+          },
+          {
+            "method": "add_time",
+            "result": null
+          },
+          {
+            "method": "remove_game_tracking_status",
+            "result": true
+          },
+          {
+            "method": "set_current_user",
+            "result": null
+          },
+          {
+            "method": "fetch_playtime_information",
+            "result": []
+          },
+          {
+            "method": "get_game",
+            "result": null
+          },
+          {
+            "method": "add_time",
+            "result": null
+          },
+          {
+            "method": "get_game",
+            "result": {
+              "game": {
+                "id": "424242",
+                "name": "Private Bob game"
+              },
+              "totalTime": 600
+            }
+          },
+          {
+            "method": "set_current_user",
+            "result": null
+          },
+          {
+            "method": "get_game",
+            "result": {
+              "game": {
+                "id": "424242",
+                "name": "Private Alice game"
+              },
+              "totalTime": 300
+            }
+          },
+          {
+            "method": "get_current_user",
+            "result": null
+          },
+          {
+            "method": "set_current_user",
+            "result": null
+          },
+          {
+            "method": "get_game",
+            "result": {
+              "game": {
+                "id": "424242",
+                "name": "Private Alice game"
+              },
+              "totalTime": 300
+            }
+          },
+          {
+            "method": "set_current_user",
+            "result": null
+          },
+          {
+            "method": "get_game",
+            "result": {
+              "game": {
+                "id": "424242",
+                "name": "Private Bob game"
+              },
+              "totalTime": 600
+            }
+          }
+        ],
+        "discovered": [
+          {
+            "name": "PlayTime",
+            "version": "3.2.5",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateSessions": {
+          "publishedArchiveMembersUnmodified": true,
+          "backendSourceSha256": {
+            "main.py": "a29c2898e40cc51c8d6559c89fc502042ca2ceafa000f6d95722311bd90d98dd",
+            "py_modules/time_tracking.py": "edab806859b077fd2826acb00404297564c88cf042ce9cfad5396a079da91b6c",
+            "py_modules/tests/helpers_test.py": "8d6fd54cf56ed2938fd39670176dd7467377257e4f61772af92b83108295d5c6",
+            "py_modules/tests/main_test.py": "5919d8d7a335fac562310de99fbf69312fd23a701c62730094a3df52da67a8c6",
+            "py_modules/tests/utils/camel_case_test.py": "a2fbfe7f46b296bc50b46a6b8372a11f00691079461b09f0edc40ec710f262fe",
+            "py_modules/tests/association_manager_test.py": "1cb2c897cd874d75e8f4ff51b5856bc75e85187926b719fcf32708ed3a7e43f7",
+            "py_modules/tests/helpers.py": "6de3062794bed6a855f155849da029d8bca4eea4e6a2d446cb27cb3f88ceb740",
+            "py_modules/tests/games.py": "43c70dd0304ab26953455954633b3aadcb7d8c4c8476edd252565edd06f29139",
+            "py_modules/tests/files_test.py": "be8a6c64d6c82fcb0b56f681d0f3ef4d09398088f2345c828f5695c90dadbf79",
+            "py_modules/tests/db/dao_test.py": "cda50c55b9d5d7520c29476db2a817e1974c76c868c7adbce4c65f3327234333",
+            "py_modules/tests/db/migration_test.py": "71336cc6fb92fb82bed0bfff7bbf916bdf8e6ce7c0007d0d45a07f5d96c95866",
+            "py_modules/tests/db/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/tests/user_manager_test.py": "619b85738c8ffaab38e9605df7e9d0c2e589887ec3a9a5121fff4d481c361794",
+            "py_modules/tests/tracking_manager_test.py": "6666f30e30d64b84d28a14eb5d52570cf277a16684d123a3cd572c2673f4935b",
+            "py_modules/tests/time_tracking_test.py": "a4485edfd073132b8930d616b24a73a3984efd3db2f5a7baa677436785c9c104",
+            "py_modules/tests/games_test.py": "b1ce514ec1a6ca3adbdc5033d5f36afe0b6255460275ef08b1771b167c7776de",
+            "py_modules/tests/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/dto/save_game_checksum.py": "5fd614d6b43d26ac9e369f0cb9c7c4fbee70dc14dcefa90a874189bd999681ac",
+            "py_modules/dto/statistics/daily_statistics_for_period.py": "ced6760d576de14ec9c6ca923f6cd91df50bd9934a6a61c22c695b408c7941b4",
+            "py_modules/dto/time/add_time.py": "261bff406324e3cf640f6fd23b7420573ab6087583872af8617988f05e62b3fd",
+            "py_modules/dto/time/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/dto/time/apply_manual_time_correction.py": "187347ae91e682c6df49c60c87cf50b04d75c1b8990b69e6ad1878f6cc40d594",
+            "py_modules/dto/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/utils/camel_case.py": "194b9871f4d4e1e97400a63598e7c9ada4bfec80864bc323ee80cc787e6af528",
+            "py_modules/helpers.py": "50dadb111632c85c5074bfd7f5733e2885de64279a7b7e6019aea49abb612906",
+            "py_modules/tracking_manager.py": "3201ba1a32a8737f3dfb212f904643a1e49563c20baa03a57b114ed2f251a062",
+            "py_modules/games.py": "1a555ede8a1bc3a0cb845edb026350cb6b3e3407ac20e3ecb36e8cf24020883d",
+            "py_modules/user_manager.py": "06e895f8f660da5dea3dea8c29aa3f727ac4d23d00b78e0ca8b37b910db00051",
+            "py_modules/files.py": "ef10119774bf8c56ac6f863afbd3726274441235e921d6544827aaebd364c201",
+            "py_modules/db/dao.py": "b7cd6f88757d7edef6f760f19c1de2a91170fbd74a90827534bca03aa0927029",
+            "py_modules/db/migration.py": "6e46657b288dab63de34fa37b54b321ca5f264ef6a9e493d49f691015a019f1e",
+            "py_modules/db/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/db/sqlite_db.py": "b2c8a86293d766dda3823986f3793ec9951fb6780bdb98a3278ee73ac0c557b7",
+            "py_modules/schemas/request.py": "ec6269091de287467adbdcac4b8a74dd8a30ce6e5fb22692b41ed095ce20dffe",
+            "py_modules/schemas/response.py": "1bbe6122c237066b6d55a033b17f6679f8c3d90ad7268eda4b5e585c7fe7d965",
+            "py_modules/schemas/common.py": "c0b668e966e7fb43338c282b348c8cca6b7d61d1cb3d0e0054c405144e176ed3",
+            "py_modules/schemas/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+            "py_modules/association_manager.py": "b860bb825615b0d52350ed0532b4ce889077887548139645dd78a5b60eb3e52e",
+            "py_modules/statistics.py": "b6aba3dbe44c731d97a4138c38939e609216b0467abf9ee8d3c46fab163db21a",
+            "py_modules/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+          },
+          "sessionReadbacks": [
+            {
+              "user": "76561198000000001",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Alice game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "tracking": []
+              }
+            },
+            {
+              "user": "76561198000000001",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Alice game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "tracking": [
+                  [
+                    "424242",
+                    "pause"
+                  ]
+                ]
+              }
+            },
+            {
+              "user": "76561198000000002",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Bob game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    600
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    600
+                  ]
+                ],
+                "tracking": []
+              }
+            },
+            {
+              "user": "76561198000000001",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Alice game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "tracking": []
+              }
+            },
+            {
+              "user": "76561198000000001",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Alice game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    300
+                  ]
+                ],
+                "tracking": []
+              }
+            },
+            {
+              "user": "76561198000000002",
+              "rows": {
+                "games": [
+                  [
+                    "424242",
+                    "Private Bob game"
+                  ]
+                ],
+                "sessions": [
+                  [
+                    "424242",
+                    600
+                  ]
+                ],
+                "totals": [
+                  [
+                    "424242",
+                    600
+                  ]
+                ],
+                "tracking": []
+              }
+            }
+          ],
+          "finalDatabases": {
+            "76561198000000001": {
+              "sha256": "ece0f50c5fb99d1304890ee0cea2bb421f3aa65f34480ee5507a3e20cd1b3026",
+              "kind": "read-only SQLite serialized snapshot",
+              "gzipBase64": "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"
+            },
+            "76561198000000002": {
+              "sha256": "00e740f473644b869e7cad94ce8f1ba48a35dac8c35aa1708784b2a00217d107",
+              "kind": "read-only SQLite serialized snapshot",
+              "gzipBase64": "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"
+            }
+          },
+          "ownedLoaderStops": [
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21434889500960708,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 19,
+                  "returncode": 0
+                },
+                {
+                  "pid": 20,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            },
+            {
+              "returncode": 0,
+              "elapsedSeconds": 0.21412800624966621,
+              "parentOnlySignal": true,
+              "ownedProcessCount": 5,
+              "adoptedChildExits": [
+                {
+                  "pid": 32,
+                  "returncode": 0
+                },
+                {
+                  "pid": 33,
+                  "returncode": 0
+                }
+              ],
+              "ownedProcessIdentitiesReaped": true
+            }
+          ],
+          "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: SDH-PlayTime\n[loader][INFO]: Loaded PlayTime (v3.2.5)\n[set_current_user] Setting user: 76561198000000001\n[UserManager] Setting current user to: 76561198000000001\n[UserManager] Initialized DAO for user: 76561198000000001\n[set_current_user] Successfully set user: 76561198000000001\n[add_time] Skipping tracking for game 424242 (status: pause)\n[set_current_user] Setting user: 76561198000000002\n[UserManager] Setting current user to: 76561198000000002\n[UserManager] Initialized DAO for user: 76561198000000002\n[set_current_user] Successfully set user: 76561198000000002\n[set_current_user] Setting user: 76561198000000001\n[UserManager] Setting current user to: 76561198000000001\n[UserManager] Using cached DAO for user: 76561198000000001\n[set_current_user] Successfully set user: 76561198000000001\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down PlayTime (v3.2.5)\n[plugin][INFO]: Stopping response listener for PlayTime (v3.2.5)\nCalling Loader unload function for PlayTime (v3.2.5).\nAttempting to unload with plugin PlayTime (v3.2.5)'s \"_unload\" function.\n\nGoodnight, World!\nUnloaded PlayTime (v3.2.5)\n\n[plugin][INFO]: Plugin PlayTime (v3.2.5) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: SDH-PlayTime\n[loader][INFO]: Loaded PlayTime (v3.2.5)\n[set_current_user] Setting user: 76561198000000001\n[UserManager] Setting current user to: 76561198000000001\n[UserManager] Initialized DAO for user: 76561198000000001\n[set_current_user] Successfully set user: 76561198000000001\n[set_current_user] Setting user: 76561198000000002\n[UserManager] Setting current user to: 76561198000000002\n[UserManager] Initialized DAO for user: 76561198000000002\n[set_current_user] Successfully set user: 76561198000000002\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down PlayTime (v3.2.5)\n[plugin][INFO]: Stopping response listener for PlayTime (v3.2.5)\nCalling Loader unload function for PlayTime (v3.2.5).\nAttempting to unload with plugin PlayTime (v3.2.5)'s \"_unload\" function.\n\nGoodnight, World!\nUnloaded PlayTime (v3.2.5)\n\n[plugin][INFO]: Plugin PlayTime (v3.2.5) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "loaderConsoleSha256": "4cd129b7d02c62b63d07dd03e5d36133eb7f6fc791b6f5fa36b3af654724a01e",
+          "privateSessionRpcVerified": true,
+          "perUserIsolationVerified": true,
+          "pauseSkipsSessionVerified": true,
+          "restartPersistenceVerified": true,
+          "automaticRecordingVerified": false,
+          "realSteamLibraryVerified": false,
+          "browserVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 private session writes, pause/resume, per-user SQLite isolation and loader restart persistence passed; automatic recording, browser, real Frame and VR unverified"
+      }
+    ]
+  },
+  "earlierAttempts": [
+    {
+      "sourceCommit": "7bcbcc8d586c0bc3c35bdf1067d81ac408e9c10e",
+      "exitCode": 1,
+      "limit": "Fixture did not collect adopted exited descendants after clean loader shutdown.",
+      "reportSha256": "8a70dd327dc1a542f87a511ee538ddcfc21ff119fecf7f6bdda9c120534d5d6a"
+    },
+    {
+      "sourceCommit": "1f81097e3e1cf5441cee2e8ab588d22b6c393de2",
+      "exitCode": 1,
+      "limit": "Completed RPC/restart checks, then an invalid fixture assertion required no WAL file. Final source uses explicitly closed read-only observers and serialized complete SQLite snapshots.",
+      "reportSha256": "5082fb7f3d19618aecf32fdffcbb1ba2cd90ddab9726af456f6dc32d2e5e20d3"
+    }
+  ]
+}

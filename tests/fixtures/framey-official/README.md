@@ -15,8 +15,12 @@ from a local fixture so CI does not depend on the store being online.
 `117.zip` was added from the digest-verified static audit cache on 2026-10-30.
 A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
+`66.zip` was added from the digest-verified repository-pinned audit cache on
+2026-10-31. No fresh live store metadata was read for this addition.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `66.zip` | PlayTime | 3.2.5 | `10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
 | `130-v102.zip` | Games Prefix Manager upstream GitHub release asset; **not in the Decky store on 2026-10-30** | 1.0.2 | `12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6` |
