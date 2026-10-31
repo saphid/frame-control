@@ -85,7 +85,9 @@ def main():
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
-              'tests/decky-runtime/free_loader_private.py', 'tests/decky-runtime/battery_private.py',
+              'tests/decky-runtime/deckyparty_private.py',
+              'tests/decky-runtime/free_loader_private.py',
+              'tests/decky-runtime/battery_private.py',
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
@@ -118,7 +120,8 @@ def main():
                     (134, '--reproduce-deck-progress-unload-regression'),
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression'),
-                    (67, '--reproduce-battery-tracker-unload-regression')]
+                    (67, '--reproduce-battery-tracker-unload-regression'),
+                    (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
