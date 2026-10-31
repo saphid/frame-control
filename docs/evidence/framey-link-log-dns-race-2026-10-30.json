@@ -1,0 +1,34 @@
+{
+  "auditedAt": "2026-10-30T23:50:03.278264+00:00",
+  "baseCommit": "aefc06d4dd1d6b566b2259983c0d61fad2aacdf0",
+  "trigger": {
+    "pr": 501,
+    "head": "c56cdfade22e1c2b5688a96569816357c9e9e43b",
+    "run": 41145645074,
+    "job": 124369987859,
+    "test": "test_link.Connecting.test_each_failure_goes_to_the_server_log_scrubbed"
+  },
+  "cause": "Concurrent missing-host DNS may remain resolving when the answering loopback address rejects SSH login. The test required unresolved even though the production failure summary correctly reported resolving.",
+  "change": "Accept waiting, resolving or unresolved for that concurrent hostname. Preserve the login category, address-kind and all hostname/IP privacy assertions.",
+  "productionCodeChanged": false,
+  "securityChanged": false,
+  "realFrameContacted": false,
+  "controlledReplay": {
+    "standInSsh": true,
+    "actualLoopbackProbe": true,
+    "unrelatedHostnameProbeHeldByEvent": true,
+    "beforePassed": false,
+    "afterPassed": true,
+    "ownedProbeThreadsReaped": true,
+    "fixtureSha256": "b6eb1b98fc4ecd5ac8dc65bd7fd5bb3a1049c667c552a32c8ae8f1497f2a9258"
+  },
+  "linkSuite": {
+    "passed": true,
+    "tests": 84
+  },
+  "logs": {
+    "before": "053c337b9f0233885ee80994fe7a2808883660069af9e6ef4bd6ad0f9a934edc",
+    "after": "854567bb7fca26148d28cada763cf9445372e3a386842c01e0d4fd1dbaf51d7b",
+    "suite": "ac98f9d564f8badd5f0fdc49f6bad2df337d274049b84175ed7097aaab0ae3c2"
+  }
+}
