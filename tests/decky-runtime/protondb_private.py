@@ -17,6 +17,19 @@ def snapshot(state):
                 parsed=json.loads(data))
 
 
+def verify_regression_stop(observation):
+    # Decky can log the same forced-stop warning twice while an outstanding
+    # RPC is cancelled. Retain the raw count; this negative requires at least
+    # one forced stop and complete owned cleanup, never a compatibility pass.
+    assert (not observation['cleanShutdownVerified'] and
+            observation['forcedPluginKills'] >= 1 and
+            observation['loaderReturncode'] == 0 and
+            not observation['exactDescendantsRemaining'] and
+            not observation['errors'] and
+            all(child['returncode'] == 0 for child in observation['adoptedChildExits'])), observation
+    assert 'Unloaded ProtonDB Badges (v1.3.4)' not in observation['console']
+
+
 def probe(backend, loader, env, log, processes, current, rpc, until_ready,
           report, state, saved, defaults, info, *, regression=False):
     evidence = report['protondbLifecycle'] = dict(stops=[], diskReadbacks=[],
@@ -65,10 +78,7 @@ def probe(backend, loader, env, log, processes, current, rpc, until_ready,
             assert before == after, 'shutdown must preserve exact private settings bytes'
             assert unrelated.poll() is None, 'unrelated sibling must survive'
             if regression:
-                assert (not observation['cleanShutdownVerified'] and
-                        observation['forcedPluginKills'] == 1 and
-                        observation['loaderReturncode'] == 0), observation
-                assert 'Unloaded ProtonDB Badges (v1.3.4)' not in observation['console']
+                verify_regression_stop(observation)
             else:
                 assert observation['cleanShutdownVerified'] and observation['seconds'] < 5, observation
                 assert observation['console'].count('Unloaded ProtonDB Badges (v1.3.4)') == 1
