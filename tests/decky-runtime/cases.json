@@ -135,7 +135,7 @@
   },
   {
     "id": 63,
-    "shim": null,
+    "shim": "free-loader-ipc-eof",
     "probe": "free-loader"
   },
   {
