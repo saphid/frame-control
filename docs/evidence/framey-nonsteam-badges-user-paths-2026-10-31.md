@@ -113,3 +113,32 @@ four local native/runtime images. Fresh final-head hosted AMD64/ARM64, full
 e2e, ownership and every package mode remain required. No real Frame, browser
 badge injection, active account selection, live search or controller check was
 performed, and compatibility stays partial.
+
+## Current main Wine Cellar integration, 2026-10-31
+
+Main `51841728090a45f9f452b4cd4ccf93f4caf8df14` was merged normally into the
+previous head `1016d0729866d7809f9925a716c4409ebb63f759`, producing frozen source
+`447d0445806557a20cc272e74582898aab7442ad`. The additive native-runner conflict
+retains both the Non-Steam original-path negative and Wine Cellar's prior-source
+unload negative. The Wine backend, compressed backend, IPC adapter and lifecycle
+helper match current main exactly. All catalog rows except Non-Steam match main;
+Non-Steam's complete record and exact archive remain unchanged from this PR.
+
+The [source-bound audit](framey-nonsteam-badges-main5184172-refresh-2026-10-31.json)
+records 91 passing focused host tests and targeted local native AMD64 checks.
+All twelve source fingerprints per report match the frozen source. Non-Steam's
+eight repaired/original literal RPC records, four parent-only zero-exit stops,
+private shortcut preservation, exact published-member hashes and complete
+consoles pass independent verification. Wine Cellar retains two clean parent-only
+stops with its exact helper reaped, then reproduces the prior-source zombie and
+forced plugin kill in the explicitly unqualified negative control.
+
+The pinned official-plugin HTTP/fake-Frame SSH install/remove test passed at the
+same source. Its uniquely owned containers, volumes, network and image tags are
+absent; targeted native containers and private image tags were also removed.
+Subsequent commits add this evidence only. Earlier hosted passes remain tied to
+their earlier heads: the refreshed final head still requires fresh complete
+CI/e2e, ownership, package modes and native AMD64/ARM64 qualification. The full
+native inventory now contains 41 probes and 34 published archive pins, with
+twelve source fingerprints; the targeted local replay does not qualify that
+full matrix. No real Frame or visible Steam badge behavior was tested.
