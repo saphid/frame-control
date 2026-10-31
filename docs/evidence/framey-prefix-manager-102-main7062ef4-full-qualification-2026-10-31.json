@@ -1,0 +1,77 @@
+{
+  "at": "2026-10-31T20:52:32.893074+00:00",
+  "sourceRevision": "c074ef85af3d4964b3ffd0b81f6e7460a6a724e2",
+  "priorHostedHead": "711d419a85a85ba0ca59e9b64a0ae6468abcb2fa",
+  "main": "7062ef4d81d7fa25e1562d22d0b1b92fa526b499",
+  "passed": true,
+  "normalMainMerge": true,
+  "allPrior18ChecksAndFiveRunsSucceeded": true,
+  "hostedArtifacts": 8,
+  "allPublishedZipDigestsVerified": true,
+  "sourceHashBindings": 1365,
+  "uniqueArtifactInputs": 150,
+  "allArtifactInputBytesUnchangedAtCombinedSource": true,
+  "nativeCasesPerArchitecture": 47,
+  "nativeRpcCallsPerArchitecture": 624,
+  "nativeInputs": 21,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "nativeRerunLocally": false,
+  "cleanStopSeconds": {
+    "x86_64": [
+      0.2138795230000028,
+      0.21395760499999028
+    ],
+    "aarch64": [
+      0.16379977000001134,
+      0.16371761300000287
+    ]
+  },
+  "allFourPriorHeadPackageModesQualified": true,
+  "productionParentHttpRequests": 65,
+  "packageBrowserScope": "Syncthing package controls; synthetic CEF; not Prefix Manager UI",
+  "store130Version": "1.0.1",
+  "githubVersion": "1.0.2",
+  "githubSha256": "12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6",
+  "githubCatalogStatus": "unverified",
+  "server": {
+    "tests": 1959,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 397.537,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "priorHostedE2eSkipNotErased": true,
+  "newHeadHostedChecksAndPackagesPending": true,
+  "globalCleanRuntime": false,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "56a05be685b01941ac4619513d7bd2033158d9754ec5c3fbbf6bf7b3536bfc9b",
+  "rawBytes": 952487
+}
