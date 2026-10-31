@@ -232,7 +232,15 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'deck-progress-private-tags':
+            if case['probe'] == 'ludusavi-dependency-discovery':
+                import ludusavi_private
+                report['dependencyDiscovery'] = ludusavi_private.exercise(
+                    current, plugin, data, record, backend, loader, env, log,
+                    processes, until_ready, rpc)
+                report['result'] = ('published Decky missing dependency report, bounded slow discovery, '
+                    'private executable fallback, restart and original negative regression passed; '
+                    'real Ludusavi backup/restore/cloud, browser and VR unverified')
+            elif case['probe'] == 'deck-progress-private-tags':
                 import base64
                 # Only private SQLite settings/manual tags are exercised. Do
                 # not call Steam sync, HLTB search or automatic tagging RPCs.

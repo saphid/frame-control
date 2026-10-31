@@ -1,0 +1,869 @@
+{
+  "at": "2026-10-31T03:55:00.670686+00:00",
+  "sourceCommit": "0a91fc6bbdd5b11f48b08bf7e7f5374d67a3c40c",
+  "sourceTree": "a1b6ceb3d33efee94612fabdbf260553987cdf66",
+  "trackedCheckoutCleanBeforeAndAfter": true,
+  "kind": "local isolated Fake Frame full suite; not hosted CI or real Frame",
+  "tests": 53,
+  "skips": 0,
+  "success": true,
+  "seconds": 392.15,
+  "catalog": {
+    "archives": 116,
+    "staticAuditErrors": 0,
+    "reusedPreviouslyVerifiedCache": true,
+    "seededCommittedArchives": 0,
+    "counts": {
+      "blocked": 47,
+      "installed-removed": 69
+    },
+    "metadataSource": "exact repository pins; no live store metadata read",
+    "registrySha256": "59db86c672ae9c28b8e623e4d786654be4b8699d72d3b980cae2c5366ed2f233",
+    "allArchiveDigestsRechecked": true,
+    "previousTransportOutcomePerIdUnchanged": true,
+    "observations": [
+      {
+        "id": 1,
+        "sha256": "b73c6b697b4f588b789d1d77be27e46512d4aa133df43128bbeafc48b1905892",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 7,
+        "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 10,
+        "sha256": "272f6f3cd66c5d5c9b50ff46463ad509c8afc014633febd22046ff1aee52ee0f",
+        "archiveValidation": "accepted",
+        "result": "blocked",
+        "reason": "ValueError: Not supported on Frame: Changes X11 gamescope color properties, not the Frame SteamVR compositor."
+      },
+      {
+        "id": 11,
+        "sha256": "a70f291d2ba681fb6757c0c7e139d3fadd9a350cf3f755a9a1f668cae18b8b8a",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: Fantastic/bin/backend",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 12,
+        "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 13,
+        "sha256": "4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 14,
+        "sha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 16,
+        "sha256": "fd5a090c2e2cd4da6723d7bd08937ab31b9f8d4663510431713da531343e303f",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service. Steam UI sound lookup is present as explicitly unsupported; the frontend still requires Steam m_GamepadUIAudioStore.m_AudioPlaybackManager, which is unavailable in the isolated panel."
+      },
+      {
+        "id": 18,
+        "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 19,
+        "sha256": "c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 21,
+        "sha256": "47614f53b8c538c4caa15f89a01e4ab106fa328e89f78545bacb3166d104d964",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: PowerTools/bin/libryzenadj.so",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 22,
+        "sha256": "69f4707c2a0580f64df260fbd3de205e068a825b620769038c7bdaec516c104e",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: memory-deck/bin/libscanmem.so.1.0.0",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: memory-deck/bin/libscanmem.so.1.0.0."
+      },
+      {
+        "id": 23,
+        "sha256": "f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 24,
+        "sha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 26,
+        "sha256": "bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 27,
+        "sha256": "20ceb9aa5327226326531d947e4a7a5318ba78b73f503266996a81877cffa536",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 28,
+        "sha256": "98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 30,
+        "sha256": "2698b31e53109b992e16f2e888a371a028a2c2719745261d4379d18bed9ac5c8",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 32,
+        "sha256": "344fce82cfb4800caccb4d6c0ec46e1ad6c9594a622d5baa0bb31286baf2d1a5",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 35,
+        "sha256": "e43ad27e0ecb0c46076791d453e9ec27ae906752a10bc6269d628cc530ea4e19",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: moondeck/python/externals/yarl/_quoting_c.cpython-313-x86_64-linux-gnu.so",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: moondeck/python/externals/yarl/_quoting_c.cpython-313-x86_64-linux-gnu.so. Frontend initializes; native CPython wheels and executables in the published archive are x86_64."
+      },
+      {
+        "id": 36,
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 37,
+        "sha256": "00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 38,
+        "sha256": "11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 40,
+        "sha256": "9450e54cbf28082d4513838d0dcd42bf04ffc08ae5a6472d0c1f88677782e3ef",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: ControllerTools/bin/backend",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: ControllerTools/bin/backend. Frontend audit failed: Audit blocks WebSocket."
+      },
+      {
+        "id": 43,
+        "sha256": "06411711b27101d438339000da3d91202d682862710b02ef3ddf2462e642448a",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 44,
+        "sha256": "a60cbe438226109a21a3eabf881a73460bfb9d70871b70a1508cfa17e3fed496",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: DeckMTP/bin/umtprd",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 46,
+        "sha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 48,
+        "sha256": "709746bfe2a7e19bda54b4de0b3f4a311053de10fa58aa070d421dbf92317ede",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 49,
+        "sha256": "b311d967ddf1b0f0046d36929645855891a40173e3a93f6f0cd8b1576b04b411",
+        "archiveValidation": "Unsafe plugin archive member",
+        "result": "blocked",
+        "reason": "ValueError: The exact official ZIP contains a 60,776,600-byte x86_64 rclone member, above the 30 MiB member limit and unusable on ARM64. Installation remains blocked."
+      },
+      {
+        "id": 50,
+        "sha256": "1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 52,
+        "sha256": "9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 53,
+        "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 56,
+        "sha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 58,
+        "sha256": "2cc576a7f60751306d690268e227df626e59d3733680ced753de4c116629a9cc",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 59,
+        "sha256": "1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 60,
+        "sha256": "7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 61,
+        "sha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 62,
+        "sha256": "04c853f6e0e20373d1262bf9a57a01f4123598797d73c8a52cdcc64cfe44845c",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: ts3-qs4sd/bin/ts3-qs4sd.so",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: ts3-qs4sd/bin/ts3-qs4sd.so."
+      },
+      {
+        "id": 63,
+        "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 64,
+        "sha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog. Shared Toggle value rendering is repaired; other listed blockers remain."
+      },
+      {
+        "id": 65,
+        "sha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 66,
+        "sha256": "10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 67,
+        "sha256": "91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 68,
+        "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 70,
+        "sha256": "adec614a26864f6747245bd78b45c7e4b2fa46200b5e7aa5f55f610d2daad870",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: MicroSDeck/bin/backend",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: MicroSDeck/bin/backend."
+      },
+      {
+        "id": 72,
+        "sha256": "60152ca9a49b3a7c4fe1ac89a2ccb3bada8c84de2c1869591e6e573165d9dd6d",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 73,
+        "sha256": "ff19cac1cab713e7f56bd5b850d5986cef4f2f9933303432e9c66de19868a3ce",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: EmuDecky/bin/hello",
+        "result": "blocked",
+        "reason": "ValueError: The exact archive contains an x86_64 bin/hello and requests root. Its backend _main also runs git reset --hard and git pull in the user's EmuDeck backend checkout on load. No managed install or EmuDeck command was run; this remains blocked."
+      },
+      {
+        "id": 74,
+        "sha256": "5f7decb4de48290f8eec15937486c9611aec0d25256515c97f98cf7ba30c79a4",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 75,
+        "sha256": "f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 76,
+        "sha256": "6dfe1f821b0cfe2a61c95e49efd6cb2587d79ff3d1e101e14fa80c12c7f6d89f",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 77,
+        "sha256": "baed8ba21589fec8cbeff6c31a83f010664ea3bbeac3d8e71d64e9a9f63fd346",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 78,
+        "sha256": "d7aaf6481a24c32c847aa1cd64cf23ba6fe73c5dc166587a2303494a42ae0486",
+        "archiveValidation": "accepted",
+        "result": "blocked",
+        "reason": "ValueError: Not supported on Frame: Targets Steam/QAM brightness shortcuts and a global Steam overlay; neither is attached to the Framey panel."
+      },
+      {
+        "id": 79,
+        "sha256": "3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 80,
+        "sha256": "7177850f8a818783525430b9f2fc4b63f49b9e665a63df2bd8c0abb660d9baad",
+        "archiveValidation": "accepted",
+        "result": "blocked",
+        "reason": "ValueError: Not supported on Frame: Targets a global Steam Deck screen-black overlay; the isolated panel cannot black out the Frame compositor."
+      },
+      {
+        "id": 81,
+        "sha256": "18e133b2e6203f16fd1ee2ed83b5a90bad34491515bef7ec1c82d525f0bfadef",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 82,
+        "sha256": "abe2eef5788cb3ff6e73fcb9783e30a54b127e28c761a9bf99e64ab5fc4be9ab",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: MagicPodsDecky/bin/magicpodscore",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: MagicPodsDecky/bin/magicpodscore. Frontend audit failed: Audit blocks WebSocket."
+      },
+      {
+        "id": 84,
+        "sha256": "f7ad2a0103c85bf308929b2e96ec9aeeb0d76bcc6ae97eb1e4b5f31ffba0cbb1",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 85,
+        "sha256": "2df6f8095acf2c6c71724dbbce8ebd34180880a3411f1a236b5b2143863dbc42",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: Decky-Undervolt/bin/libryzenadj.so",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 87,
+        "sha256": "5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 88,
+        "sha256": "321426191c123a354d66d5db57dc2a42eb7f3516bab24a294516b606baf94703",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 89,
+        "sha256": "2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 90,
+        "sha256": "e0115148305cd216e50bcfec8851fe3d1c6f3d36ae2f92113c199fc1bb2388e3",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 91,
+        "sha256": "d53d0b406d275312e9b6b586815b622c77a6657dfb75256441ba82337c4039b6",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 92,
+        "sha256": "19544af369622dac243874de99bc30485d1d8a27241fb05ca299b2d1dd39b2e0",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 93,
+        "sha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 94,
+        "sha256": "0e9ffd3ccc07b12f64541129189fe84184efb9242373d01fbc90395f4d6bfbbc",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 95,
+        "sha256": "e37d613ffab3096517aeafd176ab04d86e9c97ea42d32b9eacd6ba1d2bf873ab",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-spoof-dpi/bin/spoofdpi",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-spoof-dpi/bin/spoofdpi."
+      },
+      {
+        "id": 96,
+        "sha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 97,
+        "sha256": "14015d5a652c78b2041fd9668685573840530c306e414aabc0d3cebf95be0642",
+        "archiveValidation": "Plugin archive exceeds the 50 MiB download limit",
+        "result": "blocked",
+        "reason": "ValueError: The exact official 75,140,408-byte ZIP matches its published SHA-256 but exceeds Framey's 50 MiB managed download limit. Installation stays blocked; its OptiScaler and Proton game modifications are unverified on Frame."
+      },
+      {
+        "id": 98,
+        "sha256": "49309a02fa028d26c77230cc9f70fec9bcce91d59e887bfe8f9d3e42f8a19139",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 99,
+        "sha256": "4cacfcf96b11b423af41ec57cea915e26a0dac42fc03432dad1fcded135781a2",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 100,
+        "sha256": "b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 101,
+        "sha256": "d2638cd2943eabd2c449234855acc91e92990826cae8516dbb6a624f99b57c81",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 102,
+        "sha256": "d6cbedcd64430e1f94a2b12caf936ba270f1ceafe77c6252808ff39c88640b40",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 103,
+        "sha256": "8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 104,
+        "sha256": "65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 105,
+        "sha256": "4d892785ea5ebdc61e0584eb6c2a594344efd3ce657bbd1f000ba54971a080b6",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 106,
+        "sha256": "ae9cf06bb59aa5694409503828d341ae635bde5429a77c766b7256156c1ccc4f",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 107,
+        "sha256": "335285d75df623492a04bb1955f6f802075623de985f426d9baaaf0b100ed437",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 108,
+        "sha256": "96f8400be987d0a080e399eb108f773108eb662fe4875fcb95009dd265c1fb9c",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: HueSync/bin/hello",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 109,
+        "sha256": "7957de906e9b6721631fc0cd9a48e9524c1d7bb4371dfb183c391dfdf6d416d4",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Not supported on Frame: Calibration is specifically for defective Samsung Steam Deck OLED panels, not Frame displays."
+      },
+      {
+        "id": 110,
+        "sha256": "cb4d9091e0e28277c9e79625323f0898481cb5590d0a7ab58f4d80696225a4fc",
+        "archiveValidation": "accepted",
+        "result": "blocked",
+        "reason": "ValueError: Not supported on Frame: Changes gamescope/X11 dimming properties; no mapping to Frame VR display brightness exists."
+      },
+      {
+        "id": 111,
+        "sha256": "3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 112,
+        "sha256": "8e065d37b5c9d7f37203cb2ec9bc6cb54c136b901c998650c7c6ffb30aee8d46",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service. Frontend audit failed: window.SteamClient.UI.GetUIMode is not a function."
+      },
+      {
+        "id": 113,
+        "sha256": "ec59fc8aceb4e1abe2066b3a0707ed6313cabc4421b7c17765397903e2f8fd26",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 114,
+        "sha256": "d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 115,
+        "sha256": "2b96cc96ad3780a51fa794c250e821e15b3716851f4c96cb3d0a1e2f38890424",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 116,
+        "sha256": "a7659c79b74110476cc4458cb10530cdcb2539fa11bc8c759038a080eaa81049",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 117,
+        "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 118,
+        "sha256": "8b1ee429aece9330b83ea3fc2e7e27d007ac61a737169f20bda3f1a19ab95508",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 119,
+        "sha256": "d283bd9a5c35b3fac3788391736a6763f3e8c4615831a7c560c9fa6e6c0950ac",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-clipboard/bin/xclip",
+        "result": "blocked",
+        "reason": "ValueError: The exact archive is blocked by its x86-64 xclip binary and root request. Its published backend defaults to auto-starting an unauthenticated clipboard GET/POST API on 0.0.0.0:8765; this was inspected statically and never run on Frame."
+      },
+      {
+        "id": 120,
+        "sha256": "fb573890f5f87553893c08d6cb2fd8eaf87d54ce54383365e65e545634c55b3c",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: Reroll/bin/memscan.so",
+        "result": "blocked",
+        "reason": "ValueError: Frontend now initializes with inert game-action subscriptions, but the archive contains x86_64 memscan.so and requests root. No process-memory access was run."
+      },
+      {
+        "id": 121,
+        "sha256": "4be32fd39ce406e2276b21537c98afc00a8ed1b82a23ff0e01af552352fa48f8",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 123,
+        "sha256": "9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 124,
+        "sha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 125,
+        "sha256": "e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 126,
+        "sha256": "381ac8b915402176cf768d1ccc1bc29a6b82ea9255675f0a30c0c81ea5427225",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: decky-launch-options/bin/hello. Frontend audit failed: Cannot convert undefined or null to object. Shared Toggle value rendering is repaired; other listed blockers remain."
+      },
+      {
+        "id": 127,
+        "sha256": "3def99993c412b669933376b6420e44c68cd1fe9d9baf14b77a1f231242bd7e8",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 128,
+        "sha256": "187871a139862fc21d70286d8c1b2c2f0f7609604f88fc16415da71c4e56cef9",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 129,
+        "sha256": "2b97b769a49ac2a45f546090fc96d07e09e146020104d708a0efdad990687f8b",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 130,
+        "sha256": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 131,
+        "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 132,
+        "sha256": "248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 133,
+        "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 134,
+        "sha256": "784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 135,
+        "sha256": "b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 136,
+        "sha256": "31d4d66032eb778140b96c0b27e53cb5e969395bca6ffc288b1fa283ecfb2401",
+        "archiveValidation": "Plugin contains a non-ARM64 Linux binary: Decky-Clipper/bin/gstreamer-1.0/libgstproxy.so",
+        "result": "blocked",
+        "reason": "ValueError: Plugin contains a non-ARM64 Linux binary: Decky-Clipper/bin/gstreamer-1.0/libgstproxy.so."
+      },
+      {
+        "id": 137,
+        "sha256": "e7b98a7ca8817ef08584ed0828eee8702631af33daccc229075a012eca91f731",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 138,
+        "sha256": "c4f9760724bfdae0581a64252a9504c225f0f9a7fc378b2ade1891e2755aae01",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 139,
+        "sha256": "a13202785b57a91462c431bb14c3fbdcbabab00822a197ea592bc375f20a9972",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 140,
+        "sha256": "0198bdc752ff001ee704a85b15b4d5ad40cf03bdafd0fce67e3c21f01654e36f",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: Root plugins are not supported by the Frame user service"
+      },
+      {
+        "id": 141,
+        "sha256": "02a08172c878e9fe92c090df07b271190cc3f7d2b2330d05eedb027122fc7b32",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 142,
+        "sha256": "4df068dc0b479a4028c3270bec544dadafe3dea63455ce05926c8dc183350ff9",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      },
+      {
+        "id": 143,
+        "sha256": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 144,
+        "sha256": "4b3546170e5fbd5f9afad3b24555498ee51caac7cec9e4c86321b18cdd4b5106",
+        "archiveValidation": "accepted",
+        "result": "installed-removed"
+      },
+      {
+        "id": 145,
+        "sha256": "7c01464c55d895651295b7fae9b6258ddf570bc84ab3265fe9582102b43fa400",
+        "archiveValidation": "This plugin needs root and is not supported by the Frame user service",
+        "result": "blocked",
+        "reason": "ValueError: This plugin needs root and is not supported by the Frame user service."
+      }
+    ]
+  },
+  "runner": {
+    "canonicalScript": "scripts/framey-audit-fake.py",
+    "canonicalScriptSha256": "0fe689d2c6746f4dc175fd2c9ea6c99401742b21a59b3d50667000bc0b2562ee",
+    "executedRunnerSha256": "79b270e93ffd568babd341da69cd9112c7abfd0cb808a63d77172553690988ad",
+    "changes": "exact source root; full unittest discovery; unique project-owned image tags and matching Compose overrides; live Docker input capture; remove only owned image tags after owned Compose cleanup"
+  },
+  "ownedProject": "framey-catalog-9362b3b147",
+  "containerImages": {
+    "fakeframe": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+    "host": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+  },
+  "cleanup": {
+    "ownedContainersRemaining": 0,
+    "ownedVolumesRemaining": 0,
+    "ownedNetworksRemaining": 0,
+    "ownedImageTagsRemaining": 0,
+    "sharedSimulatorSelected": false
+  },
+  "sourceSha256": {
+    "scripts/framey-audit-fake.py": "0fe689d2c6746f4dc175fd2c9ea6c99401742b21a59b3d50667000bc0b2562ee",
+    "scripts/framey-audit-store.py": "6ae2ed7e14560e8b9cd90b3adb168faaf229faea17685a417bd964d1644aedea",
+    "tests/e2e/harness.py": "98f9ee59e79281d803e87e56f66dc8ca2edab401a99009bb077d47da815bf9dc",
+    "tests/e2e/test_agents.py": "eedfad53dbf89be1a3146b5b2eca78666b7ca88be2226478571bb6778900c0be",
+    "tests/e2e/test_android.py": "366df4b7fdcc52711abc9ea48f9e0d320d198511431bd61c83fa334cc994dd3a",
+    "tests/e2e/test_device.py": "d5ea2903e7dbbba862490340d53dcadac6b836360d6ff01c02cef22702514119",
+    "tests/e2e/test_doctor.py": "ca4c947295f76ae4c31f6f59868bf11e6317189bac1cfce037eaed9d3d40e9d7",
+    "tests/e2e/test_faults.py": "f6d3959b18c4be08abb5f19b35bff9b05a140c27d86b44fc73a2835489765bb3",
+    "tests/e2e/test_framey.py": "66d66a888c8f6a1375b35b505bc8c06423b8d7a3204fa8ca7c47e624e2d986a6",
+    "tests/e2e/test_framey_catalog.py": "108cdaa3e64c56324a01f7ad256f14f80a0a6819c0de7413afe50e143860d34b",
+    "tests/e2e/test_media_transfer.py": "785a49298306732d8249bbd3784f8cb0ca95caedc00d2da6e3bfe5f6acab2016",
+    "tests/e2e/test_pairing.py": "dc2f77341d74905376e443215872d4b26a15326143586f6de18007bef75963bb",
+    "tests/e2e/test_recovery_kit.py": "9a4ccfcb33f85997faee10e231d6e1f83a7a1745bf3105c7bdb96ea31e647a10",
+    "tests/e2e/test_running.py": "b6b7b6c1059d97076c32588e2acaa67bce0948e866536290322d629830fa304d",
+    "tests/e2e/test_titles.py": "8a6473a41bc5c6355320ac65196c09d720d4be8b9a7f96c7c287966e03e06f4d",
+    "tests/fakeframe/Containerfile": "55c56a8d047f50d9c892028c373d228bd674c2b364b4322d82765a4e26ab0804",
+    "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f",
+    "tests/fakeframe/host.Containerfile": "6faccc39e4765050f57e82ce4ba1e66609a6a3fb4c23fc4461c846d39e0fd933",
+    "tests/fakeframe/host/entrypoint.sh": "8aaadd29086fdabfc69a19cae0bd670debb588e90fdb85dfff209d3250375403",
+    "tests/fakeframe/rootfs/etc/ssh/sshd_config": "254a178e58d984beccbe004440fec0295f6ccb9edb1c5698e4ea1cb8edc50c99",
+    "tests/fakeframe/rootfs/home/steamos/.steam/steam/steamapps/common/FEX-Emu/usr/bin/FEX": "0fcd66124645adc7cc8014081b1ac78d5719ebf6a1bfdb348a0b067018e1ac55",
+    "tests/fakeframe/rootfs/usr/bin/steamos-polkit-helpers/steamos-enable-sshd": "d74145dd10c0e14add51e3a7335b2fe5bf190a5fab378ff05a6b00f5de1252a0",
+    "tests/fakeframe/rootfs/usr/lib/os-release": "c08eb8e9a0b7541fc8ff3e6109bed0c43acf6dd5d1dfdbfe9ae7c7d6dd5820b6",
+    "tests/fakeframe/rootfs/usr/local/bin/fakeframe-ctl": "89a2f45f3692717df9a293ca854626cbc16c09d5fec6c2161b235c1b9407feca",
+    "tests/fakeframe/rootfs/usr/local/bin/flatpak": "59eaaa06e9267a79d657135908474638351eda2dfa5aa4d53bcc8b0e8f56de93",
+    "tests/fakeframe/rootfs/usr/local/bin/gamescopectl": "7094db718e97cf59f0a3f01ac550456c7705218399063bd54623afa369aee764",
+    "tests/fakeframe/rootfs/usr/local/bin/nmcli": "62572a22361467bf2a7af42d3434a879b564406420d30fdc22827685bf85614d",
+    "tests/fakeframe/rootfs/usr/local/bin/podman": "c0ee5a4459216a128f325a73d663b85288f155c07ee5ecee1777ec04ca19c892",
+    "tests/fakeframe/rootfs/usr/local/bin/qdbus6": "72b630ef7b8d38c0209dc5e51ea0ac21706f79117b3eba1d3a80c363329a4617",
+    "tests/fakeframe/rootfs/usr/local/bin/steam": "d249c6e50569ec4627350d7651fd1168d1c93232127c80c65d5f96374098b19f",
+    "tests/fakeframe/rootfs/usr/local/bin/systemctl": "5945d4afe9301addf681393b6083dd0b4652659c69708879554b9cd27479edf8",
+    "tests/fakeframe/rootfs/usr/local/bin/wpctl": "9cf820421e88e5e7d4c92fed52e6c9e3eebec8b9cb229839f3a901a0f0b11c5f",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/canvas_stub.js": "e686db446bb2e7e542f78be5410250abc4344567cf8b59ab1310e6e923a2ef5f",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/cef_shim.js": "e0e2402c936e972b4d8c8108d4d436df6017fd64c05ffe55b6917f2d592172e8",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/fakeframe_state.py": "987c9db07d23277456fd0ec104d31f5a065deca365aa647dd243794142e88b06",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/fakesteam.py": "443121278d92539349a301b8e878b216945d23dd8784f41a1aac91a28579f9e9",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/init.py": "8075580e0ed9ec09ab7f36dab96dfc6c1ec7a2711fb7ff76e7d45fc69a1b604a",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/lepton.py": "a53733a886d0a453ce3d70ad69408636a4b1a03a9cf5be8ab72522aac07415fe",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/pystubs/dbus/__init__.py": "93eca6a67f0b068e7b4c8bc2947fd906809816f5f05c47b690f91ec9c4db89a3",
+    "tests/fakeframe/rootfs/usr/local/lib/fakeframe/pystubs/dbus/exceptions.py": "62d9c5c4409a3d540db41bba3dc45d5c560257778e24979aee6750176223b455",
+    "tests/fakeframe/sim/Containerfile": "27dd4af3228183f4fdbc846bcab8222da2a364c761e9317d92481869c004386b",
+    "tests/fakeframe/sim/compose.yaml": "3fcf9418350cad3231fb9196caa8d06ecc35c13f18b6808dbe6a6ed5b4632b8f",
+    "tests/fakeframe/sim/openvr/fake_openvr.c": "894d23fe690aefe7a679d69cd07574fed81f142fc8cb3d07f209c7a16ba6a7e3",
+    "tests/fakeframe/sim/rootfs/opt/steamvr/bin/linuxarm64/vrcmd": "6579b9bbe5d8c1f641274de5c846a389f969b2db114dcbc952c172e9eb45b28b",
+    "tests/fakeframe/sim/rootfs/usr/local/bin/ffmpeg": "66bc6d61c1895c251187bdb03814c068c9f14f6244c97172299f2fc54fa88c5e",
+    "tests/fakeframe/sim/rootfs/usr/local/bin/frame-sim-ctl": "31cc589ca0436bb71ecb3ae7b8a14c75ec2dc4d94fe06d2fe2b83f87353a4525",
+    "tests/fakeframe/sim/rootfs/usr/local/lib/fakeframe/launcher": "4ebf3f0cc30e14235dfa45d36dc0763404b2aee7d320292cc7361d638c4b99cd",
+    "tests/fakeframe/sim/rootfs/usr/local/lib/fakeframe/sim/scene.py": "07e82e9f8a9675e38d68f03763dc5072751a57b1abf4c65fa8edf211a8a2eebd",
+    "tests/fakeframe/sim/rootfs/usr/local/lib/fakeframe/sim/sim-init": "caefaa000b58af9e63984b7d0f98229a536903aa8f7e454797d3926181822c72",
+    "tests/fakeframe/sim/rootfs/usr/local/lib/fakeframe/sim/simstate.py": "a9328e4debf2baa42c37fb279f073070b24ad7f8a8d65cde45deddbc30606c8e",
+    "tests/fakeframe/steamos-devkit-service/LICENSE": "9ddf6f5103aecc4ea6b0a4bfbcb769a2b732117d9aa5c7c91f3f0ad329f40738",
+    "tests/fakeframe/steamos-devkit-service/README.md": "de0830ce8ab3d5511094dd721a7a245d653f31c6f6cebdc5be8abea764dca814",
+    "tests/fakeframe/steamos-devkit-service/hooks/approve-ssh-key": "9753faa940852def1a86b22d886c60480dfafac0a2dd79043b3c4830200fb3c9",
+    "tests/fakeframe/steamos-devkit-service/hooks/devkit-1-identify": "d84b54cf3a2fa0191aa0c725d9d65804019a5e30c2cf547cfea5efe039dbff1b",
+    "tests/fakeframe/steamos-devkit-service/hooks/devkit_utils/__init__.py": "e81206faf2cf0c4bce3a3090eba6108d62b14c64efaecc1f30c797b3c37b6e67",
+    "tests/fakeframe/steamos-devkit-service/hooks/install-ssh-key": "68e29446a1569959131480021fd91115c0147c455331a79bb772af7fba0817ab",
+    "tests/fakeframe/steamos-devkit-service/src/steamos-devkit-service.py": "8f220ace81bb5828b404831e668fea8c50486bc7a5d533e851ef5377d54280b2",
+    "tests/framey_official.py": "3618bcd1faca19bb53494891036faef2014d803d7cbe381287253b0ce039a938",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    "ui/frame_steam.py": "7662a9fa60c6b263b96ad84d63d83ee3e8d299b04e34fe5af37c441e3e2a73e3",
+    "ui/frame_touch.py": "85bd7630e00cd7cfa24798e9601997d96ff1dd9639e3662bcb87940e335b5930",
+    "ui/framey-compatibility.json": "59db86c672ae9c28b8e623e4d786654be4b8699d72d3b980cae2c5366ed2f233",
+    "ui/index.html": "ae864f88cd32e246788f71d71e8bbe96282e950ad3d0e0721a7562a456d28e07",
+    "ui/server.py": "ccdf981376a8f910e6fb423f3fed3bd3b314bbb8cb02ed427365031286989f10"
+  },
+  "fullE2eLogSha256": "fabec6846393e6d45b678fbb2afb0d97cb1d2d5ae8d4112a2ff2f97739687a24",
+  "staticAuditSha256": "736633e43df1815a86ccca1130231e17381d52bd5766bbd02fcb5e662ffcf8aa",
+  "catalogResultsSha256": "6ed8774592b7f3dd34aba34486b26d9fcf24fd11a9d1e2d00aac49354d593c20",
+  "liveInputsSha256": "412589ba12419613a84cc60791f3b04f328e6ea375f92962dda9787f6daf1525",
+  "officialBackendCodeExecutedByCatalogAudit": false,
+  "compatibilityRatingsChanged": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "unverified": [
+    "official plugin backend functionality from this catalog transport run",
+    "real Steam CEF",
+    "real Frame",
+    "wearer-visible/controller usability",
+    "future release commit gates"
+  ]
+}
