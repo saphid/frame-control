@@ -63,8 +63,11 @@ process cleanup is audited independently.
 
 [Structured audit](framey-tabmaster-ipc-eof-2026-10-31.json) and
 [raw reports, failure, consoles, test logs and verifiers](framey-tabmaster-ipc-eof-2026-10-31-raw.json.gz)
-retain the results and all 16 native source fingerprints. The full native matrix
-was not repeated locally. Exact-head hosted CI/e2e, native AMD64/ARM64, ownership,
+retain the focused results and all 16 native source fingerprints. A subsequent
+[full AMD64 matrix and exact-main control audit](framey-tabmaster-full-native-main-controls-2026-10-31.md)
+completed all 43 candidate probes and retained additional Games Prefix Manager
+GitHub v1.0.2 and main ARM64 Simple Timer forced-kill blockers. It does not
+qualify global clean shutdown. Exact-head hosted CI/e2e, native AMD64/ARM64, ownership,
 PC, every triggered package mode, current-main CI, feedback, mergeability and
 integration gates remain required. This scoped local result does not qualify
 #520's earlier head; it needs integration and revalidation with this repair.
