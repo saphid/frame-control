@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -944,7 +944,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -952,7 +952,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -3928,7 +3928,7 @@
         "https://github.com/safijari/Shotty"
       ],
       "status": "partial",
-      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Existing copies need Update/reinstall. Update or reinstall existing copies to receive the child IPC EOF repair for unload. Fresh native unload qualification is pending.",
+      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Update or reinstall existing copies to receive the child IPC EOF repair. Local published Decky 3.3.0 AMD64 verifies two clean parent-only unloads and restart; restoring the previous managed source reproduces a forced plugin kill. Fresh ARM64 unload and full hosted qualification remain pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -9726,7 +9726,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
