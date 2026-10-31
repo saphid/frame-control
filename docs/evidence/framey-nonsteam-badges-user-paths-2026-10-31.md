@@ -189,3 +189,52 @@ successes are historical. No new browser/e2e run, visible Steam badge, active-ac
 selection, live Steam search, managed Frame or wearer/controller proof is claimed.
 Compatibility stays partial; no headset or hourly schedule was accessed and no
 release was published.
+
+## Refresh onto TabMaster main
+
+Frozen source `c92b841d7edc8c4b080b63969522fa49b4cc1a7b` contains a normal
+merge of main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` at
+`d87f5031e831040791450bf984a43459afa38248`, followed by a forward conflict
+resolution. No history was rewritten. Four fixture/coverage conflicts retain
+the complete Non-Steam Badges repair and probe alongside main's TabMaster
+fixture. All four files parse and contain no conflict markers. Tests and
+runtime evidence apply to the final frozen source, not the intermediate merge.
+
+Independent source checks preserve all 32 main probe conditions (37 branch
+bodies), all 34 main cases and TabMaster's exact archive; removing only the
+added TabMaster block reproduces the prior Non-Steam runner exactly. The
+complete managed backend repair is unchanged. All 116 install/status policies
+and the other 115 complete catalog records are preserved, as are main's
+keyboard/input, child IPC and native-console sources.
+
+All 94 focused host tests pass. A fresh private native AMD64 replay with the
+pinned published Decky 3.3.0 loader verifies all 15 native source hashes,
+original/managed backend bytes reconstructed from the exact published archive,
+all unchanged archive members, five repaired and three original-source RPCs,
+signed app-ID normalization, store classification, missing app-ID handling,
+malformed-VDF refusal and restart persistence. The original still returns empty
+mappings for the actual-user fixture. Four parent-only loader stops return
+zero. Complete available post-cleanup consoles and hashes are retained;
+JSON diagnostics remain unattributed. Preservation/reaping assertions remain
+source-bound, without complete independent process/filesystem snapshots.
+No newly owned native container or image tag remains.
+
+[Refresh audit](framey-nonsteam-badges-main0082d79-refresh-2026-10-31.json)
+and [raw native report, source audit and focused-test output](framey-nonsteam-badges-main0082d79-refresh-2026-10-31-raw.json.gz)
+retain the exact source, outputs and limits. The full native matrix is now
+43 probes, 35 archive pins and 15 source fingerprints per architecture.
+
+The prior head's failed native workflow is retained as a failure. It stopped
+in the separate DeckyParty reload gate covered by #518; this merge does not
+include or claim that repair. Old-head green checks/packages do not qualify
+the refreshed head. Main's three completed package modes are independently
+audited, including all 12 capture hashes and five visually inspected images;
+its ARM64 package job remains live at this audit. Fresh exact-head hosted
+checks/e2e, native AMD64/ARM64, ownership, every triggered package mode and
+final main/rules/feedback/integration gates remain required.
+
+Compatibility stays partial. Backend mapping RPCs do not establish visible
+Steam badges, active-account selection, live Steam search, browser/backend
+integration, managed Frame runtime or wearer/controller usability. Syncthing
+stays blocked and unselected. No headset or schedule was accessed; no release
+was published.
