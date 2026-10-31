@@ -500,7 +500,20 @@ class StoreTransaction(unittest.TestCase):
         folder = self.folder.parent/plugin['folder']
         source = (folder/'main.py').read_text(encoding='utf-8')
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['deck-settings-verified-tls'])
+        self.assertEqual(receipt['compatShims'], ['deck-settings-verified-tls', 'deck-settings-ipc-eof'])
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(source.count(prefix), 1)
+        self.assertEqual(hashlib.sha256(source[len(prefix):].encode()).hexdigest(),
+                         'eb067334d66a47cf6abbafa9ade1754d5e56089da9315473055a5de78a923f7e')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for member in original.infolist():
+                if not member.is_dir() and member.filename != plugin['folder']+'/main.py':
+                    relative = member.filename.split('/', 1)[1]
+                    self.assertEqual((folder/relative).read_bytes(), original.read(member), relative)
         self.assertEqual(source.count('ctx = ssl.create_default_context()'), 1)
         self.assertNotIn('ssl.CERT_NONE', source)
         self.assertNotIn('ctx.check_hostname = False', source)
@@ -521,6 +534,18 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove', plugin_id=93, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_deck_settings_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 93)
+        data = official_archive(plugin)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', data, plugin_id=93,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Deck Settings child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+        self.assertEqual(frame_decky_store.apply_script(93, 'a'*64), frame_decky_store.APPLY)
 
     def test_exact_steam_status_managed_copy_verifies_public_diagnostics_tls(self):
         from framey_official import PLUGINS, archive as official_archive
