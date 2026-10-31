@@ -175,6 +175,37 @@ that separate VM/native-build job is unknown. This targeted replay does not
 qualify a merge or release. A later main transition requires normal integration
 and fresh proof; no old hosted artifact substitutes.
 
+
+## Refresh onto main d3ae60e with complete available console retention
+
+Main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` was merged normally at
+`1b782a07da4d032de3f00ed4b0ee301d044f80b8`. The sole conflict combined
+main's `capture_runtime` context with the existing private MangoPeel fixture
+startup. Removing only the MangoPeel additions reproduces main's complete
+`check.py` byte for byte. The exact watch/IPC repair, helper and probe stay
+unchanged; all 116 catalog policies and the other 115 complete rows are preserved.
+Main's package gates are still incomplete; this integration does not qualify main.
+
+All 95 focused store, compatibility, runtime-coverage, native-console and Wine
+unload-evidence tests pass. A fresh isolated AMD64 published Decky 3.3.0 replay
+independently verifies all 16 native-source fingerprints and reconstructs the
+installed backend from the exact original archive plus the watch/IPC changes.
+Private profile writes, actual kernel callbacks, replacement watch, reload and
+parent-only final loader stop pass with exit zero and no forced plugin kill.
+The complete available post-cleanup console and its hash are now retained.
+Generic cleanup observes the loader already exited and terminates the owned
+inert auxiliary process group with SIGTERM; it records exit -15, without a forced
+kill. This is expected auxiliary cleanup, not a clean plugin-shutdown claim.
+No new owned containers or runtime image tags remain.
+
+[Current refresh audit](framey-mangopeel-maind3ae60e-refresh-2026-10-31.json)
+and [raw source audit, unit log and native report](framey-mangopeel-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+retain the result. Fresh final-head hosted checks/e2e, full native matrix
+(41 probes / 34 archive pins / 16 source fingerprints on each architecture),
+ownership and all triggered package modes remain required. Previous-head
+hosted successes remain historical. Global clean plugin shutdown, actual
+MangoHud overlay and real-headset/controller behavior remain unverified.
+
 ## Limits
 
 The fixture process supplies a private `MANGOHUD_CONFIGFILE` through real `/proc`
