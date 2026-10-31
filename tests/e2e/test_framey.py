@@ -213,6 +213,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      hashlib.sha256(prefix+original).hexdigest())
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
                                      hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if plugin['id'] == 61:
+                    self.assertEqual(found[0]['compatShims'], ['tabmaster-json-file-restore'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertNotIn('Update or reinstall', found[0]['compatibility']['reason'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356')
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
