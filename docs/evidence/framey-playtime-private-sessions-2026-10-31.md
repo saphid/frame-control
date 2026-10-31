@@ -138,3 +138,15 @@ feedback and mergeability gates. Previous-head green results are historical.
 Compatibility stays partial. No automatic recorder, integrated browser,
 existing database migration, game lifecycle hook, Steam library, managed Frame,
 wearer/controller or release proof is added.
+
+## Current-main refresh: 0082d79
+
+Normal merge `52b463afa4536be1c1782185b0b01e9941b9c268` combines prior head `6e4f20ef8100bbbfc4d6cae7e37a895bd7dc7ea6` with main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4`. Conflict resolution preserves both complete PlayTime and TabMaster fixture records/probes. Independent checks preserve every main probe/setup body and all 34 main cases, the previous complete PlayTime probe/helper, main production bytes, all 116 status/install policies and other 115 complete catalog rows. No recorder/observer behavior is changed.
+
+The refreshed source passes 92 focused tests and a fresh isolated AMD64 published Decky 3.3.0 replay: 22 literal RPC results, 40 original Python hashes, six SQL stage readbacks, two independently decoded/integrity-checked SQLite snapshots and two scoped zero-exit parent-only stops. All 16 native-source fingerprints match. Available console text/hashes and complete focused output are retained; complete process snapshots remain absent. No native fixture containers or tags remain.
+
+[Current refresh audit](framey-playtime-main0082d79-refresh-2026-10-31.json) · [raw report, snapshots, available consoles and test output](framey-playtime-main0082d79-refresh-2026-10-31-raw.json.gz).
+
+The previous head's hosted native/core/e2e and all four signed-package modes were independently audited, including 12 browser capture payloads/5 unique images. Standalone captures show both devices; production-parent captures clip device rows at the iframe bottom and retain the published broken/non-ARM64 warning. Those historical results do not qualify this refreshed head. Fresh checks/e2e, native AMD64/ARM64 and every triggered package mode remain required; the full native matrix is now 42 probes / 35 archive pins / 16 source fingerprints per architecture. Exact main's own remaining gates, integration and feedback review still apply.
+
+Compatibility stays partial. No automatic recording/private MobX observer, browser/game lifecycle, Steam library, managed Frame, wearer/controller, global clean plugin shutdown or release proof is added. No headset or hourly schedule was accessed.
