@@ -259,6 +259,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 46 and digest == 'ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STEAMBACK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 93 and digest == '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_SETTINGS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 63 and digest == '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_FREE_LOADER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1499,6 +1502,25 @@ def split_by_app(data):
                     raise RuntimeError('Deck Settings TLS source changed')
                 main.write_bytes(data.replace(unsafe,b''))
                 compat_shims.append('deck-settings-verified-tls')
+            # Preserve the verified TLS repair above. The child-local EOF
+            # adapter lets the original unload hook run after an IPC disconnect.
+            if int(plugin_id)==93 and digest=='23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132' and folder=='decky-game-settings':
+                main=unpacked/'main.py'
+                previous=main.read_bytes()
+                if hashlib.sha256(previous).hexdigest()!='eb067334d66a47cf6abbafa9ade1754d5e56089da9315473055a5de78a923f7e':
+                    raise RuntimeError('Deck Settings managed TLS source changed')
+                ipc=globals().get('FRAMEY_DECK_SETTINGS_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Deck Settings child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Deck Settings child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+previous
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('deck-settings-ipc-eof')
             # The exact SuggestMe archive disables hostname and certificate
             # checks if certifi context creation fails. Keep the system CA
             # fallback verified before any credential-bearing API request.
