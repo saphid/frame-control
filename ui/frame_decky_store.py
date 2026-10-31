@@ -251,8 +251,14 @@ PSUTIL_DIGESTS = {
 }
 
 
+DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'
+
+
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 53 and digest == 'ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe':
         source = Path(__file__).with_name('framey_shotty.py').read_text(encoding='utf-8')
         return 'FRAMEY_SHOTTY_SOURCE = '+repr(source)+'\n'+APPLY
@@ -422,6 +428,34 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==103 and digest=='8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'
+                    and folder=='decky-ludusavi'):
+                helper=unpacked/'py_modules/ludusavi.py'
+                original=helper.read_bytes()
+                if (manifest.get('name')!='Decky Ludusavi' or manifest.get('api_version')!=1
+                        or hashlib.sha256(original).hexdigest()!=
+                        'c34c829b7f8d0ac5254b54a3fa1050738cf7b56392e84ee2c6892ea6f6c69d46'):
+                    raise RuntimeError('Ludusavi helper differs from pinned archive')
+                source=original.decode('utf-8')
+                source=source.replace('        self._set_env()\n',
+                    '        self.bin_path = None\n        self.version = ""\n        self._set_env()\n',1)
+                source=source.replace('                text=True,\n',
+                    '                text=True,\n                timeout=5,\n',1)
+                source=source.replace('except subprocess.CalledProcessError as e:',
+                    'except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:',1)
+                helper.write_text(source)
+                compat_shims.append('ludusavi-dependency-discovery')
+            if (int(plugin_id)==134 and digest=='784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'
+                    and folder=='deck-progress-tracker'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Deck Progress Tracker' or manifest.get('api_version')!=1
+                        or flags!=[] or hashlib.sha256(original).hexdigest()!=
+                        'd390c5b1375f0cd1260599d5477b135f91d6c0e7921deff0055c272cd9854d4f'):
+                    raise RuntimeError('Deck Progress backend differs from pinned archive')
+                (unpacked/'py_modules/framey_decky_ipc.py').write_text(FRAMEY_DECK_PROGRESS_IPC_SOURCE)
+                main.write_bytes(b'# Frame Control: repair child IPC EOF for the exact Deck Progress 1.3.6 archive.\nfrom framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'+original)
+                compat_shims.append('deck-progress-ipc-eof')
             if (int(plugin_id)==131 and digest=='0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'
                     and folder=='decky-download-all'):
                 frontend=unpacked/'dist/index.js'

@@ -65,6 +65,34 @@ captured configuration is not presented as final-run evidence. No real Frame,
 shared simulator, pre-existing user data or active Steam session was contacted
 or changed.
 
+## Refresh against current main
+
+Main `4049722d1f52d06ef76216ef3ea39103e599ff54` is merged normally,
+without rewriting branch history. Six additive conflicts retain PlayTime,
+Ludusavi dependency discovery, Deck Progress and its unchanged-original unload
+negative control. All 116 catalog versions, digests, classifications and install
+policies match main; only PlayTime's explanation/evidence metadata differs.
+The keyboard handlers, server, IPC adapter and production plugin store code
+match that main byte for byte.
+
+The merged source passes 87 focused host tests. Targeted local native AMD64
+checks independently verify PlayTime's 22 literal RPC results, 40 original Python
+hashes, six SQL readbacks, two read-only SQLite snapshots and two clean parent-only
+loader stops. They also retain Deck Progress's 36 RPCs, four decoded SQLite
+snapshots, zero managed forced kills and two expected original forced kills,
+plus Ludusavi's three literal dependency results, original missing-dependency
+failure and four parent-only zero-exit stops. All ten runtime source fingerprints
+per report match the merged source; owned containers and image tags are removed.
+The resulting full native matrix contains 39 probes and 34 published archive
+pins; these targeted local checks do not qualify that entire matrix.
+
+Historical hosted qualification at `74eb426` remains scoped to that head.
+Fresh final-head hosted CI, e2e, AMD64/ARM64 native, ownership and all triggered
+package modes remain required, along with current-main, feedback and mergeability
+gates. The keyboard event regression also passes its five tests on this source;
+that remains device-boundary test-double evidence. No real Frame, live Steam
+session, automatic recorder, new browser or physical-controller proof is added.
+
 ## Limits
 
 This probes explicit backend RPC with synthetic timestamps. Automatic recording

@@ -501,5 +501,59 @@
       "limit": "Completed RPC/restart checks, then an invalid fixture assertion required no WAL file. Final source uses explicitly closed read-only observers and serialized complete SQLite snapshots.",
       "reportSha256": "5082fb7f3d19618aecf32fdffcbb1ba2cd90ddab9726af456f6dc32d2e5e20d3"
     }
-  ]
+  ],
+  "refreshAgainstMain": {
+    "baseMain": "4049722d1f52d06ef76216ef3ea39103e599ff54",
+    "previousHead": "74eb426aa9e91f3dc518c99729051a3fc2e1722b",
+    "normalMerge": true,
+    "historyRewritten": false,
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "006198a4fe82f144e01c9efcf76b54066898e915713e833c19b736fe890460b1",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "8fbcae3ec6c189cfe56d8fb542d2d9aa74ed267adbfca7b1a38b9d805a60d9f0",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "b0d52b1b8e3cb9082d0d74eeb6c472174e2aa25af89fa849e3a8e6c7d5406f48",
+      "tests/framey_official.py": "4797e17bee52fdf135c7c6a5e1dea1613e99709bd899dcccd5a24c1b5de5edb6",
+      "ui/frame_decky_store.py": "c8e24af778cbf4792e59ff34d94f1d09199562dba64d4566478dd259c3df3f45",
+      "tests/decky-runtime/playtime_private.py": "c8337d550ea2ca5ea27e49279566617dd76e4b762c471cac6ece6dec5ac2f061",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "audit": {
+      "tenSourceFingerprintsVerifiedPerReport": true,
+      "playtimeRpcs": 22,
+      "playtimeBackendHashes": 40,
+      "playtimeSqlReadbacks": 6,
+      "playtimeSqliteSnapshots": 2,
+      "playtimeParentOnlyZeroExitStops": 2,
+      "deckProgressRpcs": 36,
+      "deckProgressDecodedSqliteSnapshots": 4,
+      "deckProgressManagedForcedKills": 0,
+      "deckProgressOriginalForcedKills": 2,
+      "ludusaviLiteralRpcs": 3,
+      "ludusaviOriginalNegativeRetained": true,
+      "ludusaviParentOnlyZeroExitStops": 4,
+      "ownedImageAndContainersCleaned": true,
+      "all116IdVersionDigestStatusAndInstallPoliciesPreserved": true,
+      "other115CatalogRowsUnchanged": true,
+      "mainKeyboardServerAndIpcUnchanged": true,
+      "inventoryCases": 39,
+      "publishedPins": 34,
+      "runtimeSourceFingerprints": 10
+    },
+    "focusedHostTests": {
+      "passed": 87,
+      "seconds": 14.371
+    },
+    "limits": [
+      "Local affected AMD64 probes only; fresh exact-head hosted full native/e2e/package/ownership/CI qualification required",
+      "No new PlayTime browser, automatic recorder, real Steam library, headset, wearer-visible or physical-controller proof",
+      "No release"
+    ],
+    "reportsSha256": {
+      "native": "19f49ae35db2672426af60e81273887aad3ffb99df7d2a4ea700048a0d3f72b7",
+      "playtime-native": "bb88ee1a4fc232d00296453ccbd4a2b187b61810a5002be68c6f95a55316b4cb",
+      "ludusavi-native": "1ab6f0095997271bd5090418799ceffe9e67a7bfb78c162f92658e8eda52abd1"
+    }
+  }
 }
