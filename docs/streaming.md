@@ -152,7 +152,10 @@ capture it.
 you're holding. On a phone the panel is a trackpad (drag to move, tap to click,
 two fingers to scroll, two-finger tap to right-click) plus a text field that
 types on the Frame. On a computer, clicking the pad passes your mouse and
-keyboard through to the Frame until you press Esc (⌘ is sent as Ctrl on a Mac).
+keyboard through to the Frame until you press Esc. Ctrl, Alt, Shift and Super/Meta
+use ordered press/release events; Command sends Linux Super in this tool. The
+Esc button and shortcut menu send keys that the host may reserve. See
+[supported keys, shortcuts and test limits](keyboard-input.md).
 
 Since Control (below), the pad goes through **gamescope's own input socket**
 ([`ui/frame_touch.py`](../ui/frame_touch.py)), so it reaches whichever panel has

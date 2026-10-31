@@ -8,7 +8,7 @@
  mod settings;
  mod util;
  mod watch_gamescope;
-@@ -27,16 +28,16 @@
+@@ -27,16 +28,17 @@
  use log4rs::encode::pattern::PatternEncoder;
  use log4rs::filter::threshold::ThresholdFilter;
  use std::convert::Infallible;
@@ -27,11 +27,12 @@
 -use sysinfo::{Pid, PidExt, ProcessExt, System, SystemExt};
 -use tokio::time::sleep;
 +use std::sync::Arc;
++use std::time::{Duration, Instant};
 +use tokio::net::UnixListener;
  
  const LOGFILE_WATCHDOG_ROLLING: &str = "watchdog.{}.log";
  const LOGFILE_WATCHDOG: &str = "watchdog.log";
-@@ -49,18 +50,32 @@
+@@ -49,18 +51,36 @@
      let watchdog_pid_path = PathBuf::from(args_iter.next().unwrap());
      let watchdog_log_dir_path = PathBuf::from(args_iter.next().unwrap());
  
@@ -40,6 +41,10 @@
 -        return ExitCode::SUCCESS;
 -    }
 -
++    if let Err(err) = bind_owner_lifetime() {
++        eprintln!("Watchdog parent unavailable: {err}");
++        return ExitCode::FAILURE;
++    }
 +    // Hold the same inode for the whole process lifetime. Never discover or
 +    // signal another process using a stale PID or an executable-name match.
 +    let _ownership = match acquire_ownership(&watchdog_pid_path) {
@@ -75,7 +80,7 @@
  
      setup_self_logging(&watchdog_log_dir_path);
      register_panic_hook(&watchdog_log_dir_path);
-@@ -84,13 +99,36 @@
+@@ -84,13 +104,36 @@
          }
      });
  
@@ -116,7 +121,7 @@
  }
  
  async fn handle<S>(
-@@ -121,36 +159,15 @@
+@@ -121,35 +164,56 @@
      write(pid_file_path, process::id().to_string()).unwrap();
  }
  
@@ -149,7 +154,38 @@
 -        .is_some()
 -    } else {
 -        false
--    }
++// Linux PR_SET_PDEATHSIG binds this helper to the spawning plugin thread.
++// Decky's five-second SIGKILL fallback cannot run Python's _unload callback.
++// This is a lifetime guard for our child, not PID-file/name-based discovery.
++unsafe extern "C" {
++    fn prctl(option: std::ffi::c_int, ...) -> std::ffi::c_int;
++    fn getppid() -> std::ffi::c_int;
++}
++
++fn bind_owner_lifetime() -> std::io::Result<()> {
++    use std::io::{Error, ErrorKind};
++    let parent = match std::env::var("FRAMEY_SYNCTHING_OWNER_PID") {
++        Ok(value) => value.parse::<i32>()
++            .map_err(|_| Error::new(ErrorKind::InvalidInput, "Invalid owning plugin PID"))?,
++        Err(std::env::VarError::NotPresent) => unsafe { getppid() },
++        Err(error) => return Err(Error::new(ErrorKind::InvalidInput, error)),
++    };
++    if parent <= 1 {
++        return Err(Error::other("Owning plugin is unavailable"));
++    }
++    // PR_SET_PDEATHSIG=1, SIGKILL=9 are Linux ABI constants on both targets.
++    if unsafe { prctl(1, 9 as std::ffi::c_ulong, 0 as std::ffi::c_ulong,
++                     0 as std::ffi::c_ulong, 0 as std::ffi::c_ulong) } != 0 {
++        return Err(Error::last_os_error());
++    }
++    // The expected PID comes from Python before fork/exec: a subreaper must
++    // not become our apparent owner if the plugin died before this guard ran.
++    if unsafe { getppid() } != parent {
++        return Err(Error::other("Owning plugin exited before helper startup"));
++    }
++    Ok(())
++}
++
 +fn acquire_ownership(pid_file_path: &Path) -> Result<File, Box<dyn std::error::Error>> {
 +    let file = OpenOptions::new()
 +        .read(true)
@@ -157,11 +193,20 @@
 +        .create(true)
 +        .truncate(false)
 +        .open(pid_file_path.with_extension("framey-lock"))?;
-+    file.try_lock()?;
-+    Ok(file)
++    // A killed predecessor receives its parent-death signal asynchronously.
++    // Allow a bounded handoff, but never bypass another owner's lock.
++    let deadline = Instant::now() + Duration::from_millis(500);
++    loop {
++        match file.try_lock() {
++            Ok(()) => return Ok(file),
++            Err(std::fs::TryLockError::WouldBlock) if Instant::now() < deadline => {
++                std::thread::sleep(Duration::from_millis(25));
++            }
++            Err(error) => return Err(error.into()),
++        }
+     }
  }
  
- fn setup_self_logging(dir: &Path) {
 --- a/backend/decky-syncthing-watchdog/src/lib.rs
 +++ b/backend/decky-syncthing-watchdog/src/lib.rs
 @@ -6,6 +6,7 @@

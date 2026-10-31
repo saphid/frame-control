@@ -5344,7 +5344,7 @@
         "https://github.com/FlashyReese/decky-wine-cellar.git"
       ],
       "status": "partial",
-      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 AMD64 and ARM64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge.",
+      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 AMD64 and ARM64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge and the child IPC EOF repair needed for clean unload. Native AMD64 unload is locally verified; fresh ARM64 unload qualification is pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -5382,7 +5382,8 @@
         "reason": "Exact managed archive installed and removed through fake Frame HTTP/SSH; receipt shim and ARM64 helper/managed Python SHA-256 checked. Plugin backend execution and VR use are outside this fake-Frame flow."
       },
       "requiredShims": [
-        "wine-cellar-native-bridge"
+        "wine-cellar-native-bridge",
+        "wine-cellar-ipc-eof"
       ],
       "missingShimStatus": "broken"
     },
@@ -8820,7 +8821,7 @@
         "https://github.com/mtkennerly/ludusavi"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Flatpak Ludusavi discovery and backup/restore unverified.",
+      "reason": "Exact managed 1.2.2 reports a missing Ludusavi executable without a version-RPC error and bounds each version probe to five seconds. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original negative control and restart. The exact frontend shows its missing-dependency message with in-memory replies in sandboxed local Chromium. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, ARM64, real Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -12216,12 +12217,13 @@
         "https://github.com/maroun2/deck-progress-tracker"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Steam game/library statistics and page patches unverified.",
+      "reason": "Initializer succeeds. A prepared adaptation for this exact archive repairs child IPC EOF handling. Published Decky 3.3.0 AMD64 passes private settings/manual-tag persistence, selected-tag deletion and graceful restart/unload; the original plugin needs two forced unload kills in the same fixture. Fresh ARM64/CI, live Steam statistics, automatic tagging, HLTB lookup, Steam-page badges, managed real Frame and worn-VR/controller use remain unverified. Existing installed copies do not receive this repair until updated.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 AMD64 private tags and IPC unload"
       ],
       "browser": {
         "id": 134,
