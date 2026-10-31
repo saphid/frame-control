@@ -102,3 +102,11 @@ e2e and every other triggered check remain required before merge.
 The machine record retains this replay under `currentMainRefresh`, separate
 from all earlier successes and observed failures. Syncthing remains blocked
 and unselected.
+
+## Refresh onto Shotty/Wine main
+
+Main `1c1e4f588735dc3119f67f90ca8c33d3a90563cd` was merged normally at frozen source `e565b133c05cbc3f4f785adc0097333f28bee64c`. The runtime-evidence correction diff is unchanged. All production/catalog bytes and current main’s native runner/probe sources remain identical to main. The refresh brings in the 27 main files added since this branch’s previous base, including the Wine and Shotty unload repairs. Syncthing remains blocked and unselected.
+
+All 26 selected host tests pass, including actual subprocess failure/timeout retention and rejection of the exact historical unclean green-job console. A fresh local native AMD64 replay independently verifies the five runtime source hashes, current main’s unchanged three helper-build inputs, pinned Decky 3.3.0/Syncthing v2.1.7 executables and archive, literal two-way transfer and restart bytes, nine proxy HTTP 200 responses, and wrong-key 403. The loader exits zero, emits its plugin-stopped and single shutdown-complete records without any forbidden diagnostics, and reaps the owned helper. Full inner/outer console hashes match. No new owned container or image tag remains. The run took about 41 seconds.
+
+[Source-bound audit](framey-syncthing-main1c1e4f5-refresh-2026-10-31-audit.json), [raw report, complete available consoles, selected-test log and resource-delta result](framey-syncthing-main1c1e4f5-refresh-2026-10-31-raw.json.gz). The cached helper build was reused only after verifying its binary digest and all three current-main build inputs. This is a new local AMD64 replay, not a fresh Rust build or hosted/full-matrix qualification. Raw-peer service-bus/systemd, managed installation, browser integration, ARM64, real Frame and wearer/controller behavior remain unverified. Exact current-main CI and all fresh applicable head workflows, e2e, native/ownership/package gates and final review remain required before merge. No release qualification follows from this replay.
