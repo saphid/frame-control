@@ -147,7 +147,8 @@
     "id": 53,
     "shim": "shotty-click-app-dir",
     "additionalShims": [
-      "shotty-bounded-copies"
+      "shotty-bounded-copies",
+      "shotty-ipc-eof"
     ],
     "probe": "screenshots"
   },
