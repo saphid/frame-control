@@ -30,3 +30,27 @@ match current main. Both owned images and their ancestor containers are absent.
 Fresh exact-head CI, ARM64, full e2e and every triggered package variant remain
 required before merge. This refresh adds no Steam-page badge, active-account,
 live-search, real Frame, wearer-visible or controller claim.
+
+## Startup-gate refresh onto main 6a5646e
+
+The previous head `7565cee074c8fa576a2853b94372726dc7a21de1` completed
+17 of 18 checks successfully. Its production-parent HTTP signed-package job
+`124394464439` failed: `bwrap` reported the missing shared Flatpak runtime
+`tmp` path before sync. Artifact `13025316289` and the failure packet were
+independently audited; this failed gate was not rerun unchanged. The precise
+path-removal actor and timing remain unproven.
+
+Normal merge `2d3b10348f726005ebca26329449d169632addd1` brings in main
+`6a5646e9da7f36ed45c840c3fe7190f2172e86ad`, including #506's serialized
+private-peer readiness and #499's bounded unreachable-network retry. The
+startup probe is byte-identical to main. All seven native-runtime source
+fingerprints are unchanged from the previous head; the other 115 complete
+catalog records and this plugin's version, digest and partial rating are
+preserved. All 120 focused store, compatibility, native-coverage, package-gate
+and fetch tests pass locally (13.405 seconds).
+
+Previous hosted native, ownership, e2e and passing package results remain
+historical. The refreshed head requires fresh full hosted qualification,
+including both native architectures and every triggered package variant.
+No real Frame was contacted, and no wearer-visible or controller check was
+performed. This refresh does not establish the failed package path as fixed.
