@@ -45,7 +45,7 @@ launcher once and requires exit zero; those earlier results remain recorded,
 not treated as passing. Its helpers, containers and temporary runtime images
 are owned by the probe and cleaned by its runner.
 
-## Refresh against current main
+## Previous refresh
 
 Main `3978edf7c8ca9d71c87015029983dd1f93ea76f1` is merged into the
 MangoPeel branch without rewriting history. Four additive inventory/dispatcher
@@ -70,6 +70,37 @@ that head. Fresh exact-head hosted native AMD64/ARM64, e2e, ownership, every
 triggered package mode, current-main and feedback/mergeability gates remain
 required. These local tests do not establish overlay, browser, Frame or controller
 usability and publish no release.
+
+## Refresh against main dd12031
+
+Main `dd12031f55ccbcba01aa07296080495df1935af1` was merged normally at
+`560989d6ed2b801e9e0ea2d427f0eeeddf473ce6`. Five additive conflicts preserve
+both MangoPeel and Ludusavi cases, store tests and runtime coverage. Main's
+keyboard, IPC and Ludusavi source bytes are unchanged. The store installer
+matches main plus only the MangoPeel watch adaptation; all 116 version, digest,
+classification and install policies and the other 115 catalog rows are preserved.
+
+On this merged source, the 61 store tests, 16 compatibility tests and three
+runtime-coverage tests pass. The generated documentation check also passes.
+Targeted native AMD64 Decky 3.3.0 probes pass for MangoPeel, Deck Progress
+managed/original controls and Ludusavi. Ten source fingerprints per report
+and all 34 published-archive inventory digests were independently checked.
+
+MangoPeel again passes real kernel-watch updates, private profile writes,
+reload and parent-only loader shutdown with exit zero. Its managed backend
+was independently reconstructed from the pinned original and watch-class
+replacement. Deck Progress retains 36 literal RPC results, four independently
+decoded SQLite snapshots, zero managed forced kills and two expected original
+forced kills. Ludusavi retains three literal RPC results, bounded discovery,
+the original missing-dependency negative and four parent-only zero-exit stops.
+Their complete case-specific consoles were independently checked. The owned
+runtime image and containers are gone.
+
+This refresh did not rerun the full host unit suite or full native inventory.
+Earlier hosted and full-suite results remain historical. Fresh final-head CI,
+e2e, native AMD64/ARM64, ownership and all triggered package modes remain
+required. These private backend probes establish no actual overlay, integrated
+browser, real headset or controller behavior. No release was published.
 
 ## Limits
 

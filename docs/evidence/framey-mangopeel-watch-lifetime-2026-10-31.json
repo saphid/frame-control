@@ -260,5 +260,65 @@
     "all116IdVersionDigestStatusAndInstallerPoliciesUnchanged": true,
     "freshExactHeadHostedQualificationRequired": true,
     "realFrameContacted": false
+  },
+  "refreshAgainstMainDd12031": {
+    "at": "2026-10-31T06:23:08.148701+00:00",
+    "head": "560989d6ed2b801e9e0ea2d427f0eeeddf473ce6",
+    "baseMain": "dd12031f55ccbcba01aa07296080495df1935af1",
+    "previousHead": "3bfcaf884124e2ea768a54fc8c3aa68cb5043f85",
+    "normalMerge": true,
+    "historyRewritten": false,
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "5222f97c02dcdd994aabd57faf5a75dfdc7efbea14ade9e1487f389c7828c014",
+      "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+      "tests/decky-runtime/check.py": "3eb86f3111e2180bc7ee9184e98e359b9b61e85a392b93900189c852a646da0b",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "0cf9103db77061ee01d84b56b4b3184318627779e2dbc848486ab05f565a7273",
+      "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+      "tests/framey_official.py": "325fff9205d7aa196d06ae62e40ddedf0ae99a58a516e9d3a8acbd874fb89736",
+      "ui/frame_decky_store.py": "f7908feb42000892c22d77254653fe82591d28f02fae25816009eb06da6ce67a",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "audit": {
+      "tenSourceFingerprintsVerifiedPerReport": true,
+      "mangopeelBackendIndependentlyReconstructed": true,
+      "allOtherMangopeelBackendBytesUnchanged": true,
+      "mangopeelCompleteReloadAndShutdownConsoleAudited": true,
+      "mangopeelRealKernelWatchAndZeroExitParentShutdownVerified": true,
+      "deckProgressRpcs": 36,
+      "deckProgressDecodedSqliteSnapshots": 4,
+      "deckProgressManagedForcedKills": 0,
+      "deckProgressOriginalForcedKills": 2,
+      "ludusaviLiteralRpcs": 3,
+      "ludusaviOriginalNegativeRetained": true,
+      "ludusaviParentOnlyZeroExitStops": 4,
+      "all116IdVersionDigestStatusAndInstallPoliciesPreserved": true,
+      "other115CatalogRowsUnchanged": true,
+      "mainProductBytesPlusOnlyMangopeelAdaptation": true,
+      "inventoryCases": 39,
+      "publishedPins": 34,
+      "runtimeSourceFingerprints": 10,
+      "ownedRuntimeImageAndContainersCleaned": true
+    },
+    "focusedHostTests": {
+      "store": 61,
+      "compatibility": 16,
+      "runtimeCoverage": 3,
+      "focusedLogSha256": "4f08e35af4f764f23b18bbd9160c5060007e0bc93c044c8bda05b450bc449526",
+      "compatLogSha256": "8c7106a80698bc8d24c8d4b547247f312aed573efd9f5967af1aa09ed9baaede"
+    },
+    "realFrameContacted": false,
+    "limits": [
+      "Targeted local AMD64 native cases; fresh hosted exact-head full native AMD64/ARM64, e2e, ownership and all package modes still required",
+      "No actual MangoHud overlay, browser backend integration, Steam library, headset, wearer-visible or controller proof",
+      "No full unit suite rerun at this merge; historical unit passes remain scoped to prior source",
+      "No release"
+    ],
+    "localReportSha256": {
+      "mango": "3610b30245650ff8c031f5b87a4d92da5126571418911969e2c68e07561e3e57",
+      "progress": "95644c811f442deec69c3382a084f009d4df414cfaceaba1e0fcdbc8dafd4a02",
+      "ludusavi": "1ce4eb04c7dbc25e2891ee16e8a0813be97264001f47c2ddbed323e936ce63d2"
+    }
   }
 }
