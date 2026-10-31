@@ -31,7 +31,7 @@ class RuntimeCoverage(unittest.TestCase):
                                          'deck-settings-readonly', 'steam-status-private-settings',
                                          'wine-cellar-private-state', 'prefix-manager', 'download-all-logging',
                                          'steamgriddb-private-artwork', 'protondb-private-settings',
-                                         'desktop-apps-private-entries'))
+                                         'desktop-apps-private-entries', 'deck-progress-private-tags'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store
