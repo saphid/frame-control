@@ -14,6 +14,7 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 124, 'name': 'AlarMe', 'version': '1.6.3', 'api_version': 1,
      'folder': 'alarme-decky-plugin', 'sha256': '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe'},
+    {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
     {'id': 134, 'name': 'Deck Progress Tracker', 'version': '1.3.6', 'api_version': 1,
