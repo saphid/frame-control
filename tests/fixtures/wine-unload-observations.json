@@ -1,0 +1,1766 @@
+{
+  "liveOrphan": {
+    "loaderPid": 9,
+    "helperPid": 23,
+    "childBefore": {
+      "state": "S",
+      "parent": 21,
+      "start": "348259376"
+    },
+    "ancestors": [
+      21,
+      20,
+      10,
+      9
+    ],
+    "parentOnlySignal": true,
+    "loaderReturncode": 0,
+    "seconds": 5.227,
+    "samples": [
+      {
+        "seconds": 0.0,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.051,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.101,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.151,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.202,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.252,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.302,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.352,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.403,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.453,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.503,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.554,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.604,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.654,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.704,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.755,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.805,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.855,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.905,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 0.956,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.006,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.056,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.107,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.157,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.207,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.257,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.308,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.358,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.408,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.458,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.509,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.559,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.609,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.659,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.709,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.76,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.81,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.86,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.91,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 1.961,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.011,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.061,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.111,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.162,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.212,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.262,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.313,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.363,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.413,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.463,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.514,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.564,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.614,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.664,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.715,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.765,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.815,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.865,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.916,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 2.966,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.016,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.066,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.117,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.167,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.217,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.267,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.317,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.368,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.418,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.468,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.518,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.569,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.619,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.669,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.719,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.77,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.82,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.87,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.92,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 3.971,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.021,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.071,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.121,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.171,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.222,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.272,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.322,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.373,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.423,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.473,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.523,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.573,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.624,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.674,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.724,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.775,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.825,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.875,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.925,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 4.975,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 5.026,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 5.076,
+        "child": {
+          "state": "S",
+          "parent": 1,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 5.126,
+        "child": {
+          "state": "S",
+          "parent": 1,
+          "start": "348259376"
+        }
+      },
+      {
+        "seconds": 5.176,
+        "child": {
+          "state": "S",
+          "parent": 1,
+          "start": "348259376"
+        }
+      }
+    ],
+    "exactChildRemaining": true,
+    "forcedPluginKills": 1,
+    "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\n[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "aac314421bc83af115b5246516020f1b3a576fa3d85e639487e8491a9343db5d",
+    "cleanShutdownVerified": false,
+    "expectedRegression": true
+  },
+  "zombie": {
+    "loaderPid": 9,
+    "helperPid": 23,
+    "childBefore": {
+      "state": "S",
+      "parent": 21,
+      "start": "348267350"
+    },
+    "ancestors": [
+      21,
+      20,
+      10,
+      9
+    ],
+    "parentOnlySignal": true,
+    "loaderReturncode": 0,
+    "seconds": 5.226,
+    "samples": [
+      {
+        "seconds": 0.0,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.05,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.101,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.151,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.201,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.251,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.301,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.352,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.402,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.452,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.502,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.553,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.603,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.653,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.703,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.754,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.804,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.854,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.904,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 0.955,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.005,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.055,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.105,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.156,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.206,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.256,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.306,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.357,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.407,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.457,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.507,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.558,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.608,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.658,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.708,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.759,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.809,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.859,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.909,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 1.96,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.01,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.06,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.11,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.161,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.211,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.261,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.312,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.362,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.412,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.462,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.512,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.563,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.613,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.663,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.714,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.764,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.814,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.864,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.915,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 2.965,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.015,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.065,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.116,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.166,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.216,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.267,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.317,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.367,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.417,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.467,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.518,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.568,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.618,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.668,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.719,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.769,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.819,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.869,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.919,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 3.97,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.02,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.07,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.12,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.171,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.221,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.271,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.321,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.372,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.422,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.472,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.522,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.573,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.623,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.673,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.723,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.774,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.824,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.874,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.924,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 4.975,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 5.025,
+        "child": {
+          "state": "Z",
+          "parent": 21,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 5.075,
+        "child": {
+          "state": "Z",
+          "parent": 1,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 5.125,
+        "child": {
+          "state": "Z",
+          "parent": 1,
+          "start": "348267350"
+        }
+      },
+      {
+        "seconds": 5.176,
+        "child": {
+          "state": "Z",
+          "parent": 1,
+          "start": "348267350"
+        }
+      }
+    ],
+    "exactChildRemaining": true,
+    "forcedPluginKills": 1,
+    "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\nTerminating Wine Cask (the Wine Cellar backend)...\n[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "9defe30128b526eb7d0f32868bdfefa91d87b8fcede846916c1df490467e15bf",
+    "cleanShutdownVerified": false,
+    "expectedRegression": true,
+    "socketOpenAtUnload": false
+  },
+  "cleanPositive": {
+    "loaderPid": 9,
+    "helperPid": 23,
+    "childBefore": {
+      "state": "S",
+      "parent": 21,
+      "start": "348266359"
+    },
+    "ancestors": [
+      21,
+      20,
+      10,
+      9
+    ],
+    "parentOnlySignal": true,
+    "loaderReturncode": 0,
+    "seconds": 0.201,
+    "samples": [
+      {
+        "seconds": 0.0,
+        "child": {
+          "state": "S",
+          "parent": 21,
+          "start": "348266359"
+        }
+      },
+      {
+        "seconds": 0.05,
+        "child": null
+      },
+      {
+        "seconds": 0.1,
+        "child": null
+      },
+      {
+        "seconds": 0.151,
+        "child": null
+      }
+    ],
+    "exactChildRemaining": false,
+    "forcedPluginKills": 0,
+    "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\nCalling Loader unload function for Wine Cellar (v0.2.1).\nAttempting to unload with plugin Wine Cellar (v0.2.1)'s \"_unload\" function.\n\n[Wine Cask] 2026-10-31 07:31:55 INFO 127.0.0.1:33390 disconnected\nWine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes\nTerminating Wine Cask (the Wine Cellar backend)...\nWine Cask stopped with exit code -15\nUnloaded Wine Cellar (v0.2.1)\n\nStopping event loop\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "b5b1c26fd1efd70007a894df0dd4582ad30449ed6b23b872a963eb070be94c90",
+    "cleanShutdownVerified": true,
+    "expectedRegression": false,
+    "socketOpenAtUnload": true
+  }
+}
