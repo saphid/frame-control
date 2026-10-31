@@ -82,7 +82,7 @@ def main():
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
-              'tests/decky-runtime/runtime_console.py',
+              'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/deck_settings_private.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
@@ -105,6 +105,7 @@ def main():
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
+                    (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),

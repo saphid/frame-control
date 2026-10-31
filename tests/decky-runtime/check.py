@@ -70,6 +70,7 @@ def main():
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
+    parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
@@ -140,6 +141,17 @@ def main():
         assert hashlib.sha256(previous).hexdigest() == '5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_deck_settings_unload_regression:
+        assert record['id'] == 93
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_bytes()
+        if source.startswith(prefix):
+            source = source[len(prefix):]
+            (plugin/'py_modules/framey_decky_ipc.py').unlink()
+        # Preserve the existing TLS repair in this previous-managed negative.
+        assert hashlib.sha256(source).hexdigest() == 'eb067334d66a47cf6abbafa9ade1754d5e56089da9315473055a5de78a923f7e'
+        (plugin/'main.py').write_bytes(source)
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -1080,9 +1092,20 @@ def main():
                     secure.shutdown()
                     secure.server_close()
                     worker.join(timeout=3)
-                report['result'] = ('published Decky discovery and read-only system/storage RPCs passed; '
-                                    'managed upload helper rejected self-signed loopback HTTPS; '
-                                    'real uploads, reports, settings writes, Frame and VR unverified')
+                import deck_settings_private
+                deck_settings_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, regression=args.reproduce_deck_settings_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_deck_settings_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_deck_settings_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedTlsRepairPreserved=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed Deck Settings source requires forced stop after IPC disconnect; expected negative only'
+                    if args.reproduce_deck_settings_unload_regression else
+                    'read-only RPCs, verified TLS, original unload hook and two clean parent-only stops/restart passed; '
+                    'real uploads, reports, settings writes, Frame and VR unverified')
             elif case['probe'] == 'theme-music-settings':
                 # The official plugin can search/download media and patch Steam
                 # game pages. This case exercises only private settings in a
