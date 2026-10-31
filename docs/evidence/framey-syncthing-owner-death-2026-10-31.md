@@ -111,3 +111,30 @@ runtime success. Fresh hosted qualification is required for the updated head.
 At this record's preparation, the original ARM64 package job was still running;
 its outcome and all updated-head gates remain unverified. No real Frame,
 wearer/controller behavior or managed installation is proved by these results.
+
+## Current-main refresh and a further shutdown failure
+
+[PR #503's AMD64 ownership job](https://github.com/saphid/frame-control/actions/runs/41169177514/job/124443207697)
+failed at `d8aac9de3e796fb9ff7a6c0a68e67f5bf6b24ab3`: its raw-peer runtime
+probe still found the helper after loader shutdown. The retained loader excerpt
+shows `CancelledError` in `shutdown_plugins`; the helper status at failure and
+complete loader console were not retained. The precise cause remains unproven.
+The failed artifact digest, exact checkout, six candidate source fingerprints
+and five runtime input fingerprints were independently checked. All those
+inputs match current main. The earlier candidate-only probe passed; no runtime
+or service result was produced. [Failure evidence](framey-syncthing-shutdown-followup-2026-10-31.json).
+
+This branch now merges main `8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c`
+without rewriting history. Owner-death production code and the candidate probe
+are unchanged. Main's keyboard, IPC, store adapter and catalog bytes are
+preserved. The merged source passed 19 ownership host tests and 13 guest-result
+and fetch host tests. Native AMD64 published Decky passed the forced-plugin-kill
+and reload test and pinned private Syncthing two-way sync, restart, RPC reads,
+wrong-key 403 and helper shutdown. Both source inventories and retained helper
+and loader digests were independently verified. This does not reproduce the
+cause of the hosted failure. [Merged-source reports and limits](framey-syncthing-owner-death-main8ebe-refresh-2026-10-31.json).
+
+All previous-head hosted results are historical after this refresh. Full
+final-head hosted qualification, including both ownership architectures and
+every package mode, remains required before merge. Syncthing stays blocked and
+unselected, and real-headset/controller usability remains unverified.
