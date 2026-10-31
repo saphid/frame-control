@@ -1,0 +1,535 @@
+{
+  "at": "2026-10-31T16:58:31.510850+00:00",
+  "sourceRevision": "7fc77589db970588f117ae8b794f0a53baaf2573",
+  "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+  "native": {
+    "at": "2026-10-31T16:55:42.695098+00:00",
+    "sourceRevision": "7fc77589db970588f117ae8b794f0a53baaf2573",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": 20,
+    "publishedArchiveSha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+    "sharedAdapterUnchanged": true,
+    "cases": [
+      {
+        "originalBackend": false,
+        "successfulRpcs": 10,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": true,
+          "result": {
+            "plugin_version": "1.3.4",
+            "os_name": "Debian GNU/Linux",
+            "os_version": "13",
+            "decky_version": "v3.3.0"
+          },
+          "seconds": 0.009
+        },
+        "stopSeconds": [
+          0.236,
+          0.215
+        ],
+        "forcedPluginKills": 0,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": true
+      },
+      {
+        "originalBackend": true,
+        "successfulRpcs": 6,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": false,
+          "error": "TimeoutError",
+          "seconds": 8.011
+        },
+        "stopSeconds": [
+          5.224
+        ],
+        "forcedPluginKills": 1,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": false
+      }
+    ],
+    "runtimeOwnedContainersAndImageTagsAbsent": true,
+    "rawReportSha256": "dbe9746e016b38dfe18b86aee15250080dd3c6f4ba8745a25697fbf7f422e2ed",
+    "realFrameContacted": false,
+    "originalIntermittentArmFailureCauseProven": false
+  },
+  "timerControl": {
+    "sourceRevision": "7fc77589db970588f117ae8b794f0a53baaf2573",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "7c2bf34d2ab8261e006556e9fffb28ea093cef0ca7d18147bd3f270cc0b6f560",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "547ca59a46a339b6956904a972cb5bc550af98a85316effc02f34a8161fd5ea9",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "22489962831242835acc40702d9823aad8e67e535e6b87a514e6599fcd202908",
+      "tests/decky-runtime/protondb_private.py": "7bcc3494e4275f94cb4304217661e801fd275b216bcdd7918cc578a7dcd8a168",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "bdbb554afadcf1501c68107b029972705061930af164dd3007b684d824fdb2e2",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "b815a8bb55ded042f0815c35512cd2e2748f88d375902f6a3cbf4539b7c45307",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "native": [
+      {
+        "caseIndex": 0,
+        "rpcs": 31,
+        "events": 30,
+        "consoleSha256": "548f07f43a11173788a6497c3983dc2da5762b87ee38cabf5e9a5ef383115a5c",
+        "positiveScopedCleanShutdownVerified": true,
+        "expectedNegative": false
+      },
+      {
+        "caseIndex": 1,
+        "rpcs": 10,
+        "events": 14,
+        "consoleSha256": "cf7a96420b05c883168afad0d368ddd9907f07cc5d434a444a1335b1c398044b",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      },
+      {
+        "caseIndex": 2,
+        "rpcs": 18,
+        "events": 24,
+        "consoleSha256": "73ae8953b0c88b1e381c05d512b8e7b794e94b39b30f7153ad320aa9e4f10df8",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      }
+    ],
+    "repairedStopSeconds": [
+      0.215,
+      0.265,
+      0.214,
+      0.225
+    ],
+    "realFrameContacted": false
+  },
+  "sourceAudit": {
+    "at": "2026-10-31T16:53:00.012790+00:00",
+    "sourceRevision": "7fc77589db970588f117ae8b794f0a53baaf2573",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "normalMergeParents": [
+      "143a7d4143df7bed0eb4e7b2ddc16c978897c7de",
+      "4e1f664be47b99fcf88c84d1280126c39d6753b4"
+    ],
+    "other36RuntimeBodiesPreserved": true,
+    "priorProtonDBBodyPreserved": true,
+    "all115OtherCatalogRowsIdentical": true,
+    "all116StatusPoliciesPreserved": true,
+    "mainOther33NativeCasesPreserved": true,
+    "sharedAdapterAndPublishedInventoryUnchanged": true,
+    "priorSharedStopHelperAndNegativeAssertionPreserved": true,
+    "mainTimerHelpersByteIdentical": true,
+    "otherInstallerCodeAstIdentical": true,
+    "runnerOnlyAddsProtonDBInputAndNegative": true,
+    "mainE2EAssertionsPreserved": true,
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "7c2bf34d2ab8261e006556e9fffb28ea093cef0ca7d18147bd3f270cc0b6f560",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "547ca59a46a339b6956904a972cb5bc550af98a85316effc02f34a8161fd5ea9",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "22489962831242835acc40702d9823aad8e67e535e6b87a514e6599fcd202908",
+      "tests/decky-runtime/protondb_private.py": "7bcc3494e4275f94cb4304217661e801fd275b216bcdd7918cc578a7dcd8a168",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "bdbb554afadcf1501c68107b029972705061930af164dd3007b684d824fdb2e2",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "b815a8bb55ded042f0815c35512cd2e2748f88d375902f6a3cbf4539b7c45307",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    }
+  },
+  "server": {
+    "tests": 1955,
+    "skips": 16,
+    "failed": 0,
+    "seconds": 247.872
+  },
+  "website": {
+    "tests": 18,
+    "skips": 0,
+    "failed": 0
+  },
+  "installer": {
+    "storeId": 14,
+    "sourceRevision": "7fc77589db970588f117ae8b794f0a53baaf2573",
+    "project": "framey-protondb-362-279c12c72e95",
+    "started": "2026-10-31T16:55:41.182656+00:00",
+    "finished": "2026-10-31T16:57:38.161381+00:00",
+    "testExit": 0,
+    "cleanupExit": 0,
+    "imageCleanupExits": [
+      0,
+      0
+    ],
+    "elapsedSeconds": 116.979,
+    "remainingOwnedResources": {
+      "containers": [],
+      "volumes": [],
+      "networks": []
+    },
+    "realFrameContacted": false,
+    "configurationSha256": "3f43ca911f7ad225dea40ea26f060d19e678e2e239ddc3f5230662330a32f523",
+    "argv": [
+      "docker",
+      "compose",
+      "-p",
+      "framey-protondb-362-279c12c72e95",
+      "-f",
+      "/tmp/framey-protondb-362-279c12c72e95.json",
+      "exec",
+      "-T",
+      "-w",
+      "/repo/tests/e2e",
+      "host",
+      "python3",
+      "-m",
+      "unittest",
+      "-v",
+      "test_framey.FrameyFlow.test_pinned_official_plugins_install_and_remove"
+    ],
+    "fixtureConfiguration": {
+      "name": "framey-protondb-362-279c12c72e95",
+      "networks": {
+        "default": {
+          "name": "framey-protondb-362-279c12c72e95_default",
+          "ipam": {}
+        }
+      },
+      "services": {
+        "fakeframe": {
+          "command": null,
+          "entrypoint": null,
+          "environment": {
+            "FAKEFRAME_PAIRING_MODE": "0"
+          },
+          "hostname": "frame",
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "fakeframe-ctl",
+              "ping"
+            ],
+            "timeout": "10s",
+            "interval": "2s",
+            "retries": 60
+          },
+          "image": "framey-protondb-362-279c12c72e95-frame",
+          "init": true,
+          "networks": {
+            "default": null
+          },
+          "pull_policy": "never",
+          "tmpfs": [
+            "/home/steamos/devkit-game:size=64m,mode=0755,exec"
+          ],
+          "volumes": [
+            {
+              "type": "volume",
+              "source": "keys",
+              "target": "/keys",
+              "volume": {}
+            },
+            {
+              "type": "volume",
+              "source": "power",
+              "target": "/sys/class/power_supply",
+              "volume": {}
+            },
+            {
+              "type": "volume",
+              "source": "power",
+              "target": "/var/lib/fakeframe/sys/power_supply",
+              "volume": {}
+            },
+            {
+              "type": "volume",
+              "source": "thermal",
+              "target": "/sys/class/thermal",
+              "volume": {}
+            },
+            {
+              "type": "volume",
+              "source": "thermal",
+              "target": "/var/lib/fakeframe/sys/thermal",
+              "volume": {}
+            }
+          ]
+        },
+        "host": {
+          "command": null,
+          "depends_on": {
+            "fakeframe": {
+              "condition": "service_healthy",
+              "required": true
+            }
+          },
+          "entrypoint": null,
+          "environment": {
+            "FAKEFRAME_CTL": "http://fakeframe:9999",
+            "FAKEFRAME_HOST": "fakeframe",
+            "FRAME_E2E": "1",
+            "FRAME_E2E_CONTAINER": "1"
+          },
+          "healthcheck": {
+            "test": [
+              "CMD",
+              "test",
+              "-f",
+              "/home/tester/.ready"
+            ],
+            "timeout": "5s",
+            "interval": "1s",
+            "retries": 120
+          },
+          "image": "framey-protondb-362-279c12c72e95-host",
+          "init": true,
+          "networks": {
+            "default": null
+          },
+          "pull_policy": "never",
+          "volumes": [
+            {
+              "type": "bind",
+              "source": "/tmp/framey-protondb-ipc360-mppkd9qczt",
+              "target": "/repo",
+              "read_only": true,
+              "bind": {
+                "create_host_path": true
+              }
+            },
+            {
+              "type": "volume",
+              "source": "keys",
+              "target": "/keys",
+              "read_only": true,
+              "volume": {}
+            }
+          ]
+        }
+      },
+      "volumes": {
+        "keys": {
+          "name": "framey-protondb-362-279c12c72e95_keys"
+        },
+        "power": {
+          "name": "framey-protondb-362-279c12c72e95_power"
+        },
+        "thermal": {
+          "name": "framey-protondb-362-279c12c72e95_thermal"
+        }
+      }
+    },
+    "pinnedFixtureCount": 37,
+    "pins": [
+      {
+        "id": 61,
+        "version": "2.15.1",
+        "sha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5"
+      },
+      {
+        "id": 103,
+        "version": "1.2.2",
+        "sha256": "8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88"
+      },
+      {
+        "id": 134,
+        "version": "1.3.6",
+        "sha256": "784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3"
+      },
+      {
+        "id": 65,
+        "version": "0.5.3",
+        "sha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872"
+      },
+      {
+        "id": 143,
+        "version": "0.1.0",
+        "sha256": "33fb674993c9b2bd119f0c6118c465e379f166ec1539c8183fcf7580f1d89577"
+      },
+      {
+        "id": 117,
+        "version": "1.0.0",
+        "sha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf"
+      },
+      {
+        "id": 131,
+        "version": "1.1.0",
+        "sha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da"
+      },
+      {
+        "id": 130,
+        "version": "1.0.1",
+        "sha256": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473"
+      },
+      {
+        "id": 68,
+        "version": "0.2.1",
+        "sha256": "7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8"
+      },
+      {
+        "id": 93,
+        "version": "1.2.6",
+        "sha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132"
+      },
+      {
+        "id": 52,
+        "version": "1.7.1-1",
+        "sha256": "9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e"
+      },
+      {
+        "id": 118,
+        "version": "1.0.2",
+        "sha256": "8b1ee429aece9330b83ea3fc2e7e27d007ac61a737169f20bda3f1a19ab95508"
+      },
+      {
+        "id": 28,
+        "version": "2.0.5",
+        "sha256": "98dcb443e81b9f9011cfe77c69eb659869c8e2df2df8b0a443df66cbfc2f5a89"
+      },
+      {
+        "id": 67,
+        "version": "0.2.0",
+        "sha256": "91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94"
+      },
+      {
+        "id": 114,
+        "version": "1.0.4",
+        "sha256": "d3e07f40a0c800e72d15594e03c8c61e9bf3092524a578a0260520e735b971a5"
+      },
+      {
+        "id": 13,
+        "version": "1.0.3",
+        "sha256": "4aefdfb0ef25dea9c6d9fd037731c8b99ee8a1be966c2f7d5b0602112ef29f62"
+      },
+      {
+        "id": 24,
+        "version": "1.3",
+        "sha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43"
+      },
+      {
+        "id": 132,
+        "version": "1.5.3",
+        "sha256": "248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4"
+      },
+      {
+        "id": 79,
+        "version": "1.0.1",
+        "sha256": "3b22dc337209615f91da566ceb968793dc163b2e509de8535fb5d0fc55817312"
+      },
+      {
+        "id": 104,
+        "version": "1.0.4",
+        "sha256": "65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd"
+      },
+      {
+        "id": 60,
+        "version": "1.2.0",
+        "sha256": "7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0"
+      },
+      {
+        "id": 125,
+        "version": "0.4.5",
+        "sha256": "e271ccb55eb23f918b99a69f79aec905df4c9b2ef7b23bbf4ec1c2d1a6f0c6b7"
+      },
+      {
+        "id": 89,
+        "version": "0.6.7",
+        "sha256": "2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7"
+      },
+      {
+        "id": 96,
+        "version": "1.0.0",
+        "sha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312"
+      },
+      {
+        "id": 12,
+        "version": "1.1.6",
+        "sha256": "246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62"
+      },
+      {
+        "id": 111,
+        "version": "1.1.7",
+        "sha256": "3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9"
+      },
+      {
+        "id": 14,
+        "version": "1.3.4",
+        "sha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358"
+      },
+      {
+        "id": 123,
+        "version": "1.2.3",
+        "sha256": "9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e"
+      },
+      {
+        "id": 50,
+        "version": "1.4.0",
+        "sha256": "1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591"
+      },
+      {
+        "id": 46,
+        "version": "1.0.0-1",
+        "sha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3"
+      },
+      {
+        "id": 18,
+        "version": "3.1.1",
+        "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5"
+      },
+      {
+        "id": 26,
+        "version": "2.0.12",
+        "sha256": "bd54a23b0b8ec0798aa590e5be236522a593529d7680e77fb888e2971bf3d558"
+      },
+      {
+        "id": 36,
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0"
+      },
+      {
+        "id": 53,
+        "version": "0.1.0",
+        "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe"
+      },
+      {
+        "id": 63,
+        "version": "1.6.0",
+        "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a"
+      },
+      {
+        "id": 135,
+        "version": "2.0.0",
+        "sha256": "b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91"
+      },
+      {
+        "id": 7,
+        "version": "2.1.3",
+        "sha256": "99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231"
+      }
+    ],
+    "cleanupIndependentlyVerified": true,
+    "rawLogSha256": "7a162b0b03c52b2e86f25e601eb4ea66db5d209dacc1c7760be8078e1b566b8d"
+  },
+  "rawSha256": "db2233a421588cad40941503cac33137ab6d7d70ac18e342853873fb5d781b50",
+  "fullLocalE2eSuiteRan": false,
+  "fullNativeMatrixRan": false,
+  "exactHostedHeadQualified": false,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}

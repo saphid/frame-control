@@ -1,0 +1,140 @@
+{
+  "at": "2026-10-31T16:32:15.900427+00:00",
+  "sourceRevision": "dc2fbca5b0d19643bf293132e85864666c112016",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "native": {
+    "at": "2026-10-31T16:28:52.992779+00:00",
+    "sourceRevision": "dc2fbca5b0d19643bf293132e85864666c112016",
+    "architecture": "x86_64",
+    "sourceFingerprintsVerified": 18,
+    "publishedArchiveSha256": "90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358",
+    "sharedAdapterUnchanged": true,
+    "cases": [
+      {
+        "originalBackend": false,
+        "successfulRpcs": 10,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": true,
+          "result": {
+            "plugin_version": "1.3.4",
+            "os_name": "Debian GNU/Linux",
+            "os_version": "13",
+            "decky_version": "v3.3.0"
+          },
+          "seconds": 0.003
+        },
+        "stopSeconds": [
+          0.185,
+          0.214
+        ],
+        "forcedPluginKills": 0,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": true
+      },
+      {
+        "originalBackend": true,
+        "successfulRpcs": 6,
+        "postEofRpc": {
+          "method": "get_system_info",
+          "completed": false,
+          "error": "TimeoutError",
+          "seconds": 8.01
+        },
+        "stopSeconds": [
+          5.274
+        ],
+        "forcedPluginKills": 1,
+        "settingsSnapshotsIndependentlyDecoded": true,
+        "cleanShutdownVerified": false
+      }
+    ],
+    "runtimeOwnedContainersAndImageTagsAbsent": true,
+    "rawReportSha256": "e3916a596d253d69790206e804926063e6713089bb5901323e0eddcba4f6402c",
+    "realFrameContacted": false,
+    "originalIntermittentArmFailureCauseProven": false
+  },
+  "freeLoaderControl": {
+    "sourceRevision": "dc2fbca5b0d19643bf293132e85864666c112016",
+    "sourceFingerprints": 18,
+    "freeLoaderDefaultStopBehaviorPreserved": true,
+    "cases": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "stopSeconds": [
+          0.216,
+          0.185
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsIndependentlyDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "stopSeconds": [
+          5.224
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsIndependentlyDecoded": true
+      }
+    ],
+    "ownedRuntimeCleanupIndependentlyVerified": true,
+    "realFrameContacted": false
+  },
+  "sourceAudit": {
+    "base": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "all115OtherCatalogRowsIdentical": true,
+    "all116StatusPoliciesPreserved": true,
+    "otherRuntimeCaseDeclarationsIdentical": true,
+    "publishedArchiveAndSharedAdapterUnchanged": true,
+    "realFrameContacted": false,
+    "otherProbeBodiesAstIdentical": 31,
+    "allOtherInstallerCodeByteIdentical": true
+  },
+  "installer": {
+    "pinnedFixtures": 37,
+    "exit": 0,
+    "cleanupIndependentlyVerified": true,
+    "sourceRevision": "dc2fbca5b0d19643bf293132e85864666c112016",
+    "project": "framey-protondb-360-580c36a72360"
+  },
+  "serverTests": 1952,
+  "serverSkips": 16,
+  "websiteTests": 18,
+  "fullLocalE2eSuiteRan": false,
+  "rawBundle": {
+    "path": "framey-protondb-badges-ipc-eof-2026-10-31-raw.json.gz",
+    "sha256": "bdae2a134054a1bd7e04b8b410cc2f72bb4a841dbfefda1c28216864096dcb91",
+    "uncompressedItemsSha256": {
+      "protondb360-original-native.json": "43d9f1eb99ee59b63b0e1ffcaa02746e73e2323cd36cb9f6857688a8d757093a",
+      "protondb360-original-native.log": "001049520e7bceb319195add1e11a56a4ff73d93b210fb87436f70deafb94688",
+      "protondb360-original-eof.json": "17c832aa7b744206340c9d26b4d5657325323069e54f1ccb3374fb859458a9ed",
+      "protondb360-original-eof.log": "4487dd8ad1544b202eafdf90015247bd98b40710c31f211d2ec9275f604a94f9",
+      "protondb360-repaired-native.json": "e3916a596d253d69790206e804926063e6713089bb5901323e0eddcba4f6402c",
+      "protondb360-repaired-native.log": "085f1bd6a783727384f181c0e7f5acb20c14ef07cce35388e0d011e4ebc6062e",
+      "protondb360-freeloader-control.json": "a71d8aafb8265299d9d727bdb2b7166fbbceb470d0ab47b2cd6cf5973837d9cf",
+      "protondb360-freeloader-control.log": "afc6bc423ae883676f9b37ff43742f596bf15911ebc81f6961938017807e68bb",
+      "protondb360-full-unit.log": "34eee98274bbfdc310c27633ac67ca2b6eca1eda3ae01673386f5b732915d9cf",
+      "protondb360-site.log": "baf2e11c6b311ab31ef69b304d04d2f1013fca4cf0e95942cae55448f44742db",
+      "protondb360-receipt.log": "2541a2d9abea0b091036cfbfe83e109794c5164af3938c968fb00f2aa13de249",
+      "protondb360-receipt-audit.json": "57762c612652e75b41703587ac8260c0ef2030d79cb7a6154c49dcc659a21840",
+      "protondb360-source-audit.json": "a0af06b543059b15a32a1ef9fbc1979e1020069247cf28e141ff9f89c74a2b01",
+      "protondb360-native-audit.json": "2403d4dc34dfaf362b653d89d5ef2698b9362aacb91e895781c38df640046b2f",
+      "protondb360-control-audit.json": "47af8bfa52f4e7272d7ebb7888ba1f5201c1b698c0076f85a0d11dbe58df02c8",
+      "independentNativeVerifier.py": "078190cbe12d85a59b59eba1e5669b5a4f241eaf9bb3ad1c39a85ec9e92d887e",
+      "ownedInstallerRunner.py": "912d19e91bc8ba5bbe02c447ce5a68bddaeb5f000aa92fe27b1b5904026ad02a",
+      "controlVerifier.py": "67e52b09e0b067e6269e9b19bf96c685d208e5d3369e351cd572488405753c02"
+    }
+  },
+  "limits": {
+    "ARM64": false,
+    "fullNativeMatrix": false,
+    "realFrame": false,
+    "badgeRendering": false,
+    "browserRefresh": false,
+    "physicalController": false,
+    "exactHostedHeadQualified": false,
+    "originalIntermittentArmFailureCauseProven": false
+  }
+}

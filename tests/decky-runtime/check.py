@@ -73,6 +73,7 @@ def main():
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-protondb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
@@ -175,6 +176,16 @@ def main():
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
+    if args.reproduce_protondb_unload_regression:
+        assert record['id'] == 14
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_bytes()
+        if source.startswith(prefix):
+            source = source[len(prefix):]
+            (plugin/'py_modules/framey_decky_ipc.py').unlink()
+        assert hashlib.sha256(source).hexdigest() == '07ae28331b7d1ab55a6303636026dadd7e5523fde84d95c62899fed6e1c133ba'
+        (plugin/'main.py').write_bytes(source)
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
     assert '_root' not in manifest.get('flags', []), manifest
@@ -1005,29 +1016,28 @@ def main():
                 assert current('set_setting', 'settings', saved) is None
                 before = state.read_bytes()
                 assert json.loads(before) == {'settings': saved}
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
-                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
-                assert current('get_setting', 'settings', defaults) == saved
-                assert current('get_setting', 'missing-private-setting', False) is False
-                assert current('get_system_info') == info
-                assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                import protondb_private
+                protondb_private.probe(backend, loader, env, log, processes,
+                    current, rpc, until_ready, report, state, saved, defaults, info,
+                    regression=args.reproduce_protondb_unload_regression)
                 report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
-                    settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
-                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    settingsPersistedAcrossLoaderRestart=not args.reproduce_protondb_unload_regression,
+                    falseValuesPreserved=True,
+                    systemInfoMatchesPrivateContainer=True, noProductionSessionChanges=True,
+                    publishedBackendUnmodified=args.reproduce_protondb_unload_regression,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     badgeRenderingVerified=False, browserVerified=False,
                     realSteamCef=False, realFrameContacted=False,
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API2 discovery, private frontend settings '
                     'write/read and loader-restart persistence, false values and container OS '
-                    'metadata passed; badge rendering, browser, Frame and VR unverified')
+                    'metadata, post-EOF RPC and clean shutdown passed; badge rendering, browser, Frame and VR unverified')
+                if args.reproduce_protondb_unload_regression:
+                    report['result'] = 'original ProtonDB Badges post-EOF RPC timeout and forced shutdown reproduced; not a compatibility pass'
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_protondb_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.

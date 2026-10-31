@@ -1,0 +1,99 @@
+{
+  "hostedFailures": [
+    {
+      "job": 124592953800,
+      "forcedKillLogEntries": 2,
+      "cleanShutdownVerified": false,
+      "ownedIdentitiesReaped": true,
+      "loaderReturncode": 0,
+      "logSha256": "a00a040d2b9672002b9f86019e60f426540ce3b2957e5c1ed6c6b5ccf80b2912"
+    },
+    {
+      "job": 124592953881,
+      "forcedKillLogEntries": 2,
+      "cleanShutdownVerified": false,
+      "ownedIdentitiesReaped": true,
+      "loaderReturncode": 0,
+      "logSha256": "70a46006aeae3e4d23759ed3e449f56cd41c16551f6b3a8f2b8f86dacb901b7d"
+    }
+  ],
+  "local": {
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "3a4764baffaaaad53eedf11bd83ffe6f664bf168e90e85892db5bb064c6e591d",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "eda844de97f475d4ba96d59c295578f283600ca564c129c1084ad3233ef127d4",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "22489962831242835acc40702d9823aad8e67e535e6b87a514e6599fcd202908",
+      "tests/decky-runtime/protondb_private.py": "7bcc3494e4275f94cb4304217661e801fd275b216bcdd7918cc578a7dcd8a168",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "5ad7e62f5412f2360c29d22d2e15ae7362f08402d97ba4febc324faf0faffc4e",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "a27efe34ef95d7edf4b93f00599f36bf932d6010360dbb977446e418ea8157ad",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "repairedRpcs": 10,
+    "originalRpcs": 6,
+    "repairedStopSeconds": [
+      0.185,
+      0.185
+    ],
+    "originalStop": {
+      "loaderPid": 9,
+      "descendantsBefore": {
+        "10": {
+          "state": "S",
+          "parent": 9,
+          "start": "351596787"
+        },
+        "19": {
+          "state": "S",
+          "parent": 10,
+          "start": "351596816"
+        },
+        "20": {
+          "state": "S",
+          "parent": 10,
+          "start": "351596816"
+        },
+        "21": {
+          "state": "R",
+          "parent": 20,
+          "start": "351596827"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 19,
+          "returncode": 0
+        },
+        {
+          "pid": 20,
+          "returncode": 0
+        }
+      ],
+      "parentOnlySignal": true,
+      "loaderReturncode": 0,
+      "seconds": 5.324,
+      "fixtureClosedUnixPeers": [],
+      "forcedPluginKills": 2,
+      "errors": [],
+      "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down ProtonDB Badges (v1.3.4)\n[plugin][INFO]: Stopping response listener for ProtonDB Badges (v1.3.4)\n[loader][ERROR]: Method get_system_info of plugin ProtonDB Badges (v1.3.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 42, in wait_for_result\ndecky_loader.plugin.messages.PluginStopped: Plugin has been stopped\n\n[plugin][WARNING]: Plugin ProtonDB Badges (v1.3.4) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][WARNING]: Plugin ProtonDB Badges (v1.3.4) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin ProtonDB Badges (v1.3.4) has been stopped in 5.2s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+      "consoleSha256": "c227b2ea3d09dc97209517fc7245afc2d317f9248bbbd1df09cee77985a6c565",
+      "cleanShutdownVerified": false
+    },
+    "settingsReadbacksVerified": true
+  },
+  "rawNativeSha256": "d03ff30417af7c267802f194764c9beb814840dc6bbf26a6f615f595c6168e0f",
+  "productionFilesChanged": false,
+  "realFrameContacted": false,
+  "pushed": false,
+  "rawSha256": "6da0eefad616a08360fe031ca76049961d9423941ec1c5e3efa69a6b872d2784"
+}
