@@ -65,3 +65,43 @@ The [refreshed local AMD64 native replay](framey-alarme-main-refresh-2026-10-30.
 Historical source `cd12ae455b20e03bab9825d47ab46fb829964740` subsequently passed all 18 checks and all five workflows. The [completed source audit](framey-alarme-completed-source-ci-2026-10-30.json) retains both native jobs (36 probes/31 pinned archives each), the exact e2e tree and all four signed-package audits, including artifact/checkout/source/signature/full-packet/runtime/sync/migration/preservation and strict shutdown identities. All distinct package captures were inspected. Native/package raw loader consoles are absent, so complete-log checks remain source-bound guest/probe evidence.
 
 After all original workflows finished, the branch normally absorbed main `445df0a6d1247dde2f40c156c4586381be9cd91d` without conflicts. Both compatibility evidence updates, AlarMe's paused-timer fix and main's host shutdown verifier are retained. The old green source does not qualify the refreshed head; fresh exact-head CI/e2e/native/package gates and current main must pass before merge. Compatibility remains partial. Audio, actual sleep inhibition, production browser/backend integration, real Steam CEF/Frame, worn visibility and physical controllers remain unverified.
+
+
+## Refresh onto main d3ae60e with retained available consoles
+
+Main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` was merged normally at
+`8dc574de`. Five test-inventory conflicts preserve the existing AlarMe branch
+and all 31 main probe conditions (36 branch bodies), including Ludusavi,
+Deck Progress, Wine and Shotty. All 116 catalog policies and the other 115
+complete catalog records are preserved. Main's input/keyboard, IPC and console
+capture sources remain unchanged. Main's ARM64 package gate is still incomplete.
+
+Tested source `7764694ceed5b4e89a47855d55f65ee4736d2e2f` also fingerprints
+AlarMe's unchanged lifecycle helper and shared RPC client in native reports.
+The product repair and complete AlarMe probe/helper bodies are unchanged.
+All 93 focused store, compatibility, runtime-coverage, native-console and Wine
+unload-evidence tests pass. A fresh isolated AMD64 published Decky 3.3.0 replay
+independently verifies all 17 report source hashes and the pinned loader/archive,
+reconstructs the exact original/managed backend bytes, and passes 39 repaired
+and 38 original-control RPCs. Paused long/elapsed deadlines, explicit resume,
+one silent completion, preset and stopwatch restart behavior pass. The original
+still incorrectly ticks after restart and deletes an elapsed paused timer.
+
+Four source-bound parent-only loader stops return zero. Complete available
+post-cleanup consoles and hashes are now retained. Generic cleanup records
+already-exited loaders without claiming another signal. Each console retains
+two JSON diagnostics; their phase/cause, error-free consoles and global clean
+plugin shutdown remain unverified. Private-file preservation and parent-only-stop
+assertions are source-bound; complete independent filesystem/process snapshots
+were not retained. No new owned runtime containers or image tags remain.
+
+[Current refresh audit](framey-alarme-maind3ae60e-refresh-2026-10-31.json)
+and [raw report, source audit and full unit output](framey-alarme-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+retain this result. Fresh final-head hosted checks/e2e, full native AMD64/ARM64
+matrix (42 probes / 34 archive pins / 17 source fingerprints per architecture),
+ownership and all triggered package modes remain required. Earlier hosted/browser
+results remain scoped to their recorded revisions; no new browser replay is
+claimed. Sound, actual sleep inhibition, production HTTP integration, live Steam
+or CEF, managed Frame and wearer/controller behavior remain unverified.
+Compatibility stays partial; no headset or hourly schedule was accessed and no
+release is published.
