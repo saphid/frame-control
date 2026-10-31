@@ -534,7 +534,7 @@
     {
       "id": 96,
       "version": "1.0.0",
-      "negative": false,
+      "negative": true,
       "bytes": 5417,
       "sha256": "b8db387471c080e2ffae0cb46e8b92145f87d9e1e9bcb9489291989f090aa7a6",
       "processReturncodes": [
@@ -550,7 +550,7 @@
     {
       "id": 60,
       "version": "1.2.0",
-      "negative": false,
+      "negative": true,
       "bytes": 1547,
       "sha256": "f5acc83b3dd8d32f72eccdca50a2e4404f3c9e47dd7716b84068852645be00b9",
       "processReturncodes": [
@@ -588,5 +588,6 @@
         "Sending SIGKILL!": 2
       }
     }
-  ]
+  ],
+  "allFiveExpectedNegativeControlsIndependentlyVerified": true
 }
