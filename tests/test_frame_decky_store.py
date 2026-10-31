@@ -1002,7 +1002,9 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['tabmaster-json-file-restore'])
+        self.assertEqual(receipt['compatShims'], ['tabmaster-json-file-restore', 'tabmaster-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         old = b'        data = json.loads(settings_file)\n'
         new = (b'        data = json.load(settings_file)\n'
                b'        if not isinstance(data, dict):\n          return False\n')
@@ -1012,7 +1014,9 @@ class StoreTransaction(unittest.TestCase):
                 if name.endswith('/'):
                     continue
                 original = bundle.read(name)
-                expected = original.replace(old, new) if name.endswith('/main.py') else original
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                expected = prefix+original.replace(old, new) if name.endswith('/main.py') else original
                 self.assertEqual((folder/Path(name).relative_to(plugin['folder'])).read_bytes(), expected, name)
         self.assertEqual(json.loads((folder/'plugin.json').read_text())['api_version'], 1)
         self.assertEqual(self.apply('remove', **args).returncode, 0)
@@ -1022,6 +1026,7 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('install', changed.getvalue(), **args)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((folder/'main.py').read_bytes(), original_main)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
         self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
 
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
