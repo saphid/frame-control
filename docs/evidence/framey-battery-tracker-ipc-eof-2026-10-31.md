@@ -17,6 +17,25 @@ Source revision `65a22d97b5a732205d4886ab7a1d46c291de97ac`, based on main `0082d
 
 [Independent audit](framey-battery-tracker-ipc-eof-2026-10-31.json) · [raw native reports, snapshots, complete available consoles and test output](framey-battery-tracker-ipc-eof-2026-10-31-raw.json.gz).
 
+## HTTP/SSH receipt regression
+
+Hosted e2e run `41191578110`, job `124509276106`, failed at head `b684ae5d`
+because the transport test expected only `battery-tracker-user-supply`; the
+installed receipt correctly included `battery-tracker-ipc-eof` too. Source
+`e480b724a523194b9fc2120d19be3a6c52322729` updates the exact expected receipt
+and checks the installed managed backend and IPC helper SHA-256 values.
+
+The real HTTP installer and fake Frame SSH flow passes its one method covering
+all 37 pinned plugin fixtures, with no skips. Owned containers, volumes, network
+and image tags were removed. Production and native-probe sources are unchanged;
+all 16 earlier native source fingerprints still match. This is transport proof,
+not backend execution or a full local e2e-suite pass. Fresh final-head hosted
+checks, native results and packages remain required.
+
+[Receipt audit](framey-battery-tracker-receipt-e2e-2026-10-31.json) and
+[complete local log, test source and cleanup records](framey-battery-tracker-receipt-e2e-2026-10-31-raw.json.gz)
+retain the result and original failure reference.
+
 ## Limits
 
 This is local native AMD64 evidence. Fresh exact-head hosted checks/e2e, AMD64/ARM64 native results, every triggered package gate, current-main integration and feedback review remain required. The deliberate peer disconnect stabilizes an observed shutdown race; it does not establish its frequency in real use.
