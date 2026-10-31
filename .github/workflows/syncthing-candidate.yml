@@ -99,6 +99,7 @@ jobs:
             ${{ runner.temp }}/syncthing-build/*.json
             ${{ runner.temp }}/syncthing-native.json
             ${{ runner.temp }}/syncthing-runtime.json
+            ${{ runner.temp }}/syncthing-runtime.console.log
             ${{ runner.temp }}/syncthing-service.json
             ${{ runner.temp }}/syncthing-service.console.log
           if-no-files-found: error
