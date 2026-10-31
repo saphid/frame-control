@@ -650,12 +650,14 @@ removed by the runner.
 Each completed native case retains `runtimeConsole.text` and its SHA-256 after
 final fixture cleanup, plus process return codes and any forced-kill escalation.
 Probe or cleanup exceptions print the complete available console to stderr and
-do not emit a successful case result. Four tests exercise long output, normal
-shutdown, a failed probe, forced cleanup and a cleanup exception; three use real
-child processes. This
-records the existing process-group stop policy; `cleanShutdownVerified: false`
-explicitly prevents treating captured output or completed cleanup as a clean
-Decky/plugin shutdown assertion. Case-specific lifecycle gates still apply.
+do not emit a successful case result. Five tests exercise long output, normal
+shutdown, a failed probe, forced cleanup, cleanup exceptions and parent-owned
+child shutdown; four use real subprocesses. The fixture sends SIGTERM only to
+the owned Decky loader and waits eight seconds for its unload protocol. Auxiliary
+fixtures retain group cleanup, and bounded group SIGKILL escalation remains
+recorded. `cleanShutdownVerified: false` explicitly prevents treating captured
+output or a zero loader exit as clean plugin shutdown. Case-specific lifecycle
+gates still apply.
 
 Every `compat_shims.append` in the managed installer must have a case in
 `tests/decky-runtime/cases.json`. Add each affected pinned official archive and
