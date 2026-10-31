@@ -261,6 +261,65 @@ class PublishRelease(unittest.TestCase):
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
 
+    def test_prior_main_or_native_run_cannot_be_hidden_by_later_success(self):
+        for kind, job in (('main', 'e2e'), ('decky', 'decky-runtime (ubuntu-24.04-arm)')):
+            cases = [{f'prior_{kind}_conclusion': state}
+                     for state in ('failure', 'cancelled', 'skipped')]
+            cases += [{f'prior_{kind}_status': 'in_progress', f'prior_{kind}_conclusion': None},
+                      {'prior_runtime_bad_job': job, 'prior_runtime_bad_conclusion': 'failure'}]
+            for case in cases:
+                gates = {f'prior_{kind}_run': True, **case}
+                with self.subTest(gates=gates):
+                    p, log, upload = self.run_script([draft()], 'v9.8.7', gates=gates)
+                    self.assertNotEqual(p.returncode, 0, p.stdout)
+                    self.assertIn('release gate failed', p.stderr)
+                    self.assertIsNone(upload)
+                    self.assertFalse(any('-X' in call for call in log))
+
+    def test_all_successful_main_and_native_runs_are_checked(self):
+        p, log, upload = self.run_script([draft()], '--dry-run', 'v9.8.7',
+                                        gates={'prior_main_run': True, 'prior_decky_run': True})
+        self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+        for run in (497, 498, 501, 503):
+            self.assertTrue(any(f'actions/runs/{run}/attempts/1/jobs' in arg
+                                for call in log for arg in call), run)
+        self.assertIsNone(upload)
+        self.assertFalse(any('-X' in call for call in log))
+
+    def test_signed_package_gates_stop_publication_before_any_mutation(self):
+        cases = [{"signed_missing": True}, {"signed_sha": "c" * 40},
+                 {"signed_branch": "unrelated"}, {"signed_event": "pull_request"},
+                 {"signed_status": "in_progress"}, {"signed_conclusion": "failure"}]
+        cases += [{"omit_job": name} for name in (
+            "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
+            "signed-package (ubuntu-latest, browser HTTP)",
+            "signed-package (ubuntu-latest, production parent HTTP)")]
+        cases += [{"bad_job": "signed-package (ubuntu-24.04-arm)",
+                   "bad_job_conclusion": conclusion}
+                  for conclusion in ("failure", "cancelled", "skipped")]
+        cases += [{"prior_signed_run_conclusion": "failure"},
+                  {"signed_attempts": 2, "signed_prior_bad_job": "signed-package (ubuntu-latest)",
+                   "signed_prior_bad_conclusion": "cancelled"}]
+        for gates in cases:
+            with self.subTest(gates=gates):
+                p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+                self.assertNotEqual(p.returncode, 0, p.stdout)
+                self.assertIn("release gate failed", p.stderr)
+                self.assertRegex(p.stderr, 'syncthing-flatpak-package|signed-package')
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
+    def test_signed_package_push_and_manual_runs_are_accepted(self):
+        for event in ("push", "workflow_dispatch"):
+            with self.subTest(event=event):
+                p, log, upload = self.run_script([draft()], "--dry-run", "v9.8.7",
+                                                 gates={"signed_event": event})
+                self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+                self.assertTrue(any("syncthing-flatpak-package.yml/runs" in arg
+                                    for call in log for arg in call))
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
     def test_refuses_missing_or_stale_independent_asset_audit(self):
         good = asset_audit(draft())
         cases = [False,

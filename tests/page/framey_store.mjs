@@ -53,7 +53,7 @@ assert.equal(el('deckyStoreList').textContent,'No plugins match this search.');
 ctx.mockApi=async (path,body) => {
   if(path==='/api/decky/plugin'){assert.equal(body.sha256,'a'.repeat(64));return {job:'job-1'};}
   if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
-  if(path==='/api/decky')return {running:true,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+  if(path==='/api/decky/panel-status')return {running:true,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
@@ -76,7 +76,7 @@ ctx.mockApi=async (path,body) => {
     assert.equal(new URL(path,'http://localhost').searchParams.get('id'),lostJobId);
     return {done:true,message:'Recovered install'};
   }
-  if(path==='/api/decky')return {managed:true,running:true,plugins:[]};
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,plugins:[]};
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
@@ -94,7 +94,7 @@ ctx.mockApi=async path => {
   if(path==='/api/decky/plugin'){
     const error=Error('Invalid reviewed store version');error.status=400;throw error;
   }
-  if(path==='/api/decky')return {managed:true,running:true,plugins:[]};
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,plugins:[]};
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
@@ -103,7 +103,7 @@ assert.equal(session.has('frameyPluginJob'),false);
 assert.equal(el('deckyJobCheck').hidden,true);
 
 // A stopped Decky service must still offer recovery by removing its owned plugin.
-ctx.mockApi=async path => path==='/api/decky' ?
+ctx.mockApi=async path => path==='/api/decky/panel-status' ?
   {managed:true,running:false,plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]} :
   Promise.reject(Error(`unexpected ${path}`));
 vm.runInContext('api=mockApi',ctx);
@@ -116,7 +116,7 @@ assert.equal(el('deckyStoreList').children[1].children[1].disabled,true);
 ctx.mockApi=async (path,body) => {
   if(path==='/api/decky/plugin'){assert.equal(body.sha256,'b'.repeat(64));return {job:'job-2'};}
   if(path.startsWith('/api/job'))return {done:true,error:'archive digest mismatch'};
-  if(path==='/api/decky')return {running:true,plugins:[]};
+  if(path==='/api/decky/panel-status')return {running:true,plugins:[]};
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
@@ -130,7 +130,7 @@ let changes=0;
 ctx.mockApi=async (path,body) => {
   if(path==='/api/decky/plugin'){changes++;return {job:'job-pending'};}
   if(path.startsWith('/api/job'))throw Error('connection lost');
-  if(path==='/api/decky')return {managed:true,running:true,
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,
     plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
   throw Error(`unexpected ${path}`);
 };
@@ -147,7 +147,7 @@ assert.equal(changes,1);
 assert.match(el('deckyJobStatus').textContent,/Check result before starting another/);
 ctx.mockApi=async path => {
   if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
-  if(path==='/api/decky')return {managed:true,running:true,
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,
     plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
   throw Error(`unexpected ${path}`);
 };
@@ -185,7 +185,7 @@ assert.doesNotMatch(el('deckyStoreList').children[0].children[0].textContent,/St
 session.set('frameyPluginJob',JSON.stringify({job:'old-job',action:'install',name:'Plugin 2'}));
 ctx.mockApi=async path => {
   if(path.startsWith('/api/job'))throw Error('no such job (the app may have restarted)');
-  if(path==='/api/decky')return {running:true,plugins:[]};
+  if(path==='/api/decky/panel-status')return {running:true,plugins:[]};
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
@@ -204,17 +204,17 @@ vm.runInContext(script,reopened);
 assert.equal(vm.runInContext('deckyJobPending()',reopened),true,'reload keeps the unknown-result gate');
 await vm.runInContext('deckyChange("install",{id:98,name:"Current",sha256:"a".repeat(64)})',ctx);
 assert.match(el('deckyJobStatus').textContent,/Refresh plugins to review installed status/);
-ctx.mockApi=async path=>{assert.equal(path,'/api/decky');throw Error('offline');};
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky/panel-status');throw Error('offline');};
 vm.runInContext('api=mockApi',ctx);
 await el('deckyRefresh').onclick();
 assert.equal(session.get('frameyPluginUnknown'),'1');
 assert.equal(el('deckyStoreList').children[0].children[1].disabled,true);
-ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true};};
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky/panel-status');return {running:true};};
 vm.runInContext('api=mockApi',ctx);
 await el('deckyRefresh').onclick();
 assert.equal(session.get('frameyPluginUnknown'),'1');
 assert.match(el('deckyState').textContent,/status is incomplete/);
-ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true,plugins:[]};};
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky/panel-status');return {running:true,plugins:[]};};
 vm.runInContext('api=mockApi',ctx);
 await el('deckyRefresh').onclick();
 assert.equal(session.has('frameyPluginUnknown'),false);
@@ -241,7 +241,7 @@ assert.match(el('frameyCompatibility').textContent,/local browser/);
 vm.runInContext('deckyStore=[{id:2,name:"Plugin 2",version:"1.0",description:"A panel",root:false}];' +
   'deckyState={running:true,plugins:[{storeId:2,name:"Plugin 2",version:"1.0"}]};showDeckyStore()',ctx);
 let statusCalls=[];
-ctx.mockApi=path=>{assert.equal(path,'/api/decky');
+ctx.mockApi=path=>{assert.equal(path,'/api/decky/panel-status');
   return new Promise((resolve,reject)=>statusCalls.push({resolve,reject}));};
 vm.runInContext('api=mockApi',ctx);
 const staleSuccess=vm.runInContext('refreshDecky()',ctx);
@@ -271,7 +271,7 @@ assert.equal(el('deckyStoreList').children[0].children[1].disabled,false);
 // A panel must not keep an old frontend after the installed receipt changes.
 let installedHash='a'.repeat(64);
 ctx.mockApi=async path => {
-  assert.equal(path,'/api/decky');
+  assert.equal(path,'/api/decky/panel-status');
   return {managed:true,running:true,plugins:[{storeId:2,name:'Plugin 2',version:'1.0',sha256:installedHash}]};
 };
 vm.runInContext('api=mockApi',ctx);
@@ -298,7 +298,7 @@ ctx.mockApi=async (path,body) => {
     return {job:'job-update'};
   }
   if(path.startsWith('/api/job'))return {done:true,message:'Updated Plugin 2'};
-  if(path==='/api/decky')return {managed:true,running:true,
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,
     plugins:[{storeId:2,name:'Plugin 2',version:'2.0',sha256:'c'.repeat(64)}]};
   throw Error(`unexpected ${path}`);
 };
@@ -322,7 +322,7 @@ let accepted=0;
 ctx.mockApi=async path => {
   if(path==='/api/decky/plugin'){accepted++;return {job:'memory-job'};}
   if(path.startsWith('/api/job'))throw Error('connection lost');
-  if(path==='/api/decky')return {managed:true,running:true,
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,
     plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
   throw Error(`unexpected ${path}`);
 };
@@ -337,7 +337,7 @@ await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
 assert.equal(accepted,1);
 ctx.mockApi=async path => {
   if(path.startsWith('/api/job'))return {done:true,message:'Installed Plugin 2'};
-  if(path==='/api/decky')return {managed:true,running:true,
+  if(path==='/api/decky/panel-status')return {managed:true,running:true,
     plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
   throw Error(`unexpected ${path}`);
 };

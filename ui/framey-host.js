@@ -111,11 +111,11 @@
   Object.defineProperty(window, 'indexedDB', {configurable:true, value:undefined});
   parent.postMessage({type:'framey:cache:init', session:cacheSession}, '*');
 
-  function request(method, args, legacy=false, type='framey:call') {
+  function request(method, args, legacy=false, type='framey:call', timeout=30000) {
     if (!/^[A-Za-z][A-Za-z0-9_]{0,63}$/.test(method)) return Promise.reject(Error('Invalid backend method'));
     const id = ++nextId;
     return new Promise((resolve, reject) => {
-      const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, 30000);
+      const timer = setTimeout(() => { pending.delete(id); reject(Error('Decky backend timed out')); }, timeout);
       pending.set(id, {resolve, reject, timer});
       parent.postMessage({type, id, method, args, legacy, session:cacheSession}, '*');
     });
@@ -128,6 +128,47 @@
   // backend uses a private socket belonging to the retained child, never a
   // general fetch proxy or an unverified listener on that TCP port.
   if (document.getElementById('framey-bundle')?.dataset?.syncthingHttp === '1') {
+    // The dashboard starts several reads together, and its duplicate state
+    // reads contend for the helper's ownership lock. Keep one fetch active.
+    // Bound queue waiting separately: later reads still need the full RPC
+    // budget after dispatch (at most 30 seconds waiting plus 30 executing).
+    const fetchQueue = [];
+    let fetchActive = false;
+    function dispatchFetch() {
+      if (fetchActive || !fetchQueue.length) return;
+      const item = fetchQueue.shift();
+      clearTimeout(item.timer);
+      item.signal?.removeEventListener('abort', item.abort);
+      const remaining = item.deadline - Date.now();
+      if (remaining <= 0 || item.signal?.aborted) {
+        item.reject(item.signal?.aborted ? new DOMException('Request aborted', 'AbortError')
+          : Error('Decky backend timed out'));
+        dispatchFetch();
+        return;
+      }
+      fetchActive = true;
+      request('framey_http_fetch', [item.args], true, 'framey:call', 30000)
+        .then(item.resolve, item.reject).finally(() => {fetchActive = false; dispatchFetch();});
+    }
+    function queueFetch(args, signal) {
+      if (fetchQueue.length >= 16) return Promise.reject(Error('Syncthing HTTP queue is full'));
+      return new Promise((resolve, reject) => {
+        const item = {args, signal, resolve, reject, deadline:Date.now()+30000};
+        const remove = error => {
+          const index = fetchQueue.indexOf(item);
+          if (index < 0) return;
+          fetchQueue.splice(index, 1);
+          clearTimeout(item.timer);
+          signal?.removeEventListener('abort', item.abort);
+          reject(error);
+        };
+        item.abort = () => remove(new DOMException('Request aborted', 'AbortError'));
+        item.timer = setTimeout(() => remove(Error('Decky backend timed out')), 30000);
+        signal?.addEventListener('abort', item.abort, {once:true});
+        fetchQueue.push(item);
+        dispatchFetch();
+      });
+    }
     window.fetch = async (input, init={}) => {
       if (typeof input !== 'string' || !input.startsWith('http://127.0.0.1:58384/'))
         throw new TypeError('Syncthing HTTP origin is fixed');
@@ -142,7 +183,7 @@
       const headers = Object.fromEntries(new Headers(init.headers || {}));
       if (Object.keys(headers).some(name => !['accept','content-type','authorization','x-api-key'].includes(name)))
         throw new TypeError('Syncthing HTTP header is unavailable');
-      const reply = await request('framey_http_fetch', [{method, path:url.pathname+url.search, headers}], true);
+      const reply = await queueFetch({method, path:url.pathname+url.search, headers}, init.signal);
       if (!reply?.success) throw Error(String(reply?.result || 'Syncthing HTTP bridge unavailable'));
       const data = reply.result;
       if (!data || !Number.isInteger(data.status) || data.status < 200 || data.status > 599 ||
@@ -256,7 +297,7 @@
       });
   }
   function addPluginEvent(event, listener) {
-    if (typeof event !== 'string' || !/^[A-Za-z0-9_:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
+    if (typeof event !== 'string' || !/^[A-Za-z0-9_#:/.-]{1,128}$/.test(event) || typeof listener !== 'function')
       throw Error('Invalid Decky event listener');
     if (!eventListeners.has(event)) {
       if (eventListeners.size >= 32) throw Error('Too many Decky event names');

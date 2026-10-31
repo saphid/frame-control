@@ -1,6 +1,7 @@
 """Decky release validation and the removable user-service transaction."""
 import sandbox  # noqa: F401
 import hashlib
+import http.server
 import io
 import json
 import os
@@ -8,6 +9,7 @@ import secrets
 import subprocess
 import sys
 import tempfile
+import threading
 import unittest
 from pathlib import Path
 from unittest.mock import patch
@@ -44,6 +46,162 @@ class DeckyRelease(unittest.TestCase):
             download.assert_not_called()
 
 
+@unittest.skipIf(os.name == 'nt', 'remote status script runs on Linux')
+class DeckyStatusProbe(unittest.TestCase):
+    def test_panel_status_reads_fresh_ownership_and_inventory_without_network_imports(self):
+        guard = '''import builtins
+original_import = builtins.__import__
+def panel_import(name, *args, **kwargs):
+    if name in ('http.client', 'urllib.request', 'platform'):
+        raise AssertionError('unrelated panel status import: '+name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = panel_import
+'''
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            base = home / '.local/share/frame-control/decky'
+            plugin = base / 'plugins/Example/plugin.json'
+            plugin.parent.mkdir(parents=True)
+            plugin.write_text(json.dumps({'name': 'Example', 'author': 'Test'}))
+            marker = plugin.with_name('.frame-control-store.json')
+            marker.write_text(json.dumps({'storeId': 14, 'version': '1.0', 'sha256': 'a'*64}))
+            receipt = base / '.frame-control/receipt.json'
+            receipt.parent.mkdir()
+            legacy = base / 'settings/release.json'
+            legacy.parent.mkdir()
+            service = home / '.config/systemd/user/frame-control-decky.service'
+            service.parent.mkdir(parents=True)
+            service.write_text('owned service canary\n')
+            systemctl = home / 'systemctl'
+            systemctl.write_text('#!/bin/sh\n[ "$1 $2 $3" = "--user is-active frame-control-decky.service" ] || exit 99\nexit "$PANEL_TEST_STATE"\n')
+            systemctl.chmod(0o700)
+            def probe(active=True):
+                before = {p: p.read_bytes() for p in home.rglob('*') if p.is_file()}
+                result = subprocess.run([sys.executable, '-'], input=guard+frame_decky.PANEL_STATUS_PROBE,
+                    capture_output=True, text=True, timeout=15,
+                    env={**os.environ, 'HOME': folder, 'PANEL_TEST_STATE': '0' if active else '3',
+                         'PATH': folder+os.pathsep+os.environ['PATH']})
+                self.assertEqual(result.returncode, 0, result.stderr)
+                self.assertEqual({p: p.read_bytes() for p in home.rglob('*') if p.is_file()}, before)
+                state = json.loads(result.stdout)
+                self.assertEqual(set(state), {'managed', 'running', 'version', 'plugins'})
+                self.assertIs(state['running'], active)
+                return state
+            owned = {'managedBy': 'Frame Control', 'version': 'v3.3.0'}
+            receipt.write_text(json.dumps(owned))
+            state = probe()
+            self.assertTrue(state['managed'])
+            self.assertEqual(state['version'], 'v3.3.0')
+            self.assertEqual(state['plugins'][0]['sha256'], 'a'*64)
+            # Each refresh must see the current installed receipt, even when stopped.
+            marker.write_text(json.dumps({'storeId': 14, 'version': '2.0', 'sha256': 'b'*64}))
+            state = probe(False)
+            self.assertTrue(state['managed'])
+            self.assertEqual(state['plugins'][0]['sha256'], 'b'*64)
+            receipt.unlink()
+            legacy.write_text(json.dumps(owned))
+            self.assertTrue(probe()['managed'])
+            receipt.write_text(json.dumps({'managedBy': 'someone else', 'version': 'v9.0.0'}))
+            self.assertFalse(probe()['managed'])  # New receipt takes precedence over legacy.
+            self.assertIsNone(probe()['version'])
+            receipt.unlink()
+            legacy.unlink()
+            self.assertFalse(probe()['managed'])
+            receipt.write_text(json.dumps(owned))
+            service.unlink()
+            self.assertFalse(probe()['managed'])
+
+    def test_panel_status_preserves_transport_deadline_and_compatibility(self):
+        plugin = {'storeId': 14, 'version': '1.0', 'sha256': 'a'*64}
+        def ssh(command, stdin, timeout):
+            self.assertEqual((command, stdin, timeout), ('python3 -', frame_decky.PANEL_STATUS_PROBE, 15))
+            return json.dumps({'managed': True, 'running': True, 'version': 'v3.3.0', 'plugins': [plugin]})
+        result = frame_decky.panel_status(ssh)
+        self.assertIn('compatibility', result['plugins'][0])
+        self.assertEqual(result['plugins'][0]['sha256'], plugin['sha256'])
+
+    def test_loopback_status_preserves_inventory_when_cef_is_unavailable(self):
+        replies = []
+        requests = []
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_GET(self):
+                requests.append(self.path)
+                code, body = replies.pop(0)
+                self.send_response(code)
+                self.send_header('Content-Length', str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *_args):
+                pass
+
+        with tempfile.TemporaryDirectory() as folder:
+            home = Path(folder)
+            base = home / '.local/share/frame-control/decky'
+            plugin = base / 'plugins/Example/plugin.json'
+            plugin.parent.mkdir(parents=True)
+            plugin.write_text(json.dumps({'name': 'Example', 'author': 'Test'}))
+            receipt = base / '.frame-control/receipt.json'
+            receipt.parent.mkdir()
+            receipt.write_text(json.dumps({'managedBy': 'Frame Control', 'version': 'v3.3.0'}))
+            service = home / '.config/systemd/user/frame-control-decky.service'
+            service.parent.mkdir(parents=True)
+            service.write_text('owned service canary\n')
+            systemctl = home / 'systemctl'
+            systemctl.write_text('#!/bin/sh\nexit 0\n')
+            systemctl.chmod(0o700)
+            os_release = home / 'os-release'
+            os_release.write_text('VERSION_ID="13"\nVARIANT_ID="vr"\nBUILD_ID="private-fixture"\n')
+            before = {p: p.read_bytes() for p in (plugin, receipt, service, os_release)}
+            server = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+            thread = threading.Thread(target=server.serve_forever, daemon=True)
+            thread.start()
+            try:
+                probe = frame_decky.PROBE.replace('8080, timeout=2', str(server.server_port)+', timeout=2')
+                # The remote runs on Linux; desktop tests also run on macOS,
+                # which has no /etc/os-release. Supply only this owned OS fixture.
+                self.assertEqual(probe.count("pathlib.Path('/etc/os-release')"), 1)
+                probe = probe.replace("pathlib.Path('/etc/os-release')",
+                                      'pathlib.Path('+repr(str(os_release))+')')
+                # The cold remote probe must not load URL/proxy/TLS helpers.
+                guard = '''import builtins
+original_import = builtins.__import__
+def bounded_import(name, *args, **kwargs):
+    if name in ('urllib.request', 'platform'):
+        raise AssertionError('cold status import: '+name)
+    return original_import(name, *args, **kwargs)
+builtins.__import__ = bounded_import
+'''
+                targets = json.dumps([{'title': 'SharedJSContext',
+                                       'url': 'http://steamloopback.host/index.html'}]).encode()
+                for code, body, expected in ((200, targets, True), (200, b'[]', False),
+                                             (503, targets, False), (200, b'invalid json', False)):
+                    with self.subTest(code=code, body=body):
+                        replies.append((code, body))
+                        result = subprocess.run([sys.executable, '-'], input=guard+probe,
+                            capture_output=True, text=True, timeout=15,
+                            env={**os.environ, 'HOME': folder,
+                                 'PATH': folder+os.pathsep+os.environ['PATH']})
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        status = json.loads(result.stdout)
+                        self.assertIs(status['cef'], expected)
+                        self.assertIs(status['managed'], True)
+                        self.assertIs(status['running'], True)
+                        self.assertEqual(status['arch'], os.uname().machine)
+                        self.assertEqual((status['frameOS'], status['variant'], status['build']),
+                                         ('13', 'vr', 'private-fixture'))
+                        self.assertEqual(status['version'], 'v3.3.0')
+                        self.assertEqual(status['plugins'][0]['name'], 'Example')
+                        self.assertEqual({p: p.read_bytes() for p in before}, before)
+                self.assertEqual(requests, ['/json/list']*4)
+            finally:
+                server.shutdown()
+                server.server_close()
+                thread.join(timeout=5)
+                self.assertFalse(thread.is_alive())
+
+
 @unittest.skipIf(os.name == 'nt', 'remote service script runs on Linux')
 class DeckyServiceScript(unittest.TestCase):
     def setUp(self):
@@ -78,6 +236,7 @@ class DeckyServiceScript(unittest.TestCase):
         self.assertEqual(json.loads(receipt.read_text())['version'], 'v3.3.0')
         service = Path(self.tmp.name) / '.config/systemd/user/frame-control-decky.service'
         first_unit = service.read_text()
+        self.assertIn('\nKillMode=mixed\n', first_unit)
         self.assertIn('Environment=PATH='+str(Path(self.tmp.name) / '.local/bin')+
                       ':/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin\n', first_unit)
 
@@ -92,6 +251,7 @@ class DeckyServiceScript(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((self.base / 'PluginLoader').read_bytes(), second)
         self.assertIn('Environment=PATH=', service.read_text())
+        self.assertIn('\nKillMode=mixed\n', service.read_text())
         result = self.apply('remove')
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.base / 'PluginLoader').exists())

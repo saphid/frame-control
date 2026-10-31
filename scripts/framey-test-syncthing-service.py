@@ -61,6 +61,20 @@ def module(name, path):
     return value
 
 
+def verify_decky_shutdown(report, *, migration=False):
+    """Require the guest's owned-service stop and complete loader-log check."""
+    actual, removed = (('actualMigrationDeckyUserService', 'ownedMigrationDeckyServiceRemoved')
+                       if migration else ('actualDeckyUserService', 'ownedDeckyServiceRemoved'))
+    stop = report.get('ownedDeckyStop')
+    if (any(report.get(key) is not True for key in (actual, removed, 'deckyShutdownLogChecked'))
+        or not isinstance(stop, dict)
+        or stop.get('activeState') != 'inactive' or stop.get('result') != 'success'
+        or stop.get('killMode') != 'mixed' or stop.get('execMainStatus') != '0'
+        or type(stop.get('mainPidBefore')) is not int or stop['mainPidBefore'] <= 0
+        or type(stop.get('mainPidAfter')) is not int or stop['mainPidAfter'] != 0):
+        raise ValueError('Missing or unsuccessful owned Decky shutdown proof')
+
+
 def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
          user_probe=None, normal_root=False, timeout=300, root_size_mib=1024,
          browser=False):
@@ -128,8 +142,11 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
         fileobj=raw, mode='wb', mtime=0, compresslevel=1
     ) as target:
 
-        def write(name, mode, data, uid=0, gid=0, major=0, minor=0):
+        def write(name, mode, data, uid=0, gid=0, major=0, minor=0, mtime=0):
             nonlocal inode
+            mtime = int(mtime)
+            if not 0 <= mtime <= 0xffffffff:
+                raise ValueError('Unexpected guest root filesystem timestamp')
             inode += 1
             name = name.encode() + b'\0'
             fields = [
@@ -138,7 +155,7 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
                 uid,
                 gid,
                 1,
-                0,
+                mtime,
                 len(data),
                 0,
                 0,
@@ -195,6 +212,9 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
                 member.gid,
                 member.devmajor or 0,
                 member.devminor or 0,
+                # Timestamp-based .pyc headers in the published rootfs must
+                # still match their sources after the guest unpacks newc.
+                mtime=member.mtime,
             )
         for name, (mode, data) in overlays.items():
             write(
@@ -208,6 +228,30 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
     if kernel is None:
         raise ValueError('Guest kernel is absent')
     return kernel
+
+
+# pack() regenerates these from pinned inputs on every run, and callers record
+# their digests, so leaving them in an evidence folder only consumes disk.
+BOOT_ARTIFACTS = ('vmlinuz', 'initrd.gz')
+
+
+def remove_boot_artifacts(folder):
+    """Delete only the regenerated VM boot images from a run folder.
+
+    Returns {name: bytes} for each removed file. Directories are never touched.
+    """
+    removed = {}
+    for name in BOOT_ARTIFACTS:
+        path = Path(folder) / name
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISDIR(info.st_mode):
+            continue
+        path.unlink()
+        removed[name] = info.st_size
+    return removed
 
 
 def main():
@@ -279,6 +323,7 @@ def main():
         'scripts/framey-test-syncthing-runtime.py',
         'scripts/framey-test-decky-runtime.py',
         'ui/vendor/syncthing-0.2.7/main.py',
+        'ui/frame_decky.py',
         'ui/vendor/syncthing-0.2.7/watchdog.patch',
         'ui/vendor/syncthing-0.2.7/owned_unit.rs',
     ]
@@ -424,6 +469,7 @@ def main():
             ):
                 raise RuntimeError('Service manager or isolation proof is incomplete')
             service = report['candidateService']
+            verify_decky_shutdown(service)
             if (
                 any(service.get(key) is not True for key in REQUIRED_SERVICE_RESULTS)
                 or service.get('flatpakPackageVerified') is not False

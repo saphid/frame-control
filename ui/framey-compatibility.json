@@ -927,13 +927,14 @@
         "https://github.com/pytest-dev/pytest-asyncio"
       ],
       "status": "partial",
-      "reason": "Controls render with fixture replies. On the real standby Frame, the exact official backend's read-only adapter status and paired-device list returned powered=true, zero devices and no errors. That direct Python probe did not run through Decky or display a panel; discovery with paired devices, labels, connections, pairing and worn VR remain unverified.",
+      "reason": "Controls render with fixture replies. On the real standby Frame, the exact official backend's read-only adapter status and paired-device list returned powered=true, zero devices and no errors. That direct Python probe did not run through Decky or display a panel; discovery with paired devices, labels, connections, pairing and worn VR remain unverified. Isolated native AMD64 and ARM64 Decky 3.3.0 also passes the unchanged backend through 13 RPCs against private synthetic BlueZ objects: paired-device filtering, adapter selection, labels/battery, reversible connection/power replies and clean unload. This does not verify actual Bluetooth connections or pairing. Exact-head CI must be repeated after source changes.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame direct read-only backend"
+        "real Frame direct read-only backend",
+        "native AMD64/ARM64 private BlueZ fixture"
       ],
       "browser": {
         "id": 18,
@@ -976,7 +977,8 @@
         "sha256": "f07f7b74f31da15b5e3a8234a3f00faa01365b56b8f496aca7bb79120be7b8a5",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-bluetooth-private-bluez-2026-10-30.md"
     },
     {
       "id": 19,
@@ -3926,7 +3928,7 @@
         "https://github.com/safijari/Shotty"
       ],
       "status": "partial",
-      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Existing copies need Update/reinstall.",
+      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Update or reinstall existing copies to receive the child IPC EOF repair. Local published Decky 3.3.0 AMD64 verifies two clean parent-only unloads and restart; restoring the previous managed source reproduces a forced plugin kill. Fresh ARM64 unload and full hosted qualification remain pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3976,7 +3978,8 @@
       },
       "requiredShims": [
         "shotty-click-app-dir",
-        "shotty-bounded-copies"
+        "shotty-bounded-copies",
+        "shotty-ipc-eof"
       ],
       "missingShimStatus": "partial",
       "runtimeEvidence": "docs/evidence/framey-shotty-bounded-2026-10-30.md"
@@ -4528,12 +4531,13 @@
         "https://github.com/Tormak9970/TabMaster.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium rendered the QAM and navigable Overview/Filters documentation with an actual Decky 3.3.0 amd64 backend. Library-tab editing remains unavailable: Steam login/library patches and MobX reactions have no target. ARM64 and worn VR unverified.",
+      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A separate native AMD64 fixture verifies private per-user settings, shared-tab filtering, backup/restore and loader-restart persistence with the exact-digest JSON restore fix; its retained console has an unattributed JSON diagnostic. Existing managed copies need update/reinstall for restore. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64 of the restore fix, browser/backend settings integration and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 AMD64 private settings/backup/restore/restart fixture"
       ],
       "browser": {
         "id": 61,
@@ -4574,7 +4578,11 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-tabmaster-backup-restore-2026-10-30.md",
+      "requiredShims": [
+        "tabmaster-json-file-restore"
+      ]
     },
     {
       "id": 62,
@@ -4736,7 +4744,7 @@
         "https://github.com/jwhitlow45/free-loader.git"
       ],
       "status": "partial",
-      "reason": "The exact archive's byte-identical duplicate ZIP members pass guarded install/remove. Actual Decky 3.3.0 in private network-isolated amd64 and ARM64 containers discovers the plugin, reads default settings and empty local deals, and retains a settings change after restart. Live deal-feed refresh, notifications, Steam store integration, real Frame ARM64 service and worn VR remain unverified; no feed request was made.",
+      "reason": "The exact archive's identical duplicate ZIP members pass guarded install/remove. Earlier private AMD64/ARM64 Decky probes verified settings and empty cache, but the ARM64 console exposed forced unload after restart. An exact-archive child IPC repair leaves the backend/cache logic unchanged; update/reinstall required. Fresh final-head CI, ARM64 shutdown and managed Frame qualification remain pending. Live feeds, notifications, Steam integration and worn VR remain unverified; no feed request was made.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4782,7 +4790,10 @@
         "hostCommit": "d963305",
         "frontendReady": true,
         "backendScope": "isolated official Python settings/defaults and empty local-deals read with a Decky stub"
-      }
+      },
+      "requiredShims": [
+        "free-loader-ipc-eof"
+      ]
     },
     {
       "id": 64,
@@ -5340,7 +5351,7 @@
         "https://github.com/FlashyReese/decky-wine-cellar.git"
       ],
       "status": "partial",
-      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 AMD64 and ARM64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge.",
+      "reason": "Exact 0.2.1 archive receives a pinned ARM64 helper and receipt-bound fixed-origin socket bridge. Published Decky 3.3.0 AMD64 and ARM64 discovered the managed backend and read an empty private Steam-home state; a separate local opaque Chromium replay rendered the official empty-state panel with mutating commands denied. Compatibility-tool downloads, install/remove, live Steam library, real Frame managed service and worn VR remain unverified. Update or reinstall an existing copy to get this bridge and the child IPC EOF repair needed for clean unload. Native AMD64 unload is locally verified; fresh ARM64 unload qualification is pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -5378,7 +5389,8 @@
         "reason": "Exact managed archive installed and removed through fake Frame HTTP/SSH; receipt shim and ARM64 helper/managed Python SHA-256 checked. Plugin backend execution and VR use are outside this fake-Frame flow."
       },
       "requiredShims": [
-        "wine-cellar-native-bridge"
+        "wine-cellar-native-bridge",
+        "wine-cellar-ipc-eof"
       ],
       "missingShimStatus": "broken"
     },
@@ -7446,7 +7458,7 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
       "status": "partial",
-      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Exact managed 1.2.6 installs restore certificate and hostname checks for the token-bearing image uploader. Published Decky 3.3.0 x86_64 discovers the managed backend, returns read-only system/storage values, and rejects a private self-signed upload endpoint before sending a fixture token. Older copies need Update. Remote reports, public uploads, settings changes, the real Frame backend and worn VR remain unverified.",
+      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Exact managed 1.2.6 installs restore certificate and hostname checks for the token-bearing image uploader. Published Decky 3.3.0 x86_64 discovers the managed backend, returns read-only system/storage values, and rejects a private self-signed upload endpoint before sending a fixture token. Older copies need Update. Remote reports, public uploads, settings changes, the real Frame backend and worn VR remain unverified. A prepared exact-archive child IPC repair preserves the verified TLS helper and original unload hook. Existing copies need Update/reinstall. Fresh native AMD64/ARM64 shutdown and hosted qualification remain pending; this adds no real Frame or worn/controller proof.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7506,7 +7518,8 @@
         "mode": "exact managed 1.2.6 source under published Decky 3.3.0 x86_64; read-only RPCs and self-signed loopback HTTPS rejection; no external upload"
       },
       "requiredShims": [
-        "deck-settings-verified-tls"
+        "deck-settings-verified-tls",
+        "deck-settings-ipc-eof"
       ]
     },
     {
@@ -7719,8 +7732,8 @@
         "https://github.com/decktools-xyz/simple-timer",
         "https://github.com/decktools-xyz/simple-timer.git"
       ],
-      "status": "works",
-      "reason": "Verified for silent in-panel session timers: Chromium Begin/Cancel/countdown/toast with real ARM64 Decky 3.3.0; repaired cancel, replace, completion and active/canceled/expired restarts pass actual loader RPC/events. Update/reinstall required. Sound and suspend unsupported; alerts require an open panel; worn VR unverified.",
+      "status": "partial",
+      "reason": "Silent in-panel timers were previously verified in Chromium with real ARM64 Decky 3.3.0. Current-main native probes exposed forced unload with an active timer. The exact-archive child IPC repair preserves timer logic; update/reinstall required. Fresh hosted AMD64/ARM64 shutdown, browser and managed Frame qualification is pending. Sound and suspend unsupported; alerts require an open panel; worn VR unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7770,7 +7783,8 @@
         "method": "local Chromium + real Frame SSH; private actual Decky 3.3.0 ARM64 service"
       },
       "requiredShims": [
-        "simple-timer-lifecycle"
+        "simple-timer-lifecycle",
+        "simple-timer-ipc-eof"
       ],
       "lifecycle": {
         "evidence": "docs/evidence/framey-simple-timer-2026-10-26.md",
@@ -8816,7 +8830,7 @@
         "https://github.com/mtkennerly/ludusavi"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Flatpak Ludusavi discovery and backup/restore unverified.",
+      "reason": "Exact managed 1.2.2 reports a missing Ludusavi executable without a version-RPC error and bounds each version probe to five seconds. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original negative control and restart. The exact frontend shows its missing-dependency message with in-memory replies in sandboxed local Chromium. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, ARM64, real Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11872,14 +11886,14 @@
         "https://github.com/bentemple/decky-download-all"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 x86_64 verifies discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
+      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 AMD64 and ARM64 verify discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
         "managed Chromium queue fixtures (synthetic Steam only)",
-        "published Decky 3.3.0 x86_64 discovery/logging RPC"
+        "published Decky 3.3.0 AMD64/ARM64 discovery/logging RPC"
       ],
       "browser": {
         "id": 131,
@@ -12212,12 +12226,13 @@
         "https://github.com/maroun2/deck-progress-tracker"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Steam game/library statistics and page patches unverified.",
+      "reason": "Initializer succeeds. A prepared adaptation for this exact archive repairs child IPC EOF handling. Published Decky 3.3.0 AMD64 passes private settings/manual-tag persistence, selected-tag deletion and graceful restart/unload; the original plugin needs two forced unload kills in the same fixture. Fresh ARM64/CI, live Steam statistics, automatic tagging, HLTB lookup, Steam-page badges, managed real Frame and worn-VR/controller use remain unverified. Existing installed copies do not receive this repair until updated.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "isolated Decky 3.3.0 AMD64 private tags and IPC unload"
       ],
       "browser": {
         "id": 134,
@@ -13574,12 +13589,13 @@
         "https://github.com/allmazz/decky-desktop-apps.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Flatpak app discovery and Steam shortcut changes unverified.",
+      "reason": "Initializer succeeds. Published Decky 3.3.0 AMD64 and ARM64 verify private desktop-entry parsing/filtering, XDG precedence, settings persistence and temporary-shortcut bookkeeping across a loader restart. Actual installed Flatpak discovery, Steam shortcut changes, app launches, browser/backend integration, the real Frame and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 AMD64/ARM64 private desktop entries/settings/bookkeeping"
       ],
       "browser": {
         "id": 143,
@@ -13618,7 +13634,8 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md"
     },
     {
       "id": 144,

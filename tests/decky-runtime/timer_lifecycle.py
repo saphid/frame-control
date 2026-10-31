@@ -8,7 +8,8 @@ import websockets
 
 
 class Client:
-    def __init__(self, name):
+    def __init__(self, name, transcript):
+        self.transcript = transcript
         self.name = name
         self.sequence = 0
         self.events = []
@@ -27,6 +28,7 @@ class Client:
             event = response['args'][0]
             if event['plugin'] == self.name:
                 self.events.append(event)
+                self.transcript.append(dict(kind="event", event=event))
         return response
 
     async def call(self, method, *args, success=True):
@@ -38,6 +40,7 @@ class Client:
             if response.get('id') != self.sequence:
                 continue
             await self.ws.send(json.dumps({'type': 3, 'id': self.sequence}))
+            self.transcript.append(dict(kind='rpc', method=method, args=list(args), response=response))
             if success:
                 assert response['type'] == 1, response
                 return response['result']
@@ -60,8 +63,8 @@ class Client:
                 break
 
 
-async def initial(name, negative):
-    async with Client(name) as client:
+async def initial(name, negative, transcript):
+    async with Client(name, transcript) as client:
         await client.call('set_subtle_mode', True)  # No sound or physical actions.
         response = await client.call('cancel_timer', success=False)
         if negative:
@@ -105,8 +108,8 @@ async def initial(name, negative):
                 'recents': await client.call('settings_getSetting', 'recent_timers_seconds', [])}
 
 
-async def resumed(name, saved):
-    async with Client(name) as client:
+async def resumed(name, saved, transcript):
+    async with Client(name, transcript) as client:
         assert 0 < await client.seconds() < 60
         assert await client.call('settings_getSetting', 'timer_end', None) == saved['end']
         assert await client.call('settings_getSetting', 'recent_timers_seconds', []) == saved['recents']
@@ -114,35 +117,39 @@ async def resumed(name, saved):
         assert await client.call('settings_getSetting', 'timer_end', None) is None
 
 
-async def idle(name):
-    async with Client(name) as client:
+async def idle(name, transcript):
+    async with Client(name, transcript) as client:
         assert await client.seconds() == 0
         assert await client.call('settings_getSetting', 'timer_end', None) is None
         await client.call('cancel_timer')  # Idempotent before any new timer.
         assert await client.call('settings_getSetting', 'subtle_mode', False) is True
 
 
-def probe(name, restart, log, negative=False):
-    saved = asyncio.run(initial(name, negative))
+def probe(name, restart, log, negative=False, *, unload_regression=False):
+    transcript = []
+    saved = asyncio.run(initial(name, negative, transcript))
+    if unload_regression:
+        restart()
+        return dict(priorManagedUnloadRegression=True, activeTimer=saved, transcript=transcript)
     if negative:
         restart({'timer_end': time.time()-60, 'subtle_mode': True})
-        asyncio.run(read_after_startup(name))
+        asyncio.run(read_after_startup(name, transcript))
         assert "has no attribute 'timer_task'" in log.read_text(), log.read_text()[-6000:]
-        return saved | {'expiredRestartError': True}
+        return saved | {'expiredRestartError': True, 'transcript': transcript}
     restart()
-    asyncio.run(resumed(name, saved))
+    asyncio.run(resumed(name, saved, transcript))
     restart()
-    asyncio.run(idle(name))
+    asyncio.run(idle(name, transcript))
     restart({'timer_end': time.time()-60, 'subtle_mode': True})
-    asyncio.run(idle(name))
+    asyncio.run(idle(name, transcript))
     return {'freshCancel': True, 'replacementSuppressesOldCompletion': True,
             'completionClearsEnd': True, 'lateExpiryEmitsWithoutSelfCancel': True,
             'activeRestartPreservesDeadlineAndRecents': True,
-            'canceledRestartIdle': True, 'expiredRestartIdle': True}
+            'canceledRestartIdle': True, 'expiredRestartIdle': True, 'transcript': transcript}
 
 
-async def read_after_startup(name):
-    async with Client(name) as client:
+async def read_after_startup(name, transcript):
+    async with Client(name, transcript) as client:
         # _main is scheduled independently; allow it to finish before reading its journal.
         await client.call('settings_getSetting', 'subtle_mode', False)
         await client.drain(.3)

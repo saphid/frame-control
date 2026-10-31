@@ -1,13 +1,20 @@
 """Prepared bundles cannot bypass exact architecture/commit/signature gates."""
 
+import contextlib
 import copy
 import hashlib
 import importlib.util
+import io
 import json
+import os
 from pathlib import Path
+import shutil
+import signal
+import sys
+import tarfile
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 class PreparedPackage(unittest.TestCase):
@@ -114,6 +121,7 @@ class PreparedPackage(unittest.TestCase):
 
     def migration(self):
         report = dict.fromkeys(self.module.MIGRATION_REQUIRED, True)
+        report.update(self.decky_shutdown(migration=True))
         report.update(architecture='x86_64', installerEnabled=False,
                       realFrameContacted=False, flatpakPackageVerified=True,
                       packagedBinarySha256='b' * 64, legacyMainPidBefore=150,
@@ -197,7 +205,49 @@ class PreparedPackage(unittest.TestCase):
                 'ancestryToMainPid': [151, 150],
             } for _ in range(3)],
         )
+        report.update(self.decky_shutdown())
         return report, required
+
+    def decky_shutdown(self, migration=False):
+        # Fields emitted by the actual mixed-policy service fixtures. The
+        # current AMD64 ownership artifact reports a clean 328 -> 0 stop.
+        actual, removed = (('actualMigrationDeckyUserService', 'ownedMigrationDeckyServiceRemoved')
+                           if migration else ('actualDeckyUserService', 'ownedDeckyServiceRemoved'))
+        return {actual: True, removed: True, 'deckyShutdownLogChecked': True,
+                'ownedDeckyStop': dict(mainPidBefore=328, mainPidAfter=0,
+                    activeState='inactive', result='success', killMode='mixed',
+                    execMainStatus='0', execMainCode='0', elapsedSeconds=6.7,
+                    timeoutStopUSec='1min 30s')}
+
+    def test_both_package_paths_require_checked_loader_shutdown(self):
+        for migration in (False, True):
+            for field in self.decky_shutdown(migration):
+                for value in (None, False):
+                    report = self.migration() if migration else self.candidate()[0]
+                    if value is None:
+                        del report[field]
+                    else:
+                        report[field] = value
+                    with self.subTest(migration=migration, field=field, value=value):
+                        with self.assertRaisesRegex(ValueError, 'Decky shutdown'):
+                            if migration:
+                                self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+                            else:
+                                self.verify(report, self.candidate()[1])
+
+    def test_both_package_paths_refuse_unsuccessful_or_incomplete_stop(self):
+        for migration in (False, True):
+            for mutation in (dict(result='timeout'), dict(activeState='failed'),
+                             dict(killMode='control-group'), dict(execMainStatus='1'),
+                             dict(mainPidBefore=0), dict(mainPidAfter=328)):
+                report = self.migration() if migration else self.candidate()[0]
+                report['ownedDeckyStop'].update(mutation)
+                with self.subTest(migration=migration, mutation=mutation):
+                    with self.assertRaisesRegex(ValueError, 'Decky shutdown'):
+                        if migration:
+                            self.module.verify_migration(report, 'x86_64', self.prepared('x86_64')['bundles'])
+                        else:
+                            self.verify(report, self.candidate()[1])
 
     def test_setup_requires_discovery_and_authenticated_use_without_preset_key(self):
         for field in ('discoveredDefaultApiKey', 'authenticatedRestWithDiscoveredKey',
@@ -360,6 +410,184 @@ class PreparedPackage(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.module.verify_browser(report, 'a'*64)
 
+
+class RunArtifactCleanup(unittest.TestCase):
+    """Each run removes its regenerated boot images but keeps its evidence."""
+
+    EVIDENCE = {'inputs.json', 'console.log', 'result.json'}
+    BOOT = {'vmlinuz', 'initrd.gz'}
+
+    @classmethod
+    def setUpClass(cls):
+        root = Path(__file__).resolve().parents[1]
+        loaded = []
+        for name, path in (('flatpak_package_cleanup', 'scripts/framey-test-syncthing-flatpak-package.py'),
+                           ('service_vm_cleanup', 'scripts/framey-test-syncthing-service.py')):
+            spec = importlib.util.spec_from_file_location(name, root / path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            loaded.append(module)
+        cls.module, cls.packer = loaded
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.folder = Path(temporary.name)
+        rootfs = self.folder / 'rootfs.tar'
+        with tarfile.open(rootfs, 'w') as archive:
+            data = b'fixture kernel'
+            member = tarfile.TarInfo('./boot/vmlinuz-fixture')
+            member.size = len(data)
+            archive.addfile(member, io.BytesIO(data))
+        bundles = self.folder / 'bundles'
+        bundles.mkdir()
+        expected = {}
+        for kind in ('runtime', 'app'):
+            data = kind.encode() * 8
+            (bundles / (kind + '.flatpak')).write_bytes(data)
+            expected[kind] = {'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)}
+        key = self.folder / 'key.gpg'
+        key.write_bytes(b'fixture key')
+        self.output = self.folder / 'run'
+        self.argv = ['framey-test-syncthing-flatpak-package.py', '--rootfs-tar', str(rootfs),
+                     '--bundles', str(bundles), '--key', str(key), '--output', str(self.output)]
+        stack = [
+            patch.object(self.module, 'KEY_SHA256', hashlib.sha256(b'fixture key').hexdigest()),
+            patch.object(self.module, 'BUNDLES', expected),
+            patch.object(self.module.platform, 'system', return_value='Linux'),
+            patch.object(self.module.platform, 'machine', return_value='x86_64'),
+            patch.object(self.module.shutil, 'which', return_value='/usr/bin/qemu-system-x86_64'),
+        ]
+        for item in stack:
+            item.start()
+            self.addCleanup(item.stop)
+
+    def qemu(self, code=0, console='', during=None, running=False):
+        """Fake QEMU; a running child exits only when reap() signals its group."""
+        exited = [] if running else [code]
+        self.group_signals = []
+
+        def killpg(_pid, signum):
+            self.group_signals.append(signum)
+            exited.append(-signum)
+
+        def popen(command, stdout, **_kwargs):
+            # Boot images exist while the owned VM runs.
+            self.assertTrue(all((self.output / name).is_file() for name in self.BOOT))
+            stdout.write(console)
+            if during:
+                during()
+            process = Mock(pid=4242)
+            process.poll.side_effect = lambda: exited[-1] if exited else None
+            process.wait.side_effect = lambda timeout=None: exited[-1]
+            return process
+
+        stack = contextlib.ExitStack()
+        stack.enter_context(patch.object(self.module.subprocess, 'Popen', side_effect=popen))
+        stack.enter_context(patch.object(self.module.os, 'killpg', side_effect=killpg, create=True))
+        return stack
+
+    def run_main(self, *extra):
+        with patch.object(sys, 'argv', self.argv + list(extra)):
+            self.module.main()
+
+    def result(self):
+        return json.loads((self.output / 'result.json').read_text())
+
+    def assert_evidence_without_boot_images(self):
+        names = {path.name for path in self.output.iterdir()}
+        self.assertTrue(self.EVIDENCE <= names, names)
+        self.assertFalse(self.BOOT & names, names)
+        inputs = json.loads((self.output / 'inputs.json').read_text())
+        self.assertEqual(len(inputs['initrdSha256']), 64)
+        self.assertIs(inputs['bootArtifactsRetained'], False)
+
+    def test_successful_run_removes_boot_images_and_keeps_evidence(self):
+        package = {key: True for key in self.module.REQUIRED}
+        package.update(architecture='x86_64', forcedTermination=False, apiKeyErrorStatus=403)
+        console = 'FRAMEY_SYSTEMD_PROBE_JSON=' + json.dumps({'success': True, 'flatpak': package}) + '\n'
+        with self.qemu(console=console), patch('builtins.print'):
+            self.run_main()
+        self.assertIs(self.result()['success'], True)
+        self.assert_evidence_without_boot_images()
+
+    def test_failed_run_removes_boot_images_and_keeps_evidence(self):
+        with self.qemu(code=1), self.assertRaises(RuntimeError):
+            self.run_main()
+        self.assertEqual((self.result()['success'], self.result()['error']), (False, 'Nonzero QEMU exit'))
+        self.assert_evidence_without_boot_images()
+
+    def test_failed_packing_still_writes_a_failure_result(self):
+        with tarfile.open(self.folder / 'rootfs.tar', 'w') as archive:
+            member = tarfile.TarInfo('./etc/os-release')
+            archive.addfile(member, io.BytesIO(b''))
+        with self.qemu(), self.assertRaises(ValueError):
+            self.run_main()
+        self.assertEqual(self.result(), {'success': False, 'inputs': None, 'error': 'Guest kernel is absent'})
+        self.assertEqual({path.name for path in self.output.iterdir()}, {'result.json'})
+
+    def assert_stopped_with_running_qemu_reaped(self, signum, deliver):
+        previous = {number: signal.getsignal(number) for number in (signal.SIGTERM, signal.SIGINT)}
+        expected = KeyboardInterrupt if signum == signal.SIGINT else SystemExit
+        with self.qemu(running=True, during=deliver), self.assertRaises(expected) as raised:
+            self.run_main()
+        if expected is SystemExit:
+            self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        self.assertEqual({number: signal.getsignal(number) for number in previous}, previous)
+        self.assertEqual(self.group_signals, [signal.SIGTERM])
+        result = self.result()
+        self.assertEqual((result['success'], result['ownedQemuReaped']), (False, True))
+        self.assert_evidence_without_boot_images()
+
+    def test_signal_while_qemu_starts_is_deferred_then_child_is_reaped(self):
+        # Portable: invoke the installed handler directly as QEMU is being registered.
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            with self.subTest(signum=signum):
+                shutil.rmtree(self.output, ignore_errors=True)
+                self.assert_stopped_with_running_qemu_reaped(
+                    signum, lambda signum=signum: signal.getsignal(signum)(signum, None))
+
+    @unittest.skipIf(os.name == 'nt', 'OS-delivered signals terminate the process on Windows')
+    def test_os_delivered_signal_while_qemu_starts_reaps_child(self):
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            with self.subTest(signum=signum):
+                shutil.rmtree(self.output, ignore_errors=True)
+                self.assert_stopped_with_running_qemu_reaped(
+                    signum, lambda signum=signum: os.kill(os.getpid(), signum))
+
+    def test_termination_handler_raises_unless_deferred(self):
+        termination = self.module.Termination()
+        with self.assertRaises(SystemExit) as raised:
+            termination(signal.SIGTERM, None)
+        self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        with self.assertRaises(KeyboardInterrupt):
+            termination(signal.SIGINT, None)
+        for signum, expected in ((signal.SIGTERM, SystemExit), (signal.SIGINT, KeyboardInterrupt)):
+            termination, registered = self.module.Termination(), False
+            with self.assertRaises(expected):
+                with termination.deferred():
+                    termination(signum, None)
+                    registered = True
+            self.assertTrue(registered)
+        with self.module.Termination().deferred():
+            pass
+
+    def test_keep_flag_retains_boot_images_for_debugging(self):
+        with self.qemu(code=1), self.assertRaises(RuntimeError):
+            self.run_main('--keep-boot-artifacts')
+        self.assertTrue(self.BOOT <= {path.name for path in self.output.iterdir()})
+        self.assertIs(json.loads((self.output / 'inputs.json').read_text())['bootArtifactsRetained'], True)
+
+    def test_remove_boot_artifacts_only_deletes_boot_image_files(self):
+        folder = self.folder / 'evidence'
+        (folder / 'initrd.gz').mkdir(parents=True)
+        (folder / 'vmlinuz').write_bytes(b'12345')
+        (folder / 'result.json').write_text('{}')
+        with self.assertRaises(TypeError):
+            self.packer.remove_boot_artifacts(folder, ('result.json', '../outside'))
+        self.assertEqual(self.packer.remove_boot_artifacts(folder), {'vmlinuz': 5})
+        self.assertEqual({path.name for path in folder.iterdir()}, {'initrd.gz', 'result.json'})
+        self.assertEqual(self.packer.remove_boot_artifacts(self.folder / 'missing'), {})
 
 if __name__ == "__main__":
     unittest.main()

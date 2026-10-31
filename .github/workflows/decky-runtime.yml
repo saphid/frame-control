@@ -43,6 +43,8 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - name: Test-only Terminal candidate with published Decky 3.3.0
         run: python3 scripts/framey-test-decky-runtime.py --case 65 --terminal-candidate --output "$RUNNER_TEMP/terminal-candidate.json"
       - uses: actions/upload-artifact@v4
@@ -50,4 +52,54 @@ jobs:
         with:
           name: terminal-candidate-${{ matrix.os }}
           path: ${{ runner.temp }}/terminal-candidate.json
+          if-no-files-found: warn
+
+  terminal-browser:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-24.04-arm]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Matching QEMU emulator
+        run: |
+          case "$(uname -m)" in
+            x86_64) emulator=qemu-system-x86 ;;
+            aarch64) emulator=qemu-system-arm ;;
+            *) exit 1 ;;
+          esac
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends "$emulator"
+      - name: Actual Terminal through production HTTP and events in owned VM
+        run: |
+          terminal_image="framey-terminal-browser:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          terminal_container="framey-terminal-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          trap 'docker rm -f "$terminal_container" >/dev/null 2>&1 || true; docker image rm "$terminal_image" >/dev/null 2>&1 || true' EXIT
+          case "$(uname -m)" in
+            x86_64) kernel=linux-image-amd64 ;;
+            aarch64) kernel=linux-image-arm64 ;;
+            *) exit 1 ;;
+          esac
+          docker build -q -t "$terminal_image" --build-arg "KERNEL_PACKAGE=$kernel" \
+            --build-arg 'BROWSER_PACKAGES=chromium chromium-sandbox' \
+            -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
+          docker create --name "$terminal_container" --network none --cap-drop ALL --entrypoint /bin/true "$terminal_image"
+          docker export "$terminal_container" > "$RUNNER_TEMP/terminal-browser-rootfs.tar"
+          python3 scripts/framey-test-terminal-browser.py --production-http \
+            --rootfs-tar "$RUNNER_TEMP/terminal-browser-rootfs.tar" \
+            --output "$RUNNER_TEMP/terminal-browser"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: terminal-browser-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/terminal-browser/inputs.json
+            ${{ runner.temp }}/terminal-browser/result.json
+            ${{ runner.temp }}/terminal-browser/console.log
+            ${{ runner.temp }}/terminal-browser/guest-result.packet
+            ${{ runner.temp }}/terminal-browser/*.png
           if-no-files-found: warn

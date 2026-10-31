@@ -27,6 +27,11 @@ RELEASE_JOBS = {
     "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)",
 }
 DECKY_JOBS = {"decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)"}
+SIGNED_PACKAGE_JOBS = {
+    "signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
+    "signed-package (ubuntu-latest, browser HTTP)",
+    "signed-package (ubuntu-latest, production parent HTTP)",
+}
 
 
 class GateError(Exception):
@@ -62,6 +67,7 @@ def tag_commit(tag):
 
 
 def exact_runs(workflow, branch, sha, event):
+    events = (event,) if isinstance(event, str) else event
     query = f"actions/workflows/{workflow}/runs?branch={quote(branch, safe='')}&head_sha={sha}&per_page=100"
     runs = []
     for page in range(1, 21):
@@ -76,17 +82,10 @@ def exact_runs(workflow, branch, sha, event):
     if len(runs) != total or len({run.get('id') for run in runs}) != len(runs):
         raise GateError(f"incomplete or duplicate {workflow} run list for {branch} at {sha}")
     matching = [run for run in runs if run.get("head_sha") == sha
-                and run.get("head_branch") == branch and run.get("event") == event]
+                and run.get("head_branch") == branch and run.get("event") in events]
     if not matching:
         raise GateError(f"no exact {workflow} {event} run for {branch} at {sha}")
     return sorted(matching, key=lambda item: item["id"])
-
-
-def exact_run(workflow, branch, sha, event):
-    run = exact_runs(workflow, branch, sha, event)[-1]
-    if run.get("status") != "completed" or run.get("conclusion") != "success":
-        raise GateError(f"{workflow} run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
-    return run
 
 
 def successful_jobs(run, required):
@@ -120,14 +119,22 @@ def main(tag, smoke_result):
     if not smoke_result:
         raise GateError("FRAME_SMOKE_RESULT is required for the locked real Frame smoke gate")
     sha = tag_commit(tag)
-    successful_jobs(exact_run("checks.yml", "main", sha, "push"), MAIN_JOBS)
-    successful_jobs(exact_run("decky-runtime.yml", "main", sha, "push"), DECKY_JOBS)
-    # A fresh run must not hide a failed, cancelled, or skipped installer in an
-    # earlier separate push run for the same tag and commit.
-    for run in exact_runs("release.yml", tag, sha, "push"):
-        if run.get("status") != "completed" or run.get("conclusion") != "success":
-            raise GateError(f"release.yml run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
-        successful_jobs(run, RELEASE_JOBS)
+    # Path filters may omit the signed-package workflow on a version-only
+    # main commit; a manual run there supplies the same native/package
+    # proof. Neither a PR result nor an older commit can satisfy this gate.
+    # A later successful run must not conceal failed, cancelled, skipped or
+    # unfinished work at this same release commit, in any required workflow.
+    requirements = (
+        ("checks.yml", "main", "push", MAIN_JOBS),
+        ("decky-runtime.yml", "main", "push", DECKY_JOBS),
+        ("syncthing-flatpak-package.yml", "main", ("push", "workflow_dispatch"), SIGNED_PACKAGE_JOBS),
+        ("release.yml", tag, "push", RELEASE_JOBS),
+    )
+    for workflow, branch, events, required in requirements:
+        for run in exact_runs(workflow, branch, sha, events):
+            if run.get("status") != "completed" or run.get("conclusion") != "success":
+                raise GateError(f"{workflow} run {run['id']} is {run.get('status')}/{run.get('conclusion')}")
+            successful_jobs(run, required)
     command = [sys.executable, str(Path(__file__).with_name("verify-frame-smoke-result.py")),
                smoke_result, sha]
     checked = subprocess.run(command, text=True, capture_output=True, check=False)

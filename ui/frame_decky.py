@@ -13,16 +13,7 @@ MAX_BINARY = 80 * 1024 * 1024
 TAG = re.compile(r"v[0-9]+\.[0-9]+\.[0-9]+(?:[-.][A-Za-z0-9.-]+)?\Z")
 
 
-PROBE = r'''
-import json, os, pathlib, platform, subprocess, urllib.request
-home = pathlib.Path.home()
-managed = home / '.local/share/frame-control/decky'
-service = home / '.config/systemd/user/frame-control-decky.service'
-release = managed / '.frame-control/receipt.json'
-legacy = managed / 'settings/release.json'
-def active(name, user=False):
-    cmd = ['systemctl'] + (['--user'] if user else []) + ['is-active', name]
-    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+PLUGIN_SCAN = r'''
 def plugins(folder):
     found = []
     if folder.is_dir() and not folder.is_symlink():
@@ -45,20 +36,64 @@ def plugins(folder):
                                   if isinstance(owned.get('compatShims'), list) else []})
             except (ValueError, OSError, UnicodeError): pass
     return found
-os_release = {}
-for line in pathlib.Path('/etc/os-release').read_text().splitlines():
-    if '=' in line:
-        k,v = line.split('=',1); os_release[k] = v.strip('"')
-try:
-    with urllib.request.urlopen('http://127.0.0.1:8080/json/list', timeout=2) as reply:
-        targets = json.load(reply)
-    cef = any(x.get('title') == 'SharedJSContext' and 'steamloopback.host' in x.get('url','') for x in targets)
-except (OSError, ValueError): cef = False
+'''
+
+
+PLUGINS_PROBE = 'import json, pathlib\n' + PLUGIN_SCAN + r'''
+print(json.dumps({'plugins':plugins(pathlib.Path.home()/'.local/share/frame-control/decky/plugins')}))
+'''
+
+
+# The installed-panel view needs service state and receipts, not CEF/OS
+# diagnostics. Keep it independent of those cold imports and network probes.
+PANEL_STATUS_PROBE = 'import json, pathlib, subprocess\n' + PLUGIN_SCAN + r'''
+home = pathlib.Path.home()
+managed = home / '.local/share/frame-control/decky'
+service = home / '.config/systemd/user/frame-control-decky.service'
+release = managed / '.frame-control/receipt.json'
+legacy = managed / 'settings/release.json'
 try:
     metadata = json.loads((release if release.exists() else legacy).read_text())
     version = metadata.get('version') if metadata.get('managedBy') == 'Frame Control' else None
 except (OSError, ValueError): version = None
-print(json.dumps({'arch':platform.machine(), 'frameOS':os_release.get('VERSION_ID'),
+running = subprocess.run(['systemctl', '--user', 'is-active', 'frame-control-decky.service'],
+    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2).returncode == 0
+print(json.dumps({'managed':service.is_file() and version is not None,
+    'running':running, 'version':version, 'plugins':plugins(managed/'plugins')}))
+'''
+
+
+PROBE = r'''
+import http.client, json, os, pathlib, subprocess
+''' + PLUGIN_SCAN + r'''
+home = pathlib.Path.home()
+managed = home / '.local/share/frame-control/decky'
+service = home / '.config/systemd/user/frame-control-decky.service'
+release = managed / '.frame-control/receipt.json'
+legacy = managed / 'settings/release.json'
+def active(name, user=False):
+    cmd = ['systemctl'] + (['--user'] if user else []) + ['is-active', name]
+    return subprocess.run(cmd, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode == 0
+os_release = {}
+for line in pathlib.Path('/etc/os-release').read_text().splitlines():
+    if '=' in line:
+        k,v = line.split('=',1); os_release[k] = v.strip('"')
+connection = http.client.HTTPConnection('127.0.0.1', 8080, timeout=2)
+try:
+    # This fixed loopback endpoint needs neither URL/proxy handling nor TLS.
+    # Avoid their cold imports on the bounded remote status path.
+    connection.request('GET', '/json/list')
+    reply = connection.getresponse()
+    if reply.status != 200: raise ValueError('CEF targets unavailable')
+    targets = json.load(reply)
+    cef = any(x.get('title') == 'SharedJSContext' and 'steamloopback.host' in x.get('url','') for x in targets)
+except (OSError, ValueError, http.client.HTTPException): cef = False
+finally: connection.close()
+try:
+    metadata = json.loads((release if release.exists() else legacy).read_text())
+    version = metadata.get('version') if metadata.get('managedBy') == 'Frame Control' else None
+except (OSError, ValueError): version = None
+print(json.dumps({'arch':os.uname().machine, 'frameOS':os_release.get('VERSION_ID'),
     'variant':os_release.get('VARIANT_ID'), 'build':os_release.get('BUILD_ID'), 'cef':cef,
     'managed':service.is_file() and version is not None, 'running':active('frame-control-decky.service', True),
     'version':version, 'upstreamInstall':pathlib.Path('/etc/systemd/system/plugin_loader.service').exists(),
@@ -133,7 +168,9 @@ try:
                                     '/sbin', '/bin'))
             text = ('[Unit]\nDescription=Decky Loader (Frame Control experimental user install)\n'
               'After=default.target\n[Service]\nType=simple\nRestart=on-failure\n'
-              'RestartSec=5\nExecStart='+str(binary)+'\n'
+              # The packaged loader forwards SIGTERM to its Python child.
+              # Signal its main process once; keep cgroup-wide final cleanup.
+              'RestartSec=5\nKillMode=mixed\nExecStart='+str(binary)+'\n'
               'Environment=UNPRIVILEGED_PATH='+str(base)+'\n'
               'Environment=PRIVILEGED_PATH='+str(base)+'\n'
               'Environment=CHOWN_PLUGIN_PATH=0\nEnvironment=LIVE_RELOAD=0\n'
@@ -164,8 +201,21 @@ finally:
 '''
 
 
+def plugin_status(ssh):
+    """Fresh managed inventory for panel receipt checks; no OS/service/CEF probes."""
+    return json.loads(ssh('python3 -', stdin=PLUGINS_PROBE, timeout=15))
+
+
 def status(ssh):
-    result = json.loads(ssh('python3 -', stdin=PROBE, timeout=15))
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PROBE, timeout=15)))
+
+
+def panel_status(ssh):
+    """Fresh service/ownership/inventory state without OS or CEF diagnostics."""
+    return _with_compatibility(json.loads(ssh('python3 -', stdin=PANEL_STATUS_PROBE, timeout=15)))
+
+
+def _with_compatibility(result):
     for plugin in result.get('plugins', []):
         plugin['compatibility'] = framey_compatibility.lookup(
             plugin.get('storeId'), plugin.get('sha256'), plugin.get('version'),
