@@ -1,0 +1,613 @@
+{
+  "at": "2026-10-31T12:53:08.490096+00:00",
+  "sourceRevision": "1bbcb6196158d114a2071ce1f46df33536762182",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "redSourceRevision": "dade4536663b5473a0f4ce4db6dd0352f6474252",
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "4c1730db285d924c4a91f03dcf45a9b15c6d8e09ff73295445cdd356177b37e0",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "601df2b043b81345c012a1e6698a9e43978cc170d59ec2b26bc585cbdffe06f3",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "6c029e1a34a05382d6b742e6f7aa393bc6a73d026da9777343411ea3ebc7a627",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "cdd3ffc3a958e740a687b0af4e05e22365509a669fcbd90bbf3f752ecdb43716",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "originalArchiveSha256": "e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5",
+  "originalBackendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+  "previousBackendSha256": "4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356",
+  "managedBackendSha256": "68b2aa6701cc0868113f69f8cb26c0a16cd93e45876ab1deb79a5938548b439a",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "d54db5ed12d78276b7c022b36531d3997584e6dff3fe6af350f359ec9752cf4e",
+    "package.json": "9634b722eb9106a941183311f0f47fc2d01199b1edf8187e5d00b1a05cb7a443",
+    "plugin.json": "a98925fc236f73d0c43313a1687c71c5d21172ef923724002b4796d3926c7204",
+    "README.md": "16fc2b311d230516ee7cc9d4244d5bfdfd533f43ca89f43399edf682dfa13041",
+    "dist/index.js": "ffce0de0b7415ec6044d2af63a4fee00dc0f332000ad6b26d84c322e017f94f2",
+    "dist/index.js.map": "4b7aaceda51d7bc0d90fb9b31dc270acf1160bb57c2c3752deb6bbcebc0d977d"
+  },
+  "strictTestRejectedPreviousManagedBackend": true,
+  "redFailure": {
+    "loaderPid": 9,
+    "returncode": 0,
+    "elapsedSeconds": 5.223458671011031,
+    "signaledOnlyOwnedLoader": true,
+    "ownedProcessCount": 5,
+    "ownedProcessIdentitiesReaped": true,
+    "descendantsBefore": {
+      "10": {
+        "state": "S",
+        "parent": 9,
+        "start": "350160395"
+      },
+      "19": {
+        "state": "S",
+        "parent": 10,
+        "start": "350160424"
+      },
+      "20": {
+        "state": "S",
+        "parent": 10,
+        "start": "350160424"
+      },
+      "21": {
+        "state": "S",
+        "parent": 20,
+        "start": "350160434"
+      }
+    },
+    "exactDescendantsRemaining": {},
+    "adoptedChildExits": [
+      {
+        "pid": 19,
+        "returncode": 0
+      },
+      {
+        "pid": 20,
+        "returncode": 0
+      }
+    ],
+    "fixtureClosedUnixPeers": [
+      "/tmp/plugin_socket_1793450854.4722567"
+    ],
+    "forcedPluginKills": 1,
+    "originalUnloadHookCompleted": false,
+    "errors": [],
+    "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\n[plugin][WARNING]: Plugin TabMaster (v2.15.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "consoleSha256": "920215ffab9b9ae7c1bed4e961d2436c882f92cfb480056906929814e9e89a72",
+    "cleanShutdownVerified": false
+  },
+  "cases": [
+    {
+      "backendSha256": "68b2aa6701cc0868113f69f8cb26c0a16cd93e45876ab1deb79a5938548b439a",
+      "rpcCount": 47,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": true,
+      "originalValidBackupRestoreRefused": false,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 0.21398642985150218,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "350168723"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "350168758"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "350168758"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "350168772"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793450937.806256"
+            ],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "7cbb81cfaef6c4c8367d318f207b441f4973e206f81b2e5c133de59385373424",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.21366612426936626,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "350169050"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "350169084"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "350169084"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "350169096"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": true,
+        "expectedRegression": false
+      },
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "jsonDecodeDiagnosticCount": 1
+    },
+    {
+      "backendSha256": "cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347",
+      "rpcCount": 48,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "set_tags",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": false,
+      "originalValidBackupRestoreRefused": true,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 0.21383008640259504,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "350169435"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "350169469"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "350169469"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "350169480"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "7cbb81cfaef6c4c8367d318f207b441f4973e206f81b2e5c133de59385373424",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.21378760691732168,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "350169747"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "350169778"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "350169778"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "350169789"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": true,
+        "expectedRegression": false
+      },
+      "consoleSha256": "a3435fb0fe9e4e50bcfebdbf0f3f432e9e8a9089addaedc0b109f430dd4683ab",
+      "jsonDecodeDiagnosticCount": 1
+    },
+    {
+      "backendSha256": "4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356",
+      "rpcCount": 47,
+      "rpcMethods": [
+        "get_setting",
+        "get_user_desktop",
+        "get_users_dict",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "set_tabs",
+        "set_tab_profiles",
+        "set_friends",
+        "set_friends_games",
+        "set_tags",
+        "set_setting",
+        "get_setting",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games",
+        "get_tags",
+        "set_active_user_id",
+        "get_tabs",
+        "get_friends",
+        "get_friends_games",
+        "get_tab_profiles",
+        "get_shared_tabs",
+        "set_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "backup_settings",
+        "set_tags",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "restore_settings",
+        "get_users_dict",
+        "get_tags",
+        "get_setting",
+        "set_active_user_id",
+        "get_tabs",
+        "get_shared_tabs",
+        "set_active_user_id",
+        "get_tabs",
+        "get_tab_profiles",
+        "get_friends",
+        "get_friends_games"
+      ],
+      "backupRestoreVerified": true,
+      "originalValidBackupRestoreRefused": false,
+      "lifecycle": {
+        "stops": [
+          {
+            "loaderPid": 9,
+            "returncode": 0,
+            "elapsedSeconds": 5.223889126908034,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "350170126"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "350170160"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "350170160"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "350170173"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793450951.8321147"
+            ],
+            "forcedPluginKills": 1,
+            "originalUnloadHookCompleted": false,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\n[plugin][WARNING]: Plugin TabMaster (v2.15.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "920215ffab9b9ae7c1bed4e961d2436c882f92cfb480056906929814e9e89a72",
+            "cleanShutdownVerified": false
+          },
+          {
+            "loaderPid": 24,
+            "returncode": 0,
+            "elapsedSeconds": 0.21387221803888679,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessCount": 5,
+            "ownedProcessIdentitiesReaped": true,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "350170955"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "350170987"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "350170987"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "350170999"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "originalUnloadHookCompleted": true,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down TabMaster (v2.15.1)\n[plugin][INFO]: Stopping response listener for TabMaster (v2.15.1)\nCalling Loader unload function for TabMaster (v2.15.1).\nAttempting to unload with plugin TabMaster (v2.15.1)'s \"_unload\" function.\n\nUnloading Tab Master.\nUnloaded TabMaster (v2.15.1)\n\n[plugin][INFO]: Plugin TabMaster (v2.15.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "ef694eb2c4d7d47919abea91eff62b55f63576dc325db615de1c04bbbbaeb6c8",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "unrelatedSiblingPreserved": true,
+        "cleanShutdownVerified": false,
+        "expectedRegression": true
+      },
+      "consoleSha256": "80b564bfb968af849aeaa3a0186c8819d6b2b5f231324100d82dfa2245037521",
+      "jsonDecodeDiagnosticCount": 0
+    }
+  ],
+  "repairedCleanStopsVerified": true,
+  "previousManagedForcedKillReproduced": true,
+  "restoreRepairPreserved": true,
+  "other36NativeDispatchBodiesPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "fullUnitTests": 1942,
+  "fullUnitSeconds": 246.931,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Focused native AMD64 only; exact-head hosted CI/e2e/native AMD64+ARM64/PC/ownership/all triggered package modes and current-main/feedback/mergeability/integration gates remain required.",
+    "Generic runtimeConsole.cleanShutdownVerified remains false by design; TabMaster lifecycle stops enforce actual plugin unload and no forced kill.",
+    "Reproduction proves IPC peer EOF can cause the observed failure; the exact socket history of the earlier intermittent failure was not retained.",
+    "Repaired and original-source consoles each retain one unattributed JSON diagnostic; no blanket error-free console claim.",
+    "Installer test verifies 37 pinned install/receipt/removal transactions without executing official backends; not the full e2e or catalog suite.",
+    "No browser/backend settings integration, library-tab editing, real Frame, Steam CEF, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "edf09401fd79072ebc087a3ab3f482fab8d962df0e7948333aedb99e3b04f909",
+  "rawGzipSha256": "f2464bd6dc75a10d3b43458687d4dca7719bdc3d6e1c1e7567299191303a380d"
+}
