@@ -1,0 +1,592 @@
+{
+  "baseMain": "4049722d1f52d06ef76216ef3ea39103e599ff54",
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "58794a969f59696607ceaa75fe754230721b99a8d593a413f039b1294443c317",
+    "ui/framey_decky_ipc.py": "69ff9e8fa842edb062407f6854766fd9add16376ec2e552f8a25d244acd192f8",
+    "tests/decky-runtime/check.py": "a7af9fb1cf180c6735c6423b53b36fa8af31b080d023c4d9f554f98b8e3f996b",
+    "tests/decky-runtime/runtime_console.py": "a33de57e8bfe380c9b2c8cee0280a745f182e3962afaa05f191fefbf9e482c69",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "b7287761a5df9e669b33ef5cb38e998f0626817027fb6a43ac64c88ef679b2e3",
+    "tests/framey_official.py": "7483873a1db44b310b0fd1c7057b68d028b674e2a53693f0bbbf74317184f242",
+    "ui/frame_decky_store.py": "c8e24af778cbf4792e59ff34d94f1d09199562dba64d4566478dd259c3df3f45",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "reportSha256": "b0cd504bafb96eb705245b50ab171ba2b3547b0e3044c2a0031791b5b8de201a",
+  "runnerLogSha256": "b262d750b6521cdd2ab6679f36e7db6b10bcf7940a4620c71438fbb5a8dcad6f",
+  "focusedTests": 7,
+  "nativeProbes": 38,
+  "publishedArchivePins": 33,
+  "ownedImageAndContainersCleaned": true,
+  "productionAndCatalogBytesUnchanged": true,
+  "realFrameContacted": false,
+  "limits": [
+    "Local AMD64 only; final-head hosted AMD64/ARM64 and other CI gates pending",
+    "Existing process-group stop policy unchanged; console retention is not a clean-shutdown gate",
+    "Full raw report retained locally; hosted artifact qualification remains separate",
+    "No real Frame, wearer-visible, controller, new browser or release proof"
+  ],
+  "sourceRevision": "61b4d7d8ee34bea39643fce10c6b166a1eec6dd6",
+  "markerTotals": {
+    "Error during shutdown:": 1,
+    "asyncio.exceptions.CancelledError": 1,
+    "Task was destroyed but it is pending": 0,
+    "Bad file descriptor": 25,
+    "Sending SIGKILL!": 2,
+    "Expecting value: line 1 column 1 (char 0)": 11
+  },
+  "recordedProcessReturncodes": {
+    "0": 19,
+    "1": 42,
+    "-15": 5
+  },
+  "allNativeShutdownsClean": false,
+  "followUp": "Reproduce the general-native stop failures, test parent-only loader signaling against the existing group signal, and require clean zero-exit shutdown with explicit expected-negative exceptions; do not infer root cause from retention alone.",
+  "focusedTestLogSha256": "caaa67b3525561b0715608512be11905637a4039abbc3fbed1f573da7219904f",
+  "consoleInventory": [
+    {
+      "id": 103,
+      "version": "1.2.2",
+      "negative": false,
+      "bytes": 5597,
+      "sha256": "cc5f5ec06bbc8f9085a8196412ed4f7cf17ea107944c14b3f3d20a239d717093",
+      "processReturncodes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Expecting value: line 1 column 1 (char 0)": 3
+      }
+    },
+    {
+      "id": 134,
+      "version": "1.3.6",
+      "negative": false,
+      "bytes": 5610,
+      "sha256": "d4cc6a51307d985e89bc3776d63eaf82970b2ded2435ba74a33e2247d5d6824b",
+      "processReturncodes": [
+        0,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 36,
+      "version": "1.8.1",
+      "negative": false,
+      "bytes": 2443,
+      "sha256": "582c34b67d213eae4fb2fe286160534c39a8e8cb6ce7c6cec03fe36d79fb75ce",
+      "processReturncodes": [
+        1,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 18,
+      "version": "3.1.1",
+      "negative": false,
+      "bytes": 1440,
+      "sha256": "8a802a530b1f488c46b63bcdc7b909f5b24cda6f965d7db1b14471879b7cecc0",
+      "processReturncodes": [
+        0,
+        -15,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 14,
+      "version": "1.3.4",
+      "negative": false,
+      "bytes": 2694,
+      "sha256": "099150462e950c007bf5b09f726f01e3f328ef2fc302cec893bb48315544eb46",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 2
+      }
+    },
+    {
+      "id": 143,
+      "version": "0.1.0",
+      "negative": false,
+      "bytes": 5128,
+      "sha256": "b0406db2154a3360ea4739a91cbd4baaf93ae235da665c0b594340d092b3a2be",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 117,
+      "version": "1.0.0",
+      "negative": false,
+      "bytes": 6076,
+      "sha256": "8f03bf2c43be3a3129c59b564c58714d74d81cb2286fa728c827ce0a6149104c",
+      "processReturncodes": [
+        -15,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 131,
+      "version": "1.1.0",
+      "negative": false,
+      "bytes": 1506,
+      "sha256": "55eb633be732e22683ea7f64f1b4d21b2f5148f5757720942c3b10d30c6b552a",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 130,
+      "version": "1.0.1",
+      "negative": false,
+      "bytes": 1611,
+      "sha256": "2ead1280bde9dcc22495698f94e9f2a4028a64660d187bab439e41047e54d7a8",
+      "processReturncodes": [
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 130,
+      "version": "1.0.2",
+      "negative": false,
+      "bytes": 1412,
+      "sha256": "8476117dec3abe8a5a3eb62006e64164dee6740fa8c5139a96bd26dca6a2f9ca",
+      "processReturncodes": [
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 68,
+      "version": "0.2.1",
+      "negative": false,
+      "bytes": 7978,
+      "sha256": "dac22870e704f88c59abcf7fa0c4bf0ad9301ed682d720155eedeaf2796ab431",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Error during shutdown:": 1,
+        "asyncio.exceptions.CancelledError": 1,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      }
+    },
+    {
+      "id": 52,
+      "version": "1.7.1-1",
+      "negative": false,
+      "bytes": 2543,
+      "sha256": "a9cae8730bddb871a50b99498b98086cd14a9ef3ec3872e398a2274f7f65b3ef",
+      "processReturncodes": [
+        1,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 93,
+      "version": "1.2.6",
+      "negative": false,
+      "bytes": 1446,
+      "sha256": "3f912ef2bfcbde5f8a74074b128ac78cd0d52061b2bfe96cdab5a962c275d34d",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 123,
+      "version": "1.2.3",
+      "negative": false,
+      "bytes": 2768,
+      "sha256": "17ebaeaabacfa6597189010dfc7f5cb1d05a05f6e95d42378ceb4ca1161a1556",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 2
+      }
+    },
+    {
+      "id": 28,
+      "version": "2.0.5",
+      "negative": false,
+      "bytes": 1329,
+      "sha256": "4e88490600d2008eec39de3ec650db317a9831e87d0321cde62d5b56312f442e",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 67,
+      "version": "0.2.0",
+      "negative": false,
+      "bytes": 1897,
+      "sha256": "51cde4722054d39f1edd7170a21685a4e964aa78510d3c22816f4b5bec09a007",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 114,
+      "version": "1.0.4",
+      "negative": false,
+      "bytes": 1643,
+      "sha256": "4da428678c589224587c51577ac89317fb24d2ae1c74a5b084c988cf9753d493",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 13,
+      "version": "1.0.3",
+      "negative": false,
+      "bytes": 1228,
+      "sha256": "bbbfaa05c7209488221903c5d912f2cc6d9558297e242f1b973a7b7935d03427",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Expecting value: line 1 column 1 (char 0)": 1
+      }
+    },
+    {
+      "id": 24,
+      "version": "1.3",
+      "negative": false,
+      "bytes": 1113,
+      "sha256": "b6a6198766b76daca1fbc39c79cbe3e3ef4a99d4f5bff29acc57997029fc400a",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 132,
+      "version": "1.5.3",
+      "negative": false,
+      "bytes": 2838,
+      "sha256": "f541005bb1f18c0061c1ddf285e1affb78a050bfdcb28c1874fd2bfd89298a15",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 2
+      }
+    },
+    {
+      "id": 79,
+      "version": "1.0.1",
+      "negative": false,
+      "bytes": 3136,
+      "sha256": "433aad0b4f2881d8a2818d7101951be687e4a1f0b3cfb5536288d9db4cd740dc",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 2
+      }
+    },
+    {
+      "id": 135,
+      "version": "2.0.0",
+      "negative": false,
+      "bytes": 4043,
+      "sha256": "5008caca10bf168787e5f6e3a3a2a1afa1e2ffcb41630e82804a8ca1ca0deff1",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 50,
+      "version": "1.4.0",
+      "negative": false,
+      "bytes": 1451,
+      "sha256": "6f521f837a4a2fd435312fa3da2c04c2f47130ecde4e10cd604ad58b2094c7d0",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 46,
+      "version": "1.0.0-1",
+      "negative": false,
+      "bytes": 5461,
+      "sha256": "230f4187f732e8d562a0ef61762f55cdc34e7ddf24f66658d944c7be97050afc",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 104,
+      "version": "1.0.4",
+      "negative": false,
+      "bytes": 5317,
+      "sha256": "8f109308af78b267f1513cabbd316b121c95ae2daa12a1e3103b18020b2f9d2b",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 63,
+      "version": "1.6.0",
+      "negative": false,
+      "bytes": 3833,
+      "sha256": "f3a989b2fb83f90ed766e935b5618703ef610860ea3e0366676b8cb35c4da0c9",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 12,
+      "version": "1.1.6",
+      "negative": false,
+      "bytes": 1610,
+      "sha256": "d473678c868f46e236e1fca4b91b6d6883a9abad86824bd34d9f84eb8d53729c",
+      "processReturncodes": [
+        1,
+        -15,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 111,
+      "version": "1.1.7",
+      "negative": false,
+      "bytes": 1601,
+      "sha256": "ee3f05ebf1e3bbd767eb5518c421fd6398689d66df44269a9f6458f2f0a51ce5",
+      "processReturncodes": [
+        1,
+        -15,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 53,
+      "version": "0.1.0",
+      "negative": false,
+      "bytes": 4441,
+      "sha256": "b8d269f610cd69110b5b55dc0f786024d2e69ab06f1192597737619596e61ca7",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1
+      }
+    },
+    {
+      "id": 89,
+      "version": "0.6.7",
+      "negative": false,
+      "bytes": 3079,
+      "sha256": "09b8d2c1f8a6b23ce3658ee3787e9bd3146548391131658a9b09ee23cf62b734",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 96,
+      "version": "1.0.0",
+      "negative": false,
+      "bytes": 7391,
+      "sha256": "04772163bd54670301a78ef84fd0791311718c83b6c79bbd8cc901668acefa5e",
+      "processReturncodes": [
+        1,
+        1,
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1,
+        "Expecting value: line 1 column 1 (char 0)": 2
+      }
+    },
+    {
+      "id": 60,
+      "version": "1.2.0",
+      "negative": false,
+      "bytes": 1748,
+      "sha256": "fba1723d7931655bff61344417b0a65f93a492cb87f468e598073e17401d07fc",
+      "processReturncodes": [
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1,
+        "Expecting value: line 1 column 1 (char 0)": 1
+      }
+    },
+    {
+      "id": 125,
+      "version": "0.4.5",
+      "negative": false,
+      "bytes": 1712,
+      "sha256": "7dda0619f512bf313535112406dc02de90321e0d738fe69cbec138b7697f3261",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 111,
+      "version": "1.1.7",
+      "negative": true,
+      "bytes": 1400,
+      "sha256": "e86ff9b94c5a099e29a32751543b5a991f14c04668cccd4d84e5f349b426c981",
+      "processReturncodes": [
+        0,
+        -15,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 96,
+      "version": "1.0.0",
+      "negative": false,
+      "bytes": 5417,
+      "sha256": "b8db387471c080e2ffae0cb46e8b92145f87d9e1e9bcb9489291989f090aa7a6",
+      "processReturncodes": [
+        1,
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Bad file descriptor": 1,
+        "Expecting value: line 1 column 1 (char 0)": 2
+      }
+    },
+    {
+      "id": 60,
+      "version": "1.2.0",
+      "negative": false,
+      "bytes": 1547,
+      "sha256": "f5acc83b3dd8d32f72eccdca50a2e4404f3c9e47dd7716b84068852645be00b9",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Expecting value: line 1 column 1 (char 0)": 1
+      }
+    },
+    {
+      "id": 65,
+      "version": "0.5.3",
+      "negative": true,
+      "bytes": 2017,
+      "sha256": "8a0dd7f0ebc1e0033a0fe2e91d2ba13f7865adf09682995eea747af6cec37195",
+      "processReturncodes": [
+        1
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {}
+    },
+    {
+      "id": 134,
+      "version": "1.3.6",
+      "negative": true,
+      "bytes": 5706,
+      "sha256": "fd9a3f01df37041386f87cd98e5cf754399fde58c2a73a7c5a213aa9d089ee02",
+      "processReturncodes": [
+        0,
+        0
+      ],
+      "forcedCleanupKills": 0,
+      "markers": {
+        "Sending SIGKILL!": 2
+      }
+    }
+  ]
+}
