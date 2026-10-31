@@ -1,7 +1,6 @@
 """Keep owned save snapshots and require Steamback's original unload hook."""
 import base64
 import hashlib
-import json
 import os
 from pathlib import Path
 import signal

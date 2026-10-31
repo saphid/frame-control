@@ -106,6 +106,7 @@ def main():
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (63, '--reproduce-free-loader-unload-regression'),
+                    (46, '--reproduce-steamback-unload-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (65, '--reproduce-terminal-import-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),

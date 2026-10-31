@@ -71,6 +71,7 @@ def main():
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
@@ -149,6 +150,16 @@ def main():
         assert managed.startswith(prefix)
         original = managed[len(prefix):]
         assert hashlib.sha256(original).hexdigest() == '2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364'
+        (plugin/'main.py').write_bytes(original)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_steamback_unload_regression:
+        assert record['id'] == 46
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        original = managed[len(prefix):]
+        assert hashlib.sha256(original).hexdigest() == '3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb'
         (plugin/'main.py').write_bytes(original)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
@@ -1595,8 +1606,17 @@ def main():
                 assert save.read_bytes() == b'new'
                 from steamback_private import probe
                 probe(backend, loader, env, log, processes, legacy, rpc, until_ready,
-                      report, base/'data'/record['folder'], save)
-                report['result'] = ('published Decky discovery, private save backup/restore/undo, '
+                      report, base/'data'/record['folder'], save,
+                      regression=args.reproduce_steamback_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                adapter = plugin/'py_modules/framey_decky_ipc.py'
+                report['ipcAdapterSha256'] = hashlib.sha256(adapter.read_bytes()).hexdigest() if adapter.exists() else None
+                if args.reproduce_steamback_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        originalSourceRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = ('original Steamback requires forced stop after IPC disconnect; expected negative only'
+                    if args.reproduce_steamback_unload_regression else
+                    'published Decky discovery, private save backup/restore/undo, '
                     'byte preservation, original unload hook and restart passed; '
                     'real Steam saves, automatic triggers, Frame and VR unverified')
             elif case['probe'] == 'toggle-settings':
