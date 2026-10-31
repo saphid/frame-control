@@ -156,3 +156,10 @@ marker transfer outside Decky. The native Decky gate checks discovery and
 read-only backend status/configuration with its network helper stopped. The
 managed ARM64 helper and transfer remain separately gated; the fixture does
 not prove worn VR or a transfer on Frame.
+
+Decky Ludusavi 1.2.2 (store ID 103) is pinned for dependency-discovery coverage.
+Only its managed `py_modules/ludusavi.py` initializes the missing-binary state
+and bounds version probes. The published loader checks missing dependencies,
+a slow private executable and fallback, restart, and the unchanged-original
+negative case. No real Ludusavi install, backup, restore or cloud operation is
+run. See [the evidence](../../../docs/evidence/framey-ludusavi-dependency-2026-10-31.md).

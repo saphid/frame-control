@@ -85,6 +85,7 @@ def main():
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/decky-runtime/mangopeel.py',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
+              'tests/decky-runtime/ludusavi_private.py',
               '.github/workflows/decky-runtime.yml']
     report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,
               'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()

@@ -14,6 +14,8 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 56, 'name': 'MangoPeel', 'version': '0.0.7', 'api_version': 1,
      'folder': 'MangoPeel', 'sha256': '71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1'},
+    {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
+     'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
     {'id': 134, 'name': 'Deck Progress Tracker', 'version': '1.3.6', 'api_version': 1,
      'folder': 'deck-progress-tracker', 'sha256': '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'},
     {'id': 65, 'name': 'Decky Terminal', 'version': '0.5.3', 'api_version': 1,

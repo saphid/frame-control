@@ -428,6 +428,23 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==103 and digest=='8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'
+                    and folder=='decky-ludusavi'):
+                helper=unpacked/'py_modules/ludusavi.py'
+                original=helper.read_bytes()
+                if (manifest.get('name')!='Decky Ludusavi' or manifest.get('api_version')!=1
+                        or hashlib.sha256(original).hexdigest()!=
+                        'c34c829b7f8d0ac5254b54a3fa1050738cf7b56392e84ee2c6892ea6f6c69d46'):
+                    raise RuntimeError('Ludusavi helper differs from pinned archive')
+                source=original.decode('utf-8')
+                source=source.replace('        self._set_env()\n',
+                    '        self.bin_path = None\n        self.version = ""\n        self._set_env()\n',1)
+                source=source.replace('                text=True,\n',
+                    '                text=True,\n                timeout=5,\n',1)
+                source=source.replace('except subprocess.CalledProcessError as e:',
+                    'except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:',1)
+                helper.write_text(source)
+                compat_shims.append('ludusavi-dependency-discovery')
             if (int(plugin_id)==134 and digest=='784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'
                     and folder=='deck-progress-tracker'):
                 main=unpacked/'main.py'

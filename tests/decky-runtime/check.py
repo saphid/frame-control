@@ -236,6 +236,14 @@ def main():
                 report['result'] = ('published Decky discovery, private MangoHud profile writes, actual '
                     'inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, '
                     'browser, actual Frame and worn/controller behavior unverified')
+            elif case['probe'] == 'ludusavi-dependency-discovery':
+                import ludusavi_private
+                report['dependencyDiscovery'] = ludusavi_private.exercise(
+                    current, plugin, data, record, backend, loader, env, log,
+                    processes, until_ready, rpc)
+                report['result'] = ('published Decky missing dependency report, bounded slow discovery, '
+                    'private executable fallback, restart and original negative regression passed; '
+                    'real Ludusavi backup/restore/cloud, browser and VR unverified')
             elif case['probe'] == 'deck-progress-private-tags':
                 import base64
                 # Only private SQLite settings/manual tags are exercised. Do
