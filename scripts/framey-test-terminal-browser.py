@@ -84,6 +84,27 @@ def digest(data):
     return hashlib.sha256(data).hexdigest()
 
 
+def source_names(production_http, arch):
+    """The exact files copied into the isolated guest, including shared imports."""
+    names=subprocess.check_output(['git','ls-files','ui'],cwd=ROOT,text=True).splitlines()
+    names += ['tests/framey_official.py','tests/fixtures/framey-official/65.zip',
+              'tests/decky-runtime/check.py','tests/decky-runtime/cases.json',
+              'tests/decky-runtime/runtime_console.py',
+              'tests/decky-runtime/terminal_lifecycle.py','tests/decky-runtime/terminal_candidate.py','tests/decky-runtime/timer_lifecycle.py',
+              'tests/decky-runtime/terminal_browser.py','tests/decky-runtime/guest_result.py',
+              'scripts/framey-test-terminal-browser.py','scripts/framey-test-syncthing-service.py',
+              'scripts/framey-test-decky-runtime.py','tests/decky-runtime/Containerfile.flatpak-vm',
+              '.github/workflows/decky-runtime.yml']
+    if production_http:
+        names += ['tests/decky-runtime/'+name for name in
+                  ('terminal_http.py', 'terminal_status_diagnostic.py', 'syncthing_http.py',
+                   'syncthing_http_parent.py', 'syncthing_service.py')]
+        names += ['apk-catalog/'+name for name in ('build.py', 'reports.py', 'pick.py')]
+    suffix={'x86_64':'amd','aarch64':'arm'}[arch]
+    names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-'+suffix],cwd=ROOT,text=True).splitlines()
+    return sorted(set(names))
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--rootfs-tar',type=Path,required=True)
@@ -96,22 +117,7 @@ def main():
     assert sys.platform=='linux' and arch in ('x86_64','aarch64')
     assert not args.output.exists(), 'Use a new owned evidence directory'
     assert args.rootfs_tar.is_file() and args.rootfs_tar.stat().st_size<=2*1024**3
-    names=subprocess.check_output(['git','ls-files','ui'],cwd=ROOT,text=True).splitlines()
-    names += ['tests/framey_official.py','tests/fixtures/framey-official/65.zip',
-              'tests/decky-runtime/check.py','tests/decky-runtime/cases.json',
-              'tests/decky-runtime/terminal_lifecycle.py','tests/decky-runtime/terminal_candidate.py','tests/decky-runtime/timer_lifecycle.py',
-              'tests/decky-runtime/terminal_browser.py','tests/decky-runtime/guest_result.py',
-              'scripts/framey-test-terminal-browser.py','scripts/framey-test-syncthing-service.py',
-              'scripts/framey-test-decky-runtime.py','tests/decky-runtime/Containerfile.flatpak-vm',
-              '.github/workflows/decky-runtime.yml']
-    if args.production_http:
-        names += ['tests/decky-runtime/'+name for name in
-                  ('terminal_http.py', 'terminal_status_diagnostic.py', 'syncthing_http.py',
-                   'syncthing_http_parent.py', 'syncthing_service.py')]
-        names += ['apk-catalog/'+name for name in ('build.py', 'reports.py', 'pick.py')]
-    suffix={'x86_64':'amd','aarch64':'arm'}[arch]
-    names += subprocess.check_output(['git','ls-files','tests/fixtures/framey-terminal-python314-'+suffix],cwd=ROOT,text=True).splitlines()
-    names=sorted(set(names))
+    names=source_names(args.production_http, arch)
     head=subprocess.check_output(['git','rev-parse','HEAD'],cwd=ROOT,text=True).strip()
     sources={}
     raw=io.BytesIO()
