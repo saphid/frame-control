@@ -67,7 +67,7 @@ WINE_CELLAR_ORIGINAL = '7796bfc96d466824617b2fee96dc1bc4beda30c776a9c61e0cc168d3
 WINE_CELLAR_MAIN = '87fe4422b8aa19660da994c7c4a2c2132dd0ec411313629b8259ee9145c6be97'
 WINE_CELLAR_FRONTEND = '51ffdf606e0e307f46ea45828eb94f24ce75c44ccce5f55f696aa7aec89924b6'
 WINE_CELLAR_AARCH64 = 'd668a9ac02ccce97cf601bcff86f0b2104ee85e6a1105499e66178d9d19b64a8'
-WINE_CELLAR_MANAGED_MAIN = '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
+WINE_CELLAR_MANAGED_MAIN = '81729be3c053c5c2a666d1c18ddd48f4a23cc3147a13ef86ee282eeee09c2bce'
 DOWNLOAD_ALL_DIGEST = '0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'
 SYNCTHING_DIGEST = '27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4'
 
@@ -264,7 +264,9 @@ def apply_script(plugin_id, digest):
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 53 and digest == 'ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe':
         source = Path(__file__).with_name('framey_shotty.py').read_text(encoding='utf-8')
-        return 'FRAMEY_SHOTTY_SOURCE = '+repr(source)+'\n'+APPLY
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_SHOTTY_SOURCE = '+repr(source)+'\n'
+                +'FRAMEY_SHOTTY_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 28 and digest == EMU_DIGEST:
         assets = Path(__file__).parent/'vendor/emuchievements-2.0.5'
         payloads = {}
@@ -304,7 +306,9 @@ def apply_script(plugin_id, digest):
         managed = (assets/'main.py.gz').read_bytes()
         if hashlib.sha256(gzip.decompress(managed)).hexdigest() != WINE_CELLAR_MANAGED_MAIN:
             raise ValueError('Bundled Wine Cellar Python SHA-256 mismatch')
-        return ('FRAMEY_WINE_CELLAR_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_WINE_CELLAR_IPC_SOURCE = '+repr(ipc)+'\n'
+                +'FRAMEY_WINE_CELLAR_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'
                 +'FRAMEY_WINE_CELLAR_MAIN = '+repr(base64.b64encode(managed).decode('ascii'))+'\n'+APPLY)
     if not ((plugin_id == 89 and digest == DECKYSPY_DIGEST)
             or (plugin_id == 114 and digest == NETWORK_SENTINEL_DIGEST)):
@@ -689,10 +693,15 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 packed_main=globals().get('FRAMEY_WINE_CELLAR_MAIN')
                 if not isinstance(packed_main,str): raise RuntimeError('Missing Wine Cellar managed Python')
                 managed=gzip.decompress(base64.b64decode(packed_main,validate=True))
-                if hashlib.sha256(managed).hexdigest()!='44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411':
+                if hashlib.sha256(managed).hexdigest()!='81729be3c053c5c2a666d1c18ddd48f4a23cc3147a13ef86ee282eeee09c2bce':
                     raise RuntimeError('Wine Cellar managed Python mismatch')
+                ipc=globals().get('FRAMEY_WINE_CELLAR_IPC_SOURCE')
+                if not isinstance(ipc,str): raise RuntimeError('Missing Wine Cellar child IPC EOF repair')
+                (unpacked/'py_modules').mkdir(exist_ok=True)
+                (unpacked/'py_modules/framey_decky_ipc.py').write_text(ipc)
                 source.write_bytes(managed)
                 compat_shims.append('wine-cellar-native-bridge')
+                compat_shims.append('wine-cellar-ipc-eof')
             if emuchievements:
                 helper=unpacked/'bin/hash'
                 source=unpacked/'main.py'
@@ -1304,9 +1313,18 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
             task.cancel()
             await asyncio.gather(task, return_exceptions=True)
 """
+                ipc=globals().get('FRAMEY_SHOTTY_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Shotty child IPC EOF repair')
+                ipc_helper=compat.parent/'framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Shotty child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
                 compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('shotty-bounded-copies')
+                compat_shims.append('shotty-ipc-eof')
             # Both exact official archives omit psutil. Install the pinned BSD
             # native wheel in the plugin folder only; never use pip or system paths.
             deckyspy=(int(plugin_id)==89 and digest=='2d431a89826ed5cf3fd37258373eb3b46c841c39795aa8b25f83e59f4eee87c7' and folder=='decky-spy')

@@ -70,6 +70,8 @@ def main():
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -113,6 +115,27 @@ def main():
         assert record['id'] == 134
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_wine_cellar_unload_regression:
+        assert record['id'] == 68
+        import gzip
+        previous = gzip.decompress((ROOT/'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz').read_bytes())
+        assert hashlib.sha256(previous).hexdigest() == '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
+        (plugin/'main.py').write_bytes(previous)
+    if record['id'] == 68:
+        expected = (previous if args.reproduce_wine_cellar_unload_regression else
+                    (ROOT/'ui/vendor/wine-cellar-0.2.1/main.py').read_bytes())
+        assert (plugin/'main.py').read_bytes() == expected, 'installed Wine Cellar source must match the tested lifecycle'
+        assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+    if args.reproduce_shotty_unload_regression:
+        assert record['id'] == 53
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
@@ -838,17 +861,13 @@ def main():
                 machine = 183 if __import__('platform').machine() == 'aarch64' else 62
                 assert helper.read_bytes()[:4] == b'\x7fELF'
                 assert int.from_bytes(helper.read_bytes()[18:20], 'little') == machine
-                token = until_ready(lambda: current('framey_ws_open'), 'private Wine Cellar helper')
-                assert isinstance(token, str) and len(token) == 32, token
-                assert current('framey_ws_send', token, '{"type":"GetState"}') is None
-                reply = until_ready(lambda: next((json.loads(message) for message in
-                    current('framey_ws_poll', token)['messages'] if json.loads(message).get('type') == 'UpdateState'),
-                    None), 'read-only Wine Cellar state')
-                assert reply['app_state']['installed_tools'] == [], reply
-                assert current('framey_ws_close', token) is None
-                report['result'] = ('actual Decky 3.3.0 discovery, managed native helper and fixed-origin '
-                                    'read-only state RPC passed against private empty Steam home; '
-                                    'no install/uninstall, real library or VR test')
+                helper_digest = hashlib.sha256(helper.read_bytes()).hexdigest()
+                assert helper_digest == (frame_decky_store.WINE_CELLAR_AARCH64 if machine == 183
+                                         else frame_decky_store.WINE_CELLAR_ORIGINAL)
+                report['helperSha256'] = helper_digest
+                import wine_cellar_private
+                report.update(wine_cellar_private.probe(backend, helper, loader, env, log, processes,
+                    current, rpc, until_ready, regression=args.reproduce_wine_cellar_unload_regression))
             elif case['probe'] == 'deck-settings-readonly':
                 # Never upload images, send a token, or change game settings.
                 # The container has no network or host Steam library access.
@@ -1535,8 +1554,30 @@ def main():
                 assert legacy('aggregate_all', allapps=[[4242, 'Private Game']]) == 1
                 assert (copied.parent/'historical.jpg').read_bytes() == b'Framey historical fixture\n'
                 assert legacy('was_rescued') is False
+                import shotty_private
+                report['shottyLifecycle'] = shotty_private.probe(backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, regression=args.reproduce_shotty_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['shottyLifecycle']['unchangedPublishedFiles'] = {}
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if item.is_dir() or item.filename == record['folder']+'/main.py':
+                            continue
+                        name = item.filename.split('/', 1)[1]
+                        digest = hashlib.sha256(original.read(item)).hexdigest()
+                        assert hashlib.sha256((plugin/name).read_bytes()).hexdigest() == digest
+                        report['shottyLifecycle']['unchangedPublishedFiles'][name] = digest
+                report['shottyLifecycle']['ipcAdapterSha256'] = (None if args.reproduce_shotty_unload_regression
+                    else hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_shotty_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
                 report['result'] = ('discovery, backend import, empty aggregation, private screenshot '
-                                    'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed')
+                    'cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed; '
+                    + ('prior managed source requires forced plugin stop; expected negative only'
+                       if args.reproduce_shotty_unload_regression else
+                       'two parent-only clean loader stops and restart passed; no real Steam library or VR proof'))
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()

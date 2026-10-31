@@ -1,4 +1,4 @@
-"""Child-process EOF repair for the exact managed Deck Progress 1.3.6 ZIP.
+"""Child-process EOF repair for exact managed plugin archives.
 
 Decky 3.3.0 returns an empty string after its IPC peer closes. Its original
 server loop dispatches that string repeatedly without yielding. End only that

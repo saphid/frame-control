@@ -166,6 +166,16 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
 
+    def test_shotty_previous_copy_requires_unload_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 53)
+        old = dict(storeId=53, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['shotty-click-app-dir', 'shotty-bounded-copies'])
+        updated = dict(old, compatShims=old['compatShims']+['shotty-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall this managed plugin', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_emuchievements_old_x86_helper_is_still_blocked(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 28)
         old = dict(storeId=28, version=plugin['version'], sha256=plugin['sha256'])
