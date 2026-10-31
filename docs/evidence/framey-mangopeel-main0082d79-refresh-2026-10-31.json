@@ -80,10 +80,6 @@
     "All four successful package audits apply to historical head 4757a42, not the new merge; source differences are explicitly retained per mode.",
     "Signed-package and browser checks exercise private Syncthing fixtures, not MangoPeel overlay or integrated MangoPeel frontend behavior.",
     "Package shutdown results are source-bound; raw Decky console is not separately retained in those artifacts.",
-    "Production-parent screenshots clip device rows and retain the blocked/non-ARM64 warning; Syncthing remains blocked and unselected.",
-    "All four successful package audits apply to historical head 4757a42, not the new merge; source differences are explicitly retained per mode.",
-    "Signed-package and browser checks exercise private Syncthing fixtures, not MangoPeel overlay or integrated MangoPeel frontend behavior.",
-    "Package shutdown results are source-bound; raw Decky console is not separately retained in those artifacts.",
     "Production-parent screenshots clip device rows and retain the blocked/non-ARM64 warning; Syncthing remains blocked and unselected."
   ],
   "packageRun": 41188921596,
