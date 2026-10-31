@@ -5,6 +5,11 @@
     "probe": "nonsteam-private-shortcuts"
   },
   {
+    "id": 134,
+    "shim": "deck-progress-ipc-eof",
+    "probe": "deck-progress-private-tags"
+  },
+  {
     "id": 36,
     "shim": null,
     "probe": "steamgriddb-private-artwork"

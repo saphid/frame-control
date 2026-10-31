@@ -14,6 +14,8 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 133, 'name': 'Non-Steam Badges', 'version': '0.1.0', 'api_version': 1,
      'folder': 'decky-nonsteam-badges', 'sha256': '9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131'},
+    {'id': 134, 'name': 'Deck Progress Tracker', 'version': '1.3.6', 'api_version': 1,
+     'folder': 'deck-progress-tracker', 'sha256': '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'},
     {'id': 65, 'name': 'Decky Terminal', 'version': '0.5.3', 'api_version': 1,
      'folder': 'decky-terminal', 'sha256': '7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872'},
     {'id': 143, 'name': 'Desktop Apps', 'version': '0.1.0', 'api_version': 1,

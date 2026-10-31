@@ -81,7 +81,7 @@ def main():
             parser.error('Unknown official plugin case')
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
-    inputs = ['scripts/framey-test-decky-runtime.py', 'tests/decky-runtime/check.py',
+    inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               '.github/workflows/decky-runtime.yml']
@@ -100,7 +100,8 @@ def main():
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (65, '--reproduce-terminal-import-regression'),
-                    (133, '--reproduce-nonsteam-path-regression')]
+                    (133, '--reproduce-nonsteam-path-regression'),
+                    (134, '--reproduce-deck-progress-unload-regression')]
                 if args.case is None or args.case == plugin_id]
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
