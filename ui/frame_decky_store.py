@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 63 and digest == '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_FREE_LOADER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -435,6 +438,22 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
+                    and folder=='Deck-Shelves'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c':
+                    raise RuntimeError('Deck Shelves backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_DECK_SHELVES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Deck Shelves child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Deck Shelves child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original)
+                compat_shims.append('deck-shelves-ipc-eof')
             if (int(plugin_id)==103 and digest=='8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'
                     and folder=='decky-ludusavi'):
                 helper=unpacked/'py_modules/ludusavi.py'
