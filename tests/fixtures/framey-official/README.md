@@ -163,3 +163,11 @@ and bounds version probes. The published loader checks missing dependencies,
 a slow private executable and fallback, restart, and the unchanged-original
 negative case. No real Ludusavi install, backup, restore or cloud operation is
 run. See [the evidence](../../../docs/evidence/framey-ludusavi-dependency-2026-10-31.md).
+
+TabMaster 2.15.1 (`61.zip`, SHA-256 `e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5`)
+runs its exact unmodified backend in published Decky 3.3.0. Its native case
+uses only synthetic users, tab/filter/profile/friend/tag settings and an owned
+container home. It verifies disk readback, shared-tab visibility, false values,
+loader restart persistence and two clean owned loader exits. It does not
+exercise Steam library-tab editing, backups/restores, browser rendering,
+real Frame or physical controllers. These remain separate verification gates.
