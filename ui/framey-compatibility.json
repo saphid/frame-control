@@ -4531,7 +4531,7 @@
         "https://github.com/Tormak9970/TabMaster.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A separate native AMD64 fixture verifies private per-user settings, shared-tab filtering and loader-restart persistence; its retained console has an unattributed shutdown JSON diagnostic. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64, browser/backend settings integration, backups/restores and worn/controller use remain unverified.",
+      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A separate native AMD64 fixture verifies private per-user settings, shared-tab filtering and loader-restart persistence; its retained console has an unattributed JSON diagnostic. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64, browser/backend settings integration, backups/restores and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",

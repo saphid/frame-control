@@ -60,3 +60,19 @@ AMD64 replay does not qualify that matrix. Exact final-head CI/e2e/native and
 all triggered package gates remain required. Compatibility stays partial; no
 Steam library editing, browser/backend integration, backup/restore, managed
 Frame, wearer/controller or release proof is added.
+
+## Catalog diagnostic wording correction
+
+The compatibility row previously called the unattributed JSON diagnostic a
+shutdown diagnostic. Remove that phase attribution: the retained settings replays
+do not localize it. The separate instrumented AMD64 observation in
+[the startup diagnostic record](framey-tabmaster-json-startup-2026-10-31.md)
+traces one empty settings read before initialization/shutdown; it does not
+establish the cause or phase of every occurrence or ARM64 behavior. Historical
+raw reports are retained without rewriting their bytes.
+
+This correction changes the TabMaster reason and its generated documentation
+only; no compatibility status, install policy, runtime source, archive or
+observed result is promoted. Current hosted results remain bound to their
+exact tested head. This local correction awaits the next qualified-main refresh
+and final exact-head gates before publication.
