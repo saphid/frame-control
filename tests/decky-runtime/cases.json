@@ -166,7 +166,10 @@
   {
     "id": 96,
     "shim": "simple-timer-lifecycle",
-    "probe": "timer-lifecycle"
+    "probe": "timer-lifecycle",
+    "additionalShims": [
+      "simple-timer-ipc-eof"
+    ]
   },
   {
     "id": 60,
