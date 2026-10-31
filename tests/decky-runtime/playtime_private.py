@@ -68,8 +68,20 @@ def exercise(call, plugin, archive, record, base, backend, loader, env, log,
         started = time.monotonic()
         os.kill(process.pid, signal.SIGTERM)
         assert process.wait(timeout=8) == 0
+        adopted_exits = []
         def reaped():
             for pid in owned:
+                # This fixture is the container's PID 1. Collect only adopted
+                # descendants of this loader, after it has exited; a zombie
+                # is not a running helper and needs waitpid rather than a kill.
+                if pid != process.pid:
+                    try:
+                        child, status = os.waitpid(pid, os.WNOHANG)
+                        if child:
+                            adopted_exits.append({'pid': child,
+                                'returncode': os.waitstatus_to_exitcode(status)})
+                    except ChildProcessError:
+                        pass
                 try:
                     current = Path('/proc')/str(pid)/'stat'
                     if current.read_text().rsplit(')', 1)[1].split()[19] == tree[pid][1]:
@@ -80,6 +92,7 @@ def exercise(call, plugin, archive, record, base, backend, loader, env, log,
         until_ready(reaped, 'owned PlayTime loader descendants reaped')
         stops.append({'returncode': 0, 'elapsedSeconds': time.monotonic()-started,
                       'parentOnlySignal': True, 'ownedProcessCount': len(owned),
+                      'adoptedChildExits': adopted_exits,
                       'ownedProcessIdentitiesReaped': True})
 
     assert call('has_min_required_python_version') is True
