@@ -207,6 +207,9 @@ def main():
         report['candidate'] = candidate
     with (home/'runtime.log').open('w+') as log:
         try:
+            if case['probe'] == 'bluetooth-private-bluez':
+                import bluetooth_bluez
+                private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
             if case['probe'] == 'mpris':
                 bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork',
                     '--address='+env['DBUS_SESSION_BUS_ADDRESS']], env=env, stdout=log, stderr=log,
@@ -262,6 +265,12 @@ def main():
                 report['candidate']['loaderPythonAbi'] = abi
                 report['result'] = ('test-only adapted Terminal: private PTY input/output, resize, '
                     'remove/reload cleanup and config persistence passed; production/browser/Frame unverified')
+            elif case['probe'] == 'bluetooth-private-bluez':
+                report['privateBluez'] = bluetooth_bluez.exercise(
+                    current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
+                report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '
+                    'paired-device filtering, adapter selection, alias/battery replies, connection/power '
+                    'round trips and clean shutdown passed; actual radio, pairing, browser and VR unverified')
             elif case['probe'] == 'terminal-import-regression':
                 # Discovery also lists a backend whose import failed. Require
                 # the precise original failure without attempting backend calls.

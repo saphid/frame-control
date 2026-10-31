@@ -1,0 +1,15 @@
+{
+  "success": true,
+  "head": "3132115db3262a7666185175c0accd88748b23d0",
+  "pr": 495,
+  "run": 41117091651,
+  "job": 124274037353,
+  "checkoutCommit": "dda35713ecd61eb21cc7d6a34b9aeb0d1af57eb0",
+  "checkoutTree": "32487a09b1f9a00235c887cd92a9a926b71b8cae",
+  "checkoutTreeMatchesExactHead": true,
+  "actualE2ePassed": true,
+  "e2eSeconds": 234,
+  "includingBuildsSeconds": 307,
+  "logSha256": "10da0b4e54720916a137de9f0ca882eeb7c048046c575156abd08a8ec842f398",
+  "realFrameContacted": false
+}
