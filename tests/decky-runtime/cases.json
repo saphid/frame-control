@@ -40,6 +40,7 @@
   {
     "id": 117,
     "shim": "deckyparty-user-lifecycle",
+    "additionalShims": ["deckyparty-ipc-eof"],
     "probe": "deckyparty-private-files"
   },
   {

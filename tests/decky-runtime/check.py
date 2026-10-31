@@ -80,6 +80,7 @@ def main():
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -115,6 +116,16 @@ def main():
         assert record['id'] == 36
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_deckyparty_unload_regression:
+        assert record['id'] == 117
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_text()
+        assert source.count(prefix) == 1
+        previous = source.replace(prefix, '').encode()
+        assert hashlib.sha256(previous).hexdigest() == '2d2ad3bedf43cddc8ad992ca79268593b7d181144c820322e72d1b16e9c0405f'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
     if not (args.reproduce_timer_regression or args.reproduce_tabmaster_restore_regression):
@@ -595,6 +606,11 @@ def main():
                     report['expectedRegression'] = dict(success=False, phase='plugin unload',
                         originalBackendRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
             elif case['probe'] == 'deckyparty-private-files':
+                import deckyparty_private
+                regression = args.reproduce_deckyparty_unload_regression
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 assert legacy('is_enabled') is False
                 marker = b'Framey private Copyparty download fixture\n'
                 (home/'fixture-download.bin').write_bytes(marker)
@@ -659,22 +675,23 @@ def main():
                 assert (home/'fixture-download.bin').read_bytes() == marker
                 unrelated = subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True)
                 processes.append(unrelated)
-                for reload_index in range(3):
-                    rpc('loader/reload_plugin',record['name'])
-                    # The reload RPC queues work. Do not race a legacy RPC against
-                    # the wrapper whose response listener Decky is shutting down.
-                    def reload_finished():
-                        output = (home/'runtime.log').read_text()
-                        return (output.count('Loaded DeckyParty File Manager') == reload_index+2 and
-                                output.count('Unloaded DeckyParty File Manager') == reload_index+1)
-                    until_ready(reload_finished, 'actual plugin reload completion')
+                reloads = []
+                for reload_index in range(1 if regression else 3):
+                    reloads.append(deckyparty_private.reload(backend, log, server_pids,
+                        rpc, until_ready, reload_index, regression=regression))
                     until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
+                    if regression:
+                        break
                     assert legacy('is_enabled') is False
                     if reload_index < 2:
                         legacy('set_enabled', enabled=True)
                         credential = legacy('get_status')['password']
                         assert until_ready(lambda: http('fixture-download.bin',credential),
                                            'Copyparty between reloads') == marker
+                until_ready(lambda: (home/'runtime.log').read_text().count('Initialized') == len(reloads)+1,
+                            'replacement DeckyParty initialization')
+                final_stop = deckyparty_private.stop(backend, log, server_pids,
+                    reloads[-1]['pluginChildrenAfter'])
                 assert unrelated.poll() is None
                 unrelated.terminate()
                 unrelated.wait(timeout=3)
@@ -682,13 +699,18 @@ def main():
                 log.seek(0)
                 lifecycle_log = log.read()
                 assert 'Unloaded DeckyParty File Manager' in lifecycle_log
-                assert 'Sending SIGKILL' not in lifecycle_log
+                assert lifecycle_log.count('Sending SIGKILL!') == int(regression)
                 report['independentState'] = {'privateDownload':True, 'privateUpload':True,
                     'privateDelete':True,
                     'anonymousAndWrongPasswordRefused':True, 'disabledChildReaped':True,
-                    'reloadStoppedServer':True, 'reloadCount':3, 'unrelatedChildUntouched':True}
-                report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload/delete, '
-                    'disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified')
+                    'reloadStoppedServer':not regression, 'reloadCount':len(reloads),
+                    'unrelatedChildUntouched':True}
+                report['deckypartyLifecycle'] = dict(reloads=reloads, finalParentOnlyStop=final_stop,
+                    expectedRegression=regression, cleanReloadsVerified=not regression,
+                    console=lifecycle_log, consoleSha256=hashlib.sha256(lifecycle_log.encode()).hexdigest())
+                report['result'] = ('prior managed DeckyParty forced-kill reload reproduced; negative control only'
+                    if regression else 'discovery, original Copyparty authenticated private listing/download/upload/delete, '
+                    'disable/restart, three clean plugin reloads and parent-only stop passed; LAN/Frame/UI unverified')
             elif case['probe'] == 'download-all-logging':
                 assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}
                 assert 'FrameyQueueDownloads' in (plugin/'dist/index.js').read_text()

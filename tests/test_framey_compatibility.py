@@ -14,6 +14,16 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_previous_deckyparty_receipt_requires_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 117)
+        old = dict(storeId=117, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['deckyparty-user-lifecycle'])
+        updated = dict(old, compatShims=['deckyparty-user-lifecycle', 'deckyparty-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual(results[1]['compatibility']['status'], 'partial')
+
     def test_table_matches_store_data_and_complete_browser_and_fake_evidence(self):
         root = Path(__file__).resolve().parents[1]
         subprocess.run([sys.executable, str(root/'scripts/framey-compatibility-doc.py'), '--check'], check=True)
