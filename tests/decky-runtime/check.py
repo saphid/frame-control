@@ -20,6 +20,8 @@ import urllib.request
 import zipfile
 import io
 
+from runtime_console import capture_runtime
+
 import websockets
 from websockets.exceptions import WebSocketException
 
@@ -214,7 +216,7 @@ def main():
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
-        try:
+        with capture_runtime(log, report, processes, loader=loader):
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
@@ -503,7 +505,7 @@ def main():
                     worker.join(timeout=3)
                 assert requests == ['/private.png']*3
                 assert not worker.is_alive()
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -799,7 +801,7 @@ def main():
                 assert current('set_setting', 'settings', saved) is None
                 before = state.read_bytes()
                 assert json.loads(before) == {'settings': saved}
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -834,7 +836,7 @@ def main():
                 assert current('get_setting', 'refresh_interval_seconds') == 180
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['refresh_interval_seconds'] == 180
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -919,7 +921,7 @@ def main():
                 assert current('get_setting', key, 'missing') == 'missing'
                 assert current('set_setting', key, 'saved') is None
                 assert current('get_setting', key, 'missing') == 'saved'
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1072,7 +1074,7 @@ def main():
                 assert (settings_dir/'deal_db.json').is_file()
                 current('settings_setSetting', 'larger_text', True)
                 assert current('settings_read')['larger_text'] is True
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1133,7 +1135,7 @@ def main():
                 refused(str(selection)+'/**')
                 (selection/'nested/cycle').unlink()
                 assert (outside/'private.bin').read_bytes() == marker
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1166,7 +1168,7 @@ def main():
                 assert saved == {'success': True}, saved
                 presets = current('get_filter_presets')
                 assert presets['active_index'] == 0 and presets['presets'][0]['label'] == 'Framey private', presets
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1211,7 +1213,7 @@ def main():
                 assert len(notifications) == 1 and notifications[0]['title'] == 'Private title', notifications
                 assert legacy('notifications_clear') is None
                 assert legacy('notification_list') == []
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1307,7 +1309,7 @@ def main():
                 saved = json.loads(state.read_text())
                 assert saved['apps']['framey-private'] == dict(favorite=True, hidden=True, lastOpened=424242)
                 assert saved['temporaryShortcuts'] == [424242]
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1341,7 +1343,7 @@ def main():
                 assert len(saved['shelves']) == 1 and saved['shelves'][0]['title'] == 'Private Test', saved
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['state']['shelves'][0]['id'] == shelf['id']
-                os.killpg(backend.pid, signal.SIGTERM)
+                backend.send_signal(signal.SIGTERM)
                 backend.wait(timeout=8)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
@@ -1431,7 +1433,7 @@ def main():
 
                 def restart(settings=None):
                     nonlocal backend
-                    os.killpg(backend.pid, signal.SIGTERM)
+                    backend.send_signal(signal.SIGTERM)
                     backend.wait(timeout=8)
                     if settings is not None:
                         path = base/'settings'/record['folder']/'settings.json'
@@ -1570,27 +1572,6 @@ def main():
             log.flush()
             log.seek(0)
             assert 'Starting Decky version v3.3.0' in log.read()
-            print(json.dumps(report))
-        except Exception:
-            log.flush()
-            log.seek(0)
-            print(log.read()[-12000:], file=sys.stderr)
-            raise
-        finally:
-            for process in reversed(processes):
-                if process.poll() is None:
-                    try:
-                        os.killpg(process.pid, signal.SIGTERM)
-                    except ProcessLookupError:
-                        continue
-                    try:
-                        process.wait(timeout=4)
-                    except subprocess.TimeoutExpired:
-                        try:
-                            os.killpg(process.pid, signal.SIGKILL)
-                        except ProcessLookupError:
-                            pass
-                        process.wait(timeout=4)
 
 
 if __name__ == '__main__':
