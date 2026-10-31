@@ -664,9 +664,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), expected)
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
-                         ['wine-cellar-native-bridge'])
+                         ['wine-cellar-native-bridge', 'wine-cellar-ipc-eof'])
         self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(),
                          frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         self.assertEqual(hashlib.sha256((folder/'dist/index.js').read_bytes()).hexdigest(),
                          frame_decky_store.WINE_CELLAR_FRONTEND)
 

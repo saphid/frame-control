@@ -58,7 +58,10 @@
   {
     "id": 68,
     "shim": "wine-cellar-native-bridge",
-    "probe": "wine-cellar-private-state"
+    "probe": "wine-cellar-private-state",
+    "additionalShims": [
+      "wine-cellar-ipc-eof"
+    ]
   },
   {
     "id": 52,

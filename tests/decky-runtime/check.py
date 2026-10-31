@@ -71,6 +71,7 @@ def main():
     parser.add_argument('--reproduce-nonsteam-path-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -119,6 +120,17 @@ def main():
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_wine_cellar_unload_regression:
+        assert record['id'] == 68
+        import gzip
+        previous = gzip.decompress((ROOT/'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz').read_bytes())
+        assert hashlib.sha256(previous).hexdigest() == '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
+        (plugin/'main.py').write_bytes(previous)
+    if record['id'] == 68:
+        expected = (previous if args.reproduce_wine_cellar_unload_regression else
+                    (ROOT/'ui/vendor/wine-cellar-0.2.1/main.py').read_bytes())
+        assert (plugin/'main.py').read_bytes() == expected, 'installed Wine Cellar source must match the tested lifecycle'
+        assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -947,17 +959,13 @@ def main():
                 machine = 183 if __import__('platform').machine() == 'aarch64' else 62
                 assert helper.read_bytes()[:4] == b'\x7fELF'
                 assert int.from_bytes(helper.read_bytes()[18:20], 'little') == machine
-                token = until_ready(lambda: current('framey_ws_open'), 'private Wine Cellar helper')
-                assert isinstance(token, str) and len(token) == 32, token
-                assert current('framey_ws_send', token, '{"type":"GetState"}') is None
-                reply = until_ready(lambda: next((json.loads(message) for message in
-                    current('framey_ws_poll', token)['messages'] if json.loads(message).get('type') == 'UpdateState'),
-                    None), 'read-only Wine Cellar state')
-                assert reply['app_state']['installed_tools'] == [], reply
-                assert current('framey_ws_close', token) is None
-                report['result'] = ('actual Decky 3.3.0 discovery, managed native helper and fixed-origin '
-                                    'read-only state RPC passed against private empty Steam home; '
-                                    'no install/uninstall, real library or VR test')
+                helper_digest = hashlib.sha256(helper.read_bytes()).hexdigest()
+                assert helper_digest == (frame_decky_store.WINE_CELLAR_AARCH64 if machine == 183
+                                         else frame_decky_store.WINE_CELLAR_ORIGINAL)
+                report['helperSha256'] = helper_digest
+                import wine_cellar_private
+                report.update(wine_cellar_private.probe(backend, helper, loader, env, log, processes,
+                    current, rpc, until_ready, regression=args.reproduce_wine_cellar_unload_regression))
             elif case['probe'] == 'deck-settings-readonly':
                 # Never upload images, send a token, or change game settings.
                 # The container has no network or host Steam library access.
