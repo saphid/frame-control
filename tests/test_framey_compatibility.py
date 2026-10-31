@@ -103,6 +103,16 @@ class Compatibility(unittest.TestCase):
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertEqual(result[1]['compatibility']['status'], 'works')
 
+    def test_mangopeel_watch_only_copy_requires_ipc_repair_update(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 56)
+        old = dict(storeId=56, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['mangopeel-watch-lifetime'])
+        updated = dict(old, compatShims=['mangopeel-watch-lifetime', 'mangopeel-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
     def test_fileserver_old_copy_requires_current_panel_update(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
         old = dict(storeId=60, version=plugin['version'], sha256=plugin['sha256'],

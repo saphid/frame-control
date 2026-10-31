@@ -1,0 +1,104 @@
+{
+  "at": "2026-10-31T11:45:08.243585+00:00",
+  "sourceRevision": "950d7541a9293e9f96eb66bd1cc7caa7105b34a8",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "priorHead": "a87469256c8ebb42e0c19ce299f021cb6a59a623",
+  "normalMergeParentsVerified": true,
+  "allMainRuntimeDispatchBytesPreserved": true,
+  "completeMangoPeelRepairAndProbePreserved": true,
+  "mainProductBytesPlusOnlyMangoPeelAdaptation": true,
+  "all116PoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "all35NativeCasePinsVerified": true,
+  "all16SourceFingerprintsVerifiedPerReplay": true,
+  "mangoPeelRpcs": 8,
+  "tabMasterRpcs": [
+    47,
+    48
+  ],
+  "tabMasterTwoRepairedAndTwoOriginalZeroExitStops": true,
+  "tabMasterJsonDiagnosticCountPerCase": 1,
+  "tabMasterJsonDiagnosticCauseProven": false,
+  "focusedTests": 97,
+  "focusedTestsSkipped": 0,
+  "initialUnitHarnessAttemptExit": 1,
+  "initialUnitHarnessLimit": "Three suites passed; the next pattern matched no tests and exited 5. Correctly named native-console/Wine suites separately passed 12 tests, completing 97 actual tests.",
+  "localFullNativeMatrixRun": false,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "positiveArchivePins": 35,
+    "sourceFingerprints": 16
+  },
+  "priorExactHeadAllFourPackageModesAudited": true,
+  "priorHeadPackageCaptures": {
+    "captures": [
+      {
+        "path": "/tmp/framey-pr509-a874692-package-http-mppkd9qczt/running1.png",
+        "sha256": "84233c940d62a8be7f37529387021135cd67bb44c765a6ce370c20d9fb049413"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-http-mppkd9qczt/stopped2.png",
+        "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-http-mppkd9qczt/restarted3.png",
+        "sha256": "84233c940d62a8be7f37529387021135cd67bb44c765a6ce370c20d9fb049413"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-http-mppkd9qczt/stopped4.png",
+        "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/browser-running1.png",
+        "sha256": "7d855e82df7b181160a6d991dba50dac1a95059bd249a0fa80349e9ca914577e"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/browser-stopped2.png",
+        "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/browser-restarted3.png",
+        "sha256": "7d855e82df7b181160a6d991dba50dac1a95059bd249a0fa80349e9ca914577e"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/browser-stopped4.png",
+        "sha256": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/http-parent-running1.png",
+        "sha256": "3e422da1a45d5939b97d6d36fd6c8a194e3778e87a010b78d9258755ce5fff35"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/http-parent-stopped2.png",
+        "sha256": "4f357a4b6fde7b46d48049944b8b3135ffae9110277ae28ca62edab2727f005a"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/http-parent-restarted3.png",
+        "sha256": "3e422da1a45d5939b97d6d36fd6c8a194e3778e87a010b78d9258755ce5fff35"
+      },
+      {
+        "path": "/tmp/framey-pr509-a874692-package-parent-mppkd9qczt/http-parent-stopped4.png",
+        "sha256": "4f357a4b6fde7b46d48049944b8b3135ffae9110277ae28ca62edab2727f005a"
+      }
+    ],
+    "visuallyInspected": true,
+    "uniqueImages": 5,
+    "observations": [
+      "Standalone running/restarted views show Running, private folder and both device rows; stopped views show Stopped.",
+      "Production parent running view clips device rows; stopped view and retained broken/non-ARM64 warning are visible.",
+      "Isolated signed Syncthing fixtures with synthetic CEF/input/receipts, not MangoPeel overlay, Steam CEF, actual Frame or controller proof."
+    ]
+  },
+  "rawPackageDeckyConsoleRetained": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Fresh exact final-head CI/e2e, native AMD64/ARM64, ownership, PC and all triggered package modes are mandatory; prior-head packages do not qualify the new SHA.",
+    "Private profile/process preservation assertions are source-bound; no full filesystem/process snapshots retained.",
+    "No global clean shutdown, actual MangoHud overlay, integrated browser/backend, live Steam, managed Frame installation, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "72c08d4935f5dbdb3937ab3c63dceb31a8ac095362ddb65785e2e5c13db74a74",
+  "rawGzipSha256": "edb178358672e4f66b9d8cf14297c949a3c9aa8b977a03dbc182d41851ded73f"
+}

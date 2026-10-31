@@ -1,5 +1,11 @@
 [
   {
+    "id": 56,
+    "shim": "mangopeel-watch-lifetime",
+    "additionalShims": ["mangopeel-ipc-eof"],
+    "probe": "mangopeel-private-watch"
+  },
+  {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
     "probe": "tabmaster-private-settings"

@@ -84,6 +84,7 @@ def main():
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/runtime_console.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
+              'tests/decky-runtime/mangopeel.py',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
               'tests/decky-runtime/wine_cellar_private.py',

@@ -4039,12 +4039,13 @@
         "https://github.com/flightlessmango/MangoHud"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; gamescope/MangoHud actions and backend are unverified.",
+      "reason": "Exact managed 0.0.7 gives its inotify reader a bounded stop and joins callbacks before closing the descriptor. Published Decky 3.3.0 AMD64 verifies private selected/multi-profile writes, actual inotify updates, replacement-watch activity and reload/shutdown without the original five-second forced kill. Existing copies need Update/reinstall. The process supplying the private config is an inert fixture; actual gamescope/MangoHud overlay behavior, ARM64, browser/backend integration, Frame and worn/controller use remain unverified. ARM64 final shutdown still required a forced kill after the watch repair; a scoped child-IPC EOF repair awaits fresh final-head qualification.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 AMD64 private inotify/profile lifecycle"
       ],
       "browser": {
         "id": 56,
@@ -4080,7 +4081,13 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "requiredShims": [
+        "mangopeel-watch-lifetime",
+        "mangopeel-ipc-eof"
+      ],
+      "missingShimStatus": "partial",
+      "runtimeEvidence": "docs/evidence/framey-mangopeel-watch-lifetime-2026-10-31.md"
     },
     {
       "id": 58,
