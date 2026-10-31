@@ -59,3 +59,6 @@ CI, package/native results, tagged installers, checksums, publisher checks and
 the locked wearer-safe real Frame smoke test. This record publishes no release.
 
 [Compact results and source fingerprints](framey-main-catalog-e2e-2026-10-31.json).
+
+A [later full-catalog run after the keyboard merge](framey-main0a-catalog-e2e-2026-10-31.md)
+records exact main `0a91fc6`; this earlier main6a result remains historical.
