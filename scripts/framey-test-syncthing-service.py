@@ -142,8 +142,11 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
         fileobj=raw, mode='wb', mtime=0, compresslevel=1
     ) as target:
 
-        def write(name, mode, data, uid=0, gid=0, major=0, minor=0):
+        def write(name, mode, data, uid=0, gid=0, major=0, minor=0, mtime=0):
             nonlocal inode
+            mtime = int(mtime)
+            if not 0 <= mtime <= 0xffffffff:
+                raise ValueError('Unexpected guest root filesystem timestamp')
             inode += 1
             name = name.encode() + b'\0'
             fields = [
@@ -152,7 +155,7 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
                 uid,
                 gid,
                 1,
-                0,
+                mtime,
                 len(data),
                 0,
                 0,
@@ -209,6 +212,9 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
                 member.gid,
                 member.devmajor or 0,
                 member.devminor or 0,
+                # Timestamp-based .pyc headers in the published rootfs must
+                # still match their sources after the guest unpacks newc.
+                mtime=member.mtime,
             )
         for name, (mode, data) in overlays.items():
             write(
