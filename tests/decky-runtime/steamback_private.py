@@ -154,4 +154,3 @@ def probe(backend, loader, env, log, processes, legacy, rpc, until_ready,
         console = Path(log.name).read_text()
         evidence['console'] = console
         evidence['consoleSha256'] = hashlib.sha256(console.encode()).hexdigest()
-
