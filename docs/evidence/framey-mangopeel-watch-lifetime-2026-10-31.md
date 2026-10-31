@@ -206,6 +206,50 @@ ownership and all triggered package modes remain required. Previous-head
 hosted successes remain historical. Global clean plugin shutdown, actual
 MangoHud overlay and real-headset/controller behavior remain unverified.
 
+## Refresh onto main 0082d79
+
+Main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` was merged normally at
+`84ce20a9a6e8b57902b86799ccc2f79c3fa58734`, retaining both parents.
+Three registry conflicts were resolved by keeping both MangoPeel and TabMaster.
+Removing only MangoPeel's additions reproduces main's full runtime dispatch;
+removing only TabMaster's new probe reproduces the prior dispatch. The complete
+MangoPeel repair/helper/archive and both parents' existing probes are preserved.
+All 116 catalog policies and the other 115 complete rows match current main.
+
+Fresh local validation passes all 95 focused tests and an isolated AMD64
+published Decky 3.3.0 MangoPeel replay. All 16 native source fingerprints match
+the tested merge. The installed backend is independently reconstructed from
+published bytes plus the pinned watch/IPC changes. Private profiles, real
+inotify callbacks, replacement watch, reload and parent-only final loader stop
+pass. Complete available post-cleanup console and unit output are retained.
+The loader exits zero; generic cleanup only terminates the owned inert auxiliary
+process group (exit -15). No owned runtime containers or image tags remain.
+
+Historical head `4757a427f380164d2e0cce0339ef7a67a120ace4` completed package
+run `41188921596`. All four modes were independently audited: signed AMD64 and
+ARM64 packages, browser HTTP and production-parent HTTP. GitHub artifact hashes,
+exact checkout/jobs/steps, full source inventories, signed content, private sync,
+owned lifecycle/migration and preserved data pass. Native guest reports were
+decoded from their console; HTTP reports were checked against virtio packets.
+Raw Decky console is not separately retained in these package artifacts, so
+their shutdown-log assertion remains source-bound. These are Syncthing fixture
+checks, not MangoPeel overlay or frontend proof. Both native package source
+inventories still match the new merge; HTTP inventories differ only in the
+compatibility catalog. Every new exact-head package mode is still required.
+
+All 12 screenshot payloads reduce to five visually inspected images. Standalone
+running/restarted views show the private folder and both synthetic devices;
+stopped views show Stopped. The production-parent views clip the device rows
+and retain the broken/non-ARM64 warning. Syncthing stays blocked/unselected.
+
+[Current merge audit](framey-mangopeel-main0082d79-refresh-2026-10-31.json) and
+[raw source, unit, native and historical package records](framey-mangopeel-main0082d79-refresh-2026-10-31-raw.json.gz)
+retain the evidence and exact limits. The complete native matrix now expects
+42 probes / 35 archive pins / 16 source fingerprints per architecture; only the
+scoped MangoPeel case ran locally. Fresh final-head hosted checks/e2e, native,
+ownership and packages remain required. Main's package gate is also pending.
+No headset or schedule was accessed; this refresh qualifies no merge or release.
+
 ## Limits
 
 The fixture process supplies a private `MANGOHUD_CONFIGFILE` through real `/proc`
