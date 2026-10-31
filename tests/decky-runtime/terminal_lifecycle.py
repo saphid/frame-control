@@ -16,9 +16,10 @@ def probe(name, home, backend, processes):
     marker = home/'framey-terminal-marker'
     assert not marker.exists()
     observed = []
+    transcript = []
 
     async def exercise():
-        async with Client(name) as client:
+        async with Client(name, transcript) as client:
             async def call(method, *args):
                 result = await client.call(method, *args)
                 observed.append(dict(method=method, result=result))
@@ -57,13 +58,14 @@ def probe(name, home, backend, processes):
             second = await call('get_terminal', terminal_id)
             assert second['pid'] != pid and second['is_completed'] is False
             return dict(firstPid=pid, reloadPid=second['pid'], config=config,
-                        outputSha256=hashlib.sha256(output.encode()).hexdigest())
+                        outputSha256=hashlib.sha256(output.encode()).hexdigest(),
+                        transcript=transcript)
 
     try:
         report = asyncio.run(exercise())
     except Exception:
         print('FRAMEY_TERMINAL_PROGRESS_JSON='+json.dumps(dict(
-            calls=observed, success=False, realFrameContacted=False,
+            calls=observed, transcript=transcript, success=False, realFrameContacted=False,
             privateContainerInputOnly=True)), flush=True, file=sys.stderr)
         raise
     def identity(pid):
