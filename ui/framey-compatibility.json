@@ -12121,12 +12121,13 @@
         "https://github.com/user-attachments/assets"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; Non-Steam game badges have no supported Steam page injection target.",
+      "reason": "Exact managed 0.1.0 maps Steam userdata paths to the actual user home. Published Decky 3.3.0 x86_64 verifies private GOG/Epic/Amazon/Luna and unknown-store shortcut mappings, signed app IDs, missing-ID and malformed-file handling, unchanged private files and loader-restart persistence. A separate unchanged-original case reproduces the hardcoded Deck-home failure. Existing copies need Update/reinstall. Active Steam account selection, browser/backend integration, Steam page badges, live search, ARM64, managed Frame use and worn/controller usability remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "published Decky 3.3.0 x86_64 private shortcut-mapping RPCs"
       ],
       "browser": {
         "id": 133,
@@ -12153,7 +12154,11 @@
         "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "requiredShims": [
+        "nonsteam-badges-user-paths"
+      ],
+      "missingShimStatus": "partial"
     },
     {
       "id": 134,
