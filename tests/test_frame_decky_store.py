@@ -204,6 +204,82 @@ class StoreTransaction(unittest.TestCase):
         finally:
             source.unlink(missing_ok=True)
 
+    @unittest.skipUnless(sys.platform == 'linux', 'real Linux inotify is required')
+    def test_mangopeel_unload_joins_idle_and_active_watches(self):
+        import concurrent.futures
+        import ctypes
+        import struct
+        import threading
+        import time
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 56)
+        data = official_archive(record)
+        self.assertEqual(frame_decky_store.archive_info(data, record['sha256'], record['name']),
+                         record['folder'])
+        result = self.apply('install', data, plugin_id=56,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['mangopeel-watch-lifetime'])
+        source = (folder/'main.py').read_text()
+        compile(source, str(folder/'main.py'), 'exec')
+        # Execute the installed watch class without the plugin's global logger
+        # or /proc discovery; these checks use real kernel events and threads.
+        node = next(n for n in ast.parse(source).body
+                    if isinstance(n, ast.ClassDef) and n.name == 'Inotify')
+        scope = dict(CDLL=ctypes.CDLL, get_errno=ctypes.get_errno, ctypes=ctypes,
+                     os=os, threading=threading, Thread=threading.Thread,
+                     struct=struct, logging=logging)
+        exec(compile(ast.Module(body=[node], type_ignores=[]), '<installed Inotify>', 'exec'), scope)
+        profile = Path(self.tmp.name)/'private-profile.conf'
+        profile.write_text('original')
+        watch = scope['Inotify']()
+        self.addCleanup(watch.stop)
+        called = threading.Event()
+        calls = []
+        def callback(path, mask):
+            calls.append((path, mask))
+            called.set()
+        watch.add_watch(str(profile), 2, callback)
+        watch.run()
+        reader, fd = watch._runThread, watch.fd
+        profile.write_text('changed')
+        self.assertTrue(called.wait(2), 'actual IN_MODIFY callback')
+        started = time.monotonic()
+        watch.stop()
+        self.assertLess(time.monotonic()-started, 1.5)
+        self.assertFalse(reader.is_alive())
+        with self.assertRaises(OSError):
+            os.fstat(fd)
+        before = len(calls)
+        profile.write_text('after unload')
+        time.sleep(.05)
+        self.assertEqual(len(calls), before)
+        watch.stop()  # Unload cleanup is idempotent.
+
+        pending = scope['Inotify']()
+        self.addCleanup(pending.stop)
+        entered, release = threading.Event(), threading.Event()
+        def active_callback(_path, _mask):
+            entered.set()
+            release.wait(2)
+        pending.add_watch(str(profile), 2, active_callback)
+        pending.run()
+        profile.write_text('active callback')
+        self.assertTrue(entered.wait(2))
+        with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+            future = pool.submit(pending.stop)
+            try:
+                with self.assertRaises(concurrent.futures.TimeoutError):
+                    future.result(timeout=.05)
+            finally:
+                release.set()
+            future.result(timeout=2)
+        result = self.apply('remove', plugin_id=56, folder=record['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
     def test_install_update_remove_only_owned_folder(self):
         first, _ = archive()
         result = self.apply('install', first)

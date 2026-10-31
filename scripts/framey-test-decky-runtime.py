@@ -83,6 +83,7 @@ def main():
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
+              'tests/decky-runtime/mangopeel.py',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               '.github/workflows/decky-runtime.yml']
     report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,

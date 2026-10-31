@@ -1,0 +1,135 @@
+{
+  "at": "2026-10-31T02:48:59.021346+00:00",
+  "baseCommit": "08bd8473b18c3d246a9c96d5e7a17ff4acaa3733",
+  "officialArchiveSha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+  "originalBackendSha256": "cb80b8563e4d1a0b58e2b35a16189db9f41a4dc1da563811353a56dd495fa976",
+  "managedBackendSha256": "b0f08ffa9ca3b7a86de8dca2c97a1135a982203f33cfedc9b0e43eb5bf13d938",
+  "allOutsideInotifyBackendBytesPreserved": true,
+  "baseline": {
+    "publishedDeckyVersion": "v3.3.0",
+    "originalUnmodifiedBackend": true,
+    "forcedKillMarker": "Plugin MangoPeel (v0.0.7) still alive 5 seconds after stop request! Sending SIGKILL!",
+    "logSha256": "8e890fea9bf35d35be1e4c75664baed0e70c7d2759d4537edbe1aeb224f97235",
+    "limit": "Original forced kill reproduced; first probe also raced queued reload completion. Later revisions wait for replacement discovery."
+  },
+  "nativeAMD64": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "5f92e1580bc88913c04e6f7b58c8fd56ede46295a90c2c2ab34a9c4e3ea1da7d",
+      "tests/decky-runtime/check.py": "4df7615308a5bdb7f9358223ea16d5f07116cb40d297b625364a847dfa36208a",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "6ae6ceec252058396dcaf13656bf25823a5446dc111638673252eb869b575311",
+      "tests/decky-runtime/mangopeel.py": "21cf93c8b9828aed5c488cbbcf589b0de113897fdeca3423d7fcadba832711be",
+      "tests/framey_official.py": "6efa7bef06fbec2402bc456ac72ff1e45e5bdb48184ae2af3e61e49ff74f0a55",
+      "ui/frame_decky_store.py": "e556fd73536c0ef8ccd01f0ec13d1acf0557959080276c3e1fccf6c3503018ec",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": [
+      {
+        "id": 56,
+        "name": "MangoPeel",
+        "version": "0.0.7",
+        "sha256": "71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1",
+        "shim": "mangopeel-watch-lifetime",
+        "calls": [
+          {
+            "method": "get_steamIndex",
+            "result": 1
+          },
+          {
+            "method": "get_steamChannel",
+            "result": "main"
+          },
+          {
+            "method": "SetOverwriteConfig",
+            "result": true
+          },
+          {
+            "method": "SetOverwriteConfigs",
+            "result": true
+          },
+          {
+            "method": "get_steamIndex",
+            "result": 2
+          },
+          {
+            "method": "ReloadConfigPath",
+            "result": true
+          },
+          {
+            "method": "get_steamIndex",
+            "result": 2
+          },
+          {
+            "method": "get_steamIndex",
+            "result": 2
+          },
+          {
+            "method": "get_steamIndex",
+            "result": 3
+          }
+        ],
+        "discovered": [
+          {
+            "name": "MangoPeel",
+            "version": "0.0.7",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateMangoPeel": {
+          "privateSelectedProfileWrite": true,
+          "privateMultiProfileWrite": true,
+          "actualInotifyCallback": true,
+          "replacementWatchActive": true,
+          "reloadWithoutForcedKill": true,
+          "ownedLoaderShutdownClean": true,
+          "loaderExitCode": 0,
+          "reloadAndShutdownConsole": "[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.1s\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[loader][INFO]: Loaded MangoPeel (v0.0.7)\n[wsrouter][WARNING]: Dropping message as there is no connected socket: {'type': 5, 'event': 'loader/import_plugin', 'args': ('MangoPeel', '0.0.7', 1, True, 15000)}\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down MangoPeel (v0.0.7)\n[plugin][INFO]: Stopping response listener for MangoPeel (v0.0.7)\n[plugin][INFO]: Plugin MangoPeel (v0.0.7) has been stopped in 0.2s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n",
+          "profilePreservedAcrossReload": true,
+          "unrelatedProfileAndProcessPreserved": true,
+          "syntheticMangoappProcess": true,
+          "actualMangoHudOverlay": false,
+          "browserVerified": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "managedBackendSha256": "b0f08ffa9ca3b7a86de8dca2c97a1135a982203f33cfedc9b0e43eb5bf13d938",
+        "result": "published Decky discovery, private MangoHud profile writes, actual inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, browser, actual Frame and worn/controller behavior unverified"
+      }
+    ]
+  },
+  "nativeReportSha256": "5becab55c2d14e9b6e4aa2250b827d2b6ad9014f4d80eb521af04daa57ec4f71",
+  "fullUnitSuite": {
+    "tests": 1913,
+    "skipped": 16,
+    "success": true,
+    "seconds": 250.266,
+    "logSha256": "f9416f41d3cdd8afa750c4103fa83f640433cff6545437071d9e91bd751896d5"
+  },
+  "focusedKernelWatchTest": {
+    "tests": 1,
+    "success": true,
+    "includes": "real IN_MODIFY callback, idle stop, active-callback join, fd closure, no callback after unload, repeat stop and owned removal"
+  },
+  "runtimeCoverageTests": 3,
+  "compatibilityTests": 16,
+  "retainedIntermediateProbeFailures": [
+    "queued reload RPC race",
+    "group teardown sometimes logged Shutdown finished but returned 1; final probe signals only the owned launcher once and requires exit 0",
+    "initial independent audit omitted creating its private plugins directory; corrected without changing production code"
+  ],
+  "liveCatalogRead": "HTTP 403; no refreshed live store metadata claim",
+  "classification": "partial; exact managed copy needs Update/reinstall",
+  "unverified": [
+    "hosted exact-head gates",
+    "native ARM64",
+    "actual gamescope/MangoHud overlay",
+    "browser/backend integration",
+    "real Frame",
+    "worn/controller behavior"
+  ],
+  "realFrameContacted": false
+}

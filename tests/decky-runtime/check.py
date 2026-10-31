@@ -186,6 +186,9 @@ def main():
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
         try:
+            if case['probe'] == 'mangopeel-private-watch':
+                import mangopeel
+                private_mango = mangopeel.start(env, log, processes)
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
@@ -220,7 +223,14 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'bluetooth-private-bluez':
+            if case['probe'] == 'mangopeel-private-watch':
+                report['privateMangoPeel'] = mangopeel.exercise(
+                    current, rpc, backend, log, private_mango, until_ready)
+                report['managedBackendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['result'] = ('published Decky discovery, private MangoHud profile writes, actual '
+                    'inotify callbacks and clean reload/shutdown passed; gamescope/MangoHud overlay, '
+                    'browser, actual Frame and worn/controller behavior unverified')
+            elif case['probe'] == 'bluetooth-private-bluez':
                 report['privateBluez'] = bluetooth_bluez.exercise(
                     current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
                 report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '

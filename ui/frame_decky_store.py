@@ -932,6 +932,98 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
 """+source[b:]
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
+            # MangoPeel's non-daemon reader used to outlive unload while blocked
+            # in os.read. Join its callback thread before closing its owned fd.
+            if int(plugin_id)==56 and digest=='71dc21ce5f9f4ee0573bd927e9b444d45dc47327888ca78ed063c7bcc57bfac1' and folder=='MangoPeel':
+                main=unpacked/'main.py'
+                source=main.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='cb80b8563e4d1a0b58e2b35a16189db9f41a4dc1da563811353a56dd495fa976':
+                    raise RuntimeError('MangoPeel compatibility source mismatch')
+                a=source.index('class Inotify:')
+                b=source.index('class MangoPeel:',a)
+                source=source[:a]+"""class Inotify:
+    def __init__(self):
+        self._libc = CDLL(None, use_errno=True)
+        self._libc.inotify_init1.argtypes = [ctypes.c_int]
+        self._libc.inotify_init1.restype = ctypes.c_int
+        self._libc.inotify_add_watch.argtypes = [ctypes.c_int, ctypes.c_char_p, ctypes.c_uint32]
+        self._libc.inotify_add_watch.restype = ctypes.c_int
+        self._libc.inotify_rm_watch.argtypes = [ctypes.c_int, ctypes.c_int]
+        self._libc.inotify_rm_watch.restype = ctypes.c_int
+        self.fd = self._libc.inotify_init1(os.O_NONBLOCK | os.O_CLOEXEC)
+        if self.fd < 0:
+            raise OSError(get_errno(), 'MangoPeel inotify initialization failed')
+        self._wdMap = {}
+        self._stop = threading.Event()
+        self._runThread = None
+
+    def _process(self):
+        import select
+        while not self._stop.is_set():
+            ready, _, _ = select.select([self.fd], [], [], 0.1)
+            if not ready or self._stop.wait(0.002):
+                continue
+            try:
+                buf = os.read(self.fd, 4096)
+            except BlockingIOError:
+                continue
+            pos = 0
+            events = {}
+            while pos < len(buf):
+                wd, mask, _cookie, name_len = struct.unpack('iIII', buf[pos:pos+16])
+                pos += 16 + name_len
+                events[wd] = events.get(wd, 0) | mask
+            for wd, mask in events.items():
+                item = self._wdMap.get(wd)
+                if item and not self._stop.is_set():
+                    try:
+                        # Callbacks belong to this thread. No detached Timer
+                        # may write a profile after stop has returned.
+                        item['callback'](item['path'], mask)
+                    except Exception:
+                        logging.exception('MangoPeel watch callback failed')
+
+    def add_watch(self, path, mask, callback):
+        if self.fd < 0:
+            raise RuntimeError('MangoPeel watch is closed')
+        wd = self._libc.inotify_add_watch(self.fd, os.fsencode(path), mask)
+        if wd < 0:
+            raise OSError(get_errno(), 'Cannot watch MangoPeel profile', path)
+        self._wdMap[wd] = dict(path=path, callback=callback)
+        return wd
+
+    def remove_watch(self, path):
+        for wd, item in list(self._wdMap.items()):
+            if item['path'] == path:
+                if self._libc.inotify_rm_watch(self.fd, wd) < 0:
+                    raise OSError(get_errno(), 'Cannot remove MangoPeel watch', path)
+                self._wdMap.pop(wd)
+
+    def run(self):
+        if self.fd < 0:
+            raise RuntimeError('MangoPeel watch is closed')
+        if self._runThread is None:
+            self._runThread = Thread(target=self._process, name='MangoPeel-inotify')
+            self._runThread.start()
+
+    def stop(self):
+        self._stop.set()
+        if self._runThread is not None:
+            self._runThread.join(timeout=1)
+            if self._runThread.is_alive():
+                raise RuntimeError('MangoPeel watch did not stop')
+            self._runThread = None
+        if self.fd >= 0:
+            # Close only after the reader/callback has exited: a reused file
+            # descriptor must never be consumed by an old watch thread.
+            os.close(self.fd)
+            self.fd = -1
+        self._wdMap.clear()
+
+
+"""+source[b:]
+                main.write_text(source,encoding='utf-8')
+                compat_shims.append('mangopeel-watch-lifetime')
             # Game Sync's selection count must stay inside its configured root,
             # including when a selected file or walked directory is a symlink.
             if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
