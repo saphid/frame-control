@@ -159,7 +159,7 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
   notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE,
-  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false, ludusaviFixture=LUDUSAVI_FIXTURE;
+  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false, ludusaviFixture=false;
 window.wineFixtureCalls=[];let wineSocketNext=0;const wineSessions=new Map();
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
@@ -431,7 +431,7 @@ def main():
                 if args.ludusavi_missing_fixture:
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Ludusavi replays missing-dependency and default-settings replies; installation, backup, restore, cloud and network are blocked.')
-                page = page.replace('LUDUSAVI_FIXTURE', 'true' if args.ludusavi_missing_fixture else 'false')
+                    page = page.replace('ludusaviFixture=false', 'ludusaviFixture=true')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')
