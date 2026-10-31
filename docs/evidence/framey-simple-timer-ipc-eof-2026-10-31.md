@@ -1,6 +1,6 @@
 # Simple Timer child IPC EOF repair, 31 October 2026
 
-Current main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` passed timer RPC/event probes but its raw native consoles showed a forced Simple Timer unload on both architectures. The current-main positive observation is separate from the expected original-source timer regression. A new private native AMD64 regression against unchanged production reproduced one forced kill after 5.224 seconds when a private Unix peer closed with an active deadline.
+Then-current main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` passed timer RPC/event probes but its raw native consoles showed a forced Simple Timer unload on both architectures. The current-main positive observation is separate from the expected original-source timer regression. A new private native AMD64 regression against unchanged production reproduced one forced kill after 5.224 seconds when a private Unix peer closed with an active deadline.
 
 The managed install for only Simple Timer 1.0.0 archive SHA-256 `973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312` now adds the existing child-local EOF adapter. It ends the closed connection loop so the existing `_unload` hook can cancel/join its timer task. The parent loader, shared adapter, timer calculations, completion notifications, settings and API1 dispatch convention are unchanged. The repaired backend is exactly a three-line import/install prefix followed by the complete previous managed backend. Published non-backend files, manifest and license are byte-identical. Existing copies need update/reinstall; the receipt requires both lifecycle and IPC shims.
 
@@ -40,3 +40,7 @@ The table changes Simple Timer from works to partial because the earlier usabili
 Raw native console text retains JSON parsing diagnostics from Decky's parent response listener. Scoped zero-exit owner/plugin stops do not establish an error-free global shutdown. The original-source negative also retains its expected task-state exceptions.
 
 Fresh final-head hosted checks/e2e, both native architectures and every triggered package mode remain required before merge. Main's own checks/package gates must qualify first. No headset or hourly schedule was accessed, and no release is qualified by this evidence.
+
+For the subsequent normal merge of main `1ac2941` into this repair and fresh
+combined-source checks, see the [current-main integration evidence](framey-simple-timer-main1ac2941-integration-2026-10-31.md).
+The original checks above remain bound to their historical source revisions.
