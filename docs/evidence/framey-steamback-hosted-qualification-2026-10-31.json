@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-31T18:35:30.550264+00:00",
+  "head": "c50a2337218bdefc83851b31eff07085c43b6e1e",
+  "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "hostedChecks": 18,
+  "artifacts": 8,
+  "uniqueSources": 149,
+  "verifiedHashBindings": 1363,
+  "nativeArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "casesEach": 46,
+  "expectedRegressionCasesEach": 8,
+  "steambackRpcsEach": [
+    11,
+    9
+  ],
+  "timerRpcsEach": [
+    31,
+    10,
+    18
+  ],
+  "hostedE2e": {
+    "tests": 53,
+    "skips": 1,
+    "testSeconds": 241.493,
+    "skip": "optional full catalog cache not mounted"
+  },
+  "nativeSummary": {
+    "x86_64": {
+      "repairedStopSeconds": [
+        0.185,
+        0.214
+      ],
+      "originalStopSeconds": 5.227,
+      "saveSnapshotBytesVerified": true
+    },
+    "aarch64": {
+      "repairedStopSeconds": [
+        0.214,
+        0.214
+      ],
+      "originalStopSeconds": 5.229,
+      "saveSnapshotBytesVerified": true
+    }
+  },
+  "allFourPackageModesVerified": true,
+  "feedbackClearAtReview": true,
+  "sourcePreservesUnrelatedMainBehavior": true,
+  "mainCi": "running/queued at review",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "rawSha256": "cd77d5091b09ef960e94fcf22b2775d621ef6b3744c8a53679e833cbd5e0596b",
+  "rawBytes": 188748,
+  "rawRetention": "Native reports, source audits, logs, artifact inventory and verifiers retained. Complete package reports, packets and images remain in linked hosted artifacts and local state."
+}
