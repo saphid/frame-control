@@ -1,9 +1,10 @@
 """Transport retries may not bypass certificate, content or permanent errors."""
+import errno
 import importlib.util
 from pathlib import Path
 import ssl
 import unittest
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, call, patch
 import urllib.error
 
 # GI belongs to the offline tooling environment; these transport tests do not
@@ -34,6 +35,34 @@ class FetchTransport(unittest.TestCase):
         ]) as fetch, patch.object(self.module.time, 'sleep'):
             self.assertEqual(self.module.download('https://example.test/object', 8), b'payload')
             self.assertEqual(fetch.call_count, 2)
+
+    def test_network_unreachable_retries_then_preserves_bytes_and_deadline(self):
+        error = urllib.error.URLError(OSError(errno.ENETUNREACH, 'Network is unreachable'))
+        with patch.object(self.module.urllib.request, 'urlopen', side_effect=[
+            error, self.response(b'payload')
+        ]) as fetch, patch.object(self.module.time, 'sleep') as delay:
+            self.assertEqual(self.module.download('https://example.test/object', 8), b'payload')
+        self.assertEqual(fetch.call_count, 2)
+        self.assertTrue(all(entry.kwargs['timeout'] == 45 for entry in fetch.call_args_list))
+        delay.assert_called_once_with(1)
+
+    def test_repeated_network_unreachable_retains_failure_after_three_attempts(self):
+        error = urllib.error.URLError(OSError(errno.ENETUNREACH, 'Network is unreachable'))
+        with patch.object(self.module.urllib.request, 'urlopen', side_effect=error) as fetch, \
+                patch.object(self.module.time, 'sleep') as delay, \
+                self.assertRaisesRegex(RuntimeError, 'https://example.test/object.*Network is unreachable'):
+            self.module.download('https://example.test/object', 8)
+        self.assertEqual(fetch.call_count, 3)
+        self.assertEqual(delay.call_args_list, [call(1), call(2)])
+
+    def test_permanent_os_error_fails_without_retry(self):
+        error = urllib.error.URLError(OSError(errno.EACCES, 'Permission denied'))
+        with patch.object(self.module.urllib.request, 'urlopen', side_effect=error) as fetch, \
+                patch.object(self.module.time, 'sleep') as delay, \
+                self.assertRaisesRegex(RuntimeError, 'Permission denied'):
+            self.module.download('https://example.test/object', 8)
+        self.assertEqual(fetch.call_count, 1)
+        delay.assert_not_called()
 
     def test_certificate_rejection_fails_without_retry(self):
         with patch.object(self.module.urllib.request, 'urlopen', side_effect=urllib.error.URLError(

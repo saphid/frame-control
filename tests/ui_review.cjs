@@ -31,10 +31,11 @@ test('helper starts and status reads name the headset shown when requested',asyn
 });
 test('a late input failure cannot replay A keystrokes on B',async()=>{
   const f=connectionFixture(),c=f.context,writes=[];let rejectA;
-  Object.assign(c,{pad:{state:'ready',queue:[],sending:false},fetch:(path,opts)=>{writes.push({device:opts.headers['X-Frame-Device'],events:JSON.parse(opts.body).events});return writes.length===1?new Promise((_,reject)=>rejectA=reject):Promise.resolve({ok:true,json:async()=>({state:'ready',sent:true})});}});
+  Object.assign(c,{pad:{state:'ready',queue:[],sending:false,keys:new Set([29])},fetch:(path,opts)=>{writes.push({device:opts.headers['X-Frame-Device'],events:JSON.parse(opts.body).events});return writes.length===1?new Promise((_,reject)=>rejectA=reject):Promise.resolve({ok:true,json:async()=>({state:'ready',sent:true})});}});
   f.run(pick(html,'const isMove = e =>','function padKey('));f.run('padSend({key:"for A"})');
   f.run('onConnection({phase:"connected",device:{id:"b",name:"B"},devices_rev:1,now:0})');
   assert.equal(c.pad.state,'off');assert.equal(c.pad.queue.length,0);
+  assert.equal(c.pad.keys.size,0,'old modifier state must not follow the headset switch');
   rejectA(Error('lost A'));await tick();c.pad.state='ready';f.run('padSend({key:"for B"})');await tick();
   assert.equal(writes.length,2);assert.equal(writes[1].device,'b');assert.equal(writes[1].events[0].key,'for B');
 });

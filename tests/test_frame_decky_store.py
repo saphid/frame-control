@@ -204,6 +204,56 @@ class StoreTransaction(unittest.TestCase):
         finally:
             source.unlink(missing_ok=True)
 
+    def test_ludusavi_dependency_discovery_is_exact_archive_scoped(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 103)
+        data = official_archive(record)
+        result = self.apply('install', data, plugin_id=103, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['ludusavi-dependency-discovery'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for item in original.infolist():
+                if item.is_dir():
+                    continue
+                relative = item.filename.split('/', 1)[1]
+                if relative != 'py_modules/ludusavi.py':
+                    self.assertEqual((folder/relative).read_bytes(), original.read(item), relative)
+        module = types.ModuleType('private_ludusavi_dependency')
+        logger = logging.getLogger('private-ludusavi-dependency')
+        with patch.dict(sys.modules, decky=types.SimpleNamespace(logger=logger)):
+            # Published plugin annotations require Python 3.10 at evaluation
+            # time. This host-side probe also runs on 3.9; Decky's native
+            # runtime separately executes the unchanged annotation syntax.
+            source = 'from __future__ import annotations\n' + (folder/'py_modules/ludusavi.py').read_text()
+            exec(compile(source, 'managed-ludusavi.py', 'exec'), module.__dict__)
+        with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
+            missing = module.Ludusavi(['not-present'])
+        self.assertIsNone(missing.bin_path)
+        self.assertEqual(missing.version, '')
+        with patch.object(module.subprocess, 'check_output', side_effect=[
+                subprocess.TimeoutExpired(['slow'], 5), 'private version\n']) as launch:
+            found = module.Ludusavi(['slow', 'fixture'])
+        self.assertEqual(found.bin_path, ('fixture',))
+        self.assertEqual(found.version, 'private version\n')
+        self.assertTrue(all(call.kwargs['timeout'] == 5 for call in launch.call_args_list))
+        with patch.object(module.subprocess, 'check_output', side_effect=FileNotFoundError):
+            found.__init__(['no-longer-present'])
+        self.assertIsNone(found.bin_path)
+        self.assertEqual(found.version, '')
+        self.assertEqual(self.apply('remove', plugin_id=103, folder=record['folder']).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/changed.txt', 'different archive')
+        result = self.apply('install', changed.getvalue(), plugin_id=103, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'py_modules/ludusavi.py').read_bytes(),
+                             original.read(record['folder']+'/py_modules/ludusavi.py'))
+        self.assertEqual(self.apply('remove', plugin_id=103, folder=record['folder']).returncode, 0)
+
     def test_install_update_remove_only_owned_folder(self):
         first, _ = archive()
         result = self.apply('install', first)
@@ -253,6 +303,41 @@ class StoreTransaction(unittest.TestCase):
             self.assertEqual(frontend.returncode, 0, frontend.stderr)
         self.assertEqual(self.apply('remove', plugin_id=130, folder=record['folder']).returncode, 0)
         self.assertFalse(folder.exists())
+
+    def test_deck_progress_eof_repair_is_scoped_to_exact_archive(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 134)
+        data = official_archive(record)
+        result = self.apply('install', data, plugin_id=134, folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['deck-progress-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for member in original.infolist():
+                if member.is_dir():
+                    continue
+                name = member.filename.split('/', 1)[1]
+                actual = (folder/name).read_bytes()
+                if name == 'main.py':
+                    self.assertTrue(actual.endswith(original.read(member)))
+                    compile(actual, str(folder/name), 'exec')
+                else:
+                    self.assertEqual(actual, original.read(member), name)
+        self.assertEqual(self.apply('remove', plugin_id=134, folder=record['folder']).returncode, 0)
+        changed = io.BytesIO(data)
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            bundle.writestr(record['folder']+'/new-version.txt', 'changed')
+        result = self.apply('install', changed.getvalue(), plugin_id=134,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'main.py').read_bytes(), original.read(record['folder']+'/main.py'))
+        self.assertEqual(self.apply('remove', plugin_id=134, folder=record['folder']).returncode, 0)
 
     def test_download_all_awaits_the_scoped_batch_and_reports_failures(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -550,9 +635,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), expected)
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
-                         ['wine-cellar-native-bridge'])
+                         ['wine-cellar-native-bridge', 'wine-cellar-ipc-eof'])
         self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(),
                          frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         self.assertEqual(hashlib.sha256((folder/'dist/index.js').read_bytes()).hexdigest(),
                          frame_decky_store.WINE_CELLAR_FRONTEND)
 
@@ -937,9 +1024,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads((shotty / '.frame-control-store.json').read_text())
         self.assertEqual(receipt['sha256'], plugin['sha256'])
-        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies'])
+        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies', 'shotty-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             self.assertEqual((shotty/'LICENSE').read_bytes(), original.read('Shotty/LICENSE'))
+        self.assertEqual((shotty/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
         compat = shotty / 'py_modules/click.py'
         self.assertTrue(compat.is_file())
         source = '''import asyncio, importlib.util, logging, sys, types
@@ -950,6 +1039,10 @@ decky = types.ModuleType('decky_plugin')
 decky.logger = logging.getLogger('shotty-test')
 decky.DECKY_PLUGIN_DIR = str(folder)
 sys.modules['decky_plugin'] = decky
+# These are filesystem-only contracts; the native job exercises real Decky IPC.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('shotty', folder/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)

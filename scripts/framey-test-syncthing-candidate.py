@@ -63,7 +63,7 @@ def main():
             for filename, data in [('watchdog', helper), ('PluginLoader', loader), ('official.zip', archive)]:
                 (inputs/filename).write_bytes(data)
                 (inputs/filename).chmod(0o644)
-            command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',
+            command = ['docker', 'run', '--rm', '--init', '--name', name, '--network', 'none', '--read-only',
                        '--user', '1100:1100',
                        '--cap-drop', 'ALL', '--security-opt', 'no-new-privileges', '--pids-limit', '128',
                        '--tmpfs', '/tmp:rw,exec,mode=1777',
