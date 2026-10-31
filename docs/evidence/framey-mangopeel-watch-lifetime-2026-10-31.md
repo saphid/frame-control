@@ -169,10 +169,11 @@ the full native matrix (41 probes / 34 archive pins / 15 source fingerprints on
 each architecture), ownership and every triggered package mode remain required.
 The earlier failed ARM64 result also remains historical negative evidence.
 
-This local refresh is held unpublished while #514’s remaining ARM64 package
-and next main qualification are pending, to avoid triggering a known temporary
-base twice. It is not merge or release qualification. A later main transition
-requires normal integration and fresh proof; no old hosted artifact substitutes.
+This refresh was prepared while #514’s ARM64 package remained pending. Its
+publication targets the actual qualified main above; the remaining duration of
+that separate VM/native-build job is unknown. This targeted replay does not
+qualify a merge or release. A later main transition requires normal integration
+and fresh proof; no old hosted artifact substitutes.
 
 ## Limits
 
