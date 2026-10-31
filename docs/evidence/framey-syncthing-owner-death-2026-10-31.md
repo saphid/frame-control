@@ -69,3 +69,45 @@ catalog ratings, installer policy and compatibility-table claims match main.
 No release is published by this fix.
 
 [Full build/runtime records and source hashes](framey-syncthing-owner-death-2026-10-31.json).
+
+## Hosted qualification and startup repair
+
+At original PR head `8c271df55b9d8ec0a80ac82df4ec9a0875a9fab9`, the
+[AMD64 ownership artifact](https://github.com/saphid/frame-control/actions/runs/41160719889/artifacts/13026764127)
+and [ARM64 ownership artifact](https://github.com/saphid/frame-control/actions/runs/41160719889/artifacts/13026679896)
+passed independent ZIP-digest, exact-checkout and 14-source-fingerprint checks.
+Both retained Decky's real forced-kill/reload evidence, private raw-peer sync,
+17 systemd service assertions and strict owned Decky shutdown. The built helper
+and full native Decky console are not retained; those checks remain source-bound.
+
+The [AMD64 signed-package job](https://github.com/saphid/frame-control/actions/runs/41160719979/job/124417438844)
+failed before two-way sync. Its
+[artifact](https://github.com/saphid/frame-control/actions/runs/41160719979/artifacts/13027501834)
+matches SHA-256 `1a257b6a79091e254c83bda6563356c6be6d00541624e803c24afc3e8c3d5b49`,
+the failed checkout, all 26 exact-head fingerprints and all 13 input fingerprints.
+The VM console and retained guest result agree: signed bundles installed, but
+peer 0 could not find `/run/user/1100/.flatpak/me.kozec.syncthingtk/tmp`.
+The private service, processes and VM were cleaned. The precise path-removal
+actor and timing remain unproven. This failed gate must not be dismissed by
+rerunning the unchanged head.
+
+The [browser HTTP](https://github.com/saphid/frame-control/actions/runs/41160719979/artifacts/13027741548)
+and [production-parent HTTP](https://github.com/saphid/frame-control/actions/runs/41160719979/artifacts/13027317666)
+modes passed independent artifact-digest, successful exact-checkout,
+source-fingerprint, full guest-result, migration/preservation and strict
+owned-shutdown checks. Parent running/restarted/final-stopped captures were
+visually inspected: the running states show the private folder and Devices;
+the final stopped state removes those sections. Inputs, CEF and store receipts
+are synthetic. These two passing modes do not override the AMD64 failure.
+
+PR #506 landed as main `6a5646e9da7f36ed45c840c3fe7190f2172e86ad` and
+serializes private-peer startup. It is merged into this branch without rewriting
+history. The inherited startup probe matches that main source exactly; the
+owner-death helper, patch and native candidate probe remain byte-identical to
+the original PR head. All 60 focused ownership, signed-package gate and fetch
+tests passed locally after the merge. This local run does not establish package
+runtime success. Fresh hosted qualification is required for the updated head.
+
+At this record's preparation, the original ARM64 package job was still running;
+its outcome and all updated-head gates remain unverified. No real Frame,
+wearer/controller behavior or managed installation is proved by these results.
