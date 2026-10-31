@@ -262,6 +262,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 36 and digest == 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STEAMGRIDDB_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 24 and digest == RADIYO_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1530,8 +1533,20 @@ def split_by_app(data):
                 if data.count(unsafe)!=2 or data.count(broken)!=2:
                     raise RuntimeError('RadiYo TLS source changed')
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
+                ipc=globals().get('FRAMEY_RADIYO_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing RadiYo child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                ipc_helper=modules/'framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('RadiYo child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                data=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+data
+                compile(data,str(main),'exec')
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+                compat_shims.append('radiyo-ipc-eof')
             # Steam Status 1.2.3 disables TLS checks for its Steam CM-list and
             # speed-test downloads. Keep the default verified contexts in the
             # exact managed archive, including both indentation variants.

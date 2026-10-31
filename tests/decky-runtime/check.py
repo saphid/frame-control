@@ -81,6 +81,7 @@ def main():
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
@@ -117,6 +118,16 @@ def main():
         assert record['id'] == 36
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_radiyo_unload_regression:
+        assert record['id'] == 24
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '79d14191b83345caedeb7a819c283f495ce6f5923fd81d1aecb86c14254a6be3'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deckyparty_unload_regression:
         assert record['id'] == 117
@@ -1580,8 +1591,19 @@ def main():
                     secure.shutdown()
                     secure.server_close()
                     worker.join(timeout=3)
-                report['result'] = ('discovery, loopback HTTP fetch/redirect and self-signed HTTPS rejection passed; '
-                    'external stations, trusted HTTPS, playback, real Frame and VR unverified')
+                import radiyo_private
+                radiyo_private.probe(backend, loader, env, log, processes, legacy, rpc,
+                                     until_ready, report, regression=args.reproduce_radiyo_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_radiyo_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_radiyo_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed child IPC forced-kill reproduced; verified TLS retained'
+                    if args.reproduce_radiyo_unload_regression else
+                    'discovery, loopback HTTP fetch/redirect, self-signed HTTPS rejection, restart and two clean parent-only stops passed; external stations, trusted HTTPS, playback, Frame and VR unverified')
             elif case['probe'] == 'desktop-apps-private-entries':
                 import shlex
                 apps = current('get_apps')

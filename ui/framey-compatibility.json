@@ -1482,7 +1482,7 @@
         "https://github.com/isiah-lloyd/radiyo-steam-deck"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds. The exact official legacy backend passes isolated Decky 3.3.0 discovery and loopback HTTP station fetch, custom fetch and redirect. A digest-scoped managed install restores TLS certificate and hostname checks; its fetch and redirect methods reject a loopback self-signed HTTPS endpoint. External radio services, trusted HTTPS, audio playback, real Frame backend and worn VR remain unverified. Older installed copies need an update for the TLS fix.",
+      "reason": "Initializer succeeds. The exact official legacy backend passes isolated Decky 3.3.0 discovery and loopback HTTP station fetch, custom fetch and redirect. A digest-scoped managed install restores TLS certificate and hostname checks; its fetch and redirect methods reject a loopback self-signed HTTPS endpoint. External radio services, trusted HTTPS, audio playback, real Frame backend and worn VR remain unverified. Older installed copies need an update for the TLS fix. The exact managed copy also repairs child IPC EOF so a disconnected peer does not prevent plugin shutdown. An isolated AMD64 Decky 3.3.0 regression verifies two parent-only clean stops and HTTP fetch/redirect after restart; restoring the previous managed source reproduces a forced plugin kill. Fresh hosted AMD64/ARM64 lifecycle qualification is pending. Existing copies need Update/reinstall; compatibility stays partial.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -1518,7 +1518,11 @@
         "sha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "requiredShims": [
+        "radiyo-verified-tls",
+        "radiyo-ipc-eof"
+      ]
     },
     {
       "id": 26,
