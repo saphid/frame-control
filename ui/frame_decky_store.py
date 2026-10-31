@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 61 and digest == 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_TABMASTER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -891,8 +894,19 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 old=b'        data = json.loads(settings_file)\n'
                 if source.count(old)!=1: raise RuntimeError('TabMaster restore source changed')
                 new=b'        data = json.load(settings_file)\n        if not isinstance(data, dict):\n          return False\n'
-                main.write_bytes(source.replace(old,new))
+                ipc=globals().get('FRAMEY_TABMASTER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing TabMaster child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('TabMaster child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+source.replace(old,new))
                 compat_shims.append('tabmaster-json-file-restore')
+                compat_shims.append('tabmaster-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.

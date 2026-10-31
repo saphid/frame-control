@@ -4531,7 +4531,7 @@
         "https://github.com/Tormak9970/TabMaster.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A separate native AMD64 fixture verifies private per-user settings, shared-tab filtering, backup/restore and loader-restart persistence with the exact-digest JSON restore fix; its retained console has an unattributed JSON diagnostic. Existing managed copies need update/reinstall for restore. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64 of the restore fix, browser/backend settings integration and worn/controller use remain unverified.",
+      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. Private per-user settings, shared-tab filtering, backup/restore and restart persistence have native fixture evidence. Prepared a child-local IPC EOF adapter for the exact archive while retaining the JSON restore repair; the previous managed backend can require a forced kill without its unload hook. Existing managed copies need update/reinstall for both repairs. New strict native lifecycle qualification is pending. Steam library-tab editing remains unavailable: library/MobX patches have no target. Browser/backend settings integration and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -4579,9 +4579,10 @@
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       },
-      "runtimeEvidence": "docs/evidence/framey-tabmaster-backup-restore-2026-10-30.md",
+      "runtimeEvidence": "docs/evidence/framey-tabmaster-ipc-eof-2026-10-31.md",
       "requiredShims": [
-        "tabmaster-json-file-restore"
+        "tabmaster-json-file-restore",
+        "tabmaster-ipc-eof"
       ]
     },
     {

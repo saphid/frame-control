@@ -2,7 +2,10 @@
   {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
-    "probe": "tabmaster-private-settings"
+    "probe": "tabmaster-private-settings",
+    "additionalShims": [
+      "tabmaster-ipc-eof"
+    ]
   },
   {
     "id": 103,
