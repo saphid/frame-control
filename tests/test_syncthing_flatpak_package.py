@@ -3,11 +3,16 @@
 import copy
 import hashlib
 import importlib.util
+import io
 import json
+import os
 from pathlib import Path
+import signal
+import sys
+import tarfile
 import tempfile
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 
 class PreparedPackage(unittest.TestCase):
@@ -402,6 +407,124 @@ class PreparedPackage(unittest.TestCase):
         report['stages'][1]['errors'] = ['Browser script failure']
         with self.assertRaises(ValueError):
             self.module.verify_browser(report, 'a'*64)
+
+
+class RunArtifactCleanup(unittest.TestCase):
+    """Each run removes its regenerated boot images but keeps its evidence."""
+
+    EVIDENCE = {'inputs.json', 'console.log', 'result.json'}
+    BOOT = {'vmlinuz', 'initrd.gz'}
+
+    @classmethod
+    def setUpClass(cls):
+        root = Path(__file__).resolve().parents[1]
+        loaded = []
+        for name, path in (('flatpak_package_cleanup', 'scripts/framey-test-syncthing-flatpak-package.py'),
+                           ('service_vm_cleanup', 'scripts/framey-test-syncthing-service.py')):
+            spec = importlib.util.spec_from_file_location(name, root / path)
+            module = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(module)
+            loaded.append(module)
+        cls.module, cls.packer = loaded
+
+    def setUp(self):
+        temporary = tempfile.TemporaryDirectory()
+        self.addCleanup(temporary.cleanup)
+        self.folder = Path(temporary.name)
+        rootfs = self.folder / 'rootfs.tar'
+        with tarfile.open(rootfs, 'w') as archive:
+            data = b'fixture kernel'
+            member = tarfile.TarInfo('./boot/vmlinuz-fixture')
+            member.size = len(data)
+            archive.addfile(member, io.BytesIO(data))
+        bundles = self.folder / 'bundles'
+        bundles.mkdir()
+        expected = {}
+        for kind in ('runtime', 'app'):
+            data = kind.encode() * 8
+            (bundles / (kind + '.flatpak')).write_bytes(data)
+            expected[kind] = {'sha256': hashlib.sha256(data).hexdigest(), 'bytes': len(data)}
+        key = self.folder / 'key.gpg'
+        key.write_bytes(b'fixture key')
+        self.output = self.folder / 'run'
+        self.argv = ['framey-test-syncthing-flatpak-package.py', '--rootfs-tar', str(rootfs),
+                     '--bundles', str(bundles), '--key', str(key), '--output', str(self.output)]
+        stack = [
+            patch.object(self.module, 'KEY_SHA256', hashlib.sha256(b'fixture key').hexdigest()),
+            patch.object(self.module, 'BUNDLES', expected),
+            patch.object(self.module.platform, 'system', return_value='Linux'),
+            patch.object(self.module.platform, 'machine', return_value='x86_64'),
+            patch.object(self.module.shutil, 'which', return_value='/usr/bin/qemu-system-x86_64'),
+        ]
+        for item in stack:
+            item.start()
+            self.addCleanup(item.stop)
+
+    def qemu(self, code=0, console='', during=None):
+        def popen(command, stdout, **_kwargs):
+            # Boot images exist while the owned VM runs.
+            self.assertTrue(all((self.output / name).is_file() for name in self.BOOT))
+            stdout.write(console)
+            if during:
+                during()
+            process = Mock(pid=0)
+            process.wait.return_value = code
+            process.poll.return_value = code
+            return process
+        return patch.object(self.module.subprocess, 'Popen', side_effect=popen)
+
+    def run_main(self, *extra):
+        with patch.object(sys, 'argv', self.argv + list(extra)):
+            self.module.main()
+
+    def assert_evidence_without_boot_images(self):
+        names = {path.name for path in self.output.iterdir()}
+        self.assertTrue(self.EVIDENCE <= names, names)
+        self.assertFalse(self.BOOT & names, names)
+        inputs = json.loads((self.output / 'inputs.json').read_text())
+        self.assertEqual(len(inputs['initrdSha256']), 64)
+        self.assertIs(inputs['bootArtifactsRetained'], False)
+
+    def test_successful_run_removes_boot_images_and_keeps_evidence(self):
+        package = {key: True for key in self.module.REQUIRED}
+        package.update(architecture='x86_64', forcedTermination=False, apiKeyErrorStatus=403)
+        console = 'FRAMEY_SYSTEMD_PROBE_JSON=' + json.dumps({'success': True, 'flatpak': package}) + '\n'
+        with self.qemu(console=console), patch('builtins.print'):
+            self.run_main()
+        self.assertIs(json.loads((self.output / 'result.json').read_text())['success'], True)
+        self.assert_evidence_without_boot_images()
+
+    def test_failed_run_removes_boot_images_and_keeps_evidence(self):
+        with self.qemu(code=1), self.assertRaises(RuntimeError):
+            self.run_main()
+        result = json.loads((self.output / 'result.json').read_text())
+        self.assertEqual((result['success'], result['error']), (False, 'Nonzero QEMU exit'))
+        self.assert_evidence_without_boot_images()
+
+    def test_terminated_run_reaps_and_removes_boot_images(self):
+        previous = signal.getsignal(signal.SIGTERM)
+        with self.qemu(during=lambda: os.kill(os.getpid(), signal.SIGTERM)), \
+                self.assertRaises(SystemExit) as raised:
+            self.run_main()
+        self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        self.assertIs(signal.getsignal(signal.SIGTERM), previous)
+        self.assertIs(json.loads((self.output / 'result.json').read_text())['success'], False)
+        self.assert_evidence_without_boot_images()
+
+    def test_keep_flag_retains_boot_images_for_debugging(self):
+        with self.qemu(code=1), self.assertRaises(RuntimeError):
+            self.run_main('--keep-boot-artifacts')
+        self.assertTrue(self.BOOT <= {path.name for path in self.output.iterdir()})
+        self.assertIs(json.loads((self.output / 'inputs.json').read_text())['bootArtifactsRetained'], True)
+
+    def test_remove_boot_artifacts_only_deletes_named_files(self):
+        folder = self.folder / 'evidence'
+        (folder / 'initrd.gz').mkdir(parents=True)
+        (folder / 'vmlinuz').write_bytes(b'12345')
+        (folder / 'result.json').write_text('{}')
+        self.assertEqual(self.packer.remove_boot_artifacts(folder), {'vmlinuz': 5})
+        self.assertEqual({path.name for path in folder.iterdir()}, {'initrd.gz', 'result.json'})
+        self.assertEqual(self.packer.remove_boot_artifacts(self.folder / 'missing'), {})
 
 
 if __name__ == "__main__":

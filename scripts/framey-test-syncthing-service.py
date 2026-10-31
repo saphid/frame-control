@@ -224,6 +224,30 @@ def pack(archive_path, output, payloads, *, marker=MARKER, bootstrap=None,
     return kernel
 
 
+# pack() regenerates these from pinned inputs on every run, and callers record
+# their digests, so leaving them in an evidence folder only consumes disk.
+BOOT_ARTIFACTS = ('vmlinuz', 'initrd.gz')
+
+
+def remove_boot_artifacts(folder, names=BOOT_ARTIFACTS):
+    """Delete regenerated VM boot images from a run folder; keep all evidence.
+
+    Returns {name: bytes} for each removed file. Directories are never touched.
+    """
+    removed = {}
+    for name in names:
+        path = Path(folder) / name
+        try:
+            info = path.lstat()
+        except FileNotFoundError:
+            continue
+        if stat.S_ISDIR(info.st_mode):
+            continue
+        path.unlink()
+        removed[name] = info.st_size
+    return removed
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--helper', type=Path, required=True)
