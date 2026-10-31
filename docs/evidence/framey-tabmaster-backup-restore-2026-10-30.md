@@ -8,7 +8,7 @@ A local networkless disposable **AMD64** replay at source `226d1ee72b58a52cb2cc8
 
 The [audit JSON](framey-tabmaster-backup-restore-2026-10-30.json) retains both full cases and consoles. All seven source fingerprints, loader/archive/backend hashes, discovery and RPC records were independently checked. Each case has two parent-only loader stops with zero exit and captured PID/start-time identity reaping checks. Disk readbacks and process-absence assertions remain source-bound observations; no complete process snapshot or container image is retained. The runner exited zero and performed its owned container/image cleanup.
 
-Each case retains one shutdown `Expecting value: line 1 column 1 (char 0)` diagnostic. Its cause is unproven; an error-free console is not claimed. The earlier [unmodified settings fixture](framey-tabmaster-native-settings-2026-10-30.md) remains historical evidence for a separate source revision.
+Each case retains one `Expecting value: line 1 column 1 (char 0)` diagnostic. Those captures do not prove its phase or cause; an error-free console is not claimed. The earlier [unmodified settings fixture](framey-tabmaster-native-settings-2026-10-30.md) remains historical evidence for a separate source revision. A [separate instrumented AMD64 observation](framey-tabmaster-json-startup-2026-10-31.md) traces an empty settings read before initialization or shutdown; it does not establish the cause of every occurrence or an ARM64 diagnosis.
 
 The focused fake-Frame official-plugin install/remove e2e passes, including the TabMaster shim receipt, installed backend digest, API1/frontend preservation and partial-status readback. It ran in a unique disposable Compose project because the standard shell runner requires unavailable `zsh`. Owned containers, volumes and image tags were cleaned; container/volume absence was independently checked. The audit JSON records the test, log hash and 126.743-second total runtime. This is installer evidence, not real Frame or browser/backend usability.
 
@@ -32,7 +32,7 @@ records 107 passing focused host tests. Local published Decky 3.3.0 AMD64 checks
 malformed/non-object refusals, restart persistence and four parent-only zero-exit
 stops with exact process identities gone. Twelve fingerprints, exact archive and
 managed backend hashes and complete consoles were independently checked. Each
-case retains one unattributed shutdown JSON diagnostic; error-free output is
+case retains one JSON diagnostic, unlocalized in that replay; error-free output is
 not claimed. The original valid-backup restore failure remains a negative.
 
 The exact main ownership helper was matched to its build/source fingerprints
@@ -49,3 +49,33 @@ native runtime resources, were removed. Later changes add evidence only. The
 full new native matrix is 41 probes / 34 archive pins / 12 source fingerprints;
 local targeted runs do not replace fresh exact-head hosted gates on both PRs.
 No real Frame, Steam editing, browser/backend integration or VR proof was added.
+
+## Qualified-main and refreshed stack base, 2026-10-31
+
+The refreshed #500 base `112fc4b62fdc409ca5b9db8042776e703231c124`, including
+qualified main `012f874906bd122c29e75a0c9d572980b41a1085`, was merged normally
+at tested source `39810272c7454ec024f9394cb023d2564c19dcd3`. The stack remains
+#501 on #500. All 31 main probe bodies, the complete repaired/original TabMaster
+probe, the restore repair, every catalog policy and the other 115 complete
+records are unchanged. Main's unrelated input/IPC sources are preserved, as is
+#500's separate diagnostic evidence.
+
+All 94 focused host tests pass. A new digest-pinned published Decky 3.3.0 AMD64
+replay independently verifies 47 repaired and 48 unchanged-original RPCs,
+original/managed backend and archive bytes, 14 source fingerprints, exact
+backup/restored bytes, malformed/non-object refusals and restart persistence.
+Four parent-only loader stops return zero with source-bound PID/start-time
+reaping checks. No new owned containers or image tags remain.
+
+The [refresh audit](framey-tabmaster-restore-main012f874-refresh-2026-10-31.json)
+and [raw reports and unit log](framey-tabmaster-restore-main012f874-refresh-2026-10-31-raw.json.gz)
+retain complete available consoles, each with one JSON diagnostic. These runs
+do not localize its phase or establish an error-free console. The instrumented
+startup diagnosis in #500 remains a separate observation.
+
+The full new native matrix is 42 probes, 34 archive pins and 14 source
+fingerprints per architecture. This targeted local AMD64 run does not qualify
+that matrix, refresh the earlier fake-Frame installer or ownership replay, or
+replace exact final-head and #500-base checks/e2e/native/package gates. No new
+backup-path confinement, general schema validation, browser/backend integration,
+Steam editing, managed Frame, wearer/controller or release proof is claimed.
