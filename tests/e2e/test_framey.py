@@ -264,7 +264,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies'])
+                    self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies', 'shotty-ipc-eof'])
                 if plugin['id'] == 132:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])

@@ -3928,7 +3928,7 @@
         "https://github.com/safijari/Shotty"
       ],
       "status": "partial",
-      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Existing copies need Update/reinstall.",
+      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Existing copies need Update/reinstall. Update or reinstall existing copies to receive the child IPC EOF repair for unload. Fresh native unload qualification is pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3978,7 +3978,8 @@
       },
       "requiredShims": [
         "shotty-click-app-dir",
-        "shotty-bounded-copies"
+        "shotty-bounded-copies",
+        "shotty-ipc-eof"
       ],
       "missingShimStatus": "partial",
       "runtimeEvidence": "docs/evidence/framey-shotty-bounded-2026-10-30.md"
