@@ -1,0 +1,534 @@
+{
+  "at": "2026-10-31T15:46:26.618331+00:00",
+  "sourceRevision": "f0e569d3b5294789b2c4ed2f1721f5dc08249c4f",
+  "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+  "priorHead": "e5406d6cc97105af2d043931465e9a302a7576bb",
+  "normalMerge": true,
+  "sourceAudit": {
+    "at": "2026-10-31T15:42:09.267272+00:00",
+    "sourceRevision": "f0e569d3b5294789b2c4ed2f1721f5dc08249c4f",
+    "baseMain": "3c03e478a2fab181e6bdfe60ada6038663843ab3",
+    "priorHead": "e5406d6cc97105af2d043931465e9a302a7576bb",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorSteamGridDBBodyPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorSteamGridDBInstallerBranchAdded": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderRuntimeAndFixtureMatchMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "a33f29f4d050361101640a72b2e56cff4662a553786f6b564d2aa34befcd0c8d",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "e6ea1cbcdfdb5d5755fa45dc316ef2e0184a3285829bc5e320c978506bc5fdfb",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "2c870a89d69e2c0c28facd97c9e237c71c3b9aaf3a871252e50cc0395800d093",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "cb7f976f078eff2ad9cf7759467832bd4670749606245a54b023a0d328f096cb",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 18
+  },
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "a33f29f4d050361101640a72b2e56cff4662a553786f6b564d2aa34befcd0c8d",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "e6ea1cbcdfdb5d5755fa45dc316ef2e0184a3285829bc5e320c978506bc5fdfb",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "2c870a89d69e2c0c28facd97c9e237c71c3b9aaf3a871252e50cc0395800d093",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "cb7f976f078eff2ad9cf7759467832bd4670749606245a54b023a0d328f096cb",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all18NativeInputsVerified": true,
+  "steamGridDbCases": [
+    {
+      "originalBackend": false,
+      "rpcs": 14,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "351209768"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "351209798"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "351209798"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "351209809"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793461348.210757"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down SteamGridDB (v1.8.1)\n[plugin][INFO]: Stopping response listener for SteamGridDB (v1.8.1)\nCalling Loader unload function for SteamGridDB (v1.8.1).\nAttempting to unload with plugin SteamGridDB (v1.8.1)'s \"_unload\" function.\n\nUnloaded SteamGridDB (v1.8.1)\n\n[plugin][INFO]: Plugin SteamGridDB (v1.8.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "01e9ebce2f079fdbe6aedbac24c800c9817862aea8a614312ad57944d7968949",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 28,
+          "descendantsBefore": {
+            "40": {
+              "state": "S",
+              "parent": 39,
+              "start": "351210194"
+            },
+            "29": {
+              "state": "S",
+              "parent": 28,
+              "start": "351210139"
+            },
+            "38": {
+              "state": "S",
+              "parent": 29,
+              "start": "351210180"
+            },
+            "39": {
+              "state": "S",
+              "parent": 29,
+              "start": "351210180"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 38,
+              "returncode": 0
+            },
+            {
+              "pid": 39,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.235,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down SteamGridDB (v1.8.1)\n[plugin][INFO]: Stopping response listener for SteamGridDB (v1.8.1)\nCalling Loader unload function for SteamGridDB (v1.8.1).\nAttempting to unload with plugin SteamGridDB (v1.8.1)'s \"_unload\" function.\n\nUnloaded SteamGridDB (v1.8.1)\n\n[plugin][INFO]: Plugin SteamGridDB (v1.8.1) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "01e9ebce2f079fdbe6aedbac24c800c9817862aea8a614312ad57944d7968949",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "consoleSha256": "98bb71372bc053b892f1e10f6e2f6a5e15a5ea6e98edf564597450ca3d03cd6d",
+      "filesPerReadback": 5
+    },
+    {
+      "originalBackend": true,
+      "rpcs": 12,
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "351210530"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "351210575"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "351210575"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "351210591"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.226,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793461355.9756083"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down SteamGridDB (v1.8.1)\n[plugin][INFO]: Stopping response listener for SteamGridDB (v1.8.1)\n[plugin][WARNING]: Plugin SteamGridDB (v1.8.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin SteamGridDB (v1.8.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "3d1847a6489f2ea64c111576d6bc3bc2e608476b8636f79a1af4e1c80eb1e7e1",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "consoleSha256": "60d623a1e08f4aa05cf82fa08f0e840acc687a26d26b5c513417aecd8e4fad8f",
+      "filesPerReadback": 5
+    }
+  ],
+  "freeLoaderCases": [
+    {
+      "originalBackend": false,
+      "rpcs": 11,
+      "cleanShutdownVerified": true,
+      "stopSeconds": [
+        0.235,
+        0.214
+      ],
+      "forcedKills": 0,
+      "privateSnapshotsDecoded": true
+    },
+    {
+      "originalBackend": true,
+      "rpcs": 7,
+      "cleanShutdownVerified": false,
+      "stopSeconds": [
+        5.249
+      ],
+      "forcedKills": 1,
+      "privateSnapshotsDecoded": true
+    }
+  ],
+  "deckSettingsControls": {
+    "at": "2026-10-31T15:44:03.696157+00:00",
+    "sourceRevision": "f0e569d3b5294789b2c4ed2f1721f5dc08249c4f",
+    "architecture": "x86_64",
+    "freeLoader": [
+      {
+        "originalBackend": false,
+        "rpcs": 11,
+        "cleanShutdownVerified": true,
+        "stopSeconds": [
+          0.235,
+          0.214
+        ],
+        "forcedKills": 0,
+        "privateSnapshotsDecoded": true
+      },
+      {
+        "originalBackend": true,
+        "rpcs": 7,
+        "cleanShutdownVerified": false,
+        "stopSeconds": [
+          5.249
+        ],
+        "forcedKills": 1,
+        "privateSnapshotsDecoded": true
+      }
+    ],
+    "deckSettings": [
+      {
+        "negative": false,
+        "rpcs": 6,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351216362"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351216396"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351216397"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351216411"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.214,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793461414.1947124"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 24,
+            "descendantsBefore": {
+              "25": {
+                "state": "S",
+                "parent": 24,
+                "start": "351216678"
+              },
+              "34": {
+                "state": "S",
+                "parent": 25,
+                "start": "351216708"
+              },
+              "35": {
+                "state": "S",
+                "parent": 25,
+                "start": "351216708"
+              },
+              "36": {
+                "state": "S",
+                "parent": 35,
+                "start": "351216720"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 34,
+                "returncode": 0
+              },
+              {
+                "pid": 35,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.185,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\nCalling Loader unload function for Deck Settings (v1.2.6).\nAttempting to unload with plugin Deck Settings (v1.2.6)'s \"_unload\" function.\n\nGoodnight World!\nUnloaded Deck Settings (v1.2.6)\n\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "aa09ec117dbe0f3083caccd4cd770720c96c5dc5977a25cd478716a94c2f1818",
+            "cleanShutdownVerified": true
+          }
+        ]
+      },
+      {
+        "negative": true,
+        "rpcs": 3,
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "351217035"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "351217066"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "351217066"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "351217077"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.223,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793461420.8922846"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Deck Settings (v1.2.6)\n[plugin][INFO]: Stopping response listener for Deck Settings (v1.2.6)\n[plugin][WARNING]: Plugin Deck Settings (v1.2.6) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Deck Settings (v1.2.6) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "716d3502c825fdeebc3c6181a4f5146aae1dd72d6e171247f8851796710f03f6",
+            "cleanShutdownVerified": false
+          }
+        ]
+      }
+    ],
+    "deckSettingsTlsPreserved": true,
+    "freeLoaderPrivateDataPreserved": true,
+    "allScopedConsolesHashed": true,
+    "realFrameContacted": false
+  },
+  "independentInstallationAllOtherArchiveMembersPreserved": {
+    "LICENSE": "78ee0223a07941ec98f772dc57cc0c5a75c815f15c0ef62daf5723b9ae976a5b",
+    "package.json": "134e7110dfc634cd90abe23bb29c9b47ff69780548b2a515eb2c9b14ac24b426",
+    "plugin.json": "80579caa4e17f6c691a39fea8a971e7e2182827349bf14d3ae4fff697653c774",
+    "README.md": "86e85fed0cbdfed9f8cd3a371ce56484088666cb8b34eff9112df1efb6cbb85d",
+    "dist/index.js.map": "9a8dbcc0858d236441ccb133681751add98a15947a87dc05a79b7352050662e8",
+    "dist/components/Markdown.d.ts": "51b236789833d5b4f8836a557960fd581afaaafa8e3138523d229b4ec1ee43fc",
+    "dist/components/asset/LibraryImage.d.ts": "f12b446aed045dfb9920015171899f05fd869d3acf47ed1262f6e698081252a2",
+    "dist/components/asset/LazyImage.d.ts": "1e87c1711beca87495554f263bf1c1eea1a51016e7ca3d0506f976bc5d73178f",
+    "dist/components/asset/Asset.d.ts": "0e6c166213c4fef965d06a5ec06428563397352178447f523e667eca1a6d4420",
+    "dist/components/plugin-pages/SGDBPage.d.ts": "6b293813f4f2822ee9ab3fd93e819e94d66ba9f8cf8b8fc4c561fd96f77570c1",
+    "dist/components/plugin-pages/AssetTabs.d.ts": "3f3e2dec93bbbbbc6d7535bc38a4b4c53dcb573cce670ae1764b662acbbcff8c",
+    "dist/components/plugin-pages/ManageTab.d.ts": "3ef5cb699391489f3690f9e2f2a4813b0c0a1102d05ffe52b5fe21ba50775080",
+    "dist/components/plugin-pages/AssetTab.d.ts": "0694f000d8498e7b85a135a321cfb365bfa745d28004678bd8a0631dbe444268",
+    "dist/components/Icons/BoopIcon.d.ts": "cf50ea009fa556298b4775eb98f284fde423a07feb6905c963ec9bbb7f8773f5",
+    "dist/components/Icons/GogIcon.d.ts": "241cf0b67ef327e27c63b6e039c6f0fca7f4ffb064d72ee8fa52f01a014cd706",
+    "dist/components/Icons/MenuIcon.d.ts": "e8649d183f7042b9389fc232206ff1af964dc15b5b01312e9c5ea79310135b01",
+    "dist/components/Icons/TwitterIcon.d.ts": "538a509ef291f9fd1356b1dca22af0c0d1b75d31417b64439339d7f46b9aaa94",
+    "dist/components/Icons/EshopIcon.d.ts": "61751b958c7929f0780c3113d5c42e941f1053d4181411b8e41fc795246a853b",
+    "dist/components/Icons/FlashpointIcon.d.ts": "a0962f8ae34e54ca0f6889abbe623c83dca6b589ceb643265488b05d1740c26b",
+    "dist/components/Chevron.d.ts": "9bcc9396d24a035335fef84d09217532c168e1fda25c652f0e9462be73f6dc4c",
+    "dist/components/AppGridFilterBar.d.ts": "d6d34370353fcb52e9c482b5ec0351b91ee07fcd849505d8aa418c6be1aba68e",
+    "dist/components/Motd.d.ts": "b2c019d9497697f90690cfd6a482e61dbd18feeb2628d21c42fb20cc4a157f66",
+    "dist/components/DropdownMultiselect.d.ts": "94bfa6890b422f9d9d4180f1c741d48499f81069f4019b6c59b6db4bbc41d486",
+    "dist/components/ResultsStateBar.d.ts": "bba9750a65e4f35bc22c905c0e7ff53acf03d9b59e3bf735aa9e9d3deecae9fb",
+    "dist/components/TabSorter.d.ts": "945118ee4b06cc988d23f86614c294b93cfb3de3d6d9180a9ef2c64fb9c1da0c",
+    "dist/components/AdaptiveNavGlyph.d.ts": "cfe2d9cd343c159c9e3f6166611919782a645eebee2c059a1fa8b2227731bab4",
+    "dist/components/qam-contents/Toolbar.d.ts": "6fb2ba4587d453e0a1929e37dd644afb83012e37e291744d14b659a5b459ed41",
+    "dist/components/qam-contents/PanelSocialButton.d.ts": "f6caad28bddc3609f7c01572a3b1d3be4eecfcb922a795c5ed6f66f98aa4a88c",
+    "dist/components/qam-contents/QuickAccessSettings.d.ts": "96d868c9f8fbdcdd72c540b5ae764518a0ef2310ef113531f9f8586f67a60357",
+    "dist/components/qam-contents/GuideVideoField.d.ts": "1f40498b2408d53f2824189e22e00f9a4cacda59b68c38fbff534492e981a7a7",
+    "dist/components/Chips/index.d.ts": "56c67c71e5e5d4dd1adb5a3821bb339366127144d6d869b5cabdf2c7a30398ef",
+    "dist/components/Chips/Chip.d.ts": "4c40540bef5c763bf4f396998f097e6d51929befeeb64577004cea790bb4e999",
+    "dist/index.d.ts": "46a0b34e1264c4d25ca6646ff0e6cfaa7275ea1ae5a6bc23d4dfd84edf2f2b2e",
+    "dist/patches/homePatch.d.ts": "bc467e1560189238115735081ea432bca5595e7861b730dd3dd04592e66d3114",
+    "dist/patches/patchUtils.d.ts": "23acb21a8b16e83d8b5bf5ef09b008ffcc075c080d8af67646b1d1dfb1939ced",
+    "dist/patches/contextMenuPatch.d.ts": "7fe86f15efbedf37b0ef2727fffc573956e48dd3a530f770a9f344fd8624c963",
+    "dist/patches/capsuleGlowPatch.d.ts": "9355967295925b7be25aae89f7953f57bb7be0635a30488531dfb83e13264588",
+    "dist/patches/squareLibraryPatch.d.ts": "09cd5946c1daeca98756eb921950e19c9cff0898a11d07e17ea23e16e1ed5854",
+    "dist/utils/compareFilterWithDefaults.d.ts": "4a9704026bafd2291f45b0d9b5b4c00669e01ace618080b3954decc308b86241",
+    "dist/utils/openFilePicker.d.ts": "3cbc685db5f565e92ffabb4119dd86d4ab431ecee695914de705561cea765c74",
+    "dist/utils/styleInjector.d.ts": "371cc1ca6dd36cfb0d18cd497a5d3c4999687e03fe16abf864388d995210ce51",
+    "dist/utils/i18n.d.ts": "ce70b6bb44dae75acad1d5fd684ff49c6eb3350af0e5b2dd73e92dc490db621e",
+    "dist/utils/showRestartConfirm.d.ts": "6a2641e9af60e344b59f375832349becbef4e228776387f44afc419b4fab6ab8",
+    "dist/utils/getAppDetails.d.ts": "caeeef7c04291e592d12702ca8bbedc07061ac26fecd1317f874b7f16ba46272",
+    "dist/utils/getCustomLogoPosition.d.ts": "f515c7fe22c063ade51baa2cac9c012f31cf888a899578ff58077544073c6bbd",
+    "dist/utils/steam-api-language-map.d.ts": "e4a6dcf236301ce57bf59cb122ad5732b84d457a2da787844ee027a962b9efa8",
+    "dist/utils/getCurrentSteamUserId.d.ts": "1de8a599cab783dda79b3fe095085b4d232e5247bc2018c211d820b8982dae9f",
+    "dist/utils/getAppOverview.d.ts": "cdedc0d9cfeb7b7c921a43dd2a297d4f4ad89f06d44b36776cb63455ff8590d0",
+    "dist/utils/showQrModal.d.ts": "613ad2884c008da31aea98a676fd2ad7a698bc042c31b26b2ff1a8666eda770a",
+    "dist/utils/log.d.ts": "ed82d5faf8b6cd0a1b1e1387410104a5f733718422874ee457d7de10256400ce",
+    "dist/static-classes.d.ts": "faa349aca1e2bff0b097cbe9823406b86b9686ceeccb002194c124483b2106e5",
+    "dist/assets/howto-24bc522f.webm": "87069b84fc63a67f8aeb632f9846c88b17de8b60395d3a57ce854693517c3b36",
+    "dist/assets/dpad-daf9c40e.svg": "b5366f611e6eb6d468a7f17a526d46caafc1aba9d183a8c0e71f27478af6e7a9",
+    "dist/assets/spinner-667847d4.svg": "147ad0cab6891e47661171b498ef22650992743da6cdd9627dbeeba986578589",
+    "dist/index.js": "b91c9ec45d43d0b5036e15b58905f3b295332c2ecdbe5ac3a1d7b060bdfcb10f",
+    "dist/hooks/useSGDB.d.ts": "cdb9f3ea921072683a4a97ac02c6984e0a829d68313bd4daa8a87a7693c24814",
+    "dist/hooks/useSettings.d.ts": "fa1472640f5d9ebe200f08ed05a601d1c95d1402c56ba7565cc5765ab17eec33",
+    "dist/hooks/useAssetSearch.d.ts": "3d819690db60782f43e2c83161ec0f7f7d10e3a62aa31bb860014658b55d9dde",
+    "dist/constants.d.ts": "5f562a22bb4e6b2b4f139ab53aca9b39d90f6ed648a9f65e5aa30af34242c4c3",
+    "dist/modals/FiltersModal.d.ts": "ea42a8554bf7017b249accdc5fc47ebbc3eb7abf6baabb1b01c07d68e522891f",
+    "dist/modals/DetailsModal.d.ts": "39433b2c154afaf75971c814bf66cf91cec09db81fcac986d8f760042f43d9dd",
+    "dist/modals/BeggingModal.d.ts": "fa762e7495a0a79fc083386cef82644caaf2ec262b21c0078549fa7d414339d5",
+    "dist/modals/GameSelectionModal.d.ts": "7f99f29f2821e91c44ff1384f39282d0de231b2390da5d2089d052bcf5726b4f",
+    "dist/modals/TaborderModal.d.ts": "39433b2c154afaf75971c814bf66cf91cec09db81fcac986d8f760042f43d9dd",
+    "dist/modals/LogoPositionerModal.d.ts": "a7fcc216ac8204ffb63163aedb854b42dfb074942e34ad5c6eef1a6b3154177e",
+    "dist/modals/OfficialAssetsModal.d.ts": "5e1f4c190a89e899c522c467c8cdd46bae9496a643702b72877c89b44fa23086",
+    "py_modules/vdf/LICENSE": "87c46dbdd422e99400f428873b6a23fd5526d3362926ba17351db7c45771bdea",
+    "py_modules/vdf/__init__.py": "d6d0c517f237ca0ac40c36c0888161cdac485492b390e7227784fb5c38c8857f"
+  },
+  "steamGridDbPrivateFileHashesBase64AndContentsVerified": true,
+  "freeLoaderPrivateCacheTextHashesAndContentsVerified": true,
+  "serverTests": 1951,
+  "serverSkips": 16,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "installerMethods": 1,
+  "pinnedInstallerFixtures": 37,
+  "installerOwnedResourcesAbsent": true,
+  "fullE2eSuiteRanLocally": false,
+  "fullMatrixRanLocally": false,
+  "fullMatrixExpected": {
+    "probes": 45,
+    "positiveCaseArchivePins": 34,
+    "sourceFingerprints": 18
+  },
+  "rawJsonSha256": "47c029ac34a5275e70f8869ad2344d424ec2ff3b8f12f9017e663ea0360a9fda",
+  "rawGzipSha256": "45bb0724d1d7767007c65fe0eaf7e0a126380cf9026121e62e1f14a5fa166849",
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "steamGridDbStatus": "broken",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Only the SteamGridDB, Free Loader and Deck Settings native cases ran locally, on AMD64. Fresh exact final-head AMD64/ARM64 CI, full e2e, ownership, PC and all triggered package modes are pending.",
+    "Scoped clean lifecycle results do not establish globally clean plugin shutdown. Original-source and previous-managed negative controls retain expected forced kills.",
+    "Private Unix-peer closure reproduces one EOF failure path; the peer history of earlier hosted ARM64 failures is unknown.",
+    "Five SteamGridDB files and two Free Loader files per stop have independent byte readbacks; no host user files or real Steam data were accessed.",
+    "Installer receipt test does not execute published backend code or replace the full e2e suite.",
+    "No browser, Steam LibraryContextMenu, external artwork service, actual Steam CEF, real Frame installation, worn UI, physical controller or release proof."
+  ]
+}
