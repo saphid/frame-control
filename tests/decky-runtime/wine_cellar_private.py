@@ -17,6 +17,20 @@ def identity(pid):
         return None
 
 
+def failed_unload_evidence(observation):
+    """Keep the original failure negative whether its owned helper died or survived."""
+    samples = [sample['child'] for sample in observation['samples']
+               if sample['child'] and sample['child']['start'] == observation['childBefore']['start']]
+    zombie = any(child['state'] == 'Z' for child in samples)
+    orphan = observation['exactChildRemaining'] and any(
+        child['parent'] == 1 and child['state'] in ('R', 'S', 'D', 'T', 't', 'I')
+        for child in samples)
+    assert observation['parentOnlySignal'] and observation['cleanShutdownVerified'] is False, observation
+    assert observation['forcedPluginKills'] == 1 and observation['loaderReturncode'] == 0, observation
+    assert 'Shutdown finished.' in observation['console'] and (zombie or orphan), observation
+    return dict(zombieObserved=zombie, liveOrphanObserved=bool(orphan))
+
+
 def stop(backend, helper, log, *, regression):
     log.flush()
     before = Path(log.name).read_text()
@@ -58,9 +72,7 @@ def stop(backend, helper, log, *, regression):
         console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
         cleanShutdownVerified=clean, expectedRegression=regression)
     if regression:
-        assert not clean and forced == 1 and any(s['child'] and s['child']['state'] == 'Z'
-                                                  for s in samples), observation
-        assert backend.returncode == 0 and 'Shutdown finished.' in console, observation
+        observation['failedUnloadEvidence'] = failed_unload_evidence(observation)
     else:
         assert clean, observation
     return observation
@@ -94,7 +106,7 @@ def probe(backend, helper, loader, env, log, processes, current, rpc, until_read
     return dict(wineCellarLifecycle=dict(stops=observations, readbacks=state_readbacks,
         console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
         cleanShutdownVerified=not regression, expectedRegression=regression),
-        result=('prior managed IPC EOF failure reproduced: zombie child and Decky forced plugin stop; '
+        result=('prior managed IPC EOF failure reproduced: unreaped helper and Decky forced plugin stop; '
                 'negative control only, not clean qualification' if regression else
                 'actual Decky 3.3.0 discovery, two read-only native helper state replies and two '
                 'parent-only zero-exit loader stops with reaped children; no install/uninstall, Frame or VR test'))

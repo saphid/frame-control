@@ -1,0 +1,72 @@
+{
+  "at": "2026-10-31T07:35:17.921757+00:00",
+  "base": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+  "sourceCommit": "f6bce259848b23c2664912421f66e2420ac7daca",
+  "productAndCatalogBytesUnchanged": true,
+  "records": {
+    "wine-negative283-native": {
+      "sourceCommit": "f6bce259848b23c2664912421f66e2420ac7daca",
+      "sourceFingerprints": 12,
+      "rawReportSha256": "cfeb0eb3a430834cb2a45fb7148fc9ca4ca1976e2dece59237b0e92cc4cc4f04",
+      "rawLogSha256": "24d43b8a10ec6873fbf38853462a12752259d7b056dc2bbfcee76d2f59ab6921",
+      "positiveReadOnlyRpcs": 7,
+      "negativeReadOnlyRpcs": 4,
+      "positiveParentOnlyStops": [
+        0.201,
+        0.251
+      ],
+      "negativeForcedPluginKills": 1,
+      "negativeFreshState": "zombie",
+      "wholeConsoleVerified": false
+    },
+    "native-integration283-wine-corrected": {
+      "sourceCommit": "4ff081d9e9f18669f2052fee1d38783e2784c1a3",
+      "sourceFingerprints": 15,
+      "rawReportSha256": "4ceba60ba1d68435e1e2a49fb6a1028fc2dc5a94f7efb0b8d72f939ffd145006",
+      "rawLogSha256": "38ccbe1e6aafa8a4db59edcb2213621e17d1d677467c3de56332f74639000062",
+      "positiveReadOnlyRpcs": 7,
+      "negativeReadOnlyRpcs": 4,
+      "positiveParentOnlyStops": [
+        0.201,
+        0.253
+      ],
+      "negativeForcedPluginKills": 1,
+      "negativeFreshState": "zombie",
+      "wholeConsoleVerified": true
+    }
+  },
+  "unitTests": 7,
+  "unitLogSha256": "68125c24b6e98503229f4904e95b3a30a75db6fba3913c5f6f94d20abb7d664a",
+  "initialIntegrationFailureRetained": true,
+  "liveOrphanQualification": "Replay of the actual failed observation; fresh corrected native runs observed zombie negatives.",
+  "arm64Verified": false,
+  "fullNativeMatrixVerified": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "rawBundle": {
+    "path": "framey-wine-unload-negative-states-2026-10-31-raw.json.gz",
+    "sha256": "3f733271ea7f05fefb9fda05cfa5bf2c97619fd9e910b58baf7f7e50569cba45",
+    "uncompressedSha256": "ce98ac5c3bb8f557f911a121d699e928f25294097cda60d640a580ee5f521b81",
+    "members": [
+      "native-integration283-shotty.json",
+      "native-integration283-wine.json",
+      "native-integration283-wine-failed-observation.json",
+      "native516-wine-control283.json",
+      "native-integration283-wine-replay.json",
+      "wine-negative283-native.json",
+      "native-integration283-wine-corrected.json"
+    ]
+  },
+  "failedLog": {
+    "path": "framey-wine-unload-negative-states-2026-10-31-failed.log",
+    "sha256": "07c1937a993f4184395dcfc600856184012b89304d5452a3f24649037c959749"
+  },
+  "privateIntegration": {
+    "main": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+    "head514": "e689984172f542ec3bb78a8e1bc81974786e798a",
+    "head516": "ab18a50323cb4fdc05b2390420ef232a401a12d9",
+    "initialTree": "53fbfa6be4bcdce2687a3f997f977d601ba1c786",
+    "correctedTree": "ce81b4465ad72f999706dcb8cc784ab19a5913ee"
+  },
+  "initialFailureDoesNotQualifyIntegration": true
+}
