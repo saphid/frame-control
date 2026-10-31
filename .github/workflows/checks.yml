@@ -121,9 +121,28 @@ jobs:
     timeout-minutes: 30
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5
+        with:
+          path: ${{ runner.temp }}/framey-catalog
+          key: framey-catalog-v1-${{ hashFiles('ui/framey-compatibility.json') }}
+          restore-keys: framey-catalog-v1-
+      - name: Verify every pinned catalog archive
+        run: python3 scripts/framey-cache-catalog.py --cache "$RUNNER_TEMP/framey-catalog" --output "$RUNNER_TEMP/framey-e2e/catalog-cache.json"
       - name: Install zsh
         # The runner image's third-party apt sources (packages.microsoft.com) sometimes
         # fail to refresh; Ubuntu's own lists still update, and the install fails if not.
         run: (sudo apt-get update -qq || true) && sudo apt-get install -y -qq zsh
       - name: End-to-end tests
+        env:
+          FRAMEY_AUDIT_CACHE: ${{ runner.temp }}/framey-catalog
+          FRAMEY_AUDIT_OUTPUT: ${{ runner.temp }}/framey-e2e/catalog-result.json
         run: scripts/e2e.sh
+      - name: Retain catalog verification and installer outcomes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-catalog
+          path: ${{ runner.temp }}/framey-e2e/
+          if-no-files-found: error
