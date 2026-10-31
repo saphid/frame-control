@@ -12,12 +12,9 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
-<<<<<<< HEAD
+    {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 133, 'name': 'Non-Steam Badges', 'version': '0.1.0', 'api_version': 1,
      'folder': 'decky-nonsteam-badges', 'sha256': '9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131'},
-=======
-    {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
->>>>>>> origin/main
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
     {'id': 134, 'name': 'Deck Progress Tracker', 'version': '1.3.6', 'api_version': 1,
