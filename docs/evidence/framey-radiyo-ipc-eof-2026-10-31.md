@@ -22,3 +22,13 @@ Source `f7748f22229df6f3ab2ce3dccb93d3164468d933`, based on main `0082d79a3ff9a9
 This is isolated AMD64 fixture evidence. Fresh exact-head hosted checks/e2e, AMD64/ARM64 native runs, every triggered package mode, exact current-main integration and feedback review remain required. The explicit disconnect stabilizes the observed shutdown race; it does not measure real-use frequency. Scoped stop evidence does not establish global clean plugin shutdown.
 
 No new browser, external station, trusted HTTPS, audio playback, real Steam CEF, managed Frame installation, wearer-visible or physical-controller usability is proved. No headset or hourly schedule was accessed. Other plugins' lifecycle work remains separate. No release is qualified or published.
+
+## Installer receipt regression coverage
+
+Tested source `f3b84655c868f63d33a773c79bd30cddc58eded1` adds HTTP/SSH installer assertions for the exact RadiYo TLS/IPC receipt, API shim list, partial compatibility status, installed backend SHA-256 `23cdff5bfa7f57e6c0341c825ab23cfb363e4408ae3c4f117fe3d1885f00a265`, and shared IPC helper bytes. Production and all 16 native probe source fingerprints are unchanged.
+
+A fresh owned fake-Frame run passed `test_pinned_official_plugins_install_and_remove`: one method, 37 pinned plugin fixtures, zero skips, 80.272 seconds including setup. All owned containers, volumes, network and images were removed. This checks installation bytes, receipts, frontend/manifest files and removal; the fake Frame does not execute official backends. The full e2e suite and optional 116-plugin catalog audit were not run locally.
+
+The previous hosted native run [41191858034](https://github.com/saphid/frame-control/actions/runs/41191858034/job/124510088087) at `e1e4dcbc` failed in the ARM64 positive DeckyParty reload probe after a forced plugin kill and reload timeout. The retained partial report completed seven probes and did not reach RadiYo. Existing repair #518 owns that failure; it is not waived or counted as a RadiYo pass. Every fresh final-head hosted gate remains required.
+
+[Receipt-test audit](framey-radiyo-receipt-e2e-2026-10-31.json) · [complete local log, test source and retained prior failure](framey-radiyo-receipt-e2e-2026-10-31-raw.json.gz).
