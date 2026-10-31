@@ -159,7 +159,7 @@ Ready means initializer completion, not useful plugin behavior. No plugin backen
 const plugins=CATALOG_DATA, librarySnapshot=LIBRARY_DATA, runningSnapshot=RUNNING_DATA;
 const batteryFixture=BATTERY_FIXTURE, networkFixture=NETWORK_FIXTURE,
   notificationsFixture=NOTIFICATIONS_FIXTURE, themeMusicFixture=THEME_MUSIC_FIXTURE,
-  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false;
+  wineFixture=WINE_FIXTURE, wineState=WINE_STATE, prefixFixture=false, ludusaviFixture=LUDUSAVI_FIXTURE;
 window.wineFixtureCalls=[];let wineSocketNext=0;const wineSessions=new Map();
 window.batteryFixtureCalls=[];window.networkFixtureCalls=[];
 window.notificationsFixtureCalls=[];window.notificationsFixtureDenied=[];
@@ -270,6 +270,14 @@ addEventListener('message',event=>{
       event.source.postMessage({type:'framey:reply',id:data.id,
         ...(Object.hasOwn(fixtures,data.method)?{result:{success:true,result:fixtures[data.method]}}:
           {error:'Private Decky Notifications fixture rejects backend method'})},'*');
+    }else if(ludusaviFixture&&active.id===103&&!data.legacy){
+      const allowed=(data.method==='get_ludusavi_version'&&data.args?.length===0)||
+        (data.method==='get_config'&&data.args?.length===1&&
+         ['auto_backup_enabled','auto_backup_new_games','auto_backup_toast_enabled','recent_games'].includes(data.args[0]));
+      const result=data.method==='get_ludusavi_version'?{bin_path:null,version:''}:
+        data.args?.[0]==='recent_games'?[]:false;
+      event.source.postMessage({type:'framey:reply',id:data.id,
+        ...(allowed?{result}:{error:'Private Ludusavi fixture denies installation, backup, restore and other calls'})},'*');
     }else event.source.postMessage({type:'framey:reply',id:data.id,
       error:'Read-only compatibility audit: backend method blocked'},'*');}
   if(data.type==='framey:cache:init')event.source.postMessage({type:'framey:cache:seed',session:data.session,entries:{}},'*');
@@ -287,7 +295,7 @@ window.runAudit=async(ids,settleMs=1200)=>{
     if(!librarySnapshot&&!runningSnapshot)panel.contentWindow.postMessage({type:'audit:inspect'},'*');
     await new Promise(resolve=>setTimeout(resolve,80));
     results.push(active);
-    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture&&!wineFixture&&!prefixFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
+    if(!batteryFixture&&!networkFixture&&!notificationsFixture&&!themeMusicFixture&&!wineFixture&&!prefixFixture&&!ludusaviFixture){active=null;panel.src='about:blank';await new Promise(resolve=>setTimeout(resolve,30));}
   }}finally{running=false;run.disabled=false;progress.textContent='Done: '+results.length;}
   return results;
 };
@@ -316,6 +324,8 @@ def main():
                         help='Replay only plugin 68 with native empty-state response; commands remain denied')
     parser.add_argument('--prefix-manager-102-fixture', action='store_true',
                         help='Replay the managed upstream v1.0.2 panel with one private row; all writes denied')
+    parser.add_argument('--ludusavi-missing-fixture', action='store_true',
+                        help='Replay plugin 103 missing-dependency/version and default settings; all writes denied')
     parser.add_argument('--library-snapshot', type=Path,
                         help='Optional detached Steam library JSON; replay only, not live Steam/backend evidence')
     parser.add_argument('--running-snapshot', type=Path,
@@ -324,9 +334,13 @@ def main():
     if sum((args.speed_test_mock, args.battery_tracker_fixture,
             args.network_sentinel_fixture, args.decky_notifications_fixture,
             args.theme_music_settings_fixture, args.wine_cellar_fixture,
-            args.prefix_manager_102_fixture)) > 1:
+            args.prefix_manager_102_fixture, args.ludusavi_missing_fixture)) > 1:
         parser.error('Choose one frontend fixture')
     plugins = json.loads(args.catalog.read_text())['plugins']
+    if args.ludusavi_missing_fixture:
+        plugins = [plugin for plugin in plugins if plugin['id'] == 103]
+        if len(plugins) != 1 or plugins[0]['sha256'] != '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88':
+            parser.error('Ludusavi 1.2.2 fixture requires its pinned archive digest')
     if args.speed_test_mock:
         plugins = [plugin for plugin in plugins if plugin['id'] == 118]
         if len(plugins) != 1:
@@ -414,6 +428,10 @@ def main():
                     page = page.replace('All backend calls and network requests are denied.',
                                         'Games Prefix Manager replays one private row in its managed panel; every write and network call is blocked.')
                     page = page.replace('prefixFixture=false', 'prefixFixture=true')
+                if args.ludusavi_missing_fixture:
+                    page = page.replace('All backend calls and network requests are denied.',
+                                        'Ludusavi replays missing-dependency and default-settings replies; installation, backup, restore, cloud and network are blocked.')
+                page = page.replace('LUDUSAVI_FIXTURE', 'true' if args.ludusavi_missing_fixture else 'false')
                 page = page.replace('BATTERY_FIXTURE', 'true' if args.battery_tracker_fixture else 'false')
                 page = page.replace('NETWORK_FIXTURE', 'true' if args.network_sentinel_fixture else 'false')
                 page = page.replace('NOTIFICATIONS_FIXTURE', 'true' if args.decky_notifications_fixture else 'false')

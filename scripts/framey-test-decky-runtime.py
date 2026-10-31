@@ -84,6 +84,7 @@ def main():
     inputs = ['scripts/framey-test-decky-runtime.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
+              'tests/decky-runtime/ludusavi_private.py',
               '.github/workflows/decky-runtime.yml']
     report = {'decky': RELEASE, 'architecture': platform.machine(), 'loaderSha256': digest,
               'sourceSha256': {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest()

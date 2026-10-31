@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
+     'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
     {'id': 65, 'name': 'Decky Terminal', 'version': '0.5.3', 'api_version': 1,
      'folder': 'decky-terminal', 'sha256': '7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872'},
     {'id': 143, 'name': 'Desktop Apps', 'version': '0.1.0', 'api_version': 1,
