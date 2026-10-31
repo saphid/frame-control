@@ -1,0 +1,328 @@
+{
+  "head": "3132115db3262a7666185175c0accd88748b23d0",
+  "architecture": "x86_64",
+  "artifactSha256": "9bed1c52c10f0e50216371e940e701ca1b4b36bfcc899c65c70c7b0589e44268",
+  "allSourceFingerprintsVerified": true,
+  "signedContentAndActualPackageVerified": true,
+  "requiredResults": {
+    "signedBundlesInstalled": true,
+    "packageLaunched": true,
+    "actualTwoWaySync": true,
+    "runtimeOriginGpgVerificationEnabled": true,
+    "appOriginGpgVerificationEnabled": true,
+    "actualUserServiceLifecycle": true,
+    "certificateRetained": true,
+    "syncRetainedAfterRestart": true,
+    "ownedServiceRemoved": true,
+    "ownedProcessesReaped": true,
+    "noOwnedFlatpakInstancesRemain": true,
+    "uninstallPreservedOwnedData": true
+  },
+  "commits": {
+    "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+    "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+  },
+  "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+  "stopElapsedSeconds": 0.088,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "setupPortScans": [
+    8384
+  ],
+  "setupPortScanElapsedSeconds": 0.149,
+  "combinedDeckyVerified": true,
+  "requiredLifecycleResults": 17,
+  "wizardResults": {
+    "defaultPackageConfig": true,
+    "remainedUnconfiguredDuringScan": true,
+    "discoveredDefaultPort": true,
+    "discoveredDefaultApiKey": true,
+    "scannedBasicAuth": true,
+    "persistedThroughDeckyRpc": true,
+    "setupCommittedAndReloaded": true,
+    "authenticatedRestWithDiscoveredKey": true,
+    "ownedSetupServiceStopped": true
+  },
+  "ownershipRefusals": 18,
+  "processIdentityChecks": 16,
+  "uninstallPreservedCandidateData": true,
+  "migrationMountNamespaceAssertionSourceBound": true,
+  "migrationResults": 12,
+  "legacyPidBefore": 642,
+  "legacyPidAfter": 710,
+  "migrationDataPreservedAfterUninstall": true,
+  "browserStages": [
+    "running",
+    "stopped",
+    "restarted",
+    "stopped"
+  ],
+  "browserCalls": 70,
+  "manualPortFallbackUsed": false,
+  "sandboxedRendererCount": 4,
+  "signedBrowserPidTransitions": [
+    {
+      "stage": "running",
+      "pids": [
+        1065,
+        1075,
+        1083
+      ]
+    },
+    {
+      "stage": "restarted",
+      "pids": [
+        1153,
+        1165,
+        1174
+      ]
+    }
+  ],
+  "screenshotSha256": {
+    "running1": "1f2966967e5a740b949300efa91ef594286be95b429279bbb5454c80a26ff8bc",
+    "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+    "restarted3": "1f2966967e5a740b949300efa91ef594286be95b429279bbb5454c80a26ff8bc",
+    "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+  },
+  "syntheticInput": true,
+  "privateTestBridge": true,
+  "productionHttpParentVerified": false,
+  "realSteamCef": false,
+  "physicalControllerVerified": false,
+  "httpGateway": {
+    "success": true,
+    "realFrameContacted": false,
+    "syntheticCef": true,
+    "syntheticStoreReceipt": true,
+    "realSteamCef": false,
+    "managedInstallVerified": false,
+    "installerEnabled": false,
+    "browserSandboxDisabled": false,
+    "productionHttpHandler": true,
+    "productionPanelDispatcher": true,
+    "productionMethodScript": true,
+    "productionLocalSshWrapper": true,
+    "uiSourceFingerprints": 105,
+    "statusImportProfiling": false,
+    "productionStatusCommandUnchanged": true,
+    "rejectedRequests": {
+      "missingUiKey": 403,
+      "staleReceipt": 400,
+      "wrongPlugin": 400,
+      "modernHttpCall": 400,
+      "missingHttpShim": 400
+    },
+    "actualSignedProcessPids": [
+      1408,
+      1425,
+      1433
+    ],
+    "actualDeckyRpc": true,
+    "authenticatedSyncthingRest": true,
+    "serviceStartStopVerified": true,
+    "stoppedStateBeforeAndAfter": true,
+    "requests": [
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 403,
+        "authenticated": false,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 400,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 400,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 400,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 400,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "get_settings_json",
+        "httpStatus": 200,
+        "authenticated": true
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "POST",
+        "path": "/__decky-watchdog/start"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/rest/system/status"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/rest/system/status"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/rest/system/status"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "POST",
+        "path": "/__decky-watchdog/stop"
+      },
+      {
+        "method": "framey_http_fetch",
+        "httpStatus": 200,
+        "authenticated": true,
+        "httpMethod": "GET",
+        "path": "/__decky-watchdog/state"
+      }
+    ],
+    "fixtureCefTrace": {
+      "records": [
+        {
+          "requestId": 1,
+          "method": "get_settings_json",
+          "startedAfterMilliseconds": 3467,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 78,
+          "elapsedMilliseconds": 95
+        },
+        {
+          "requestId": 2,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 5212,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 1,
+          "elapsedMilliseconds": 172
+        },
+        {
+          "requestId": 3,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 7106,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 0,
+          "elapsedMilliseconds": 103
+        },
+        {
+          "requestId": 4,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 8592,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 0,
+          "elapsedMilliseconds": 20
+        },
+        {
+          "requestId": 5,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 10133,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 0,
+          "elapsedMilliseconds": 74
+        },
+        {
+          "requestId": 6,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 12038,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 0,
+          "elapsedMilliseconds": 17
+        },
+        {
+          "requestId": 7,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 13391,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 1,
+          "elapsedMilliseconds": 78
+        },
+        {
+          "requestId": 8,
+          "method": "framey_http_fetch",
+          "startedAfterMilliseconds": 14842,
+          "outcome": "succeeded",
+          "openElapsedMilliseconds": 1,
+          "elapsedMilliseconds": 100
+        }
+      ],
+      "overflow": false,
+      "authenticatedSocketCount": 1,
+      "issuedRequestCount": 8
+    },
+    "ownedBrowserReaped": true,
+    "httpServerStopped": true,
+    "ownedReceiptRemoved": true,
+    "sshObserverRemoved": true
+  },
+  "httpSourceCount": 105,
+  "sourceCount": 122,
+  "productionHttpDispatcherVerified": true,
+  "managedInstallVerified": false,
+  "job": 124274036653,
+  "run": 41117091598,
+  "exactCompletedJobVerified": true,
+  "exactHeadCheckoutVerified": true,
+  "jobLogSha256": "49ad05f7c03ea052a4104c01a03a27739e3765dcf5739e42f0b2e5d84c86d053",
+  "bothLoaderShutdownLogsChecked": true,
+  "retainedConsoleWithoutShutdownErrors": true,
+  "ownedDeckyStop": {
+    "mainPidBefore": 878,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 6.229
+  },
+  "migrationDeckyStop": {
+    "mainPidBefore": 676,
+    "timeoutStopUSec": "1min 30s",
+    "killMode": "mixed",
+    "activeState": "inactive",
+    "result": "success",
+    "mainPidAfter": 0,
+    "execMainCode": "0",
+    "execMainStatus": "0",
+    "elapsedSeconds": 1.16
+  },
+  "strictNewHostGateAccepted": true,
+  "plainConsoleFullResultVerified": false,
+  "capturesVisuallyInspected": true,
+  "uniqueCaptureImagesInspected": 2
+}

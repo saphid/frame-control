@@ -10,7 +10,7 @@ import frame_decky_store
 
 
 METHOD = re.compile(r'[A-Za-z][A-Za-z0-9_]{0,63}\Z')
-EVENT = re.compile(r'[A-Za-z0-9_:/.-]{1,128}\Z')
+EVENT = re.compile(r'[A-Za-z0-9_#:/.-]{1,128}\Z')
 SESSION = re.compile(r'[A-Za-z0-9_.-]{1,100}\Z')
 RECEIPT = re.compile(r'[0-9a-f]{64}\Z')
 MODULE_PATH = re.compile(r'[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*/[A-Za-z0-9_.-]+\.js\Z|index\.js\Z')
