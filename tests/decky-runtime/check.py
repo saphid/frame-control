@@ -2,6 +2,7 @@
 import argparse
 import ast
 import asyncio
+import base64
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -289,6 +290,7 @@ def main():
                 stop_progress_loader()
                 assert rows() == before
                 stopped_database_sha = hashlib.sha256(database.read_bytes()).hexdigest()
+                stopped_database = base64.b64encode(database.read_bytes()).decode()
                 backend = subprocess.Popen([str(loader)],env=env,stdout=log,stderr=log,start_new_session=True)
                 processes.append(backend)
                 restarted = until_ready(lambda:rpc('loader/get_plugins'),'restarted Deck Progress discovery')
@@ -321,7 +323,9 @@ def main():
                     settingsAndManualTagsPersistedAcrossRestart=True,invalidTagAndMissingArgumentsRefused=True,
                     selectedDeletePreservedOtherTag=True,independentReadonlySqliteReadback=True,
                     databaseRelativePath=str(database.relative_to(home)),stoppedDatabaseSha256=stopped_database_sha,
+                    stoppedDatabaseBase64=stopped_database,
                     finalDatabaseSha256=hashlib.sha256(database.read_bytes()).hexdigest(),
+                    finalDatabaseBase64=base64.b64encode(database.read_bytes()).decode(),
                     unchangedPublishedFiles=unchanged,ownedLoaderStops=stops,loaderConsole=console,
                     loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
                     jsonDecodeDiagnosticCount=console.count('Expecting value: line 1 column 1 (char 0)'),
