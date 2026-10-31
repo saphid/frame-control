@@ -93,6 +93,15 @@ class Compatibility(unittest.TestCase):
         result = compatibility.lookup(release['id'], release['sha256'], release['version'])
         self.assertEqual(result['status'], 'unverified')
 
+    def test_free_loader_old_receipt_requires_current_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 63)
+        base = dict(storeId=63, version=plugin['version'], sha256=plugin['sha256'])
+        installed = {'plugins': [base, dict(base, compatShims=['free-loader-ipc-eof'])]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 2)
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_old_simple_timer_copy_requires_lifecycle_reinstall(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 96)
         installed = {'plugins': [dict(storeId=96, version=plugin['version'], sha256=plugin['sha256']),
@@ -129,12 +138,21 @@ class Compatibility(unittest.TestCase):
     def test_deck_settings_old_copy_exposes_upload_tls_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 93)
         old = dict(storeId=93, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['deck-settings-verified-tls'])
+        updated = dict(old, compatShims=['deck-settings-verified-tls', 'deck-settings-ipc-eof'])
         result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('certificate and hostname checks', result[0]['compatibility']['reason'])
         self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+
+    def test_deck_settings_tls_only_receipt_still_needs_ipc_update(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 93)
+        old = dict(storeId=93, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['deck-settings-verified-tls'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old]}))['plugins'][0]
+        self.assertEqual(result['compatibility']['status'], 'partial')
+        self.assertIn('Update or reinstall', result['compatibility']['reason'])
+        self.assertIn('IPC', result['compatibility']['reason'])
 
     def test_steam_status_old_copy_exposes_diagnostic_tls_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 123)
