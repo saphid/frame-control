@@ -2,7 +2,6 @@
 import argparse
 import ast
 import asyncio
-import base64
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -219,6 +218,7 @@ def main():
                 return response
 
             if case['probe'] == 'deck-progress-private-tags':
+                import base64
                 # Only private SQLite settings/manual tags are exercised. Do
                 # not call Steam sync, HLTB search or automatic tagging RPCs.
                 initial = until_ready(lambda: current('get_settings').get('settings'),
@@ -317,7 +317,8 @@ def main():
                 console = (home/'runtime.log').read_text()
                 assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
                 for marker in ('Import failed:', 'Error during shutdown:', 'asyncio.exceptions.CancelledError',
-                               'Task was destroyed but it is pending', 'Bad file descriptor'):
+                               'Task was destroyed but it is pending', 'Bad file descriptor',
+                               'Sending SIGKILL!', 'still alive 5 seconds after stop request'):
                     assert marker not in console, marker
                 report['privateTags'] = dict(settingsBeforeRestart=before,settingsAfterSelectedDelete=final,
                     settingsAndManualTagsPersistedAcrossRestart=True,invalidTagAndMissingArgumentsRefused=True,
