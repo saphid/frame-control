@@ -102,3 +102,39 @@ ARM64 backend, real Frame, worn view or physical-controller result is claimed.
 Earlier frontend evidence and its limits remain separate. All 116 catalog
 versions/digests/install policies are unchanged; only PlayTime's evidence scope
 and reason are expanded.
+
+## Refresh onto main d3ae60e
+
+Normally merged main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` into the
+previous head `f0ada47f9218a4478abcf63bb33d2da04c775da7` at tested source
+`0d52ef036135ee1b6621865f79e70e22fcccb3bc`, without rewriting history.
+All 31 main probe bodies and the complete PlayTime probe/helper are preserved.
+Production store, input and IPC bytes match main. All 116 status/install
+policies, the other 115 complete catalog records and the complete previous
+PlayTime catalog record are unchanged. Main's full checks/native workflows
+passed, but its package gates were still pending during this local replay.
+
+All 92 focused host tests, generated compatibility documentation and diff checks
+pass. A fresh isolated AMD64 replay with digest-pinned published Decky 3.3.0
+independently verifies 22 literal RPCs, all 40 original Python hashes, six SQL
+stage readbacks and two hash-checked SQLite snapshots opened read-only. Exact
+private session totals, paused-session refusal, per-user isolation, integrity
+checks and restart persistence pass. All 16 native-source fingerprints match
+the tested source. Two parent-only loader stops return zero, with recorded
+adopted child exits. Process reaping remains a source-bound PID/start-time
+assertion; a complete process snapshot was not retained.
+
+The integrated generic capture retains complete available post-cleanup console
+text and its hash. It observes already-exited loaders without claiming another
+signal; global clean plugin shutdown remains unverified. No newly owned runtime
+containers or image tags remain. The [refresh audit](framey-playtime-maind3ae60e-refresh-2026-10-31.json)
+and [complete report, snapshots and unit log](framey-playtime-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+retain the evidence.
+
+This single-case local replay does not qualify the full 41-probe / 34-archive /
+16-source-fingerprint native matrix. Fresh final-head checks/e2e, AMD64/ARM64
+native and every triggered package gate remain required, along with exact-main,
+feedback and mergeability gates. Previous-head green results are historical.
+Compatibility stays partial. No automatic recorder, integrated browser,
+existing database migration, game lifecycle hook, Steam library, managed Frame,
+wearer/controller or release proof is added.
