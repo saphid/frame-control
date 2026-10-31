@@ -105,3 +105,13 @@ claimed. Sound, actual sleep inhibition, production HTTP integration, live Steam
 or CEF, managed Frame and wearer/controller behavior remain unverified.
 Compatibility stays partial; no headset or hourly schedule was accessed and no
 release is published.
+
+## Current main 0082d79 refresh
+
+Normal merge `eb9f167e13b03ac7411715b884e1c1aa57d36d12` resolves three inventory conflicts between the existing AlarMe repair and main `0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4`. Independent source comparison preserves all 32 main probe conditions/37 branch bodies, all 34 main cases, the complete AlarMe probe/production repair, all 116 classification/install policies, the other 115 complete catalog rows and AlarMe's complete prior row. Main's keyboard/input, IPC and native console sources are byte-preserved. The full matrix now expects 43 probes, 35 archive pins and 17 source fingerprints per architecture.
+
+All 93 focused tests pass. A fresh isolated AMD64 published Decky 3.3.0 replay passes 39 repaired and 38 original-source API1 RPCs, with original paused/elapsed deadline failures retained. Independent audit reconstructs the pinned original/managed backend, checks all 17 source fingerprints and each complete available console hash. Four parent-only zero-exit stops and private-file checks remain source-bound. No new owned containers/image tags remain. Available console JSON diagnostics remain unattributed; error-free consoles and global clean plugin shutdown are unverified.
+
+[Current refresh audit](framey-alarme-main0082d79-refresh-2026-10-31.json) · [complete native report, source audit and unit/native logs](framey-alarme-main0082d79-refresh-2026-10-31-raw.json.gz).
+
+The final evidence commit changes documentation only after that tested merge source. Previous head `982f2982` has five successful terminal workflows; those do not qualify this new SHA. Fresh final-head hosted checks/e2e, native AMD64/ARM64, ownership, PC and all triggered package modes remain required, together with exact current-main, feedback, rules, mergeability and integration review. No new browser, sound, actual sleep inhibition, production HTTP, live Steam/CEF, managed Frame, wearer/controller or release proof is claimed. No headset or hourly schedule was accessed.
