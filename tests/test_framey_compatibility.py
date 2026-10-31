@@ -70,6 +70,15 @@ class Compatibility(unittest.TestCase):
         self.assertEqual(result[1]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
+    def test_old_tabmaster_copy_requires_restore_fix(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 61)
+        old = dict(storeId=61, version=plugin['version'], sha256=plugin['sha256'])
+        updated = dict(old, compatShims=['tabmaster-json-file-restore'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertTrue(result[0]['compatibility']['reason'].startswith('Update or reinstall'))
+        self.assertFalse(result[1]['compatibility']['reason'].startswith('Update or reinstall'))
+
     def test_old_prefix_manager_copy_requires_user_service_adaptation(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 130)
         old = dict(storeId=130, version=plugin['version'], sha256=plugin['sha256'])
