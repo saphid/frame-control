@@ -108,6 +108,7 @@ def main():
                     (96, '--reproduce-timer-unload-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (65, '--reproduce-terminal-import-regression'),
+                    (61, '--reproduce-tabmaster-restore-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression')]

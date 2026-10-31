@@ -72,6 +72,7 @@ def main():
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
+    parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
@@ -107,11 +108,11 @@ def main():
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
-    if not args.reproduce_timer_regression:
+    if not (args.reproduce_timer_regression or args.reproduce_tabmaster_restore_regression):
         expected_shims = ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])
         assert receipt.get('compatShims', []) == expected_shims, receipt
     else:
-        assert record['id'] == 96
+        assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
     if args.reproduce_deck_progress_unload_regression:
@@ -831,7 +832,37 @@ def main():
                 assert json.loads(before) == expected
                 with zipfile.ZipFile(io.BytesIO(data)) as original:
                     original_backend = original.read(record['folder']+'/main.py')
-                assert (plugin/'main.py').read_bytes() == original_backend
+                installed_backend = (plugin/'main.py').read_bytes()
+                assert (installed_backend == original_backend) is args.reproduce_tabmaster_restore_regression
+                # Exercise the actual published backup/restore RPCs against
+                # owned private files, then require restored bytes on restart.
+                backup = home/'private-tabmaster-backup.json'
+                assert current('backup_settings', str(backup)) is True
+                backup_bytes = backup.read_bytes()
+                assert json.loads(backup_bytes) == expected
+                assert current('set_tags', [{'id': 99, 'name': 'Private changed tag'}]) is None
+                dirty = state.read_bytes()
+                assert dirty != before
+                malformed = home/'private-tabmaster-invalid.json'
+                malformed.write_bytes(b'{invalid private JSON')
+                assert current('restore_settings', str(malformed)) is False
+                assert state.read_bytes() == dirty and backup.read_bytes() == backup_bytes
+                for name, payload in [('list', []), ('null', None), ('string', 'private')]:
+                    invalid = home/('private-tabmaster-'+name+'.json')
+                    invalid.write_text(json.dumps(payload))
+                    assert current('restore_settings', str(invalid)) is False
+                    assert state.read_bytes() == dirty and backup.read_bytes() == backup_bytes
+                restored = current('restore_settings', str(backup))
+                if args.reproduce_tabmaster_restore_regression:
+                    assert restored is False and state.read_bytes() == dirty
+                    # Reset only our private fixture through real RPC before
+                    # retaining the unchanged settings/restart assertions.
+                    assert current('set_tags', tags) is None
+                else:
+                    assert restored is True, {'validBackupRestore': restored,
+                                              'nativeCalls': report['calls'][-5:]}
+                assert state.read_bytes() == before
+                assert backup.read_bytes() == backup_bytes
                 stops = []
 
                 def stop_tabmaster_loader():
@@ -900,20 +931,27 @@ def main():
                     loaderConsoleSha256=hashlib.sha256(loader_console.encode()).hexdigest(),
                     jsonDecodeDiagnosticCount=loader_console.count('Expecting value: line 1 column 1 (char 0)'),
                     loaderConsoleErrorFree=False,
-                    publishedBackendUnmodified=True,
-                    backendSha256=hashlib.sha256(original_backend).hexdigest(),
+                    publishedBackendUnmodified=args.reproduce_tabmaster_restore_regression,
+                    backendSha256=hashlib.sha256(installed_backend).hexdigest(),
+                    originalBackendSha256=hashlib.sha256(original_backend).hexdigest(),
                     actualUserHome=True, emptyDefaults=True, falseValuesPreserved=True,
                     perUserTabsAndProfiles=True, perUserFriendsAndGames=True,
                     sharedTabVisibilityFiltered=True, globalTags=True,
                     settingsPersistedToDisk=True, settingsPersistedAcrossLoaderRestart=True,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     ownedLoaderStops=stops, completeLoaderShutdownLogged=True,
-                    steamLibraryEditingVerified=False, backupRestoreVerified=False,
+                    backupRestoreVerified=not args.reproduce_tabmaster_restore_regression,
+                    originalValidBackupRestoreRefused=args.reproduce_tabmaster_restore_regression,
+                    malformedAndNonObjectBackupsRefused=True,
+                    backupFilePreserved=True, restoredSettingsPersistedAcrossRestart=True,
+                    steamLibraryEditingVerified=False,
                     browserVerified=False, realSteamCef=False, realFrameContacted=False,
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API1 discovery, private per-user settings, '
-                    'shared-tab filtering, false values and disk/loader-restart persistence passed; '
-                    'Steam library editing, backup/restore, browser, Frame and VR unverified')
+                    'shared-tab filtering, false values and disk/loader-restart persistence passed; '+
+                    ('original valid backup restore failure reproduced; ' if args.reproduce_tabmaster_restore_regression
+                     else 'private backup/restore and malformed/non-object refusals passed; ')+
+                    'Steam library editing, browser, Frame and VR unverified')
             elif case['probe'] == 'protondb-private-settings':
                 # The exact frontend reads/writes one settings object. Keep
                 # every write inside the disposable native container home.

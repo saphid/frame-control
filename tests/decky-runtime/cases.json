@@ -1,7 +1,7 @@
 [
   {
     "id": 61,
-    "shim": null,
+    "shim": "tabmaster-json-file-restore",
     "probe": "tabmaster-private-settings"
   },
   {
