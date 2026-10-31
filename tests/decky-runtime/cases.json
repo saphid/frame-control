@@ -72,6 +72,7 @@
   {
     "id": 93,
     "shim": "deck-settings-verified-tls",
+    "additionalShims": ["deck-settings-ipc-eof"],
     "probe": "deck-settings-readonly"
   },
   {
