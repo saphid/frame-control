@@ -764,6 +764,10 @@ def main():
                 assert legacy('delete_prefix', appid='4343', do_backup=False) == [True, 'Success']
                 assert not unidentified.exists() and (outside/'keep.dat').read_bytes() == marker
                 assert legacy('get_games') == []
+                if record['version'] == '1.0.2':
+                    import prefix_manager_private
+                    prefix_manager_private.probe(backend, loader, env, log, processes, legacy,
+                        rpc, until_ready, report, regression=False)
                 report['independentState'] = {'backupBytesMatch': True, 'oldBackupPreserved': True,
                     'outsideMarkerPreserved': True, 'symlinkAndTraversalRejected': True,
                     'privatePrefixesRemoved': True, 'bulkCleanupAlwaysRefused': True,
