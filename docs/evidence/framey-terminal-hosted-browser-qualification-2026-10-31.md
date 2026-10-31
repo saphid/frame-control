@@ -1,0 +1,27 @@
+# Exact-head Terminal browser qualification
+
+PR [#492](https://github.com/saphid/frame-control/pull/492), exact head `21a1535cdad19b4ba8410ed6e4b644d34db62e12`, completes 24 successful hosted checks. Current main `fda7bcd86237033949d72a967c4e8fd41c9d46cc` has 14 successful checks and one running ARM64 package check at review; no merge/release is qualified here.
+
+## Announcement
+
+New private Terminal production-HTTP browser replays now pass on AMD64 and ARM64. They demonstrate fixture PTY output and removal using the actual Decky 3.3.0 user service, original published frontend, unchanged production parent/panel/HTTP/event/SSH paths and synthetic CEF/receipt/input. Official managed Terminal remains **partial**. This does not prove real Steam CEF, Frame, wearer/controller or release usability.
+
+## Evidence
+
+- Six ZIPs verify against GitHub-published digests, exact-head metadata and run 41227124662. Across their reports, 1,344 source-hash bindings verify against 181 exact-head files. Both published Decky 3.3.0 loader digests match. This is a scoped six-artifact audit, not independent qualification of every artifact from all 24 checks.
+- Each browser run independently reconstructs its 168-file source tar and verifies bootstrap, public archive, original frontend, generated panel and length/SHA-bound guest packet. Each architecture's 168 inputs match tested source `c5fccb3088d2e87b1549490f742813e716a6faf0`; 163 inputs are common across architectures and five per-architecture Python fixture files differ. Final head changes no tested source bytes.
+- Both runs make 20 successful production HTTP requests (14 method calls, six event polls) and 17 successful original synthetic CEF calls. Maximum HTTP durations are 1.621 seconds AMD64 and 16.845 seconds ARM64. Output `framey-browser-output`, subscription, resize, input and remove verify. Delivered event counts are three/four observations, not a fixed contract.
+- All six screenshots were inspected: rendered private Terminal, output and empty Active Terminals after removal. **Horizontal overflow/clipped right toolbar remains.** The official catalog's managed-install ARM64 warning remains appropriate; private candidate evidence does not promote that claim.
+- Browser iframe sandbox, seccomp/NoNewPrivs, original CEF trace, source fingerprints, request drain with zero pending handlers, browser/HTTP/event listener/SSH observer/service/bundle cleanup and original unit restore verify. Guest user managers stop and owned QEMU is reaped. Hosted artifacts do not independently prove absence of host boot files. Scoped cleanup is not a globally clean-runtime verdict.
+- Both native private-candidate reports retain 15 successful RPCs, output/resize, explicit remove/reload reaping, private config persistence and an unrelated sibling. Native console hashes/probe/cleanup records verify, but **cleanShutdownVerified remains false**: PTY I/O and missing-config warnings remain in raw logs. Neither is relabeled a clean runtime. The normal native reports retain 45 discovered cases each; all their source fingerprints verify, but every unrelated runtime body was not independently re-audited here.
+- Source comparison against current main preserves complete installer/catalog bytes, all 116 catalog rows/policies, all 34 native cases, Timer/e2e helpers and whole checker/runner AST after removing inherited Terminal additions. Main UI differences remain unchanged inherited stack changes. The lifecycle helper adds/retains the shared Client transcript. Parent #490 and dependency/integration qualification remain separate gates.
+- Historical ARM64 job 124590135092 remains **failed**: production `get_terminal` HTTP 503 after 30.095 seconds, despite nine successful original CEF calls and 139-ms native `get_terminal`, without subscription/output. New passes show that the pending replay succeeded; they do not establish the VM packer as the sole cause or rule out intermittent behavior. The initial Client-transcript failure is also retained historically, not credited as a pass. Production deadlines are unchanged and failed mutations are not retried.
+- Exact-head reviews, issue comments and unresolved threads were empty at review. Both browser jobs and every step succeeded. No full local suite was repeated for this hosted artifact audit.
+
+[Hosted runtime/browser run](https://github.com/saphid/frame-control/actions/runs/41227124662), [AMD64 browser job](https://github.com/saphid/frame-control/actions/runs/41227124662/job/124613501162), [ARM64 browser job](https://github.com/saphid/frame-control/actions/runs/41227124662/job/124613501314).
+
+[Audit](framey-terminal-hosted-browser-qualification-2026-10-31.json), [raw reports/packets/logs/historical failure/verifiers](framey-terminal-hosted-browser-qualification-2026-10-31-raw.json.gz), raw SHA-256 `09b3eb7a7cfd54608606198ce748fb541ec5853e6a603e0bfaf433cef4d5e72b`. Browser screenshots are embedded in raw reports and retained as original hosted artifact members with hashes.
+
+## Limits
+
+No actual Steam CEF, official managed Terminal install, Frame, wearer/controller, clean global runtime, every-check artifact, tagged installer or release qualification. Fresh exact-main/head/required checks/e2e/applicable native/package/feedback/mergeability/behind-or-overlap gates remain required. Release held for all exact release-commit gates and locked real Frame smoke. Headset, schedules and pre-existing user data untouched.

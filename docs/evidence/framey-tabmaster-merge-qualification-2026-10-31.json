@@ -1,0 +1,31 @@
+{
+  "at": "2026-10-31T19:26:11.290295+00:00",
+  "pr": 525,
+  "mergeCommit": "13360b13017bbb1a16c5ee6472bb15b5ea996586",
+  "parents": [
+    "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+    "f445c71833b119aab35d0ac920859ca40c536ab1"
+  ],
+  "tree": "72db8606932901729acd0951cceb0a72ccdfde7e",
+  "priorMainChecks": 15,
+  "prChecks": 18,
+  "allObservedChecksAndRunsCompletedSuccess": true,
+  "feedbackClearAtMerge": true,
+  "legacyBranchProtection": "not configured (404)",
+  "branchRules": [],
+  "treeEqualsPreviouslyTestedCandidate": true,
+  "nativeInputsPreserved": 20,
+  "localCandidateTests": {
+    "server": 1952,
+    "serverSkips": 16,
+    "website": 18,
+    "e2e": 53,
+    "e2eSkips": 0,
+    "catalog": 116
+  },
+  "newMergeCommitCi": "running; not yet qualified",
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "rawSha256": "879a6f0139cd65e04384e3dae0de67d16232c35205e16a27a8c3780fe916090b",
+  "rawBytes": 30995
+}

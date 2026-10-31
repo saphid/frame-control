@@ -1,0 +1,18 @@
+{
+  "head": "906bd32288cbdec7dbe1b7d6c158a4c7bf0b9bab",
+  "failure": "Old DeckyParty reload forced a plugin kill and missed its unload hook before timeout; later replacement clean stop does not qualify reload.",
+  "failedRun": 41236913339,
+  "failedJob": 124642498607,
+  "artifactSha256": "2cd56fbd18c83ba35ade48767b1e8c4603bb7a7731d2dcc29a0a774cb5a88770",
+  "all20NativeInputsMatchPreRepairMain": true,
+  "repairPr": 518,
+  "repairHead": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+  "repairMerge": "de5eb65ff954381cec0df7b1f339f6916abee3d2",
+  "failureRetained": true,
+  "infrastructureWaiver": false,
+  "blindRerun": false,
+  "newDocumentationHeadCiStillRequired": true,
+  "rawSha256": "5f8133d31f4739f5f257352ae0d6a45568bcc444ed94b8b0fb50a7fb9f6e63e5",
+  "realFrameContacted": false,
+  "releaseQualified": false
+}
