@@ -135,6 +135,13 @@ def main():
             '"InstallConfigStore" { "Software" { "Valve" { "Steam" { "CompatToolMapping" { } } } } }')
         (steam/'steamapps/libraryfolders.vdf').write_text(
             '"libraryfolders" { "0" { "path" "PRIVATE" } }')
+    if case['probe'] == 'deck-progress-private-tags':
+        # TEMPORARY PRIVATE DIAGNOSTIC: never compatibility-pass evidence.
+        source = (plugin/'main.py').read_text()
+        old = "            self.dropped_task.cancel()"
+        new = "            logger.info(f'FRAMEY_PRIVATE_UNLOAD task={self.dropped_task!r} same_loop={self.dropped_task.get_loop() is asyncio.get_running_loop()} current={asyncio.current_task()!r}')\n            cancelled = self.dropped_task.cancel()\n            logger.info(f'FRAMEY_PRIVATE_UNLOAD cancel={cancelled!r} task={self.dropped_task!r}')"
+        assert source.count(old) == 1
+        (plugin/'main.py').write_text(source.replace(old, new))
     loader = base/'PluginLoader'
     shutil.copy('/input/PluginLoader', loader)
     loader.chmod(0o700)
