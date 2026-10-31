@@ -76,9 +76,11 @@ def main():
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
+    parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -110,6 +112,16 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_deckyparty_unload_regression:
+        assert record['id'] == 117
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_text()
+        assert source.count(prefix) == 1
+        previous = source.replace(prefix, '').encode()
+        assert hashlib.sha256(previous).hexdigest() == '2d2ad3bedf43cddc8ad992ca79268593b7d181144c820322e72d1b16e9c0405f'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
     if not (args.reproduce_timer_regression or args.reproduce_tabmaster_restore_regression):
         expected_shims = ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])
@@ -118,6 +130,18 @@ def main():
         assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_tabmaster_restore_regression:
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_tabmaster_unload_regression:
+        assert record['id'] == 61 and not args.reproduce_tabmaster_restore_regression
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deck_progress_unload_regression:
         assert record['id'] == 134
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -577,6 +601,11 @@ def main():
                     'local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID '
                     'normalization passed; Steam context menu, external service, browser and VR unverified')
             elif case['probe'] == 'deckyparty-private-files':
+                import deckyparty_private
+                regression = args.reproduce_deckyparty_unload_regression
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 assert legacy('is_enabled') is False
                 marker = b'Framey private Copyparty download fixture\n'
                 (home/'fixture-download.bin').write_bytes(marker)
@@ -641,22 +670,23 @@ def main():
                 assert (home/'fixture-download.bin').read_bytes() == marker
                 unrelated = subprocess.Popen([sys.executable,'-c','import time; time.sleep(30)'],start_new_session=True)
                 processes.append(unrelated)
-                for reload_index in range(3):
-                    rpc('loader/reload_plugin',record['name'])
-                    # The reload RPC queues work. Do not race a legacy RPC against
-                    # the wrapper whose response listener Decky is shutting down.
-                    def reload_finished():
-                        output = (home/'runtime.log').read_text()
-                        return (output.count('Loaded DeckyParty File Manager') == reload_index+2 and
-                                output.count('Unloaded DeckyParty File Manager') == reload_index+1)
-                    until_ready(reload_finished, 'actual plugin reload completion')
+                reloads = []
+                for reload_index in range(1 if regression else 3):
+                    reloads.append(deckyparty_private.reload(backend, log, server_pids,
+                        rpc, until_ready, reload_index, regression=regression))
                     until_ready(lambda: closed() and not server_pids(), 'owned server cleanup')
+                    if regression:
+                        break
                     assert legacy('is_enabled') is False
                     if reload_index < 2:
                         legacy('set_enabled', enabled=True)
                         credential = legacy('get_status')['password']
                         assert until_ready(lambda: http('fixture-download.bin',credential),
                                            'Copyparty between reloads') == marker
+                until_ready(lambda: (home/'runtime.log').read_text().count('Initialized') == len(reloads)+1,
+                            'replacement DeckyParty initialization')
+                final_stop = deckyparty_private.stop(backend, log, server_pids,
+                    reloads[-1]['pluginChildrenAfter'])
                 assert unrelated.poll() is None
                 unrelated.terminate()
                 unrelated.wait(timeout=3)
@@ -664,13 +694,18 @@ def main():
                 log.seek(0)
                 lifecycle_log = log.read()
                 assert 'Unloaded DeckyParty File Manager' in lifecycle_log
-                assert 'Sending SIGKILL' not in lifecycle_log
+                assert lifecycle_log.count('Sending SIGKILL!') == int(regression)
                 report['independentState'] = {'privateDownload':True, 'privateUpload':True,
                     'privateDelete':True,
                     'anonymousAndWrongPasswordRefused':True, 'disabledChildReaped':True,
-                    'reloadStoppedServer':True, 'reloadCount':3, 'unrelatedChildUntouched':True}
-                report['result'] = ('discovery, original Copyparty authenticated private listing/download/upload/delete, '
-                    'disable/restart and actual plugin reload cleanup passed; LAN/Frame/UI unverified')
+                    'reloadStoppedServer':not regression, 'reloadCount':len(reloads),
+                    'unrelatedChildUntouched':True}
+                report['deckypartyLifecycle'] = dict(reloads=reloads, finalParentOnlyStop=final_stop,
+                    expectedRegression=regression, cleanReloadsVerified=not regression,
+                    console=lifecycle_log, consoleSha256=hashlib.sha256(lifecycle_log.encode()).hexdigest())
+                report['result'] = ('prior managed DeckyParty forced-kill reload reproduced; negative control only'
+                    if regression else 'discovery, original Copyparty authenticated private listing/download/upload/delete, '
+                    'disable/restart, three clean plugin reloads and parent-only stop passed; LAN/Frame/UI unverified')
             elif case['probe'] == 'download-all-logging':
                 assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}
                 assert 'FrameyQueueDownloads' in (plugin/'dist/index.js').read_text()
@@ -899,40 +934,27 @@ def main():
                 assert backup.read_bytes() == backup_bytes
                 stops = []
 
+                unrelated = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
+                                             start_new_session=True)
+                processes.append(unrelated)
+
                 def stop_tabmaster_loader():
-                    # Match managed KillMode=mixed: let the loader stop its
-                    # children before considering the group's cleanup fallback.
-                    def identity(pid):
-                        try:
-                            fields = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
-                            return int(fields[1]), int(fields[19])
-                        except (FileNotFoundError, ProcessLookupError):
-                            return None
-                    snapshot = {int(path.name): identity(int(path.name))
-                                for path in Path('/proc').iterdir() if path.name.isdigit()}
-                    owned = {backend.pid}
-                    while True:
-                        children = {pid for pid, value in snapshot.items()
-                                    if value and value[0] in owned}
-                        if children <= owned:
-                            break
-                        owned |= children
-                    identities = {pid: snapshot[pid] for pid in owned}
-                    assert all(identities.values()) and len(identities) >= 2
-                    started = time.monotonic()
-                    backend.send_signal(signal.SIGTERM)
-                    assert backend.wait(timeout=8) == 0
-                    elapsed = time.monotonic()-started
-                    assert all(identity(pid) != value for pid, value in identities.items()), identities
-                    log.flush()
-                    text = (home/'runtime.log').read_text()
-                    for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
-                                   'Task was destroyed but it is pending', 'Bad file descriptor'):
-                        assert marker not in text, marker
-                    stops.append({'returncode': backend.returncode, 'elapsedSeconds': elapsed,
-                                  'signaledOnlyOwnedLoader': True,
-                                  'ownedProcessIdentitiesReaped': True,
-                                  'ownedProcessCount': len(identities)})
+                    import tabmaster_private
+                    observation = tabmaster_private.stop(backend, log,
+                        disconnect=not stops and not args.reproduce_tabmaster_restore_regression)
+                    stops.append(observation)
+                    report['tabmasterLifecycle'] = dict(stops=stops,
+                        unrelatedSiblingPreserved=unrelated.poll() is None,
+                        cleanShutdownVerified=all(s['cleanShutdownVerified'] for s in stops),
+                        expectedRegression=args.reproduce_tabmaster_unload_regression)
+                    assert unrelated.poll() is None, 'unrelated sibling must survive loader shutdown'
+                    if args.reproduce_tabmaster_unload_regression and len(stops) == 1:
+                        assert observation['returncode'] == 0 and observation['forcedPluginKills'] == 1, observation
+                        assert not observation['cleanShutdownVerified'] and not observation['originalUnloadHookCompleted'], observation
+                        assert 5 <= observation['elapsedSeconds'] < 8, observation
+                        assert observation['ownedProcessIdentitiesReaped'], observation
+                    else:
+                        assert observation['cleanShutdownVerified'], observation
 
                 stop_tabmaster_loader()
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
@@ -966,6 +988,8 @@ def main():
                     jsonDecodeDiagnosticCount=loader_console.count('Expecting value: line 1 column 1 (char 0)'),
                     loaderConsoleErrorFree=False,
                     publishedBackendUnmodified=args.reproduce_tabmaster_restore_regression,
+                    ipcAdapterSha256=(None if args.reproduce_tabmaster_restore_regression or args.reproduce_tabmaster_unload_regression
+                        else hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()),
                     backendSha256=hashlib.sha256(installed_backend).hexdigest(),
                     originalBackendSha256=hashlib.sha256(original_backend).hexdigest(),
                     actualUserHome=True, emptyDefaults=True, falseValuesPreserved=True,
@@ -985,7 +1009,14 @@ def main():
                     'shared-tab filtering, false values and disk/loader-restart persistence passed; '+
                     ('original valid backup restore failure reproduced; ' if args.reproduce_tabmaster_restore_regression
                      else 'private backup/restore and malformed/non-object refusals passed; ')+
+                    ('previous managed child IPC forced-kill reproduced; expected negative, not a compatibility pass; '
+                     if args.reproduce_tabmaster_unload_regression else
+                     'two clean parent-only stops, original unload hooks and restart passed; ')+
                     'Steam library editing, browser, Frame and VR unverified')
+                if args.reproduce_tabmaster_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
             elif case['probe'] == 'protondb-private-settings':
                 # The exact frontend reads/writes one settings object. Keep
                 # every write inside the disposable native container home.
