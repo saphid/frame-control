@@ -4,26 +4,34 @@ Decky 3.3.0 returns an empty string after its IPC peer closes. Its original
 server loop dispatches that string repeatedly without yielding. End only that
 connection's loop; keep the socket active so another connection can be served.
 """
-import asyncio
+class _PeerClosed(Exception):
+    pass
 
 
-async def listen_for_method_call(self, reader, writer):
-    self.server_writer = writer
-    while self.active and self.on_new_message:
-        line = await self._read_single_line(reader)
-        if line == '':
+def repair_socket(socket_type):
+    original_read = socket_type._read_single_line
+    original_listen = socket_type._listen_for_method_call
+
+    async def read(self, reader):
+        line = await original_read(self, reader)
+        if line == '' and reader.at_eof():
+            raise _PeerClosed
+        return line
+
+    async def listen(self, reader, writer):
+        try:
+            await original_listen(self, reader, writer)
+        except _PeerClosed:
             return
 
-        def reply(task):
-            result = task.result()
-            if result is not None:
-                asyncio.create_task(self._write_single_line(writer, result))
-
-        asyncio.create_task(self.on_new_message(line)).add_done_callback(reply)
+    # Delegate framing, dispatch, replies and exceptions to the original
+    # implementation. Only this private EOF signal ends the connection loop.
+    socket_type._read_single_line = read
+    socket_type._listen_for_method_call = listen
 
 
 def install():
     # Plugins run in separate child processes. The parent loader and every
     # other plugin retain their original transport and authentication paths.
     from decky_loader.localplatform.localsocket import UnixSocket
-    UnixSocket._listen_for_method_call = listen_for_method_call
+    repair_socket(UnixSocket)
