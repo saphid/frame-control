@@ -53,7 +53,10 @@
     "id": 130,
     "version": "1.0.2",
     "shim": "prefix-manager-user-paths",
-    "probe": "prefix-manager"
+    "probe": "prefix-manager",
+    "additionalShims": [
+      "prefix-manager-102-ipc-eof"
+    ]
   },
   {
     "id": 68,

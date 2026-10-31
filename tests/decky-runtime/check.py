@@ -75,6 +75,7 @@ def main():
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
+    parser.add_argument('--reproduce-prefix-manager-102-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
@@ -117,6 +118,16 @@ def main():
         assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_prefix_manager_102_unload_regression:
+        assert record['id'] == 130 and record['version'] == '1.0.2'
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deck_progress_unload_regression:
         assert record['id'] == 134
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -798,6 +809,10 @@ def main():
                 assert legacy('delete_prefix', appid='4343', do_backup=False) == [True, 'Success']
                 assert not unidentified.exists() and (outside/'keep.dat').read_bytes() == marker
                 assert legacy('get_games') == []
+                if record['version'] == '1.0.2':
+                    import prefix_manager_private
+                    prefix_manager_private.probe(backend, loader, env, log, processes, legacy,
+                        rpc, until_ready, report, regression=args.reproduce_prefix_manager_102_unload_regression)
                 report['independentState'] = {'backupBytesMatch': True, 'oldBackupPreserved': True,
                     'outsideMarkerPreserved': True, 'symlinkAndTraversalRejected': True,
                     'privatePrefixesRemoved': True, 'bulkCleanupAlwaysRefused': True,
@@ -806,6 +821,17 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+                if record['version'] == '1.0.2':
+                    report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                    report['ipcAdapterSha256'] = (None if args.reproduce_prefix_manager_102_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    report['result'] += ('; prior managed peer EOF and forced plugin kill reproduced; expected negative only'
+                        if args.reproduce_prefix_manager_102_unload_regression else
+                        '; peer EOF RPC readback, restart and two clean parent-only plugin unloads passed')
+                    if args.reproduce_prefix_manager_102_unload_regression:
+                        report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                            previousManagedSourceRestored=True, forcedPluginKills=1,
+                            qualifiedCompatibilityPass=False)
             elif case['probe'] == 'tabmaster-private-settings':
                 # Exact published backend, synthetic users and private disk only.
                 until_ready(lambda: current('get_setting', 'framey-ready', 'ready') == 'ready',
