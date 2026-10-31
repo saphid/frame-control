@@ -210,7 +210,8 @@ def exercise(name, home):
                     assert body['id'] == 65
                     if body.get('method') == 'send_terminal_input':
                         assert body['args'][1] in (COMMAND, COMMAND.replace('\n', '\r'))
-                    self.fixture_request = dict(route=self.path, request=body)
+                    self.fixture_request = dict(route=self.path, request=body,
+                        startedAfterSeconds=round(time.monotonic()-started, 3))
                 try:
                     super().do_POST()
                 finally:
@@ -233,7 +234,9 @@ def exercise(name, home):
                 entry = getattr(self, 'fixture_request', None)
                 if entry is not None:
                     assert len(requests) < 500
-                    requests.append(dict(entry, httpStatus=status, response=obj))
+                    elapsed = time.monotonic()-started-entry['startedAfterSeconds']
+                    requests.append(dict(entry, httpStatus=status, response=obj,
+                                         elapsedSeconds=round(elapsed, 3)))
                 super().send_json(obj, status)
 
         httpd = server.LoopbackServer(('127.0.0.1', 0), Handler)
@@ -264,13 +267,15 @@ def exercise(name, home):
             report['actualDeckyDiscovery'] = found
             assert cef.eval("DeckyBackend.call('loader/call_plugin_method',"+json.dumps(name)+",'get_terminals')") == []
             bootstrap = r'''
-window.terminalStage=null;window.terminalFailure=null;window.terminalErrors=[];
+window.terminalStage=null;window.terminalFailure=null;window.terminalFailureDetails=null;window.terminalErrors=[];
 addEventListener('error',e=>terminalErrors.push(e.message));
 addEventListener('unhandledrejection',e=>terminalErrors.push(String(e.reason)));
 addEventListener('message',e=>{
  if(e.source!==document.getElementById('frameyFrame')?.contentWindow)return;
  if(e.data?.type==='test:stage')window.terminalStage=e.data;
- if(e.data?.type==='test:failure')window.terminalFailure=e.data.error;
+ if(e.data?.type==='test:failure'){
+  window.terminalFailure=e.data.error;window.terminalFailureDetails=e.data.diagnostic;
+ }
 });
 window.advanceTerminal=(action,command)=>{window.terminalStage=null;
  document.getElementById('frameyFrame').contentWindow.postMessage({type:'test:advance',action,command},'*');};
@@ -305,7 +310,7 @@ window.advanceTerminal=(action,command)=>{window.terminalStage=null;
             assert PROBE.count(old_input) == 1
             driver = PROBE.replace(old_input, """
 await wait(()=>[...document.querySelectorAll('.xterm-rows > div')]
- .some(row=>row.textContent.trim()==='framey-browser-output'));
+ .some(row=>row.textContent.trim()==='framey-browser-output'),'terminal-output');
 await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame);stage('output');""")
             old_stage = 'text:text().slice(0,3000),errors'
             assert driver.count(old_stage) == 1
@@ -370,7 +375,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         if page:
             if not report['success']:
                 try:
-                    report['parentFailureState'] = page.eval("({panel:document.getElementById('frameyPanelStatus')?.textContent,deckyState:document.getElementById('deckyState')?.textContent?.slice(0,512),installed:document.getElementById('deckyInstalled')?.innerText,errors:window.terminalErrors,failure:window.terminalFailure,stage:window.terminalStage})")
+                    report['parentFailureState'] = page.eval("({panel:document.getElementById('frameyPanelStatus')?.textContent,deckyState:document.getElementById('deckyState')?.textContent?.slice(0,512),installed:document.getElementById('deckyInstalled')?.innerText,errors:window.terminalErrors,failure:window.terminalFailure,childFailure:window.terminalFailureDetails,stage:window.terminalStage})")
                     report['screenshots']['failure'] = screenshot(page)
                 except (OSError, frame_steam.Fail):
                     report['parentFailureUnavailable'] = True

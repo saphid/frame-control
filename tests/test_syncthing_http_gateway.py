@@ -11,6 +11,49 @@ from unittest.mock import Mock, patch
 ROOT = Path(__file__).resolve().parents[1]
 
 
+class TerminalDomFailure(unittest.TestCase):
+    def test_successful_create_without_list_update_retains_child_timeout_and_does_not_retry(self):
+        import ast
+        import shutil
+        import subprocess
+        node = shutil.which('node')
+        if node is None:
+            self.skipTest('Node is unavailable')
+        tree = ast.parse((ROOT/'tests/decky-runtime/terminal_browser.py').read_text())
+        probe = next(ast.literal_eval(n.value) for n in tree.body if isinstance(n, ast.Assign)
+                     and any(isinstance(t, ast.Name) and t.id == 'PROBE' for t in n.targets))
+        script = r'''
+const assert=require('node:assert/strict'),vm=require('node:vm');
+const handlers=new Map(),messages=[];let now=0,creates=0;
+const button={textContent:'Add Terminal',click:()=>{creates++;}};
+const parent={postMessage:value=>messages.push(value)};
+const context=vm.createContext({parent,Date:{now:()=>now},
+ addEventListener:(name,fn)=>handlers.set(name,fn),
+ setTimeout:fn=>{now+=100;fn();},
+ document:{getElementById:()=>({innerText:'Active Terminals'}),
+  querySelectorAll:selector=>selector==='button'?[button]:[],querySelector:()=>null}});
+vm.runInContext(PROBE,context);
+for(let n=0;n<25;n++)handlers.get('unhandledrejection')({reason:'Decky backend timed out '+'x'.repeat(2000)});
+(async()=>{
+ await handlers.get('message')({source:parent,data:{type:'test:advance',action:'create'}});
+ assert.equal(creates,1,'a completed mutation must not be retried');
+ assert.equal(messages.length,1);const failure=messages[0];
+ assert.equal(failure.type,'test:failure');assert.match(failure.error,/Terminal DOM timed out/);
+ assert.equal(failure.diagnostic.phase,'created-terminal-button');
+ assert.equal(failure.diagnostic.errors.length,20);
+ assert(failure.diagnostic.errors.every(value=>value.length===1000&&value.startsWith('Decky backend timed out')));
+ assert.equal(failure.diagnostic.text,'Active Terminals');
+ assert.deepEqual(Array.from(failure.diagnostic.buttons),['Add Terminal']);
+ assert.equal(failure.diagnostic.textareaPresent,false);
+ assert.equal(now,60000,'the existing DOM deadline must remain unchanged');
+ console.log(JSON.stringify(failure));
+})().catch(error=>{console.error(error);process.exitCode=1;});
+'''.replace('vm.runInContext(PROBE,context)', 'vm.runInContext('+json.dumps(probe)+',context)')
+        result = subprocess.run([node, '-e', script], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)['type'], 'test:failure')
+
+
 def load(name, path):
     spec = importlib.util.spec_from_file_location(name, path)
     module = importlib.util.module_from_spec(spec)

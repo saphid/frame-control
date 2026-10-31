@@ -22,11 +22,12 @@ import frame_steam
 
 COMMAND = "printf 'framey-browser-terminal\\n' > framey-browser-terminal-marker; stty size; printf 'framey-browser-output\\n'\n"
 PROBE = r'''
-const errors=[];
-addEventListener('error',e=>errors.push(e.message));
-addEventListener('unhandledrejection',e=>errors.push(String(e.reason)));
-addEventListener('securitypolicyviolation',e=>errors.push('CSP '+e.violatedDirective));
-const wait=async fn=>{const end=Date.now()+60000;while(Date.now()<end){if(fn())return;
+const errors=[];let phase='idle';
+const rememberError=value=>{if(errors.length<20)errors.push(String(value).slice(0,1000));};
+addEventListener('error',e=>rememberError(e.message));
+addEventListener('unhandledrejection',e=>rememberError(e.reason));
+addEventListener('securitypolicyviolation',e=>rememberError('CSP '+e.violatedDirective));
+const wait=async(fn,label)=>{phase=label;const end=Date.now()+60000;while(Date.now()<end){if(fn())return;
  await new Promise(resolve=>setTimeout(resolve,100));}throw Error('Terminal DOM timed out');};
 const text=()=>document.getElementById('framey-root').innerText;
 const stage=name=>parent.postMessage({type:'test:stage',stage:name,text:text().slice(0,3000),errors},'*');
@@ -35,11 +36,11 @@ addEventListener('message',async e=>{
  if(e.source!==parent||e.data?.type!=='test:advance'||busy)return;busy=true;
  try{
   if(e.data.action==='create'){
-   await wait(()=>[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Add Terminal')));
+   await wait(()=>[...document.querySelectorAll('button')].some(b=>b.textContent.includes('Add Terminal')),'add-terminal-button');
    [...document.querySelectorAll('button')].find(b=>b.textContent.includes('Add Terminal')).click();
-   await wait(()=>document.querySelector('section button'));
+   await wait(()=>document.querySelector('section button'),'created-terminal-button');
    document.querySelector('section button').click();
-   await wait(()=>document.querySelector('.xterm-helper-textarea'));
+   await wait(()=>document.querySelector('.xterm-helper-textarea'),'terminal-textarea');
    await new Promise(resolve=>setTimeout(resolve,1500));stage('terminal');
   }else if(e.data.action==='input'){
    const field=document.querySelector('.xterm-helper-textarea');if(!field)throw Error('No xterm textarea');
@@ -49,11 +50,14 @@ addEventListener('message',async e=>{
   }else if(e.data.action==='close'){
    const back=[...document.querySelectorAll('button')].find(b=>b.textContent==='Back to plugin');
    if(!back)throw Error('No route back button');back.click();
-   await wait(()=>document.querySelectorAll('section button').length===2);
+   await wait(()=>document.querySelectorAll('section button').length===2,'terminal-list-after-back');
    document.querySelectorAll('section button')[1].click();
-   await wait(()=>document.querySelectorAll('section button').length===0);stage('removed');
+   await wait(()=>document.querySelectorAll('section button').length===0,'terminal-list-after-remove');stage('removed');
   }
- }catch(error){parent.postMessage({type:'test:failure',error:String(error)},'*');}
+ }catch(error){parent.postMessage({type:'test:failure',error:String(error),diagnostic:{
+  phase,errors:[...errors],text:text().slice(0,3000),
+  buttons:[...document.querySelectorAll('button')].slice(0,30).map(b=>b.textContent.slice(0,128)),
+  textareaPresent:!!document.querySelector('.xterm-helper-textarea')}},'*');}
  finally{busy=false;}
 });
 '''
