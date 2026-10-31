@@ -9,6 +9,7 @@ The managed installer and real Frame remain outside this disposable VM.
 """
 
 import argparse
+import contextlib
 import hashlib
 import importlib.util
 import json
@@ -94,6 +95,41 @@ def reap(process):
         except subprocess.TimeoutExpired:
             os.killpg(process.pid, signal.SIGKILL)
             process.wait(timeout=5)
+
+
+class Termination:
+    """SIGTERM/SIGINT handler, deferred while a child is being registered.
+
+    SIGTERM raises SystemExit(143); SIGINT keeps raising KeyboardInterrupt.
+    """
+
+    SIGNALS = (signal.SIGTERM, signal.SIGINT)
+
+    def __init__(self):
+        self.deferring = False
+        self.pending = None
+
+    def __call__(self, signum, _frame):
+        if self.deferring:
+            self.pending = self.pending or signum
+            return
+        self.stop(signum)
+
+    @staticmethod
+    def stop(signum):
+        if signum == signal.SIGINT:
+            raise KeyboardInterrupt
+        raise SystemExit(128 + signum)
+
+    @contextlib.contextmanager
+    def deferred(self):
+        self.deferring = True
+        try:
+            yield
+        finally:
+            self.deferring = False
+            if self.pending is not None:
+                self.stop(self.pending)
 
 
 def prepared_bundles(preparation, arch):
@@ -452,6 +488,8 @@ def main():
                         help='With browser setup: production local HTTP/panel dispatch through fixture CEF')
     parser.add_argument('--http-browser-parent', action='store_true',
                         help='With HTTP gateway: unchanged production parent and actual Decky user service')
+    parser.add_argument('--keep-boot-artifacts', action='store_true',
+                        help='Debugging only: keep the regenerated vmlinuz/initrd.gz in --output')
     args = parser.parse_args()
     if args.http_gateway and not args.browser_setup:
         parser.error('HTTP gateway probe requires --browser-setup')
@@ -556,182 +594,200 @@ def main():
     packer = importlib.util.module_from_spec(spec)
     spec.loader.exec_module(packer)
     rootfs_sha = sha(args.rootfs_tar)
-    kernel = packer.pack(
-        args.rootfs_tar,
-        args.output / "initrd.gz",
-        payloads,
-        marker=MARKER,
-        bootstrap=root_probe.read_bytes(),
-        user_probe=user_probe.read_bytes(),
-        normal_root=True,
-        timeout=budgets['unitSeconds'],
-        root_size_mib=2048 if args.browser_setup else 1024,
-        browser=args.browser_setup,
-    )
-    (args.output / "vmlinuz").write_bytes(kernel)
-    inputs = {
-        "rootfsTarSha256": rootfs_sha,
-        "rootfsTarBytes": args.rootfs_tar.stat().st_size,
-        "kernelSha256": hashlib.sha256(kernel).hexdigest(),
-        "initrdSha256": sha(args.output / "initrd.gz"),
-        "sourceSha256": fingerprints,
-        "bundles": bundles,
-        "architecture": arch,
-        "preparationSha256": sha(args.preparation) if args.preparation else None,
-        "keySha256": KEY_SHA256,
-        "memoryMiB": 8192 if args.browser_setup else 6144,
-        "timeoutSeconds": budgets['hostSeconds'],
-        "guestTimeouts": budgets,
-        "networkDevice": False,
-        "hostBusExposed": False,
-        "realFrameContacted": False,
-        "candidate": candidate,
-        "browserSetup": browser_inputs,
-        "httpGateway": http_gateway,
-        "httpBrowserParentRequested": args.http_browser_parent,
-        "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
-                             "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
-                            if args.browser_setup else None),
-    }
-    (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
-    command = [
-        emulator,
-        *machine,
-        "-accel",
-        "tcg,thread=multi",
-        "-cpu",
-        "max",
-        "-smp",
-        "2",
-        "-m",
-        str(inputs['memoryMiB']),
-        "-nodefaults",
-        "-nographic",
-        "-serial",
-        "stdio",
-        "-monitor",
-        "none",
-        "-nic",
-        "none",
-        "-no-reboot",
-        "-kernel",
-        str(args.output / "vmlinuz"),
-        "-initrd",
-        str(args.output / "initrd.gz"),
-        "-append",
-        f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
-    ]
-    console = args.output / "console.log"
-    packet_path = args.output / 'guest-result.packet'
-    if args.browser_setup:
-        command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
-                    '-device', 'virtio-serial-pci,id=framey_result_bus',
-                    '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
-    result = {"success": False, "inputs": inputs}
+    # Every run regenerates multi-hundred-MB VM boot images in its evidence folder.
+    # Whatever ends the run, result.json is written, any owned QEMU is reaped and
+    # then the images are removed; inputs.json keeps their digests. SIGTERM (e.g.
+    # a job timeout) becomes SystemExit; it and SIGINT are deferred while QEMU is
+    # being started, so a started child is always registered for reaping.
+    termination = Termination()
+    previous_handlers = {signum: signal.signal(signum, termination) for signum in Termination.SIGNALS}
+    result = {"success": False, "inputs": None}
+    process = None
     try:
-        with console.open("w") as log:
-            process = subprocess.Popen(
-                command,
-                stdin=subprocess.DEVNULL,
-                stdout=log,
-                stderr=subprocess.STDOUT,
-                start_new_session=True,
+        try:
+            kernel = packer.pack(
+                args.rootfs_tar,
+                args.output / "initrd.gz",
+                payloads,
+                marker=MARKER,
+                bootstrap=root_probe.read_bytes(),
+                user_probe=user_probe.read_bytes(),
+                normal_root=True,
+                timeout=budgets['unitSeconds'],
+                root_size_mib=2048 if args.browser_setup else 1024,
+                browser=args.browser_setup,
             )
-            try:
+            (args.output / "vmlinuz").write_bytes(kernel)
+            inputs = {
+                "rootfsTarSha256": rootfs_sha,
+                "rootfsTarBytes": args.rootfs_tar.stat().st_size,
+                "kernelSha256": hashlib.sha256(kernel).hexdigest(),
+                "initrdSha256": sha(args.output / "initrd.gz"),
+                "bootArtifactsRetained": args.keep_boot_artifacts,
+                "sourceSha256": fingerprints,
+                "bundles": bundles,
+                "architecture": arch,
+                "preparationSha256": sha(args.preparation) if args.preparation else None,
+                "keySha256": KEY_SHA256,
+                "memoryMiB": 8192 if args.browser_setup else 6144,
+                "timeoutSeconds": budgets['hostSeconds'],
+                "guestTimeouts": budgets,
+                "networkDevice": False,
+                "hostBusExposed": False,
+                "realFrameContacted": False,
+                "candidate": candidate,
+                "browserSetup": browser_inputs,
+                "httpGateway": http_gateway,
+                "httpBrowserParentRequested": args.http_browser_parent,
+                "resultTransport": ({"kind": "virtio-serial", "port": result_codec.PORT,
+                                     "maximumPayloadBytes": result_codec.MAX_PAYLOAD}
+                                    if args.browser_setup else None),
+            }
+            result["inputs"] = inputs
+            (args.output / "inputs.json").write_text(json.dumps(inputs, indent=2) + "\n")
+            command = [
+                emulator,
+                *machine,
+                "-accel",
+                "tcg,thread=multi",
+                "-cpu",
+                "max",
+                "-smp",
+                "2",
+                "-m",
+                str(inputs['memoryMiB']),
+                "-nodefaults",
+                "-nographic",
+                "-serial",
+                "stdio",
+                "-monitor",
+                "none",
+                "-nic",
+                "none",
+                "-no-reboot",
+                "-kernel",
+                str(args.output / "vmlinuz"),
+                "-initrd",
+                str(args.output / "initrd.gz"),
+                "-append",
+                f"console={console_device} rdinit=/init panic=-1 systemd.show_status=false",
+            ]
+            console = args.output / "console.log"
+            packet_path = args.output / 'guest-result.packet'
+            if args.browser_setup:
+                command += ['-chardev', 'file,id=framey_result,path='+str(packet_path).replace(',', ',,'),
+                            '-device', 'virtio-serial-pci,id=framey_result_bus',
+                            '-device', 'virtserialport,bus=framey_result_bus.0,chardev=framey_result,name='+result_codec.PORT]
+            with console.open("w") as log:
+                with termination.deferred():
+                    process = subprocess.Popen(
+                        command,
+                        stdin=subprocess.DEVNULL,
+                        stdout=log,
+                        stderr=subprocess.STDOUT,
+                        start_new_session=True,
+                    )
                 code = process.wait(timeout=budgets['hostSeconds'])
-            finally:
-                reap(process)
-                result["ownedQemuReaped"] = process.poll() is not None
-        if code != 0:
-            raise RuntimeError('Nonzero QEMU exit')
-        if args.browser_setup:
-            if not packet_path.is_file() or not 0 < packet_path.stat().st_size <= result_codec.MAX_PAYLOAD+256:
-                raise RuntimeError('Missing/oversized dedicated guest result packet')
-            packet = packet_path.read_bytes()
-            guest = result_codec.decode(packet)
-            result['guestResultPacket'] = dict(bytes=len(packet), sha256=hashlib.sha256(packet).hexdigest())
-        else:
-            guest = guest_report(console.read_text())
-        result["guest"] = guest
-        package = guest.get("flatpak", {})
-        if guest.get('success') is not True:
-            raise RuntimeError('Guest package probe failed; inspect retained partial result and console')
-        if package.get("architecture") != arch:
-            raise RuntimeError("Guest architecture does not match the native host")
-        if guest.get("success") is not True or any(
-            package.get(key) is not True for key in REQUIRED
-        ):
-            raise RuntimeError(
-                "Incomplete package probe; inspect retained guest result and console"
-            )
-        if (
-            package.get("forcedTermination") is not False
-            or package.get("apiKeyErrorStatus") != 403
-        ):
-            raise RuntimeError("Package cleanup/authentication gate failed")
-        if candidate:
-            verify_migration(package.get('candidateMigration', {}), arch, bundles)
-            verify_candidate(package.get('candidateService', {}), arch, bundles,
-                             packer.REQUIRED_SERVICE_RESULTS)
-            if package.get('uninstallPreservedCandidateData') is not True:
-                raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
-            if package.get('uninstallPreservedMigrationData') is not True:
-                raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
-        if args.browser_setup:
-            browser_result = package.get('candidateService', {}).get('browserSetup', {})
-            verify_browser(browser_result, browser_inputs['panelSha256'])
-            import base64
-            for name, encoded in browser_result['screenshots'].items():
-                if name not in ('running1', 'stopped2', 'restarted3', 'stopped4'):
-                    raise RuntimeError('Unexpected browser screenshot stage')
-                data = base64.b64decode(encoded, validate=True)
-                if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
-                    raise RuntimeError('Invalid browser screenshot')
-                (args.output / ('browser-'+name+'.png')).write_bytes(data)
-        if args.http_gateway:
-            gateway = package.get('candidateService', {}).get('httpGateway', {})
-            required = ('success', 'actualDeckyRpc', 'authenticatedSyncthingRest',
-                        'serviceStartStopVerified', 'stoppedStateBeforeAndAfter',
-                        'productionHttpHandler', 'productionPanelDispatcher',
-                        'productionMethodScript', 'productionLocalSshWrapper',
-                        'ownedBrowserReaped', 'httpServerStopped', 'ownedReceiptRemoved')
-            if any(gateway.get(key) is not True for key in required):
-                raise RuntimeError('Production HTTP/panel gateway proof missing')
-            if (gateway.get('realFrameContacted') is not False
-                or gateway.get('realSteamCef') is not False
-                or gateway.get('syntheticCef') is not True
-                or gateway.get('syntheticStoreReceipt') is not True
-                or gateway.get('rejectedRequests') != dict(missingUiKey=403, staleReceipt=400,
-                    wrongPlugin=400, modernHttpCall=400, missingHttpShim=400)):
-                raise RuntimeError('HTTP gateway scope/refusal proof missing')
-            if args.http_browser_parent:
-                parent = gateway.get('browserParent', {})
-                verify_http_parent(parent)
-                if (package['candidateService'].get('actualDeckyUserService') is not True
-                        or package['candidateService'].get('ownedDeckyServiceRemoved') is not True):
-                    raise RuntimeError('Actual Decky user service cleanup proof missing')
-                for name, encoded in parent['screenshots'].items():
-                    import base64
+            if code != 0:
+                raise RuntimeError('Nonzero QEMU exit')
+            if args.browser_setup:
+                if not packet_path.is_file() or not 0 < packet_path.stat().st_size <= result_codec.MAX_PAYLOAD+256:
+                    raise RuntimeError('Missing/oversized dedicated guest result packet')
+                packet = packet_path.read_bytes()
+                guest = result_codec.decode(packet)
+                result['guestResultPacket'] = dict(bytes=len(packet), sha256=hashlib.sha256(packet).hexdigest())
+            else:
+                guest = guest_report(console.read_text())
+            result["guest"] = guest
+            package = guest.get("flatpak", {})
+            if guest.get('success') is not True:
+                raise RuntimeError('Guest package probe failed; inspect retained partial result and console')
+            if package.get("architecture") != arch:
+                raise RuntimeError("Guest architecture does not match the native host")
+            if guest.get("success") is not True or any(
+                package.get(key) is not True for key in REQUIRED
+            ):
+                raise RuntimeError(
+                    "Incomplete package probe; inspect retained guest result and console"
+                )
+            if (
+                package.get("forcedTermination") is not False
+                or package.get("apiKeyErrorStatus") != 403
+            ):
+                raise RuntimeError("Package cleanup/authentication gate failed")
+            if candidate:
+                verify_migration(package.get('candidateMigration', {}), arch, bundles)
+                verify_candidate(package.get('candidateService', {}), arch, bundles,
+                                 packer.REQUIRED_SERVICE_RESULTS)
+                if package.get('uninstallPreservedCandidateData') is not True:
+                    raise RuntimeError('Candidate certificate/data preserving uninstall proof is missing')
+                if package.get('uninstallPreservedMigrationData') is not True:
+                    raise RuntimeError('Legacy migration data preserving uninstall proof is missing')
+            if args.browser_setup:
+                browser_result = package.get('candidateService', {}).get('browserSetup', {})
+                verify_browser(browser_result, browser_inputs['panelSha256'])
+                import base64
+                for name, encoded in browser_result['screenshots'].items():
+                    if name not in ('running1', 'stopped2', 'restarted3', 'stopped4'):
+                        raise RuntimeError('Unexpected browser screenshot stage')
                     data = base64.b64decode(encoded, validate=True)
                     if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
-                        raise RuntimeError('Invalid HTTP parent screenshot')
-                    (args.output/('http-parent-'+name+'.png')).write_bytes(data)
-        if any(
-            sha(path) != fingerprints[str(path.relative_to(ROOT))]
-            for path in source_paths
-        ):
-            raise RuntimeError("Probe sources changed during execution")
-        if args.preparation and sha(args.preparation) != inputs["preparationSha256"]:
-            raise RuntimeError("Preparation changed during execution")
-        if sha(args.rootfs_tar) != rootfs_sha:
-            raise RuntimeError("Guest rootfs changed during execution")
-        result["success"] = True
-    except BaseException as error:
-        result["error"] = str(error)
-        raise
+                        raise RuntimeError('Invalid browser screenshot')
+                    (args.output / ('browser-'+name+'.png')).write_bytes(data)
+            if args.http_gateway:
+                gateway = package.get('candidateService', {}).get('httpGateway', {})
+                required = ('success', 'actualDeckyRpc', 'authenticatedSyncthingRest',
+                            'serviceStartStopVerified', 'stoppedStateBeforeAndAfter',
+                            'productionHttpHandler', 'productionPanelDispatcher',
+                            'productionMethodScript', 'productionLocalSshWrapper',
+                            'ownedBrowserReaped', 'httpServerStopped', 'ownedReceiptRemoved')
+                if any(gateway.get(key) is not True for key in required):
+                    raise RuntimeError('Production HTTP/panel gateway proof missing')
+                if (gateway.get('realFrameContacted') is not False
+                    or gateway.get('realSteamCef') is not False
+                    or gateway.get('syntheticCef') is not True
+                    or gateway.get('syntheticStoreReceipt') is not True
+                    or gateway.get('rejectedRequests') != dict(missingUiKey=403, staleReceipt=400,
+                        wrongPlugin=400, modernHttpCall=400, missingHttpShim=400)):
+                    raise RuntimeError('HTTP gateway scope/refusal proof missing')
+                if args.http_browser_parent:
+                    parent = gateway.get('browserParent', {})
+                    verify_http_parent(parent)
+                    if (package['candidateService'].get('actualDeckyUserService') is not True
+                            or package['candidateService'].get('ownedDeckyServiceRemoved') is not True):
+                        raise RuntimeError('Actual Decky user service cleanup proof missing')
+                    for name, encoded in parent['screenshots'].items():
+                        import base64
+                        data = base64.b64decode(encoded, validate=True)
+                        if not data.startswith(b'\x89PNG\r\n\x1a\n') or len(data) > 2*1024**2:
+                            raise RuntimeError('Invalid HTTP parent screenshot')
+                        (args.output/('http-parent-'+name+'.png')).write_bytes(data)
+            if any(
+                sha(path) != fingerprints[str(path.relative_to(ROOT))]
+                for path in source_paths
+            ):
+                raise RuntimeError("Probe sources changed during execution")
+            if args.preparation and sha(args.preparation) != inputs["preparationSha256"]:
+                raise RuntimeError("Preparation changed during execution")
+            if sha(args.rootfs_tar) != rootfs_sha:
+                raise RuntimeError("Guest rootfs changed during execution")
+            result["success"] = True
+        except BaseException as error:
+            result["error"] = str(error)
+            raise
+        finally:
+            try:
+                if process is not None:
+                    reap(process)
+                    result["ownedQemuReaped"] = process.poll() is not None
+            finally:
+                (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
+        print(json.dumps(result), flush=True)
     finally:
-        (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
-    print(json.dumps(result), flush=True)
+        for signum, handler in previous_handlers.items():
+            signal.signal(signum, handler)
+        if not args.keep_boot_artifacts:
+            packer.remove_boot_artifacts(args.output)
 
 
 if __name__ == "__main__":
