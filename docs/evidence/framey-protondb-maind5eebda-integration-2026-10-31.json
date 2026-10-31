@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-31T22:40:56.956389+00:00",
+  "pr": 529,
+  "testedSource": "22511bfa6e7e9cecc1f72056a4a22545c5b68bd8",
+  "integratedMain": "d5eebdac850bdedaf0472dc1bbc93afede17c710",
+  "normalMergeParents": [
+    "7f7e4ea0592f0abcfcf2087be57cd4b1e742d2ac",
+    "d5eebdac850bdedaf0472dc1bbc93afede17c710"
+  ],
+  "sourceInputs": 22,
+  "serverTests": 1966,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 12,
+  "localNativePluginIds": [
+    14,
+    63,
+    61,
+    96,
+    117
+  ],
+  "protondbRpcs": [
+    10,
+    6
+  ],
+  "independentSettingsAndRestartAndOriginalTimeoutVerified": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 404.081,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "badgeRenderingAndOfficialUiUnverified": true,
+  "originalIntermittentArmFailureCauseProven": false,
+  "genericCleanRuntimeClaim": false,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "56567516ccd509dc28ca4b9265b9854072a2f49ea83717af7b5bd1c725122225",
+  "rawBytes": 70982
+}
