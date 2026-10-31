@@ -1,7 +1,7 @@
 [
   {
     "id": 134,
-    "shim": null,
+    "shim": "deck-progress-ipc-eof",
     "probe": "deck-progress-private-tags"
   },
   {

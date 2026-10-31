@@ -69,6 +69,7 @@ def main():
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
+    parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -108,6 +109,11 @@ def main():
         assert record['id'] == 96
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_deck_progress_unload_regression:
+        assert record['id'] == 134
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -314,16 +320,36 @@ def main():
                         if not item.is_dir():
                             name = item.filename.split('/',1)[1]
                             raw = (plugin/name).read_bytes()
-                            assert raw == original.read(item)
-                            unchanged[name] = hashlib.sha256(raw).hexdigest()
+                            if name == 'main.py' and not args.reproduce_deck_progress_unload_regression:
+                                assert raw.endswith(original.read(item))
+                                assert raw[:-len(original.read(item))] == b'# Frame Control: repair child IPC EOF for the exact Deck Progress 1.3.6 archive.\nfrom framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                            else:
+                                assert raw == original.read(item)
+                                unchanged[name] = hashlib.sha256(raw).hexdigest()
+                if not args.reproduce_deck_progress_unload_regression:
+                    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
                 log.flush()
                 console = (home/'runtime.log').read_text()
                 assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
                 for marker in ('Import failed:', 'Error during shutdown:', 'asyncio.exceptions.CancelledError',
-                               'Task was destroyed but it is pending', 'Bad file descriptor',
-                               'Sending SIGKILL!', 'still alive 5 seconds after stop request'):
+                               'Task was destroyed but it is pending', 'Bad file descriptor'):
                     assert marker not in console, marker
-                report['privateTags'] = dict(settingsBeforeRestart=before,settingsAfterSelectedDelete=final,
+                forced_kills = console.count('Sending SIGKILL!')
+                if args.reproduce_deck_progress_unload_regression:
+                    assert forced_kills == 2
+                    assert console.count('still alive 5 seconds after stop request') == 2
+                    report['expectedRegression'] = dict(success=False,phase='plugin unload',
+                        originalPluginUnmodified=True,forcedPluginKills=forced_kills,
+                        qualifiedCompatibilityPass=False)
+                else:
+                    assert forced_kills == 0
+                    assert 'still alive 5 seconds after stop request' not in console
+                report['privateTags'] = dict(scopedChildIpcEofRepair=not args.reproduce_deck_progress_unload_regression,
+                    originalBackendRetainedAsExactSuffix=not args.reproduce_deck_progress_unload_regression,
+                    publishedBackendUnmodified=args.reproduce_deck_progress_unload_regression,
+                    ipcAdapterSha256=(None if args.reproduce_deck_progress_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()),
+                    forcedPluginKills=forced_kills,settingsBeforeRestart=before,settingsAfterSelectedDelete=final,
                     settingsAndManualTagsPersistedAcrossRestart=True,invalidTagAndMissingArgumentsRefused=True,
                     selectedDeletePreservedOtherTag=True,independentReadonlySqliteReadback=True,
                     databaseRelativePath=str(database.relative_to(home)),stoppedDatabaseSha256=stopped_database_sha,
@@ -335,8 +361,10 @@ def main():
                     jsonDecodeDiagnosticCount=console.count('Expecting value: line 1 column 1 (char 0)'),
                     loaderConsoleErrorFree=False,steamLibraryVerified=False,automaticTaggingVerified=False,
                     hltbSearchVerified=False,browserVerified=False,realFrameContacted=False,physicalControllerVerified=False)
-                report['result'] = ('published Decky API1 private settings/manual tags, invalid-input refusals, '
+                report['result'] = ('managed child-IPC EOF repair with published Decky API1 private settings/manual tags, invalid-input refusals, '
                     'SQLite readback and restart persistence passed; Steam, automatic tags, HLTB, browser and Frame unverified')
+                if args.reproduce_deck_progress_unload_regression:
+                    report['result'] = 'original unmodified Deck Progress two forced unload kills reproduced; lifecycle failed, not a qualified compatibility pass'
             elif case['probe'] == 'bluetooth-private-bluez':
                 report['privateBluez'] = bluetooth_bluez.exercise(
                     current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
