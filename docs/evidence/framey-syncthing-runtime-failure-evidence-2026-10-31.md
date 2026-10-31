@@ -14,13 +14,13 @@ inside the native probe, diagnostics include the exact owned helper's PID,
 state and parent PID, whether its socket directory remains, and the full logs
 available at that point. No environment variables or command lines are dumped.
 
-Three tests execute actual subprocesses: exit 23 retains more than 12,000 output
+The original three tests execute actual subprocesses: exit 23 retains more than 12,000 output
 bytes without becoming success; a timeout retains emitted stdout/stderr and
 still raises; success replaces a stale console file.
 
-The native AMD64 positive control uses published Decky 3.3.0, the unchanged main
+The initial native AMD64 positive control uses published Decky 3.3.0, the unchanged main
 candidate helper and pinned Syncthing v2.1.7 peers. Two-way sync, restart, private
-RPC reads, wrong-key 403 and normal helper/process shutdown pass. All five
+RPC reads, wrong-key 403 and normal helper/process shutdown pass at the initial probe source, before the strict gate below. All five
 runtime input fingerprints and the loader/helper/console hashes were checked.
 
 A separate owned source copy deliberately pauses only the plugin before
@@ -31,6 +31,37 @@ helper with its plugin parent and socket directory still present. No successful
 result JSON is written. This validates the diagnostic failure path; it does not
 reproduce or explain the historical CI failure. The injected source is not part
 of the product or CI probe.
+
+
+## Green job with an unclean loader shutdown
+
+At head `4f27b3d9dcf297acbdc20666af32b843cf01e972`, the
+[AMD64 ownership job](https://github.com/saphid/frame-control/actions/runs/41170465301/job/124447124841)
+passed, but its [artifact 13030957526](https://github.com/saphid/frame-control/actions/runs/41170465301/artifacts/13030957526)
+retains a 2,067-byte loader console containing `Error during shutdown:` and
+`asyncio.exceptions.CancelledError` in Decky's `kill_if_still_running` sleep.
+The helper was reaped and no plugin SIGKILL was logged; those facts do not
+prove clean loader shutdown. The artifact ZIP digest, successful exact-head
+checkout, 14 source fingerprints, inner loader hash and outer console hash
+were independently checked. This observation does not establish the root
+cause or the cause of PR #503's earlier failure.
+
+The runtime probe now requires a zero loader exit, a shutdown completion and
+Syncthing's plugin-stopped record. Shutdown exceptions, pending-task errors,
+bad descriptors and forced plugin kills fail the probe before success JSON is
+emitted. The exception path retains the console and owned helper snapshot.
+The normal `Cancelling tasks...` banner remains allowed. Seven host tests pass,
+including a real subprocess that rejects the exact retained hosted log and
+preserves it in the sidecar. The new gate is a test change, not a candidate
+shutdown fix. All 101 related host tests also pass. A first native trial using the old group signal returned loader exit 1 even
+though its unload log appeared normal; the strict gate rejected it and retained
+the failure console. Normal stop now signals only the owning loader, matching
+`KillMode=mixed`, so plugin/helper termination must be performed by the loader
+rather than the test. A fresh native AMD64 run with that final fixture passes
+the strict zero-exit, plugin-stopped and clean-console assertions, helper/socket
+cleanup, peer transfer/restart and RPC checks. Its five source fingerprints and
+inner/outer console hashes were independently verified. Final-head hosted
+AMD64/ARM64 and all other triggered jobs remain required.
 
 The timeout path retains only output emitted before timeout. The existing
 forced peer-cleanup path still prints the tail of that peer's log and was not

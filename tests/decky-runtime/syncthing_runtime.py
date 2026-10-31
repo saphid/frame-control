@@ -40,6 +40,17 @@ def helper_snapshot(pid, socket_path):
     return snapshot
 
 
+def verify_loader_shutdown(text, returncode):
+    """Reaped helpers and a zero exit alone do not prove clean plugin unload."""
+    errors = [marker for marker in ('Error during shutdown:',
+              'asyncio.exceptions.CancelledError', 'Task was destroyed but it is pending',
+              'Sending SIGKILL!', 'Bad file descriptor') if marker in text]
+    assert not errors, f'Decky shutdown errors: {errors}'
+    assert returncode == 0, f'Decky loader exit was unsuccessful: {returncode}'
+    assert text.count('[main][INFO]: Shutdown finished.') == 1, 'Decky shutdown incomplete'
+    assert '[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in ' in text, 'Plugin unload incomplete'
+
+
 def main():
     assert os.getuid() == 1100 and Path('/repo').is_dir(), 'Use the isolated native runner'
     home = Path.home()
@@ -215,7 +226,10 @@ def main():
             'syncthingStopBudgetSeconds':SYNCTHING_STOP_SECONDS,
             'serviceManagerVerified':False, 'systemdBus':'absent; service setup stays disabled',
             'realFrameContacted':False}
-        os.killpg(backend.pid, signal.SIGTERM)
+        # Match the service's KillMode=mixed normal stop: signal the loader,
+        # which owns plugin unload. A group signal also kills its plugin and
+        # helper, hiding whether the loader actually reaped its descendants.
+        backend.send_signal(signal.SIGTERM)
         backend.wait(timeout=8)
         until_ready(lambda:not Path(f'/proc/{helper_pid}').exists(), 'owned helper shutdown')
         assert not socket_path.parent.exists()
@@ -224,6 +238,8 @@ def main():
         logs[-1].seek(0)
         report['loaderConsole'] = logs[-1].read()
         report['loaderConsoleSha256'] = hashlib.sha256(report['loaderConsole'].encode()).hexdigest()
+        verify_loader_shutdown(report['loaderConsole'], backend.returncode)
+        report['loaderShutdownVerified'] = True
     except BaseException:
         print('OWNED_HELPER_SNAPSHOT '+json.dumps(helper_snapshot(helper_pid, socket_path)), file=sys.stderr)
         for log in logs:
