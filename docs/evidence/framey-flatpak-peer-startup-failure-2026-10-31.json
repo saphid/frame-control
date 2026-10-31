@@ -1,0 +1,37 @@
+{
+  "at": "2026-10-31T01:52:51.445681+00:00",
+  "head": "7565cee074c8fa576a2853b94372726dc7a21de1",
+  "run": 41153298192,
+  "job": 124394464439,
+  "artifactId": 13025316289,
+  "artifactSha256": "4114ef94658bbeab3a82a463d2afacd3483154587941a63bedae5a9f0d8d56ac",
+  "allSourceFingerprintsVerified": true,
+  "fullFailureGuestPacketVerified": true,
+  "packagePass": false,
+  "guestSuccess": false,
+  "ownedQemuReaped": true,
+  "ownedProcessesReaped": true,
+  "ownedServiceRemoved": true,
+  "forcedTermination": false,
+  "failure": {
+    "index": 0,
+    "port": 8384,
+    "elapsedSeconds": 90.011,
+    "error": "packaged peer readiness: <urlopen error [Errno 111] Connection refused>",
+    "processStatuses": [
+      {
+        "pid": 508,
+        "returnCode": null
+      }
+    ],
+    "logTails": {
+      "0": "bwrap: Can't find source path /run/user/1100/.flatpak/me.kozec.syncthingtk/tmp: No such file or directory\n",
+      "1": "[start] 2026/10/31 01:41:27 INFO: syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]\n[5MYJ6] 2026/10/31 01:41:28 INFO: My ID: 5MYJ6AP-EIWLG4E-CVWW66K-NLQ6COV-ILSC7UV-GW36VT2-7EGNOIX-WMVLWQY\n[5MYJ6] 2026/10/31 01:41:29 INFO: Single thread SHA256 performance is 99 MB/s using minio/sha256-simd (91 MB/s using crypto/sha256).\n[5MYJ6] 2026/10/31 01:41:29 INFO: Hashing performance is 79.69 MB/s\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 1...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 2...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 3...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 5...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 6...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 7...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 9...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 10...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 11...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 13...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 14...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 16...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 17...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Running database migration 19...\n[5MYJ6] 2026/10/31 01:41:29 INFO: Compacting database after migration...\n[5MYJ6] 2026/10/31 01:41:29 INFO: No stored folder metadata for \"framey-private\"; recalculating\n[5MYJ6] 2026/10/31 01:41:29 INFO: Overall send rate is unlimited, receive rate is unlimited\n[5MYJ6] 2026/10/31 01:41:29 INFO: TCP listener (127.0.0.1:22001) starting\n[5MYJ6] 2026/10/31 01:41:29 INFO: Ready to synchronize \"Private actual Flatpak sync\" (framey-private) (sendreceive)\n[5MYJ6] 2026/10/31 01:41:29 INFO: Loading HTTPS certificate: open /home/tester/.var/app/me.kozec.syncthingtk/data/peer-1/https-cert.pem: no such file or directory\n[5MYJ6] 2026/10/31 01:41:29 INFO: Creating new HTTPS certificate\n[5MYJ6] 2026/10/31 01:41:29 INFO: Completed initial scan of sendreceive folder \"Private actual Flatpak sync\" (framey-private)\n[5MYJ6] 2026/10/31 01:41:29 INFO: GUI and API listening on 127.0.0.1:8385\n[5MYJ6] 2026/10/31 01:41:29 INFO: Access the GUI via the following URL: http://127.0.0.1:8385/\n[5MYJ6] 2026/10/31 01:41:29 INFO: My name is \"framey-owned-vm\"\n[5MYJ6] 2026/10/31 01:41:29 INFO: Device SD4NK4Y-7SPAOQ4-2FRIVLO-EGEZXUQ-46NVUSY-ANADNQE-WWPQQZM-6NUU2QS is \"owned-peer\" at [tcp://127.0.0.1:22000]\n"
+    },
+    "serviceState": "MainPID=0\nResult=exit-code\nExecMainCode=1\nExecMainStatus=1\nActiveState=failed\nSubState=failed"
+  },
+  "rootCauseLimit": "missing Flatpak shared runtime path observed; precise actor/timing not independently reproduced",
+  "mitigation": "wait for authenticated readiness of each peer before launching the next",
+  "noRetriesOrExpandedTimeouts": true,
+  "realFrameContacted": false
+}

@@ -294,6 +294,7 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
             self.assertTrue(options['start_new_session'])
             self.assertEqual(options['env']['LD_LIBRARY_PATH'], '')
             self.assertEqual(options['env']['DBUS_SESSION_BUS_ADDRESS'], f'unix:path=/run/user/{os.getuid()}/bus')
+            self.assertEqual(options['env']['FRAMEY_SYNCTHING_OWNER_PID'], str(os.getpid()))
         self.owner.process = None
 
     async def test_pid_cleanup_preserves_foreign_file_and_a_locked_successor(self):
