@@ -142,3 +142,51 @@ ownership and all triggered package modes remain required. Previous-head
 hosted successes remain historical. The raw-peer fixture has no service bus;
 no new systemd, browser, managed-install, Frame or wearer/controller proof is
 claimed. Syncthing stays blocked and unselected, and no release is published.
+
+## Refresh onto TabMaster main and completed old-head audit
+
+Frozen source `6e1d94310e9a9512e5bf08b6252844a60f681e04` normally merges main
+`0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4` into prior head
+`47c54283993ed8bddd365788572b168f4469962d`. The merge has no conflicts and adds
+20 main files. The strict runtime correction is unchanged. Production/catalog
+bytes match main, including its TabMaster fixture and complete native probes.
+
+All 38 focused tests pass. A fresh private AMD64 Decky 3.3.0/Syncthing v2.1.7
+replay passes literal two-way transfer, peer restart, nine proxy HTTP 200s,
+wrong-key 403 and the strict parent-only loader shutdown assertion. All five
+runtime source hashes, executable/build-input pins and complete inner/outer
+console hashes pass independent checks. Owned helper/peers are reaped, and no
+new fixture container or image tag remains. No new Rust build is claimed.
+
+At old head `47c5428`, checks/e2e, native AMD64/ARM64 and all four signed-package
+modes passed. Independent audits bind exact checkouts, GitHub artifact digests,
+40 native probes, 33 archive pins, 15 source fingerprints and 40 complete
+available console hashes per architecture. Core ran 1,947 server tests with
+27 platform/optional skips, 50 app and 18 website tests. E2e ran 53 tests with
+one optional catalog-cache skip; this is not full116 qualification. Native
+consoles retain unrelated positive forced kills and expected original-source
+negative failures. Green workflows do not prove global clean plugin shutdown.
+
+Both old-head ownership artifacts contain the complete raw-peer loader console
+and outer sidecar; this follow-up audit verifies them, correcting the earlier
+understatement that they were not retained. Five runtime source hashes, actual
+transfer/restart and nine HTTP 200s/403 pass on each architecture. The raw loader
+exit code is not separately retained; zero exit is asserted by the pinned
+source. The separate systemd fixture and signed packages retain source-bound
+shutdown results, without a separately retained Decky loader console.
+
+All 12 old-head package capture payloads pass hash checks; five unique images
+were visually inspected. Standalone running views show the private folder and
+both owned devices; stopped views show Stopped. The production-parent running
+view clips device rows and preserves the broken/non-ARM64 warning. Native
+package input inventories match this merge; HTTP inventories differ only in
+main's compatibility catalog. These are private AMD64 browser fixtures, not
+real Steam CEF or Frame proof.
+
+[Source-bound refresh and old-head qualification audit](framey-syncthing-main0082d79-refresh-2026-10-31.json)
+and [raw reports, consoles, focused-test log and five captures](framey-syncthing-main0082d79-refresh-2026-10-31-raw.json.gz)
+retain the evidence and limits. All hosted results above apply to the old
+head. The new merge/evidence commit requires fresh exact-head checks/e2e,
+native, ownership and every package mode. Main's package workflow is unfinished
+at this audit. Syncthing stays blocked and unselected; no managed Frame,
+wearer/controller or release proof is claimed. No headset or schedule was touched.
