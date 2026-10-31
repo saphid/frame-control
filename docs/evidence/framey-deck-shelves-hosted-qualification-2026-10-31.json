@@ -1,0 +1,128 @@
+{
+  "at": "2026-10-31T19:10:24.826394+00:00",
+  "head": "19860eea731c3b28548e1a20e50295b6a579c342",
+  "currentMain": "fda7bcd86237033949d72a967c4e8fd41c9d46cc",
+  "hostedChecks": 18,
+  "artifacts": 8,
+  "uniqueSources": 149,
+  "verifiedHashBindings": 1363,
+  "allGitHubArchiveDigestsAndHeadsVerified": true,
+  "nativeArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "casesEach": 46,
+  "deckShelvesRpcsEach": [
+    4,
+    3
+  ],
+  "nativeSummary": {
+    "x86_64": {
+      "repaired": {
+        "originalBackend": false,
+        "backendSha256": "a8b4cf75ebe369cb738ae2a5babf1981d1c077b5edd59661c216cc145f8c4fd8",
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "rpcMethods": [
+          "get_settings",
+          "set_settings",
+          "get_settings",
+          "get_settings"
+        ],
+        "stopSeconds": [
+          0.1638088889999949,
+          0.16376971200000412
+        ],
+        "forcedKills": 0,
+        "cleanShutdownVerified": true,
+        "originalUnloadHooksVerified": true,
+        "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+        "unrelatedSiblingPreserved": true,
+        "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8"
+      },
+      "original": {
+        "originalBackend": true,
+        "backendSha256": "f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c",
+        "ipcAdapterSha256": null,
+        "rpcMethods": [
+          "get_settings",
+          "set_settings",
+          "get_settings"
+        ],
+        "stopSeconds": [
+          5.176241933000028
+        ],
+        "forcedKills": 1,
+        "cleanShutdownVerified": false,
+        "originalUnloadHooksVerified": false,
+        "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+        "unrelatedSiblingPreserved": true,
+        "consoleSha256": "a3373e8d7374e407eb306be55a248b115a51eb6e160be2c10162f8088acf5248"
+      }
+    },
+    "aarch64": {
+      "repaired": {
+        "originalBackend": false,
+        "backendSha256": "a8b4cf75ebe369cb738ae2a5babf1981d1c077b5edd59661c216cc145f8c4fd8",
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "rpcMethods": [
+          "get_settings",
+          "set_settings",
+          "get_settings",
+          "get_settings"
+        ],
+        "stopSeconds": [
+          0.2137372060000189,
+          0.1636394490000157
+        ],
+        "forcedKills": 0,
+        "cleanShutdownVerified": true,
+        "originalUnloadHooksVerified": true,
+        "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+        "unrelatedSiblingPreserved": true,
+        "consoleSha256": "23cc369fc5d581f95de410601df1b7454ecadd7362d942453e626c7fd52f10c8"
+      },
+      "original": {
+        "originalBackend": true,
+        "backendSha256": "f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c",
+        "ipcAdapterSha256": null,
+        "rpcMethods": [
+          "get_settings",
+          "set_settings",
+          "get_settings"
+        ],
+        "stopSeconds": [
+          5.233054266000011
+        ],
+        "forcedKills": 1,
+        "cleanShutdownVerified": false,
+        "originalUnloadHooksVerified": false,
+        "settingsAndBackupBytesHashesJsonMetadataVerified": true,
+        "unrelatedSiblingPreserved": true,
+        "consoleSha256": "a3373e8d7374e407eb306be55a248b115a51eb6e160be2c10162f8088acf5248"
+      }
+    }
+  },
+  "timerRpcsEach": [
+    31,
+    10,
+    18
+  ],
+  "hostedE2e": {
+    "tests": 53,
+    "skips": 1,
+    "testSeconds": 239.184,
+    "skip": "optional full catalog cache not mounted"
+  },
+  "allFourPackageModesVerified": true,
+  "packageBrowserScope": "Package/Syncthing controls, not Deck Shelves Steam Home UI",
+  "feedbackClearAtReview": true,
+  "sourcePreservesUnrelatedMainBehavior": true,
+  "mainCi": "running at review",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "rawSha256": "7a1e5390a5ce19c8ddf4a17c7de575bd480a14e529184be804a49359dbb2b2ce",
+  "rawBytes": 178529,
+  "rawRetention": "Native reports/source audits/logs/inventory/verifiers retained; complete package reports/packets/images remain linked hosted artifacts and local state."
+}
