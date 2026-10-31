@@ -89,6 +89,7 @@ def main():
               'tests/decky-runtime/free_loader_private.py',
               'tests/decky-runtime/deck_shelves_private.py',
               'tests/decky-runtime/tabmaster_private.py',
+              'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
@@ -123,6 +124,8 @@ def main():
                     (53, '--reproduce-shotty-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
+            if args.case is None or args.case == 130:
+                probes.append((130, '1.0.2', '--reproduce-prefix-manager-102-unload-regression'))
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',

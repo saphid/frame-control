@@ -294,6 +294,7 @@ class StoreTransaction(unittest.TestCase):
         self.assertNotIn('api_version', manifest)
         self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
                          ['prefix-manager-user-paths'])
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
         compile((folder/'main.py').read_bytes(), str(folder/'main.py'), 'exec')
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             self.assertEqual((folder/'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
@@ -371,6 +372,15 @@ class StoreTransaction(unittest.TestCase):
         source = (folder/'main.py').read_text()
         compile(source, str(folder/'main.py'), 'exec')
         self.assertIn('if delete_game_folder:\n        return False, "Game data deletion is unavailable on Frame; no files changed"', source)
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(hashlib.sha256(source[len(prefix):].encode()).hexdigest(),
+                         '96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['prefix-manager-user-paths', 'prefix-manager-102-ipc-eof'])
         frontend = (folder/'dist/index.js').read_text()
         self.assertNotIn('showDeleteGameFolder: true', frontend)
         self.assertNotIn('showDeleteGameFolder: game.install_path !== "-"', frontend)
