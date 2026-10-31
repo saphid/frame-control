@@ -4531,13 +4531,14 @@
         "https://github.com/Tormak9970/TabMaster.git"
       ],
       "status": "partial",
-      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. Private per-user settings, shared-tab filtering, backup/restore and restart persistence have native fixture evidence. Prepared a child-local IPC EOF adapter for the exact archive while retaining the JSON restore repair; the previous managed backend can require a forced kill without its unload hook. Existing managed copies need update/reinstall for both repairs. New strict native lifecycle qualification is pending. Steam library-tab editing remains unavailable: library/MobX patches have no target. Browser/backend settings integration and worn/controller use remain unverified.",
+      "reason": "Local Chromium rendered QAM and navigable Overview/Filters documentation with an isolated Decky 3.3.0 AMD64 backend. A native AMD64 fixture verifies private per-user settings, shared-tab filtering, backup/restore, IPC peer EOF, two clean parent-only stops with original unload hooks and restart persistence. The exact-archive adapter preserves the JSON restore repair; the previous managed backend reproduces a forced kill after peer EOF. One JSON diagnostic remains retained and unattributed. Existing managed copies need update/reinstall for both repairs. Steam library-tab editing remains unavailable: library/MobX patches have no target. ARM64 of this repair, browser/backend settings integration and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "published Decky 3.3.0 AMD64 private settings/backup/restore/restart fixture"
+        "published Decky 3.3.0 AMD64 private settings/backup/restore/restart fixture",
+        "published Decky 3.3.0 AMD64 IPC EOF/shutdown/restore controls"
       ],
       "browser": {
         "id": 61,
