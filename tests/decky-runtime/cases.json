@@ -87,7 +87,10 @@
   {
     "id": 67,
     "shim": "battery-tracker-user-supply",
-    "probe": "battery-tracker"
+    "probe": "battery-tracker",
+    "additionalShims": [
+      "battery-tracker-ipc-eof"
+    ]
   },
   {
     "id": 114,

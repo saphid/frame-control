@@ -5223,10 +5223,11 @@
         "https://github.com/safijari/steam-deck-battery-tracker.git"
       ],
       "status": "partial",
-      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers recorded Frame-shaped private battery samples and returned history/per-app power. A locked real Frame read verified the required sysfs fields, not the managed plugin. Local Chromium rendered synthetic history, an average-power row and lookback slider requests from 1 to 5. Real Frame ARM64 recording, long-term history, foreground-app labeling, Frame panel controls and worn VR remain unverified; existing copies need update or reinstall.",
+      "reason": "Exact managed install removes the unnecessary root flag, selects a readable Battery-type power supply, and repairs empty history and per-app sample grouping. The exact managed copy also repairs child IPC EOF so disconnects allow recorder cancellation and pending-sample flush. An isolated AMD64 Decky 3.3.0 regression verifies two parent-only clean stops, pending SQLite writes and restart persistence; restoring the prior managed backend reproduces a forced plugin kill and lost pending samples. This lifecycle repair still needs fresh hosted AMD64/ARM64 qualification. Earlier isolated amd64 and ARM64 containers recorded Frame-shaped private battery samples and returned history/per-app power. A locked real Frame read verified the required sysfs fields, not the managed plugin. Local Chromium rendered synthetic history, an average-power row and lookback slider requests from 1 to 5. Real Frame ARM64 recording, long-term history, foreground-app labeling, Frame panel controls and worn VR remain unverified; existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
-        "battery-tracker-user-supply"
+        "battery-tracker-user-supply",
+        "battery-tracker-ipc-eof"
       ],
       "verification": [
         "static archive",

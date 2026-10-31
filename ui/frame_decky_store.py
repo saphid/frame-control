@@ -256,6 +256,10 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 67 and digest == BATTERY_TRACKER_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_BATTERY_TRACKER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1420,8 +1424,18 @@ def split_by_app(data):
                 decky_plugin.logger.exception('recorder')
             await asyncio.sleep(5)
 """
+                ipc=globals().get('FRAMEY_BATTERY_TRACKER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Battery Tracker child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Battery Tracker child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('battery-tracker-user-supply')
+                compat_shims.append('battery-tracker-ipc-eof')
             if deckyspy:
                 compat=modules/'framey_battery.py'
                 if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
