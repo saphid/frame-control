@@ -1092,6 +1092,10 @@ def main():
                     secure.shutdown()
                     secure.server_close()
                     worker.join(timeout=3)
+                report['uploadTlsNegative'] = dict(selfSignedRejected=True,
+                    httpRequestsReceived=len(hits),
+                    installedMethodAstSha256=hashlib.sha256(ast.dump(method, include_attributes=False).encode()).hexdigest(),
+                    realUploadVerified=False)
                 import deck_settings_private
                 deck_settings_private.probe(backend, loader, env, log, processes, current, rpc,
                     until_ready, report, regression=args.reproduce_deck_settings_unload_regression)

@@ -7455,7 +7455,7 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
       "status": "partial",
-      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Exact managed 1.2.6 installs restore certificate and hostname checks for the token-bearing image uploader. Published Decky 3.3.0 x86_64 discovers the managed backend, returns read-only system/storage values, and rejects a private self-signed upload endpoint before sending a fixture token. Older copies need Update. Remote reports, public uploads, settings changes, the real Frame backend and worn VR remain unverified.",
+      "reason": "Game picker renders with detached real Frame library/install-folder reads; search modal opens in local Chromium. Snapshot refreshes on panel reopen. Exact managed 1.2.6 installs restore certificate and hostname checks for the token-bearing image uploader. Published Decky 3.3.0 x86_64 discovers the managed backend, returns read-only system/storage values, and rejects a private self-signed upload endpoint before sending a fixture token. Older copies need Update. Remote reports, public uploads, settings changes, the real Frame backend and worn VR remain unverified. A prepared exact-archive child IPC repair preserves the verified TLS helper and original unload hook. Existing copies need Update/reinstall. Fresh native AMD64/ARM64 shutdown and hosted qualification remain pending; this adds no real Frame or worn/controller proof.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7515,7 +7515,8 @@
         "mode": "exact managed 1.2.6 source under published Decky 3.3.0 x86_64; read-only RPCs and self-signed loopback HTTPS rejection; no external upload"
       },
       "requiredShims": [
-        "deck-settings-verified-tls"
+        "deck-settings-verified-tls",
+        "deck-settings-ipc-eof"
       ]
     },
     {
