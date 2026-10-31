@@ -1003,9 +1003,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads((shotty / '.frame-control-store.json').read_text())
         self.assertEqual(receipt['sha256'], plugin['sha256'])
-        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies'])
+        self.assertEqual(receipt['compatShims'], ['shotty-click-app-dir', 'shotty-bounded-copies', 'shotty-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             self.assertEqual((shotty/'LICENSE').read_bytes(), original.read('Shotty/LICENSE'))
+        self.assertEqual((shotty/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
         compat = shotty / 'py_modules/click.py'
         self.assertTrue(compat.is_file())
         source = '''import asyncio, importlib.util, logging, sys, types
@@ -1016,6 +1018,10 @@ decky = types.ModuleType('decky_plugin')
 decky.logger = logging.getLogger('shotty-test')
 decky.DECKY_PLUGIN_DIR = str(folder)
 sys.modules['decky_plugin'] = decky
+# These are filesystem-only contracts; the native job exercises real Decky IPC.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('shotty', folder/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
