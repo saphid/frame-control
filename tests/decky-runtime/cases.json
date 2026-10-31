@@ -1,5 +1,10 @@
 [
   {
+    "id": 61,
+    "shim": null,
+    "probe": "tabmaster-private-settings"
+  },
+  {
     "id": 103,
     "shim": "ludusavi-dependency-discovery",
     "probe": "ludusavi-dependency-discovery"
