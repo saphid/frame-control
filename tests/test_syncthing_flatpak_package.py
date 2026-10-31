@@ -8,6 +8,7 @@ import io
 import json
 import os
 from pathlib import Path
+import shutil
 import signal
 import sys
 import tarfile
@@ -525,36 +526,49 @@ class RunArtifactCleanup(unittest.TestCase):
         self.assertEqual(self.result(), {'success': False, 'inputs': None, 'error': 'Guest kernel is absent'})
         self.assertEqual({path.name for path in self.output.iterdir()}, {'result.json'})
 
-    def assert_terminated_with_running_qemu_reaped(self, deliver):
-        previous = signal.getsignal(signal.SIGTERM)
-        with self.qemu(running=True, during=deliver), self.assertRaises(SystemExit) as raised:
+    def assert_stopped_with_running_qemu_reaped(self, signum, deliver):
+        previous = {number: signal.getsignal(number) for number in (signal.SIGTERM, signal.SIGINT)}
+        expected = KeyboardInterrupt if signum == signal.SIGINT else SystemExit
+        with self.qemu(running=True, during=deliver), self.assertRaises(expected) as raised:
             self.run_main()
-        self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
-        self.assertIs(signal.getsignal(signal.SIGTERM), previous)
+        if expected is SystemExit:
+            self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
+        self.assertEqual({number: signal.getsignal(number) for number in previous}, previous)
         self.assertEqual(self.group_signals, [signal.SIGTERM])
         result = self.result()
         self.assertEqual((result['success'], result['ownedQemuReaped']), (False, True))
         self.assert_evidence_without_boot_images()
 
-    def test_sigterm_while_qemu_starts_is_deferred_then_child_is_reaped(self):
+    def test_signal_while_qemu_starts_is_deferred_then_child_is_reaped(self):
         # Portable: invoke the installed handler directly as QEMU is being registered.
-        self.assert_terminated_with_running_qemu_reaped(
-            lambda: signal.getsignal(signal.SIGTERM)(signal.SIGTERM, None))
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            with self.subTest(signum=signum):
+                shutil.rmtree(self.output, ignore_errors=True)
+                self.assert_stopped_with_running_qemu_reaped(
+                    signum, lambda signum=signum: signal.getsignal(signum)(signum, None))
 
-    @unittest.skipIf(os.name == 'nt', 'OS-delivered SIGTERM terminates the process on Windows')
-    def test_os_delivered_sigterm_while_qemu_starts_reaps_child(self):
-        self.assert_terminated_with_running_qemu_reaped(lambda: os.kill(os.getpid(), signal.SIGTERM))
+    @unittest.skipIf(os.name == 'nt', 'OS-delivered signals terminate the process on Windows')
+    def test_os_delivered_signal_while_qemu_starts_reaps_child(self):
+        for signum in (signal.SIGTERM, signal.SIGINT):
+            with self.subTest(signum=signum):
+                shutil.rmtree(self.output, ignore_errors=True)
+                self.assert_stopped_with_running_qemu_reaped(
+                    signum, lambda signum=signum: os.kill(os.getpid(), signum))
 
     def test_termination_handler_raises_unless_deferred(self):
         termination = self.module.Termination()
         with self.assertRaises(SystemExit) as raised:
             termination(signal.SIGTERM, None)
         self.assertEqual(raised.exception.code, 128 + signal.SIGTERM)
-        with self.assertRaises(SystemExit):
-            with termination.deferred():
-                termination(signal.SIGTERM, None)
-                registered = True
-        self.assertTrue(registered)
+        with self.assertRaises(KeyboardInterrupt):
+            termination(signal.SIGINT, None)
+        for signum, expected in ((signal.SIGTERM, SystemExit), (signal.SIGINT, KeyboardInterrupt)):
+            termination, registered = self.module.Termination(), False
+            with self.assertRaises(expected):
+                with termination.deferred():
+                    termination(signum, None)
+                    registered = True
+            self.assertTrue(registered)
         with self.module.Termination().deferred():
             pass
 

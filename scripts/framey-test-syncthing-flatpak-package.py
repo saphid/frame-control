@@ -98,7 +98,12 @@ def reap(process):
 
 
 class Termination:
-    """SIGTERM handler raising SystemExit, deferred while a child is registered."""
+    """SIGTERM/SIGINT handler, deferred while a child is being registered.
+
+    SIGTERM raises SystemExit(143); SIGINT keeps raising KeyboardInterrupt.
+    """
+
+    SIGNALS = (signal.SIGTERM, signal.SIGINT)
 
     def __init__(self):
         self.deferring = False
@@ -106,8 +111,14 @@ class Termination:
 
     def __call__(self, signum, _frame):
         if self.deferring:
-            self.pending = signum
+            self.pending = self.pending or signum
             return
+        self.stop(signum)
+
+    @staticmethod
+    def stop(signum):
+        if signum == signal.SIGINT:
+            raise KeyboardInterrupt
         raise SystemExit(128 + signum)
 
     @contextlib.contextmanager
@@ -118,7 +129,7 @@ class Termination:
         finally:
             self.deferring = False
             if self.pending is not None:
-                raise SystemExit(128 + self.pending)
+                self.stop(self.pending)
 
 
 def prepared_bundles(preparation, arch):
@@ -586,9 +597,10 @@ def main():
     # Every run regenerates multi-hundred-MB VM boot images in its evidence folder.
     # Whatever ends the run, result.json is written, any owned QEMU is reaped and
     # then the images are removed; inputs.json keeps their digests. SIGTERM (e.g.
-    # a job timeout) becomes SystemExit, deferred while QEMU is being registered.
+    # a job timeout) becomes SystemExit; it and SIGINT are deferred while QEMU is
+    # being started, so a started child is always registered for reaping.
     termination = Termination()
-    previous_sigterm = signal.signal(signal.SIGTERM, termination)
+    previous_handlers = {signum: signal.signal(signum, termination) for signum in Termination.SIGNALS}
     result = {"success": False, "inputs": None}
     process = None
     try:
@@ -772,7 +784,8 @@ def main():
                 (args.output / "result.json").write_text(json.dumps(result, indent=2) + "\n")
         print(json.dumps(result), flush=True)
     finally:
-        signal.signal(signal.SIGTERM, previous_sigterm)
+        for signum, handler in previous_handlers.items():
+            signal.signal(signum, handler)
         if not args.keep_boot_artifacts:
             packer.remove_boot_artifacts(args.output)
 
