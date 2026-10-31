@@ -779,6 +779,138 @@ def main():
                 report['result'] = ('published Decky legacy discovery, current-user/multi-library discovery, '
                     'private backup/delete, two-user/malformed/unreadable shortcut bulk-cleanup refusals '
                     'and duplicate-library-ID/symlink/traversal refusals passed; no real saves or VR')
+            elif case['probe'] == 'tabmaster-private-settings':
+                # Exact published backend, synthetic users and private disk only.
+                until_ready(lambda: current('get_setting', 'framey-ready', 'ready') == 'ready',
+                            'TabMaster settings initialization')
+                assert current('get_user_desktop') == str(home/'Desktop')
+                assert current('get_users_dict') == {} and current('get_tags') == []
+                assert current('set_active_user_id', 'framey-alice') is False
+                assert current('get_tabs') == {} and current('get_tab_profiles') == {}
+                alice_tabs = {
+                    'shared': {'name': 'Private shared tab', 'visibleToOthers': True,
+                               'filters': [{'type': 'installed', 'value': False}]},
+                    'private': {'name': 'Private hidden tab', 'visibleToOthers': False},
+                }
+                profiles = {'private-profile': ['shared', 'private']}
+                friends = [{'id': 'fixture-friend', 'name': 'Private Friend'}]
+                friend_games = {'fixture-friend': [777, 888]}
+                tags = [{'id': 17, 'name': 'Private tag'}]
+                for method, value in [('set_tabs', alice_tabs), ('set_tab_profiles', profiles),
+                                      ('set_friends', friends), ('set_friends_games', friend_games),
+                                      ('set_tags', tags)]:
+                    assert current(method, value) is None
+                assert current('set_setting', 'framey-private-false', False) is False
+                assert current('get_setting', 'framey-private-false', True) is False
+                assert current('get_tabs') == alice_tabs
+                assert current('get_tab_profiles') == profiles
+                assert current('get_friends') == friends
+                assert current('get_friends_games') == friend_games
+                assert current('get_tags') == tags
+                assert current('set_active_user_id', 'framey-bob') is False
+                assert current('get_tabs') == {} and current('get_friends') == []
+                assert current('get_friends_games') == {} and current('get_tab_profiles') == {}
+                assert current('get_shared_tabs') == {'framey-alice': {'shared': alice_tabs['shared']}}
+                bob_tabs = {'bob-only': {'name': 'Private Bob tab', 'visibleToOthers': False}}
+                assert current('set_tabs', bob_tabs) is None
+                assert current('set_active_user_id', 'framey-alice') is False
+                assert current('get_tabs') == alice_tabs and current('get_shared_tabs') == {}
+                state = base/'settings'/record['folder']/'settings.json'
+                before = state.read_bytes()
+                expected = {
+                    'usersDict': {
+                        'framey-alice': {'tabs': alice_tabs, 'friends': friends,
+                                        'friendsGames': friend_games, 'tabProfiles': profiles},
+                        'framey-bob': {'tabs': bob_tabs, 'friends': [], 'friendsGames': {}},
+                    },
+                    'tags': tags, 'framey-private-false': False,
+                }
+                assert json.loads(before) == expected
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    original_backend = original.read(record['folder']+'/main.py')
+                assert (plugin/'main.py').read_bytes() == original_backend
+                stops = []
+
+                def stop_tabmaster_loader():
+                    # Match managed KillMode=mixed: let the loader stop its
+                    # children before considering the group's cleanup fallback.
+                    def identity(pid):
+                        try:
+                            fields = Path(f'/proc/{pid}/stat').read_text().rsplit(')', 1)[1].split()
+                            return int(fields[1]), int(fields[19])
+                        except (FileNotFoundError, ProcessLookupError):
+                            return None
+                    snapshot = {int(path.name): identity(int(path.name))
+                                for path in Path('/proc').iterdir() if path.name.isdigit()}
+                    owned = {backend.pid}
+                    while True:
+                        children = {pid for pid, value in snapshot.items()
+                                    if value and value[0] in owned}
+                        if children <= owned:
+                            break
+                        owned |= children
+                    identities = {pid: snapshot[pid] for pid in owned}
+                    assert all(identities.values()) and len(identities) >= 2
+                    started = time.monotonic()
+                    backend.send_signal(signal.SIGTERM)
+                    assert backend.wait(timeout=8) == 0
+                    elapsed = time.monotonic()-started
+                    assert all(identity(pid) != value for pid, value in identities.items()), identities
+                    log.flush()
+                    text = (home/'runtime.log').read_text()
+                    for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                                   'Task was destroyed but it is pending', 'Bad file descriptor'):
+                        assert marker not in text, marker
+                    stops.append({'returncode': backend.returncode, 'elapsedSeconds': elapsed,
+                                  'signaledOnlyOwnedLoader': True,
+                                  'ownedProcessIdentitiesReaped': True,
+                                  'ownedProcessCount': len(identities)})
+
+                stop_tabmaster_loader()
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda: rpc('loader/get_plugins'), 'restarted TabMaster discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                assert restarted[0]['version'] == record['version'] and not restarted[0]['disabled']
+                until_ready(lambda: current('get_users_dict') == expected['usersDict'],
+                            'TabMaster users restored from private settings')
+                assert current('get_tags') == tags
+                assert current('get_setting', 'framey-private-false', True) is False
+                assert current('set_active_user_id', 'framey-bob') is False
+                assert current('get_tabs') == bob_tabs
+                assert current('get_shared_tabs') == {'framey-alice': {'shared': alice_tabs['shared']}}
+                assert current('set_active_user_id', 'framey-alice') is False
+                assert current('get_tabs') == alice_tabs
+                assert current('get_tab_profiles') == profiles
+                assert current('get_friends') == friends
+                assert current('get_friends_games') == friend_games
+                assert state.read_bytes() == before
+                stop_tabmaster_loader()
+                log.flush()
+                loader_console = (home/'runtime.log').read_text()
+                assert len(loader_console.encode()) <= 128*1024
+                assert loader_console.count('Starting Decky version v3.3.0') == 2
+                assert loader_console.count('[main][INFO]: Shutdown finished.') == 2
+                report['privateSettings'] = dict(
+                    loaderConsole=loader_console,
+                    loaderConsoleSha256=hashlib.sha256(loader_console.encode()).hexdigest(),
+                    jsonDecodeDiagnosticCount=loader_console.count('Expecting value: line 1 column 1 (char 0)'),
+                    loaderConsoleErrorFree=False,
+                    publishedBackendUnmodified=True,
+                    backendSha256=hashlib.sha256(original_backend).hexdigest(),
+                    actualUserHome=True, emptyDefaults=True, falseValuesPreserved=True,
+                    perUserTabsAndProfiles=True, perUserFriendsAndGames=True,
+                    sharedTabVisibilityFiltered=True, globalTags=True,
+                    settingsPersistedToDisk=True, settingsPersistedAcrossLoaderRestart=True,
+                    settingsSha256=hashlib.sha256(before).hexdigest(),
+                    ownedLoaderStops=stops, completeLoaderShutdownLogged=True,
+                    steamLibraryEditingVerified=False, backupRestoreVerified=False,
+                    browserVerified=False, realSteamCef=False, realFrameContacted=False,
+                    physicalControllerVerified=False)
+                report['result'] = ('published Decky API1 discovery, private per-user settings, '
+                    'shared-tab filtering, false values and disk/loader-restart persistence passed; '
+                    'Steam library editing, backup/restore, browser, Frame and VR unverified')
             elif case['probe'] == 'protondb-private-settings':
                 # The exact frontend reads/writes one settings object. Keep
                 # every write inside the disposable native container home.

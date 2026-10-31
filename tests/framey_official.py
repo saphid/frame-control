@@ -14,6 +14,7 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 66, 'name': 'PlayTime', 'version': '3.2.5', 'api_version': 1,
      'folder': 'SDH-PlayTime', 'sha256': '10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f'},
+    {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
     {'id': 134, 'name': 'Deck Progress Tracker', 'version': '1.3.6', 'api_version': 1,
