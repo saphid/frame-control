@@ -75,11 +75,8 @@ def main():
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
-<<<<<<< HEAD
-    parser.add_argument('--reproduce-prefix-manager-102-unload-regression', action='store_true')
-=======
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
->>>>>>> origin/main
+    parser.add_argument('--reproduce-prefix-manager-102-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
@@ -122,25 +119,26 @@ def main():
         assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
-<<<<<<< HEAD
-    if args.reproduce_prefix_manager_102_unload_regression:
-        assert record['id'] == 130 and record['version'] == '1.0.2'
-=======
     if args.reproduce_tabmaster_restore_regression:
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_tabmaster_unload_regression:
         assert record['id'] == 61 and not args.reproduce_tabmaster_restore_regression
->>>>>>> origin/main
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
                   b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
         managed = (plugin/'main.py').read_bytes()
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
-<<<<<<< HEAD
-        assert hashlib.sha256(previous).hexdigest() == '96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478'
-=======
         assert hashlib.sha256(previous).hexdigest() == '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356'
->>>>>>> origin/main
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_prefix_manager_102_unload_regression:
+        assert record['id'] == 130 and record['version'] == '1.0.2'
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deck_progress_unload_regression:
