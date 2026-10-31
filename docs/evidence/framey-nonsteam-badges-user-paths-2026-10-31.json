@@ -1,0 +1,287 @@
+{
+  "sourceRevision": "787f9d9db0e90b52a9ae74bec87b0640d0efa30b",
+  "runnerExitCode": 0,
+  "architecture": "x86_64",
+  "publishedDecky": "v3.3.0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "reportSha256": "6d1d061ad8822c0109730c0fcd0e94555c7c1071b306ab23d4fd42073f904694",
+  "sourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "ab96a1b5c4cf1ae1105f141c537bfec217546e49d3c955eba4ad3e12fda453fe",
+    "tests/decky-runtime/check.py": "a6d22fe33c15509c15f84ba46f9ff8a5e0f34a317a2cebd3f9d3407ea1647cd8",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "f9e0ad21bf085fc66289dffdf65b7a11bac74c7e5a25917174b3c8b37fbaee86",
+    "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
+    "ui/frame_decky_store.py": "18b3ead3d3799762c8a28c97bc0bb5f4a2940dd64064497ab6bbae7394ea654d",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "allSevenSourceFingerprintsVerified": true,
+  "exactArchiveBackendAndOnlyThreeUserPathEditsVerified": true,
+  "cases": [
+    {
+      "id": 133,
+      "name": "Non-Steam Badges",
+      "version": "0.1.0",
+      "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+      "shim": "nonsteam-badges-user-paths",
+      "calls": [
+        {
+          "method": "get_all_store_mappings",
+          "result": {}
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {
+            "4294967173": {
+              "store": "gog",
+              "name": "Private GOG"
+            },
+            "4242": {
+              "store": "epic",
+              "name": "Private Epic"
+            },
+            "4343": {
+              "store": "amazon",
+              "name": "Private Amazon"
+            },
+            "4444": {
+              "store": "amazon",
+              "name": "Private Luna"
+            },
+            "4545": {
+              "store": null,
+              "name": "Private Other"
+            }
+          }
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {}
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {
+            "4294967173": {
+              "store": "gog",
+              "name": "Private GOG"
+            },
+            "4242": {
+              "store": "epic",
+              "name": "Private Epic"
+            },
+            "4343": {
+              "store": "amazon",
+              "name": "Private Amazon"
+            },
+            "4444": {
+              "store": "amazon",
+              "name": "Private Luna"
+            },
+            "4545": {
+              "store": null,
+              "name": "Private Other"
+            }
+          }
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {
+            "4294967173": {
+              "store": "gog",
+              "name": "Private GOG"
+            },
+            "4242": {
+              "store": "epic",
+              "name": "Private Epic"
+            },
+            "4343": {
+              "store": "amazon",
+              "name": "Private Amazon"
+            },
+            "4444": {
+              "store": "amazon",
+              "name": "Private Luna"
+            },
+            "4545": {
+              "store": null,
+              "name": "Private Other"
+            }
+          }
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Non-Steam Badges",
+          "version": "0.1.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "privateShortcuts": {
+        "actualUserHome": true,
+        "originalBackendUnmodified": false,
+        "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+        "installedBackendSha256": "17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970",
+        "signedAppIdNormalized": true,
+        "storeClassification": true,
+        "missingAppIdSkipped": true,
+        "malformedVdfRefused": true,
+        "mappingsPreservedAcrossLoaderRestart": true,
+        "originalHardcodedHomeFailureReproduced": false,
+        "privateShortcutsPreserved": true,
+        "unchangedArchiveFiles": {
+          "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+          "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+          "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+          "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+          "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+          "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+          "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+          "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.2645885832607746,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessIdentitiesReaped": true,
+            "ownedProcessCount": 5
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.214087953325361,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessIdentitiesReaped": true,
+            "ownedProcessCount": 5
+          }
+        ],
+        "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: Unterminated cstring (offset: 1)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "loaderConsoleSha256": "f36939e4aa182a3836aead693eb27576025c9475885e74ec96e0fbb2df385c32",
+        "loaderConsoleErrorFree": false,
+        "browserVerified": false,
+        "steamPageBadgesVerified": false,
+        "steamSearchVerified": false,
+        "activeSteamAccountSelectionVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false
+      },
+      "result": "published Decky API1 private shortcut mappings and restart persistence passed; browser badges, active Steam account, Steam search, Frame and VR unverified"
+    },
+    {
+      "id": 133,
+      "name": "Non-Steam Badges",
+      "version": "0.1.0",
+      "sha256": "9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131",
+      "shim": null,
+      "calls": [
+        {
+          "method": "get_all_store_mappings",
+          "result": {}
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {}
+        },
+        {
+          "method": "get_all_store_mappings",
+          "result": {}
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Non-Steam Badges",
+          "version": "0.1.0",
+          "load_type": 1,
+          "disabled": false
+        }
+      ],
+      "privateShortcuts": {
+        "actualUserHome": true,
+        "originalBackendUnmodified": true,
+        "originalBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+        "installedBackendSha256": "af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704",
+        "signedAppIdNormalized": false,
+        "storeClassification": false,
+        "missingAppIdSkipped": false,
+        "malformedVdfRefused": false,
+        "mappingsPreservedAcrossLoaderRestart": false,
+        "originalHardcodedHomeFailureReproduced": true,
+        "privateShortcutsPreserved": true,
+        "unchangedArchiveFiles": {
+          "LICENSE": "152ca0aa1e15489763b6d432702ed026c8f1768eda093429ea2e66c366ad756b",
+          "package.json": "74ff4a42daf4cfcf3baf74a626fc2bc2f88fa637fe586d23b523d5031bb73fbf",
+          "plugin.json": "528cc9b00cc8b0afa0fb690a18e90d44c44bf062e9f18b4c03c8bb58f10ce56b",
+          "README.md": "41d9d1775bc5fe61a46e7335ade85bdc1ace065589cbd1f0aceea3eec137a89e",
+          "dist/index.js": "f290b52ae62b4437e3f48d287d47a0f4f3eeb5dc35e55f29c12205454a103721",
+          "dist/index.js.map": "d304f2608749d51720411d64cea85c13319538265878215a88736a9dff708ddc",
+          "py_modules/vdf/vdict.py": "4b88f06f246abf1f7fec566dd9dcbf6a115dfd4e4a4a912265cb1e6173bf43d2",
+          "py_modules/vdf/__init__.py": "8287027feb42abc4d142566780f9b044e2a8164e8ae3139a45dceb27cb3db6c0",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "payloadSha256": "b342426af8686d61bff588ee426f931d0da91bae4134891dd069dfe0a2775001",
+        "ownedLoaderStops": [
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.21407604590058327,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessIdentitiesReaped": true,
+            "ownedProcessCount": 5
+          },
+          {
+            "returncode": 0,
+            "elapsedSeconds": 0.21434115571901202,
+            "signaledOnlyOwnedLoader": true,
+            "ownedProcessIdentitiesReaped": true,
+            "ownedProcessCount": 5
+          }
+        ],
+        "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: decky-nonsteam-badges\n[loader][INFO]: Loaded Non-Steam Badges (v0.1.0)\nDiagnostics: env_path=/home/tester/.local/share/frame-control/decky/plugins/decky-nonsteam-badges/.env, exists=False, debug_mode=False\nError building games mapping: [Errno 2] No such file or directory: '/home/deck/.steam/steam/userdata/'\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Non-Steam Badges (v0.1.0)\n[plugin][INFO]: Stopping response listener for Non-Steam Badges (v0.1.0)\nCalling Loader unload function for Non-Steam Badges (v0.1.0).\nAttempting to unload with plugin Non-Steam Badges (v0.1.0)'s \"_unload\" function.\n\nUnloaded Non-Steam Badges (v0.1.0)\n\n[plugin][INFO]: Plugin Non-Steam Badges (v0.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "loaderConsoleSha256": "84f1bf62d71d74878d4836d7670617b423f5331ab6986258d23ed7de2c4a3b5f",
+        "loaderConsoleErrorFree": false,
+        "browserVerified": false,
+        "steamPageBadgesVerified": false,
+        "steamSearchVerified": false,
+        "activeSteamAccountSelectionVerified": false,
+        "realFrameContacted": false,
+        "physicalControllerVerified": false
+      },
+      "result": "original hardcoded-home empty mapping failure reproduced; browser badges, active Steam account, Steam search, Frame and VR unverified"
+    }
+  ],
+  "observedRpcCounts": [
+    5,
+    3
+  ],
+  "jsonDecodeDiagnosticCounts": [
+    0,
+    0
+  ],
+  "jsonDiagnosticCauseProven": false,
+  "limits": [
+    "ARM64 current change pending",
+    "single synthetic numeric Steam account; real active-account selection unverified",
+    "upstream search TLS behavior unchanged; never called",
+    "Steam page badges/browser/Frame/controller unverified",
+    "disk/process observations source-bound; full container/process snapshot not retained"
+  ],
+  "focusedManagedE2e": {
+    "project": "framey-nonsteam-81bd3e47e2",
+    "testExit": 0,
+    "cleanupExit": 0,
+    "elapsedSeconds": 52.634,
+    "realFrameContacted": false,
+    "configurationSha256": "809769695f3b53b4afa5d2654a995284f309585cec8ef077103ce2d3a60e96f8",
+    "ownedContainersVolumesImagesAbsent": true,
+    "logSha256": "516146c25e112a4c6438d736b4f37bc41548777b62f0936a6f876d36e2579633",
+    "runnerSha256": "165f007889d48789a724094bb6bbe9a2b64b65103fb0dd0f670530cef5217af6",
+    "sourceSha256": {
+      "tests/e2e/test_framey.py": "6c8d0f9ce3b5e7e60640f2fe157e1fcc1dc3ec2f1cad59cc55a2c5efbf5da96d",
+      "tests/framey_official.py": "1dd35709125be5c52815de83bad87a5e1b439c58ffd755042a0feaf33892a71e",
+      "ui/frame_decky_store.py": "18b3ead3d3799762c8a28c97bc0bb5f4a2940dd64064497ab6bbae7394ea654d",
+      "ui/framey-compatibility.json": "3c50002d85f04a4cde82cde4800acc7639e02ff22281b291e08a023cc9df8df7"
+    },
+    "scope": "Only official Non-Steam Badges managed installation, receipt/backend digest, partial status and removal in owned fake-Frame; no native RPC/browser/hardware claim.",
+    "catalogFormattingAfterTest": "The final catalog preserves Unicode literally instead of equivalent JSON escapes. All 116 parsed records are identical to the tested catalog; the recorded source hash is the tested escaped representation."
+  }
+}
