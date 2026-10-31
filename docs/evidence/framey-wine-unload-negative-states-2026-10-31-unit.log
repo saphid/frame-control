@@ -1,0 +1,12 @@
+test_live_helper_still_owned_by_its_parent_is_not_orphan_evidence (test_framey_wine_unload_evidence.WineUnloadEvidence.test_live_helper_still_owned_by_its_parent_is_not_orphan_evidence) ... ok
+test_live_orphan_requires_the_exact_helper_to_remain (test_framey_wine_unload_evidence.WineUnloadEvidence.test_live_orphan_requires_the_exact_helper_to_remain) ... ok
+test_loader_failure_missing_shutdown_and_missing_forced_kill_are_rejected (test_framey_wine_unload_evidence.WineUnloadEvidence.test_loader_failure_missing_shutdown_and_missing_forced_kill_are_rejected) ... ok
+test_real_clean_positive_cannot_qualify_as_an_original_failure (test_framey_wine_unload_evidence.WineUnloadEvidence.test_real_clean_positive_cannot_qualify_as_an_original_failure) ... ok
+test_real_live_orphan_is_an_unclean_original_negative (test_framey_wine_unload_evidence.WineUnloadEvidence.test_real_live_orphan_is_an_unclean_original_negative) ... ok
+test_real_zombie_is_an_unclean_original_negative (test_framey_wine_unload_evidence.WineUnloadEvidence.test_real_zombie_is_an_unclean_original_negative) ... ok
+test_reused_process_identity_cannot_supply_either_failure_state (test_framey_wine_unload_evidence.WineUnloadEvidence.test_reused_process_identity_cannot_supply_either_failure_state) ... ok
+
+----------------------------------------------------------------------
+Ran 7 tests in 0.006s
+
+OK
