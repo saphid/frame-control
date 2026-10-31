@@ -1,0 +1,167 @@
+DEPRECATED: The legacy builder is deprecated and will be removed in a future release.
+            Install the buildx component to build images with BuildKit:
+            https://docs.docker.com/go/buildx/
+
+sha256:70ca1b168e74f499891ae5ab325f600ccd16341b6147024275d83c277e51e018
+PASS 68 store: actual Decky 3.3.0 discovery, two read-only native helper state replies and two parent-only zero-exit loader stops with reaped children; no install/uninstall, Frame or VR test
+Traceback (most recent call last):
+  File "/tmp/framey-native-integration283-mppkd9qczt/scripts/framey-test-decky-runtime.py", line 151, in <module>
+    main()
+  File "/tmp/framey-native-integration283-mppkd9qczt/scripts/framey-test-decky-runtime.py", line 138, in main
+    raise RuntimeError(f'Decky runtime case {plugin_id} {version or "store"} failed:\n{result.stdout}\n{result.stderr}')
+RuntimeError: Decky runtime case 68 store failed:
+
+[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues
+[main][INFO]: Starting Decky version v3.3.0
+[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins
+[updater][INFO]: Current branch is not set, determining branch from version...
+[updater][INFO]: Current version determined to be stable
+[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins
+[loader][INFO]: found plugin: decky-wine-cellar
+[loader][INFO]: Loaded Wine Cellar (v0.2.1)
+Wine Cellar main.py https://github.com/FlashyReese/decky-wine-cellar
+[backend] Settings path: /home/tester/.local/share/frame-control/decky/settings/decky-wine-cellar
+Starting Wine Cask (the Wine Cellar backend)...
+Wine Cask started with PID 23
+[Wine Cask] 2026-10-31 07:30:43 INFO Logging to: /home/tester/.local/share/frame-control/decky/logs/decky-wine-cellar/wine-cask.log
+[Wine Cask] 2026-10-31 07:30:43 INFO Using DECKY_USER_HOME: /home/tester
+[Wine Cask] 2026-10-31 07:30:43 INFO Looking for Steam directory in /home/tester
+[Wine Cask] 2026-10-31 07:30:43 INFO Found Steam directory: /home/tester/.local/share/Steam
+[Wine Cask] 2026-10-31 07:30:43 INFO Listening on: 127.0.0.1:42395
+[Wine Cask] 2026-10-31 07:30:44 ERROR Request error: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)
+caused by: error sending request for url (https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1)
+caused by: client error (Connect)
+caused by: dns error
+caused by: error resolving DNS
+caused by: failed to lookup address information: Temporary failure in name resolution
+[Wine Cask] 2026-10-31 07:30:44 ERROR full debug error: Request(
+    reqwest::Error {
+        kind: Request,
+        url: "https://api.github.com/repos/GloriousEggroll/proton-ge-custom/releases?per_page=100&page=1",
+        source: hyper_util::client::legacy::Error(
+            Connect,
+            ConnectError(
+                "dns error",
+                DnsError {
+                    inner: Custom {
+                        kind: Uncategorized,
+                        error: "failed to lookup address information: Temporary failure in name resolution",
+                    },
+                },
+            ),
+        ),
+    },
+)
+[Wine Cask] 2026-10-31 07:30:44 ERROR Unable to fetch new releases. No cached releases found.
+[Wine Cask] 2026-10-31 07:30:44 ERROR Request error: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)
+caused by: error sending request for url (https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1)
+caused by: client error (Connect)
+caused by: dns error
+caused by: error resolving DNS
+caused by: failed to lookup address information: Temporary failure in name resolution
+[Wine Cask] 2026-10-31 07:30:44 ERROR full debug error: Request(
+    reqwest::Error {
+        kind: Request,
+        url: "https://api.github.com/repos/luxtorpeda-dev/luxtorpeda/releases?per_page=100&page=1",
+        source: hyper_util::client::legacy::Error(
+            Connect,
+            ConnectError(
+                "dns error",
+                DnsError {
+                    inner: Custom {
+                        kind: Uncategorized,
+                        error: "failed to lookup address information: Temporary failure in name resolution",
+                    },
+                },
+            ),
+        ),
+    },
+)
+[Wine Cask] 2026-10-31 07:30:44 ERROR Unable to fetch new releases. No cached releases found.
+[Wine Cask] 2026-10-31 07:30:44 ERROR Request error: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)
+caused by: error sending request for url (https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1)
+caused by: client error (Connect)
+caused by: dns error
+caused by: error resolving DNS
+caused by: failed to lookup address information: Temporary failure in name resolution
+[Wine Cask] 2026-10-31 07:30:44 ERROR full debug error: Request(
+    reqwest::Error {
+        kind: Request,
+        url: "https://api.github.com/repos/dreamer/boxtron/releases?per_page=100&page=1",
+        source: hyper_util::client::legacy::Error(
+            Connect,
+            ConnectError(
+                "dns error",
+                DnsError {
+                    inner: Custom {
+                        kind: Uncategorized,
+                        error: "failed to lookup address information: Temporary failure in name resolution",
+                    },
+                },
+            ),
+        ),
+    },
+)
+[Wine Cask] 2026-10-31 07:30:44 ERROR Unable to fetch new releases. No cached releases found.
+[Wine Cask] 2026-10-31 07:30:44 ERROR Request error: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)
+caused by: error sending request for url (https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1)
+caused by: client error (Connect)
+caused by: dns error
+caused by: error resolving DNS
+caused by: failed to lookup address information: Temporary failure in name resolution
+[Wine Cask] 2026-10-31 07:30:44 ERROR full debug error: Request(
+    reqwest::Error {
+        kind: Request,
+        url: "https://api.github.com/repos/CachyOS/proton-cachyos/releases?per_page=100&page=1",
+        source: hyper_util::client::legacy::Error(
+            Connect,
+            ConnectError(
+                "dns error",
+                DnsError {
+                    inner: Custom {
+                        kind: Uncategorized,
+                        error: "failed to lookup address information: Temporary failure in name resolution",
+                    },
+                },
+            ),
+        ),
+    },
+)
+[Wine Cask] 2026-10-31 07:30:44 ERROR Unable to fetch new releases. No cached releases found.
+[Wine Cask] 2026-10-31 07:30:45 INFO Incoming TCP connection from: 127.0.0.1:53726
+[Wine Cask] 2026-10-31 07:30:45 INFO WebSocket connection established: 127.0.0.1:53726
+[Wine Cask] 2026-10-31 07:30:45 INFO Received a message from 127.0.0.1:53726
+[Wine Cask] 2026-10-31 07:30:45 INFO Type: UpdateState
+[Wine Cask] 2026-10-31 07:30:45 INFO 127.0.0.1:53726 disconnected
+Wine Cellar Framey socket closed: 0 bytes read on a total of 2 expected bytes
+[main][INFO]: Shutting down...
+[main][INFO]: Disabling reload...
+[main][INFO]: Killing plugins...
+[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)
+[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)
+[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!
+[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s
+[main][INFO]: Disconnecting from WS...
+[main][INFO]: Cancelling tasks...
+[main][INFO]: Shutdown finished.
+======== Running on http://127.0.0.1:1337 ========
+(Press CTRL+C to quit)
+
+Traceback (most recent call last):
+  File "/repo/tests/decky-runtime/check.py", line 1578, in <module>
+    main()
+    ~~~~^^
+  File "/repo/tests/decky-runtime/check.py", line 860, in main
+    report.update(wine_cellar_private.probe(backend, helper, loader, env, log, processes,
+                  ~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        current, rpc, until_ready, regression=args.reproduce_wine_cellar_unload_regression))
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/repo/tests/decky-runtime/wine_cellar_private.py", line 84, in probe
+    observation = stop(backend, helper, log, regression=regression)
+  File "/repo/tests/decky-runtime/wine_cellar_private.py", line 61, in stop
+    assert not clean and forced == 1 and any(s['child'] and s['child']['state'] == 'Z'
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                              for s in samples), observation
+                                              ^^^^^^^^^^^^^^^^^
+AssertionError: {'loaderPid': 9, 'helperPid': 23, 'childBefore': {'state': 'S', 'parent': 21, 'start': '348259376'}, 'ancestors': [21, 20, 10, 9], 'parentOnlySignal': True, 'loaderReturncode': 0, 'seconds': 5.227, 'samples': [{'seconds': 0.0, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.051, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.101, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.151, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.202, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.252, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.302, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.352, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.403, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.453, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.503, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.554, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.604, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.654, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.704, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.755, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.805, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.855, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.905, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 0.956, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.006, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.056, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.107, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.157, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.207, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.257, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.308, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.358, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.408, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.458, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.509, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.559, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.609, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.659, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.709, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.76, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.81, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.86, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.91, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 1.961, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.011, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.061, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.111, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.162, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.212, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.262, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.313, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.363, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.413, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.463, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.514, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.564, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.614, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.664, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.715, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.765, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.815, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.865, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.916, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 2.966, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.016, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.066, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.117, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.167, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.217, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.267, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.317, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.368, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.418, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.468, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.518, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.569, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.619, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.669, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.719, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.77, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.82, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.87, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.92, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 3.971, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.021, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.071, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.121, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.171, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.222, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.272, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.322, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.373, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.423, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.473, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.523, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.573, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.624, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.674, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.724, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.775, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.825, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.875, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.925, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 4.975, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 5.026, 'child': {'state': 'S', 'parent': 21, 'start': '348259376'}}, {'seconds': 5.076, 'child': {'state': 'S', 'parent': 1, 'start': '348259376'}}, {'seconds': 5.126, 'child': {'state': 'S', 'parent': 1, 'start': '348259376'}}, {'seconds': 5.176, 'child': {'state': 'S', 'parent': 1, 'start': '348259376'}}], 'exactChildRemaining': True, 'forcedPluginKills': 1, 'console': '[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Wine Cellar (v0.2.1)\n[plugin][INFO]: Stopping response listener for Wine Cellar (v0.2.1)\n[plugin][WARNING]: Plugin Wine Cellar (v0.2.1) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Wine Cellar (v0.2.1) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n', 'consoleSha256': 'aac314421bc83af115b5246516020f1b3a576fa3d85e639487e8491a9343db5d', 'cleanShutdownVerified': False, 'expectedRegression': True}
+
