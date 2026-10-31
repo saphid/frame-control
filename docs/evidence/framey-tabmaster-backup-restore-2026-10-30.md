@@ -79,3 +79,41 @@ that matrix, refresh the earlier fake-Frame installer or ownership replay, or
 replace exact final-head and #500-base checks/e2e/native/package gates. No new
 backup-path confinement, general schema validation, browser/backend integration,
 Steam editing, managed Frame, wearer/controller or release proof is claimed.
+
+## Refresh onto main d3ae60e and base500 8fea583a
+
+Normally merged #500 `8fea583a514be5ba8a0ce6b435b6359068c63af4`, including
+main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f`, at tested source
+`ddabdc4982e4a45af67b3e26fef3c4b8b6f6614c`. The two catalog/generated-doc
+conflicts were resolved by retaining the restore scope and dropping only the
+unsupported shutdown-phase attribution for the JSON diagnostic. The stack is
+still #501 on #500. Main and base500 hosted gates were pending during this
+local run; this integration does not qualify either base or authorize a merge.
+
+The restore repair diff and complete repaired/original probe remain unchanged.
+All 31 main probe bodies, all 116 status/install policies, the other 115 complete
+catalog records and unrelated production input/IPC sources are preserved.
+All 94 focused host tests, generated compatibility documentation and diff checks
+pass. The complete focused test output is retained with the new native report.
+
+A fresh isolated AMD64 replay with digest-pinned published Decky 3.3.0 verifies
+47 repaired and 48 unchanged-original settings RPCs, original/managed backend
+bytes, the exact archive and all 15 native-source fingerprints. Private valid
+backup restoration, malformed/non-object refusal and restored-state restart
+persistence pass; the unchanged original still refuses a valid backup. Four
+parent-only loader stops return zero. No newly owned fixture container or image
+tag remains. PID/start-time reaping remains a source-bound assertion without a
+complete retained process snapshot.
+
+The integrated console capture retains the complete available post-cleanup
+text and hashes for both cases, each with one JSON diagnostic. Generic cleanup
+observes already-exited loaders without claiming another signal. Global clean
+shutdown, an error-free console and the diagnostic's phase/cause remain
+unverified. The [refresh audit](framey-tabmaster-restore-maind3ae60e-refresh-2026-10-31.json)
+and [raw reports and unit log](framey-tabmaster-restore-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+record these observations and limits.
+
+The final head needs fresh checks/e2e, native AMD64/ARM64, ownership and every
+triggered package mode, plus exact-main and #500-base qualification. Prior-head
+hosted evidence is historical. Compatibility stays partial; no new browser,
+Steam, managed Frame, wearer/controller or release proof is claimed.
