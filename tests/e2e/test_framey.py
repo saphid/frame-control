@@ -244,7 +244,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      frame_decky_store.FILESERVER_BINARIES[arch])
                 if plugin['id'] == 68:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['wine-cellar-native-bridge'])
+                    self.assertEqual(receipt['compatShims'], ['wine-cellar-native-bridge', 'wine-cellar-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],

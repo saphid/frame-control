@@ -70,6 +70,8 @@ def main():
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
+    parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -109,6 +111,22 @@ def main():
         assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+    if args.reproduce_deck_progress_unload_regression:
+        assert record['id'] == 134
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_wine_cellar_unload_regression:
+        assert record['id'] == 68
+        import gzip
+        previous = gzip.decompress((ROOT/'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz').read_bytes())
+        assert hashlib.sha256(previous).hexdigest() == '44841fea9318bb975aebaf1024ad14c912e5d5fe8b6fef561671e6a0e9559411'
+        (plugin/'main.py').write_bytes(previous)
+    if record['id'] == 68:
+        expected = (previous if args.reproduce_wine_cellar_unload_regression else
+                    (ROOT/'ui/vendor/wine-cellar-0.2.1/main.py').read_bytes())
+        assert (plugin/'main.py').read_bytes() == expected, 'installed Wine Cellar source must match the tested lifecycle'
+        assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
     # Exercise the production manifest's API convention, never import Plugin ourselves.
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
@@ -221,7 +239,154 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'bluetooth-private-bluez':
+            if case['probe'] == 'ludusavi-dependency-discovery':
+                import ludusavi_private
+                report['dependencyDiscovery'] = ludusavi_private.exercise(
+                    current, plugin, data, record, backend, loader, env, log,
+                    processes, until_ready, rpc)
+                report['result'] = ('published Decky missing dependency report, bounded slow discovery, '
+                    'private executable fallback, restart and original negative regression passed; '
+                    'real Ludusavi backup/restore/cloud, browser and VR unverified')
+            elif case['probe'] == 'deck-progress-private-tags':
+                import base64
+                # Only private SQLite settings/manual tags are exercised. Do
+                # not call Steam sync, HLTB search or automatic tagging RPCs.
+                initial = until_ready(lambda: current('get_settings').get('settings'),
+                                      'private Deck Progress database')
+                assert initial == dict(auto_tag_enabled=True, in_progress_threshold=30,
+                    cache_ttl=7200, source_installed=True, source_non_steam=True, source_all_owned=True)
+                assert current('get_game_tag', '424242') == dict(success=True, tag=None)
+                settings = dict(auto_tag_enabled=False, in_progress_threshold=75,
+                    cache_ttl=1800, source_installed=False, framey_private_label='Private tags')
+                assert current('update_settings', settings) == dict(success=True)
+                updated = current('get_settings')
+                assert updated['success'] is True
+                for key, value in settings.items():
+                    assert updated['settings'][key] == value
+                assert current('set_manual_tag', {'appid':'424242', 'tag':'completed'}) == dict(success=True)
+                assert current('set_manual_tag', '434343', 'mastered') == dict(success=True)
+                def tag(appid, expected):
+                    result = current('get_game_tag', appid)
+                    assert result['success'] is True
+                    assert result['tag']['appid'] == appid and result['tag']['tag'] == expected
+                    assert result['tag']['is_manual'] is True
+                    return result['tag']
+                first, other = tag('424242', 'completed'), tag('434343', 'mastered')
+                for params, error in [({'appid':'424242', 'tag':'invalid'}, 'Invalid tag'),
+                                      ({'appid':'', 'tag':'dropped'}, 'Missing appid'),
+                                      ({'appid':'424242'}, 'Missing tag')]:
+                    result = current('set_manual_tag', params)
+                    assert result['success'] is False and error in result['error']
+                assert tag('424242', 'completed') == first
+                databases = list(base.rglob('game_tracker.db'))
+                assert len(databases) == 1
+                database = databases[0]
+                assert database.is_relative_to(home) and not database.is_symlink()
+                def rows():
+                    with sqlite3.connect(database.as_uri()+'?mode=ro', uri=True) as db:
+                        return dict(tags=db.execute(
+                            'SELECT appid,tag,is_manual FROM game_tags ORDER BY appid').fetchall(),
+                            settings=db.execute('SELECT key,value FROM settings ORDER BY key').fetchall())
+                before = rows()
+                assert before['tags'] == [('424242','completed',1),('434343','mastered',1)]
+                raw_settings = dict(before['settings'])
+                assert raw_settings['auto_tag_enabled'] == 'false'
+                assert raw_settings['in_progress_threshold'] == '75'
+                assert raw_settings['framey_private_label'] == 'Private tags'
+                stops = []
+                def stop_progress_loader():
+                    def identity(pid):
+                        try:
+                            fields = Path('/proc/'+str(pid)+'/stat').read_text().rsplit(')',1)[1].split()
+                            return int(fields[1]), int(fields[19])
+                        except (FileNotFoundError, ProcessLookupError):
+                            return None
+                    snapshot = {int(p.name):identity(int(p.name)) for p in Path('/proc').iterdir() if p.name.isdigit()}
+                    owned = {backend.pid}
+                    while True:
+                        children = {pid for pid,value in snapshot.items() if value and value[0] in owned}
+                        if children <= owned:
+                            break
+                        owned |= children
+                    identities = {pid:snapshot[pid] for pid in owned}
+                    assert len(identities) >= 2 and all(identities.values())
+                    started = time.monotonic()
+                    backend.send_signal(signal.SIGTERM)
+                    assert backend.wait(timeout=8) == 0
+                    assert all(identity(pid) != value for pid,value in identities.items())
+                    stops.append(dict(returncode=backend.returncode,elapsedSeconds=time.monotonic()-started,
+                        signaledOnlyOwnedLoader=True,ownedProcessIdentitiesReaped=True,
+                        ownedProcessCount=len(identities)))
+                stop_progress_loader()
+                assert rows() == before
+                stopped_database_sha = hashlib.sha256(database.read_bytes()).hexdigest()
+                stopped_database = base64.b64encode(database.read_bytes()).decode()
+                backend = subprocess.Popen([str(loader)],env=env,stdout=log,stderr=log,start_new_session=True)
+                processes.append(backend)
+                restarted = until_ready(lambda:rpc('loader/get_plugins'),'restarted Deck Progress discovery')
+                assert len(restarted) == 1 and restarted[0]['name'] == record['name']
+                restored = until_ready(lambda:current('get_settings').get('settings'),'restarted private database')
+                assert restored == updated['settings']
+                assert tag('424242','completed') == first and tag('434343','mastered') == other
+                assert current('remove_tag', {'appid':'424242'}) == dict(success=True)
+                assert current('get_game_tag','424242') == dict(success=True,tag=None)
+                assert tag('434343','mastered') == other
+                final = rows()
+                assert final['tags'] == [('434343','mastered',1)] and final['settings'] == before['settings']
+                stop_progress_loader()
+                assert rows() == final
+                unchanged = {}
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for item in original.infolist():
+                        if not item.is_dir():
+                            name = item.filename.split('/',1)[1]
+                            raw = (plugin/name).read_bytes()
+                            if name == 'main.py' and not args.reproduce_deck_progress_unload_regression:
+                                assert raw.endswith(original.read(item))
+                                assert raw[:-len(original.read(item))] == b'# Frame Control: repair child IPC EOF for the exact Deck Progress 1.3.6 archive.\nfrom framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                            else:
+                                assert raw == original.read(item)
+                                unchanged[name] = hashlib.sha256(raw).hexdigest()
+                if not args.reproduce_deck_progress_unload_regression:
+                    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                log.flush()
+                console = (home/'runtime.log').read_text()
+                assert console.count('Starting Decky version v3.3.0') == console.count('[main][INFO]: Shutdown finished.') == 2
+                for marker in ('Import failed:', 'Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                               'Task was destroyed but it is pending', 'Bad file descriptor'):
+                    assert marker not in console, marker
+                forced_kills = console.count('Sending SIGKILL!')
+                if args.reproduce_deck_progress_unload_regression:
+                    assert forced_kills == 2
+                    assert console.count('still alive 5 seconds after stop request') == 2
+                    report['expectedRegression'] = dict(success=False,phase='plugin unload',
+                        originalPluginUnmodified=True,forcedPluginKills=forced_kills,
+                        qualifiedCompatibilityPass=False)
+                else:
+                    assert forced_kills == 0
+                    assert 'still alive 5 seconds after stop request' not in console
+                report['privateTags'] = dict(scopedChildIpcEofRepair=not args.reproduce_deck_progress_unload_regression,
+                    originalBackendRetainedAsExactSuffix=not args.reproduce_deck_progress_unload_regression,
+                    publishedBackendUnmodified=args.reproduce_deck_progress_unload_regression,
+                    ipcAdapterSha256=(None if args.reproduce_deck_progress_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()),
+                    forcedPluginKills=forced_kills,settingsBeforeRestart=before,settingsAfterSelectedDelete=final,
+                    settingsAndManualTagsPersistedAcrossRestart=True,invalidTagAndMissingArgumentsRefused=True,
+                    selectedDeletePreservedOtherTag=True,independentReadonlySqliteReadback=True,
+                    databaseRelativePath=str(database.relative_to(home)),stoppedDatabaseSha256=stopped_database_sha,
+                    stoppedDatabaseBase64=stopped_database,
+                    finalDatabaseSha256=hashlib.sha256(database.read_bytes()).hexdigest(),
+                    finalDatabaseBase64=base64.b64encode(database.read_bytes()).decode(),
+                    unchangedPublishedFiles=unchanged,ownedLoaderStops=stops,loaderConsole=console,
+                    loaderConsoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                    jsonDecodeDiagnosticCount=console.count('Expecting value: line 1 column 1 (char 0)'),
+                    loaderConsoleErrorFree=False,steamLibraryVerified=False,automaticTaggingVerified=False,
+                    hltbSearchVerified=False,browserVerified=False,realFrameContacted=False,physicalControllerVerified=False)
+                report['result'] = ('managed child-IPC EOF repair with published Decky API1 private settings/manual tags, invalid-input refusals, '
+                    'SQLite readback and restart persistence passed; Steam, automatic tags, HLTB, browser and Frame unverified')
+                if args.reproduce_deck_progress_unload_regression:
+                    report['result'] = 'original unmodified Deck Progress two forced unload kills reproduced; lifecycle failed, not a qualified compatibility pass'
+            elif case['probe'] == 'bluetooth-private-bluez':
                 report['privateBluez'] = bluetooth_bluez.exercise(
                     current, plugin, io.BytesIO(data), record, backend, private_bluez, log)
                 report['result'] = ('published Decky API1 discovery and unmodified backend, private BlueZ '
@@ -844,17 +1009,13 @@ def main():
                 machine = 183 if __import__('platform').machine() == 'aarch64' else 62
                 assert helper.read_bytes()[:4] == b'\x7fELF'
                 assert int.from_bytes(helper.read_bytes()[18:20], 'little') == machine
-                token = until_ready(lambda: current('framey_ws_open'), 'private Wine Cellar helper')
-                assert isinstance(token, str) and len(token) == 32, token
-                assert current('framey_ws_send', token, '{"type":"GetState"}') is None
-                reply = until_ready(lambda: next((json.loads(message) for message in
-                    current('framey_ws_poll', token)['messages'] if json.loads(message).get('type') == 'UpdateState'),
-                    None), 'read-only Wine Cellar state')
-                assert reply['app_state']['installed_tools'] == [], reply
-                assert current('framey_ws_close', token) is None
-                report['result'] = ('actual Decky 3.3.0 discovery, managed native helper and fixed-origin '
-                                    'read-only state RPC passed against private empty Steam home; '
-                                    'no install/uninstall, real library or VR test')
+                helper_digest = hashlib.sha256(helper.read_bytes()).hexdigest()
+                assert helper_digest == (frame_decky_store.WINE_CELLAR_AARCH64 if machine == 183
+                                         else frame_decky_store.WINE_CELLAR_ORIGINAL)
+                report['helperSha256'] = helper_digest
+                import wine_cellar_private
+                report.update(wine_cellar_private.probe(backend, helper, loader, env, log, processes,
+                    current, rpc, until_ready, regression=args.reproduce_wine_cellar_unload_regression))
             elif case['probe'] == 'deck-settings-readonly':
                 # Never upload images, send a token, or change game settings.
                 # The container has no network or host Steam library access.

@@ -39,6 +39,14 @@ def main():
     settings.write_text('not JSON')
     pid_path = home/'foreign-watchdog.pid'
     pid_path.write_text('unrelated PID marker')
+    for expected_parent in ('invalid', str(os.getpid()+1)):
+        rejected = subprocess.run([str(helper), str(settings), str(pid_path), str(home/'absent-log')],
+            env=dict(os.environ, FRAMEY_SYNCTHING_OWNER_PID=expected_parent),
+            capture_output=True, text=True, timeout=5)
+        assert rejected.returncode != 0 and 'parent unavailable' in rejected.stderr, rejected.stderr
+        assert pid_path.read_text() == 'unrelated PID marker'
+        assert not pid_path.with_suffix('.framey-lock').exists()
+        assert not (home/'absent-log').exists()
     with socket.socket() as foreign:
         foreign.bind(('127.0.0.1', 58384))
         foreign.listen()
@@ -103,7 +111,8 @@ def main():
     worker.start()
     report = {'archiveSha256':DIGEST, 'pythonSha256':hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest(),
               'helperSha256':hashlib.sha256(binary.read_bytes()).hexdigest(), 'installerEnabled':False,
-              'independentState':{'listenerConflictBeforeSettingsOrService':True}}
+              'independentState':{'listenerConflictBeforeSettingsOrService':True,
+                                  'invalidOrMismatchedParentBeforeOwnershipOrSettings':True}}
     with (home/'candidate-runtime.log').open('w+') as log:
         backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
         forced = False
@@ -204,8 +213,36 @@ def main():
                 duplicateOwnershipRefused=True, activeReloadCount=3, unrelatedProcessPreserved=True)
             report['independentState'].update(privateSocketMode=True, privateHttpProxy=True,
                 privateFixtureAuthErrorPreserved=True, privateSocketCleanupOnReload=True)
+            # Exercise Decky's documented five-second SIGKILL fallback, rather
+            # than relying on the intermittent missed-unload failure from CI.
+            # The helper must die with its exact owning plugin process, even
+            # when Python cannot run _unload or TemporaryDirectory cleanup.
+            parent = int(next(line.split(':', 1)[1].strip() for line in
+                              Path(f'/proc/{old}/status').read_text().splitlines()
+                              if line.startswith('PPid:')))
+            assert parent not in (1, os.getpid(), backend.pid) and alive(parent)
+            parent_command = Path(f'/proc/{parent}/cmdline').read_bytes()
+            assert b'Syncthing' in parent_command, parent_command
+            forced_log_start = Path(log.name).stat().st_size
+            os.kill(parent, signal.SIGSTOP)
+            rpc('loader/reload_plugin', 'Syncthing')
+            new = until_ready(lambda: (pid if (pid := current_pid()) != old else None),
+                              'reload after forced plugin termination')
+            assert until_ready(lambda: not alive(old), 'helper stopped with killed plugin')
+            assert not alive(parent) and unrelated.poll() is None
+            forced_console = Path(log.name).read_bytes()[forced_log_start:].decode('utf-8')
+            assert 'still alive 5 seconds after stop request! Sending SIGKILL!' in forced_console, forced_console
+            report['forcedReloadConsole'] = forced_console
+            # This directory belonged to the killed Python owner; only the
+            # isolated probe cleans it, after proving its helper has exited.
+            assert old_socket.parent.name.startswith('framey-syncthing-')
+            shutil.rmtree(old_socket.parent)
+            old, old_socket = new, owned_socket(new)
+            report['independentState'].update(forcedPluginTerminationReleasesHelper=True,
+                forcedReloadPreservesUnrelatedProcess=True, forcedOwnerTempCleanedByFixture=True,
+                publishedDeckyForcedTerminationLogVerified=True)
             report['result'] = ('published Decky discovery, disabled defaults, native listener/ownership conflicts, '
-                'owned restart, three reloads and private-socket HTTP transport passed; '
+                'owned restart, three normal reloads, forced plugin termination/reload and private-socket HTTP transport passed; '
                 'the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified')
         except BaseException:
             log.flush()
