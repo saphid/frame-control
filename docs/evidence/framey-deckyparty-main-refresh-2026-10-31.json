@@ -1,0 +1,98 @@
+{
+  "at": "2026-10-31T12:30:18.335126+00:00",
+  "sourceRevision": "713e1692c48e6f89663c44786439e54141861af5",
+  "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+  "priorHead": "8d5fc0c535e46fd8bebc0c997b30c392a16dd011",
+  "sourceAudit": {
+    "at": "2026-10-31T12:25:38.671974+00:00",
+    "sourceRevision": "713e1692c48e6f89663c44786439e54141861af5",
+    "baseMain": "1ac29413186fb29d5844ee9ad1c5c6fd36eeac27",
+    "priorHead": "8d5fc0c535e46fd8bebc0c997b30c392a16dd011",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorDeckypartyBodyPreserved": true,
+    "tabmasterRuntimeBodyMatchesCurrentMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleAndInventoryUnchanged": true
+  },
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "2e3e6e27fed8441c82438bfae737904a60f3276f648157146d9ef91435b90f42",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "c90891af2c1d3f80e6009b9905e6212e3367b843e7f304928ab0b750f684d18d",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "da2f2fe9dd5b704f30a53c14db91cf1a022ae7e12a9460549165bb820a2cc737",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "145adc5d412479c706f17330a178bddbfaedfb081c23a2c645195247f26b1a00",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "nativeSourceFingerprints": 16,
+  "archiveSha256": "193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf",
+  "backendSha256": "ace5c277fc010ebc102ba731c479a478e11aa004f763755c8e5b298a4a2c0734",
+  "adapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unmodifiedArchiveFiles": {
+    "LICENSE": "d9bbb2eef9907fb42eac3cc7ad90d33608dac47e1cf618ac0088c8123be5fbf1",
+    "package.json": "a06f1f1fe71cd7d088a26b038dc1e79541177d37fdb62c037dc85e8c8c6fd656",
+    "plugin.json": "2d52baaf95ecc0828f97809278b56296d2e5174f2bbfc205bade21c47632164f",
+    "README.md": "d2122fcdd8dc3c6ba169f3c81623e47a0ef73a99b8a7d39aa374c5f826943756",
+    "dist/index.js": "72295c05f3ce33c5b544d12b653dfe2c8aa833b95a79c8ca152b35b202059a62",
+    "bin/copyparty-sfx.py": "e88f0327739c85dcd382048244942c668669cc2dd92db64e1aebf425981f7310"
+  },
+  "deckypartyRpcCounts": [
+    15,
+    8
+  ],
+  "repairedReloadSeconds": [
+    0.397,
+    0.367,
+    0.367
+  ],
+  "previousForcedReloadSeconds": 5.273,
+  "originalUnloadHookAndOwnedCleanupVerified": true,
+  "tabmasterRpcCounts": [
+    47,
+    48
+  ],
+  "tabmasterRestorePositiveAndPublishedSourceNegativeVerified": true,
+  "tabmasterExpectedJsonDiagnosticRetained": true,
+  "focusedTests": 84,
+  "focusedSkips": 0,
+  "fullUnitTests": 1943,
+  "fullUnitSeconds": 245.3,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "siteSkips": 0,
+  "installerTestMethods": 1,
+  "installerFixtures": 37,
+  "installerSkips": 0,
+  "installerOwnedCleanupVerified": true,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "globalCleanPluginShutdownVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local native AMD64 only; fresh exact-head hosted CI/e2e, native AMD64/ARM64, ownership, PC, every triggered package mode and exact-main gates remain required.",
+    "Native containers/images are cleaned by the frozen runner; explicit native process cleanup is checked in the reports. The installer has an independent Docker-resource absence check.",
+    "The installer test covers 37 pins without executing official backends. It is not the full e2e or 116-plugin suite.",
+    "DeckyParty retains offline IP discovery errors; TabMaster retains its expected malformed-JSON diagnostic. This is not globally clean/error-free runtime proof.",
+    "No LAN/HTTPS, browser/panel, Steam CEF, real Frame, wearer/controller or release proof."
+  ],
+  "rawJsonSha256": "4000a016913106abffd3d90518a6783a02874ebaa8556528bdbea887536f7f5c",
+  "rawGzipSha256": "bd52325ea42d98b05d7b8bf9cef69f4ddce832790893c1452de8cf8c983d152e"
+}

@@ -1095,7 +1095,9 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['deckyparty-user-lifecycle'])
+        self.assertEqual(receipt['compatShims'], ['deckyparty-user-lifecycle', 'deckyparty-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             for name in ('LICENSE', 'plugin.json', 'dist/index.js', 'bin/copyparty-sfx.py'):
                 self.assertEqual((folder/name).read_bytes(), original.read('Decky-CP/'+name))
@@ -1109,6 +1111,8 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('install', changed.getvalue(), **args)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
 
     def test_exact_shotty_archive_gets_isolated_click_import(self):
         from framey_official import PLUGINS, archive as official_archive
