@@ -439,7 +439,7 @@ class AuthenticatedRuntimeReadiness(unittest.TestCase):
 
 
 class PrivateCefDiagnostics(unittest.TestCase):
-    def run_fixture(self, scenario):
+    def run_fixture(self, scenario, document=None):
         import re
         import shutil
         import subprocess
@@ -447,7 +447,7 @@ class PrivateCefDiagnostics(unittest.TestCase):
         if executable is None:
             self.skipTest('Node is required for fixture JavaScript behavior')
         gateway = load('private_cef_diagnostics', ROOT/'tests/decky-runtime/syncthing_http.py')
-        source = re.search(r'<script>(.*)</script>', gateway.CEF, re.S).group(1)
+        source = re.search(r'<script>(.*)</script>', document or gateway.CEF, re.S).group(1)
         source = source.replace('__FIXTURE_TOKEN__', json.dumps('private-fixture-auth'))
         harness = r'''
 const assert=require('node:assert/strict'),vm=require('node:vm');
@@ -481,6 +481,40 @@ console.log(JSON.stringify({records:context.fixtureRpcTrace,overflow:context.fix
                                 timeout=15)
         self.assertEqual(result.returncode, 0, result.stderr[-4000:])
         return json.loads(result.stdout)
+
+    def test_terminal_timeout_keeps_rpc_stage_without_private_arguments(self):
+        import ast
+        gateway = load('terminal_trace_cef', ROOT/'tests/decky-runtime/syncthing_http.py')
+        path = ROOT/'tests/decky-runtime/terminal_http.py'
+        tree = ast.parse(path.read_text())
+        tree.body = [node for node in tree.body if isinstance(node, ast.FunctionDef)
+                     and node.name == 'cef_document']
+        scope = {'RPC_CEF': gateway.CEF, 'json': json}
+        exec(compile(tree, str(path), 'exec'), scope)
+        result = self.run_fixture(r'''
+const subscription=context.DeckyBackend.call('loader/call_plugin_method',
+ 'Decky Terminal','subscribe_terminal','private-fixture-argument');
+now=10;open(sockets[0]);
+const sent=sockets[0].sent.find(message=>message.type===0);
+assert.equal(sent.args[1],'subscribe_terminal');
+assert.equal(context.fixtureRpcTrace[0].outcome,'pending');
+// The backend did receive this call but never replied. A pre-Decky SSH
+// startup timeout would leave no subscribe_terminal record at all.
+now=20000;timers[0].callback();
+await assert.rejects(subscription,/Fixture Decky RPC timeout/);
+const unknown=context.DeckyBackend.call('loader/call_plugin_method',
+ 'Decky Terminal','private-fixture-argument','private-fixture-argument');
+const next=sockets[0].sent.filter(message=>message.type===0).at(-1);
+now=20005;answer(sockets[0],next.id,1,'private-response');
+assert.equal(await unknown,'private-response');
+''', document=scope['cef_document']('private-fixture-auth'))
+        self.assertEqual([row['method'] for row in result['records']],
+                         ['subscribe_terminal', 'other'])
+        self.assertEqual([row['outcome'] for row in result['records']],
+                         ['timed-out', 'succeeded'])
+        self.assertEqual(result['records'][0]['elapsedMilliseconds'], 20000)
+        self.assertEqual(result['socketCount'], 1)
+        self.assertFalse(result['overflow'])
 
     def test_one_socket_multiplexes_concurrent_requests_with_unique_ids(self):
         result = self.run_fixture(r'''

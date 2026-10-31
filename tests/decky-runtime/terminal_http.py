@@ -27,6 +27,11 @@ from syncthing_service import stop_decky_service
 from terminal_status_diagnostic import RequestActivity
 
 
+CEF_TRACE = ('({records:fixtureRpcTrace,overflow:fixtureTraceOverflow,'
+             'socketCount:fixtureSocketCount,requestCount:fixtureRequestCount,'
+             'nativeEvents:fixtureNativeEvents})')
+
+
 def started_terminal_pid(requests):
     """Overlapping list requests may observe the same terminal before/after start."""
     listings = [entry['response']['result'] for entry in requests
@@ -47,7 +52,14 @@ def cef_document(token):
     # Production framey-events.js owns filtering, session bounds and cursors.
     needle = '  const reply=JSON.parse(event.data);'
     assert RPC_CEF.count(needle) == 1
-    document = RPC_CEF.replace(needle, needle+r'''
+    methods = "['get_settings_json','set_setting','framey_http_fetch']"
+    assert RPC_CEF.count(methods) == 1
+    terminal_methods = ['get_terminals', 'create_terminal', 'remove_terminal',
+        'get_terminal', 'get_config', 'subscribe_terminal', 'unsubscribe_terminal',
+        'send_terminal_buffer', 'change_terminal_window_size', 'set_terminal_title',
+        'send_terminal_input']
+    document = RPC_CEF.replace(methods, json.dumps(terminal_methods))
+    document = document.replace(needle, needle+r'''
   if(reply.type===5&&reply.event==='loader/plugin_event'){
    if(window.fixtureNativeEvents.length>=200)throw Error('Fixture event trace overflow');
    window.fixtureNativeEvents.push(reply.args[0]);
@@ -352,8 +364,7 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
                 assert path in assets, path
             report.update(success=True, stages=stages, screenshots=shots,
                 requests=requests, assets=assets, productionEventListenerCleanup=True,
-                sandboxedRendererPids=sandboxed_renderers(browser.pid),
-                fixtureCefTrace=cef.eval('({records:fixtureRpcTrace,overflow:fixtureTraceOverflow,socketCount:fixtureSocketCount,nativeEvents:fixtureNativeEvents})'))
+                sandboxedRendererPids=sandboxed_renderers(browser.pid))
     finally:
         report.update(stages=stages, screenshots=shots, requests=requests, assets=assets)
         if page:
@@ -374,6 +385,15 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         # the trace. Keep the separate CEF facade alive for read-only profiling.
         report['requestDrain'] = request_activity.drain()
         diagnostics_ready = report['requestDrain']['drained']
+        # Read the original replay before a later diagnostic issues its own
+        # RPC. A timed-out SSH child may never have reached Decky at all.
+        if cef:
+            try:
+                report['fixtureCefTrace'] = cef.eval(CEF_TRACE)
+                report['fixtureCefTrace']['handlersDrained'] = diagnostics_ready
+                report['fixtureCefTrace']['beforeFailureDiagnostics'] = True
+            except (OSError, frame_steam.Fail):
+                report['fixtureCefTraceUnavailable'] = True
         # Never run before the real request: warming imports here cannot make
         # the original replay pass. Its exception and failed outcome persist.
         status_failed = any(entry['kind'] == 'decky-status' and entry['outcome'] == 'failure'
@@ -430,6 +450,8 @@ await new Promise(requestAnimationFrame);await new Promise(requestAnimationFrame
         if stop_error is not None:
             raise stop_error
     assert report['requestDrain']['drained'], report['requestDrain']
+    if report['success']:
+        assert 'fixtureCefTrace' in report and not report['fixtureCefTrace']['overflow']
     assert all(report[key] for key in ('ownedTargetClosed', 'ownedBrowserReaped', 'httpServerStopped',
                'ownedDeckyServiceStopped', 'originalUnitRestored', 'ownedBundleRemoved', 'sshObserverRemoved'))
     return report
