@@ -1,0 +1,20 @@
+# Prefix Manager GitHub 1.0.2 integration with TabMaster main
+
+## Announcement
+
+Normally integrated main `13360b13017bbb1a16c5ee6472bb15b5ea996586` into #526 and retained both Prefix Manager and TabMaster shutdown regression controls. Published Decky 3.3.0 AMD64 verifies the separate GitHub 1.0.2 repair, unchanged store 1.0.1 behavior, TabMaster and Simple Timer controls. The full fake-Frame suite passes 53 tests with zero skips and all 116 catalog outcomes. GitHub 1.0.2 remains unverified in catalog lookup; no release or headset usability claim.
+
+## Verification
+
+- Corrected tested source `49c8f82d00e808e6cb90090c79e8d56553a6742a`. The initial unpushed merge commit retained checker conflict markers after a resolution-helper assertion; a normal follow-up commit corrected them without rewriting history. All tests and audits bind the corrected source. A whole-checker AST comparison preserves every main path outside the prior Prefix Manager change. All other installer branches, main's complete 116-row catalog/policies, e2e assertions, shared IPC adapter and both lifecycle helpers remain preserved. All 21 native input hashes bind the same source.
+- Full server: 1,952 tests, 15 platform/optional skips. Website: 18 tests, zero skips. Source syntax and diff checks pass.
+- Digest-verified published AMD64 loader: Prefix Manager store/repaired GitHub/prior-managed negative completes 39/42/40 RPCs. The repaired GitHub copy stops in [0.16372341802343726, 0.21419122209772468] seconds with no forced kills or owned survivors. It retains backups/outside markers/unrelated siblings, validates empty-library reads after restart and reproduces the prior forced-stop failure. Store 1.0.1's entire installed output and receipt are byte-identical to current main. The GitHub repair adds only the scoped EOF prefix/helper to the existing bounded user-path adaptation and removes the unnecessary root flag. No real prefixes or saves were used.
+- TabMaster repaired/original/prior-managed controls: 47/48/47 RPCs. Original unload hooks complete without forced kills in positive stops; restore refusal and prior forced-stop negatives remain reproduced. Simple Timer: 31/10/18 RPCs, four positive clean stops, decoded/hashed persistence snapshots and original/prior-managed negatives retained. Generic runtime-console clean status remains false; existing JSON/socket diagnostics are not erased.
+- Independent fresh store read using the production User-Agent still serves store 130 **1.0.1** at `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473`. GitHub separately publishes the 58,717-byte **v1.0.2** ZIP at `sha256:12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6`. Catalog output and compatibility table are unchanged.
+- Unique disposable fake-Frame project: 53 tests in 395.640 seconds, zero skips; all 116 cache ZIP hashes verify. Its 69 install/remove outcomes and 47 expected refusals, including reasons, exactly match the previous complete integration audit. Official plugin backends do not execute in this transport suite. Independent cleanup verifies owned resources/images/temp config gone and the pre-existing simulator/image tags preserved.
+
+[Audit](framey-prefix-manager-102-main13360b-tabmaster-integration-2026-10-31.json), [raw logs/readbacks/source hashes/controls/verifiers](framey-prefix-manager-102-main13360b-tabmaster-integration-2026-10-31-raw.json.gz), SHA-256 `dd60973fb6eb55423ee91c8ee1f2478d569a3dd6e85ec067a1d45116ea337fdc`. Prior old-head hosted AMD64/ARM64 and package qualification belongs to `9aaaa004` and does not qualify the new source.
+
+## Limits
+
+Combined-source hosted full CI/e2e/native ARM64 and every triggered package mode remain pending. Final exact-main/head feedback/mergeability gates are mandatory. No managed Frame, actual Steam CEF, real saves, worn/controller or release verification. No headset or schedule touched. Release remains held for every exact release-commit, tagged installer/checksum/publisher and locked real-Frame gate.
