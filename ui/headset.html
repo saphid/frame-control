@@ -430,7 +430,7 @@ window.addEventListener('message',async event=>{
   if(req.type==='framey:events'){
     if(req.session!==frameySession||!Number.isSafeInteger(req.id)||req.id<1||!Array.isArray(req.args)||
       req.args.length!==2||!Array.isArray(req.args[0])||req.args[0].length>32||
-      req.args[0].some(name=>typeof name!=='string'||!/^[A-Za-z0-9_:/.-]{1,128}$/.test(name))||
+      req.args[0].some(name=>typeof name!=='string'||!/^[A-Za-z0-9_#:/.-]{1,128}$/.test(name))||
       !Number.isSafeInteger(req.args[1])||req.args[1]<0)return;
     const pluginId=activeFrameyId,session=frameySession,receipt=activeFrameyReceipt?.sha256,
       reply={type:'framey:reply',id:req.id};
