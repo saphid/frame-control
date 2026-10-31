@@ -110,3 +110,35 @@ Main `1c1e4f588735dc3119f67f90ca8c33d3a90563cd` was merged normally at frozen so
 All 26 selected host tests pass, including actual subprocess failure/timeout retention and rejection of the exact historical unclean green-job console. A fresh local native AMD64 replay independently verifies the five runtime source hashes, current main’s unchanged three helper-build inputs, pinned Decky 3.3.0/Syncthing v2.1.7 executables and archive, literal two-way transfer and restart bytes, nine proxy HTTP 200 responses, and wrong-key 403. The loader exits zero, emits its plugin-stopped and single shutdown-complete records without any forbidden diagnostics, and reaps the owned helper. Full inner/outer console hashes match. No new owned container or image tag remains. The run took about 41 seconds.
 
 [Source-bound audit](framey-syncthing-main1c1e4f5-refresh-2026-10-31-audit.json), [raw report, complete available consoles, selected-test log and resource-delta result](framey-syncthing-main1c1e4f5-refresh-2026-10-31-raw.json.gz). The cached helper build was reused only after verifying its binary digest and all three current-main build inputs. This is a new local AMD64 replay, not a fresh Rust build or hosted/full-matrix qualification. Raw-peer service-bus/systemd, managed installation, browser integration, ARM64, real Frame and wearer/controller behavior remain unverified. Exact current-main CI and all fresh applicable head workflows, e2e, native/ownership/package gates and final review remain required before merge. No release qualification follows from this replay.
+
+
+## Refresh onto main d3ae60e
+
+Main `d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f` was merged normally at
+`faddd91bb067c0bfa95b45b1f04e248132732db4`, without conflicts or rewriting
+history. The runtime evidence-correction diff is unchanged. All product and
+catalog bytes and main's native probe/console sources remain identical to main.
+The signed-package gates for that main are still incomplete.
+
+All 38 focused runtime-evidence, candidate-ownership, native-console and Wine
+unload-evidence tests pass, including rejection and retention of the historical
+unclean shutdown console and real subprocess timeout/failure output. A fresh
+isolated AMD64 replay with pinned published Decky 3.3.0 and Syncthing v2.1.7
+passes two-way private transfer, restart/preservation, all nine literal proxy
+HTTP 200 responses, wrong-key 403 and the strict source-bound parent-only,
+zero-exit, complete-plugin-unload assertion. The raw loader exit code is not
+separately recorded in the report. Complete inner/outer console bytes and hashes
+are retained and independently checked; no global plugin-shutdown claim follows.
+
+The cached helper is reused only after its binary digest and all three current
+build-input hashes match. No new Rust build is claimed. All five report source
+fingerprints and additional launcher/Containerfile hashes match the tested
+source. No new owned runtime container or image tag remains.
+
+[Current refresh audit](framey-syncthing-maind3ae60e-refresh-2026-10-31-audit.json)
+and [raw report, full available consoles and unit log](framey-syncthing-maind3ae60e-refresh-2026-10-31-raw.json.gz)
+retain this result. Fresh final-head hosted checks/e2e, native AMD64/ARM64,
+ownership and all triggered package modes remain required. Previous-head
+hosted successes remain historical. The raw-peer fixture has no service bus;
+no new systemd, browser, managed-install, Frame or wearer/controller proof is
+claimed. Syncthing stays blocked and unselected, and no release is published.
