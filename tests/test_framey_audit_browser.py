@@ -19,6 +19,48 @@ spec.loader.exec_module(audit)
 
 
 class ReceiptBoundAudit(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the browser reply check')
+    def test_ludusavi_missing_fixture_rejects_every_write(self):
+        page_script = audit.PAGE.split('<script>', 1)[1].split('</script>', 1)[0]
+        for old, new in [('CATALOG_DATA', '[{"id":103,"name":"Decky Ludusavi"}]'),
+                         ('LIBRARY_DATA', 'null'), ('RUNNING_DATA', 'null'),
+                         ('BATTERY_FIXTURE', 'false'), ('NETWORK_FIXTURE', 'false'),
+                         ('NOTIFICATIONS_FIXTURE', 'false'), ('THEME_MUSIC_FIXTURE', 'false'),
+                         ('WINE_FIXTURE', 'false'), ('WINE_STATE', 'null'),
+                         ('ludusaviFixture=false', 'ludusaviFixture=true')]:
+            page_script = page_script.replace(old, new)
+        script = r'''
+const assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs');
+const messages=[],handlers={};
+const context={panel:{src:'',contentWindow:{postMessage:data=>messages.push(data)}},
+  run:{disabled:false},download:{},progress:{textContent:''},
+  addEventListener:(type,handler)=>{handlers[type]=handler},
+  setTimeout:callback=>{callback();return 1},URL,Blob,Number,Promise,JSON,Error,Object};
+context.window=context;
+vm.runInNewContext(fs.readFileSync(0,'utf8'),context);
+(async()=>{
+  await context.runAudit([103],1200);
+  assert.equal(context.panel.src,'/panel/103');
+  function call(method,args=[],legacy=false){
+    handlers.message({source:context.panel.contentWindow,
+      data:{type:'framey:call',id:1,method,args,legacy}});
+    return messages.at(-1);
+  }
+  assert.deepEqual(JSON.parse(JSON.stringify(call('get_ludusavi_version').result)),
+    {bin_path:null,version:''});
+  assert.equal(call('get_config',['auto_backup_enabled']).result,false);
+  assert.deepEqual(JSON.parse(JSON.stringify(call('get_config',['recent_games']).result)),[]);
+  for(const [method,args] of [['set_config',['auto_backup_enabled',true]],
+    ['install_ludusavi',[]],['backup',[]],['restore',[]],['cloud_sync',[]],
+    ['get_config',['unknown']],['get_ludusavi_version',['unexpected']]])
+    assert.match(call(method,args).error,/denies/);
+  assert.match(call('get_ludusavi_version',[],true).error,/backend method blocked/);
+})().catch(error=>{console.error(error);process.exitCode=1});
+'''
+        result = subprocess.run(['node', '-e', script], input=page_script,
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_speed_test_replay_is_opt_in_and_network_denied(self):
         default = audit.audit_prelude()
         self.assertIn("window.fetch=()=>Promise.reject(Error('Audit blocks plugin network'));", default)
