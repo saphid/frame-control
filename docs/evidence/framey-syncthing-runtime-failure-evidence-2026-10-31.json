@@ -1,0 +1,108 @@
+{
+  "at": "2026-10-31T04:53:33.338332+00:00",
+  "baseCommit": "8ebe9acda1cb1174120f07fb42b39afcc1ed8c9c",
+  "scope": "Native isolated Syncthing test diagnostics only; no product or helper change.",
+  "hostTests": {
+    "tests": 3,
+    "failures": 0,
+    "cases": [
+      "Real subprocess exit23 preserves >12000 output bytes",
+      "Timeout retains partial stdout and stderr and still raises",
+      "Success replaces stale console output"
+    ]
+  },
+  "positiveNativeAMD64": {
+    "runtime": "v2.1.7",
+    "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+    "helperSha256": "bef65e425ff895dd40e932fdae424376988e6abed17a9527e4eda383002a578d",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "independentState": {
+      "twoWaySync": true,
+      "runtimeRestartPreservedFiles": true,
+      "realRestProxy": true,
+      "realApiKeyErrorPreserved": true,
+      "completionPercent": 100,
+      "deckyShutdownStoppedOwnedHelper": true,
+      "allOwnedProcessesReaped": true
+    },
+    "markerBytes": 3239,
+    "markerSha256": "39fd6ed70748fda5b97fd6b75eeebe1ed9e1a077662c40fd813624420989320e",
+    "reverseBytes": 1677,
+    "reverseSha256": "ebc4a5eb1748124f2cb2ab2f419ae3eea04e5d6c5eee94de06661729f35e5fc7",
+    "realDeckyRpcProxy": {
+      "/rest/system/status": 200,
+      "/rest/system/version": 200,
+      "/rest/config/options": 200,
+      "/rest/config/devices": 200,
+      "/rest/stats/device": 200,
+      "/rest/config/folders": 200,
+      "/rest/stats/folder": 200,
+      "/rest/db/status?folder=framey-private": 200,
+      "/rest/system/connections": 200
+    },
+    "apiKeyErrorStatus": 403,
+    "installerEnabled": false,
+    "syncthingStopBudgetSeconds": 25,
+    "serviceManagerVerified": false,
+    "systemdBus": "absent; service setup stays disabled",
+    "realFrameContacted": false,
+    "loaderConsole": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/decky/plugins\n[loader][INFO]: found plugin: decky-syncthing\n[loader][INFO]: Loaded Syncthing (v0.2.7)\n[plugin][WARNING]: Plugin Syncthing (v0.2.7) is using legacy method calls. This will be removed in a future release.\nLoaded.\nCalling Loader unload function for Syncthing (v0.2.7).\nAttempting to unload with plugin Syncthing (v0.2.7)'s \"_unload\" function.\n\n[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Syncthing (v0.2.7)\nUnloaded Syncthing (v0.2.7)\n\n[plugin][INFO]: Plugin Syncthing (v0.2.7) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+    "loaderConsoleSha256": "62e1c3905b3ed33b2446f2f7bf7bd377db95a8bec38ccae1fd97bf5cdc11454a",
+    "runtimeStopElapsedUpperBoundsSeconds": [
+      10.087,
+      10.087
+    ],
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+    "runtimeArchiveUrl": "https://github.com/syncthing/syncthing/releases/download/v2.1.7/syncthing-linux-amd64-v2.1.7.tar.gz",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-runtime.py": "343622c00a68c2adc94ff92749909c3aa723a59159c36025cb684b14c87e4a08",
+      "tests/decky-runtime/syncthing_runtime.py": "a8c46a370ed08042695db324abe8cc48272c9b8470937ee7d33d0c18d6d97f80",
+      "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+      "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+    },
+    "probeConsoleSha256": "72c7be27753a4913dca90d24fd12a37b17d4b12af33b28bf142d83cf70aa4086"
+  },
+  "positiveCapturedConsoleSha256": "72c7be27753a4913dca90d24fd12a37b17d4b12af33b28bf142d83cf70aa4086",
+  "positiveCapturedConsoleBytes": 2700,
+  "negativeControl": {
+    "purpose": "Pause only the isolated owning plugin before loader stop. The actual loader returns without its SIGKILL fallback; the original helper remains sleeping with its plugin parent. This deliberate diagnostic negative control does not establish the cause of the historical CI failure.",
+    "injectedSource": {
+      "purpose": "Pause only the isolated owning plugin before loader stop. The actual loader returns without its SIGKILL fallback; the original helper remains sleeping with its plugin parent. This deliberate diagnostic negative control does not establish the cause of the historical CI failure.",
+      "fixtureSha256": "f3e61318649962738b4160d99071afde21da96851cf1eb1e1562494e10c5e524",
+      "injection": "        # Deliberate negative control, only in this owned local source copy.\n        parent = int(next(line.split(':', 1)[1].strip() for line in\n                          Path(f'/proc/{helper_pid}/status').read_text().splitlines()\n                          if line.startswith('PPid:')))\n        assert parent not in (1, os.getpid(), backend.pid)\n        assert b'Syncthing' in Path(f'/proc/{parent}/cmdline').read_bytes()\n        os.kill(parent, signal.SIGSTOP)\n"
+    },
+    "processExitCode": 1,
+    "helperSnapshot": {
+      "pid": 96,
+      "present": true,
+      "socketParentExists": true,
+      "status": {
+        "Name": "decky-syncthing",
+        "State": "S (sleeping)",
+        "Pid": "96",
+        "PPid": "95"
+      }
+    },
+    "consoleSha256": "a5e6c480f68f4df2d3c6753e0d570bca19eb4470e60ec80582a60ea8762ada47",
+    "consoleBytes": 14980,
+    "successfulResultJsonAbsent": true,
+    "nativeHelperShutdownFailurePreserved": true,
+    "loaderConsoleStartAndEndRetained": true,
+    "loaderForcedKillObserved": false
+  },
+  "productionAndCatalogMatchMain": true,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "limits": [
+    "Native AMD64 local proof; fresh final-head CI and ARM64 remain required.",
+    "The deliberate paused-owner negative control is not the historical CI failure cause.",
+    "The host timeout retains only output emitted before its timeout; it cannot collect the container's unflushed logs.",
+    "The existing forced peer-cleanup diagnostic still prints that peer log's tail; it is not exercised by this proof.",
+    "No managed Syncthing install, real Steam CEF, Frame, worn view, physical controller or release."
+  ],
+  "ownedNegativeSourceCopyAndNativeContainersCleaned": true
+}

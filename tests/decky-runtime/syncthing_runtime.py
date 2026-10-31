@@ -20,6 +20,26 @@ DIGEST = '27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4'
 SYNCTHING_STOP_SECONDS = 25
 
 
+def helper_snapshot(pid, socket_path):
+    """Read only the exact helper created by this isolated probe."""
+    snapshot = {'pid':pid, 'present':False}
+    if socket_path is not None:
+        snapshot['socketParentExists'] = socket_path.parent.exists()
+    if pid is None:
+        return snapshot
+    proc = Path(f'/proc/{pid}')
+    try:
+        snapshot['status'] = {key:value.strip() for line in (proc/'status').read_text().splitlines()
+                              for key, _, value in [line.partition(':')]
+                              if key in ('Name', 'State', 'Pid', 'PPid')}
+        snapshot['present'] = True
+    except FileNotFoundError:
+        pass
+    except OSError as error:
+        snapshot['readError'] = str(error)
+    return snapshot
+
+
 def main():
     assert os.getuid() == 1100 and Path('/repo').is_dir(), 'Use the isolated native runner'
     home = Path.home()
@@ -28,6 +48,7 @@ def main():
     binary.chmod(0o700)
     cases, processes, logs = [], [], []
     forced = False
+    helper_pid, socket_path = None, None
     try:
         for index in range(2):
             folder = home/f'peer-{index}'
@@ -199,11 +220,17 @@ def main():
         until_ready(lambda:not Path(f'/proc/{helper_pid}').exists(), 'owned helper shutdown')
         assert not socket_path.parent.exists()
         report['independentState']['deckyShutdownStoppedOwnedHelper'] = True
+        logs[-1].flush()
+        logs[-1].seek(0)
+        report['loaderConsole'] = logs[-1].read()
+        report['loaderConsoleSha256'] = hashlib.sha256(report['loaderConsole'].encode()).hexdigest()
     except BaseException:
+        print('OWNED_HELPER_SNAPSHOT '+json.dumps(helper_snapshot(helper_pid, socket_path)), file=sys.stderr)
         for log in logs:
             log.flush()
             log.seek(0)
-            print(log.read()[-5000:], file=sys.stderr)
+            print('=== '+str(Path(log.name).name)+' ===', file=sys.stderr)
+            print(log.read(), file=sys.stderr)
         raise
     finally:
         # Ask both peers to stop before waiting, so neither keeps a live peer
