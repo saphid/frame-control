@@ -201,6 +201,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 expected = MANAGED_FRONTENDS.get(plugin['id'], expected)
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 61:
+                    self.assertEqual(found[0]['compatShims'], ['tabmaster-json-file-restore'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertNotIn('Update or reinstall', found[0]['compatibility']['reason'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356')
                 if plugin['id'] == 96:
                     self.assertEqual(found[0]['compatShims'], ['simple-timer-lifecycle'])
                     self.assertEqual(found[0]['compatibility']['status'], 'works')
