@@ -111,6 +111,8 @@ def main():
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
+            if args.case is None or args.case == 130:
+                probes.append((130, '1.0.2', '--reproduce-prefix-manager-102-unload-regression'))
             for plugin_id, version, negative in probes:
                 name = 'framey-decky-'+uuid.uuid4().hex[:12]
                 command = ['docker', 'run', '--rm', '--name', name, '--network', 'none', '--read-only',
