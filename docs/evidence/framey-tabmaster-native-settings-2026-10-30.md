@@ -11,3 +11,27 @@ The complete private loader console is retained. It has one `Expecting value: li
 The first local replay failed at the first stop: the fixture sent SIGTERM to the whole owned process group, producing a nonzero parent exit and signal-wakeup errors. The revised fixture signals only the loader parent, matching the managed service's `KillMode=mixed` signal policy, and verifies descendant identity reaping. A second replay passed that exit/reaping check but failed a broad JSON-diagnostic assertion. The final fixture retains that diagnostic and full console instead of claiming all logs are clean. The adjacent audit preserves both failed log hashes and their distinct limits.
 
 ARM64 and fresh exact-PR CI still need to pass. This case does not connect the earlier browser to this backend or verify Steam library-tab editing, library/MobX patches, backups/restores, real Steam CEF, a managed Frame installation, wearer-visible UI or physical controllers. No headset was contacted and no user's data was read or changed.
+
+
+## Current main refresh, 2026-10-31
+
+Main `51841728090a45f9f452b4cd4ccf93f4caf8df14` was merged normally. Frozen source
+`a6a32451af03d9f0079251aebbcd9fdf82e0d716` retains all 31 main probe bodies and
+the original TabMaster probe, main's exact store/keyboard/IPC/ownership sources,
+all 116 catalog policies and the other 115 complete records. Additive inventory
+conflicts retain TabMaster, Ludusavi and Deck Progress. An initial local merge
+preparation failure was corrected before testing or pushing; it is recorded in
+[the refresh audit](framey-tabmaster-main5184172-refresh-2026-10-31.json).
+
+The refreshed source passed 105 focused host tests and local native AMD64's
+40 literal TabMaster RPCs, private settings and two parent-only zero-exit stops.
+All twelve source fingerprints, original backend/archive bytes, full console
+hashes and exact process-reaping assertions were independently checked. The
+one shutdown JSON diagnostic remains unattributed. Owned native containers and
+image tags were removed. Subsequent commits add evidence only.
+
+The full refreshed native matrix is 40 probes / 34 archive pins / 12 source
+fingerprints; this targeted run does not qualify that full matrix. Final-head
+hosted CI/e2e/native AMD64/ARM64 and every package gate remain required. No real
+Frame, browser/backend integration, backup/restore or Steam editing proof is
+added by this settings-only PR; the separate stacked #501 owns the restore fix.

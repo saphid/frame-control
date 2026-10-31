@@ -13,3 +13,39 @@ Each case retains one shutdown `Expecting value: line 1 column 1 (char 0)` diagn
 The focused fake-Frame official-plugin install/remove e2e passes, including the TabMaster shim receipt, installed backend digest, API1/frontend preservation and partial-status readback. It ran in a unique disposable Compose project because the standard shell runner requires unavailable `zsh`. Owned containers, volumes and image tags were cleaned; container/volume absence was independently checked. The audit JSON records the test, log hash and 126.743-second total runtime. This is installer evidence, not real Frame or browser/backend usability.
 
 TabMaster remains **partial**. Fresh exact-head CI and ARM64 of this repair are pending. This replay does not connect a browser to the backend or verify Steam library-tab editing, library/MobX patches, real Steam CEF, a managed Frame installation, wearer-visible UI or physical controllers. No headset was contacted or user data accessed.
+
+
+## Current main and fixture refresh, 2026-10-31
+
+The refreshed #500 fixture base contains main
+`51841728090a45f9f452b4cd4ccf93f4caf8df14`. It was merged normally into this
+restore branch at frozen tested source
+`8afd5b1711b969fb6c7c46f29eba7cd4bc40085a`. The later #500 evidence-only head
+`0dc8da2114e145da8598d0b1763ba17154924715` is included without changing those
+runtime inputs. All 31 main probe bodies and the complete prior TabMaster
+restore probe survive. Keyboard, IPC and Syncthing ownership inputs match main;
+all 116 catalog policies and the other 115 complete rows remain unchanged.
+
+The [refresh audit](framey-tabmaster-restore-main5184172-refresh-2026-10-31.json)
+records 107 passing focused host tests. Local published Decky 3.3.0 AMD64 checks
+47 repaired and 48 unchanged-original literal RPCs, private backup bytes,
+malformed/non-object refusals, restart persistence and four parent-only zero-exit
+stops with exact process identities gone. Twelve fingerprints, exact archive and
+managed backend hashes and complete consoles were independently checked. Each
+case retains one unattributed shutdown JSON diagnostic; error-free output is
+not claimed. The original valid-backup restore failure remains a negative.
+
+The exact main ownership helper was matched to its build/source fingerprints
+and replayed through the isolated native candidate: three normal reloads and
+Decky's deliberately forced plugin kill followed by successful helper reload
+pass, with an unrelated process preserved. This checks the merged lifetime
+repair for the old #501 failure path. It does not prove why the original unload
+stalled, nor qualify clean parent-only final candidate shutdown: this candidate
+runner's final cleanup uses group signaling. Syncthing remains uninstalled.
+
+Pinned official-plugin HTTP/fake-Frame SSH install/remove passes at the same
+source. Its uniquely owned containers, volumes, network and image tags, and the
+native runtime resources, were removed. Later changes add evidence only. The
+full new native matrix is 41 probes / 34 archive pins / 12 source fingerprints;
+local targeted runs do not replace fresh exact-head hosted gates on both PRs.
+No real Frame, Steam editing, browser/backend integration or VR proof was added.
