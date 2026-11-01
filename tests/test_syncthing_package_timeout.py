@@ -31,6 +31,8 @@ class CapturedGuestProbe(unittest.TestCase):
         popen = subprocess.Popen
 
         def launch(*args, **kwargs):
+            # Match the Linux guest's UTF-8 pipes on Windows hosts too.
+            kwargs['encoding'] = 'utf-8'
             child = popen(*args, **kwargs)
             children.append(child)
             return child
