@@ -5828,12 +5828,13 @@
         "https://github.com/safijari/reshadeck"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; ReShade deployment into Proton games is unverified.",
+      "reason": "Managed installs preserve existing shader/include files and leave the effect untouched on startup. Native AMD64 Decky verifies explicit selection with a private authenticated X11 server, spaces, disable, restart and clean unload. Requires xprop and a configured DISPLAY; gamescope shader rendering, ARM64, actual Frame and worn VR unverified. Update/reinstall required.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native Decky AMD64 private X11"
       ],
       "browser": {
         "id": 75,
@@ -5863,6 +5864,18 @@
         "sha256": "f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "requiredShims": [
+        "reshadeck-owned-shaders",
+        "reshadeck-ipc-eof"
+      ],
+      "reshadeckRuntime": {
+        "evidence": "docs/evidence/framey-reshadeck-preserve-shaders-2026-11-01.md",
+        "mode": "published Decky 3.3.0 AMD64; private authenticated Xvfb, no host display or gamescope",
+        "realFrameContacted": false,
+        "physicalShaderRenderingVerified": false,
+        "officialUiVerified": false,
+        "arm64Verified": false
       }
     },
     {
@@ -12371,7 +12384,9 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
-      "requiredShims": ["deck-shelves-ipc-eof"],
+      "requiredShims": [
+        "deck-shelves-ipc-eof"
+      ],
       "chunkedFollowUp": {
         "evidence": "docs/evidence/framey-deck-shelves-browser-2026-10-26.md",
         "mode": "exact archive in opaque local Chromium; backend and network denied",

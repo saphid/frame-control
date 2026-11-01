@@ -171,3 +171,5 @@ container home. It verifies disk readback, shared-tab visibility, false values,
 loader restart persistence and two clean owned loader exits. It does not
 exercise Steam library-tab editing, backups/restores, browser rendering,
 real Frame or physical controllers. These remain separate verification gates.
+
+`75.zip` (Reshadeck 0.2.0) was added from the digest-verified full-catalog audit cache on 2026-11-01, without changing its catalog pin. Its upstream LICENSE is retained.

@@ -347,6 +347,9 @@ def main():
                     env=env, stdout=log, stderr=log, start_new_session=True)
                 processes.append(player)
                 until_ready(lambda: Path('/tmp/mpris-state.json').is_file(), 'silent MPRIS player')
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                reshade_fixture = reshadeck_private.start(env, log, processes, until_ready)
             backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
             processes.append(backend)
             discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery')
@@ -368,7 +371,12 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'ludusavi-dependency-discovery':
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
+                    legacy, until_ready, reshade_fixture, plugin)
+                report['result'] = 'private authenticated X11 property changes, shared shader preservation, explicit selection and two clean stops; gamescope rendering, Frame and VR unverified'
+            elif case['probe'] == 'ludusavi-dependency-discovery':
                 import ludusavi_private
                 report['dependencyDiscovery'] = ludusavi_private.exercise(
                     current, plugin, data, record, backend, loader, env, log,

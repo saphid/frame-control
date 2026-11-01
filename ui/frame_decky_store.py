@@ -256,6 +256,11 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 75 and digest == 'f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281':
+        helper = Path(__file__).with_name('framey_reshadeck.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_RESHADECK_SOURCE = '+repr(helper)+'\n'
+                +'FRAMEY_RESHADECK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -466,6 +471,29 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==75 and digest=='f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281'
+                    and folder=='reshadeck'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Reshadeck' or manifest.get('flags')!=['debug']
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='ff5b902a09892638b2a7f3ff784fe57211f7ab7ad1a63ffa0bdfa9e3c47cdb56'):
+                    raise RuntimeError('Reshadeck manifest or backend differs from pinned archive')
+                for name,key in [('framey_reshadeck','FRAMEY_RESHADECK_SOURCE'),('framey_decky_ipc','FRAMEY_RESHADECK_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source:
+                        raise RuntimeError('Missing Reshadeck runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('Reshadeck helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_reshadeck import install as _framey_install_reshadeck\n'
+                        b'_framey_install_reshadeck(globals())\ndel _framey_install_reshadeck\n')
+                main.write_bytes(prefix+original+suffix)
+                compat_shims.append('reshadeck-owned-shaders')
+                compat_shims.append('reshadeck-ipc-eof')
             if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
                     and folder=='Deck-Shelves'):
                 main=unpacked/'main.py'
