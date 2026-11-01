@@ -3,8 +3,8 @@ import asyncio
 from timer_lifecycle import Client
 
 
-async def initial(name, calls):
-    async with Client(name) as client:
+async def initial(name, calls, transcript):
+    async with Client(name, transcript) as client:
         async def call(method, *args):
             value = await client.call(method, *args)
             calls.append(dict(method=method, result=value))
@@ -64,8 +64,8 @@ async def initial(name, calls):
                     stopwatch=stopwatch)
 
 
-async def resumed(name, calls, saved, negative):
-    async with Client(name) as client:
+async def resumed(name, calls, saved, negative, transcript):
+    async with Client(name, transcript) as client:
         async def call(method, *args):
             value = await client.call(method, *args)
             calls.append(dict(method=method, result=value))
@@ -100,15 +100,16 @@ async def resumed(name, calls, saved, negative):
 
 
 def probe(name, restart, calls, negative=False):
-    saved = asyncio.run(initial(name, calls))
+    transcript = []
+    saved = asyncio.run(initial(name, calls, transcript))
     restart()
-    asyncio.run(resumed(name, calls, saved, negative))
+    asyncio.run(resumed(name, calls, saved, negative, transcript))
     return dict(timerPauseResumeCancel=True, singleSilentCompletion=True,
                 pausedTimerRestartPreserved=not negative, originalPausedRestartTicks=negative,
                 elapsedPausedDeadlinePreservedAndResumed=not negative,
                 originalElapsedPausedTimerDeleted=negative,
                 presetDeduplicatedAndRestarted=True,
                 stopwatchLapsAndPausedRestart=True, ownedFixtureStateCleaned=True,
-                publishedBackendUnmodified=negative, realFrameContacted=False,
+                publishedBackendUnmodified=negative, transcript=transcript, realFrameContacted=False,
                 soundVerified=False, sleepInhibitionVerified=False, browserVerified=False,
                 physicalControllerVerified=False)
