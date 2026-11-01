@@ -1,5 +1,6 @@
 {
-  "at": "2026-11-01T05:51:39.642325+00:00",
+  "at": "2026-11-01T05:59:38.141733+00:00",
+  "sourceRevision": "2452c35bc916423634e29911396c45c7fe93722a",
   "storeId": 23,
   "version": "1.3.2",
   "archiveSha256": "f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133",
@@ -60,9 +61,64 @@
     "managedFrame": false,
     "realFrameContacted": false
   },
+  "tests": {
+    "at": "2026-11-01T05:56:00.735209+00:00",
+    "sourceRevision": "2452c35bc916423634e29911396c45c7fe93722a",
+    "unit": {
+      "tests": 1987,
+      "skips": 15,
+      "seconds": 257.159,
+      "logSha256": "3ead855b74dbf66bdb2f244837605076c791739f406b4c1713152cd221668c6b"
+    },
+    "site": {
+      "tests": 18,
+      "skips": 0,
+      "logSha256": "3cf6a1c7616d6de0583b569d897b5204e8c987218950ab3af24d13a3891d8946"
+    },
+    "native": {
+      "cases": 1,
+      "rpcs": 23,
+      "architecture": "x86_64",
+      "sourceHashes": 28
+    },
+    "fullProductionSourceTested": true,
+    "scope": "Unit process started before evidence and generated compatibility-doc prose were added. Production, native fixtures and test source were unchanged during the full run; focused compatibility/document checks follow.",
+    "realFrameContacted": false
+  },
   "focusedTests": 16,
-  "fullQualificationPending": true,
-  "rawPacketSha256": "db82a97913052c53708b6324a3252bd02a2e1536fa621d292f826b0e886ce20a",
+  "compatibilityTests": 24,
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 409.77,
+    "catalogCount": 116,
+    "installedRemoved": 69,
+    "refusals": 47,
+    "postCleanup": {
+      "containers": [],
+      "volumes": [],
+      "networks": []
+    },
+    "imagesAndConfigurationRemoved": true,
+    "sharedSimulatorHealthy": true
+  },
+  "rawPacketSha256": "3e390e362a9f97de65f67a2ae5e59b8c57276430636293e842632cca8246f653",
+  "fullQualificationPending": false,
+  "sourceReview": {
+    "at": "2026-11-01T05:55:17.712999+00:00",
+    "sourceRevision": "2452c35bc916423634e29911396c45c7fe93722a",
+    "onlyCatalogRowChanged": 23,
+    "all116PinsPoliciesFlagsAndClassificationsUnchanged": true,
+    "sourceReview": "Only exact ID23/version/digest/folder/manifest/main-hash receives preservation helper. Published backend bytes retained as prefix; all other archive members unchanged in focused test. Three fixed video names, valid canonical source before mutation, serialized identity-checked apply/reset, existing-original backups, rollback on write errors, refusal of changed targets or missing backups. Power-loss auto-recovery is explicitly not claimed.",
+    "all28NativeFingerprintsMatch": true,
+    "packaging": "app/package.json extraResources ../ui *.py includes new helper; actual new release installers remain unverified",
+    "realFrameContacted": false
+  },
+  "scope": "Final change after full suite is test-only canonical temporary paths for systems where /tmp is a symlink. All16 focused tests pass after that portability correction; all28 native inputs and all e2e/production inputs remain unchanged. Evidence and generated documentation prose were completed afterward. Fresh exact-final-head hosted qualification remains required.",
+  "nativeArm64Verified": false,
+  "actualSteamPlayback": false,
+  "externalRepository": false,
   "realFrameContacted": false,
-  "releaseQualified": false
+  "releaseQualified": false,
+  "socketResourceWarningsRemain": true
 }

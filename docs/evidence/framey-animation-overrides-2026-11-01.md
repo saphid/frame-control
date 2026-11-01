@@ -50,8 +50,18 @@ zero with a parent-only signal and no forced kill. The generic recorder's
 `cleanShutdownVerified` flag remains false; no separate strict restart/shutdown
 proof is claimed.
 
-Full unit/site and disposable simulator results will be added to the companion
-JSON before publication. Compatibility remains **partial**.
+Full local unit suite: **1,987 tests, 15 platform/dependency skips**. Site:
+**18 tests, zero skips**. Full disposable fake-Frame suite: **53 tests, zero
+skips**, all **116** pinned catalog archives, **69 install/remove and 47
+expected refusal outcomes**. Independent post-run inspection found no owned
+containers, volumes, networks, image tags or configuration file; the shared
+simulator stayed healthy. The catalog suite does not execute official
+backends. The final test-only change canonicalizes temporary paths for systems
+where `/tmp` is a symlink; all **16 focused tests** pass after that correction,
+plus **24 compatibility tests** and the generated-doc check. Native and e2e
+production inputs are unchanged. Exact-final-head hosted CI remains required.
+Existing socket ResourceWarnings remain. Compatibility remains **partial**. See the [summary](framey-animation-overrides-2026-11-01.json)
+and [raw evidence and verifiers](framey-animation-overrides-2026-11-01-raw.json.gz).
 
 ## Using and recovering backups
 

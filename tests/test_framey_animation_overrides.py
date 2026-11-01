@@ -34,7 +34,7 @@ class AnimationOverrides(unittest.TestCase):
         self.folder = self.tx.folder.parent/self.pin['folder']
         temp = tempfile.TemporaryDirectory(prefix='framey-animation-')
         self.addCleanup(temp.cleanup)
-        self.home = Path(temp.name)
+        self.home = Path(temp.name).resolve()
         self.movies = self.home/'movies'
         self.movies.mkdir()
         self.a = self.home/'a.webm'
