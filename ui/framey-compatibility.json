@@ -11140,7 +11140,7 @@
         "https://github.com/mpcallahan/DeckyHourNotifications"
       ],
       "status": "partial",
-      "reason": "Silent labeled timer create/ticks/pause/cancel, preset save/cancel-confirm/delete and stopwatch start/lap/pause/reset/reopen pass in local Chromium with the official Decky 3.3.0 ARM64 backend. Audio, alarms/reminders, suspend inhibition, Steam overlays and worn VR remain unverified; notifications require the panel to stay open. Exact managed installs repair paused timers that incorrectly tick or disappear after a backend restart; native AMD64/ARM64 lifecycle checks and a private AMD64 browser restart/resume/cancel replay pass. Update/reinstall is required. Production HTTP integration, real Frame rendering and physical controllers remain unverified.",
+      "reason": "Exact AlarMe 1.6.3 archive gets paused-timer restart and child IPC EOF repairs. Historical native AMD64/ARM64 RPC and AMD64 browser evidence cover earlier source; a later ARM64 run forced a child kill and is rejected by the new strict shutdown gate. Fresh exact-head strict native qualification is required. Sound, actual sleep inhibition, Steam integration and worn Frame/controller use remain unverified; compatibility stays partial. Existing managed copies need Update/reinstall. Earlier silent browser timer/preset/stopwatch evidence remains historical; notifications require the panel to stay open. Production HTTP and Steam CEF are unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11242,11 +11242,22 @@
         "browserEvidence": "docs/evidence/framey-alarme-browser-restart-2026-10-30.md",
         "nativeCiEvidence": "docs/evidence/framey-alarme-native-ci-2026-10-30.json",
         "nativeCiSourceRevision": "3ec43ad6a5af1df55a8190015f7802cc18190511",
-        "productionHttpParentVerified": false
+        "productionHttpParentVerified": false,
+        "qualificationLimit": "Historical source only; does not qualify the new EOF repair or supersede the later ARM64 forced-kill failure. Fresh strict AMD64/ARM64 shutdown evidence required."
       },
       "requiredShims": [
-        "alarme-paused-restart"
-      ]
+        "alarme-paused-restart",
+        "alarme-ipc-eof"
+      ],
+      "ipcEofFollowUp": {
+        "status": "partial",
+        "shim": "alarme-ipc-eof",
+        "mode": "exact-archive managed child IPC EOF repair; strict parent-only shutdown with real disconnected child peer",
+        "arm64Verified": false,
+        "browserVerified": false,
+        "realFrameVerified": false,
+        "physicalControllerVerified": false
+      }
     },
     {
       "id": 125,

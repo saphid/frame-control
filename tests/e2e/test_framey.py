@@ -202,7 +202,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
                 if plugin['id'] == 124:
-                    self.assertEqual(found[0]['compatShims'], ['alarme-paused-restart'])
+                    self.assertEqual(found[0]['compatShims'], ['alarme-paused-restart', 'alarme-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
                                      'cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39')

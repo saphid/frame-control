@@ -278,6 +278,7 @@ def main():
         assert record['id'] == 124
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
 
     (home/'.local/share/Steam/steamui/images').mkdir(parents=True)
     if case['probe'] == 'wine-cellar-private-state':
@@ -404,6 +405,11 @@ def main():
                         old = b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
                         source = source.replace(old, old.replace(b'            remaining =',
                             b'            if timer.get("paused", False):\r\n                continue\r\n            remaining ='))
+                        source = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n') + source
+                        installed_ipc = (plugin/'py_modules/framey_decky_ipc.py').read_bytes()
+                        assert installed_ipc == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                        report['ipcHelperSha256'] = hashlib.sha256(installed_ipc).hexdigest()
                     assert (plugin/'main.py').read_bytes() == source
                     preserved = []
                     for member in original.namelist():

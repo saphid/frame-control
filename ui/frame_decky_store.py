@@ -282,6 +282,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 24 and digest == RADIYO_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 124 and digest == '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ALARME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1081,8 +1084,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 old=b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
                 if source.count(old)!=1: raise RuntimeError('AlarMe paused timer startup changed')
                 new=old.replace(b'            remaining =', b'            if timer.get("paused", False):\r\n                continue\r\n            remaining =')
-                main.write_bytes(source.replace(old,new))
+                ipc=globals().get('FRAMEY_ALARME_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing AlarMe child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('AlarMe child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                source=prefix+source.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
                 compat_shims.append('alarme-paused-restart')
+                compat_shims.append('alarme-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
