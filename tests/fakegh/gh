@@ -63,6 +63,7 @@ release_jobs = ("draft", "checksums",
                 "build (macos-15-intel, dist:mac:x64, app/dist/*.dmg app/dist/*.zip)",
                 "build (macos-latest, dist, app/dist/*.dmg app/dist/*.zip)")
 decky_jobs = ("decky-runtime (ubuntu-latest)", "decky-runtime (ubuntu-24.04-arm)")
+ownership_jobs = ("owned-watchdog (ubuntu-latest)", "owned-watchdog (ubuntu-24.04-arm)")
 signed_jobs = ("signed-package (ubuntu-latest)", "signed-package (ubuntu-24.04-arm)",
                "signed-package (ubuntu-latest, browser HTTP)",
                "signed-package (ubuntu-latest, production parent HTTP)")
@@ -94,7 +95,7 @@ elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
     branch = parse_qs(query).get("branch", [""])[0]
     is_main = workflow != "release.yml"
     run_id = {"checks.yml": 501, "release.yml": 502, "decky-runtime.yml": 503,
-              "syncthing-flatpak-package.yml": 504}[workflow]
+              "syncthing-flatpak-package.yml": 504, "syncthing-candidate.yml": 505}[workflow]
     run = {"id": run_id, "head_sha": gate.get("main_sha" if is_main else "release_sha", commit),
            "head_branch": branch, "event": "push", "run_attempt": gate.get("release_attempts", 1) if run_id == 502 else 1,
            "status": gate.get("decky_status" if run_id == 503 else ("main_status" if is_main else "release_status"), "completed"),
@@ -121,6 +122,18 @@ elif method == "GET" and endpoint.startswith(repo + "actions/workflows/"):
         elif gate.get("prior_signed_run_conclusion"):
             runs.append(dict(run, id=499, run_attempt=1,
                              conclusion=gate["prior_signed_run_conclusion"]))
+    if run_id == 505:
+        run.update(head_sha=gate.get("ownership_sha", commit),
+                   head_branch=gate.get("ownership_branch", branch),
+                   event=gate.get("ownership_event", "workflow_dispatch"),
+                   status=gate.get("ownership_status", "completed"),
+                   conclusion=gate.get("ownership_conclusion", "success"),
+                   run_attempt=gate.get("ownership_attempts", 1))
+        if gate.get("ownership_missing"):
+            runs = []
+        elif gate.get("prior_ownership_run_conclusion"):
+            runs.append(dict(run, id=496, run_attempt=1,
+                             conclusion=gate["prior_ownership_run_conclusion"]))
     if run_id == 502 and gate.get("prior_release_run_bad_job"):
         runs.append(dict(run, id=500, run_attempt=1, status="completed",
                          conclusion=gate.get("prior_release_run_conclusion", "failure"),
@@ -135,10 +148,13 @@ elif method == "GET" and endpoint.startswith(repo + "actions/runs/"):
     attempt = int(parts[2])
     names = {"497": main_jobs, "498": decky_jobs,
              "500": release_jobs, "501": main_jobs, "502": release_jobs,
-             "503": decky_jobs, "504": signed_jobs, "499": signed_jobs}[run_id]
+             "503": decky_jobs, "504": signed_jobs, "499": signed_jobs,
+             "505": ownership_jobs, "496": ownership_jobs}[run_id]
     names = [name for name in names if name != gate.get("omit_job")]
     jobs = [{"name": name, "status": "completed",
-             "conclusion": (gate.get("prior_runtime_bad_conclusion", "failure")
+             "conclusion": (gate.get("ownership_prior_bad_conclusion", "failure")
+                            if run_id == "505" and attempt == 1 and name == gate.get("ownership_prior_bad_job")
+                            else gate.get("prior_runtime_bad_conclusion", "failure")
                             if run_id in ("497", "498") and name == gate.get("prior_runtime_bad_job")
                             else gate.get("prior_release_run_bad_conclusion", "cancelled")
                             if run_id == "500" and name == gate.get("prior_release_run_bad_job")
