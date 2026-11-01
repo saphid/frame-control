@@ -93,6 +93,7 @@ def main():
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/radiyo_private.py',
+              'tests/decky-runtime/surround_private.py', 'ui/framey_surround.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',

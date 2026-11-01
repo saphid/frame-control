@@ -197,5 +197,11 @@
     "id": 125,
     "shim": "localsend-digest-native",
     "probe": "localsend"
+  },
+  {
+    "id": 100,
+    "shim": "surround-owned-runtime",
+    "additionalShims": ["surround-ipc-eof"],
+    "probe": "surround-private-audio"
   }
 ]

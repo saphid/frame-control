@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 100, 'name': 'Virtual Surround Sound', 'version': '0.0.5', 'api_version': 1,
+     'folder': 'decky-virtual-surround-sound', 'sha256': 'b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4'},
     {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
