@@ -30,8 +30,11 @@ class WatchdogOwnership(unittest.IsolatedAsyncioTestCase):
         spec = importlib.util.spec_from_file_location('syncthing_candidate',
             ROOT/'ui/vendor/syncthing-0.2.7/main.py')
         self.module = importlib.util.module_from_spec(spec)
-        with patch.dict(sys.modules, {'decky_plugin':decky}):
+        ipc = types.ModuleType('framey_decky_ipc')
+        ipc.install = Mock()
+        with patch.dict(sys.modules, {'decky_plugin':decky, 'framey_decky_ipc':ipc}):
             spec.loader.exec_module(self.module)
+        ipc.install.assert_called_once_with()
         self.owner = self.module.watchdog
 
     async def asyncTearDown(self):

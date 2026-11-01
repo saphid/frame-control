@@ -1,3 +1,7 @@
+# Frame Control: let child IPC EOF yield to Decky shutdown.
+from framey_decky_ipc import install as _framey_install_ipc_eof
+_framey_install_ipc_eof()
+del _framey_install_ipc_eof
 import asyncio
 import json
 import os

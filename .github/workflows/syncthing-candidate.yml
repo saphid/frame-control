@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths:
       - 'ui/vendor/syncthing-0.2.7/**'
+      - 'ui/framey_decky_ipc.py'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
       - 'scripts/framey-test-syncthing-runtime.py'
@@ -24,6 +25,7 @@ on:
   pull_request:
     paths:
       - 'ui/vendor/syncthing-0.2.7/**'
+      - 'ui/framey_decky_ipc.py'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-syncthing-candidate.py'
       - 'scripts/framey-test-syncthing-runtime.py'

@@ -135,6 +135,8 @@ def main():
                     destination.write_bytes(archive.read(entry))
         plugin = plugins/'decky-syncthing'
         shutil.copy('/repo/ui/vendor/syncthing-0.2.7/main.py', plugin/'main.py')
+        (plugin/'py_modules').mkdir(exist_ok=True)
+        shutil.copy('/repo/ui/framey_decky_ipc.py', plugin/'py_modules/framey_decky_ipc.py')
         helper = plugin/'bin/decky-syncthing-watchdog'
         shutil.copy('/input/watchdog', helper)
         helper.chmod(0o700)
