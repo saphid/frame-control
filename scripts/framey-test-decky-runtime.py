@@ -97,6 +97,7 @@ def main():
               'tests/decky-runtime/animation_private.py', 'ui/framey_animation_overrides.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
+              'tests/decky-runtime/playtime_private.py',
               'tests/decky-runtime/ludusavi_private.py',
               'tests/decky-runtime/steamgriddb_private.py',
               'tests/decky-runtime/wine_cellar_private.py',

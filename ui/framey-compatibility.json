@@ -5139,13 +5139,14 @@
         "https://github.com/your-username/PlayTime"
       ],
       "status": "partial",
-      "reason": "Statistics and routed settings render with a detached real Frame library/user snapshot and actual Decky 3.3.0 amd64 backend in isolation. User selection and empty statistics reads pass. Running snapshots are now exposed, but its private MobX observation is unsupported; automatic recording and ARM64 backend remain unverified.",
+      "reason": "Statistics and routed settings render with the earlier detached Frame library/user snapshot. Published Decky 3.3.0 amd64 now verifies private session writes, paused-session refusal, per-user SQLite isolation and persistence across loader restart with the unmodified 3.2.5 backend. Its private MobX running-app observation remains unsupported; automatic recording, ARM64 backend and worn VR remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame SSH"
+        "real Frame SSH",
+        "actual Decky 3.3.0 amd64 private sessions"
       ],
       "browser": {
         "id": 66,

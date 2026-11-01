@@ -374,7 +374,15 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'screensaver-private-bus':
+            if case['probe'] == 'playtime-private-sessions':
+                import playtime_private
+                report['privateSessions'] = playtime_private.exercise(
+                    current, plugin, data, record, base, backend, loader, env, log,
+                    processes, until_ready, rpc)
+                report['result'] = ('published Decky API1 private session writes, pause/resume, '
+                    'per-user SQLite isolation and loader restart persistence passed; '
+                    'automatic recording, browser, real Frame and VR unverified')
+            elif case['probe'] == 'screensaver-private-bus':
                 import screensaver_private
                 report['screensaverRuntime'] = screensaver_private.probe(backend, loader, env, log, processes,
                     legacy, rpc, until_ready, screensaver_oracle, plugin, discovered)
