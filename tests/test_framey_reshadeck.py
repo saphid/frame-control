@@ -30,7 +30,7 @@ class Reshadeck(unittest.IsolatedAsyncioTestCase):
         result=self.tx.apply('install',self.data,plugin_id=75,folder=self.pin['folder'],version=self.pin['version'])
         self.assertEqual(result.returncode,0,result.stderr)
         self.folder=self.tx.folder.parent/self.pin['folder']
-        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.home=Path(self.temp.name)
+        self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.home=Path(self.temp.name).resolve()
         self.module=self.imported(True);self.plugin=self.module.Plugin();self.runtime=self.module._framey_reshadeck_runtime
 
     def imported(self,managed):
