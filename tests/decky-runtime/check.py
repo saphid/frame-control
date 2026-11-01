@@ -175,6 +175,8 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == '4bcfb8f3f94636a838dafef963f273b7752b99f4111fa3bed919c3ead49d3356'
+        tabmaster_managed_backend = managed
+        tabmaster_managed_ipc = (plugin/'py_modules/framey_decky_ipc.py').read_bytes()
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_prefix_manager_102_unload_regression:
@@ -1039,6 +1041,18 @@ def main():
                         assert observation['cleanShutdownVerified'], observation
 
                 stop_tabmaster_loader()
+                if args.reproduce_tabmaster_unload_regression:
+                    # The old backend is intentionally broken. Its next RPC
+                    # connection can also hit EOF, so it cannot promise a clean
+                    # restart. Restore the exact installed adapter before the
+                    # recovery phase; retain the forced-stop negative above.
+                    (plugin/'main.py').write_bytes(tabmaster_managed_backend)
+                    (plugin/'py_modules/framey_decky_ipc.py').write_bytes(tabmaster_managed_ipc)
+                    report['tabmasterNegativeRecovery'] = dict(
+                        restoredExactManagedBackend=True,
+                        backendSha256=hashlib.sha256(tabmaster_managed_backend).hexdigest(),
+                        ipcAdapterSha256=hashlib.sha256(tabmaster_managed_ipc).hexdigest(),
+                        priorNegativeRemainsCompatibilityFailure=True)
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1091,7 +1105,7 @@ def main():
                     'shared-tab filtering, false values and disk/loader-restart persistence passed; '+
                     ('original valid backup restore failure reproduced; ' if args.reproduce_tabmaster_restore_regression
                      else 'private backup/restore and malformed/non-object refusals passed; ')+
-                    ('previous managed child IPC forced-kill reproduced; expected negative, not a compatibility pass; '
+                    ('previous managed child IPC forced-kill reproduced, exact managed adapter restored before clean restart; expected negative, not a compatibility pass; '
                      if args.reproduce_tabmaster_unload_regression else
                      'two clean parent-only stops, original unload hooks and restart passed; ')+
                     'Steam library editing, browser, Frame and VR unverified')
