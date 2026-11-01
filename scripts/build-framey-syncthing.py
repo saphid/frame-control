@@ -66,6 +66,10 @@ def build(folder, image, arch, output):
                 subprocess.run(args+tests, stdout=log, stderr=subprocess.STDOUT, check=True, timeout=30)
                 subprocess.run(args+['/src/owned-unit-tests'], stdout=log, stderr=subprocess.STDOUT,
                                check=True, timeout=30)
+                subprocess.run(args+['cargo', 'test', '--frozen', '--offline', '--release',
+                    '--target', target, '-j2', '--bin', 'decky-syncthing-watchdog',
+                    'listener_retry_tests'], stdout=log, stderr=subprocess.STDOUT,
+                    check=True, timeout=600)
             result = subprocess.run(args+command, stdout=log, stderr=subprocess.STDOUT, timeout=600)
         if result.returncode:
             raise RuntimeError(f'{arch} build failed; see {output/arch}.build.log')
@@ -77,7 +81,8 @@ def build(folder, image, arch, output):
         path.write_bytes(binary)
         path.chmod(0o700)
         return {'architecture':arch, 'elfMachine':machine, 'bytes':len(binary), 'sha256':sha(binary),
-                'command':command, 'executed':False, 'serviceFileTestsExecuted':native}
+                'command':command, 'executed':False, 'serviceFileTestsExecuted':native,
+                'listenerRetryTestsExecuted':native}
     finally:
         subprocess.run(['docker', 'rm', '-f', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 

@@ -117,6 +117,19 @@ are `fakeframe-frame` and `fakeframe-host`; the compose project, network and
 volumes are `fakeframe-e2e*`. CI runs it on a native arm64 runner
 (`ubuntu-24.04-arm`, the `e2e` job in `.github/workflows/checks.yml`).
 
+CI prepares all exact version/digest archives from `ui/framey-compatibility.json`,
+verifies SHA-256 even on cache hits, and mounts the cache read-only for the full
+catalog installer audit. A missing download, bad digest or missing result fails
+the job. The `e2e-catalog` artifact retains the cache verification and per-plugin
+install/remove or expected-refusal results, including partial results on failure.
+This tests transport and installer policy; it does not execute official plugin
+backends or prove browser, real Frame or worn VR usability.
+
+To include that audit locally, prepare the cache with
+`python3 scripts/framey-cache-catalog.py --cache /tmp/framey-catalog --output /tmp/catalog-cache.json`,
+then run `FRAMEY_AUDIT_CACHE=/tmp/framey-catalog FRAMEY_AUDIT_OUTPUT=/tmp/catalog-result.json scripts/e2e.sh`.
+Without a cache, local e2e keeps the explicit optional-catalog skip.
+
 The host container exists because OpenSSH reads `~/.ssh/config` from the
 passwd home directory, not `$HOME`. There, `ssh frame` reaches the fake Frame
 through the same `Host frame` block `ui/frame_connect.py` writes, the

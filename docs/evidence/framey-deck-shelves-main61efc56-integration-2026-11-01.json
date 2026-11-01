@@ -1,0 +1,69 @@
+{
+  "at": "2026-11-01T02:21:01.171226+00:00",
+  "pr": 528,
+  "testedSource": "790febb2c265f0eee4e2142a39695b6307d4dc4c",
+  "integratedMain": "61efc562a65b552b1c00b75e8559c1c78764f57e",
+  "normalMergeParents": [
+    "8c42a972abcc816e365235c31f37aa85f6b7ae71",
+    "61efc562a65b552b1c00b75e8559c1c78764f57e"
+  ],
+  "mainTimeWaitRepairByteIdentical": true,
+  "sourceInputs": 25,
+  "serverTests": 1968,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 9,
+  "localNativePluginIds": [
+    135,
+    36,
+    24,
+    130
+  ],
+  "deckShelvesRpcs": [
+    4,
+    3
+  ],
+  "settingsBackupBytesHashesJsonMetadataVerified": true,
+  "repairedOriginalUnloadHooksVerified": true,
+  "twoCleanParentOnlyStopsAndRestartPersistenceVerified": true,
+  "originalForcedKillVerified": true,
+  "postEofRpcBeforeShutdownVerified": false,
+  "postRestartRpcResponseVerified": true,
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "steamGridDbStatus": "broken",
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "radiYoTlsBothRejectionPathsPreserved": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 402.55,
+  "catalogPins": 116,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "separateMainPackageModesAudited": [
+    "AMD64",
+    "browser HTTP",
+    "production parent HTTP"
+  ],
+  "compatibility": "partial",
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "58fbffc205240d580c372c4b83385575d5d900236a65f8ec9f9ba65b15262733",
+  "rawBytes": 101682
+}
