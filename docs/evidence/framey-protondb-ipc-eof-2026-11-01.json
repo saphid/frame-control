@@ -99,5 +99,12 @@
   "physicalControllerVerified": false,
   "genericCleanShutdownClaim": false,
   "mergeQualified": false,
-  "releaseQualified": false
+  "releaseQualified": false,
+  "mainIntegration": {
+    "main": "e02fb4fec61e169f4a8815ad82d872316cdb890f",
+    "integratedCommit": "35d7a2fc2acb04b2544da36fc85901cd535667fd",
+    "allNativeSourceInputsUnchanged": true,
+    "localE2eExecutedBeforeFixtureCleanup": true,
+    "publicationHeadHostedChecksRequired": true
+  }
 }

@@ -54,3 +54,12 @@ qualified. Other hidden forced-kill cases found in #542 remain separate work.
 The JSON summary and compressed raw packet retain reports, red/green consoles,
 fingerprints, full unit/focused logs, simulator cleanup and the independent
 source audit program.
+
+## Current-main integration
+
+Main `e02fb4fec61e169f4a8815ad82d872316cdb890f` (#544) was normally merged
+before publication. Its only test-source changes register `server_close` for
+two simulator HTTP fixtures; all native test/production fingerprints above
+remain byte-identical. The 53-test local run records the preceding implementation
+and its two socket warnings, not an execution of this later combined commit.
+Fresh publication-head hosted e2e/native qualification remains required.
