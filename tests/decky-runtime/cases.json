@@ -2,8 +2,18 @@
   {
     "id": 37,
     "shim": "discord-status-pipe-lifecycle",
-    "additionalShims": ["discord-status-ipc-eof"],
+    "additionalShims": [
+      "discord-status-ipc-eof"
+    ],
     "probe": "discord-private-activity"
+  },
+  {
+    "id": 87,
+    "shim": "screensaver-user-bus",
+    "additionalShims": [
+      "screensaver-ipc-eof"
+    ],
+    "probe": "screensaver-private-bus"
   },
   {
     "id": 23,
