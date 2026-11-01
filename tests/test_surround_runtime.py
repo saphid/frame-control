@@ -1,4 +1,5 @@
 """Exact installed surround archive, confined HRIRs and owned process contracts."""
+import __future__
 import asyncio
 import hashlib
 import importlib.util
@@ -23,6 +24,7 @@ import frame_decky_store
 PIN = next(p for p in PLUGINS if p['id'] == 100)
 
 
+@unittest.skipIf(os.name == 'nt', 'remote plugin transaction and audio ownership require POSIX')
 class Surround(unittest.IsolatedAsyncioTestCase):
     def setUp(self):
         self.transaction = store_tests.StoreTransaction()
@@ -138,7 +140,12 @@ class Surround(unittest.IsolatedAsyncioTestCase):
             data=(self.folder/'main.py').read_bytes()if managed else z.read(PIN['folder']+'/main.py')
         with patch.dict(sys.modules,decky=decky,settings=settings,framey_decky_ipc=ipc), \
              patch.dict(os.environ,DECKY_PLUGIN_LOG_DIR=str(self.home),DECKY_PLUGIN_SETTINGS_DIR=str(self.home)):
-            exec(compile(data,module.__file__,'exec'),module.__dict__)
+            # The published backend evaluates Python 3.10 union annotations.
+            # Host CI includes 3.9; postpone only annotations in this fixture.
+            # Native Decky separately executes the unchanged installed bytes.
+            code = compile(data, module.__file__, 'exec',
+                           flags=__future__.annotations.compiler_flag, dont_inherit=True)
+            exec(code, module.__dict__)
         return module
 
     async def test_original_uninstall_loss_and_actual_managed_preservation(self):
