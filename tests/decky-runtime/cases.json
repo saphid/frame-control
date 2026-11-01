@@ -1,5 +1,10 @@
 [
   {
+    "id": 124,
+    "shim": "alarme-paused-restart",
+    "probe": "alarme-private-lifecycle"
+  },
+  {
     "id": 87,
     "shim": "screensaver-user-bus",
     "additionalShims": [

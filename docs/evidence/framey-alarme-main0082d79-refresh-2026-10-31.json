@@ -1,0 +1,119 @@
+{
+  "at": "2026-10-31T11:19:22.279025+00:00",
+  "sourceRevision": "eb9f167e13b03ac7411715b884e1c1aa57d36d12",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "priorHead": "982f2982902f50ea2825168b244f7f7587f683d3",
+  "normalMerge": true,
+  "mainProbeConditionsPreserved": 32,
+  "mainProbeBranchesPreserved": 37,
+  "completeAlarMeProbeAndProductionRepairPreserved": true,
+  "mainInputAndIpcAndConsoleSourcesPreserved": true,
+  "all116PoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "alarMeCompleteCatalogRowPreserved": true,
+  "focusedTests": 93,
+  "unitLogSha256": "a8638e28d8168560890b98e53e532df19b2f041969a1579cf539f421445684e4",
+  "nativeArchitecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "380c3331ba72a8bae001122e2d0cd4f4e213a159661a4acebdba7af6b2deecdb",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "d0a21dd5c75c6ac94c9ec5ba29a237c51606efd2f572b0f049eab2c7a46ffe63",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/alarme_lifecycle.py": "3b2e6c6267829926d668af367323a4c14920708ab520c27c74ebfb5b52dc9cb7",
+    "tests/decky-runtime/timer_lifecycle.py": "e1dedd912542a180fa4150bd7d4a9bf069d04403a323de457eef779fa6a11692",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "3bfa8e01a5481bf0958e99ed47deb2c883405e082780784777879c7b0a06ebce",
+    "tests/framey_official.py": "36f687a70f5f7035686b9f1d54e8ab4b1cd4fc990640934449f85126eee34304",
+    "ui/frame_decky_store.py": "fad46735960568636dc4f289c70f71d3cb3d98c5a492834d0bad1ff0eda483a8",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all17SourceFingerprintsVerified": true,
+  "unchangedAlarMeAndSharedRpcHelpersFingerprinted": true,
+  "archiveSha256": "17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe",
+  "originalBackendSha256": "ff456c2620b5b85473b4ca642551df49b490a2770e0af5c2706c6069c9f73d27",
+  "managedBackendSha256": "cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39",
+  "backendIndependentlyReconstructed": true,
+  "repairedRpcs": 39,
+  "originalRpcs": 38,
+  "originalPauseAndElapsedDeadlineFailuresRetained": true,
+  "fourParentOnlyZeroExitStopsSourceBound": true,
+  "completeAvailableConsoleObservations": [
+    {
+      "originalControl": false,
+      "rpcs": 39,
+      "consoleSha256": "0ef08e5363f438e0762f445441dbac28b127445ec093d2882e38935c90022300",
+      "bytes": 4593,
+      "genericCleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ],
+      "jsonDiagnosticCount": 2
+    },
+    {
+      "originalControl": true,
+      "rpcs": 38,
+      "consoleSha256": "7f42dd2d78484d863f46e5afcb443e1b72ccbd995d4bec61dc98e03036a269b9",
+      "bytes": 4551,
+      "genericCleanupStops": [
+        {
+          "pid": 23,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ],
+      "jsonDiagnosticCount": 2
+    }
+  ],
+  "globalCleanShutdownVerified": false,
+  "rawJsonSha256": "980d489166954c77c3b5cb14e251270f5e10df994e3001fa32a85d654c8bda6e",
+  "rawGzipSha256": "512348aa54522db281623a5351538b5d633548d9d1a91f8b3ba8d7bbcd8d2355",
+  "newOwnedContainers": 0,
+  "newOwnedImageTags": 0,
+  "fullNativeMatrixExpected": {
+    "probes": 43,
+    "archivePins": 35,
+    "sourceFingerprints": 17
+  },
+  "realFrameContacted": false,
+  "compatibility": "partial",
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Targeted local AMD64 replay only; fresh exact-head hosted checks/e2e/native/ownership/packages and exact-main gates remain required.",
+    "Archive/private-file and parent-only-stop checks remain source-bound; complete independent filesystem/process snapshots were not retained.",
+    "Available JSON diagnostics are unattributed; an error-free console/global clean plugin shutdown is unverified.",
+    "No new browser replay, production HTTP integration, audio, actual sleep inhibition, live Steam/CEF, managed Frame, wearer/controller or release proof."
+  ]
+}

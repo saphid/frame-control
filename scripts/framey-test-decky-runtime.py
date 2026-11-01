@@ -83,6 +83,7 @@ def main():
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
+              'tests/decky-runtime/alarme_lifecycle.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
               'tests/decky-runtime/deckyparty_private.py',
@@ -124,6 +125,7 @@ def main():
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
+                    (124, '--reproduce-alarme-pause-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),
                     (61, '--reproduce-tabmaster-unload-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),
