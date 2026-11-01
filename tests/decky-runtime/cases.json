@@ -1,5 +1,13 @@
 [
   {
+    "id": 56,
+    "shim": "mangopeel-watch-lifetime",
+    "additionalShims": [
+      "mangopeel-ipc-eof"
+    ],
+    "probe": "mangopeel-private-watch"
+  },
+  {
     "id": 23,
     "shim": "animation-preserve-overrides",
     "probe": "animation-private-overrides"
