@@ -67,13 +67,17 @@ def time_wait_recovery(helper, home):
             assert child.returncode != 0, 'invalid settings remain a deliberate negative control'
             assert 'Watchdog waiting for loopback TCP TIME_WAIT' in stderr, stderr
             assert 'Watchdog listener unavailable' not in stderr, stderr
-            assert 'SerdeJson' in stderr, stderr
+            # Upstream's registered panic hook writes to this owned file,
+            # rather than stderr. Retain the deliberate settings failure.
+            panic = (logs/'last_panic.txt').read_text()
+            assert 'SerdeJson' in panic, panic
             assert pid.read_text() == str(child.pid)
             assert settings.read_text() == 'not JSON'
             elapsed = round(time.monotonic()-began, 3)
             assert 1 < elapsed < 80, elapsed
             return dict(initialTcpRows=rows, seconds=elapsed, helperExit=child.returncode,
-                        stdout=stdout, stderr=stderr, heldStateUntouchedWhileWaiting=True,
+                        stdout=stdout, stderr=stderr, panicLog=panic,
+                        heldStateUntouchedWhileWaiting=True,
                         actualTcpTimeWaitExpired=True, listenerReservedBeforeSettings=True,
                         settingsStillInvalid=True, realFrameContacted=False)
         finally:
