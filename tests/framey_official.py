@@ -14,6 +14,8 @@ MANAGED_FRONTENDS = {
 PLUGINS = (
     {'id': 19, 'name': 'Notebook', 'version': '0.1.5', 'api_version': 'legacy',
      'folder': 'SDH-Notebook', 'sha256': 'c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c'},
+    {'id': 23, 'name': 'Animation Changer', 'version': '1.3.2', 'api_version': 'legacy',
+     'folder': 'SDH-AnimationChanger', 'sha256': 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'},
     {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},

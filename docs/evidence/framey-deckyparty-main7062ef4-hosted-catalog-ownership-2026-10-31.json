@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-31T20:35:50.705710+00:00",
+  "head": "9bec4ddc5242a912415be602165f3e93638ffe4f",
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 343.137
+  },
+  "catalogRecords": 116,
+  "eachPinVersionDigestVerified": true,
+  "allOutcomesAndReasonsMatchLocal": true,
+  "installedRemoved": 69,
+  "expectedRefusals": 47,
+  "e2eArtifactId": 13056468926,
+  "e2eRunId": 41238231060,
+  "ownershipRunId": 41238231101,
+  "ownershipArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "ownershipUniqueSources": 14,
+  "ownershipHashBindings": 42,
+  "allPublishedZipAndMemberDigestsVerified": true,
+  "hostedPostJobDockerAbsenceIndependentlyVerified": false,
+  "socketResourceWarningsRemain": true,
+  "officialPluginBackendsExecutedByCatalog": false,
+  "installerEnabled": false,
+  "fullPackageModesQualified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "realFrameContacted": false,
+  "published": false,
+  "rawSha256": "c90c9c5b597256e1fb7b95c5ff574473a73a18d7a6cba9f92a1f61f7e3469203",
+  "rawBytes": 32810,
+  "publicationContext": "This qualification was prepared before the documentation update; recorded pending/incomplete gate fields retain their historical scope."
+}
