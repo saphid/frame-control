@@ -8,6 +8,11 @@
     "probe": "screensaver-private-bus"
   },
   {
+    "id": 23,
+    "shim": "animation-preserve-overrides",
+    "probe": "animation-private-overrides"
+  },
+  {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
     "probe": "tabmaster-private-settings",
