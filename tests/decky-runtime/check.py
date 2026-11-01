@@ -67,6 +67,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('version', nargs='?', default='-')
+    parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
@@ -117,6 +118,11 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_volume_mixer_user_regression:
+        assert record['id'] == 38
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deck_shelves_unload_regression:
         assert record['id'] == 135
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -340,6 +346,9 @@ def main():
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
+            if case['probe'] == 'volume-mixer-private-audio':
+                import volume_mixer_private
+                volume_fixture = volume_mixer_private.start(env, log, processes, until_ready)
             if case['probe'] == 'screensaver-private-bus':
                 import screensaver_private
                 screensaver_oracle = screensaver_private.start(env, log, processes, until_ready)
@@ -382,6 +391,12 @@ def main():
                 report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
                     legacy, until_ready, reshade_fixture, plugin)
                 report['result'] = 'private authenticated X11 property changes, shared shader preservation, explicit selection and two clean stops; gamescope rendering, Frame and VR unverified'
+            elif case['probe'] == 'volume-mixer-private-audio':
+                report['volumeMixerRuntime'] = volume_mixer_private.probe(backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, volume_fixture, plugin, discovered,
+                    original=args.reproduce_volume_mixer_user_regression)
+                report['result'] = ('expected original wrong-user Pulse connection failure; negative only' if args.reproduce_volume_mixer_user_regression else
+                    'private actual-user Pulse stream discovery and stereo volume readback, restart and two strict stops; Bluetooth/audio/UI/Frame unverified')
             elif case['probe'] == 'screensaver-private-bus':
                 import screensaver_private
                 report['screensaverRuntime'] = screensaver_private.probe(backend, loader, env, log, processes,
