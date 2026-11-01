@@ -1,0 +1,44 @@
+{
+  "at": "2026-10-31T19:56:26.351495+00:00",
+  "head": "2d530add215db0b308b674d0bb9f588272973326",
+  "runId": 41235136552,
+  "native": [
+    {
+      "artifact": 13055995178,
+      "architecture": "x86_64",
+      "cases": 47,
+      "sourceHashes": 21,
+      "allSourcesBoundToExactHead": true,
+      "publishedLoaderDigestVerified": true,
+      "allDiscovered": true,
+      "expectedRegressionCases": 9,
+      "rpcCalls": 593,
+      "globalCleanRuntime": false,
+      "reportSha256": "566bacc7d84e0c67a7c16da7bd7f33a247ba309b9c0ca505fb07ae327a5272bb"
+    },
+    {
+      "artifact": 13055500820,
+      "architecture": "aarch64",
+      "cases": 47,
+      "sourceHashes": 21,
+      "allSourcesBoundToExactHead": true,
+      "publishedLoaderDigestVerified": true,
+      "allDiscovered": true,
+      "expectedRegressionCases": 9,
+      "rpcCalls": 593,
+      "globalCleanRuntime": false,
+      "reportSha256": "9c0e4c2aa5c6c66f5aa41c628829ffc752420bc6a61eaa897bf2af1d51130490"
+    }
+  ],
+  "combinedSourceArm64Verified": true,
+  "scopedRadiyoTlsLifecycleVerified": true,
+  "tabmasterAndTimerControlsVerified": true,
+  "fullCiQualified": false,
+  "allPackageModesQualified": false,
+  "realFrameContacted": false,
+  "globalCleanRuntime": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "976fabe340cc2ec371f13b6fafe78901f47faea2342a2bd3a96ef0a4e98b5b43",
+  "rawBytes": 141231
+}

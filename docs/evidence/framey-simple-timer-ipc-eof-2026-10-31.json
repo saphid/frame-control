@@ -1,0 +1,101 @@
+{
+  "at": "2026-10-31T10:24:17.670404+00:00",
+  "sourceRevision": "1e06d6424196853dc6e1d5f0c404586b6d809a99",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "baselineRevision": "8c9ad68b0688ab3b0a3265bd71c2923f3194e6c8",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "597ec69a589a05590752cf87d6b8e0a68fb92e7836ff4f7e64133c46cf09ebef",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "36aab75611280691b8d18fa07b1a28a76cde560d1b73f79ab9345bd6c409819d",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "ce5a92c86f7050d7f70e712f15e6c37af4662e2ae816ba394dc9b4031c0c13df",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "5a9844146efa872c4d7fd81b04825e4874dec5e8c41ab3dfd9305c6bb7f09171",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all17SourceFingerprintsVerified": true,
+  "all17BaselineSourceFingerprintsVerified": true,
+  "installedSource": {
+    "archiveSha256": "973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312",
+    "previousManagedBackendSha256": "d3dbcd73cce1ecd48d4fade93923ffc2574f94b381d55dfee1fbb5d91f12984a",
+    "managedBackendSha256": "7c3b00e081dbfa602a7f811f25d3b19271b881a6fbb90d56c500ba8ea0d2598f",
+    "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "onlyIpcPrefixAdded": true,
+    "unchangedArchiveFiles": {
+      "LICENSE": "e5afb91b92026a3aa486a132fcd4ee51a8752a75b456e7758bc0bdd4af917498",
+      "package.json": "7e31e09dedf60ea087161661bfd489fc8ddf4ec597508c29b13e61be4db112aa",
+      "plugin.json": "fd6db528b7a993025398ce36c6a1b0e6c3c9c60e8a1ae2a0ca004be0a8e92c2b",
+      "README.md": "acb75490ccaa20aa09017b745a7311c409701e03a3c1bad816ff695a910d09c1",
+      "dist/alarm.mp3": "d545b67d8cf1a702919ea1def4e6d80054558e8db2bff95c33955b70e9c205ee",
+      "dist/index.js.map": "55faf61971d1d875e357910a63110e2a7ed31ad9314002fdb1715a673705a9de",
+      "dist/index.js": "9756d61559ab9224f82b161d510609e799fffd84f5d744098a0adee40cda7739",
+      "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "mainSharedIpcAdapterUnchanged": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "simpleTimerStatusChangedFrom": "works",
+  "simpleTimerStatus": "partial",
+  "all116InstallPoliciesPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "otherProbeBodiesPreserved": 36,
+  "focusedTests": 93,
+  "nativeCases": [
+    {
+      "caseIndex": 0,
+      "rpcs": 31,
+      "events": 30,
+      "consoleSha256": "399d27f7382ab207eac463a5a8a9b7902141ce9ecb7ad8fd790b4a6035b4fdf6",
+      "positiveScopedCleanShutdownVerified": true,
+      "expectedNegative": false
+    },
+    {
+      "caseIndex": 1,
+      "rpcs": 10,
+      "events": 14,
+      "consoleSha256": "3e247fe1462afb0381fed23716ed62ccf361bc03e036b773ad7354acea450258",
+      "positiveScopedCleanShutdownVerified": false,
+      "expectedNegative": true
+    },
+    {
+      "caseIndex": 2,
+      "rpcs": 18,
+      "events": 24,
+      "consoleSha256": "2135b5fc40d9e12078ee7dd89cd071dcc030baadcdec730f0beb64a79be0cc6c",
+      "positiveScopedCleanShutdownVerified": false,
+      "expectedNegative": true
+    }
+  ],
+  "repairedCleanStops": 4,
+  "priorManagedSourceForcedKillVerified": true,
+  "unchangedProductionForcedKillVerified": true,
+  "settingsByteIdenticalAcrossEachStop": true,
+  "rawJsonSha256": "ce227c8117864f203546e617b2e7dab4f9de656dfc2d3aae6664014ede6d076c",
+  "rawGzipSha256": "d6c61384be272647a42aeaf6ee790f993c73c846355cfe59a23cd00b8e5057b9",
+  "fullMatrixExpected": {
+    "probes": 42,
+    "archivePins": 34,
+    "sourceFingerprints": 17
+  },
+  "globalCleanPluginShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local isolated AMD64 published Decky3.3.0 only; private Unix-peer disconnect stabilizes the prior-source regression.",
+    "Fresh final-head hosted checks/e2e, native AMD64/ARM64 and every triggered package gate remain required.",
+    "Raw console retains JSON parsing diagnostics; scoped clean parent/plugin stops do not prove global error-free shutdown.",
+    "No refreshed browser, managed Frame, worn display/controller, sound, suspend or release proof; original unsupported features remain unsupported."
+  ]
+}

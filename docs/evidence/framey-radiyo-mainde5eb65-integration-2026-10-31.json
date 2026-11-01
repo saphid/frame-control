@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-31T21:28:32.320924+00:00",
+  "sourceRevision": "9b76388188548db642779f4ec4282d7d45ef2642",
+  "main": "de5eb65ff954381cec0df7b1f339f6916abee3d2",
+  "priorHead": "8b6b4fafeefeda8fce10f676037f78a96c455862",
+  "passed": true,
+  "normalMainIntegration": true,
+  "nativeArchitecture": "x86_64",
+  "nativeInputs": 22,
+  "nativeCases": 10,
+  "radiyoRpcs": [
+    9,
+    7
+  ],
+  "radiyoStopSeconds": [
+    0.195,
+    0.185
+  ],
+  "radiyoPreviousForcedStopSeconds": 5.224,
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "deckypartyRpcs": [
+    15,
+    8
+  ],
+  "deckypartyRepairedReloadSeconds": [
+    0.365,
+    0.366,
+    0.366
+  ],
+  "deckypartyNegativeReloadSeconds": 5.273,
+  "server": {
+    "tests": 1961,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 401.063,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "compatibility": "partial",
+  "globalCleanRuntime": false,
+  "realFrameContacted": false,
+  "newHeadHostedArm64AndPackagesQualified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "8797bf952dbcf601d0ba10084d621cadb2964857847864de8b092c7c1f3ec751",
+  "rawBytes": 48649
+}
