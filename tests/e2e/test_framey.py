@@ -205,7 +205,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(found[0]['compatShims'], ['alarme-paused-restart', 'alarme-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
-                                     'cdc87b9626157be5e7b90ecfda7ca35e9a7d9778ee8b7b2f1751d28eac34ab39')
+                                     '1bf6512c51c1693176385621c47dfe2c53a3f6d58baa2e9f4961660b3709160a')
                 if plugin['id'] == 135:
                     self.assertEqual(found[0]['compatShims'], ['deck-shelves-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
