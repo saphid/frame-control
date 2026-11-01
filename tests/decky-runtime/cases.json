@@ -19,7 +19,7 @@
   },
   {
     "id": 36,
-    "shim": null,
+    "shim": "steamgriddb-ipc-eof",
     "probe": "steamgriddb-private-artwork"
   },
   {

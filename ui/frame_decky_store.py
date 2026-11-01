@@ -263,6 +263,9 @@ def apply_script(plugin_id, digest):
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_BATTERY_TRACKER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
 
+    if plugin_id == 36 and digest == 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_STEAMGRIDDB_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 24 and digest == RADIYO_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -457,6 +460,22 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==36 and digest=='e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'
+                    and folder=='decky-steamgriddb'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='f92e0163770e3b079df68b800ed5ea3df9248548acbc074aac19be79d72b3ddc':
+                    raise RuntimeError('SteamGridDB backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_STEAMGRIDDB_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing SteamGridDB child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('SteamGridDB child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n').encode()
+                main.write_bytes(prefix+original)
+                compat_shims.append('steamgriddb-ipc-eof')
             if (int(plugin_id)==103 and digest=='8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'
                     and folder=='decky-ludusavi'):
                 helper=unpacked/'py_modules/ludusavi.py'
