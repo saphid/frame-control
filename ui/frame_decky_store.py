@@ -261,6 +261,9 @@ def apply_script(plugin_id, digest):
         lifecycle = Path(__file__).with_name('framey_discord_lifecycle.py').read_text(encoding='utf-8')
         return ('FRAMEY_DISCORD_IPC_SOURCE = '+repr(ipc)+'\n'
                 +'FRAMEY_DISCORD_LIFECYCLE_SOURCE = '+repr(lifecycle)+'\n'+APPLY)
+    if plugin_id == 23 and digest == 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133':
+        source = Path(__file__).with_name('framey_animation_overrides.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -495,6 +498,24 @@ try:
                 main.write_bytes(prefix+original+suffix)
                 compat_shims.append('discord-status-pipe-lifecycle')
                 compat_shims.append('discord-status-ipc-eof')
+            if (int(plugin_id)==23 and digest=='f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'
+                    and folder=='SDH-AnimationChanger'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Animation Changer' or manifest.get('flags')!=[]
+                        or hashlib.sha256(original).hexdigest()!='11a96a6f3108021b096e0aeb60c7d3ee3c6b2e237cf235c02f5753cf9d3382b8'):
+                    raise RuntimeError('Animation Changer manifest or source differs from pinned archive')
+                repair=globals().get('FRAMEY_ANIMATION_OVERRIDES_SOURCE')
+                if not isinstance(repair,str) or not repair:
+                    raise RuntimeError('Missing Animation Changer override preservation helper')
+                helper=unpacked/'py_modules/framey_animation_overrides.py'
+                if helper.exists(): raise RuntimeError('Animation override helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(repair,encoding='utf-8')
+                suffix=(b'\nfrom framey_animation_overrides import install as _framey_install_overrides\n'
+                        b'_framey_install_overrides(globals())\ndel _framey_install_overrides\n')
+                main.write_bytes(original+suffix)
+                compat_shims.append('animation-preserve-overrides')
             if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
                     and folder=='Deck-Shelves'):
                 main=unpacked/'main.py'
