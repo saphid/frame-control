@@ -5,6 +5,14 @@
     "probe": "alarme-private-lifecycle"
   },
   {
+    "id": 87,
+    "shim": "screensaver-user-bus",
+    "additionalShims": [
+      "screensaver-ipc-eof"
+    ],
+    "probe": "screensaver-private-bus"
+  },
+  {
     "id": 23,
     "shim": "animation-preserve-overrides",
     "probe": "animation-private-overrides"
