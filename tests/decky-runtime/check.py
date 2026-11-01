@@ -329,6 +329,9 @@ def main():
                             'voltage_now':'8746718', 'current_now':'1030625'}.items():
             (supply/name).write_text(value+'\n')
         env['FRAMEY_BATTERY_ROOT'] = str(supply.parent)
+    if case['probe'] == 'animation-private-overrides':
+        import animation_private
+        animation_fixture = animation_private.prepare(home, base, record['folder'])
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
@@ -376,6 +379,15 @@ def main():
                 report['result'] = ('published Decky API1 private session writes, pause/resume, '
                     'per-user SQLite isolation and loader restart persistence passed; '
                     'automatic recording, browser, real Frame and VR unverified')
+            elif case['probe'] == 'animation-private-overrides':
+                report['privateAnimationOverrides'] = animation_private.exercise(
+                    animation_fixture, legacy, rpc, record['name'], until_ready)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['preservationHelperSha256'] = hashlib.sha256(
+                    (plugin/'py_modules/framey_animation_overrides.py').read_bytes()).hexdigest()
+                report['result'] = ('published Decky legacy discovery and private default/apply/repeat/switch/reset '
+                    'RPCs preserve three original override files including bytes and inodes; '
+                    'actual Steam playback, repository downloads, browser and VR unverified')
             elif case['probe'] == 'ludusavi-dependency-discovery':
                 import ludusavi_private
                 report['dependencyDiscovery'] = ludusavi_private.exercise(
