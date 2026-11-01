@@ -1166,8 +1166,9 @@ def main():
                 assert current('set_setting', 'settings', saved) is None
                 before = state.read_bytes()
                 assert json.loads(before) == {'settings': saved}
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
+                import protondb_private
+                first_stop = protondb_private.stop(backend, log, disconnect=True)
+                assert first_stop['cleanShutdownVerified'] and first_stop['seconds'] < 5, first_stop
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1178,6 +1179,11 @@ def main():
                 assert current('get_setting', 'missing-private-setting', False) is False
                 assert current('get_system_info') == info
                 assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                second_stop = protondb_private.stop(backend, log, disconnect=False)
+                assert second_stop['cleanShutdownVerified'] and second_stop['seconds'] < 5, second_stop
+                report['protondbLifecycle'] = dict(stops=[first_stop, second_stop],
+                    settingsBytesPreserved=state.read_bytes() == before,
+                    realFrameContacted=False, badgeRenderingVerified=False, physicalControllerVerified=False)
                 report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
                     settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
