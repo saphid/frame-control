@@ -3419,7 +3419,7 @@
         "https://github.com/geeksville/steamback.git"
       ],
       "status": "partial",
-      "reason": "Panel opens using the real Frame current-user/library snapshot. The exact archive's byte-identical duplicate ZIP members now pass guarded managed install/remove locally; the original fake-Frame baseline recorded an older host rejection. Private save discovery, backup, restore and undo pass through published Decky 3.3.0 x86_64 and ARM64 in network- and device-isolated containers with independent byte readbacks. Automatic backup triggers, real Steam saves, the managed backend on Frame and worn VR remain unverified.",
+      "reason": "Panel opens using the real Frame current-user/library snapshot. The exact archive's byte-identical duplicate ZIP members now pass guarded managed install/remove locally; the original fake-Frame baseline recorded an older host rejection. Private save discovery, backup, restore and undo pass through published Decky 3.3.0 x86_64 and ARM64 in network- and device-isolated containers with independent byte readbacks. Automatic backup triggers, real Steam saves, the managed backend on Frame and worn VR remain unverified. A later ARM64 console records a forced plugin stop without its unload hook. The exact-archive child IPC repair preserves the save engine; update/reinstall required. Isolated AMD64 controls verify the original unload hook, clean parent-only stops, unchanged private backup/undo/save bytes and restart. Fresh final-head hosted, ARM64 shutdown and managed Frame qualification remain pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3465,6 +3465,14 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "requiredShims": [
+        "steamback-ipc-eof"
+      ],
+      "localFollowUp": {
+        "evidence": "docs/evidence/framey-steamback-ipc-eof-2026-10-31.md",
+        "mode": "isolated published Decky 3.3.0 AMD64 controlled IPC disconnect and private save/restart checks",
+        "globalCleanShutdownVerified": false
       }
     },
     {
