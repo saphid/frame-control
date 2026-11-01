@@ -1,5 +1,13 @@
 [
   {
+    "id": 87,
+    "shim": "screensaver-user-bus",
+    "additionalShims": [
+      "screensaver-ipc-eof"
+    ],
+    "probe": "screensaver-private-bus"
+  },
+  {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
     "probe": "tabmaster-private-settings",
@@ -40,7 +48,9 @@
   {
     "id": 117,
     "shim": "deckyparty-user-lifecycle",
-    "additionalShims": ["deckyparty-ipc-eof"],
+    "additionalShims": [
+      "deckyparty-ipc-eof"
+    ],
     "probe": "deckyparty-private-files"
   },
   {
@@ -78,7 +88,9 @@
   {
     "id": 93,
     "shim": "deck-settings-verified-tls",
-    "additionalShims": ["deck-settings-ipc-eof"],
+    "additionalShims": [
+      "deck-settings-ipc-eof"
+    ],
     "probe": "deck-settings-readonly"
   },
   {

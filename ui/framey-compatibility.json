@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -944,7 +944,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -952,7 +952,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -6929,12 +6929,13 @@
         "https://github.com/xfangfang/DeckyInhibitScreenSaver.git"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; global screen overlay and idle/suspend integration have no verified VR target.",
+      "reason": "Managed installs preserve the configured user HOME/runtime/session bus. Native AMD64 Decky verifies private D-Bus inhibit/uninhibit, disconnected-peer cleanup, refusal of busy service names without queueing, settings restart and two clean stops. Requires a configured user bus and unoccupied service names; existing desktop services are left alone. Actual Frame bus, Steam suspend bridge, official controls, ARM64 and worn VR unverified. Update/reinstall required.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native Decky AMD64 private D-Bus"
       ],
       "browser": {
         "id": 87,
@@ -6963,6 +6964,22 @@
         "sha256": "5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "requiredShims": [
+        "screensaver-user-bus",
+        "screensaver-ipc-eof"
+      ],
+      "screensaverRuntime": {
+        "evidence": "docs/evidence/framey-screensaver-user-bus-2026-11-01.md",
+        "decky": "3.3.0",
+        "architecture": "x86_64",
+        "privateBus": true,
+        "existingOwnerPreserved": true,
+        "doNotQueueOrReplace": true,
+        "actualSuspendInhibitionVerified": false,
+        "officialUiVerified": false,
+        "arm64Verified": false,
+        "realFrameContacted": false
       }
     },
     {
@@ -9754,7 +9771,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -12371,7 +12388,9 @@
         "archiveValidation": "accepted",
         "result": "installed-removed"
       },
-      "requiredShims": ["deck-shelves-ipc-eof"],
+      "requiredShims": [
+        "deck-shelves-ipc-eof"
+      ],
       "chunkedFollowUp": {
         "evidence": "docs/evidence/framey-deck-shelves-browser-2026-10-26.md",
         "mode": "exact archive in opaque local Chromium; backend and network denied",

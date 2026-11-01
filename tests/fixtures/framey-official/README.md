@@ -171,3 +171,5 @@ container home. It verifies disk readback, shared-tab visibility, false values,
 loader restart persistence and two clean owned loader exits. It does not
 exercise Steam library-tab editing, backups/restores, browser rendering,
 real Frame or physical controllers. These remain separate verification gates.
+
+`87.zip` is the existing pinned ScreenSaver 1.1.2 store archive (87), SHA-256 `5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822`, copied from the previously verified full-catalog cache on 2026-11-01. No fresh live-store version claim.
