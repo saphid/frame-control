@@ -1187,14 +1187,14 @@ def main():
                 report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
                     settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
-                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    systemInfoMatchesPrivateContainer=True, publishedSettingsMethodsUnchanged=True,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     badgeRenderingVerified=False, browserVerified=False,
                     realSteamCef=False, realFrameContacted=False,
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API2 discovery, private frontend settings '
                     'write/read and loader-restart persistence, false values and container OS '
-                    'metadata passed; badge rendering, browser, Frame and VR unverified')
+                    'metadata, child-peer EOF and two clean parent-only unloads passed; badge rendering, browser, Frame and VR unverified')
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.

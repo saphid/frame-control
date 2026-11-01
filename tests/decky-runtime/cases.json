@@ -50,7 +50,7 @@
   },
   {
     "id": 14,
-    "shim": null,
+    "shim": "protondb-ipc-eof",
     "probe": "protondb-private-settings"
   },
   {
