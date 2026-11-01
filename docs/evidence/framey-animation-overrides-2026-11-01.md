@@ -80,3 +80,7 @@ is not implemented or verified, and external writers do not share this lock.
 Native ARM64, legacy migration of real user files, repository downloads,
 rendered controls, actual Steam video decoding/playback, real Frame use and worn
 visual/controller behavior remain unverified. No real headset was contacted.
+
+A later [main integration record](framey-animation-main9b2-integration-2026-11-01.md)
+qualifies the combined installer with Deck Shelves using fresh focused and
+native AMD64 tests. The full suite above remains attributed to its earlier source.
