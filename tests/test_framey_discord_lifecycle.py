@@ -1,6 +1,7 @@
 """Real private Unix IPC, exact managed archive; no live Discord or Steam."""
 import sandbox  # noqa: F401
 import asyncio
+from contextlib import ExitStack
 import importlib.util
 import io
 import json
@@ -36,9 +37,11 @@ class DiscordLifecycle(unittest.TestCase):
             folder=self.record['folder'], version=self.record['version'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.folder = self.transaction.folder.parent/self.record['folder']
-        self.temp = self.enterContext(tempfile.TemporaryDirectory(prefix='framey-dipc-'))
-        self.enterContext(patch.dict(os.environ, XDG_RUNTIME_DIR=self.temp))
-        self.peer = self.enterContext(private.Peer(Path(self.temp)/'discord-ipc-0'))
+        fixtures = ExitStack()
+        self.addCleanup(fixtures.close)
+        self.temp = fixtures.enter_context(tempfile.TemporaryDirectory(prefix='framey-dipc-', dir='/tmp'))
+        fixtures.enter_context(patch.dict(os.environ, XDG_RUNTIME_DIR=self.temp))
+        self.peer = fixtures.enter_context(private.Peer(Path(self.temp)/'discord-ipc-0'))
         stubs = {'decky': types.SimpleNamespace(logger=logging.getLogger('fixture-discord')),
                  'framey_decky_ipc': types.SimpleNamespace(install=lambda: None)}
         helper = self.folder/'py_modules/framey_discord_lifecycle.py'
