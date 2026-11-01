@@ -95,6 +95,7 @@ def main():
               'tests/decky-runtime/radiyo_private.py',
               'tests/decky-runtime/screensaver_private.py', 'ui/framey_screensaver.py',
               'tests/decky-runtime/surround_private.py', 'ui/framey_surround.py',
+              'tests/decky-runtime/volume_mixer_private.py',
               'tests/decky-runtime/animation_private.py', 'ui/framey_animation_overrides.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
@@ -117,6 +118,7 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (38, '--reproduce-volume-mixer-user-regression'),
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (96, '--reproduce-timer-unload-regression'),
                     (63, '--reproduce-free-loader-unload-regression'),

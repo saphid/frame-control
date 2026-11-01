@@ -175,3 +175,6 @@ real Frame or physical controllers. These remain separate verification gates.
 
 `87.zip` is the existing pinned ScreenSaver 1.1.2 store archive (87), SHA-256 `5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822`, copied from the previously verified full-catalog cache on 2026-11-01. No fresh live-store version claim.
 `23.zip` was added on 2026-11-01 from the existing digest-verified catalog cache; no fresh store metadata is claimed.
+
+
+`38.zip` is Volume Mixer 1.2.1-1, SHA-256 `11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3`, copied from the previously verified catalog cache on 2026-11-01. This does not claim a fresh live-store version lookup. The native case uses UID 1100, private D-Bus and silent Pulse streams, without PULSE_SERVER overriding runtime discovery. It checks real stereo volume readback, an unrelated stream, restart and strict shutdown including an extra child IPC EOF. Its original-source negative must fail Pulse discovery. Bluetooth, audible output, adapted ARM64/Frame and worn/controller use are unverified.

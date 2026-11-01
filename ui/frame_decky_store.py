@@ -261,6 +261,9 @@ def apply_script(plugin_id, digest):
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
                 +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 38 and digest == '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_VOLUME_MIXER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 87 and digest == '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822':
         source = Path(__file__).with_name('framey_screensaver.py').read_text(encoding='utf-8')
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
@@ -502,6 +505,27 @@ try:
                 main.write_bytes(prefix+original+suffix)
                 compat_shims.append('surround-owned-runtime')
                 compat_shims.append('surround-ipc-eof')
+            if (int(plugin_id)==38 and digest=='11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3' and folder=='VolumeMixer-decky'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Volume Mixer' or manifest.get('flags')!=[]
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='4fbe68db632397bd78b0bd35a46426825351a74ed168a6bbbd6fb65378b3fce2'):
+                    raise RuntimeError('Volume Mixer manifest or backend differs from pinned archive')
+                old=(b"    os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'\n"
+                     b"    os.environ['HOME'] = '/home/deck'")
+                if original.count(old)!=1: raise RuntimeError('Volume Mixer environment block differs')
+                ipc=globals().get('FRAMEY_VOLUME_MIXER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Volume Mixer IPC helper')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Volume Mixer IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original.replace(old,b'    pass  # Preserve configured user HOME and Pulse runtime.'))
+                compat_shims.append('volume-mixer-user-audio')
+                compat_shims.append('volume-mixer-ipc-eof')
             if (int(plugin_id)==87 and digest=='5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822' and folder=='DeckyInhibitScreenSaver'):
                 main=unpacked/'main.py'
                 original=main.read_bytes()
