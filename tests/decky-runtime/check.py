@@ -73,6 +73,7 @@ def main():
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
@@ -116,6 +117,11 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_deck_shelves_unload_regression:
+        assert record['id'] == 135
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_battery_tracker_unload_regression:
         assert record['id'] == 67
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
@@ -1708,16 +1714,25 @@ def main():
                 assert len(saved['shelves']) == 1 and saved['shelves'][0]['title'] == 'Private Test', saved
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['state']['shelves'][0]['id'] == shelf['id']
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                restored = until_ready(lambda: current('get_settings')['shelves'],
-                                       'private shelf after restart')
-                assert restored[0]['id'] == shelf['id'] and restored[0]['title'] == shelf['title'], restored
-                report['result'] = ('published Decky discovery, private shelf settings and restart persistence passed; '
+                import deck_shelves_private
+
+                def verify_restarted_shelves():
+                    assert current('get_settings') == saved
+
+                report['deckShelvesLifecycle'] = deck_shelves_private.probe(
+                    backend, loader, env, log, processes, rpc, until_ready, report['discovered'],
+                    [state, state.with_suffix('.json.bak')], verify_restarted_shelves,
+                    regression=args.reproduce_deck_shelves_unload_regression)
+                regression = args.reproduce_deck_shelves_unload_regression
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        originalBackendRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = ('published Decky discovery and private shelf settings passed; '+
+                    ('original backend forced stop reproduced; expected negative only; ' if regression else
+                     'settings/backup persistence, two clean parent-only stops, original unload hooks and restart passed; ')+
                     'Steam Home injection, real Frame and VR unverified')
             elif case['probe'] == 'storage-cleaner':
                 # The only deletion is an owned marker under this disposable

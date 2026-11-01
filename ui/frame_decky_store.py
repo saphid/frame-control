@@ -259,6 +259,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 23 and digest == 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133':
         source = Path(__file__).with_name('framey_animation_overrides.py').read_text(encoding='utf-8')
         return 'FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
     if plugin_id == 130 and digest == PREFIX_MANAGER_102_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -484,6 +487,22 @@ try:
                         b'_framey_install_overrides(globals())\ndel _framey_install_overrides\n')
                 main.write_bytes(original+suffix)
                 compat_shims.append('animation-preserve-overrides')
+            if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
+                    and folder=='Deck-Shelves'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c':
+                    raise RuntimeError('Deck Shelves backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_DECK_SHELVES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Deck Shelves child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Deck Shelves child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original)
+                compat_shims.append('deck-shelves-ipc-eof')
             if (int(plugin_id)==36 and digest=='e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'
                     and folder=='decky-steamgriddb'):
                 main=unpacked/'main.py'
