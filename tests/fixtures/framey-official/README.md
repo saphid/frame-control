@@ -17,8 +17,13 @@ A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
 `134.zip` was downloaded from the official CDN on 2026-10-31 and matched the existing catalog digest. This is not a fresh full-store metadata claim.
 
+`19.zip` was downloaded from the official CDN on 2026-10-30 and matches
+Notebook 0.1.5's digest in the saved publisher catalog. The live catalog refresh
+returned HTTP 403; no new listing/version claim follows from that download.
+
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `19.zip` | Notebook | 0.1.5 | `c35b09de4bba4b4157fbe84cb7b0d20fc3924f78fa3c48ae17686b4314c1cc0c` |
 | `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |

@@ -1029,13 +1029,15 @@
         "https://github.com/popsUlfr/SDH-Notebook.git"
       ],
       "status": "works",
-      "reason": "Default notebook drawing, save and reopen verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Running-game context is now supplied; per-game selection was attempted with a synthetic game and backend calls denied. Real per-game selection, background artwork and worn-VR input remain unverified.",
+      "reason": "Default notebook drawing, save and reopen were verified in Chromium with real Decky 3.3.0 ARM64, including backend restart. Separately, the unmodified official backend passes private default/two-app page isolation, selected-page and stroke persistence across restart, and selected deletion with independent file readbacks under isolated Decky 3.3.0 AMD64 and ARM64. A private AMD64 browser replay verifies drawing, per-app selection, restart and selected deletion using synthetic app contexts. Production HTTP parent, actual Steam game transitions, background artwork and worn-VR/controller input remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
         "fake-Frame",
-        "real Frame SSH"
+        "real Frame SSH",
+        "isolated Decky 3.3.0 AMD64/ARM64 private per-app pages",
+        "private AMD64 browser per-app restart/delete replay"
       ],
       "browser": {
         "id": 19,
@@ -1108,6 +1110,15 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "nativePagesFollowUp": {
+        "evidence": "docs/evidence/framey-notebook-native-pages-2026-10-30.json",
+        "mode": "actual published Decky 3.3.0 AMD64/ARM64 legacy RPCs; private synthetic app IDs and files",
+        "realFrameContacted": false,
+        "browserVerified": true,
+        "nativeCiEvidence": "docs/evidence/framey-notebook-native-ci-2026-10-30.json",
+        "browserEvidence": "docs/evidence/framey-notebook-browser-app-pages-2026-10-30.json",
+        "browserScope": "private x86_64 legacy RPC bridge and synthetic running-app context; original tested source revision 85ae9528e867cf202b03216bf235e41dbd1f7a69; no production HTTP parent or Steam CEF"
       }
     },
     {
