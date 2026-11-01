@@ -1532,8 +1532,11 @@ def main():
                 refused(str(selection)+'/**')
                 (selection/'nested/cycle').unlink()
                 assert (outside/'private.bin').read_bytes() == marker
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
+                import game_sync_private
+                settings_file = base/'settings'/record['folder']/'config.json'
+                settings_before = settings_file.read_bytes()
+                first_stop = game_sync_private.stop(backend, log, disconnect=True)
+                assert first_stop['cleanShutdownVerified'], first_stop
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1544,6 +1547,12 @@ def main():
                 assert current('test_syncpath', str(selection/'save.bin')) == 1
                 refused(outside/'private.bin')
                 assert (outside/'private.bin').read_bytes() == marker
+                second_stop = game_sync_private.stop(backend, log, disconnect=False)
+                assert second_stop['cleanShutdownVerified'], second_stop
+                assert settings_file.read_bytes() == settings_before
+                report['gameSyncLifecycle'] = dict(stops=[first_stop, second_stop],
+                    settingsBytesPreserved=True, realFrameContacted=False,
+                    cloudSyncVerified=False, physicalControllerVerified=False)
                 report['independentState'] = {'outsideFileUnchanged':True, 'validSelectionCount':True,
                     'siblingAndParentEscapeRefused':True, 'outsideLinksRefused':True,
                     'insideLinksAllowed':True, 'cyclesRefused':True, 'restartBoundaryPreserved':True}
