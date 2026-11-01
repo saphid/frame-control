@@ -70,6 +70,7 @@ class FrameyFlow(FrameTestCase):
         require()
         StoreFixture.release = 0
         cls.fixture = ThreadingHTTPServer(('127.0.0.1', 0), StoreFixture)
+        cls.addClassCleanup(cls.fixture.server_close)
         cls.thread = threading.Thread(target=cls.fixture.serve_forever, daemon=True)
         cls.thread.start()
         port = cls.fixture.server_port
@@ -251,8 +252,10 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                         helper_hash = hashlib.sha256(bundle.read('Decky-CP/bin/copyparty-sfx.py')).hexdigest()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/copyparty-sfx.py').split()[0], helper_hash)
                 if plugin['id'] == 104:
-                    self.assertEqual(found[0]['compatShims'], ['game-sync-bounded-selection'])
+                    self.assertEqual(found[0]['compatShims'], ['game-sync-bounded-selection', 'game-sync-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                     with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
                         manager_hash = hashlib.sha256(bundle.read(plugin['folder']+'/py_modules/rclone_manager.py')).hexdigest()
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/rclone_manager.py').split()[0], manager_hash)
