@@ -414,13 +414,17 @@ def main():
 
                 stops = []
                 def stop_loader():
-                    started = time.monotonic()
-                    # Signal only the loader: it owns plugin shutdown. Sending
-                    # SIGTERM to the whole group races the plugin's cleanup.
-                    backend.terminate()
-                    status = backend.wait(timeout=8)
-                    assert status == 0, status
-                    stops.append(dict(returncode=status, elapsedSeconds=round(time.monotonic()-started, 3)))
+                    if not args.reproduce_alarme_pause_regression:
+                        from alarme_lifecycle import stop
+                        observation = stop(backend, log, disconnect=not stops)
+                        stops.append(observation)
+                        assert observation['cleanShutdownVerified'], observation
+                    else:
+                        started = time.monotonic()
+                        backend.terminate()
+                        status = backend.wait(timeout=8)
+                        assert status == 0, status
+                        stops.append(dict(returncode=status, elapsedSeconds=round(time.monotonic()-started, 3)))
 
                 def restart():
                     nonlocal backend
