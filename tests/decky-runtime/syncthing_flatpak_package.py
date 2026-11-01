@@ -32,10 +32,11 @@ EXPECTED = {
 }[ARCH]
 
 
-def command(args, timeout=180):
+def run_captured(args, timeout):
+    """Keep bounded diagnostics when a captured command never returns."""
     began = time.monotonic()
     try:
-        p = subprocess.run(args, capture_output=True, text=True, timeout=timeout)
+        return subprocess.run(args, capture_output=True, text=True, timeout=timeout)
     except subprocess.TimeoutExpired as error:
         def tail(value):
             return (value.decode(errors='replace') if isinstance(value, bytes) else value or '')[-10000:]
@@ -45,6 +46,10 @@ def command(args, timeout=180):
             'stdout': tail(error.stdout), 'stderr': tail(error.stderr),
         }
         raise
+
+
+def command(args, timeout=180):
+    p = run_captured(args, timeout)
     if p.returncode:
         raise RuntimeError(
             str(args)
@@ -474,9 +479,9 @@ def main():
     wait_for_instances()
     report["noOwnedFlatpakInstancesRemain"] = True
     if Path('/input/candidate-inputs.json').exists():
-        migration = subprocess.run(
+        migration = run_captured(
             ['python3', '/input/syncthing_migration.py'],
-            capture_output=True, text=True, timeout=360,
+            timeout=360,
         )
         print(migration.stdout, flush=True)
         print(migration.stderr[-12000:], flush=True)
@@ -484,9 +489,9 @@ def main():
                  for line in migration.stdout.splitlines() if 'FRAMEY_MIGRATION_JSON=' in line]
         assert migration.returncode == 0 and len(lines) == 1
         report['candidateMigration'] = json.loads(lines[0])
-        candidate = subprocess.run(
+        candidate = run_captured(
             ['python3', '/input/syncthing_service.py', '--signed-flatpak'],
-            capture_output=True, text=True, timeout=720 if inputs.get('browserSetupRequested') else 360,
+            timeout=720 if inputs.get('browserSetupRequested') else 360,
         )
         print(candidate.stdout, flush=True)
         print(candidate.stderr[-12000:], flush=True)

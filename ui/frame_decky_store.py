@@ -256,6 +256,47 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 87 and digest == '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822':
+        source = Path(__file__).with_name('framey_screensaver.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SCREENSAVER_SOURCE = '+repr(source)+'\nFRAMEY_SCREENSAVER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 23 and digest == 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133':
+        source = Path(__file__).with_name('framey_animation_overrides.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 130 and digest == PREFIX_MANAGER_102_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 67 and digest == BATTERY_TRACKER_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_BATTERY_TRACKER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+
+    if plugin_id == 46 and digest == 'ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_STEAMBACK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 36 and digest == 'e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_STEAMGRIDDB_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 24 and digest == RADIYO_DIGEST:
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 93 and digest == '23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECK_SETTINGS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 117 and digest == '193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DECKYPARTY_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 61 and digest == 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5':
+        source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_TABMASTER_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 63 and digest == '05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_FREE_LOADER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 134 and digest == DECK_PROGRESS_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_PROGRESS_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -432,6 +473,82 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==87 and digest=='5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822' and folder=='DeckyInhibitScreenSaver'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='ScreenSaver' or manifest.get('flags')!=[]
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='21969c9cf387012c980a0330051dfa5fd961037b160d0a3bac6498138f20c29d'):
+                    raise RuntimeError('ScreenSaver manifest or backend differs from pinned archive')
+                # Do not overwrite the actual user environment during import.
+                old=(b"    os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'\n"
+                     b"    os.environ['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus'\n"
+                     b"    os.environ['HOME'] = '/home/deck'")
+                if original.count(old)!=1: raise RuntimeError('ScreenSaver environment block differs')
+                for name,key in [('framey_screensaver','FRAMEY_SCREENSAVER_SOURCE'),('framey_decky_ipc','FRAMEY_SCREENSAVER_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source: raise RuntimeError('Missing ScreenSaver runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('ScreenSaver helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_screensaver import install as _framey_install_screensaver\n'
+                        b'_framey_install_screensaver(globals())\ndel _framey_install_screensaver\n')
+                main.write_bytes(prefix+original.replace(old,b'    pass  # Preserve configured user HOME/runtime/session bus.')+suffix)
+                compat_shims.append('screensaver-user-bus')
+                compat_shims.append('screensaver-ipc-eof')
+            if (int(plugin_id)==23 and digest=='f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'
+                    and folder=='SDH-AnimationChanger'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Animation Changer' or manifest.get('flags')!=[]
+                        or hashlib.sha256(original).hexdigest()!='11a96a6f3108021b096e0aeb60c7d3ee3c6b2e237cf235c02f5753cf9d3382b8'):
+                    raise RuntimeError('Animation Changer manifest or source differs from pinned archive')
+                repair=globals().get('FRAMEY_ANIMATION_OVERRIDES_SOURCE')
+                if not isinstance(repair,str) or not repair:
+                    raise RuntimeError('Missing Animation Changer override preservation helper')
+                helper=unpacked/'py_modules/framey_animation_overrides.py'
+                if helper.exists(): raise RuntimeError('Animation override helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(repair,encoding='utf-8')
+                suffix=(b'\nfrom framey_animation_overrides import install as _framey_install_overrides\n'
+                        b'_framey_install_overrides(globals())\ndel _framey_install_overrides\n')
+                main.write_bytes(original+suffix)
+                compat_shims.append('animation-preserve-overrides')
+            if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
+                    and folder=='Deck-Shelves'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='f44495405452962de15cd3cdebd0b15b804de31cd5bb261b4bd6938191d06c5c':
+                    raise RuntimeError('Deck Shelves backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_DECK_SHELVES_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Deck Shelves child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Deck Shelves child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original)
+                compat_shims.append('deck-shelves-ipc-eof')
+            if (int(plugin_id)==36 and digest=='e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0'
+                    and folder=='decky-steamgriddb'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='f92e0163770e3b079df68b800ed5ea3df9248548acbc074aac19be79d72b3ddc':
+                    raise RuntimeError('SteamGridDB backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_STEAMGRIDDB_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing SteamGridDB child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('SteamGridDB child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n').encode()
+                main.write_bytes(prefix+original)
+                compat_shims.append('steamgriddb-ipc-eof')
             if (int(plugin_id)==103 and digest=='8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'
                     and folder=='decky-ludusavi'):
                 helper=unpacked/'py_modules/ludusavi.py'
@@ -667,6 +784,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 manifest['flags']=[]
                 (unpacked/'plugin.json').write_text(json.dumps(manifest))
                 compat_shims.append('prefix-manager-user-paths')
+                if digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6':
+                    previous=main.read_bytes()
+                    if hashlib.sha256(previous).hexdigest()!='96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478':
+                        raise RuntimeError('Prefix Manager 1.0.2 managed safeguards differ from tested source')
+                    ipc=globals().get('FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE')
+                    if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Prefix Manager 1.0.2 child IPC EOF repair')
+                    modules=unpacked/'py_modules'
+                    modules.mkdir(exist_ok=True)
+                    helper=modules/'framey_decky_ipc.py'
+                    if helper.exists(): raise RuntimeError('Prefix Manager 1.0.2 child IPC helper collides with archive')
+                    compile(ipc,str(helper),'exec')
+                    helper.write_text(ipc,encoding='utf-8')
+                    main.write_bytes((b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+previous)
+                    compat_shims.append('prefix-manager-102-ipc-eof')
             if wine_cellar:
                 helper=unpacked/'bin/backend'
                 source=unpacked/'main.py'
@@ -881,6 +1013,64 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
                 compat_shims.append('deckyfileserver-directory-entry')
+            # Preserve Steamback's save engine; repair only its child IPC EOF.
+            if int(plugin_id)==46 and digest=='ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3' and folder=='Steamback':
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='3a61cae9e9fdfae1cf69eb73fdd8a15d47c10858f6d78fec4c0e10e5bb52abfb':
+                    raise RuntimeError('Steamback backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_STEAMBACK_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Steamback child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Steamback child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('steamback-ipc-eof')
+            # Exact Free Loader child EOF must yield so its original unload
+            # hook can run; settings/feed/cache implementations stay unchanged.
+            if int(plugin_id)==63 and digest=='05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a' and folder=='free-loader':
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364':
+                    raise RuntimeError('Free Loader backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_FREE_LOADER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Free Loader child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Free Loader child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('free-loader-ipc-eof')
+            # TabMaster 2.15.1 passes a file object to json.loads, so every
+            # restore fails. Read its JSON stream and refuse non-object state.
+            if int(plugin_id)==61 and digest=='e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5' and folder=='TabMaster':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347':
+                    raise RuntimeError('TabMaster backend differs from pinned archive')
+                old=b'        data = json.loads(settings_file)\n'
+                if source.count(old)!=1: raise RuntimeError('TabMaster restore source changed')
+                new=b'        data = json.load(settings_file)\n        if not isinstance(data, dict):\n          return False\n'
+                ipc=globals().get('FRAMEY_TABMASTER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing TabMaster child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('TabMaster child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+source.replace(old,new))
+                compat_shims.append('tabmaster-json-file-restore')
+                compat_shims.append('tabmaster-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
@@ -973,8 +1163,20 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
         decky.logger.info("Simple Timer has been unloaded.")
 
 """+source[b:]
+                ipc=globals().get('FRAMEY_SIMPLE_TIMER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Simple Timer child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Simple Timer child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('simple-timer-lifecycle')
+                compat_shims.append('simple-timer-ipc-eof')
             # Game Sync's selection count must stay inside its configured root,
             # including when a selected file or walked directory is a symlink.
             if int(plugin_id)==104 and digest=='65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd' and folder=='SDH-GameSync':
@@ -1040,7 +1242,16 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 source=main.read_text(encoding='utf-8')
                 if hashlib.sha256(source.encode()).hexdigest()!='807abacba8359bfd87763bc4e32a40b89ca6ca84bb778d29bc062fbd4f0686b2':
                     raise RuntimeError('DeckyParty Python source mismatch')
-                source='from __future__ import annotations\nimport pwd\nimport signal\n'+source
+                ipc=globals().get('FRAMEY_DECKYPARTY_IPC_SOURCE')
+                if not isinstance(ipc,str): raise RuntimeError('Missing DeckyParty child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('DeckyParty IPC helper collides with archive')
+                ipc_helper.parent.mkdir(exist_ok=True)
+                ipc_helper.write_text(ipc)
+                source=('from __future__ import annotations\n'
+                    'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                    '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    'import pwd\nimport signal\n'+source)
                 a=source.index('    @staticmethod\n    def _get_home_dir(')
                 b=source.index('    @staticmethod\n    def _get_sd_mounts(',a)
                 source=source[:a]+"""    @staticmethod
@@ -1129,6 +1340,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('deckyparty-user-lifecycle')
+                compat_shims.append('deckyparty-ipc-eof')
             # Shotty 0.1.0 imports click.get_app_dir but never calls it. Its
             # official ZIP omits click and Decky's bundled Python lacks it.
             # Supply the Linux function only inside this exact plugin's
@@ -1369,8 +1581,18 @@ def split_by_app(data):
                 decky_plugin.logger.exception('recorder')
             await asyncio.sleep(5)
 """
+                ipc=globals().get('FRAMEY_BATTERY_TRACKER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Battery Tracker child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Battery Tracker child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('battery-tracker-user-supply')
+                compat_shims.append('battery-tracker-ipc-eof')
             if deckyspy:
                 compat=modules/'framey_battery.py'
                 if compat.exists(): raise RuntimeError('DeckySpy battery module collides with archive')
@@ -1415,8 +1637,20 @@ def split_by_app(data):
                 if data.count(unsafe)!=2 or data.count(broken)!=2:
                     raise RuntimeError('RadiYo TLS source changed')
                 data=data.replace(unsafe,b'').replace(broken,b"'URL Error: ' + str(error.reason)")
+                ipc=globals().get('FRAMEY_RADIYO_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing RadiYo child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                ipc_helper=modules/'framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('RadiYo child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                data=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+data
+                compile(data,str(main),'exec')
                 main.write_bytes(data)
                 compat_shims.append('radiyo-verified-tls')
+                compat_shims.append('radiyo-ipc-eof')
             # Steam Status 1.2.3 disables TLS checks for its Steam CM-list and
             # speed-test downloads. Keep the default verified contexts in the
             # exact managed archive, including both indentation variants.
@@ -1446,6 +1680,25 @@ def split_by_app(data):
                     raise RuntimeError('Deck Settings TLS source changed')
                 main.write_bytes(data.replace(unsafe,b''))
                 compat_shims.append('deck-settings-verified-tls')
+            # Preserve the verified TLS repair above. The child-local EOF
+            # adapter lets the original unload hook run after an IPC disconnect.
+            if int(plugin_id)==93 and digest=='23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132' and folder=='decky-game-settings':
+                main=unpacked/'main.py'
+                previous=main.read_bytes()
+                if hashlib.sha256(previous).hexdigest()!='eb067334d66a47cf6abbafa9ade1754d5e56089da9315473055a5de78a923f7e':
+                    raise RuntimeError('Deck Settings managed TLS source changed')
+                ipc=globals().get('FRAMEY_DECK_SETTINGS_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Deck Settings child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Deck Settings child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+previous
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('deck-settings-ipc-eof')
             # The exact SuggestMe archive disables hostname and certificate
             # checks if certifi context creation fails. Keep the system CA
             # fallback verified before any credential-bearing API request.

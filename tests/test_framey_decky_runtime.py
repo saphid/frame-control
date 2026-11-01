@@ -22,7 +22,7 @@ class RuntimeCoverage(unittest.TestCase):
             if case.get('version'):
                 self.assertEqual((case['id'], case['version']),
                                  (PREFIX_MANAGER_102['id'], PREFIX_MANAGER_102['version']))
-            self.assertIn(case['probe'], ('bluetooth-private-bluez', 'deckyparty-private-files', 'mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
+            self.assertIn(case['probe'], ('screensaver-private-bus', 'bluetooth-private-bluez', 'deckyparty-private-files', 'mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
                                          'toggle-settings', 'fileserver', 'localsend', 'network-sentinel',
                                          'battery-tracker', 'free-loader', 'radio-local', 'game-sync-config',
                                          'shelves-settings', 'storage-cleaner', 'steamback-private-save',
@@ -32,7 +32,7 @@ class RuntimeCoverage(unittest.TestCase):
                                          'wine-cellar-private-state', 'prefix-manager', 'download-all-logging',
                                          'steamgriddb-private-artwork', 'protondb-private-settings',
                                          'desktop-apps-private-entries', 'tabmaster-private-settings', 'ludusavi-dependency-discovery',
-                                         'deck-progress-private-tags'))
+                                         'deck-progress-private-tags', 'animation-private-overrides'))
 
     def test_new_shim_without_runtime_case_fails_coverage(self):
         import frame_decky_store

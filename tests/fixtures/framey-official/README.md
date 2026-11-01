@@ -19,6 +19,7 @@ A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |
@@ -171,3 +172,6 @@ container home. It verifies disk readback, shared-tab visibility, false values,
 loader restart persistence and two clean owned loader exits. It does not
 exercise Steam library-tab editing, backups/restores, browser rendering,
 real Frame or physical controllers. These remain separate verification gates.
+
+`87.zip` is the existing pinned ScreenSaver 1.1.2 store archive (87), SHA-256 `5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822`, copied from the previously verified full-catalog cache on 2026-11-01. No fresh live-store version claim.
+`23.zip` was added on 2026-11-01 from the existing digest-verified catalog cache; no fresh store metadata is claimed.

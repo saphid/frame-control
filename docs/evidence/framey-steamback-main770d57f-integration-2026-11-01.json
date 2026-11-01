@@ -1,0 +1,60 @@
+{
+  "at": "2026-11-01T01:19:36.923580+00:00",
+  "pr": 527,
+  "testedSource": "4927d66646f3bae15159bdb80fa62127914768b2",
+  "integratedMain": "770d57fd228786ee410a72e477f948805a928b11",
+  "normalMergeParents": [
+    "bb14eb4b3b64ea9e6da6b888b59b8c54c295dd82",
+    "770d57fd228786ee410a72e477f948805a928b11"
+  ],
+  "sourceInputs": 25,
+  "serverTests": 1967,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 9,
+  "localNativePluginIds": [
+    46,
+    36,
+    24,
+    130
+  ],
+  "steambackRpcs": [
+    11,
+    9
+  ],
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "steamGridDbStatus": "broken",
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "radiYoTlsBothRejectionPathsPreserved": true,
+  "independentPrivateSaveSnapshotsVerified": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 402.778,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "realSteamSavesAutomaticTriggersOfficialUiWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "ab5905086e6326941ea42f6704c39a2963cd606714ed90d83fbd3d7bd9905696",
+  "rawBytes": 66937
+}
