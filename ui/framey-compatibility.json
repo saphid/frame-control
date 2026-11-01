@@ -2975,7 +2975,11 @@
         "mode": "native Decky 3.3.0 AMD64; disposable private Discord Unix wire peer",
         "realDiscordContacted": false,
         "realFrameContacted": false
-      }
+      },
+      "requiredShims": [
+        "discord-status-pipe-lifecycle",
+        "discord-status-ipc-eof"
+      ]
     },
     {
       "id": 38,

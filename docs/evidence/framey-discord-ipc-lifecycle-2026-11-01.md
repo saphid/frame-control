@@ -41,12 +41,32 @@ payloads, process ownership, stops and console hashes. Its first attempt
 incorrectly required every descendant to be reaped by the probe; Decky reaps
 some itself. That audit-only assumption was corrected without rerunning the
 native test. The generic console `cleanShutdownVerified` flag remains false
-because it did not signal already-stopped loaders; the explicit two-stop
-records supply the strict shutdown evidence.
+because the generic recorder never certifies plugin shutdown; the explicit
+two-stop records supply the strict shutdown evidence.
 
-Full server/site and simulator qualification will be recorded in the companion
-JSON before publication. Hosted ARM64 runtime and exact-publication CI remain
+Full local server suite: **1,976 tests, 15 platform/optional skips**. Website:
+**18 tests, zero skips**. Full disposable fake-Frame suite: **53 tests, zero
+skips**, all 116 exact catalog records, **69 install/remove and 47 refusal
+outcomes**. Source hashes retain the native inputs and all other 115 catalog
+rows. Owned simulator containers, volumes, networks and image tags were
+removed; independent cleanup inspection passed and the shared simulator stayed
+healthy. The catalog suite does not execute every official backend. See the
+[summary](framey-discord-ipc-lifecycle-2026-11-01.json) and
+[raw logs, native wire/console evidence and audit programs](framey-discord-ipc-lifecycle-2026-11-01-raw.json.gz). Hosted ARM64 runtime and exact-publication CI remain
 required. Actual Discord presence/account, Steam event/shortcut detection,
 artwork fetch, connected browser UI, real Frame and worn/controller behavior
 remain unverified. The original blocking receive/framing and hard-coded
 Flatpak user path assumptions remain outside this lifecycle fix.
+
+The full suite ran before the test-only `ExitStack` portability correction; all
+eight focused lifecycle tests then passed on Python 3.9 and Python 3.12. After
+normal integration of main `149b6ce3995a6ca98106eef32085257e56d9dd58`, the
+three added timeout diagnostic tests and three runtime inventory tests pass
+separately. All 28 native input hashes remain unchanged. The final metadata-only addition
+of two required-shim names makes old installed copies show the existing
+Update/reinstall warning; compatibility stays partial. Both Python versions
+pass the eight focused tests again, including that receipt-based warning, and
+the compatibility suite passes. All 116 catalog versions/digests/flags/policies
+and e2e execution code are unchanged. The full server/catalog/native producers
+were not rerun for this metadata change; their results remain attributed to
+the original source, with fresh hosted final-head CI still required.

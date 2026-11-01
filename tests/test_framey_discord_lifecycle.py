@@ -121,6 +121,15 @@ class DiscordLifecycle(unittest.TestCase):
         import frame_decky_store
         receipt = json.loads((self.folder/'.frame-control-store.json').read_text())
         self.assertEqual(receipt['compatShims'], ['discord-status-pipe-lifecycle', 'discord-status-ipc-eof'])
+        import framey_compatibility
+        args = (37, self.record['sha256'], self.record['version'])
+        current = framey_compatibility.lookup(*args, installed_shims=receipt['compatShims'])
+        previous = framey_compatibility.lookup(*args, installed_shims=[])
+        self.assertEqual(current['status'], 'partial')
+        self.assertEqual(previous['status'], 'partial')
+        self.assertTrue(previous['reason'].startswith('Update or reinstall'))
+        self.assertFalse(current['reason'].startswith('Update or reinstall'))
+
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
                   b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
         suffix = (b'\nfrom framey_discord_lifecycle import install as _framey_discord_lifecycle\n'
