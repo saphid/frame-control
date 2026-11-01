@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 104 and digest == '65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_GAME_SYNC_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 38 and digest == '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_VOLUME_MIXER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1258,6 +1261,20 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(utility),'exec')
                 utility.write_text(source,encoding='utf-8')
                 compat_shims.append('game-sync-bounded-selection')
+                main=unpacked/'main.py'
+                backend=main.read_bytes()
+                if (manifest.get('name')!='Game Sync' or manifest.get('api_version')!=1 or flags!=[]
+                        or hashlib.sha256(backend).hexdigest()!='96fa86a0f1f14531c701bc416a2ae244b521eb24abfa58ce3b76cb27bb8dcff0'):
+                    raise RuntimeError('Game Sync backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_GAME_SYNC_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Game Sync child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Game Sync child IPC helper collides with archive')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+backend)
+                compat_shims.append('game-sync-ipc-eof')
             # The exact DeckyParty archive already runs as the service user.
             # Invoke its original helper with system Python, without sudo, and
             # keep ownership until its process has exited and been reaped.
