@@ -429,7 +429,7 @@ def main(signed_flatpak=False):
             return result['result']
 
         assert json.loads(legacy_rpc('get_settings_json'))['is_setup'] is False
-        wait(lambda: list(base.rglob('watchdog.pid')), 'candidate watchdog')
+        wait(lambda: list(base.rglob('watchdog.pid')), 'candidate watchdog', timeout=80)
         helper_pid = int(next(base.rglob('watchdog.pid')).read_text())
 
         def http(method, route):
