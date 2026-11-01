@@ -187,6 +187,7 @@ def candidate_payloads(helper_path, report_path, archive_path, loader_path, arch
     if (len(builds) != 1 or builds[0].get('sha256') != hashlib.sha256(helper).hexdigest()
         or builds[0].get('bytes') != len(helper)
         or builds[0].get('serviceFileTestsExecuted') is not True
+        or builds[0].get('listenerRetryTestsExecuted') is not True
         or helper[:4] != b'\x7fELF' or int.from_bytes(helper[18:20], 'little') != elf):
         raise ValueError('Candidate helper/build architecture or digest mismatch')
     loader, loader_sha = native.loader_bytes(loader_path)

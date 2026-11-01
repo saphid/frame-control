@@ -73,7 +73,7 @@ def main():
             for filename in ('watchdog', 'PluginLoader', 'official.zip'):
                 command += ['--mount', f'type=bind,source={inputs/filename},target=/input/{filename},readonly']
             command += ['--entrypoint', 'python3', image['Id'], '/repo/tests/decky-runtime/syncthing_candidate.py']
-            result = subprocess.run(command, capture_output=True, text=True, timeout=120)
+            result = subprocess.run(command, capture_output=True, text=True, timeout=210)
             if result.returncode:
                 raise RuntimeError('Native candidate failed:\n'+result.stdout+'\n'+result.stderr)
             report = json.loads(result.stdout)
