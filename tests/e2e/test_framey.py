@@ -70,6 +70,7 @@ class FrameyFlow(FrameTestCase):
         require()
         StoreFixture.release = 0
         cls.fixture = ThreadingHTTPServer(('127.0.0.1', 0), StoreFixture)
+        cls.addClassCleanup(cls.fixture.server_close)
         cls.thread = threading.Thread(target=cls.fixture.serve_forever, daemon=True)
         cls.thread.start()
         port = cls.fixture.server_port
