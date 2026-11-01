@@ -19,6 +19,7 @@ A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `133.zip` | Non-Steam Badges | 0.1.0 | `9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131` |
 | `23.zip` | Animation Changer | 1.3.2 | `f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |

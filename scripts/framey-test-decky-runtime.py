@@ -123,6 +123,7 @@ def main():
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
+                    (133, '--reproduce-nonsteam-path-regression'),
                     (61, '--reproduce-tabmaster-restore-regression'),
                     (61, '--reproduce-tabmaster-unload-regression'),
                     (134, '--reproduce-deck-progress-unload-regression'),

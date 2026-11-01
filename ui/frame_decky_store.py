@@ -571,6 +571,22 @@ try:
                                         b'Submitted ${items.length} downloads to Steam (smallest first)')
                 frontend.write_bytes(managed)
                 compat_shims.append('download-all-local-queue')
+            # Only the published Non-Steam Badges backend's three Deck-user
+            # paths change. Keep its API, frontend, search and parser intact.
+            if int(plugin_id)==133 and digest=='9c12b21fd02da12f4c37f9aab68d75172a11787d09c3478f15b4fc97e01df131' and folder=='decky-nonsteam-badges':
+                main=unpacked/'main.py'
+                source=main.read_bytes()
+                if hashlib.sha256(source).hexdigest()!='af524b89f765018281f07aa2dd557a69d862a9c9ec3df0b5eb3c489e96ed2704':
+                    raise RuntimeError('Non-Steam Badges Python source mismatch')
+                if source.count(b'Path("/home/deck/.steam/steam/userdata/")')!=2 or source.count(b'base_path = "/home/deck/.steam/steam/userdata/"')!=1:
+                    raise RuntimeError('Non-Steam Badges userdata paths differ from pinned archive')
+                source=source.replace(b'Path("/home/deck/.steam/steam/userdata/")',
+                    b'(Path.home()/".steam/steam/userdata")')
+                source=source.replace(b'base_path = "/home/deck/.steam/steam/userdata/"',
+                    b'base_path = str(Path.home()/".steam/steam/userdata")')
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('nonsteam-badges-user-paths')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()

@@ -201,6 +201,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 expected = MANAGED_FRONTENDS.get(plugin['id'], expected)
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 133:
+                    self.assertEqual(found[0]['compatShims'], ['nonsteam-badges-user-paths'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '17c2880823cc0683f887fe95c419b64ba39fe18671eab4257ffecb7422ea1970')
                 if plugin['id'] == 135:
                     self.assertEqual(found[0]['compatShims'], ['deck-shelves-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
