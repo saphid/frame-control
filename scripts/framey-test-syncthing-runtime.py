@@ -41,6 +41,24 @@ def download(url, limit):
     return data
 
 
+def run_probe(command, console_path, timeout):
+    """Retain captured output even when the native probe fails or times out."""
+    def retain(stdout, stderr):
+        def decode(value):
+            return value.decode('utf-8', errors='replace') if isinstance(value, bytes) else (value or '')
+        console_path.parent.mkdir(parents=True, exist_ok=True)
+        console_path.write_text('=== stdout ===\n'+decode(stdout)+'\n=== stderr ===\n'+decode(stderr),
+                                encoding='utf-8')
+
+    try:
+        result = subprocess.run(command, capture_output=True, text=True, timeout=timeout)
+    except subprocess.TimeoutExpired as error:
+        retain(error.stdout, error.stderr)
+        raise
+    retain(result.stdout, result.stderr)
+    return result
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--helper', type=Path, required=True)
@@ -101,7 +119,8 @@ def main():
                 (inputs/filename).chmod(0o644)
                 command += ['--mount', f'type=bind,source={inputs/filename},target=/input/{filename},readonly']
             command += ['--entrypoint', 'python3', tag, '/repo/tests/decky-runtime/syncthing_runtime.py']
-            result = subprocess.run(command, capture_output=True, text=True, timeout=180)
+            console_path = args.output.with_suffix('.console.log')
+            result = run_probe(command, console_path, timeout=180)
             if result.returncode:
                 raise RuntimeError('Actual Syncthing runtime failed:\n'+result.stdout+'\n'+result.stderr)
             report = json.loads(result.stdout)
@@ -111,6 +130,7 @@ def main():
                 raise RuntimeError('Runtime probe executable fingerprints differ')
             report.update(architecture=arch, decky=native.RELEASE, loaderSha256=loader_sha,
                           runtimeArchiveSha256=packed_sha, runtimeArchiveUrl=url, sourceSha256=sources)
+            report['probeConsoleSha256'] = sha(console_path.read_bytes())
             args.output.parent.mkdir(parents=True, exist_ok=True)
             args.output.write_text(json.dumps(report, indent=2)+'\n')
             print('Actual Syncthing two-way sync, restart and Decky private HTTP RPC passed; '

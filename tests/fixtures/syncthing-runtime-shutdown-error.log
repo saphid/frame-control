@@ -1,0 +1,46 @@
+[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues
+[main][INFO]: Starting Decky version v3.3.0
+[loader][INFO]: plugin_path: /home/tester/decky/plugins
+[updater][INFO]: Current branch is not set, determining branch from version...
+[updater][INFO]: Current version determined to be stable
+[loader][INFO]: import plugins from /home/tester/decky/plugins
+[loader][INFO]: found plugin: decky-syncthing
+[loader][INFO]: Loaded Syncthing (v0.2.7)
+[plugin][WARNING]: Plugin Syncthing (v0.2.7) is using legacy method calls. This will be removed in a future release.
+Loaded.
+Calling Loader unload function for Syncthing (v0.2.7).
+Attempting to unload with plugin Syncthing (v0.2.7)'s "_unload" function.
+
+[main][INFO]: Shutting down...
+[main][INFO]: Disabling reload...
+[main][INFO]: Killing plugins...
+[plugin][INFO]: Shutting down Syncthing (v0.2.7)
+[plugin][INFO]: Stopping response listener for Syncthing (v0.2.7)
+[main][INFO]: Error during shutdown:
+Traceback (most recent call last):
+  File "aiohttp/web.py", line 518, in run_app
+  File "asyncio/base_events.py", line 707, in run_until_complete
+  File "asyncio/base_events.py", line 678, in run_forever
+    def run_forever(self):
+                ^^^^^^^^^^
+  File "asyncio/base_events.py", line 2062, in _run_once
+  File "asyncio/events.py", line 94, in _run
+  File "aiohttp/web_runner.py", line 42, in _raise_graceful_exit
+aiohttp.web_runner.GracefulExit
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "decky_loader/main.py", line 126, in shutdown
+  File "decky_loader/loader.py", line 106, in shutdown_plugins
+  File "decky_loader/plugin/plugin.py", line 166, in stop
+  File "decky_loader/plugin/plugin.py", line 183, in kill_if_still_running
+  File "asyncio/tasks.py", line 712, in sleep
+asyncio.exceptions.CancelledError
+
+[main][INFO]: Cancelling tasks...
+[main][INFO]: Shutdown finished.
+======== Running on http://127.0.0.1:1337 ========
+(Press CTRL+C to quit)
+Unloaded Syncthing (v0.2.7)
+
