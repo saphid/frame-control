@@ -4,6 +4,7 @@ import io
 import os
 from pathlib import Path
 import signal
+import socket
 import subprocess
 import time
 import zipfile
@@ -44,6 +45,17 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
                 break
             owned.update(children)
         assert len(owned) >= 2
+        previous_console = Path(log.name).read_text()
+        closed_peers = []
+        if not stops:
+            paths = list(Path('/tmp').glob('plugin_socket_*'))
+            assert len(paths) == 1 and paths[0].is_socket() and paths[0].stat().st_uid == os.getuid()
+            with socket.socket(socket.AF_UNIX) as peer:
+                peer.settimeout(.2)
+                peer.connect(str(paths[0]))
+                peer.shutdown(socket.SHUT_WR)
+            closed_peers = [str(paths[0])]
+            time.sleep(.05)
         started = time.monotonic()
         os.kill(process.pid, signal.SIGTERM)
         assert process.wait(timeout=8) == 0
@@ -65,9 +77,24 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
                     pass
             return True
         until_ready(reaped, 'owned Ludusavi fixture loader descendants reaped')
-        stops.append({'returncode': 0, 'elapsedSeconds': time.monotonic()-started,
-                      'parentOnlySignal': True, 'ownedProcessCount': len(owned),
-                      'adoptedChildExits': adopted, 'ownedProcessIdentitiesReaped': True})
+        console = Path(log.name).read_text()[len(previous_console):]
+        seconds = time.monotonic()-started
+        forced = console.count('Sending SIGKILL!')
+        errors = [marker for marker in ['Error during shutdown:', 'Task was destroyed but it is pending',
+                  'asyncio.exceptions.CancelledError', 'Bad file descriptor'] if marker in console]
+        clean = (process.returncode == 0 and seconds < 5 and not forced and not errors
+                 and all(child['returncode'] == 0 for child in adopted)
+                 and console.count('[main][INFO]: Shutdown finished.') == 1
+                 and 'Unloaded Decky Ludusavi (v1.2.2)' in console)
+        observation = dict(returncode=process.returncode, elapsedSeconds=seconds,
+            parentOnlySignal=True, ownedProcessCount=len(owned), ownedProcessIdentities=tree,
+            adoptedChildExits=adopted, ownedProcessIdentitiesReaped=True,
+            closedUnixPeers=closed_peers, forcedPluginKills=forced, errors=errors,
+            console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+            cleanShutdownVerified=clean)
+        stops.append(observation)
+        assert clean, observation
+
 
     def initialized(count):
         until_ready(lambda: (home/'runtime.log').read_text().count('Using Binary:') == count,
