@@ -1553,6 +1553,13 @@ def main():
                 report['gameSyncLifecycle'] = dict(stops=[first_stop, second_stop],
                     settingsBytesPreserved=True, realFrameContacted=False,
                     cloudSyncVerified=False, physicalControllerVerified=False)
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    report['gameSyncInstalledSha256'] = {
+                        item.filename.split('/', 1)[1]: hashlib.sha256(
+                            (plugin/item.filename.split('/', 1)[1]).read_bytes()).hexdigest()
+                        for item in original.infolist() if not item.is_dir()}
+                report['gameSyncIpcHelperSha256'] = hashlib.sha256(
+                    (plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()
                 report['independentState'] = {'outsideFileUnchanged':True, 'validSelectionCount':True,
                     'siblingAndParentEscapeRefused':True, 'outsideLinksRefused':True,
                     'insideLinksAllowed':True, 'cyclesRefused':True, 'restartBoundaryPreserved':True}
