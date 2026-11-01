@@ -1,0 +1,21 @@
+# RadiYo integration of the merged TabMaster repair
+
+PR [#520](https://github.com/saphid/frame-control/pull/520) normally merges main `13360b13017bbb1a16c5ee6472bb15b5ea996586` into prior head `44ba8459e382ce2afbd5b7b6d9b0b89296b21264` at tested source `1bf649bb2c3363bd9afadc72f927d87fc25409b5`. No history rewritten. One conflict in the runtime fingerprint list retains both TabMaster and RadiYo helpers. Both negative-control dispatches are retained. #525's separately verified merge remains historical evidence; this record tests their combined source.
+
+## Announcement
+
+Integrated TabMaster's merged unload repair into RadiYo's shutdown/TLS branch. Fresh private AMD64 native tests verify both repairs and their failed controls together, preserving settings/backup/restore and TLS rejection. Existing RadiYo copies need Update/reinstall; compatibility remains **partial**. ARM64/final-head hosted matrix and real radio playback/UI/Steam/Frame remain unverified.
+
+## Verification
+
+- Complete checker/runner/installer AST audits against current main preserve its other 36 runtime bodies, other 33 cases, other 115 complete catalog rows, all 116 policies and e2e/compatibility/Timer assertions. RadiYo's prior probe/helper/negative/TLS branch is unchanged. All three fresh native reports bind the same 21 input hashes; the added TabMaster helper is fingerprinted.
+- Published digest-verified Decky 3.3.0 AMD64: RadiYo repaired/previous-managed 9/7 RPCs, loopback HTTP body/header/redirect/restart and both self-signed HTTPS rejection paths. Two repaired stops take 0.215/0.214 seconds; previous-managed force-stop takes 5.274. Selected stop errors/recorded owned descendants are absent; adopted exits and unrelated sibling verify. Independent owned install/remove/receipt reconstructs the exact TLS backend and preserved members.
+- TabMaster repaired/original/previous-managed 47/48/47 RPCs. Repaired stops complete the original unload hook with zero forced kills and preserve backup/restore/private settings. Original valid-restore refusal and previous-managed forced-stop remain negatives. Timer retains 31/10/18 RPCs, hashed settings/events/restart, four repaired clean stops and original/previous-managed failures. Generic console clean-shutdown verdicts stay false; TabMaster JSON diagnostics remain. No global clean-runtime claim.
+- Full server suite: 1,953 tests, 15 skips, no failures. Website: 18 tests, zero skips. Full fake-Frame e2e: **53 tests, zero skips**, every exact catalog archive hash checked, all 116 IDs/digests/outcomes retained (69 install/remove, 47 expected refusals), exactly matching the prior complete prospective-TabMaster result. Cache mounted read-only; these installer fixtures do not execute official backends. New unique owned containers/volumes/network/images are removed and absence independently checked; existing cache/data preserved. Socket ResourceWarnings remain in the retained log; this is not a globally clean-runtime verdict.
+- Prior head `44ba8459e382ce2afbd5b7b6d9b0b89296b21264` had 18 successful hosted checks, including both native architectures and all four package modes; its separate hosted audit remains prepared in #531's evidence queue. Those prior-head artifacts do not qualify the combined source here. No full native matrix or ARM64 run was done locally.
+
+## Remaining gates
+
+Exact final-head hosted CI/e2e/AMD64+ARM64/native/ownership/every applicable package mode, completed exact-current-main CI, feedback, mergeability and behind-or-overlap checks remain required. Existing historical TabMaster/RadiYo failures remain failed runs and are not erased by later repairs. No external public stations, trusted public HTTPS, audio playback, RadiYo UI/browser refresh, actual Steam CEF, managed Frame, wearer/controller, tagged installer or release proof. No headset, schedule or pre-existing user data touched. Release held until every exact release-commit gate and locked real Frame smoke passes.
+
+[Audit](framey-radiyo-main13360b-tabmaster-integration-2026-10-31.json), [raw native reports/logs/full catalog outcomes/source verifiers](framey-radiyo-main13360b-tabmaster-integration-2026-10-31-raw.json.gz), raw SHA-256 `6ff11b72ece3ab271735f77749ec0cc1ac748a9a3a2e523cffe73d1824fe4aed`.

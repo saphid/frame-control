@@ -189,7 +189,7 @@ def main():
 
         defaults = json.loads(legacy('get_settings_json'))
         assert defaults['is_setup'] is False and defaults['autostart'] == 'no'
-        until_ready(lambda:list(base.rglob('watchdog.pid')), 'watchdog startup')
+        until_ready(lambda:list(base.rglob('watchdog.pid')), 'watchdog startup', timeout=80)
         helper_pid = int(next(base.rglob('watchdog.pid')).read_text())
         entries = Path(f'/proc/{helper_pid}/environ').read_bytes().split(b'\0')
         socket_path = Path(os.fsdecode(next(e.split(b'=', 1)[1] for e in entries if e.startswith(b'FRAMEY_SYNCTHING_SOCKET='))))

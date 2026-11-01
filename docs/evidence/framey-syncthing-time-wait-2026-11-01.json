@@ -1,0 +1,59 @@
+{
+  "at": "2026-11-01T01:05:34.048074+00:00",
+  "testedSource": "1a6b974ae19716e919db8c27be9ed6b1b4fa487f",
+  "baseMain": "770d57fd228786ee410a72e477f948805a928b11",
+  "serverTests": 1964,
+  "serverSkips": 15,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "rustClassifierTests": 5,
+  "nativeArchitecture": "x86_64",
+  "decky": "v3.3.0",
+  "originalHelperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+  "fixedHelperSha256": "ef5f0e459b5b779488189108e95015f03f83f472ee02d69ae00dd3df7cffbe6b",
+  "actualTimeWaitRecoverySeconds": 63.356,
+  "invalidSettingsNegativeStillFails": true,
+  "foreignListenerRefusalBeforeStateChangesVerified": true,
+  "threeNormalReloadsVerified": true,
+  "forcedPluginExitStillReapsOnlyOwnedHelper": true,
+  "nativeCandidateOwnershipAndPrivateHttpChecksPassed": true,
+  "actualSyncthingVersion": "v2.1.7",
+  "actualSyncthingTwoWaySyncPassed": true,
+  "nativePrivateRestReadRoutes": 9,
+  "apiKeyErrorStatus": 403,
+  "peerStopSeconds": [
+    10.087,
+    10.087
+  ],
+  "original519CauseProven": false,
+  "installerEnabled": false,
+  "syncthingStillBlocked": true,
+  "packageAndArm64FreshExecutionUnverified": true,
+  "localFullE2eNotRun": true,
+  "realFrameContacted": false,
+  "cleanup": {
+    "passed": true,
+    "remainingOwned": {
+      "candidateContainers": "",
+      "candidateImages": "",
+      "builderContainers": "",
+      "runtimeContainers": "",
+      "runtimeImages": ""
+    },
+    "simulator": {
+      "id": "cfcf8a78103af20a9dc46192c893dedd5606107b3d3f6c8bef804db0dace3729",
+      "startedAt": "2026-10-30T08:17:01.714646486Z",
+      "restartCount": 0
+    },
+    "images": {
+      "fakeframe-frame:latest": "sha256:679f30d953ef03039568b79ecb95ee542e65c8a3fee30300fd68bb84c0238bba",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "sharedSimulatorAndImagesPreserved": true,
+    "realFrameContacted": false
+  },
+  "rawSha256": "c3b25ec9c160ef7aaa2190baa472219036f8b956c541d4585df18520d0507b73",
+  "rawBytes": 36738,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

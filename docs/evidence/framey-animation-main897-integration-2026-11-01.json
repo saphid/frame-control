@@ -1,0 +1,30 @@
+{
+  "at": "2026-11-01T06:52:06.865693+00:00",
+  "sourceRevision": "1f59125443e99513ae0f230b56a5fee8510a5de7",
+  "baseMain": "89757d33f61124486404bc16e84b7d3697cf2c9f",
+  "previousHead": "72d63f7284e128213465c80f9a3eacec222451de",
+  "prospectiveTreeVerified": true,
+  "allAnimationInputsUnchanged": true,
+  "onlyPriorMainTabMasterPatchAndEvidenceAdded": true,
+  "reversePatchAppliesCleanly": true,
+  "priorMainPatchSha256": "0e1dd94d9b91b8cbb5ba613f52b46023ea14969d8038fc2014d78cea296197fc",
+  "focused": {
+    "animation": {
+      "tests": 16,
+      "sha256": "de75d94754fec293255879098048d644c28c5acb7872c3f17eac5a9e16ab50f2",
+      "text": "................\n----------------------------------------------------------------------\nRan 16 tests in 1.374s\n\nOK\n"
+    },
+    "inventory": {
+      "tests": 3,
+      "sha256": "3a172c55de7c4fc985c2eec12502fa584b176585174d269e7bf8844dda63959f",
+      "text": "...\n----------------------------------------------------------------------\nRan 3 tests in 0.052s\n\nOK\n"
+    }
+  },
+  "fullPreviousHostedEvidenceAppliesOnlyToOldHead": true,
+  "freshExactHeadCiRequired": true,
+  "initialAuditAdapterError": "Initial verifier expected an elif; exact prior source uses two if branches. Corrected verifier requires exactly those two preserved branches.",
+  "productionChangedByAuditCorrection": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

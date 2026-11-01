@@ -1,0 +1,66 @@
+{
+  "at": "2026-10-31T20:00:04.269364+00:00",
+  "head": "e7f35e3352acb222051e3adf9d53fb427c266acf",
+  "artifactId": 13055602207,
+  "runId": 41235942300,
+  "jobId": 124639631299,
+  "jobUrl": "https://github.com/saphid/frame-control/actions/runs/41235942300/job/124639631299",
+  "architecture": "aarch64",
+  "artifactSha256": "4063679cd2b05388e486cff9450891d9816a15f2925f00a00f7ac3f03f2f95d0",
+  "artifactMembers": [
+    {
+      "name": "catalog-cache.json",
+      "bytes": 21831,
+      "sha256": "80bb8ef0732abe9849f1d756216488ccfcf2fee5e2623b5e2ffefe056932a3c1"
+    },
+    {
+      "name": "catalog-result.json",
+      "bytes": 28711,
+      "sha256": "6ed8774592b7f3dd34aba34486b26d9fcf24fd11a9d1e2d00aac49354d593c20"
+    }
+  ],
+  "catalogSha256": "e5c3309860e32e190c3810f73eec01d622001c69bbb0a7f0e10be7b2742f2b07",
+  "records": 116,
+  "cacheSources": {
+    "cache": 116
+  },
+  "outcomes": {
+    "blocked": 47,
+    "installed-removed": 69
+  },
+  "eachPinVersionDigestVerified": true,
+  "identicalToLocalFullCatalogOutcomes": true,
+  "sourceSha256": {
+    ".github/workflows/checks.yml": "a7e8d48268dd6e16ade83c46833193ea5afdd239b8389563ad380b6c8e1519ac",
+    "scripts/e2e.sh": "1661182f988ad5178ae0cd1357e6bfdb1181be83467895a715d51b6b67c70c3e",
+    "scripts/framey-cache-catalog.py": "f67c4d9ba3ff2bc2e2f20811f49c703d0e80775253088f3c273f8a1298a7c4e4",
+    "tests/test_framey_catalog_cache.py": "a5707f17698439a0f82fb4fee7910397ed341af4ff3c83052a2dd8ea33ec5e0f",
+    "tests/e2e/test_framey_catalog.py": "108cdaa3e64c56324a01f7ad256f14f80a0a6819c0de7413afe50e143860d34b",
+    "tests/e2e/test_framey.py": "7c525c3a61ab8da01c88fc43d143c2031d4569ff59bfeeb8f21d67c196ebfb0c",
+    "tests/e2e/harness.py": "98f9ee59e79281d803e87e56f66dc8ca2edab401a99009bb077d47da815bf9dc",
+    "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f",
+    "tests/fakeframe/Containerfile": "55c56a8d047f50d9c892028c373d228bd674c2b364b4322d82765a4e26ab0804",
+    "tests/fakeframe/host.Containerfile": "6faccc39e4765050f57e82ce4ba1e66609a6a3fb4c23fc4461c846d39e0fd933",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "99fc27194d623a1cc35844019f25a9ce87a30f262b50ee50195210b94aec5798",
+    "ui/framey-compatibility.json": "e5c3309860e32e190c3810f73eec01d622001c69bbb0a7f0e10be7b2742f2b07"
+  },
+  "exactHeadCheckoutVerified": true,
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 348.3
+  },
+  "actualResultCopyVerified": true,
+  "readOnlyMountAndCleanupVerifiedFromSource": true,
+  "hostedResourceAbsenceIndependentlyObserved": false,
+  "cleanupLimit": "Hosted job completes successfully with source trap; no post-job Docker inspection packet is retained.",
+  "socketResourceWarningsRemain": true,
+  "officialPluginBackendsExecuted": false,
+  "catalogRatingsChanged": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "a0fb2c622efabaaf34ec18117afe5a33540e3f6af69409f86efcf8d46daffe6d",
+  "rawBytes": 29333
+}

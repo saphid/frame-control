@@ -1,0 +1,59 @@
+{
+  "at": "2026-10-31T20:42:32.507817+00:00",
+  "sourceRevision": "db9824f4071b224e4a6bdccb6800b330e74288b2",
+  "main": "7062ef4d81d7fa25e1562d22d0b1b92fa526b499",
+  "priorHead": "0c921258d1cd5367d2683d1d1eaafeaac90cd652",
+  "passed": true,
+  "normalMainIntegration": true,
+  "nativeInputs": 21,
+  "nativeCases": 8,
+  "nativeArchitecture": "x86_64",
+  "batteryRpcs": [
+    37,
+    35
+  ],
+  "batteryRepairedStopSeconds": [
+    0.196,
+    0.215
+  ],
+  "batteryNegativeStopSeconds": 5.195,
+  "twoSqliteSnapshotsIndependentlyDecodedAndIntegrityChecked": true,
+  "pendingSamplesFlushedAndPersistedAcrossRestart": true,
+  "priorForcedKillAndLostSamplesRetained": true,
+  "tabmasterRpcs": [
+    47,
+    48,
+    47
+  ],
+  "timerRpcs": [
+    31,
+    10,
+    18
+  ],
+  "server": {
+    "tests": 1960,
+    "skips": 15
+  },
+  "site": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 397.758,
+    "records": 116,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "ownedCleanupVerified": true,
+  "hostedNewHeadArm64AndPackagesQualified": false,
+  "compatibility": "partial",
+  "globalCleanRuntime": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "a3a09a760ff3e10f52395b05e075bb8bc29634261d84986bf234d1d74c224f75",
+  "rawBytes": 45591
+}

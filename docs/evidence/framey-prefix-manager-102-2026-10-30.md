@@ -54,3 +54,7 @@ changes, game-data deletion, complete non-Steam names, a live Steam library,
 wearer-visible panels and physical controller use remain unverified. These
 checks do not raise the published v0.4.56 store classification for 1.0.1 or
 authorize a release.
+
+A subsequent native matrix found a forced v1.0.2 shutdown despite successful
+RPCs. See the [scoped EOF repair and strict lifecycle evidence](framey-prefix-manager-102-ipc-eof-2026-10-31.md).
+The preflight above does not establish clean shutdown. Store 1.0.1 claims remain unchanged.

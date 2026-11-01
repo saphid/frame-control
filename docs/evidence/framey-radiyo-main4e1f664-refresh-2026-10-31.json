@@ -1,0 +1,399 @@
+{
+  "at": "2026-10-31T18:04:52.772073+00:00",
+  "sourceRevision": "955ce6dba2497a2eeecc139672941c328c15e5df",
+  "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+  "priorHead": "3bfccea94b5cdd13de055901d7dee47edc8f2002",
+  "normalMerge": true,
+  "nativeAudit": {
+    "sourceRevision": "955ce6dba2497a2eeecc139672941c328c15e5df",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "nativeSourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "f3ac3214c885b4fd3edde4c782a15e777d6c3af60c2ff449a9881a49bbc555ad",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "c3416f8e8f758d40aa734a5d4bfb2e0c74fe184fa624250eb9010865fddde7f5",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "987b17781c77da33dec91f49d73a0ef9785ea6a7b61d6ea99eb48ed8d01b7994",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "7f8fc34875eac89acb55f149a40d52e2bcbaa9b67131538291fa9e47a84c6b1c",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeSourceFingerprints": 20,
+    "archiveSha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43",
+    "backendSha256": "23cdff5bfa7f57e6c0341c825ab23cfb363e4408ae3c4f117fe3d1885f00a265",
+    "adapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "unmodifiedArchiveFiles": {
+      "LICENSE": "7f64a1130058fd9b965b366c26a125aeb055856d86b2d5297b7abc2a15beb400",
+      "package.json": "6334c9b75f3db2030d3e921076f8d11139ad73ae29d3cbb1a91b99e3546aab2a",
+      "plugin.json": "352523e9df7ca0c09e0764caed1055a4940071c202828722c82c1450a06f4cff",
+      "README.md": "fe549af9c94268beb30b0858f5ed6a68780e687986657ba3d5a818569b7cbec7",
+      "dist/index.js": "41ac20dfcc93b98df1aba0f0adc282077351e9f9ebb1340181fe364150f671db",
+      "dist/assets/logo-61e502bb.png": "307f46653dc13c18660c5bb0a2a383e6474953904f76249d231970a0e3c4fd47"
+    },
+    "radiyoCases": [
+      {
+        "rpcs": 9,
+        "tlsBothMethodsRejectedSelfSigned": true,
+        "httpReadbacks": [
+          {
+            "station": {
+              "body": "Framey lifecycle station\n",
+              "headers": {
+                "Server": "BaseHTTP/0.6 Python/3.13.5",
+                "Date": "Sat, 31 Oct 2026 18:00:27 GMT",
+                "Content-Type": "text/plain",
+                "Content-Length": "25"
+              },
+              "status": 200
+            },
+            "redirect": {
+              "response": "http://127.0.0.1:43855/station"
+            }
+          },
+          {
+            "station": {
+              "body": "Framey lifecycle station\n",
+              "headers": {
+                "Server": "BaseHTTP/0.6 Python/3.13.5",
+                "Date": "Sat, 31 Oct 2026 18:00:30 GMT",
+                "Content-Type": "text/plain",
+                "Content-Length": "25"
+              },
+              "status": 200
+            },
+            "redirect": {
+              "response": "http://127.0.0.1:43855/station"
+            }
+          }
+        ],
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "352037330"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "352037374"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "352037374"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "352037385"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.225,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793469623.9736574"
+            ],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+            "cleanShutdownVerified": true
+          },
+          {
+            "loaderPid": 33,
+            "descendantsBefore": {
+              "34": {
+                "state": "S",
+                "parent": 33,
+                "start": "352037762"
+              },
+              "43": {
+                "state": "S",
+                "parent": 34,
+                "start": "352037791"
+              },
+              "44": {
+                "state": "S",
+                "parent": 34,
+                "start": "352037791"
+              },
+              "45": {
+                "state": "S",
+                "parent": 44,
+                "start": "352037802"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 43,
+                "returncode": 0
+              },
+              {
+                "pid": 44,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 0.215,
+            "fixtureClosedUnixPeers": [],
+            "forcedPluginKills": 0,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+            "cleanShutdownVerified": true
+          }
+        ],
+        "consoleSha256": "d63c8202aa597254264afaf7a64fe0b7039c924e36ccd42aadda5ed2dcb03480"
+      },
+      {
+        "rpcs": 7,
+        "tlsBothMethodsRejectedSelfSigned": true,
+        "httpReadbacks": [
+          {
+            "station": {
+              "body": "Framey lifecycle station\n",
+              "headers": {
+                "Server": "BaseHTTP/0.6 Python/3.13.5",
+                "Date": "Sat, 31 Oct 2026 18:00:35 GMT",
+                "Content-Type": "text/plain",
+                "Content-Length": "25"
+              },
+              "status": 200
+            },
+            "redirect": {
+              "response": "http://127.0.0.1:39465/station"
+            }
+          }
+        ],
+        "stops": [
+          {
+            "loaderPid": 9,
+            "descendantsBefore": {
+              "10": {
+                "state": "S",
+                "parent": 9,
+                "start": "352038151"
+              },
+              "19": {
+                "state": "S",
+                "parent": 10,
+                "start": "352038181"
+              },
+              "20": {
+                "state": "S",
+                "parent": 10,
+                "start": "352038181"
+              },
+              "21": {
+                "state": "S",
+                "parent": 20,
+                "start": "352038191"
+              }
+            },
+            "exactDescendantsRemaining": {},
+            "adoptedChildExits": [
+              {
+                "pid": 19,
+                "returncode": 0
+              },
+              {
+                "pid": 20,
+                "returncode": 0
+              }
+            ],
+            "parentOnlySignal": true,
+            "loaderReturncode": 0,
+            "seconds": 5.234,
+            "fixtureClosedUnixPeers": [
+              "/tmp/plugin_socket_1793469632.0371623"
+            ],
+            "forcedPluginKills": 1,
+            "errors": [],
+            "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][WARNING]: Plugin RadiYo! (v1.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "60707430106551f272c6fd16208fe73e2a3dfe97c53fa5b8ac2417e784bc13b4",
+            "cleanShutdownVerified": false
+          }
+        ],
+        "consoleSha256": "d487da146ebdca1769fecad894098389066af726076873d84d21fee482f36661"
+      }
+    ],
+    "radiyoRpcCounts": [
+      9,
+      7
+    ],
+    "repairedStopSeconds": [
+      0.225,
+      0.215
+    ],
+    "previousForcedStopSeconds": 5.234,
+    "bothTlsRejectionPathsPreserved": true,
+    "originalManagedTlsBackendIndependentlyReconstructed": true,
+    "realFrameContacted": false,
+    "globalCleanPluginShutdownVerified": false
+  },
+  "timerControl": {
+    "sourceRevision": "955ce6dba2497a2eeecc139672941c328c15e5df",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "f3ac3214c885b4fd3edde4c782a15e777d6c3af60c2ff449a9881a49bbc555ad",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "c3416f8e8f758d40aa734a5d4bfb2e0c74fe184fa624250eb9010865fddde7f5",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "987b17781c77da33dec91f49d73a0ef9785ea6a7b61d6ea99eb48ed8d01b7994",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "7f8fc34875eac89acb55f149a40d52e2bcbaa9b67131538291fa9e47a84c6b1c",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "native": [
+      {
+        "caseIndex": 0,
+        "rpcs": 31,
+        "events": 30,
+        "consoleSha256": "bf5d35b73158485bcdf178248ade181df0ccc4b42a29094fdc2e7ae83b732272",
+        "positiveScopedCleanShutdownVerified": true,
+        "expectedNegative": false
+      },
+      {
+        "caseIndex": 1,
+        "rpcs": 10,
+        "events": 14,
+        "consoleSha256": "1b7eac5674dbdc2afe4893f7719c26fd5e34a377c81723f054f6b57352a632ef",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      },
+      {
+        "caseIndex": 2,
+        "rpcs": 18,
+        "events": 24,
+        "consoleSha256": "2e2add57594c8de7ff7c0b26792b0659b83f574b239b088cf95b30838c32932a",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      }
+    ],
+    "repairedStopSeconds": [
+      0.185,
+      0.225,
+      0.215,
+      0.246
+    ],
+    "negativeStopSeconds": 5.224,
+    "settingsSnapshotsDecodedAndHashed": true,
+    "runtimeOwnedContainersAndImagesAbsent": true,
+    "realFrameContacted": false
+  },
+  "sourceAudit": {
+    "at": "2026-10-31T18:00:55.664505+00:00",
+    "sourceRevision": "955ce6dba2497a2eeecc139672941c328c15e5df",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "priorHead": "3bfccea94b5cdd13de055901d7dee47edc8f2002",
+    "normalMerge": true,
+    "wholeMainCheckerAstPreserved": true,
+    "mainCompatibilityReceiptTestsPreserved": true,
+    "mainTimerHelpersByteIdentical": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorRadiyoBodyPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorRadiyoInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderRuntimeAndFixtureMatchMain": true,
+    "other115CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "mainOther33NativeCasesPreserved": true,
+    "priorRadiyoCaseAndHelperPreserved": true,
+    "mainRunnerPreservedWithOneNewControl": true,
+    "mainE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "f3ac3214c885b4fd3edde4c782a15e777d6c3af60c2ff449a9881a49bbc555ad",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "c3416f8e8f758d40aa734a5d4bfb2e0c74fe184fa624250eb9010865fddde7f5",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "987b17781c77da33dec91f49d73a0ef9785ea6a7b61d6ea99eb48ed8d01b7994",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "7f8fc34875eac89acb55f149a40d52e2bcbaa9b67131538291fa9e47a84c6b1c",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 20
+  },
+  "historicalTabmasterFailure": {
+    "sourceRevision": "62a99ba8b7c395ffc4000c0195b1917f12ba95e4",
+    "positiveShutdownFailed": true,
+    "strictAuditorFailed": true,
+    "firstForcedStopSeconds": 5.224617586005479,
+    "forcedPluginKills": 1,
+    "rawGzipSha256": "5a1a944c45e971598fb7920fbc5285b81bb3b094c8b4a94d4de3a30228934035",
+    "consoleSha256": "80b564bfb968af849aeaa3a0186c8819d6b2b5f231324100d82dfa2245037521",
+    "rerunHere": false,
+    "waived": false,
+    "blockedUntilPr525Qualifies": true
+  },
+  "blockedByPr525UntilQualification": true,
+  "fullUnitTests": 1950,
+  "fullUnitSeconds": 267.215,
+  "fullUnitSkips": 16,
+  "siteTests": 18,
+  "installerFixtures": 37,
+  "installerMethods": 1,
+  "installerSkips": 0,
+  "installerOwnedCleanupIndependentlyVerified": true,
+  "radiyoStatus": "partial",
+  "fullLocalE2eSuiteRan": false,
+  "fullNativeMatrixRan": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawJsonSha256": "dfe1e1b636d5084ba3930c0e243ef441224ae27d355dd5daba1e3b17322e6dfe",
+  "rawGzipSha256": "9f4e4fbec857d271b4866041b9e49cc533b973a91ddb96836dde08005a6c92cc"
+}

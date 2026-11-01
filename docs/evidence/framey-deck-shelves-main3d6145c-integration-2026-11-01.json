@@ -1,0 +1,55 @@
+{
+  "at": "2026-11-01T04:48:26.551861+00:00",
+  "pr": 528,
+  "testedSource": "24560b06018ef780e5c212e1d04d2bff245750a4",
+  "integratedMain": "3d6145c640ffe1f9b51923335972ddd513ad0de2",
+  "priorPublishedHead": "754bf0a573a0c2f86464be975a9ec965b3002f67",
+  "normalMergeParents": [
+    "754bf0a573a0c2f86464be975a9ec965b3002f67",
+    "3d6145c640ffe1f9b51923335972ddd513ad0de2"
+  ],
+  "conflictsResolved": 2,
+  "all27NativeSourceInputsVerified": true,
+  "serverTests": 1972,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "localNativeArchitecture": "x86_64",
+  "localNativeCases": 6,
+  "localNativePluginIds": [
+    135,
+    67,
+    46
+  ],
+  "independentNativeAudits": 3,
+  "deckShelvesRpcs": [
+    4,
+    3
+  ],
+  "batteryRpcs": [
+    37,
+    36
+  ],
+  "steambackRpcs": [
+    11,
+    9
+  ],
+  "allMainBatteryAndSteambackControlsPreserved": true,
+  "other115CompleteCatalogRowsAndAll116PoliciesPreserved": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 412.104,
+  "all116CatalogPinsAndOutcomesVerified": true,
+  "ownedCleanupVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "store130Version": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "freshExactPublicationHostedGatesRequired": true,
+  "actualSteamCef": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "a89e5a41724193b8d3d2c89b213b4e0859106566b34c4989a5855c47a176d817",
+  "rawBytes": 123919
+}
