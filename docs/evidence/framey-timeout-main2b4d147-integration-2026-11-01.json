@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-01T04:00:36.597305+00:00",
+  "pr": 535,
+  "testedSource": "0415fb98f6ce67c587af19942b4c452e254b4115",
+  "integratedMain": "2b4d1474ec71573ab91845b46e21f773284bebad",
+  "priorPublishedHead": "95f72f7618012f685b3bed2d3af242c7ef9837b4",
+  "normalMergeParents": [
+    "95f72f7618012f685b3bed2d3af242c7ef9837b4",
+    "2b4d1474ec71573ab91845b46e21f773284bebad"
+  ],
+  "conflicts": 0,
+  "onlyTwoNonEvidenceFilesChanged": [
+    "tests/decky-runtime/syncthing_flatpak_package.py",
+    "tests/test_syncthing_package_timeout.py"
+  ],
+  "allOtherMainFilesByteIdentical": true,
+  "all25NativeInputsByteIdenticalToMain": true,
+  "all116CatalogRowsByteIdenticalToMain": true,
+  "serverTests": 1970,
+  "serverPlatformOptionalSkips": 15,
+  "realChildProbeTestsExecutedAndPassed": 3,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "inheritedMainNativeCasesPerArchitecture": 51,
+  "inheritedMainBehaviorAudits": 8,
+  "inheritedMainE2eTests": 53,
+  "inheritedMainE2eSkips": 0,
+  "inheritedMainProofIsNotNewIntegrationExecution": true,
+  "priorPublishedHeadAmd64PackageModesQualified": 3,
+  "priorArm64PackageStillUnqualified": true,
+  "freshExactPublicationHostedGatesRequired": true,
+  "actualSteamCef": false,
+  "realFrameContacted": false,
+  "underlying529HangFixed": false,
+  "remoteUpdated": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "186bc6eb106df90c682fbfcf378f78128a920925e2f8bf269c43f079ef2ceac2",
+  "rawBytes": 245947
+}

@@ -1,0 +1,47 @@
+{
+  "at": "2026-11-01T03:10:30.899676+00:00",
+  "pr": 528,
+  "testedSource": "33bc70aeff9141484eabe9c4780032f71c24c46d",
+  "integratedMain": "4558a36f58f84840d835f4fc281f12541f15ea94",
+  "priorPublishedHead": "6c157e6df71000ad7e9cd3a607f09c9d1555a82f",
+  "normalMergeParents": [
+    "6c157e6df71000ad7e9cd3a607f09c9d1555a82f",
+    "4558a36f58f84840d835f4fc281f12541f15ea94"
+  ],
+  "mergeConflictFree": true,
+  "integrationChangedPaths": [
+    "docs/evidence/link-invalid-dns-2026-11-01-raw.json.gz",
+    "docs/evidence/link-invalid-dns-2026-11-01.json",
+    "docs/evidence/link-invalid-dns-2026-11-01.md",
+    "tests/test_link.py"
+  ],
+  "nativeInputsByteIdentical": 25,
+  "connectionTests": 84,
+  "connectionSkips": 0,
+  "connectionSeconds": 26.06,
+  "historicalQualificationHead": "6c157e6df71000ad7e9cd3a607f09c9d1555a82f",
+  "historicalNativeCasesPerArchitecture": 51,
+  "historicalNativeArchitectures": [
+    "x86_64",
+    "aarch64"
+  ],
+  "historicalIndependentNativeBehaviorAudits": 8,
+  "historicalE2eTests": 53,
+  "historicalE2eSkips": 0,
+  "historicalCatalogPins": 116,
+  "historicalPackageModes": 4,
+  "historicalPackageUniqueSources": 154,
+  "historicalPackageHashBindings": 1373,
+  "historicalOwnershipBothArchitectures": true,
+  "newHeadNativeExecuted": false,
+  "newHeadE2eExecuted": false,
+  "newHeadPackagesExecuted": false,
+  "compatibility": "partial",
+  "store130Pin": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawBytes": 59127,
+  "rawSha256": "20faea55a611971b889e909eb1705a7db9bfb0b041957208c63d19ddc584aa56"
+}
