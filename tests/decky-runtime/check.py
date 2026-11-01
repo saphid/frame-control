@@ -49,8 +49,8 @@ def rpc(route, *args):
     return asyncio.run(request(route, list(args)))
 
 
-def until_ready(read, description):
-    deadline = time.monotonic()+20
+def until_ready(read, description, *, timeout=20):
+    deadline = time.monotonic()+timeout
     last = None
     while time.monotonic() < deadline:
         try:

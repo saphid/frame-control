@@ -210,7 +210,7 @@ def main():
             pid = int(paths[0].read_text())
             return pid if Path(f'/proc/{pid}/exe').exists() else None
 
-        helper_pid = wait(current_pid, 'migrated owned helper')
+        helper_pid = wait(current_pid, 'migrated owned helper', timeout=80)
 
         def method(name, **kwargs):
             result = rpc('loader/call_legacy_plugin_method', 'Syncthing', name, kwargs)
