@@ -22,7 +22,9 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
                 continue
             relative = item.filename.split('/', 1)[1]
             payload = (plugin/relative).read_bytes()
-            if relative != 'py_modules/ludusavi.py':
+            if relative == 'main.py':
+                assert payload == b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n' + original.read(item), relative
+            elif relative != 'py_modules/ludusavi.py':
                 assert payload == original.read(item), relative
             hashes[relative] = hashlib.sha256(payload).hexdigest()
     assert managed != original_helper
@@ -87,7 +89,8 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
                  and console.count('[main][INFO]: Shutdown finished.') == 1
                  and 'Unloaded Decky Ludusavi (v1.2.2)' in console)
         observation = dict(returncode=process.returncode, elapsedSeconds=seconds,
-            parentOnlySignal=True, ownedProcessCount=len(owned), ownedProcessIdentities=tree,
+            parentOnlySignal=True, loaderPid=process.pid, ownedProcessCount=len(owned),
+            ownedProcessIdentities={pid: tree[pid] for pid in owned},
             adoptedChildExits=adopted, ownedProcessIdentitiesReaped=True,
             closedUnixPeers=closed_peers, forcedPluginKills=forced, errors=errors,
             console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
@@ -166,7 +169,8 @@ def exercise(call, plugin, archive, record, backend, loader, env, log,
     for marker in ['Error during shutdown:', 'Task was destroyed but it is pending',
                    'asyncio.exceptions.CancelledError', 'Bad file descriptor']:
         assert marker not in console, marker
-    return {'onlyHelperModified': True, 'managedArchiveMemberSha256': hashes,
+    return {'onlyDependencyHelperAndChildIpcModified': True, 'managedArchiveMemberSha256': hashes,
+            'ipcHelperSha256': hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest(),
             'originalHelperSha256': hashlib.sha256(original_helper).hexdigest(),
             'managedHelperSha256': hashlib.sha256(managed).hexdigest(),
             'states': states, 'originalMissingDependencyFailure': original_failure,

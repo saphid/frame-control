@@ -212,14 +212,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
-                         ['ludusavi-dependency-discovery'])
+                         ['ludusavi-dependency-discovery', 'ludusavi-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             for item in original.infolist():
                 if item.is_dir():
                     continue
                 relative = item.filename.split('/', 1)[1]
-                if relative != 'py_modules/ludusavi.py':
+                if relative == 'main.py':
+                    self.assertEqual((folder/relative).read_bytes(), b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n' + original.read(item))
+                elif relative != 'py_modules/ludusavi.py':
                     self.assertEqual((folder/relative).read_bytes(), original.read(item), relative)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
         module = types.ModuleType('private_ludusavi_dependency')
         logger = logging.getLogger('private-ludusavi-dependency')
         with patch.dict(sys.modules, decky=types.SimpleNamespace(logger=logger)):
