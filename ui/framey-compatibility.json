@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -944,7 +944,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -952,7 +952,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -3048,7 +3048,7 @@
         "https://github.com/mk-fg/python-pulse-control"
       ],
       "status": "works",
-      "reason": "Per-app stream discovery and slider/keyboard volume changes pass in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session, with independent Pulse readback of a silent test stream. Bluetooth playback, audible output and worn-VR controls unverified.",
+      "reason": "Per-app stream discovery and slider/keyboard volume changes passed historically in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session. Exact managed installs now preserve actual user HOME/Pulse runtime and repair IPC EOF shutdown; native AMD64 private stereo volume/readback and restart are covered. Update/reinstall old copies. This adapted backend on ARM64/Frame, Bluetooth playback, audible output and worn-VR controls remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3091,6 +3091,15 @@
         "evidence": "docs/evidence/framey-audio-backends-2026-10-26.json",
         "audio": "private silent virtual targets",
         "realFrame": false
+      },
+      "requiredShims": [
+        "volume-mixer-user-audio",
+        "volume-mixer-ipc-eof"
+      ],
+      "volumeMixerRuntime": {
+        "evidence": "docs/evidence/framey-volume-mixer-user-runtime-2026-11-01.md",
+        "runtime": "published Decky 3.3.0 native AMD64; private silent PipeWire/Pulse and D-Bus; actual UID 1100; no PULSE_SERVER override",
+        "realFrameContacted": false
       }
     },
     {
@@ -9776,7 +9785,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",

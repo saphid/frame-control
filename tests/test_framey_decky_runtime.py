@@ -22,7 +22,7 @@ class RuntimeCoverage(unittest.TestCase):
             if case.get('version'):
                 self.assertEqual((case['id'], case['version']),
                                  (PREFIX_MANAGER_102['id'], PREFIX_MANAGER_102['version']))
-            self.assertIn(case['probe'], ('screensaver-private-bus', 'bluetooth-private-bluez', 'deckyparty-private-files', 'mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
+            self.assertIn(case['probe'], ('volume-mixer-private-audio', 'screensaver-private-bus', 'bluetooth-private-bluez', 'deckyparty-private-files', 'mpris', 'screenshots', 'system-monitor', 'timer-lifecycle',
                                          'toggle-settings', 'fileserver', 'localsend', 'network-sentinel',
                                          'battery-tracker', 'free-loader', 'radio-local', 'game-sync-config',
                                          'shelves-settings', 'storage-cleaner', 'steamback-private-save',
