@@ -256,6 +256,10 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 87 and digest == '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822':
+        source = Path(__file__).with_name('framey_screensaver.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SCREENSAVER_SOURCE = '+repr(source)+'\nFRAMEY_SCREENSAVER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 23 and digest == 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133':
         source = Path(__file__).with_name('framey_animation_overrides.py').read_text(encoding='utf-8')
         return 'FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'+APPLY
@@ -469,6 +473,32 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==87 and digest=='5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822' and folder=='DeckyInhibitScreenSaver'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='ScreenSaver' or manifest.get('flags')!=[]
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='21969c9cf387012c980a0330051dfa5fd961037b160d0a3bac6498138f20c29d'):
+                    raise RuntimeError('ScreenSaver manifest or backend differs from pinned archive')
+                # Do not overwrite the actual user environment during import.
+                old=(b"    os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'\n"
+                     b"    os.environ['DBUS_SESSION_BUS_ADDRESS'] = 'unix:path=/run/user/1000/bus'\n"
+                     b"    os.environ['HOME'] = '/home/deck'")
+                if original.count(old)!=1: raise RuntimeError('ScreenSaver environment block differs')
+                for name,key in [('framey_screensaver','FRAMEY_SCREENSAVER_SOURCE'),('framey_decky_ipc','FRAMEY_SCREENSAVER_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source: raise RuntimeError('Missing ScreenSaver runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('ScreenSaver helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_screensaver import install as _framey_install_screensaver\n'
+                        b'_framey_install_screensaver(globals())\ndel _framey_install_screensaver\n')
+                main.write_bytes(prefix+original.replace(old,b'    pass  # Preserve configured user HOME/runtime/session bus.')+suffix)
+                compat_shims.append('screensaver-user-bus')
+                compat_shims.append('screensaver-ipc-eof')
             if (int(plugin_id)==23 and digest=='f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133'
                     and folder=='SDH-AnimationChanger'):
                 main=unpacked/'main.py'

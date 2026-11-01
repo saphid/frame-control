@@ -340,6 +340,9 @@ def main():
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
+            if case['probe'] == 'screensaver-private-bus':
+                import screensaver_private
+                screensaver_oracle = screensaver_private.start(env, log, processes, until_ready)
             if case['probe'] == 'mpris':
                 bus = subprocess.Popen(['dbus-daemon', '--session', '--nofork',
                     '--address='+env['DBUS_SESSION_BUS_ADDRESS']], env=env, stdout=log, stderr=log,
@@ -371,7 +374,12 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'animation-private-overrides':
+            if case['probe'] == 'screensaver-private-bus':
+                import screensaver_private
+                report['screensaverRuntime'] = screensaver_private.probe(backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, screensaver_oracle, plugin, discovered)
+                report['result'] = 'private user D-Bus names, busy-service refusal without queueing, three inhibit APIs, disconnect release, settings restart and two clean stops; Frame suspend/UI/VR unverified'
+            elif case['probe'] == 'animation-private-overrides':
                 report['privateAnimationOverrides'] = animation_private.exercise(
                     animation_fixture, legacy, rpc, record['name'], until_ready)
                 report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
