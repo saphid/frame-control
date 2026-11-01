@@ -81,6 +81,7 @@ def main():
     parser.add_argument('--reproduce-deck-progress-unload-regression', action='store_true')
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-battery-tracker-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
@@ -115,6 +116,16 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_battery_tracker_unload_regression:
+        assert record['id'] == 67
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '490d8334b173f956f286e50c9d01af5b83416e8e0037685366efb75c6c323241'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_steamgriddb_unload_regression:
         assert record['id'] == 36
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -1304,7 +1315,20 @@ def main():
                 assert sample['average_power'] > 0, sample
                 history = legacy('get_recent_data', lookback=2)
                 assert len(history['x']) == len(history['cap']) >= 2, history
-                report['result'] = 'discovery, Frame-shaped private battery samples, history and per-app power passed; real managed Frame backend unverified'
+                import battery_private
+                report['batteryLifecycle'] = battery_private.probe(
+                    backend, loader, env, log, processes, legacy, rpc, until_ready, history,
+                    regression=args.reproduce_battery_tracker_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_battery_tracker_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_battery_tracker_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        pendingBatterySamplesLost=True, qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed child IPC forced-kill and lost pending samples reproduced'
+                    if args.reproduce_battery_tracker_unload_regression else
+                    'discovery, private samples, history/per-app power, two clean parent-only stops, pending flush and restart persistence passed; real managed Frame backend unverified')
             elif case['probe'] == 'network-sentinel':
                 assert current('get_settings')['auto_monitor'] is False
                 assert current('get_network_history') == []

@@ -1,0 +1,297 @@
+{
+  "at": "2026-10-31T10:08:08.270443+00:00",
+  "sourceRevision": "65a22d97b5a732205d4886ab7a1d46c291de97ac",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "4adcb2e19b189e70026e77d6c2886d35cb75f5f90ff1c917447c905859377389",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "b7f47079e6ce5a4f03b4d118bb62873644723c4b3918f5b7ffd2e3b8da55f40d",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "f1a8610dc0783210727897ba73d2ccea35fdc73c82bc32daa8c305b1c98028f1",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "693fcd8a5a5018b78e3e020f57c3a2e7b235062ccef84d33d4715766e0cce0eb",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all16SourceFingerprintsVerified": true,
+  "archiveSha256": "91c388d3c1b52079314045b79671ad55c767510658b6193f6936ed6cad383b94",
+  "originalBackendSha256": "2303ec70c262f1cbfe1c8c138770c6e7c3496827e748e679c94ca43ff9f28725",
+  "previousManagedBackendSha256": "490d8334b173f956f286e50c9d01af5b83416e8e0037685366efb75c6c323241",
+  "managedBackendSha256": "ba50a1bc9b81547d718ff155cd6ca0bc37426ba0e9a76a68ccee437abf6a8549",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unchangedArchiveFiles": {
+    "LICENSE": "708a5b37ed16f1eafaa9d4f08196b197b5e6e7d63566e1cf0847f1f963a64007",
+    "package.json": "3d14e2d181ebf21f2fec2f5e0088a81aea4ff6b058a9999bfd6964e624502871",
+    "README.md": "a65e0957b0c260fde04fa00c49aca43dce1be3d68eee473e106da61e29793cf6",
+    "dist/index.js": "39cbd595b6f6bfd60d64d21295983538d5f60b54618261d2de53aaf0ace459fb",
+    "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "onlyIpcPrefixAddedToPreviousManagedBackend": true,
+  "mainSharedIpcAdapterUnchanged": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "otherProbeBodiesPreserved": 36,
+  "focusedTests": 85,
+  "unitLogSha256": "f2dc961e8382b48988725c0d096fe0f6d8012747026f47767c88bfd4baac926a",
+  "nativeCases": [
+    {
+      "rpcs": 36,
+      "databaseSha256": "d9e3d48508cd7d35916f3c3bf02769d3c5557dfaa65da5c9b0b5f581e06e407b",
+      "rows": [
+        [
+          89,
+          1,
+          90,
+          "Unknown"
+        ],
+        [
+          89,
+          -1,
+          90,
+          "Framey private"
+        ],
+        [
+          89,
+          -1,
+          90,
+          "Unknown"
+        ]
+      ],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349197077"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349197107"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349197107"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349197117"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.225,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793441221.3001297"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "rowsBefore": [],
+          "rowsAfter": [
+            [
+              89,
+              1,
+              90,
+              "Unknown"
+            ],
+            [
+              89,
+              -1,
+              90,
+              "Framey private"
+            ]
+          ],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Battery Tracker (v0.2.0)\n[plugin][INFO]: Stopping response listener for Battery Tracker (v0.2.0)\nCalling Loader unload function for Battery Tracker (v0.2.0).\nAttempting to unload with plugin Battery Tracker (v0.2.0)'s \"_unload\" function.\n\nUnloaded Battery Tracker (v0.2.0)\n\n[plugin][INFO]: Plugin Battery Tracker (v0.2.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "5d6e0c5919895c07b93b960247c2611ba41e9a92aab23b755433bc69141700d0",
+          "cleanShutdownVerified": true,
+          "expectedRegression": false
+        },
+        {
+          "loaderPid": 23,
+          "descendantsBefore": {
+            "24": {
+              "state": "S",
+              "parent": 23,
+              "start": "349197699"
+            },
+            "33": {
+              "state": "S",
+              "parent": 24,
+              "start": "349197730"
+            },
+            "34": {
+              "state": "S",
+              "parent": 24,
+              "start": "349197730"
+            },
+            "35": {
+              "state": "S",
+              "parent": 34,
+              "start": "349197745"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 33,
+              "returncode": 0
+            },
+            {
+              "pid": 34,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "rowsBefore": [
+            [
+              89,
+              1,
+              90,
+              "Unknown"
+            ],
+            [
+              89,
+              -1,
+              90,
+              "Framey private"
+            ]
+          ],
+          "rowsAfter": [
+            [
+              89,
+              1,
+              90,
+              "Unknown"
+            ],
+            [
+              89,
+              -1,
+              90,
+              "Framey private"
+            ],
+            [
+              89,
+              -1,
+              90,
+              "Unknown"
+            ]
+          ],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Battery Tracker (v0.2.0)\n[plugin][INFO]: Stopping response listener for Battery Tracker (v0.2.0)\nCalling Loader unload function for Battery Tracker (v0.2.0).\nAttempting to unload with plugin Battery Tracker (v0.2.0)'s \"_unload\" function.\n\nUnloaded Battery Tracker (v0.2.0)\n\n[plugin][INFO]: Plugin Battery Tracker (v0.2.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "5d6e0c5919895c07b93b960247c2611ba41e9a92aab23b755433bc69141700d0",
+          "cleanShutdownVerified": true,
+          "expectedRegression": false
+        }
+      ],
+      "consoleSha256": "1a0c38021718af3a94df093ad2276323a1c97c1002fff715e1ee59a0d0b514b9"
+    },
+    {
+      "rpcs": 34,
+      "databaseSha256": "ad35f71df82d5883d2fcfe2548191b241e45b4c045baf98f3d1a8b2dee8e6515",
+      "rows": [],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349198056"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349198087"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349198087"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349198099"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.224,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793441231.093072"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "rowsBefore": [],
+          "rowsAfter": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Battery Tracker (v0.2.0)\n[plugin][INFO]: Stopping response listener for Battery Tracker (v0.2.0)\n[plugin][WARNING]: Plugin Battery Tracker (v0.2.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Battery Tracker (v0.2.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "7206335ffebde185990eb7bae347a6a10b968319614d2ac52611de7c023aa8b9",
+          "cleanShutdownVerified": false,
+          "expectedRegression": true
+        }
+      ],
+      "consoleSha256": "cd58b723f863e23d40e078e4bd542c22f52d05002bb675ed7676b75c561b2d35"
+    }
+  ],
+  "twoSqliteSnapshotsIndependentlyDecoded": true,
+  "repairedCleanStops": 2,
+  "priorSourceForcedKillAndLostSamplesVerified": true,
+  "rawJsonSha256": "ae69b5e498c83d978d81685523e2ababc837e6c15a1e07dbb068b49dd0e6068c",
+  "rawGzipSha256": "fbfd27ea2e83b0060ce8a57551ca3c770dcd24890269e23b0334b5e4c0a5e879",
+  "fullMatrixExpected": {
+    "probes": 42,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "compatibility": "partial",
+  "globalCleanPluginShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local isolated AMD64 published Decky 3.3.0 only; explicit private Unix-peer disconnect stabilizes the regression.",
+    "Fresh final-head hosted checks/e2e, native AMD64/ARM64 and all triggered package gates remain required.",
+    "No new browser, real battery, managed Frame, foreground-app labeling, long-term recording, wearer/controller or release proof.",
+    "Baseline failure report binds production source; its newly added helper was not in that baseline source inventory. Final replay fingerprints the helper and the restored prior source is hash-pinned."
+  ]
+}
