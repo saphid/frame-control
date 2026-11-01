@@ -94,6 +94,7 @@ def main():
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
+              'tests/decky-runtime/steamgriddb_private.py',
               'tests/decky-runtime/wine_cellar_private.py',
               'tests/decky-runtime/shotty_private.py', 'ui/framey_shotty.py',
               'tests/fixtures/framey-wine-cellar-pre-ipc.py.gz',
@@ -123,6 +124,7 @@ def main():
                     (134, '--reproduce-deck-progress-unload-regression'),
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression'),
+                    (36, '--reproduce-steamgriddb-unload-regression'),
                     (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]

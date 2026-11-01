@@ -213,6 +213,18 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      hashlib.sha256(prefix+original).hexdigest())
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
                                      hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if plugin['id'] == 36:
+                    self.assertEqual(found[0]['compatShims'], ['steamgriddb-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'broken')
+                    self.assertNotIn('Update or reinstall', found[0]['compatibility']['reason'])
+                    with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                        original = bundle.read(plugin['folder']+'/main.py')
+                    prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                              b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     hashlib.sha256(prefix+original).hexdigest())
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 61:
                     self.assertEqual(found[0]['compatShims'], ['tabmaster-json-file-restore', 'tabmaster-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
