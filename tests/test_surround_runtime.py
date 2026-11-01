@@ -36,7 +36,7 @@ class Surround(unittest.IsolatedAsyncioTestCase):
         self.folder = self.transaction.folder.parent / PIN['folder']
         self.temp = tempfile.TemporaryDirectory(prefix='framey-surround-test-')
         self.addCleanup(self.temp.cleanup)
-        self.home = Path(self.temp.name)
+        self.home = Path(self.temp.name).resolve()
         self.environment = patch.dict(os.environ, DECKY_PLUGIN_RUNTIME_DIR=str(self.home / 'runtime'))
         self.environment.start()
         self.addCleanup(self.environment.stop)
