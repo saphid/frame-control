@@ -114,6 +114,16 @@ class Compatibility(unittest.TestCase):
         result = compatibility.lookup(release['id'], release['sha256'], release['version'])
         self.assertEqual(result['status'], 'unverified')
 
+    def test_old_battery_tracker_copy_requires_child_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 67)
+        old = dict(storeId=67, version=plugin['version'], sha256=plugin['sha256'],
+                   compatShims=['battery-tracker-user-supply'])
+        updated = dict(old, compatShims=['battery-tracker-user-supply', 'battery-tracker-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall this managed plugin', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
+
     def test_steamback_old_receipt_requires_current_ipc_repair(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 46)
         base = dict(storeId=46, version=plugin['version'], sha256=plugin['sha256'])
