@@ -320,14 +320,19 @@ class PreparedPackage(unittest.TestCase):
             'pythonSha256': digest('main.py'), 'installerEnabled': False,
             'builds': [{'architecture': 'x86_64',
                         'sha256': hashlib.sha256(binary).hexdigest(),
-                        'bytes': len(binary), 'serviceFileTestsExecuted': True}],
+                        'bytes': len(binary), 'serviceFileTestsExecuted': True,
+                        'listenerRetryTestsExecuted': True}],
         }
         with tempfile.TemporaryDirectory() as temporary:
             helper = Path(temporary) / 'helper'
             build_report = Path(temporary) / 'build.json'
             helper.write_bytes(binary)
             for mutation, arch in [(dict(patchSha256='0' * 64), 'x86_64'),
-                                   ({}, 'aarch64')]:
+                                   ({}, 'aarch64'),
+                                   (dict(builds=[{**report['builds'][0],
+                                       'listenerRetryTestsExecuted': False}]), 'x86_64'),
+                                   (dict(builds=[{key: value for key, value in report['builds'][0].items()
+                                       if key != 'listenerRetryTestsExecuted'}]), 'x86_64')]:
                 build_report.write_text(json.dumps({**report, **mutation}))
                 with self.assertRaises(ValueError):
                     self.module.candidate_payloads(helper, build_report, None, None, arch)
