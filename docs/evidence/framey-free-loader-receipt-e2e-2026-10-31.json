@@ -1,0 +1,463 @@
+{
+  "at": "2026-10-31T11:10:44.505046+00:00",
+  "sourceRevision": "60710bf8a987502148ab2f5fb801f2c87a1addd3",
+  "priorNativeHead": "7840a8fba27551a3321b68d0e5d10e9ed22436b0",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "sourceChangeOnly": "tests/e2e/test_framey.py",
+  "productionAndNativeProbeSourcesUnchanged": true,
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "beaec7b48d9df788347b99ba413918916d41aec15e2721a945357d02b215e64b",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "27d73b5dab9e0013b82e1f32b08fb9dd5752e81beab02c3a4e963b3d56bc39af",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "65faa44f97de37db05bfbe03dde2c91e3e061c49d59453289b1ea3c7b40c6303",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "83896532bcb93dd51bc9b7b1adc5d9069c8cf8cc022df92855d04bfc9c6898e5",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "nativeSourceFingerprintsVerified": 16,
+  "localTest": "test_framey.FrameyFlow.test_pinned_official_plugins_install_and_remove",
+  "testCount": 1,
+  "pluginFixtures": 37,
+  "skipped": 0,
+  "all37ArchivePinsVerified": true,
+  "realHttpInstallerAndFakeFrameSsh": true,
+  "exactReceiptBackendAndIpcHelperHashesChecked": true,
+  "elapsedSeconds": 82.653,
+  "testExit": 0,
+  "cleanupExit": 0,
+  "ownedImagesRemoved": true,
+  "remainingOwnedResources": {
+    "containers": [],
+    "volumes": [],
+    "networks": []
+  },
+  "testSourceSha256": "bc00eed51d85da0fb166cd486b302d7daa964a02b729c61cf91d2212067ac166",
+  "localLogSha256": "0bab22b35eb5c75bbb9223c0aba7ecd7ea431ad8756cd239afd0012d2c2ab485",
+  "historicalNativeCi": {
+    "x86_64": {
+      "run": 41193473538,
+      "job": 124514818902,
+      "artifactId": 13040252151,
+      "artifactSha256": "f6f4faaffb1517355aa9e9ce9d294d44982ae657dd617238519a6085a022d13b",
+      "jobLogSha256": "4e0264745996b14ee76a4f5b560dba516943ccbaa9fd12a69cca3925a8edab78",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "probes": 42,
+      "pinnedArchives": 34,
+      "sourceFingerprints": 16,
+      "completeConsoleHashesVerified": 42,
+      "installedSource": {
+        "archiveSha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+        "managedBackendSha256": "1be5c28420161c97207cc52e2f32cd5a1c9a47758f9cf3963aaa36aa7e706d45",
+        "originalBackendSha256": "2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364",
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "preserved": {
+          "LICENSE": "a05d52a13f8992968968eaac00a518efbd872fd07352d87250b9b6e434e4a2c9",
+          "package.json": "56b3dd43b4660535b7cefa057fa184398a661920abf085411b7fe3619f5277c4",
+          "plugin.json": "16dbf146760c18feeae4cdd8e475b56ec26535109430a3019932c48f2f6647e7",
+          "README.md": "2bfa4f34143a12a7c40573b4b12f7438335ec869f74104b90d6e155a76cf6d78",
+          "dist/index.js.map": "8e2959fe8da92e0cf1de87f741f5e9e6c5dc49ce04edcdbf66708908c9df3506",
+          "dist/index.js": "508d23c9a6e26f51148e4e634b08c6c04009362ccca9787f0b714005f03cb48f",
+          "py_modules/amazon_feed.py": "c3868356681e55597402fd764093f69da5494ef872b88eb7753bb13b564e879b",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "py_modules/deal_db.py": "3dee809d91b7221befffe88bd3577340109b9a7506588a3201ad95702019c696",
+          "py_modules/request_lib.py": "c065cdd2d92b869b982f2f93bfc0a93e80db6e19797096f2b5ae84a5bd5548ae",
+          "py_modules/plugin_settings.py": "ff550c2641cf07b241e1d0aaf5be5c4bedaec2776896da8e8d78b07390f05742",
+          "py_modules/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "members": 19,
+        "receipt": {
+          "storeId": 63,
+          "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+          "version": "1.6.0",
+          "compatShims": [
+            "free-loader-ipc-eof"
+          ]
+        }
+      },
+      "repairedRpcs": 11,
+      "originalNegativeRpcs": 7,
+      "repairedCleanStopSeconds": [
+        0.185,
+        0.185
+      ],
+      "originalForcedKillSeconds": 5.227,
+      "settingsCacheByteReadbacksVerified": true,
+      "unrelatedSiblingAndExactOwnedCleanupVerified": true,
+      "otherPositiveForcedKillObservations": [
+        {
+          "id": 36,
+          "version": "1.8.1",
+          "consoleSha256": "be53b7c234c4e74d083c7ccaf8ab45f607e1963f29948b20b507535f628ee25f",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 27,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 52,
+          "version": "1.7.1-1",
+          "consoleSha256": "e08442a8bc7afb0c56465213290951038b3aae4dad96b2e85b03fc1876fe7eed",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 23,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 123,
+          "version": "1.2.3",
+          "consoleSha256": "41ad758280cb0c300f4efcc4de0e029e969bf8620721a9c76f378e42ea82344b",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 22,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 67,
+          "version": "0.2.0",
+          "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 24,
+          "version": "1.3",
+          "consoleSha256": "d487da146ebdca1769fecad894098389066af726076873d84d21fee482f36661",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 104,
+          "version": "1.0.4",
+          "consoleSha256": "25cf959711f8e1a9d39aef97cb761464c59243c01daf05d1d927d9c9f3c5fcde",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 23,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 89,
+          "version": "0.6.7",
+          "consoleSha256": "d9619fb8a87a7b147f7af54f263db86b3ed8f178002df90f69b12d1118dae2de",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 96,
+          "version": "1.0.0",
+          "consoleSha256": "72ad10a4016d834895cabf82739ce00a4ea99ac6d84e7e0d969589a85d99a282",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 4,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 51,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 37,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            },
+            {
+              "pid": 23,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        }
+      ],
+      "historicalHeadQualifiedForNativeOnly": true,
+      "newHeadQualified": false
+    },
+    "aarch64": {
+      "run": 41193473538,
+      "job": 124514818750,
+      "artifactId": 13039324655,
+      "artifactSha256": "1ecbc2706e482d3041b2a3103224161fee2a0bf90a10c6c06bde5e01fa8f6669",
+      "jobLogSha256": "7939cd289f0e22d89b22c8bde085443fb075e80e2cede99f5bdfdcb5e5e4d02e",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "probes": 42,
+      "pinnedArchives": 34,
+      "sourceFingerprints": 16,
+      "completeConsoleHashesVerified": 42,
+      "installedSource": {
+        "archiveSha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+        "managedBackendSha256": "1be5c28420161c97207cc52e2f32cd5a1c9a47758f9cf3963aaa36aa7e706d45",
+        "originalBackendSha256": "2514b5a59fe0571734eecbfc893b3ef9f01ee19b9c1b24e54028051e546ab364",
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "preserved": {
+          "LICENSE": "a05d52a13f8992968968eaac00a518efbd872fd07352d87250b9b6e434e4a2c9",
+          "package.json": "56b3dd43b4660535b7cefa057fa184398a661920abf085411b7fe3619f5277c4",
+          "plugin.json": "16dbf146760c18feeae4cdd8e475b56ec26535109430a3019932c48f2f6647e7",
+          "README.md": "2bfa4f34143a12a7c40573b4b12f7438335ec869f74104b90d6e155a76cf6d78",
+          "dist/index.js.map": "8e2959fe8da92e0cf1de87f741f5e9e6c5dc49ce04edcdbf66708908c9df3506",
+          "dist/index.js": "508d23c9a6e26f51148e4e634b08c6c04009362ccca9787f0b714005f03cb48f",
+          "py_modules/amazon_feed.py": "c3868356681e55597402fd764093f69da5494ef872b88eb7753bb13b564e879b",
+          "py_modules/.keep": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "py_modules/deal_db.py": "3dee809d91b7221befffe88bd3577340109b9a7506588a3201ad95702019c696",
+          "py_modules/request_lib.py": "c065cdd2d92b869b982f2f93bfc0a93e80db6e19797096f2b5ae84a5bd5548ae",
+          "py_modules/plugin_settings.py": "ff550c2641cf07b241e1d0aaf5be5c4bedaec2776896da8e8d78b07390f05742",
+          "py_modules/__init__.py": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        "members": 19,
+        "receipt": {
+          "storeId": 63,
+          "sha256": "05208aee6f6ba824391d8ddc81b1168b2599a9711e7528cdaa789f6cc710b42a",
+          "version": "1.6.0",
+          "compatShims": [
+            "free-loader-ipc-eof"
+          ]
+        }
+      },
+      "repairedRpcs": 11,
+      "originalNegativeRpcs": 7,
+      "repairedCleanStopSeconds": [
+        0.185,
+        0.185
+      ],
+      "originalForcedKillSeconds": 5.231,
+      "settingsCacheByteReadbacksVerified": true,
+      "unrelatedSiblingAndExactOwnedCleanupVerified": true,
+      "otherPositiveForcedKillObservations": [
+        {
+          "id": 14,
+          "version": "1.3.4",
+          "consoleSha256": "b2e21a2b438c17623a7335bba75d317a9661a630e6e9b111bdb533e07701578a",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 23,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            },
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": false,
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "id": 67,
+          "version": "0.2.0",
+          "consoleSha256": "3a3394fe3275bb52594ad7658c2af009a9017e61c58e4c1b09f5ec34c399b47f",
+          "markers": {
+            "Error during shutdown:": 0,
+            "asyncio.exceptions.CancelledError": 0,
+            "Task was destroyed but it is pending": 0,
+            "Bad file descriptor": 0,
+            "Sending SIGKILL!": 1,
+            "Expecting value: line 1 column 1 (char 0)": 0
+          },
+          "cleanupStops": [
+            {
+              "pid": 9,
+              "signaledProcessGroup": false,
+              "forcedKill": false,
+              "loader": true,
+              "parentOnlySignal": true,
+              "returncode": 0
+            }
+          ]
+        }
+      ],
+      "historicalHeadQualifiedForNativeOnly": true,
+      "newHeadQualified": false
+    }
+  },
+  "rawJsonSha256": "15f21ef0148ac309d0f6c2dc72e0ac78461e50d5676a9bfef27c4b0f26c74513",
+  "rawGzipSha256": "a1b5e17476742252f7e336d6107ad2d14cc79a91a30e9b96b5741b865d2e116e",
+  "globalCleanPluginShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "limits": [
+    "One HTTP/SSH installer method covering 37 pinned fixtures; full e2e and optional 116-plugin audit were not run locally.",
+    "Fake Frame installation checks do not execute official plugin backends.",
+    "Native AMD64/ARM64 results apply to historical head 7840a8fb. Every new final-head hosted gate remains required.",
+    "Other positive plugin probes retain forced kills; scoped Free Loader repair does not prove global clean shutdown.",
+    "Private synthetic cache/settings only; no feed, notifications, Steam store, browser, managed Frame or wearer/controller proof."
+  ]
+}

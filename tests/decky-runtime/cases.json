@@ -2,13 +2,23 @@
   {
     "id": 56,
     "shim": "mangopeel-watch-lifetime",
-    "additionalShims": ["mangopeel-ipc-eof"],
+    "additionalShims": [
+      "mangopeel-ipc-eof"
+    ],
     "probe": "mangopeel-private-watch"
+  },
+  {
+    "id": 23,
+    "shim": "animation-preserve-overrides",
+    "probe": "animation-private-overrides"
   },
   {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
-    "probe": "tabmaster-private-settings"
+    "probe": "tabmaster-private-settings",
+    "additionalShims": [
+      "tabmaster-ipc-eof"
+    ]
   },
   {
     "id": 103,
@@ -22,7 +32,7 @@
   },
   {
     "id": 36,
-    "shim": null,
+    "shim": "steamgriddb-ipc-eof",
     "probe": "steamgriddb-private-artwork"
   },
   {
@@ -43,6 +53,9 @@
   {
     "id": 117,
     "shim": "deckyparty-user-lifecycle",
+    "additionalShims": [
+      "deckyparty-ipc-eof"
+    ],
     "probe": "deckyparty-private-files"
   },
   {
@@ -59,7 +72,10 @@
     "id": 130,
     "version": "1.0.2",
     "shim": "prefix-manager-user-paths",
-    "probe": "prefix-manager"
+    "probe": "prefix-manager",
+    "additionalShims": [
+      "prefix-manager-102-ipc-eof"
+    ]
   },
   {
     "id": 68,
@@ -77,6 +93,9 @@
   {
     "id": 93,
     "shim": "deck-settings-verified-tls",
+    "additionalShims": [
+      "deck-settings-ipc-eof"
+    ],
     "probe": "deck-settings-readonly"
   },
   {
@@ -92,7 +111,10 @@
   {
     "id": 67,
     "shim": "battery-tracker-user-supply",
-    "probe": "battery-tracker"
+    "probe": "battery-tracker",
+    "additionalShims": [
+      "battery-tracker-ipc-eof"
+    ]
   },
   {
     "id": 114,
@@ -107,7 +129,10 @@
   {
     "id": 24,
     "shim": "radiyo-verified-tls",
-    "probe": "radio-local"
+    "probe": "radio-local",
+    "additionalShims": [
+      "radiyo-ipc-eof"
+    ]
   },
   {
     "id": 132,
@@ -121,7 +146,7 @@
   },
   {
     "id": 135,
-    "shim": null,
+    "shim": "deck-shelves-ipc-eof",
     "probe": "shelves-settings"
   },
   {
@@ -131,7 +156,7 @@
   },
   {
     "id": 46,
-    "shim": null,
+    "shim": "steamback-ipc-eof",
     "probe": "steamback-private-save"
   },
   {
@@ -141,7 +166,7 @@
   },
   {
     "id": 63,
-    "shim": null,
+    "shim": "free-loader-ipc-eof",
     "probe": "free-loader"
   },
   {
@@ -171,7 +196,10 @@
   {
     "id": 96,
     "shim": "simple-timer-lifecycle",
-    "probe": "timer-lifecycle"
+    "probe": "timer-lifecycle",
+    "additionalShims": [
+      "simple-timer-ipc-eof"
+    ]
   },
   {
     "id": 60,

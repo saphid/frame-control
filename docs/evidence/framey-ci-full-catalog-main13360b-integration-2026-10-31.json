@@ -1,0 +1,49 @@
+{
+  "at": "2026-10-31T19:48:17.920767+00:00",
+  "sourceRevision": "503a7bec89eb8cca1afeb69efcab9bfaed8ea058",
+  "main": "13360b13017bbb1a16c5ee6472bb15b5ea996586",
+  "previousHead": "57eb0bc1c46247662beb053d4649819330281ac6",
+  "ordinaryMergeParents": [
+    "57eb0bc1c46247662beb053d4649819330281ac6",
+    "13360b13017bbb1a16c5ee6472bb15b5ea996586"
+  ],
+  "mainProductSourcePreserved": true,
+  "prSourceUnchanged": true,
+  "nativeInputsPreserved": 20,
+  "server": {
+    "tests": 1959,
+    "skips": 15,
+    "seconds": 255.109
+  },
+  "cacheRegressionTests": 7,
+  "website": {
+    "tests": 18,
+    "skips": 0
+  },
+  "e2e": {
+    "tests": 53,
+    "skips": 0,
+    "seconds": 397.858
+  },
+  "catalog": {
+    "records": 116,
+    "manifestSha256": "e5c3309860e32e190c3810f73eec01d622001c69bbb0a7f0e10be7b2742f2b07",
+    "allCacheHitsHashVerified": true,
+    "installedRemoved": 69,
+    "expectedRefusals": 47,
+    "allPriorOutcomesAndReasonsMatch": true
+  },
+  "actualReadOnlyMountVerified": true,
+  "actualHarnessResultCopyVerified": true,
+  "ownedCleanupVerified": true,
+  "preexistingImagesRestored": true,
+  "simulatorContinuityVerified": true,
+  "nativeRuntime": "No rerun: all 20 source inputs equal qualified main; prior AMD64/ARM64 evidence retained",
+  "oldHeadHosted": "57eb0bc1: 13 successful checks, ARM64 53 e2e / zero skips; historical proof only",
+  "combinedHeadHostedCi": false,
+  "combinedHeadArm64": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "rawSha256": "cd740dfd0e08c665b73e0a9b4623b68929f541a4c51fe9257f9be7b222128d01",
+  "rawBytes": 73216
+}

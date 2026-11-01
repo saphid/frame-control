@@ -1,0 +1,40 @@
+{
+  "at": "2026-11-01T04:40:46.341383+00:00",
+  "pr": 535,
+  "testedSource": "eca42ce81ae9e4adb154084f19fbc503405a0f04",
+  "integratedMain": "3d6145c640ffe1f9b51923335972ddd513ad0de2",
+  "priorPublishedHead": "81103c9128164afeb37967b7ae859cf1263477c6",
+  "normalMergeParents": [
+    "81103c9128164afeb37967b7ae859cf1263477c6",
+    "3d6145c640ffe1f9b51923335972ddd513ad0de2"
+  ],
+  "conflicts": 0,
+  "onlyTwoNonEvidenceFilesChanged": [
+    "tests/decky-runtime/syncthing_flatpak_package.py",
+    "tests/test_syncthing_package_timeout.py"
+  ],
+  "allOtherMainFilesByteIdentical": true,
+  "bothTimeoutFilesByteIdenticalToPrior": true,
+  "all26NativeInputsAndAll116CatalogRowsByteIdenticalToMain": true,
+  "allNativeAndE2eInputsPreserved": true,
+  "serverTests": 1971,
+  "serverPlatformOptionalSkips": 15,
+  "realChildProbeTestsExecutedAndPassed": 3,
+  "websiteTests": 18,
+  "websiteSkips": 0,
+  "priorExactHeadNativeCasesPerArchitecture": 51,
+  "priorNativeInputs": 25,
+  "priorPackageModesQualifiedAtPreparation": 3,
+  "priorArm64PackageUnqualifiedAtPreparation": true,
+  "oldPublishedHeadLiveJobUntouched": true,
+  "noNativeE2eOrPackageExecutionOfThisNewSourceClaimed": true,
+  "currentMainCIStillPendingAtPreparation": true,
+  "freshExactPublicationHostedGatesRequired": true,
+  "underlying529CauseOrFixEstablished": false,
+  "realSteamCef": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "2b77da9c1d7b106be9923b8bc59c89c52ffed654d296db3aca9e3264c53f6829",
+  "rawBytes": 159305
+}
