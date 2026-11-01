@@ -181,6 +181,7 @@ class Titles(harness.FrameTestCase):
             def log_message(self, *args):
                 pass
         httpd = http.server.ThreadingHTTPServer(('127.0.0.1', 0), Files)
+        self.addCleanup(httpd.server_close)
         threading.Thread(target=httpd.serve_forever, daemon=True).start()
         self.addCleanup(httpd.shutdown)
         base = f'http://127.0.0.1:{httpd.server_address[1]}'

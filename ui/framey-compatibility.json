@@ -9002,7 +9002,7 @@
         "https://github.com/GedasFX/decky-cloud-save"
       ],
       "status": "partial",
-      "reason": "The exact managed 1.0.4 selection check resolves paths inside the configured sync root, refuses outside links and recursive directory cycles, and retains the 9,000-file count limit. Private actual Decky 3.3.0 x86_64 RPCs verify those read-only selections and setting restart persistence; original configuration discovery was also verified on ARM64. Existing copies need Update/reinstall. This does not constrain rclone execution or prove cloud sync: the published updater still names an amd64 download and default sync arguments include --copy-links. Cloud login, sync, process signals, the updated ARM64 selection check, real Frame and worn VR remain unverified.",
+      "reason": "The exact managed 1.0.4 selection check remains bounded to its configured sync root, and its child IPC EOF repair permits clean unload. Private actual Decky 3.3.0 AMD64 tests verify read-only selections, settings restart persistence and two strict parent-only unloads, including a real child-peer EOF. Existing copies need Update/reinstall. This does not constrain rclone execution or prove cloud sync: the published updater still names an amd64 download and default sync arguments include --copy-links. Cloud login/sync/process signals, this repair on ARM64/Frame, browser integration and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",

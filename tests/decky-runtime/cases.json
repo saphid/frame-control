@@ -178,7 +178,10 @@
   {
     "id": 104,
     "shim": "game-sync-bounded-selection",
-    "probe": "game-sync-config"
+    "probe": "game-sync-config",
+    "additionalShims": [
+      "game-sync-ipc-eof"
+    ]
   },
   {
     "id": 63,
