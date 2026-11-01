@@ -8,6 +8,14 @@
     "probe": "discord-private-activity"
   },
   {
+    "id": 38,
+    "shim": "volume-mixer-user-audio",
+    "probe": "volume-mixer-private-audio",
+    "additionalShims": [
+      "volume-mixer-ipc-eof"
+    ]
+  },
+  {
     "id": 87,
     "shim": "screensaver-user-bus",
     "additionalShims": [
