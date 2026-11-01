@@ -1,0 +1,80 @@
+{
+  "at": "2026-10-31T21:36:11.450296+00:00",
+  "head": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+  "qualifiedPackageModes": 4,
+  "uniqueSources": 128,
+  "verifiedHashBindings": 1281,
+  "allOriginalZipAndMemberDigestsVerified": true,
+  "packages": [
+    {
+      "artifact": 13057653930,
+      "architecture": "aarch64",
+      "headSha": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+      "sourceHashes": 26,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": false,
+      "productionParent": false
+    },
+    {
+      "artifact": 13057074691,
+      "architecture": "x86_64",
+      "headSha": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+      "sourceHashes": 26,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": false,
+      "productionParent": false
+    },
+    {
+      "artifact": 13057807183,
+      "architecture": "x86_64",
+      "headSha": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+      "sourceHashes": 127,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": true,
+      "productionParent": false,
+      "packetVerified": true,
+      "httpRequests": 13,
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "realSteamCef": false
+    },
+    {
+      "artifact": 13057203490,
+      "architecture": "x86_64",
+      "headSha": "0ed5b06ed5b2942492f4a6ad96448e3d977ebf49",
+      "sourceHashes": 128,
+      "signedTwoWaySyncLifecycleAndPreservingUninstall": true,
+      "realFrameContacted": false,
+      "browserHttp": true,
+      "productionParent": true,
+      "packetVerified": true,
+      "httpRequests": 16,
+      "browserStages": [
+        "running",
+        "stopped",
+        "restarted",
+        "stopped"
+      ],
+      "realSteamCef": false,
+      "parentRequests": 65,
+      "maxParentRequestSeconds": 7.649,
+      "productionIframeUnchanged": true,
+      "parentErrors": []
+    }
+  ],
+  "omittedPayloadManifests": 4,
+  "rawSha256": "ca7c4ce31b5981653733614548dacbd53160efbd063667d7f08d6c70cf98d206",
+  "rawBytes": 778386,
+  "published": false,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "publicationContext": "Prepared as exact older-head proof; later source integrations require fresh CI and artifact qualification."
+}

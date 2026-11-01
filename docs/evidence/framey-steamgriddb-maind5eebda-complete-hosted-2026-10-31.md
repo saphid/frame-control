@@ -1,0 +1,23 @@
+# SteamGridDB complete hosted qualification and main evidence integration
+
+## Announcement
+
+SteamGridDB 1.8.1 retains its exact-archive child-IPC EOF repair after normally integrating current main's evidence. Exact older PR #523 head `580933c781da265376ae3969d5d4adb5fedc4efa` finishes all 18 checks/five workflows; all nine artifact ZIP/member digests and 1367 source-hash bindings across 151 files independently verify, including all four signed-package modes. Current combined source `637daa982e3ea7eac3ed4bcbf27922575e2c6553` changes only evidence compared with that tested head; every product/test/workflow file and all recorded artifact inputs remain byte-identical. These are input-equivalence checks, not new-head executions. Compatibility remains **broken** because actual Steam LibraryContextMenu/official plugin UI remains unverified. Nothing is released.
+
+## Current main and execution scope
+
+Normally merged main `d5eebdac850bdedaf0472dc1bbc93afede17c710` into `580933c781da265376ae3969d5d4adb5fedc4efa`. Only `docs/evidence/` paths change, including preserved historical failure records. The publication adds this three-file evidence packet. All 22 native source hashes and every binding across all 151 artifact inputs remain identical at the combined source. Local tests were not repeated for this documentation-only merge. The earlier tested merge source and whole-checker/installer audits remain in the underlying evidence. New exact published-head hosted checks/artifacts and a fresh main/head/required-check/all-run/feedback/mergeability gate remain required before merge.
+
+## Exact older-head verification
+
+- All nine original artifact ZIP/member digests match GitHub metadata for `580933c781da265376ae3969d5d4adb5fedc4efa`. All 18 checks and five workflows finish successfully. The earlier 17/18 partial observation and verifier-reference correction remain in local state; no job was cancelled or blindly rerun.
+- Published digest-verified Decky 3.3.0 AMD64/ARM64: 48 cases/602 RPCs each; all 22 source inputs match the exact head. Independently audited SteamGridDB repaired/original cases complete 14/12 RPCs on each architecture, with private artwork/settings/shortcut-icon VDF persistence, restart and two clean parent-only positive stops. The original still force-kills and remains a negative. Owned identities reap and unrelated siblings survive. Exact installed source/EOF helper and other original archive members verify. These private fixtures do not qualify a real Steam library or wearer-visible plugin UI. Generic runtime-console clean flags stay false.
+- Independent TabMaster 47/48/47, Simple Timer 31/10/18 and DeckyParty 15/8 RPC controls retain private settings/backup/restart, authenticated operations and prior forced-kill negatives on both architectures. A later clean replacement stop does not qualify DeckyParty's failed original reload. Diagnostics and expected negatives remain recorded.
+- Hosted ARM64 catalog: 53 tests/zero skips/all 116 pins. All 69 install/remove and 47 refusal outcomes/reasons match the previous local full result. This transport suite does not execute official backends.
+- Ownership/runtime/two-way sync/private user-service controls qualify on both architectures. All four signed-package modes qualify: AMD64, ARM64, browser HTTP and production-parent HTTP. Signatures, actual sync, restart, data-preserving uninstall, original packet decoding/hashes and reported owned cleanup verify. Production parent records 65 successful requests, no parent errors and unchanged sandboxed iframe. These are synthetic-CEF Syncthing package controls, not official SteamGridDB UI; Syncthing installation stays disabled. Images remain in original archives and were not visually re-audited. Repeated fetched-payload manifests are omitted with inventory hashes retained; original ZIPs remain complete.
+
+## Remaining limits
+
+The new combined documentation head needs its own CI and exact-head artifacts. Source/cleanup success is retained for hosted jobs, without an independent post-job Docker-absence packet. Original forced-kill and diagnostic records remain. No real Steam artwork/save changes, globally clean runtime, actual Steam CEF, managed Frame, wearer/controller or release proof. No headset, schedules, PR #113 or pre-existing data touched. Release stays held for every exact release-commit/tagged-installer/checksum/publisher/locked-Frame gate.
+
+[Summary](framey-steamgriddb-maind5eebda-complete-hosted-2026-10-31.json), [raw reports/metadata/controls/integration proof/verifiers](framey-steamgriddb-maind5eebda-complete-hosted-2026-10-31-raw.json.gz), SHA-256 `e78a12ce2cb317e09ff8f1183f6ce1b6843daf588a9a807838684e8807b90711`.

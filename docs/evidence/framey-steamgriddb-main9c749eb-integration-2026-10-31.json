@@ -1,0 +1,50 @@
+{
+  "at": "2026-10-31T22:54:11.489926+00:00",
+  "pr": 523,
+  "testedSource": "8ed544ea89812f22628f5825fce51c6a2ca0de65",
+  "integratedMain": "9c749eb2ac1707229759adb1c42f69079e8df19d",
+  "normalMergeParents": [
+    "4c30ab20c22f5d287ca81d5cac062ee865faa499",
+    "9c749eb2ac1707229759adb1c42f69079e8df19d"
+  ],
+  "sourceInputs": 23,
+  "serverTests": 1963,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 13,
+  "localNativePluginIds": [
+    36,
+    130,
+    61,
+    96,
+    117
+  ],
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 404.873,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "broken",
+  "officialUiAndWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "6766057ec01bd09c5d2118faf1f459fcc19542722972250e2ef14659fa13bd6a",
+  "rawBytes": 81834
+}

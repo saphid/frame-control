@@ -1,0 +1,126 @@
+{
+  "at": "2026-10-31T16:45:56.003310+00:00",
+  "base": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-service.py": "975adb19ac3fc7917b387b181387e9f2d478d7aebf0f963e99ae59548e7010bd",
+    "tests/test_syncthing_rootfs_pack.py": "6f74692b9ee0fe45e27d1ef56b662007ff1432d77474368b54221fd4e79d4484"
+  },
+  "regression": {
+    "original": {
+      "tests": 3,
+      "failures": 8,
+      "errors": 0,
+      "successful": false
+    },
+    "fixed": {
+      "tests": 3,
+      "failures": 0,
+      "errors": 0,
+      "successful": true
+    }
+  },
+  "native": {
+    "base": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "sourceSha256": "975adb19ac3fc7917b387b181387e9f2d478d7aebf0f963e99ae59548e7010bd",
+    "rootfsSha256": "58b210352990ccebbe6e3ef9031c6f3caa68a02b6359b6969f5c8ad1d7c1edca",
+    "realFrameContacted": false,
+    "network": "none",
+    "accelerator": "TCG",
+    "normalRoot": true,
+    "cases": {
+      "original": {
+        "proof": {
+          "uid": 1000,
+          "gid": 1000,
+          "pythonVersion": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]",
+          "modules": [
+            {
+              "module": "http.client",
+              "sourceMtime": 0,
+              "sourceSize": 58613,
+              "cacheHeader": [
+                168627699,
+                0,
+                1786363619,
+                58613
+              ],
+              "cacheUsableWithoutCompilation": false,
+              "error": "Source compilation forbidden: cache invalidated"
+            },
+            {
+              "module": "email.parser",
+              "sourceMtime": 0,
+              "sourceSize": 4975,
+              "cacheHeader": [
+                168627699,
+                0,
+                1786363619,
+                4975
+              ],
+              "cacheUsableWithoutCompilation": false,
+              "error": "Source compilation forbidden: cache invalidated"
+            }
+          ]
+        },
+        "qemuExitCode": 0,
+        "qemuReaped": true,
+        "consoleSha256": "d58f72127c6c90d14d859631020a208847222bbfe527036016099890be3b515e",
+        "ownedBootFilesRemoved": true
+      },
+      "fixed": {
+        "proof": {
+          "uid": 1000,
+          "gid": 1000,
+          "pythonVersion": "3.13.5 (main, Aug 10 2026, 12:06:59) [GCC 14.2.0]",
+          "modules": [
+            {
+              "module": "http.client",
+              "sourceMtime": 1786363619,
+              "sourceSize": 58613,
+              "cacheHeader": [
+                168627699,
+                0,
+                1786363619,
+                58613
+              ],
+              "cacheUsableWithoutCompilation": true
+            },
+            {
+              "module": "email.parser",
+              "sourceMtime": 1786363619,
+              "sourceSize": 4975,
+              "cacheHeader": [
+                168627699,
+                0,
+                1786363619,
+                4975
+              ],
+              "cacheUsableWithoutCompilation": true
+            }
+          ]
+        },
+        "qemuExitCode": 0,
+        "qemuReaped": true,
+        "consoleSha256": "2fbeef1d3d3ec7caedcc577ebd2215fca65e25825f228907a38234b6975671fe",
+        "ownedBootFilesRemoved": true
+      }
+    },
+    "scope": "Actual AMD64 Debian VM cache lookup only; no Terminal/browser/ARM64/headset usability proof"
+  },
+  "server": {
+    "tests": 1952,
+    "skipped": 16,
+    "failed": 0,
+    "seconds": 249.378
+  },
+  "site": {
+    "tests": 18,
+    "skipped": 0,
+    "failed": 0
+  },
+  "initialHelperFailure": "Missing explicit importlib.util in the standalone guest helper; no cache verdict. Corrected helper and reran both controls.",
+  "outsidePackDefinitionsUnchanged": true,
+  "terminalArmResolutionVerified": false,
+  "realFrameContacted": false,
+  "rawSha256": "e87ccb517f4f0ec21dda8265eb5b3873c3622ce2c2f866d4c7a3fecb7fdba062"
+}
