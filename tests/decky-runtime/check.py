@@ -2,6 +2,7 @@
 import argparse
 import ast
 import asyncio
+from contextlib import ExitStack
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -325,7 +326,11 @@ def main():
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
               'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
-        with capture_runtime(log, report, processes, loader=loader):
+        with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
+            if case['probe'] == 'discord-private-activity':
+                import discord_private
+                discord_peer = fixtures.enter_context(
+                    discord_private.Peer(Path(env['XDG_RUNTIME_DIR'])/'discord-ipc-0'))
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
@@ -360,7 +365,14 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'ludusavi-dependency-discovery':
+            if case['probe'] == 'discord-private-activity':
+                report['discordLifecycle'] = discord_private.probe(
+                    discord_peer, backend, loader, env, log, processes, current,
+                    rpc, until_ready, report, plugin)
+                report['result'] = ('private Discord wire handshake/activity/clear/rejected-handshake retry, '
+                    'replacement and two clean unload/restart stops passed; '
+                    'real Discord account/activity, Steam callbacks, browser and Frame unverified')
+            elif case['probe'] == 'ludusavi-dependency-discovery':
                 import ludusavi_private
                 report['dependencyDiscovery'] = ludusavi_private.exercise(
                     current, plugin, data, record, backend, loader, env, log,

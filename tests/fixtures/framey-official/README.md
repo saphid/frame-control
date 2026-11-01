@@ -1,5 +1,7 @@
 # Pinned Decky store test archives
 
+`37.zip` was downloaded from the official CDN on 2026-11-01 and matched the existing catalog digest. This is not a fresh full-store metadata claim. Its private IPC tests use a disposable local wire peer; no real Discord account or Frame is contacted.
+
 These are unmodified ZIPs downloaded from the official Decky store CDN on
 2026-10-25, except `96.zip` and `111.zip` downloaded on 2026-10-26 and `60.zip` on
 2026-10-27; `13.zip` and `125.zip` were added from the digest-verified audit cache on 2026-10-27,
@@ -19,6 +21,7 @@ A fresh official store read confirmed DeckyParty 1.0.0 and the same digest.
 
 | File | Official plugin | Version | Store SHA-256 |
 | --- | --- | --- | --- |
+| `37.zip` | Discord Status | 1.5.0 | `00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45` |
 | `134.zip` | Deck Progress Tracker | 1.3.6 | `784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3` |
 | `117.zip` | DeckyParty File Manager | 1.0.0 | `193fb3aa0446fbc3c6bae0ae15700b5f04acebfa917b8e1791988c6ce832dddf` |
 | `130.zip` | Games Prefix Manager | 1.0.1 | `ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473` |

@@ -1,5 +1,11 @@
 [
   {
+    "id": 37,
+    "shim": "discord-status-pipe-lifecycle",
+    "additionalShims": ["discord-status-ipc-eof"],
+    "probe": "discord-private-activity"
+  },
+  {
     "id": 61,
     "shim": "tabmaster-json-file-restore",
     "probe": "tabmaster-private-settings",

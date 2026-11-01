@@ -2918,7 +2918,7 @@
         "https://github.com/andrewburgess/steamdeck-discord-status.git"
       ],
       "status": "partial",
-      "reason": "Disconnected panel renders; running-activity construction accepts a synthetic game in local Chromium. Exact official is_connected returned false in real Decky 3.3.0 ARM64. Empty live running-list reads and lifetime registration/cleanup passed. Real game transitions, Discord shortcut detection/connection/activity, local custom artwork and worn VR remain unverified/unsupported.",
+      "reason": "Disconnected panel renders; running-activity construction accepts a synthetic game in local Chromium. Exact official is_connected returned false in real Decky 3.3.0 ARM64. Empty live running-list reads and lifetime registration/cleanup passed. Real game transitions, Discord shortcut detection/connection/activity, local custom artwork and worn VR remain unverified/unsupported. Exact managed 1.5.0 now closes prior/failed IPC pipes and awaits unload. Disposable native Decky 3.3.0 AMD64 with a private wire peer passed activity/clear/rejected-handshake retry, replacement, two strict clean stops and restart. No real Discord account/activity, Steam callbacks, shortcut/artwork UI or worn Frame validation is claimed.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -2969,6 +2969,12 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "ipcLifecycleFollowUp": {
+        "evidence": "docs/evidence/framey-discord-ipc-lifecycle-2026-11-01.md",
+        "mode": "native Decky 3.3.0 AMD64; disposable private Discord Unix wire peer",
+        "realDiscordContacted": false,
+        "realFrameContacted": false
       }
     },
     {

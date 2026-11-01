@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 37, 'name': 'Discord Status', 'version': '1.5.0', 'api_version': 1,
+     'folder': 'DiscordStatus', 'sha256': '00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45'},
     {'id': 61, 'name': 'TabMaster', 'version': '2.15.1', 'api_version': 1, 'folder': 'TabMaster', 'sha256': 'e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5'},
     {'id': 103, 'name': 'Decky Ludusavi', 'version': '1.2.2', 'api_version': 1,
      'folder': 'decky-ludusavi', 'sha256': '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88'},
