@@ -1,0 +1,37 @@
+{
+  "at": "2026-11-01T02:52:37.200263+00:00",
+  "pr": 527,
+  "testedSource": "a7b8f1232d9089fcb02488ff302ec605e1df7800",
+  "priorPublishedHead": "0316a4299bd41f091ad39477c50a8d20c12ac337",
+  "integratedMain": "4558a36f58f84840d835f4fc281f12541f15ea94",
+  "normalMergeParents": [
+    "0316a4299bd41f091ad39477c50a8d20c12ac337",
+    "4558a36f58f84840d835f4fc281f12541f15ea94"
+  ],
+  "changedPathsFromPrior": [
+    "docs/evidence/link-invalid-dns-2026-11-01-raw.json.gz",
+    "docs/evidence/link-invalid-dns-2026-11-01.json",
+    "docs/evidence/link-invalid-dns-2026-11-01.md",
+    "tests/test_link.py"
+  ],
+  "linkTests": 84,
+  "linkSkips": 0,
+  "linkSeconds": 27.745,
+  "actualLocalPlatform": "Linux x86_64",
+  "nativeInputsPreserved": 25,
+  "nativeExecutionRerun": false,
+  "localE2eRerun": false,
+  "fullCurrentHostedChecksRequired": true,
+  "allPriorJobsTerminal": true,
+  "priorOnlyFailure": "macOS connection DNS fixture tests",
+  "mainNineChecksGreen": true,
+  "compatibility": "partial",
+  "store130Version": "1.0.1",
+  "github102LookupStatus": "unverified",
+  "realFrameContacted": false,
+  "schedulesChanged": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "e3f448382fa54736fe4af48c3dd6a17ae4e01f4d7d708680ddeee0ab334ceaa6",
+  "rawBytes": 24223
+}

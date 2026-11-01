@@ -1,0 +1,63 @@
+{
+  "at": "2026-11-01T02:11:35.894766+00:00",
+  "pr": 527,
+  "testedSource": "01634dbd25d9b508f9698d9a5a85003a4c47abf3",
+  "integratedMain": "61efc562a65b552b1c00b75e8559c1c78764f57e",
+  "normalMergeParents": [
+    "83a7240b95cc7655a5bf48040ef905bc64c6229f",
+    "61efc562a65b552b1c00b75e8559c1c78764f57e"
+  ],
+  "sourceInputs": 25,
+  "serverTests": 1967,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 9,
+  "localNativePluginIds": [
+    46,
+    36,
+    24,
+    130
+  ],
+  "steambackRpcs": [
+    11,
+    9
+  ],
+  "steamGridDbRpcs": [
+    14,
+    12
+  ],
+  "steamGridDbStatus": "broken",
+  "radiYoRpcs": [
+    9,
+    7
+  ],
+  "radiYoTlsBothRejectionPathsPreserved": true,
+  "independentPrivateSaveSnapshotsVerified": true,
+  "postEofRpcBeforeShutdownVerified": false,
+  "postRestartRpcResponseVerified": true,
+  "controlledEofShutdownVerified": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 401.237,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "realSteamSavesAutomaticTriggersOfficialUiWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "3b8956c30d00cde084e7f3369eeb98607a6bdbeda217dfd5726f363ae3d3f6cf",
+  "rawBytes": 116043
+}

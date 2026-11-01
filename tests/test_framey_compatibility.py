@@ -114,6 +114,15 @@ class Compatibility(unittest.TestCase):
         result = compatibility.lookup(release['id'], release['sha256'], release['version'])
         self.assertEqual(result['status'], 'unverified')
 
+    def test_steamback_old_receipt_requires_current_ipc_repair(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 46)
+        base = dict(storeId=46, version=plugin['version'], sha256=plugin['sha256'])
+        installed = {'plugins': [base, dict(base, compatShims=['steamback-ipc-eof'])]}
+        result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 2)
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_old_radiyo_copy_requires_child_ipc_repair(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 24)
         old = dict(storeId=24, version=plugin['version'], sha256=plugin['sha256'],
