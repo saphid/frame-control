@@ -90,6 +90,7 @@ def main():
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/protondb_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
+              'tests/decky-runtime/radiyo_private.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
@@ -122,6 +123,7 @@ def main():
                     (134, '--reproduce-deck-progress-unload-regression'),
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression'),
+                    (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
                 if args.case is None or args.case == plugin_id]
             if args.case is None or args.case == 130:
