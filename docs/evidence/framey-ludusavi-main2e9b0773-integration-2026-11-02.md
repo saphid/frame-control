@@ -1,0 +1,19 @@
+# Ludusavi integration with main 2e9b0773 — 2026-11-02
+
+Implementation `b668e5d3bed6f0b23a836e6371f71cba000c3950` normally merges exact main `2e9b0773abda3078332461a1b933f7dbf0ec6407` into the prepared Ludusavi IPC EOF repair. The unpublished Game Sync integration is retained. Two conflicts use exact main plus complete, byte-preserved Ludusavi installer/e2e guards. This source includes the merged Discord, ProtonDB and Game Sync lifecycle repairs, primary shutdown gate, Surround and Reshadeck.
+
+Independent source comparison retains the whole installer/APPLY AST outside the added store-103 IPC repair, all **116 pins/flags/policies/ratings**, the other 115 complete catalog rows and all **40 native cases** with the added Ludusavi shim expectation. The e2e AST outside store 103 is unchanged. Main's runner, checker, container, shared IPC and lifecycle helpers are byte-identical. Ludusavi's probe and transaction tests retain the prior local bytes; 1,825 other main git objects are retained. Generated docs pass.
+
+## Verification
+
+- Complete local unit suite: **2040 tests, 15 platform/optional skips**, 285.193 seconds. These skips do not qualify native or release gates. Unit ResourceWarnings remain in raw evidence; separate e2e reports none.
+- Complete isolated fake-Frame e2e: **53 tests / zero skips**, all **116 pins** (69 install/remove, 47 expected refusals), zero unclosed HTTP socket warnings. Official backends are stubbed in this suite. Owned Compose resources are gone, prior image tags restored, shared simulator identity/start/restart/healthy state preserved.
+- Digest-pinned published Decky **3.3.0 native AMD64 Ludusavi**: **three actual RPCs**, **40 source fingerprints**, missing dependency, bounded timeout of a private dummy executable followed by fallback, original dependency-helper negative control, and missing dependency after restart. The timed-out executable is reaped. All ten original archive members, scoped prefix/dependency repair and added IPC helper are independently reconstructed.
+- **Four strict parent-only clean unloads** (0.315s / 0.314s / 0.314s / 0.214s), including one following a real private child IPC EOF. Each verifies the original unload callback, zero forced plugin kills/shutdown errors, exact owned process identities gone and successful adopted exits. The retained original IPC red failure takes 5.224s, with a forced plugin kill despite a zero loader exit; it is not counted as a pass.
+- Native AMD64 **ProtonDB regression**: **9 actual RPCs**, 40 source fingerprints and two strict parent-only clean stops; no forced kill/shutdown error, all adopted exits zero.
+
+The compressed packet contains raw native reports/consoles, original failure log, full test logs, catalog outcomes, cleanup records, source bindings and audit programs. Publication adds only this note, JSON summary and raw packet after the tested implementation. Fresh exact-publication hosted CI, both native architectures, all nine artifact audits and exact-current-main qualification remain required before merge. No release is qualified.
+
+## Limits
+
+Exact cached store **103 / Decky Ludusavi 1.2.2**, ZIP `8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88`; no fresh live-store claim. Compatibility stays **partial**. Update/reinstall is required. Actual Ludusavi installation/backup/restore/cloud/save data, other command lifecycle, real browser/backend integration, ARM64 for this combined publication, real Frame and wearer/controller behavior remain unverified. Earlier Chromium evidence used in-memory replies and is not repeated here. The original red observer reported all container processes; the final observer records only the owned descendant set used by cleanup. Scoped cleanup does not claim complete filesystem cleanup. No headset, schedule, security setting, pre-existing data or PR #113 changes.
