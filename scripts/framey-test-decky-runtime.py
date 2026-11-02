@@ -82,6 +82,7 @@ def main():
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
+              'ui/framey_discord_lifecycle.py', 'tests/decky-runtime/discord_private.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
