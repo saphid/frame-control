@@ -1,5 +1,13 @@
 [
   {
+    "id": 37,
+    "shim": "discord-status-pipe-lifecycle",
+    "additionalShims": [
+      "discord-status-ipc-eof"
+    ],
+    "probe": "discord-private-activity"
+  },
+  {
     "id": 38,
     "shim": "volume-mixer-user-audio",
     "probe": "volume-mixer-private-audio",
