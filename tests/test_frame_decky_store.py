@@ -683,7 +683,15 @@ class StoreTransaction(unittest.TestCase):
         folder = self.folder.parent/plugin['folder']
         source = (folder/'main.py').read_text(encoding='utf-8')
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['steam-status-verified-tls'])
+        self.assertEqual(receipt['compatShims'], ['steam-status-verified-tls', 'steam-status-ipc-eof'])
+        self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(), 'a16ab5869a93d64fb87f0cf836d98148ef83fb3000daafd32d37ee64dc1aba13')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for entry in original.infolist():
+                relative = entry.filename.removeprefix(plugin['folder']+'/')
+                if not entry.is_dir() and relative != 'main.py':
+                    self.assertEqual((folder/relative).read_bytes(), original.read(entry))
         self.assertEqual(source.count('ssl.create_default_context()'), 2)
         self.assertNotIn('ssl.CERT_NONE', source)
         self.assertNotIn('ssl_context.check_hostname = False', source)
@@ -713,6 +721,33 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove', plugin_id=123, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_steam_status_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 123)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=123,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Steam Status child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
+    def test_steam_status_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 123)
+        stream = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(stream, 'a') as bundle:
+            original = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', b'Different archive; no adaptation')
+        changed = stream.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(123, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=123,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'], [])
 
     def test_exact_suggestme_fallback_keeps_certificate_verification(self):
         from framey_official import PLUGINS, archive as official_archive

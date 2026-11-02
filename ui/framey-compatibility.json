@@ -11034,7 +11034,7 @@
         "https://github.com/sponsors/bschelst"
       ],
       "status": "partial",
-      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Exact managed 1.2.3 installs keep certificate and hostname verification for public CM-list and speed-test downloads; older managed copies need Update. Isolated Decky 3.3.0 x86_64 and ARM64 passed private setting write/read and persistence after a loader restart. Live public diagnostics, real Frame use of the adapted backend and VR controls remain unverified.",
+      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Exact managed 1.2.3 installs keep certificate and hostname verification for public CM-list and speed-test downloads; older managed copies need Update. Isolated Decky 3.3.0 x86_64 and ARM64 passed private setting write/read and persistence after a loader restart. Live public diagnostics, real Frame use of the adapted backend and VR controls remain unverified. The exact managed archive now includes a child IPC EOF adapter so the original unload callback can run; existing copies require Update/reinstall. Historical persistence passes do not qualify this repair; fresh strict native shutdown checks are required.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11124,7 +11124,8 @@
         "mode": "isolated Decky 3.3.0 x86_64 and ARM64; private setting write/read and persistence after loader restart"
       },
       "requiredShims": [
-        "steam-status-verified-tls"
+        "steam-status-verified-tls",
+        "steam-status-ipc-eof"
       ]
     },
     {

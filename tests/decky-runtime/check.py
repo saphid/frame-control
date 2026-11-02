@@ -68,6 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('version', nargs='?', default='-')
+    parser.add_argument('--reproduce-steam-status-unload-regression', action='store_true')
     parser.add_argument('--reproduce-localsend-unload-regression', action='store_true')
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
@@ -281,6 +282,15 @@ def main():
             assert old in source
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
+
+    if args.reproduce_steam_status_unload_regression:
+        assert record['id'] == 123
+        main = plugin/'main.py'
+        prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+        source = main.read_bytes()
+        assert source.startswith(prefix)
+        main.write_bytes(source[len(prefix):])
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
 
     if args.reproduce_download_all_unload_regression:
         assert record['id'] == 131
@@ -1267,10 +1277,28 @@ def main():
                 assert current('get_setting', 'refresh_interval_seconds') == 180
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['refresh_interval_seconds'] == 180
+                prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                installed = (plugin/'main.py').read_bytes()
+                expected = '67275a905b5173ef6b0a25c8b7e53e45cddc42323da78c26efa8b2dd21f555d6'
+                previous = installed if args.reproduce_steam_status_unload_regression else installed[len(prefix):]
+                if not args.reproduce_steam_status_unload_regression:
+                    assert installed.startswith(prefix)
+                    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                assert hashlib.sha256(previous).hexdigest() == expected
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for entry in original.infolist():
+                        relative = entry.filename.removeprefix(record['folder']+'/')
+                        if not entry.is_dir() and relative != 'main.py':
+                            assert (plugin/relative).read_bytes() == original.read(entry), relative
+                report['backendSha256'] = hashlib.sha256(installed).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_steam_status_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 import steam_status_private
                 steam_status_private.probe(backend, loader, env, log, processes, current, rpc,
-                    until_ready, report, regression=False)
-                report['result'] = ('published Decky discovery, private setting persistence, peer EOF readback, '
+                    until_ready, report, regression=args.reproduce_steam_status_unload_regression)
+                report['result'] = ('prior managed Steam Status peer EOF and forced kill reproduced; negative control only'
+                    if args.reproduce_steam_status_unload_regression else
+                    'published Decky discovery, private setting persistence, peer EOF readback, '
                     'restart and two clean parent-only unloads passed; TLS contexts remain verified; '
                     'public network diagnostics, Frame and VR unverified')
             elif case['probe'] == 'wine-cellar-private-state':

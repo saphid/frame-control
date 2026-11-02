@@ -269,6 +269,9 @@ def apply_script(plugin_id, digest):
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
                 +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 123 and digest == '9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_STEAM_STATUS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 14 and digest == '90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_PROTONDB_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1865,8 +1868,21 @@ def split_by_app(data):
                     if data.count(unsafe)!=1:
                         raise RuntimeError('Steam Status TLS source changed')
                     data=data.replace(unsafe,b'')
+                if hashlib.sha256(data).hexdigest()!='67275a905b5173ef6b0a25c8b7e53e45cddc42323da78c26efa8b2dd21f555d6':
+                    raise RuntimeError('Steam Status managed TLS source changed')
+                ipc=globals().get('FRAMEY_STEAM_STATUS_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Steam Status child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Steam Status child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                data=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+data
+                compile(data,str(main),'exec')
                 main.write_bytes(data)
                 compat_shims.append('steam-status-verified-tls')
+                compat_shims.append('steam-status-ipc-eof')
             # Deck Settings' exact 1.2.6 image uploader sends a bearer token
             # over HTTPS while disabling both certificate and hostname checks.
             # Retain Python's verified default context in this managed copy.
