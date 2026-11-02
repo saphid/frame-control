@@ -166,6 +166,7 @@
   {
     "id": 132,
     "shim": "suggestme-verified-tls",
+    "additionalShims": ["suggestme-ipc-eof"],
     "probe": "suggestme-private"
   },
   {
