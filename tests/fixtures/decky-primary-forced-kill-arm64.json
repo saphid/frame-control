@@ -1,0 +1,38 @@
+{
+  "source": {
+    "head": "39ed2b0b139c2f486daeb3f3cb8a27067d9bc858",
+    "artifact": 13103701800,
+    "architecture": "aarch64",
+    "pluginId": 104,
+    "observedParentZeroExit": true
+  },
+  "observation": {
+    "id": 104,
+    "result": "discovery, default config, bounded private selections and setting restart persistence passed; rclone, cloud authentication, sync, process signals, real Frame and VR unverified",
+    "runtimeConsole": {
+      "text": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: SDH-GameSync\n[loader][INFO]: Loaded Game Sync (v1.0.4)\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Recursive directory link in sync selection\n\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Game Sync (v1.0.4)\n[plugin][INFO]: Stopping response listener for Game Sync (v1.0.4)\nCalling Loader unload function for Game Sync (v1.0.4).\nAttempting to unload with plugin Game Sync (v1.0.4)'s \"_unload\" function.\n\nUnloaded Game Sync (v1.0.4)\n\n[plugin][INFO]: Plugin Game Sync (v1.0.4) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: SDH-GameSync\n[loader][INFO]: Loaded Game Sync (v1.0.4)\n[loader][ERROR]: Method test_syncpath of plugin Game Sync (v1.0.4) failed with the following exception:\nTraceback (most recent call last):\n  File \"decky_loader/loader.py\", line 229, in handle_plugin_method_call\n  File \"decky_loader/plugin/plugin.py\", line 137, in execute_method\n  File \"decky_loader/plugin/messages.py\", line 44, in wait_for_result\nException: Selection is outside the sync root or cannot be resolved\n\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Game Sync (v1.0.4)\n[plugin][INFO]: Stopping response listener for Game Sync (v1.0.4)\n[plugin][WARNING]: Plugin Game Sync (v1.0.4) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Game Sync (v1.0.4) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+      "sha256": "25cf959711f8e1a9d39aef97cb761464c59243c01daf05d1d927d9c9f3c5fcde",
+      "probeCompleted": true,
+      "cleanupCompleted": true,
+      "processStops": [
+        {
+          "pid": 24,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": true,
+          "returncode": 0
+        },
+        {
+          "pid": 9,
+          "signaledProcessGroup": false,
+          "forcedKill": false,
+          "loader": true,
+          "parentOnlySignal": false,
+          "returncode": 0
+        }
+      ],
+      "cleanShutdownVerified": false
+    }
+  }
+}
