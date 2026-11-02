@@ -66,6 +66,20 @@ def loader_bytes(path):
     return data, digest
 
 
+def verify_primary_shutdown(observation):
+    """Reject hidden shutdown failures even when the loader parent exits zero."""
+    label = f"Decky primary case {observation['id']}"
+    console = observation.get('runtimeConsole', {})
+    if not console.get('probeCompleted') or not console.get('cleanupCompleted'):
+        raise RuntimeError(f'{label}: incomplete runtime console')
+    text = console.get('text', '')
+    if hashlib.sha256(text.encode()).hexdigest() != console.get('sha256'):
+        raise RuntimeError(f'{label}: runtime console digest mismatch')
+    for marker in ('Sending SIGKILL!', 'Error during shutdown:'):
+        if marker in text:
+            raise RuntimeError(f'{label}: {marker}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--loader', type=Path, help='Optional cached, digest-verified native Decky 3.3.0 binary')
@@ -168,6 +182,8 @@ def main():
                         raise RuntimeError(f'Decky runtime case {plugin_id} {version or "store"} failed:\n{result.stdout}\n{result.stderr}')
                     observation = json.loads(result.stdout)
                     report['cases'].append(observation)
+                    if not negative:
+                        verify_primary_shutdown(observation)
                     print(f"PASS {plugin_id} {version or 'store'}: {observation['result']}", flush=True)
                 finally:
                     subprocess.run(['docker', 'rm', '-f', '--volumes', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
