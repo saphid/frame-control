@@ -1267,17 +1267,12 @@ def main():
                 assert current('get_setting', 'refresh_interval_seconds') == 180
                 state = base/'settings'/record['folder']/'settings.json'
                 assert json.loads(state.read_text())['refresh_interval_seconds'] == 180
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(lambda: current('get_setting', 'refresh_interval_seconds') == 180,
-                                   'private Steam Status setting after restart')
-                report['result'] = ('published Decky discovery, private setting write/read and restart '
-                                    'persistence passed; both managed public diagnostic contexts retain TLS '
-                                    'verification; no public network diagnostics, Frame or VR test')
+                import steam_status_private
+                steam_status_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, regression=False)
+                report['result'] = ('published Decky discovery, private setting persistence, peer EOF readback, '
+                    'restart and two clean parent-only unloads passed; TLS contexts remain verified; '
+                    'public network diagnostics, Frame and VR unverified')
             elif case['probe'] == 'wine-cellar-private-state':
                 helper = plugin/'bin/backend'
                 machine = 183 if __import__('platform').machine() == 'aarch64' else 62
