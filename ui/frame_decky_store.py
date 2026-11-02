@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 103 and digest == '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_LUDUSAVI_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 75 and digest == 'f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281':
         helper = Path(__file__).with_name('framey_reshadeck.py').read_text(encoding='utf-8')
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
@@ -700,6 +703,19 @@ try:
                     'except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:',1)
                 helper.write_text(source)
                 compat_shims.append('ludusavi-dependency-discovery')
+                main=unpacked/'main.py'
+                backend=main.read_bytes()
+                if flags!=[] or hashlib.sha256(backend).hexdigest()!='00fcd7029ab4ba9fac0e872899a6dcadd6d05a8cc8892542b5abd2db967eac48':
+                    raise RuntimeError('Ludusavi backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_LUDUSAVI_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Ludusavi child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Ludusavi child IPC helper collides with archive')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+backend)
+                compat_shims.append('ludusavi-ipc-eof')
             if (int(plugin_id)==134 and digest=='784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'
                     and folder=='deck-progress-tracker'):
                 main=unpacked/'main.py'

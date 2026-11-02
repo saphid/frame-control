@@ -8915,7 +8915,7 @@
         "https://github.com/mtkennerly/ludusavi"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.2.2 reports a missing Ludusavi executable without a version-RPC error and bounds each version probe to five seconds. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original negative control and restart. The exact frontend shows its missing-dependency message with in-memory replies in sandboxed local Chromium. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, ARM64, real Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
+      "reason": "Exact managed 1.2.2 retains bounded dependency discovery and repairs child IPC EOF. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original dependency-helper negative, restart and four clean parent-only unloads. Prior sandboxed local Chromium shows the missing-dependency UI with in-memory replies. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, repaired ARM64/Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
