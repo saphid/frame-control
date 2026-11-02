@@ -1690,16 +1690,11 @@ def main():
                 assert saved == {'success': True}, saved
                 presets = current('get_filter_presets')
                 assert presets['active_index'] == 0 and presets['presets'][0]['label'] == 'Framey private', presets
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                restored = until_ready(lambda: current('get_filter_presets')['presets'][0],
-                                       'private SuggestMe preset after restart')
-                assert restored['label'] == 'Framey private', restored
-                report['result'] = ('published Decky discovery, empty library and private preset restart passed; '
+                import suggestme_private
+                suggestme_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, regression=False)
+                report['result'] = ('published Decky discovery, empty library and private preset persistence, '
+                    'peer EOF readback, restart and two clean parent-only unloads passed; TLS fallback remains verified; '
                     'network recommendations, actual Steam library, Frame and VR unverified')
             elif case['probe'] == 'notifications-private':
                 assert not Path('/tmp/notifications.log').exists()

@@ -100,6 +100,7 @@ def main():
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/download_all_private.py',
               'tests/decky-runtime/steam_status_private.py',
+              'tests/decky-runtime/suggestme_private.py',
               'tests/decky-runtime/localsend_private.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
