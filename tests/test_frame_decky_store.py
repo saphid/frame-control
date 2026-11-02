@@ -402,16 +402,47 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['download-all-local-queue'])
+        self.assertEqual(receipt['compatShims'], ['download-all-local-queue', 'download-all-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(official_archive(record))) as original:
-            for name in ('main.py', 'LICENSE'):
-                self.assertEqual((folder/name).read_bytes(), original.read(record['folder']+'/'+name))
+            prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+            self.assertEqual((folder/'main.py').read_bytes(), prefix+original.read(record['folder']+'/main.py'))
+            for entry in original.infolist():
+                relative = entry.filename.removeprefix(record['folder']+'/')
+                if not entry.is_dir() and relative not in ('main.py','dist/index.js'):
+                    self.assertEqual((folder/relative).read_bytes(), original.read(entry))
+            self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         frontend = folder/'dist/index.js'
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_download_all.mjs'),
                                  str(frontend)], capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(self.apply('remove', plugin_id=131, folder=record['folder']).returncode, 0)
         self.assertFalse(folder.exists())
+
+    def test_download_all_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 131)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(record), plugin_id=131,
+                                folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Download All child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/record['folder']).exists())
+
+    def test_download_all_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 131)
+        changed = io.BytesIO(official_archive(record))
+        with zipfile.ZipFile(changed, 'a') as bundle:
+            original = bundle.read(record['folder']+'/main.py')
+            bundle.writestr(record['folder']+'/private-new-version.txt', 'Different archive; no repair')
+        result = self.apply('install', changed.getvalue(), plugin_id=131,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/record['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
 
     def test_prefix_manager_102_release_asset_disables_game_data_delete(self):
         from framey_official import PREFIX_MANAGER_102, archive as official_archive
@@ -864,15 +895,21 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+        self.assertEqual(receipt['compatShims'], ['localsend-digest-native', 'localsend-ipc-eof'])
         self.assertEqual(json.loads((folder/'plugin.json').read_text())['flags'], [])
         expected = (frame_decky_store.LOCALSEND_AARCH64 if platform.machine() == 'aarch64'
                     else frame_decky_store.LOCALSEND_ORIGINAL)
         self.assertEqual(hashlib.sha256((folder/'bin/localsend-core').read_bytes()).hexdigest(), expected)
         self.assertEqual((folder/'bin/localsend-core').stat().st_mode & 0o777, 0o700)
         with zipfile.ZipFile(io.BytesIO(data)) as source:
-            for name in ('main.py', 'LICENSE'):
-                self.assertEqual((folder/name).read_bytes(), source.read(plugin['folder']+'/'+name))
+            prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+            self.assertEqual((folder/'main.py').read_bytes(), prefix+source.read(plugin['folder']+'/main.py'))
+            for entry in source.infolist():
+                relative = entry.filename.removeprefix(plugin['folder']+'/')
+                if not entry.is_dir() and relative not in ('main.py','bin/localsend-core'):
+                    self.assertEqual((folder/relative).read_bytes(), source.read(entry))
+            self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         result = self.apply('remove', plugin_id=125, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
@@ -934,6 +971,24 @@ class StoreTransaction(unittest.TestCase):
         with patch.object(frame_decky_store, 'LOCALSEND_AARCH64', '0'*64):
             with self.assertRaisesRegex(ValueError, 'SHA-256 mismatch'):
                 frame_decky_store.apply_script(125, frame_decky_store.LOCALSEND_DIGEST)
+
+    def test_localsend_missing_ipc_payload_cannot_publish_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 125)
+        script = frame_decky_store.apply_script(125, plugin['sha256'])
+        script = ''.join(line for line in script.splitlines(keepends=True)
+                         if not line.startswith('FRAMEY_LOCALSEND_IPC_SOURCE = '))
+        # Only write fixture helpers; model the Linux target independently of
+        # the test host's CPU name (macOS reports ARM64 as "arm64").
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch):
+                target = 'import platform\nplatform.machine=lambda:'+repr(arch)+'\n'+script
+                with patch.object(frame_decky_store, 'apply_script', return_value=target):
+                    result = self.apply('install', official_archive(plugin), plugin_id=125,
+                                        folder=plugin['folder'], version=plugin['version'])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Missing LocalSend child IPC EOF repair', result.stderr)
+                self.assertFalse((self.folder.parent/plugin['folder']).exists())
 
     def test_localsend_arm64_transaction_checks_written_helper(self):
         from framey_official import PLUGINS, archive as official_archive
