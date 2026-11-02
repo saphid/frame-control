@@ -1,0 +1,309 @@
+{
+  "at": "2026-11-02T05:32:38.397129+00:00",
+  "implementation": "1c39336f60726ca16e014904bbc9a0086dbce52e",
+  "baseMain": "84f5efd3fbde8525b473f11c3bd2071d7ffb3e82",
+  "sourceAudit": {
+    "at": "2026-11-02T05:25:45.245327+00:00",
+    "implementation": "1c39336f60726ca16e014904bbc9a0086dbce52e",
+    "baseMain": "84f5efd3fbde8525b473f11c3bd2071d7ffb3e82",
+    "sourceChanges": [
+      "docs/framey-compatibility.md",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/decky-runtime/download_all_private.py",
+      "tests/e2e/test_framey.py",
+      "tests/test_frame_decky_store.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json"
+    ],
+    "installerOutsideDownloadAllEqualMain": true,
+    "queueFrontendTransformationUnchanged": true,
+    "checkerOutsideDownloadAllEqualMain": true,
+    "e2eAndStoreTestsOutsideDownloadAllEqualMain": true,
+    "all40NativeCaseValuesAndOrderRetainedExceptAdded131Shim": true,
+    "all116PinsPoliciesRatingsPreserved": true,
+    "other115CatalogRowsUnchanged": true,
+    "sharedIpcAndStrictProducerGateUnchanged": true,
+    "allOtherMainGitObjectsRetained": true,
+    "generatedDocsPass": true,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "unit": {
+    "at": "2026-11-02T05:31:24.122850+00:00",
+    "implementation": "1c39336f60726ca16e014904bbc9a0086dbce52e",
+    "exit": 0,
+    "tests": 2043,
+    "testSeconds": 281.777,
+    "wallSeconds": 282.92064471310005,
+    "skips": 15,
+    "realFrameContacted": false
+  },
+  "native": {
+    "at": "2026-11-02T05:26:47.551676+00:00",
+    "implementation": "1c39336f60726ca16e014904bbc9a0086dbce52e",
+    "redCommit": "ea8abf79e0bb08adc02b075ccedef7306a972edf",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "4ee50783280aebd70d1b05d54b6a361f2808f3a40a1240068d1573f662dd8ab8",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "7c9791925410c84a4adcd6080fcd83e3c7044b1ed7ce1bbe92436f3b716936cf",
+      "ui/framey_discord_lifecycle.py": "f75b372fa48d39968abe60921847a154b5c485c5b462dfa3855aae9dd3b8520c",
+      "tests/decky-runtime/discord_private.py": "e7abd8c6a8ad5b85167b7ee73fca254e1857952d771bc1ae4a9d103f8c8cfb8c",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/download_all_private.py": "0258433b119d97beb0334cfaf115adb981ac7a86eb9f7795eb4d404e53a55a51",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+      "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/reshadeck_private.py": "94bf1b762a6a0f9448a8e02c1fe6fd9be552557df61ee1a7083b7d8626bf8ee2",
+      "ui/framey_reshadeck.py": "5640fdf1d8bf9fd1df9e3e0637aca48fa8793c299ea2788bbaa70921d0b3f689",
+      "tests/decky-runtime/screensaver_private.py": "15aa711ce5578e8c4e691689c8174ae6e1f59a4b1cb558ba3a1803186d47c000",
+      "ui/framey_screensaver.py": "9708b949d6723584d3dfbed0ccb52becd4754a2172e479b1e8b8a0d522add45c",
+      "tests/decky-runtime/surround_private.py": "481876917ecbe9e7a4f82e20ab3ef6bbd6bd7d456194d2c01e09ffacafb5bcc2",
+      "ui/framey_surround.py": "5d697c4fe229a8d15dda1408c9177cb8e9f19571dd1f39817d5d45831318fc22",
+      "tests/decky-runtime/volume_mixer_private.py": "9b57b5b42445bac803a4308fb357c705048d92c8adbec63ae4710e34ce9f7f37",
+      "tests/decky-runtime/animation_private.py": "5ecc5acad0c33b95f852df35014d0b6189c1f7c64aaa556146ec86a76b6c617a",
+      "ui/framey_animation_overrides.py": "1be712568c6675dd77cff64eb0b06a97569d80daa81d269533c2ea8d3be20188",
+      "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+      "tests/decky-runtime/cases.json": "80e76f5c157d15f0b835a8cca656489af9c626a9f4257a89f6a097d1f735e740",
+      "tests/framey_official.py": "dfa77356bbbd41082ae40673c1724c13d0a2a372aba69adabfa67b788b309ed0",
+      "ui/frame_decky_store.py": "26a1d83d0e9a979d867b42a08835de04a495e3241bfb323b770defdb7640238a",
+      "tests/decky-runtime/ludusavi_private.py": "c620d2c5a8bdb8a4fa52df378e4426a466d1e7271c800243aacd1486eb9482f9",
+      "tests/decky-runtime/protondb_private.py": "fa42f20a4f9487230ec2ace56bed14c47d50866a1ace559d2c861431bf3af32d",
+      "tests/decky-runtime/game_sync_private.py": "097b860de03d340fd9b857d87f67a5b0271381307d8cc97280a1f4c79985cb5b",
+      "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeReportSha256": "2efef4b0e431f331c501a3325262ce051fe4cfce85aec8d5a7ceaf00305ba736",
+    "redEofRpcTimeoutAndForcedCleanupRetained": true,
+    "managedLoggingRpcs": 3,
+    "strictManagedStops": [
+      {
+        "loaderPid": 9,
+        "descendantsBefore": {
+          "10": {
+            "state": "S",
+            "parent": 9,
+            "start": "364793575"
+          },
+          "20": {
+            "state": "S",
+            "parent": 10,
+            "start": "364793609"
+          },
+          "21": {
+            "state": "S",
+            "parent": 10,
+            "start": "364793609"
+          },
+          "22": {
+            "state": "S",
+            "parent": 21,
+            "start": "364793621"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 20,
+            "returncode": 0
+          },
+          {
+            "pid": 21,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.214,
+        "fixtureClosedUnixPeers": [
+          "/tmp/plugin_socket_1793597186.3194368"
+        ],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[UI] Private Download All lifecycle\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Download All (v1.1.0)\n[plugin][INFO]: Stopping response listener for Download All (v1.1.0)\nCalling Loader unload function for Download All (v1.1.0).\nAttempting to unload with plugin Download All (v1.1.0)'s \"_unload\" function.\n\nDownload All plugin unloaded\nUnloaded Download All (v1.1.0)\n\n[plugin][INFO]: Plugin Download All (v1.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "c05311c63f6f658df83576cbd8a2dbba215d65698e6b90edaba0090c1e8c9a1b",
+        "cleanShutdownVerified": true
+      },
+      {
+        "loaderPid": 24,
+        "descendantsBefore": {
+          "25": {
+            "state": "S",
+            "parent": 24,
+            "start": "364793891"
+          },
+          "35": {
+            "state": "S",
+            "parent": 25,
+            "start": "364793931"
+          },
+          "36": {
+            "state": "S",
+            "parent": 25,
+            "start": "364793931"
+          },
+          "37": {
+            "state": "S",
+            "parent": 36,
+            "start": "364793944"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 35,
+            "returncode": 0
+          },
+          {
+            "pid": 36,
+            "returncode": 0
+          }
+        ],
+        "parentOnlySignal": true,
+        "loaderReturncode": 0,
+        "seconds": 0.265,
+        "fixtureClosedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Download All (v1.1.0)\n[plugin][INFO]: Stopping response listener for Download All (v1.1.0)\nCalling Loader unload function for Download All (v1.1.0).\nAttempting to unload with plugin Download All (v1.1.0)'s \"_unload\" function.\n\nDownload All plugin unloaded\nUnloaded Download All (v1.1.0)\n\n[plugin][INFO]: Plugin Download All (v1.1.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "dd2bfc5e9653a1e4e6223be530d3ea2fe12de3808934b54efd78266a604c18d0",
+        "cleanShutdownVerified": true
+      }
+    ],
+    "explicitForcedNegative": {
+      "loaderPid": 9,
+      "descendantsBefore": {
+        "10": {
+          "state": "S",
+          "parent": 9,
+          "start": "364794267"
+        },
+        "20": {
+          "state": "S",
+          "parent": 10,
+          "start": "364794297"
+        },
+        "21": {
+          "state": "S",
+          "parent": 10,
+          "start": "364794297"
+        },
+        "22": {
+          "state": "S",
+          "parent": 21,
+          "start": "364794310"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 20,
+          "returncode": 0
+        },
+        {
+          "pid": 21,
+          "returncode": 0
+        }
+      ],
+      "parentOnlySignal": true,
+      "loaderReturncode": 0,
+      "seconds": 5.234,
+      "fixtureClosedUnixPeers": [
+        "/tmp/plugin_socket_1793597193.1988473"
+      ],
+      "forcedPluginKills": 1,
+      "errors": [],
+      "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Download All (v1.1.0)\n[plugin][INFO]: Stopping response listener for Download All (v1.1.0)\n[plugin][WARNING]: Plugin Download All (v1.1.0) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Download All (v1.1.0) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+      "consoleSha256": "47fe70deaddf39d84ff2f56646f53d3710f5341d7c42738547c11aeab04bb8ff",
+      "cleanShutdownVerified": false
+    },
+    "sameNativeProbeForRedAndGreen": true,
+    "backendIndependentlyReconstructed": true,
+    "sharedAdapterIndependentlyBound": true,
+    "unrelatedSiblingAndMarkerPreserved": true,
+    "globalCleanFilesystemClaim": false,
+    "arm64Verified": false,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "e2e": {
+    "implementation": "1c39336f60726ca16e014904bbc9a0086dbce52e",
+    "started": "2026-11-02T05:25:20.235662+00:00",
+    "priorImages": {
+      "fakeframe-frame:latest": "sha256:374a293e4d9839df617cdf72f3818315dfcac41ff9914538456eda4450015191",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "simulatorId": "cfcf8a78103af20a9dc46192c893dedd5606107b3d3f6c8bef804db0dace3729",
+    "simulatorStartedAt": "2026-10-30T08:17:01.714646486Z",
+    "simulatorRestartCount": 0,
+    "realFrameContacted": false,
+    "exit": 0,
+    "seconds": 424.1935006659478,
+    "restoredImages": {
+      "fakeframe-frame:latest": "sha256:374a293e4d9839df617cdf72f3818315dfcac41ff9914538456eda4450015191",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "ownedResourcesRemaining": {
+      "containers": "",
+      "volumes": "",
+      "networks": ""
+    },
+    "sharedSimulatorUnchanged": true,
+    "tests": 53,
+    "skips": 0,
+    "testSeconds": 416.518,
+    "catalogPins": 116,
+    "outcomes": {
+      "blocked": 47,
+      "installed-removed": 69
+    },
+    "resourceWarnings": 0
+  },
+  "retainedArm64Failure": {
+    "at": "2026-11-02T05:26:29.298640+00:00",
+    "pr": 545,
+    "head": "4e032cfb26374d5e7624eb946a82badc9e08cb88",
+    "main": "84f5efd3fbde8525b473f11c3bd2071d7ffb3e82",
+    "failedJob": 125108706718,
+    "failedArtifact": 13118620763,
+    "failedArtifactSha256": "6ee979011c23a9c163b1fc4b4379c74232d88f5d5eb1201d93f302db321611d4",
+    "sourceBindings": 41,
+    "primaryId": 131,
+    "plugin": "Download All",
+    "version": "1.1.0",
+    "archiveSha256": "0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da",
+    "consoleSha256": "743b8a3a4a4d947b430ea42f41592b0a6b1826b74c56e107ce268c2bd666070b",
+    "forcedPluginKill": true,
+    "unloadCallbackMissing": true,
+    "unmodifiedSharedDownloadAllBackendReproducedOnAMD64": true,
+    "redBinding": "download488-red-binding.json",
+    "oldFailedHeadRerun": false,
+    "mergeHeld": true,
+    "mainRuntimeQualificationHeldForLatentDownloadAllFailure": true,
+    "releaseQualified": false,
+    "realFrameContacted": false
+  },
+  "rawSha256": "b672c908c1b3e6972232f0fdafd52276a9904f80b4c9d21d63b2e8be315f376a",
+  "freshHostedBothArchitecturesRequired": true,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}
