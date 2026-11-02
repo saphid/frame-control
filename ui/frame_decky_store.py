@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 14 and digest == '90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_PROTONDB_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 37 and digest == '00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         lifecycle = Path(__file__).with_name('framey_discord_lifecycle.py').read_text(encoding='utf-8')
@@ -484,6 +487,24 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==14 and digest=='90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358'
+                    and folder=='protondb-decky'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='ProtonDB Badges' or manifest.get('api_version')!=2
+                        or flags!=[] or hashlib.sha256(original).hexdigest()!=
+                        '07ae28331b7d1ab55a6303636026dadd7e5523fde84d95c62899fed6e1c133ba'):
+                    raise RuntimeError('ProtonDB Badges manifest or backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_PROTONDB_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing ProtonDB Badges IPC helper')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('ProtonDB Badges IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original)
+                compat_shims.append('protondb-ipc-eof')
             if (int(plugin_id)==37 and digest=='00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45'
                     and folder=='DiscordStatus'):
                 main=unpacked/'main.py'
