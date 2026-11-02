@@ -1181,8 +1181,9 @@ def main():
                 assert current('set_setting', 'settings', saved) is None
                 before = state.read_bytes()
                 assert json.loads(before) == {'settings': saved}
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
+                import protondb_private
+                first_stop = protondb_private.stop(backend, log, disconnect=True)
+                assert first_stop['cleanShutdownVerified'] and first_stop['seconds'] < 5, first_stop
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1193,17 +1194,22 @@ def main():
                 assert current('get_setting', 'missing-private-setting', False) is False
                 assert current('get_system_info') == info
                 assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                second_stop = protondb_private.stop(backend, log, disconnect=False)
+                assert second_stop['cleanShutdownVerified'] and second_stop['seconds'] < 5, second_stop
+                report['protondbLifecycle'] = dict(stops=[first_stop, second_stop],
+                    settingsBytesPreserved=state.read_bytes() == before,
+                    realFrameContacted=False, badgeRenderingVerified=False, physicalControllerVerified=False)
                 report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
                     settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
-                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    systemInfoMatchesPrivateContainer=True, publishedSettingsMethodsUnchanged=True,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     badgeRenderingVerified=False, browserVerified=False,
                     realSteamCef=False, realFrameContacted=False,
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API2 discovery, private frontend settings '
                     'write/read and loader-restart persistence, false values and container OS '
-                    'metadata passed; badge rendering, browser, Frame and VR unverified')
+                    'metadata, child-peer EOF and two clean parent-only unloads passed; badge rendering, browser, Frame and VR unverified')
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.
