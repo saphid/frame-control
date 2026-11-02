@@ -66,6 +66,20 @@ def loader_bytes(path):
     return data, digest
 
 
+def verify_primary_shutdown(observation):
+    """Reject hidden shutdown failures even when the loader parent exits zero."""
+    label = f"Decky primary case {observation['id']}"
+    console = observation.get('runtimeConsole', {})
+    if not console.get('probeCompleted') or not console.get('cleanupCompleted'):
+        raise RuntimeError(f'{label}: incomplete runtime console')
+    text = console.get('text', '')
+    if hashlib.sha256(text.encode()).hexdigest() != console.get('sha256'):
+        raise RuntimeError(f'{label}: runtime console digest mismatch')
+    for marker in ('Sending SIGKILL!', 'Error during shutdown:'):
+        if marker in text:
+            raise RuntimeError(f'{label}: {marker}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--loader', type=Path, help='Optional cached, digest-verified native Decky 3.3.0 binary')
@@ -82,6 +96,7 @@ def main():
     data, digest = loader_bytes(args.loader)
     tag = 'framey-decky-runtime:'+uuid.uuid4().hex[:12]
     inputs = ['scripts/framey-test-decky-runtime.py', 'ui/framey_decky_ipc.py', 'tests/decky-runtime/check.py',
+              'ui/framey_discord_lifecycle.py', 'tests/decky-runtime/discord_private.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/alarme_lifecycle.py',
               'tests/decky-runtime/timer_private.py',
@@ -94,12 +109,16 @@ def main():
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/radiyo_private.py',
+                  'tests/decky-runtime/reshadeck_private.py', 'ui/framey_reshadeck.py',
               'tests/decky-runtime/screensaver_private.py', 'ui/framey_screensaver.py',
+              'tests/decky-runtime/surround_private.py', 'ui/framey_surround.py',
               'tests/decky-runtime/volume_mixer_private.py',
               'tests/decky-runtime/animation_private.py', 'ui/framey_animation_overrides.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
               'tests/framey_official.py', 'ui/frame_decky_store.py',
               'tests/decky-runtime/ludusavi_private.py',
+              'tests/decky-runtime/protondb_private.py',
+              'tests/decky-runtime/game_sync_private.py',
               'tests/decky-runtime/steamgriddb_private.py',
               'tests/decky-runtime/wine_cellar_private.py',
               'tests/decky-runtime/shotty_private.py', 'ui/framey_shotty.py',
@@ -168,6 +187,8 @@ def main():
                         raise RuntimeError(f'Decky runtime case {plugin_id} {version or "store"} failed:\n{result.stdout}\n{result.stderr}')
                     observation = json.loads(result.stdout)
                     report['cases'].append(observation)
+                    if not negative:
+                        verify_primary_shutdown(observation)
                     print(f"PASS {plugin_id} {version or 'store'}: {observation['result']}", flush=True)
                 finally:
                     subprocess.run(['docker', 'rm', '-f', '--volumes', name], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

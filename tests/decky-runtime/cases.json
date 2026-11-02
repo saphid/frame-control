@@ -8,6 +8,22 @@
     ]
   },
   {
+    "id": 75,
+    "shim": "reshadeck-owned-shaders",
+    "additionalShims": [
+      "reshadeck-ipc-eof"
+    ],
+    "probe": "reshadeck-private-x11"
+  },
+  {
+    "id": 37,
+    "shim": "discord-status-pipe-lifecycle",
+    "additionalShims": [
+      "discord-status-ipc-eof"
+    ],
+    "probe": "discord-private-activity"
+  },
+  {
     "id": 38,
     "shim": "volume-mixer-user-audio",
     "probe": "volume-mixer-private-audio",
@@ -39,7 +55,10 @@
   {
     "id": 103,
     "shim": "ludusavi-dependency-discovery",
-    "probe": "ludusavi-dependency-discovery"
+    "probe": "ludusavi-dependency-discovery",
+    "additionalShims": [
+      "ludusavi-ipc-eof"
+    ]
   },
   {
     "id": 134,
@@ -58,7 +77,7 @@
   },
   {
     "id": 14,
-    "shim": null,
+    "shim": "protondb-ipc-eof",
     "probe": "protondb-private-settings"
   },
   {
@@ -178,7 +197,10 @@
   {
     "id": 104,
     "shim": "game-sync-bounded-selection",
-    "probe": "game-sync-config"
+    "probe": "game-sync-config",
+    "additionalShims": [
+      "game-sync-ipc-eof"
+    ]
   },
   {
     "id": 63,
@@ -230,5 +252,13 @@
     "id": 125,
     "shim": "localsend-digest-native",
     "probe": "localsend"
+  },
+  {
+    "id": 100,
+    "shim": "surround-owned-runtime",
+    "additionalShims": [
+      "surround-ipc-eof"
+    ],
+    "probe": "surround-private-audio"
   }
 ]

@@ -2,6 +2,7 @@
 import argparse
 import ast
 import asyncio
+from contextlib import ExitStack
 import hashlib
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -350,7 +351,11 @@ def main():
               'sha256': record['sha256'],
               'shim': None if args.reproduce_alarme_pause_regression else case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
-        with capture_runtime(log, report, processes, loader=loader):
+        with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
+            if case['probe'] == 'discord-private-activity':
+                import discord_private
+                discord_peer = fixtures.enter_context(
+                    discord_private.Peer(Path(env['XDG_RUNTIME_DIR'])/'discord-ipc-0'))
             if case['probe'] == 'bluetooth-private-bluez':
                 import bluetooth_bluez
                 private_bluez = bluetooth_bluez.start(ROOT, env, log, processes, until_ready)
@@ -370,6 +375,12 @@ def main():
                     env=env, stdout=log, stderr=log, start_new_session=True)
                 processes.append(player)
                 until_ready(lambda: Path('/tmp/mpris-state.json').is_file(), 'silent MPRIS player')
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                reshade_fixture = reshadeck_private.start(env, log, processes, until_ready)
+            if case['probe'] == 'surround-private-audio':
+                import surround_private
+                surround_fixture = surround_private.start(env, log, processes, until_ready)
             backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
             processes.append(backend)
             discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery')
@@ -391,7 +402,19 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'volume-mixer-private-audio':
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
+                    legacy, until_ready, reshade_fixture, plugin)
+                report['result'] = 'private authenticated X11 property changes, shared shader preservation, explicit selection and two clean stops; gamescope rendering, Frame and VR unverified'
+            elif case['probe'] == 'discord-private-activity':
+                report['discordLifecycle'] = discord_private.probe(
+                    discord_peer, backend, loader, env, log, processes, current,
+                    rpc, until_ready, report, plugin)
+                report['result'] = ('private Discord wire handshake/activity/clear/rejected-handshake retry, '
+                    'replacement and two clean unload/restart stops passed; '
+                    'real Discord account/activity, Steam callbacks, browser and Frame unverified')
+            elif case['probe'] == 'volume-mixer-private-audio':
                 report['volumeMixerRuntime'] = volume_mixer_private.probe(backend, loader, env, log, processes,
                     legacy, rpc, until_ready, volume_fixture, plugin, discovered,
                     original=args.reproduce_volume_mixer_user_regression)
@@ -1238,8 +1261,9 @@ def main():
                 assert current('set_setting', 'settings', saved) is None
                 before = state.read_bytes()
                 assert json.loads(before) == {'settings': saved}
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
+                import protondb_private
+                first_stop = protondb_private.stop(backend, log, disconnect=True)
+                assert first_stop['cleanShutdownVerified'] and first_stop['seconds'] < 5, first_stop
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1250,17 +1274,22 @@ def main():
                 assert current('get_setting', 'missing-private-setting', False) is False
                 assert current('get_system_info') == info
                 assert state.read_bytes() == before, 'Restart/read must preserve settings bytes'
+                second_stop = protondb_private.stop(backend, log, disconnect=False)
+                assert second_stop['cleanShutdownVerified'] and second_stop['seconds'] < 5, second_stop
+                report['protondbLifecycle'] = dict(stops=[first_stop, second_stop],
+                    settingsBytesPreserved=state.read_bytes() == before,
+                    realFrameContacted=False, badgeRenderingVerified=False, physicalControllerVerified=False)
                 report['privateSettings'] = dict(defaultReadPreservesEmptyConfig=True,
                     frontendSettingsObject=True, settingsPersistedToDisk=True,
                     settingsPersistedAcrossLoaderRestart=True, falseValuesPreserved=True,
-                    systemInfoMatchesPrivateContainer=True, noProductionChanges=True,
+                    systemInfoMatchesPrivateContainer=True, publishedSettingsMethodsUnchanged=True,
                     settingsSha256=hashlib.sha256(before).hexdigest(),
                     badgeRenderingVerified=False, browserVerified=False,
                     realSteamCef=False, realFrameContacted=False,
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API2 discovery, private frontend settings '
                     'write/read and loader-restart persistence, false values and container OS '
-                    'metadata passed; badge rendering, browser, Frame and VR unverified')
+                    'metadata, child-peer EOF and two clean parent-only unloads passed; badge rendering, browser, Frame and VR unverified')
             elif case['probe'] == 'steam-status-private-settings':
                 # Only change private container settings. The public CM-list
                 # and 100 MB download diagnostics must never run in this probe.
@@ -1604,8 +1633,11 @@ def main():
                 refused(str(selection)+'/**')
                 (selection/'nested/cycle').unlink()
                 assert (outside/'private.bin').read_bytes() == marker
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
+                import game_sync_private
+                settings_file = base/'settings'/record['folder']/'config.json'
+                settings_before = settings_file.read_bytes()
+                first_stop = game_sync_private.stop(backend, log, disconnect=True)
+                assert first_stop['cleanShutdownVerified'], first_stop
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
                                            start_new_session=True)
                 processes.append(backend)
@@ -1616,6 +1648,19 @@ def main():
                 assert current('test_syncpath', str(selection/'save.bin')) == 1
                 refused(outside/'private.bin')
                 assert (outside/'private.bin').read_bytes() == marker
+                second_stop = game_sync_private.stop(backend, log, disconnect=False)
+                assert second_stop['cleanShutdownVerified'], second_stop
+                assert settings_file.read_bytes() == settings_before
+                report['gameSyncLifecycle'] = dict(stops=[first_stop, second_stop],
+                    settingsBytesPreserved=True, realFrameContacted=False,
+                    cloudSyncVerified=False, physicalControllerVerified=False)
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    report['gameSyncInstalledSha256'] = {
+                        item.filename.split('/', 1)[1]: hashlib.sha256(
+                            (plugin/item.filename.split('/', 1)[1]).read_bytes()).hexdigest()
+                        for item in original.infolist() if not item.is_dir()}
+                report['gameSyncIpcHelperSha256'] = hashlib.sha256(
+                    (plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()
                 report['independentState'] = {'outsideFileUnchanged':True, 'validSelectionCount':True,
                     'siblingAndParentEscapeRefused':True, 'outsideLinksRefused':True,
                     'insideLinksAllowed':True, 'cyclesRefused':True, 'restartBoundaryPreserved':True}
@@ -1766,6 +1811,11 @@ def main():
                 report['result'] = ('previous managed child IPC forced-kill reproduced; verified TLS retained'
                     if args.reproduce_radiyo_unload_regression else
                     'discovery, loopback HTTP fetch/redirect, self-signed HTTPS rejection, restart and two clean parent-only stops passed; external stations, trusted HTTPS, playback, Frame and VR unverified')
+            elif case['probe'] == 'surround-private-audio':
+                import surround_private
+                report['surroundAudio'] = surround_private.probe(backend, loader, env, log, processes,
+                    current, until_ready, surround_fixture, plugin)
+                report['result'] = 'private PipeWire/Pulse sinks, bundled presets, real stream routing, restart persistence and owned cleanup; physical audio, official UI and Frame unverified'
             elif case['probe'] == 'desktop-apps-private-entries':
                 import shlex
                 apps = current('get_apps')
