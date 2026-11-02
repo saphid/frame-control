@@ -68,6 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('version', nargs='?', default='-')
+    parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
@@ -279,6 +280,15 @@ def main():
             assert old in source
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
+
+    if args.reproduce_download_all_unload_regression:
+        assert record['id'] == 131
+        main = plugin/'main.py'
+        prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+        source = main.read_bytes()
+        assert source.startswith(prefix)
+        main.write_bytes(source[len(prefix):])
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
 
     (home/'.local/share/Steam/steamui/images').mkdir(parents=True)
     if case['probe'] == 'wine-cellar-private-state':
@@ -824,8 +834,19 @@ def main():
             elif case['probe'] == 'download-all-logging':
                 assert current('log_from_ui', 'info', 'Private Framey download fixture') == {'success':True}
                 assert 'FrameyQueueDownloads' in (plugin/'dist/index.js').read_text()
-                report['result'] = ('published Decky discovery and logging RPC passed; '
-                                    'Steam queue behavior is covered by isolated CEF/frontend fixtures, not this backend')
+                import download_all_private
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    source = original.read(record['folder']+'/main.py')
+                    prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    installed = (plugin/'main.py').read_bytes()
+                    assert installed in (source, prefix+source)
+                    report['backendSha256'] = hashlib.sha256(installed).hexdigest()
+                download_all_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, regression=args.reproduce_download_all_unload_regression)
+                report['result'] = ('prior Download All forced child kill after peer EOF reproduced; negative only'
+                    if args.reproduce_download_all_unload_regression else
+                    'published Decky discovery, logging after actual peer EOF, restart and two clean parent-only stops passed; '
+                    'actual Steam queue behavior, browser, Frame and controllers unverified')
             elif case['probe'] == 'prefix-manager':
                 # Only tmpfs fixtures exist here: never a host Steam prefix.
                 assert manifest.get('flags') == [] and 'api_version' not in manifest
