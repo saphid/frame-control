@@ -978,12 +978,17 @@ class StoreTransaction(unittest.TestCase):
         script = frame_decky_store.apply_script(125, plugin['sha256'])
         script = ''.join(line for line in script.splitlines(keepends=True)
                          if not line.startswith('FRAMEY_LOCALSEND_IPC_SOURCE = '))
-        with patch.object(frame_decky_store, 'apply_script', return_value=script):
-            result = self.apply('install', official_archive(plugin), plugin_id=125,
-                                folder=plugin['folder'], version=plugin['version'])
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Missing LocalSend child IPC EOF repair', result.stderr)
-        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+        # Only write fixture helpers; model the Linux target independently of
+        # the test host's CPU name (macOS reports ARM64 as "arm64").
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch):
+                target = 'import platform\nplatform.machine=lambda:'+repr(arch)+'\n'+script
+                with patch.object(frame_decky_store, 'apply_script', return_value=target):
+                    result = self.apply('install', official_archive(plugin), plugin_id=125,
+                                        folder=plugin['folder'], version=plugin['version'])
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Missing LocalSend child IPC EOF repair', result.stderr)
+                self.assertFalse((self.folder.parent/plugin['folder']).exists())
 
     def test_localsend_arm64_transaction_checks_written_helper(self):
         from framey_official import PLUGINS, archive as official_archive
