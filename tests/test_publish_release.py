@@ -309,6 +309,39 @@ class PublishRelease(unittest.TestCase):
                 self.assertIsNone(upload)
                 self.assertFalse(any("-X" in call for call in log))
 
+    def test_ownership_gates_stop_publication_before_any_mutation(self):
+        cases = [{"ownership_missing": True}, {"ownership_sha": "c" * 40},
+                 {"ownership_branch": "unrelated"}, {"ownership_event": "pull_request"},
+                 {"ownership_status": "in_progress"}, {"ownership_conclusion": "failure"}]
+        names = ("owned-watchdog (ubuntu-latest)", "owned-watchdog (ubuntu-24.04-arm)")
+        cases += [{"omit_job": name} for name in names]
+        cases += [{"bad_job": name, "bad_job_conclusion": conclusion}
+                  for name in names for conclusion in ("failure", "cancelled", "skipped")]
+        cases += [{"prior_ownership_run_conclusion": "failure"},
+                  {"ownership_attempts": 2, "ownership_prior_bad_job": names[1],
+                   "ownership_prior_bad_conclusion": "cancelled"}]
+        for gates in cases:
+            with self.subTest(gates=gates):
+                p, log, upload = self.run_script([draft()], "v9.8.7", gates=gates)
+                self.assertNotEqual(p.returncode, 0, p.stdout)
+                self.assertIn("release gate failed", p.stderr)
+                self.assertRegex(p.stderr, 'syncthing-candidate|owned-watchdog')
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
+    def test_ownership_push_and_manual_runs_are_accepted(self):
+        for event in ("push", "workflow_dispatch"):
+            with self.subTest(event=event):
+                p, log, upload = self.run_script([draft()], "--dry-run", "v9.8.7",
+                                                 gates={"ownership_event": event})
+                self.assertEqual(p.returncode, 0, p.stderr + p.stdout)
+                self.assertTrue(any("syncthing-candidate.yml/runs" in arg
+                                    for call in log for arg in call))
+                self.assertTrue(any("actions/runs/505/attempts/1/jobs" in arg
+                                    for call in log for arg in call))
+                self.assertIsNone(upload)
+                self.assertFalse(any("-X" in call for call in log))
+
     def test_signed_package_push_and_manual_runs_are_accepted(self):
         for event in ("push", "workflow_dispatch"):
             with self.subTest(event=event):
