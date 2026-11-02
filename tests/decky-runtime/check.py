@@ -68,6 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('version', nargs='?', default='-')
+    parser.add_argument('--reproduce-localsend-unload-regression', action='store_true')
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
@@ -283,6 +284,15 @@ def main():
 
     if args.reproduce_download_all_unload_regression:
         assert record['id'] == 131
+        main = plugin/'main.py'
+        prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+        source = main.read_bytes()
+        assert source.startswith(prefix)
+        main.write_bytes(source[len(prefix):])
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+
+    if args.reproduce_localsend_unload_regression:
+        assert record['id'] == 125
         main = plugin/'main.py'
         prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
         source = main.read_bytes()
@@ -1471,7 +1481,27 @@ def main():
                 assert settings['download_folder'].startswith(str(base)), settings
                 stopped = current('proxy_get', '/api/localsend/v2/info')
                 assert stopped['status'] == 503 and stopped['data']['error'] == 'Backend not running', stopped
-                report['result'] = 'published Decky discovery and public read-only settings/status RPC passed; network helper remained stopped'
+                import localsend_private
+                until_ready(lambda: Path('/tmp/localsend-notify.sock').is_socket(), 'LocalSend notification socket')
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    source = original.read(record['folder']+'/main.py')
+                    prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    installed = (plugin/'main.py').read_bytes()
+                    assert installed == (source if args.reproduce_localsend_unload_regression else prefix+source)
+                    for entry in original.infolist():
+                        relative = entry.filename.removeprefix(record['folder']+'/')
+                        if not entry.is_dir() and relative not in ('main.py','bin/localsend-core'):
+                            assert (plugin/relative).read_bytes() == original.read(entry), relative
+                    report['ipcAdapterSha256'] = (None if args.reproduce_localsend_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    report['nativeHelperSha256'] = hashlib.sha256(helper.read_bytes()).hexdigest()
+                    report['backendSha256'] = hashlib.sha256(installed).hexdigest()
+                localsend_private.probe(backend, loader, env, log, processes, current, rpc, until_ready,
+                    report, regression=args.reproduce_localsend_unload_regression)
+                report['result'] = ('prior LocalSend forced child kill after peer EOF reproduced; negative only'
+                    if args.reproduce_localsend_unload_regression else
+                    'published Decky stopped status/configuration, peer EOF readback, restart, two clean parent-only stops and notification socket cleanup passed; '
+                    'network helper remained stopped; network transfer, browser, Frame and controllers unverified')
             elif case['probe'] == 'fileserver':
                 assert until_ready(lambda: current('get_port') == 8000, 'default port')
                 assert current('get_directory') == str(home)

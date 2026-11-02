@@ -353,7 +353,9 @@ def apply_script(plugin_id, digest):
         data = gzip.decompress(packed)
         if hashlib.sha256(data).hexdigest() != LOCALSEND_AARCH64:
             raise ValueError('Bundled LocalSend ARM64 helper SHA-256 mismatch')
-        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'+APPLY)
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'
+                +'FRAMEY_LOCALSEND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 60 and digest == FILESERVER_DIGEST:
         assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
         payloads = {}
@@ -1052,7 +1054,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 elif arch!='x86_64':
                     raise RuntimeError('Unsupported LocalSend helper architecture')
                 helper.chmod(0o700)
+                ipc=globals().get('FRAMEY_LOCALSEND_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing LocalSend child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                adapter=modules/'framey_decky_ipc.py'
+                if adapter.exists(): raise RuntimeError('LocalSend child IPC helper collides with archive')
+                compile(ipc,str(adapter),'exec')
+                adapter.write_text(ipc,encoding='utf-8')
+                prefix=b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                managed=prefix+source.read_bytes()
+                compile(managed,str(source),'exec')
+                source.write_bytes(managed)
                 compat_shims.append('localsend-digest-native')
+                compat_shims.append('localsend-ipc-eof')
             # GPL source and reproducible build recipe ship with Frame Control.
             # The exact official helper is x86_64; this plugin needs no root.
             if int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer':
