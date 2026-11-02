@@ -88,6 +88,7 @@
   {
     "id": 131,
     "shim": "download-all-local-queue",
+    "additionalShims": ["download-all-ipc-eof"],
     "probe": "download-all-logging"
   },
   {

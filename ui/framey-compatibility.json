@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -944,7 +944,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -952,7 +952,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -9821,7 +9821,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11974,7 +11974,7 @@
         "https://github.com/bentemple/decky-download-all"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.1.0 adds a local Steam download subscription and bounded queue bridge. Local Chromium fixtures verify Scheduled/All/size filters, smallest-first append, existing-queue resume and visible partial failures; published Decky 3.3.0 AMD64 and ARM64 verify discovery/logging only. Stale, duplicate and remote selections are refused. Actual Steam callbacks/queue changes, the ARM64 Frame backend, headset rendering and physical controllers remain unverified. Existing copies need Update/reinstall.",
+      "reason": "Exact managed 1.1.0 retains its local Steam download subscription and bounded queue bridge and adds the child IPC EOF repair. Prior native AMD64/ARM64 evidence covered discovery/logging only; a later strict ARM64 run exposed a forced shutdown kill and is retained. Fresh exact-head strict shutdown qualification is required. Earlier local Chromium queue fixtures use synthetic Steam only. Actual Steam callbacks/queue changes, real Frame rendering and physical controllers remain unverified. Compatibility stays partial; existing copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -12020,10 +12020,19 @@
         "result": "installed-removed"
       },
       "requiredShims": [
-        "download-all-local-queue"
+        "download-all-local-queue",
+        "download-all-ipc-eof"
       ],
       "missingShimStatus": "broken",
-      "runtimeEvidence": "docs/evidence/framey-download-all-2026-10-30.md"
+      "runtimeEvidence": "docs/evidence/framey-download-all-2026-10-30.md",
+      "ipcEofFollowUp": {
+        "shim": "download-all-ipc-eof",
+        "mode": "exact-archive child IPC EOF repair; strict parent-only shutdown with disconnected child peer",
+        "arm64Verified": false,
+        "browserRetested": false,
+        "realFrameVerified": false,
+        "physicalControllerVerified": false
+      }
     },
     {
       "id": 132,
