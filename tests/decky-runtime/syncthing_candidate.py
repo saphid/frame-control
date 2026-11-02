@@ -29,6 +29,28 @@ def alive(pid):
         return False
 
 
+def disconnect_child_peer(helper_pid):
+    """Close a real extra Decky child IPC peer before normal reload.
+
+    Decky's parent closes its peer immediately after SIGTERM. A ready EOF
+    must not starve the signal handler that runs the plugin's _unload.
+    Select only the socket retained by this candidate's owning child.
+    """
+    parent = int(next(line.split(':', 1)[1] for line in
+                      Path(f'/proc/{helper_pid}/status').read_text().splitlines()
+                      if line.startswith('PPid:')))
+    assert b'Syncthing' in Path(f'/proc/{parent}/cmdline').read_bytes()
+    inodes = {os.readlink(fd) for fd in Path(f'/proc/{parent}/fd').iterdir()}
+    paths = {row[7] for line in Path('/proc/net/unix').read_text().splitlines()[1:]
+             if len(row := line.split()) == 8 and f'socket:[{row[6]}]' in inodes
+             and row[7].startswith('/tmp/plugin_socket_')}
+    assert len(paths) == 1, paths
+    with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as peer:
+        peer.connect(next(iter(paths)))
+        peer.shutdown(socket.SHUT_WR)
+    return parent
+
+
 def time_wait_recovery(helper, home):
     """Use a real closed TCP client, not a mocked bind error or timer."""
     with tempfile.TemporaryDirectory(prefix='time-wait-', dir=home) as temporary:
@@ -133,6 +155,8 @@ def main():
                 destination.write_bytes(original.read(entry))
     plugin = plugins/'decky-syncthing'
     shutil.copy(ASSETS/'main.py', plugin/'main.py')
+    (plugin/'py_modules').mkdir(exist_ok=True)
+    shutil.copy('/repo/ui/framey_decky_ipc.py', plugin/'py_modules/framey_decky_ipc.py')
     binary = plugin/'bin/decky-syncthing-watchdog'
     shutil.copy(helper, binary)
     binary.chmod(0o700)
@@ -263,11 +287,22 @@ def main():
             assert not first_socket.parent.exists()
             old = restarted
             old_socket = owned_socket(old)
+            report['normalReloads'] = []
             for _ in range(3):
+                parent = disconnect_child_peer(old)
+                normal_start = Path(log.name).stat().st_size
+                began = time.monotonic()
                 rpc('loader/reload_plugin', 'Syncthing')
                 new = until_ready(lambda: (pid if (pid := current_pid()) != old else None), 'candidate reload', timeout=80)
                 assert not alive(old) and unrelated.poll() is None
                 assert not old_socket.parent.exists()
+                assert not alive(parent)
+                console = Path(log.name).read_bytes()[normal_start:].decode('utf-8')
+                assert 'Sending SIGKILL!' not in console, console
+                report['normalReloads'].append(dict(disconnectedChildPeer=True,
+                    childPid=parent, helperPid=old, replacementHelperPid=new,
+                    childExited=True, helperExited=True, privateSocketDirectoryRemoved=True,
+                    seconds=round(time.monotonic()-began, 3), console=console))
                 old = new
                 old_socket = owned_socket(old)
             report['independentState'].update(ownedRestartReaped=True, foreignPidIgnored=True,
@@ -303,7 +338,7 @@ def main():
                 forcedReloadPreservesUnrelatedProcess=True, forcedOwnerTempCleanedByFixture=True,
                 publishedDeckyForcedTerminationLogVerified=True)
             report['result'] = ('published Decky discovery, disabled defaults, native listener/ownership conflicts, '
-                'owned restart, three normal reloads, forced plugin termination/reload and private-socket HTTP transport passed; '
+                'owned restart, three normal reloads after real child IPC peer EOF, forced plugin termination/reload and private-socket HTTP transport passed; '
                 'the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified')
         except BaseException:
             log.flush()

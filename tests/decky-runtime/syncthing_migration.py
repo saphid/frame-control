@@ -166,6 +166,8 @@ def main():
                     target.write_bytes(packed.read(entry))
         plugin = plugins / 'decky-syncthing'
         shutil.copy('/input/main.py', plugin / 'main.py')
+        (plugin / 'py_modules').mkdir(exist_ok=True)
+        shutil.copy('/input/framey_decky_ipc.py', plugin / 'py_modules/framey_decky_ipc.py')
         shutil.copy('/input/watchdog', plugin / 'bin/decky-syncthing-watchdog')
         (plugin / 'bin/decky-syncthing-watchdog').chmod(0o700)
         settings_path = base / 'settings/decky-syncthing/decky-syncthing.json'
