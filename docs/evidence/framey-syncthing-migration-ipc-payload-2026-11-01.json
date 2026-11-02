@@ -1,0 +1,51 @@
+{
+  "at": "2026-11-01T09:40:37.066209+00:00",
+  "testedImplementation": "17ee294ee59d88ade389974e7c928e8ed10b6ef6",
+  "baseHead": "cea43ed35581893982b2a7045a1bfed1f473cf1c",
+  "failedHostedArtifacts": [
+    {
+      "artifactId": 13078606657,
+      "artifactName": "syncthing-flatpak-package-ubuntu-latest-production-parent-http",
+      "archiveSha256": "9fa09e35f85cb8362210725f7a9c9a028fd840f8fc1c5b2e9d51e2a1a34294b9",
+      "failedHead": "cea43ed35581893982b2a7045a1bfed1f473cf1c",
+      "architecture": "x86_64",
+      "packagePassed": false,
+      "signedBundlesInstalled": true,
+      "actualTwoWaySync": true,
+      "consoleSha256": "b8916dc67a5541a004224e53446982a427bcfc29a47d752895c2c9774448a560",
+      "consoleExcerpt": "[  397.290853] python3[260]: [loader][INFO]: Loaded Syncthing (v0.2.7)\n[  397.291489] python3[260]: Failed to start Syncthing (v0.2.7)!\n[  397.292304] python3[260]: Traceback (most recent call last):\n[  397.293057] python3[260]:   File \"decky_loader/plugin/sandboxed_plugin.py\", line 116, in initialize\n[  397.293771] python3[260]:   File \"<frozen importlib._bootstrap_external>\", line 763, in exec_module\n[  397.294451] python3[260]:   File \"<frozen importlib._bootstrap>\", line 491, in _call_with_frames_removed\n[  397.295233] python3[260]:   File \"/home/tester/decky-migration/plugins/decky-syncthing/main.py\", line 2, in <module>\n[  397.296023] python3[260]:     from framey_decky_ipc import install as _framey_install_ipc_eof\n[  397.296980] python3[260]: ModuleNotFoundError: No module named 'framey_decky_ipc'\n[  397.297651] python3[260]: [main][INFO]: Shutting down...\n[  397.298277] python3[260]: [main][INFO]: Disabling reload...",
+      "jobId": 124797064825
+    },
+    {
+      "artifactId": 13078426557,
+      "artifactName": "syncthing-flatpak-package-ubuntu-24.04-arm",
+      "archiveSha256": "800d2ced838ef1e32cd1c9f6ca15b9ca05ba7a72e60c361453c7b98956d0e352",
+      "failedHead": "cea43ed35581893982b2a7045a1bfed1f473cf1c",
+      "architecture": "aarch64",
+      "packagePassed": false,
+      "signedBundlesInstalled": true,
+      "actualTwoWaySync": true,
+      "consoleSha256": "0f14b4b4ef7053c0ae8fb2983035ce4862236cbc122906d5ae963bf81522947b",
+      "consoleExcerpt": "[ 1066.536577] python3[252]: [injector][WARNING]: The request to http://localhost:8080/json timed out\n[ 1066.539656] python3[252]: Failed to start Syncthing (v0.2.7)!\n[ 1066.542652] python3[252]: Traceback (most recent call last):\n[ 1066.545718] python3[252]:   File \"decky_loader/plugin/sandboxed_plugin.py\", line 116, in initialize\n[ 1066.548748] python3[252]:   File \"<frozen importlib._bootstrap_external>\", line 763, in exec_module\n[ 1066.551440] python3[252]:   File \"<frozen importlib._bootstrap>\", line 491, in _call_with_frames_removed\n[ 1066.554752] python3[252]:   File \"/home/tester/decky-migration/plugins/decky-syncthing/main.py\", line 2, in <module>\n[ 1066.557939] python3[252]:     from framey_decky_ipc import install as _framey_install_ipc_eof\n[ 1066.560956] python3[252]: ModuleNotFoundError: No module named 'framey_decky_ipc'\n[ 1066.563633] python3[252]: [main][INFO]: Shutting down...\n[ 1066.566553] python3[252]: [main][INFO]: Disabling reload...",
+      "jobId": 124797064954
+    }
+  ],
+  "sourceSha256": {
+    "tests/decky-runtime/syncthing_migration.py": "778ee34ffb97a3dc4567896a3df754b6889f56003bdf9c9fd57f1f2c3912edf6",
+    "tests/test_syncthing_flatpak_migration_payload.py": "de63d5a02f9e7540126cdc6535993b05acc18e23605de37cc4ecba37a1025c27"
+  },
+  "focusedTests": 102,
+  "focusedSkips": 0,
+  "isolatedImportFailsBeforeAndPassesAfter": true,
+  "priorNativeRuntimeBindingsUnchanged": 9,
+  "testScope": "Execute actual migration delivery statements into owned plugin directory; Python -I imports real copied backend and adapter. Decky-provided API is a fixture; no watchdog/service executes.",
+  "rawEvidence": {
+    "path": "docs/evidence/framey-syncthing-migration-ipc-payload-2026-11-01-raw.json.gz",
+    "sha256": "d835c4aed0d58791698b29484fa315dd3ae6562d53c41db5dc099158b2c29bf4",
+    "uncompressedSha256": "4640cae37b00640de8593cc3445a440078376a7522eba58cf7662632302e40ef"
+  },
+  "fullNewPackageModesVerified": false,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}

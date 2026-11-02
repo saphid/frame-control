@@ -79,7 +79,7 @@ def main():
     if sha(official) != DIGEST:
         raise ValueError('Official Syncthing plugin archive digest mismatch')
     paths = ['scripts/framey-test-syncthing-runtime.py', 'tests/decky-runtime/syncthing_runtime.py',
-             'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
+             'ui/vendor/syncthing-0.2.7/main.py', 'ui/framey_decky_ipc.py', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
                     'ui/vendor/syncthing-0.2.7/owned_unit.rs']
     sources = {path:sha((ROOT/path).read_bytes()) for path in paths}
     tag = 'framey-syncthing-runtime:'+uuid.uuid4().hex[:12]

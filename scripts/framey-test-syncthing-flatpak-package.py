@@ -199,12 +199,14 @@ def candidate_payloads(helper_path, report_path, archive_path, loader_path, arch
         raise ValueError('Pinned official plugin archive mismatch')
     evidence = {
         **required, 'architecture': arch, 'helperSha256': sha(helper_path),
+        'childIpcSha256': sha(ROOT / 'ui/framey_decky_ipc.py'),
         'buildReportSha256': sha(report_path), 'loaderSha256': loader_sha,
         'decky': native.RELEASE, 'officialArchiveSha256': runtime.DIGEST,
     }
     return {
         'watchdog': helper, 'PluginLoader': loader, 'official.zip': official,
         'main.py': (assets / 'main.py').read_bytes(),
+        'framey_decky_ipc.py': (ROOT / 'ui/framey_decky_ipc.py').read_bytes(),
         'syncthing_service.py': (ROOT / 'tests/decky-runtime/syncthing_service.py').read_bytes(),
         'syncthing_migration.py': (ROOT / 'tests/decky-runtime/syncthing_migration.py').read_bytes(),
         'candidate-inputs.json': json.dumps(evidence).encode(),
@@ -572,7 +574,7 @@ def main():
             'tests/decky-runtime/syncthing_service.py', 'tests/decky-runtime/syncthing_migration.py',
             'scripts/build-framey-syncthing.py',
             'scripts/framey-test-decky-runtime.py', 'scripts/framey-test-syncthing-runtime.py',
-            'ui/vendor/syncthing-0.2.7/main.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
+            'ui/vendor/syncthing-0.2.7/main.py', 'ui/framey_decky_ipc.py', 'ui/vendor/syncthing-0.2.7/source.tar.gz',
             'ui/vendor/syncthing-0.2.7/owned_unit.rs', 'ui/vendor/syncthing-0.2.7/watchdog.patch',
         ])
     if args.browser_setup:
