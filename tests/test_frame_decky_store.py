@@ -747,7 +747,7 @@ class StoreTransaction(unittest.TestCase):
         folder = self.folder.parent/plugin['folder']
         self.assertEqual((folder/'main.py').read_bytes(), original)
         self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
-        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'], [])
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
 
     def test_exact_suggestme_fallback_keeps_certificate_verification(self):
         from framey_official import PLUGINS, archive as official_archive

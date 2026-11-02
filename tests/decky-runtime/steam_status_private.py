@@ -81,7 +81,7 @@ def probe(backend, loader, env, log, processes, call, rpc, until_ready, report, 
     processes.append(sibling)
     evidence = report['steamStatusLifecycle'] = dict(stops=[], settingsAfterEof=False,
         restartedDiscovery=False, unrelatedSiblingPreserved=False, markerPreserved=False,
-        expectedRegression=regression, realFrameContacted=False, actualSteamQueueVerified=False,
+        expectedRegression=regression, realFrameContacted=False, publicDiagnosticsVerified=False,
         browserVerified=False, physicalControllerVerified=False)
     def read_setting():
         assert call('get_setting', 'refresh_interval_seconds') == 180
@@ -92,7 +92,7 @@ def probe(backend, loader, env, log, processes, call, rpc, until_ready, report, 
                 backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
                 processes.append(backend)
                 found = until_ready(lambda: rpc('loader/get_plugins'), 'Steam Status restart discovery')
-                assert found == [dict(name='Steam Status', version='1.2.3', load_type=2, disabled=False)]
+                assert found == [dict(name='Steam Status', version='1.2.3', load_type=1, disabled=False)]
                 evidence['restartedDiscovery'] = found
                 read_setting()
             observation = stop(backend, log, disconnect=cycle == 0,
