@@ -244,6 +244,7 @@
   {
     "id": 125,
     "shim": "localsend-digest-native",
+    "additionalShims": ["localsend-ipc-eof"],
     "probe": "localsend"
   },
   {

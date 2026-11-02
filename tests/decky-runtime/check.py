@@ -1487,7 +1487,14 @@ def main():
                     source = original.read(record['folder']+'/main.py')
                     prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
                     installed = (plugin/'main.py').read_bytes()
-                    assert installed in (source, prefix+source)
+                    assert installed == (source if args.reproduce_localsend_unload_regression else prefix+source)
+                    for entry in original.infolist():
+                        relative = entry.filename.removeprefix(record['folder']+'/')
+                        if not entry.is_dir() and relative not in ('main.py','bin/localsend-core'):
+                            assert (plugin/relative).read_bytes() == original.read(entry), relative
+                    report['ipcAdapterSha256'] = (None if args.reproduce_localsend_unload_regression else
+                        hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                    report['nativeHelperSha256'] = hashlib.sha256(helper.read_bytes()).hexdigest()
                     report['backendSha256'] = hashlib.sha256(installed).hexdigest()
                 localsend_private.probe(backend, loader, env, log, processes, current, rpc, until_ready,
                     report, regression=args.reproduce_localsend_unload_regression)
