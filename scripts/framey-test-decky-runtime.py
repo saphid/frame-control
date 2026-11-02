@@ -144,6 +144,7 @@ def main():
                     (131, '--reproduce-download-all-unload-regression'),
                     (125, '--reproduce-localsend-unload-regression'),
                     (123, '--reproduce-steam-status-unload-regression'),
+                    (132, '--reproduce-suggestme-unload-regression'),
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (96, '--reproduce-timer-unload-regression'),
                     (63, '--reproduce-free-loader-unload-regression'),

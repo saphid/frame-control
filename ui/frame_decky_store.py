@@ -269,6 +269,9 @@ def apply_script(plugin_id, digest):
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
                 +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 132 and digest == '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_SUGGESTME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 123 and digest == '9053308e04a74f44745b45b9f4f50af3673348d367e7b14bacc5677de707ac4e':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_STEAM_STATUS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1926,8 +1929,22 @@ def split_by_app(data):
                 old=b'    except Exception:\r\n        ctx = ssl.create_default_context()\r\n        ctx.check_hostname = False\r\n        ctx.verify_mode = ssl.CERT_NONE\r\n        return ctx\r\n'
                 new=b'    except Exception:\r\n        return ssl.create_default_context()\r\n'
                 if data.count(old)!=1: raise RuntimeError('SuggestMe TLS source changed')
-                main.write_bytes(data.replace(old,new))
+                data=data.replace(old,new)
+                if hashlib.sha256(data).hexdigest()!='ae8494d93abc2a5eeeac6905e888f2e7ba6ab191ed39fee735b590ed8e52573e':
+                    raise RuntimeError('SuggestMe managed TLS source changed')
+                ipc=globals().get('FRAMEY_SUGGESTME_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing SuggestMe child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('SuggestMe child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                data=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+data
+                compile(data,str(main),'exec')
+                main.write_bytes(data)
                 compat_shims.append('suggestme-verified-tls')
+                compat_shims.append('suggestme-ipc-eof')
             # The exact Decky Notifications archive writes a shared /tmp log
             # and dumps every environment variable if openssl fails.
             # Use Decky's captured stderr and keep credentials out of logs.
