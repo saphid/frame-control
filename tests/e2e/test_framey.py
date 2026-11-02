@@ -309,7 +309,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
                 if plugin['id'] == 125:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native', 'localsend-ipc-eof'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/localsend-core').split()[0],
                                      frame_decky_store.LOCALSEND_AARCH64 if arch == 'aarch64'
