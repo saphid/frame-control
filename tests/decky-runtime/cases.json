@@ -1,5 +1,13 @@
 [
   {
+    "id": 75,
+    "shim": "reshadeck-owned-shaders",
+    "additionalShims": [
+      "reshadeck-ipc-eof"
+    ],
+    "probe": "reshadeck-private-x11"
+  },
+  {
     "id": 37,
     "shim": "discord-status-pipe-lifecycle",
     "additionalShims": [

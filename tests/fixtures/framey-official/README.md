@@ -176,6 +176,7 @@ loader restart persistence and two clean owned loader exits. It does not
 exercise Steam library-tab editing, backups/restores, browser rendering,
 real Frame or physical controllers. These remain separate verification gates.
 
+`75.zip` (Reshadeck 0.2.0) was added from the digest-verified full-catalog audit cache on 2026-11-01, without changing its catalog pin. Its upstream LICENSE is retained.
 `87.zip` is the existing pinned ScreenSaver 1.1.2 store archive (87), SHA-256 `5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822`, copied from the previously verified full-catalog cache on 2026-11-01. No fresh live-store version claim.
 `23.zip` was added on 2026-11-01 from the existing digest-verified catalog cache; no fresh store metadata is claimed.
 

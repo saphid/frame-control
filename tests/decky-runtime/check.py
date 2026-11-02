@@ -367,6 +367,9 @@ def main():
                     env=env, stdout=log, stderr=log, start_new_session=True)
                 processes.append(player)
                 until_ready(lambda: Path('/tmp/mpris-state.json').is_file(), 'silent MPRIS player')
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                reshade_fixture = reshadeck_private.start(env, log, processes, until_ready)
             if case['probe'] == 'surround-private-audio':
                 import surround_private
                 surround_fixture = surround_private.start(env, log, processes, until_ready)
@@ -391,7 +394,12 @@ def main():
                 report['calls'].append({'method': method, 'result': response})
                 return response
 
-            if case['probe'] == 'discord-private-activity':
+            if case['probe'] == 'reshadeck-private-x11':
+                import reshadeck_private
+                report['reshadeckRuntime'] = reshadeck_private.probe(backend, loader, env, log, processes,
+                    legacy, until_ready, reshade_fixture, plugin)
+                report['result'] = 'private authenticated X11 property changes, shared shader preservation, explicit selection and two clean stops; gamescope rendering, Frame and VR unverified'
+            elif case['probe'] == 'discord-private-activity':
                 report['discordLifecycle'] = discord_private.probe(
                     discord_peer, backend, loader, env, log, processes, current,
                     rpc, until_ready, report, plugin)

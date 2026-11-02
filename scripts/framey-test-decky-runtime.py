@@ -108,6 +108,7 @@ def main():
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/radiyo_private.py',
+                  'tests/decky-runtime/reshadeck_private.py', 'ui/framey_reshadeck.py',
               'tests/decky-runtime/screensaver_private.py', 'ui/framey_screensaver.py',
               'tests/decky-runtime/surround_private.py', 'ui/framey_surround.py',
               'tests/decky-runtime/volume_mixer_private.py',
