@@ -99,6 +99,7 @@ def main():
               'ui/framey_discord_lifecycle.py', 'tests/decky-runtime/discord_private.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/download_all_private.py',
+              'tests/decky-runtime/localsend_private.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
               'tests/decky-runtime/deckyparty_private.py',
@@ -139,6 +140,7 @@ def main():
                 (plugin_id, None, negative) for plugin_id, negative in [
                     (38, '--reproduce-volume-mixer-user-regression'),
                     (131, '--reproduce-download-all-unload-regression'),
+                    (125, '--reproduce-localsend-unload-regression'),
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
                     (96, '--reproduce-timer-unload-regression'),
                     (63, '--reproduce-free-loader-unload-regression'),
