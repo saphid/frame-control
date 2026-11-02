@@ -293,6 +293,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 131 and digest == '0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_DOWNLOAD_ALL_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 130 and digest == PREFIX_MANAGER_102_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_PREFIX_MANAGER_102_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -353,7 +356,9 @@ def apply_script(plugin_id, digest):
         data = gzip.decompress(packed)
         if hashlib.sha256(data).hexdigest() != LOCALSEND_AARCH64:
             raise ValueError('Bundled LocalSend ARM64 helper SHA-256 mismatch')
-        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'+APPLY)
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_LOCALSEND_AARCH64 = '+repr(base64.b64encode(packed).decode('ascii'))+'\n'
+                +'FRAMEY_LOCALSEND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 60 and digest == FILESERVER_DIGEST:
         assets = Path(__file__).parent/'vendor/deckyfileserver-1.2.0'
         payloads = {}
@@ -732,6 +737,22 @@ try:
                 compat_shims.append('deck-progress-ipc-eof')
             if (int(plugin_id)==131 and digest=='0641231eec139e3231e7b5369d0dbacefd686b52e3f2fffb39384876881408da'
                     and folder=='decky-download-all'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='a205e2537490f156f9162277c58d873da096693823a1cc2d25f870592a735e17':
+                    raise RuntimeError('Download All backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_DOWNLOAD_ALL_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Download All child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Download All child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                compile(prefix+original,str(main),'exec')
+                main.write_bytes(prefix+original)
                 frontend=unpacked/'dist/index.js'
                 bundle=frontend.read_bytes()
                 if (manifest.get('name')!='Download All' or manifest.get('api_version')!=1 or flags!=[]
@@ -754,6 +775,7 @@ try:
                                         b'Submitted ${items.length} downloads to Steam (smallest first)')
                 frontend.write_bytes(managed)
                 compat_shims.append('download-all-local-queue')
+                compat_shims.append('download-all-ipc-eof')
             if prefix_manager:
                 main=unpacked/'main.py'
                 data=main.read_bytes()
@@ -1035,7 +1057,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 elif arch!='x86_64':
                     raise RuntimeError('Unsupported LocalSend helper architecture')
                 helper.chmod(0o700)
+                ipc=globals().get('FRAMEY_LOCALSEND_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing LocalSend child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                adapter=modules/'framey_decky_ipc.py'
+                if adapter.exists(): raise RuntimeError('LocalSend child IPC helper collides with archive')
+                compile(ipc,str(adapter),'exec')
+                adapter.write_text(ipc,encoding='utf-8')
+                prefix=b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                managed=prefix+source.read_bytes()
+                compile(managed,str(source),'exec')
+                source.write_bytes(managed)
                 compat_shims.append('localsend-digest-native')
+                compat_shims.append('localsend-ipc-eof')
             # GPL source and reproducible build recipe ship with Frame Control.
             # The exact official helper is x86_64; this plugin needs no root.
             if int(plugin_id)==60 and digest=='7dc2ecdcd05aa415d1ac90afaff28ecb17f77809a2bc7a77aee8e92505b976f0' and folder=='DeckyFileServer':

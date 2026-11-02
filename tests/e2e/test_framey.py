@@ -207,6 +207,24 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
                                      '1bf6512c51c1693176385621c47dfe2c53a3f6d58baa2e9f4961660b3709160a')
+                if plugin['id'] == 131:
+                    self.assertEqual(found[0]['compatShims'], ['download-all-local-queue', 'download-all-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                        original = bundle.read(plugin['folder']+'/main.py')
+                    prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0], hashlib.sha256(prefix+original).hexdigest())
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                        hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if plugin['id'] == 125:
+                    self.assertEqual(found[0]['compatShims'], ['localsend-digest-native', 'localsend-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as bundle:
+                        original = bundle.read(plugin['folder']+'/main.py')
+                    prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0], hashlib.sha256(prefix+original).hexdigest())
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                        hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 135:
                     self.assertEqual(found[0]['compatShims'], ['deck-shelves-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
@@ -296,7 +314,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      frame_decky_store.WINE_CELLAR_MANAGED_MAIN)
                 if plugin['id'] == 125:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native'])
+                    self.assertEqual(receipt['compatShims'], ['localsend-digest-native', 'localsend-ipc-eof'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/localsend-core').split()[0],
                                      frame_decky_store.LOCALSEND_AARCH64 if arch == 'aarch64'

@@ -96,6 +96,7 @@
   {
     "id": 131,
     "shim": "download-all-local-queue",
+    "additionalShims": ["download-all-ipc-eof"],
     "probe": "download-all-logging"
   },
   {
@@ -251,6 +252,7 @@
   {
     "id": 125,
     "shim": "localsend-digest-native",
+    "additionalShims": ["localsend-ipc-eof"],
     "probe": "localsend"
   },
   {
