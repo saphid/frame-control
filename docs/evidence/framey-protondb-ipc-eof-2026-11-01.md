@@ -63,3 +63,25 @@ two simulator HTTP fixtures; all native test/production fingerprints above
 remain byte-identical. The 53-test local run records the preceding implementation
 and its two socket warnings, not an execution of this later combined commit.
 Fresh publication-head hosted e2e/native qualification remains required.
+
+
+## ARM64 failure caught by the new primary gate — 2 Nov
+
+#539 head `86c2eea0054e57576ca4efc4d5ccde0d7a3275f2`, native ARM64
+[job 125036937727](https://github.com/saphid/frame-control/actions/runs/41369575279/job/125036937727),
+failed at primary case 14: Decky forcibly killed ProtonDB Badges after five
+seconds. This was a real plugin shutdown failure, without a real Frame or
+Steam session. The failed artifact 13109006007 has ZIP SHA-256
+`97c53588a1c8b57a29fcfb6cfb70dbae3d2ca9fa370b291de8064d565dee0fe4`.
+The retained compressed record contains the failed case, console digest and
+all 37 exact-head source fingerprints. Every source fingerprint and console
+digest was independently verified before retaining it.
+
+The failing ProtonDB probe body AST and complete catalog row match current
+main `e2f7fb151c5b78a0178a06f3017d109f0ef3b6e1`; Surround was not the failing
+case. Current main's own native jobs passed at this snapshot, so this record
+does not claim that its exact run failed. The observed intermittent shutdown
+risk is covered by this existing repair's child-peer EOF fixture. The failed
+job was not rerun to replace its evidence. Fresh integrated-head ARM64, e2e
+and other applicable hosted gates remain required; prior local AMD64 results
+do not qualify the new integrated source or establish badge/controller usability.
