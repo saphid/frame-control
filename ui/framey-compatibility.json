@@ -3967,7 +3967,7 @@
         "https://github.com/safijari/Shotty"
       ],
       "status": "partial",
-      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 x86_64 verifies selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Update or reinstall existing copies to receive the child IPC EOF repair. Local published Decky 3.3.0 AMD64 verifies two clean parent-only unloads and restart; restoring the previous managed source reproduces a forced plugin kill. Fresh ARM64 unload and full hosted qualification remain pending.",
+      "reason": "Exact managed 0.1.0 repairs the missing click import and confines screenshot copies to owned regular Steam userdata files and Pictures/Screenshots. Published Decky 3.3.0 AMD64 and ARM64 verify selected copies across separate filesystems, repeat copies, independent destination bytes, preserved conflicts, title confinement, symlink refusal and historical aggregation. Real Frame ARM64 backend, live screenshot notifications, continuous rescue and worn/controller use remain unverified. Update or reinstall existing copies to receive the child IPC EOF repair. Local published Decky 3.3.0 AMD64 verifies two clean parent-only unloads and restart; restoring the previous managed source reproduces a forced plugin kill. Fresh ARM64 unload and full hosted qualification remain pending.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3975,7 +3975,7 @@
         "fake-Frame managed transport",
         "prior real Frame library snapshot (not this backend)",
         "isolated Python copy contracts",
-        "published Decky 3.3.0 x86_64 private cross-filesystem copy RPCs"
+        "published Decky 3.3.0 AMD64/ARM64 private cross-filesystem copy RPCs"
       ],
       "browser": {
         "id": 53,
@@ -4021,7 +4021,7 @@
         "shotty-ipc-eof"
       ],
       "missingShimStatus": "partial",
-      "runtimeEvidence": "docs/evidence/framey-shotty-bounded-2026-10-30.md"
+      "runtimeEvidence": "docs/evidence/framey-shotty-native-architectures-2026-10-30.md"
     },
     {
       "id": 56,

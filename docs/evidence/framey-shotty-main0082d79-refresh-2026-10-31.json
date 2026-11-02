@@ -1,0 +1,53 @@
+{
+  "at": "2026-10-31T11:22:09.839875+00:00",
+  "sourceRevision": "a9123f88124b065dd3e2af0b1a1d1c9974816c4e",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "priorHead": "c24a1899e2b7bb65e5b5f6687ce6bdaccbd4446f",
+  "normalMerge": true,
+  "conflictsResolved": 3,
+  "all116VersionsDigestsRatingsInstallPoliciesAndRequiredShimsPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "shottyChangedFields": [
+    "reason",
+    "runtimeEvidence",
+    "verification"
+  ],
+  "shottyIpcRequirementAndUnloadLimitsPreserved": true,
+  "originalNativeEvidenceByteIdentical": true,
+  "mainNativeInputsByteIdentical": 15,
+  "runtimeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "10d96b1955c4e4727865ddabd724555346608c39fc59a504a73da044d720d6e5",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "c660c747bca0677cfdd320673f6387be60cf808919cf1f56f912fe7d24273841",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "f4d394c6734a5a5a0f214c0fe9ac62b66dd6c16bbc812008d33a936a2500629f",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "b105a6a9d8b84055a298ce904f9c21fc44416adb84f00f4112c156635be5c4d9",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "allNonDocumentationRuntimeFilesMatchMain": true,
+  "diffAgainstCurrentMainCheckPassed": true,
+  "mergeParentDiffOnlyHasInheritedWhitespaceInTwoMainEvidenceLogs": true,
+  "realFrameContacted": false,
+  "focusedTests": 22,
+  "unitLogSha256": "0dc4f1c738879a4262233c5857a2cdc6dcf2527c0d0d14657ec46f3f3253c544",
+  "generatedDocumentationCheckPassed": true,
+  "currentMainAllFourPackagesIndependentlyAudited": true,
+  "mainPackageRun": 41190719751,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawJsonSha256": "9cc78333e8a9b83a9b2bdb17260486a22e058ec1aee4022ce99fce13e31b579d",
+  "rawGzipSha256": "33e053195266248f1ec7ef00519b26cea15d3817fcdbfdd037d33f5aac252d5f",
+  "limits": [
+    "Documentation/catalog claims only; no new backend/browser/headset replay.",
+    "Native runtime sources match main, but every fresh final-head hosted gate remains required.",
+    "Historical Shotty native evidence retains source-bound private byte checks and no raw loader console; current-main unload requirements/limits remain preserved."
+  ]
+}
