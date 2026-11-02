@@ -256,6 +256,33 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 103 and digest == '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_LUDUSAVI_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 75 and digest == 'f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281':
+        helper = Path(__file__).with_name('framey_reshadeck.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_RESHADECK_SOURCE = '+repr(helper)+'\n'
+                +'FRAMEY_RESHADECK_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 100 and digest == 'b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4':
+        source = Path(__file__).with_name('framey_surround.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
+                +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 14 and digest == '90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_PROTONDB_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 37 and digest == '00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        lifecycle = Path(__file__).with_name('framey_discord_lifecycle.py').read_text(encoding='utf-8')
+        return ('FRAMEY_DISCORD_IPC_SOURCE = '+repr(ipc)+'\n'
+                +'FRAMEY_DISCORD_LIFECYCLE_SOURCE = '+repr(lifecycle)+'\n'+APPLY)
+    if plugin_id == 104 and digest == '65e021ebb37d2ebfbfbe3dbc8af95aef9556cf484730362c6b26c4ecc3e62ccd':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_GAME_SYNC_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
+    if plugin_id == 38 and digest == '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_VOLUME_MIXER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 87 and digest == '5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822':
         source = Path(__file__).with_name('framey_screensaver.py').read_text(encoding='utf-8')
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
@@ -282,6 +309,9 @@ def apply_script(plugin_id, digest):
     if plugin_id == 24 and digest == RADIYO_DIGEST:
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_RADIYO_IPC_SOURCE = '+repr(source)+'\n'+APPLY
+    if plugin_id == 124 and digest == '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_ALARME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 96 and digest == '973d927e9d9a1feec04679c564af7e389a729b6735d2a988ffc2cb46ce4eb312':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SIMPLE_TIMER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -473,6 +503,116 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==75 and digest=='f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281'
+                    and folder=='reshadeck'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Reshadeck' or manifest.get('flags')!=['debug']
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='ff5b902a09892638b2a7f3ff784fe57211f7ab7ad1a63ffa0bdfa9e3c47cdb56'):
+                    raise RuntimeError('Reshadeck manifest or backend differs from pinned archive')
+                for name,key in [('framey_reshadeck','FRAMEY_RESHADECK_SOURCE'),('framey_decky_ipc','FRAMEY_RESHADECK_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source:
+                        raise RuntimeError('Missing Reshadeck runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('Reshadeck helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_reshadeck import install as _framey_install_reshadeck\n'
+                        b'_framey_install_reshadeck(globals())\ndel _framey_install_reshadeck\n')
+                main.write_bytes(prefix+original+suffix)
+                compat_shims.append('reshadeck-owned-shaders')
+                compat_shims.append('reshadeck-ipc-eof')
+            if (int(plugin_id)==100 and digest=='b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4'
+                    and folder=='decky-virtual-surround-sound'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Virtual Surround Sound' or manifest.get('flags')!=[]
+                        or manifest.get('api_version')!=1
+                        or hashlib.sha256(original).hexdigest()!='ed93c09f3aa2f37b917a0ed6539173096175fd277e69c47fc13127e22be35569'
+                        or hashlib.sha256((unpacked/'service.sh').read_bytes()).hexdigest()!='8709a0fa2106bce08d5fb9e9913ef3184850354098b5ce645dde411a14748cda'):
+                    raise RuntimeError('Virtual Surround Sound manifest or source differs from pinned archive')
+                for name,key in [('framey_surround','FRAMEY_SURROUND_SOURCE'),('framey_decky_ipc','FRAMEY_SURROUND_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source:
+                        raise RuntimeError('Missing owned surround runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('Surround runtime helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_surround import install as _framey_install_surround\n'
+                        b'_framey_install_surround(globals())\ndel _framey_install_surround\n')
+                main.write_bytes(prefix+original+suffix)
+                compat_shims.append('surround-owned-runtime')
+                compat_shims.append('surround-ipc-eof')
+            if (int(plugin_id)==14 and digest=='90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358'
+                    and folder=='protondb-decky'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='ProtonDB Badges' or manifest.get('api_version')!=2
+                        or flags!=[] or hashlib.sha256(original).hexdigest()!=
+                        '07ae28331b7d1ab55a6303636026dadd7e5523fde84d95c62899fed6e1c133ba'):
+                    raise RuntimeError('ProtonDB Badges manifest or backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_PROTONDB_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing ProtonDB Badges IPC helper')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('ProtonDB Badges IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original)
+                compat_shims.append('protondb-ipc-eof')
+            if (int(plugin_id)==37 and digest=='00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45'
+                    and folder=='DiscordStatus'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Discord Status' or manifest.get('api_version')!=1
+                        or flags!=['debug'] or hashlib.sha256(original).hexdigest()!=
+                        'f9f844d96ed54ccca1a6d8497d7f8c23f4900944d90e463ba2ac2847b38d798f'):
+                    raise RuntimeError('Discord Status manifest or backend differs from pinned archive')
+                for name,key in [('framey_decky_ipc.py','FRAMEY_DISCORD_IPC_SOURCE'),
+                                 ('framey_discord_lifecycle.py','FRAMEY_DISCORD_LIFECYCLE_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source:
+                        raise RuntimeError('Missing Discord Status lifecycle repair')
+                    helper=unpacked/'py_modules'/name
+                    if helper.exists(): raise RuntimeError('Discord Status helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_discord_lifecycle import install as _framey_discord_lifecycle\n'
+                        b'_framey_discord_lifecycle(Plugin, Pipe)\ndel _framey_discord_lifecycle\n')
+                main.write_bytes(prefix+original+suffix)
+                compat_shims.append('discord-status-pipe-lifecycle')
+                compat_shims.append('discord-status-ipc-eof')
+            if (int(plugin_id)==38 and digest=='11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3' and folder=='VolumeMixer-decky'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Volume Mixer' or manifest.get('flags')!=[]
+                        or 'api_version' in manifest
+                        or hashlib.sha256(original).hexdigest()!='4fbe68db632397bd78b0bd35a46426825351a74ed168a6bbbd6fb65378b3fce2'):
+                    raise RuntimeError('Volume Mixer manifest or backend differs from pinned archive')
+                old=(b"    os.environ['XDG_RUNTIME_DIR'] = '/run/user/1000'\n"
+                     b"    os.environ['HOME'] = '/home/deck'")
+                if original.count(old)!=1: raise RuntimeError('Volume Mixer environment block differs')
+                ipc=globals().get('FRAMEY_VOLUME_MIXER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Volume Mixer IPC helper')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Volume Mixer IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+original.replace(old,b'    pass  # Preserve configured user HOME and Pulse runtime.'))
+                compat_shims.append('volume-mixer-user-audio')
+                compat_shims.append('volume-mixer-ipc-eof')
             if (int(plugin_id)==87 and digest=='5e61f20d53e244c55a0375d6299b16cdb9701c222519c7fecd726f1926091822' and folder=='DeckyInhibitScreenSaver'):
                 main=unpacked/'main.py'
                 original=main.read_bytes()
@@ -566,6 +706,19 @@ try:
                     'except (subprocess.CalledProcessError, subprocess.TimeoutExpired) as e:',1)
                 helper.write_text(source)
                 compat_shims.append('ludusavi-dependency-discovery')
+                main=unpacked/'main.py'
+                backend=main.read_bytes()
+                if flags!=[] or hashlib.sha256(backend).hexdigest()!='00fcd7029ab4ba9fac0e872899a6dcadd6d05a8cc8892542b5abd2db967eac48':
+                    raise RuntimeError('Ludusavi backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_LUDUSAVI_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Ludusavi child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Ludusavi child IPC helper collides with archive')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+backend)
+                compat_shims.append('ludusavi-ipc-eof')
             if (int(plugin_id)==134 and digest=='784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c3687db14fb3'
                     and folder=='deck-progress-tracker'):
                 main=unpacked/'main.py'
@@ -1081,8 +1234,21 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 old=b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
                 if source.count(old)!=1: raise RuntimeError('AlarMe paused timer startup changed')
                 new=old.replace(b'            remaining =', b'            if timer.get("paused", False):\r\n                continue\r\n            remaining =')
-                main.write_bytes(source.replace(old,new))
+                ipc=globals().get('FRAMEY_ALARME_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing AlarMe child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('AlarMe child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                source=prefix+source.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
                 compat_shims.append('alarme-paused-restart')
+                compat_shims.append('alarme-ipc-eof')
             # Simple Timer 1.0.0 has annotation-only task state, orphaned
             # replacement tasks and canceled deadlines that resume on restart.
             # Preserve its API1 instance convention and upstream license.
@@ -1246,6 +1412,20 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(utility),'exec')
                 utility.write_text(source,encoding='utf-8')
                 compat_shims.append('game-sync-bounded-selection')
+                main=unpacked/'main.py'
+                backend=main.read_bytes()
+                if (manifest.get('name')!='Game Sync' or manifest.get('api_version')!=1 or flags!=[]
+                        or hashlib.sha256(backend).hexdigest()!='96fa86a0f1f14531c701bc416a2ae244b521eb24abfa58ce3b76cb27bb8dcff0'):
+                    raise RuntimeError('Game Sync backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_GAME_SYNC_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Game Sync child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Game Sync child IPC helper collides with archive')
+                helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                main.write_bytes(prefix+backend)
+                compat_shims.append('game-sync-ipc-eof')
             # The exact DeckyParty archive already runs as the service user.
             # Invoke its original helper with system Python, without sudo, and
             # keep ownership until its process has exited and been reaped.

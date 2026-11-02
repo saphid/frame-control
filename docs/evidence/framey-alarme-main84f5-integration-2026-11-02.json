@@ -1,0 +1,362 @@
+{
+  "at": "2026-11-02T05:17:21.652568+00:00",
+  "implementation": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+  "baseMain": "84f5efd3fbde8525b473f11c3bd2071d7ffb3e82",
+  "sourceAudit": {
+    "at": "2026-11-02T05:11:27.672184+00:00",
+    "implementation": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+    "baseMain": "84f5efd3fbde8525b473f11c3bd2071d7ffb3e82",
+    "priorLocal": "151b778327286405d1306532958496d79b133dfd",
+    "repairHead": "ee627904d8f8985f50257e8f66f0be9cbdae4cee",
+    "normalMergeConflictsResolved": [
+      "tests/decky-runtime/cases.json",
+      "tests/framey_official.py",
+      "tests/test_framey_decky_runtime.py"
+    ],
+    "all40MainCasesRetained": true,
+    "expectedNativeCases": 41,
+    "installerCheckerE2eAndStoreTestsOutsideAlarmeAstEqualMain": true,
+    "all116PinsPoliciesRatingsPreserved": true,
+    "other115CatalogRowsUnchanged": true,
+    "sharedIpcAndMainShutdownGateUnchanged": true,
+    "priorAlarmeNativeProbeAndArchiveUnchanged": true,
+    "generatedDocsPass": true,
+    "diffCheckVersusCurrentMainPass": true,
+    "oldBranchDiffCheckFlaggedOnlyTwoPreexistingMainBlankLines": true,
+    "published": false,
+    "arm64Verified": false,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false,
+    "sourceChanges": [
+      "docs/framey-compatibility.md",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/alarme_lifecycle.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/e2e/test_framey.py",
+      "tests/fixtures/framey-official/124.zip",
+      "tests/framey_official.py",
+      "tests/test_frame_decky_store.py",
+      "tests/test_framey_decky_runtime.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json"
+    ],
+    "changedFiles": [
+      "docs/evidence/framey-alarme-browser-afterRestart-2026-10-30.png",
+      "docs/evidence/framey-alarme-browser-beforeRestart-2026-10-30.png",
+      "docs/evidence/framey-alarme-browser-empty-2026-10-30.png",
+      "docs/evidence/framey-alarme-browser-restart-2026-10-30.json",
+      "docs/evidence/framey-alarme-browser-restart-2026-10-30.md",
+      "docs/evidence/framey-alarme-completed-source-ci-2026-10-30.json",
+      "docs/evidence/framey-alarme-ipc-eof-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-alarme-ipc-eof-2026-11-01.json",
+      "docs/evidence/framey-alarme-ipc-eof-2026-11-01.md",
+      "docs/evidence/framey-alarme-main-refresh-2026-10-30.json",
+      "docs/evidence/framey-alarme-main0082d79-refresh-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-alarme-main0082d79-refresh-2026-10-31.json",
+      "docs/evidence/framey-alarme-main358-native-2026-10-31.json",
+      "docs/evidence/framey-alarme-main358-refresh-2026-10-31.json",
+      "docs/evidence/framey-alarme-mainad070-integration-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-alarme-mainad070-integration-2026-11-01.json",
+      "docs/evidence/framey-alarme-mainad070-integration-2026-11-01.md",
+      "docs/evidence/framey-alarme-maind3ae60e-refresh-2026-10-31-raw.json.gz",
+      "docs/evidence/framey-alarme-maind3ae60e-refresh-2026-10-31.json",
+      "docs/evidence/framey-alarme-maind64-refresh-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-alarme-maind64-refresh-2026-11-01.json",
+      "docs/evidence/framey-alarme-maind64-refresh-2026-11-01.md",
+      "docs/evidence/framey-alarme-native-ci-2026-10-30.json",
+      "docs/evidence/framey-alarme-native-lifecycle-2026-10-30.json",
+      "docs/evidence/framey-alarme-native-lifecycle-2026-10-30.md",
+      "docs/evidence/framey-alarme-original-paused-restart-failure-2026-10-30.json",
+      "docs/evidence/framey-alarme-volume-integration-2026-11-01-raw.json.gz",
+      "docs/evidence/framey-alarme-volume-integration-2026-11-01.json",
+      "docs/evidence/framey-alarme-volume-integration-2026-11-01.md",
+      "docs/framey-compatibility.md",
+      "scripts/framey-test-decky-runtime.py",
+      "tests/decky-runtime/alarme_lifecycle.py",
+      "tests/decky-runtime/cases.json",
+      "tests/decky-runtime/check.py",
+      "tests/e2e/test_framey.py",
+      "tests/fixtures/framey-official/124.zip",
+      "tests/framey_official.py",
+      "tests/test_frame_decky_store.py",
+      "tests/test_framey_decky_runtime.py",
+      "ui/frame_decky_store.py",
+      "ui/framey-compatibility.json"
+    ],
+    "allOtherMainGitObjectsRetained": true,
+    "primaryInventoryAll40ValuesAndOrderRetained": true,
+    "officialPluginTupleOutsideAlarmeUnchanged": true,
+    "runtimeRunnerOnlyAddsAlarmeInputAndNegative": true,
+    "runtimeCoverageOnlyAddsAlarmeProbe": true
+  },
+  "unit": {
+    "at": "2026-11-02T05:14:36.147339+00:00",
+    "implementation": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+    "exit": 0,
+    "tests": 2043,
+    "testSeconds": 278.25,
+    "wallSeconds": 279.43963777832687,
+    "skips": 15,
+    "realFrameContacted": false
+  },
+  "nativeAudit": {
+    "at": "2026-11-02T05:16:25.303294+00:00",
+    "implementation": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+    "nativeTestCommit": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+    "redCommit": "61cfeb5f36340c31be37b221a9f57e0340992a38",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "429d809fae8d75218b5b36851bdec8d31bbb7e6bc5314bc038b274404e4da338",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "f92e7e5fdd3fa7f079bc6d74474ef87a76bc1047268e55bd6b757c843863bebd",
+      "ui/framey_discord_lifecycle.py": "f75b372fa48d39968abe60921847a154b5c485c5b462dfa3855aae9dd3b8520c",
+      "tests/decky-runtime/discord_private.py": "e7abd8c6a8ad5b85167b7ee73fca254e1857952d771bc1ae4a9d103f8c8cfb8c",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/alarme_lifecycle.py": "9309c428b91b3c741c589f1e27e83dd9534b9d69b43c451f1541cb6255bec264",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/deckyparty_private.py": "491adff6327de13351c15e6faa21751c82c0181f052b273e167eb7b5df42d7d1",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/deck_shelves_private.py": "7601ff4ae19850dccf80ebc0f63ae7829af193367ac82d1357782e6c7e8f3b78",
+      "tests/decky-runtime/battery_private.py": "9ca0c40c87a70a47dba5ca6e98af9e5e06e4895804c93dc3e24da1a88f81ae0d",
+      "tests/decky-runtime/steamback_private.py": "e3e3d895aa75918f80ef2058f316fdc45ee87dae47e6ec5cda69d83fa906a36d",
+      "tests/decky-runtime/tabmaster_private.py": "4a8efe46e2f46f0ba13352a1b4e10105cc69c9fa0bc8ef0768fd7ce77d34b103",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+      "tests/decky-runtime/reshadeck_private.py": "94bf1b762a6a0f9448a8e02c1fe6fd9be552557df61ee1a7083b7d8626bf8ee2",
+      "ui/framey_reshadeck.py": "5640fdf1d8bf9fd1df9e3e0637aca48fa8793c299ea2788bbaa70921d0b3f689",
+      "tests/decky-runtime/screensaver_private.py": "15aa711ce5578e8c4e691689c8174ae6e1f59a4b1cb558ba3a1803186d47c000",
+      "ui/framey_screensaver.py": "9708b949d6723584d3dfbed0ccb52becd4754a2172e479b1e8b8a0d522add45c",
+      "tests/decky-runtime/surround_private.py": "481876917ecbe9e7a4f82e20ab3ef6bbd6bd7d456194d2c01e09ffacafb5bcc2",
+      "ui/framey_surround.py": "5d697c4fe229a8d15dda1408c9177cb8e9f19571dd1f39817d5d45831318fc22",
+      "tests/decky-runtime/volume_mixer_private.py": "9b57b5b42445bac803a4308fb357c705048d92c8adbec63ae4710e34ce9f7f37",
+      "tests/decky-runtime/animation_private.py": "5ecc5acad0c33b95f852df35014d0b6189c1f7c64aaa556146ec86a76b6c617a",
+      "ui/framey_animation_overrides.py": "1be712568c6675dd77cff64eb0b06a97569d80daa81d269533c2ea8d3be20188",
+      "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+      "tests/decky-runtime/cases.json": "de7239253d4cf3e2ff96e5280d6147a655669e9d0593d4e35bb79e9a07e2065a",
+      "tests/framey_official.py": "05a5828035b5a71cdd30a0401b1b582897d3aefeb1849ee7273478c6c9232f94",
+      "ui/frame_decky_store.py": "ef284710fd4d4cb8942305e8605b51f80b849170ac11f0db88ef3a13cea80c3b",
+      "tests/decky-runtime/ludusavi_private.py": "c620d2c5a8bdb8a4fa52df378e4426a466d1e7271c800243aacd1486eb9482f9",
+      "tests/decky-runtime/protondb_private.py": "fa42f20a4f9487230ec2ace56bed14c47d50866a1ace559d2c861431bf3af32d",
+      "tests/decky-runtime/game_sync_private.py": "097b860de03d340fd9b857d87f67a5b0271381307d8cc97280a1f4c79985cb5b",
+      "tests/decky-runtime/steamgriddb_private.py": "ae815dc7e5f0e178e95c93e0bbf3eca232f3f2eb6f35af6b1b618345e332240e",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "reportSha256": "4ea237e663f832ed28cef31be2f72273ee7b65aed3646a1096eca9b7fc712a98",
+    "redRejected": true,
+    "redObservation": {
+      "parentOnlySignal": true,
+      "loaderPid": 9,
+      "returncode": 0,
+      "elapsedSeconds": 5.235,
+      "descendantsBefore": {
+        "10": {
+          "state": "S",
+          "parent": 9,
+          "start": "357773326"
+        },
+        "19": {
+          "state": "S",
+          "parent": 10,
+          "start": "357773361"
+        },
+        "20": {
+          "state": "S",
+          "parent": 10,
+          "start": "357773361"
+        },
+        "21": {
+          "state": "S",
+          "parent": 20,
+          "start": "357773373"
+        }
+      },
+      "exactDescendantsRemaining": {},
+      "adoptedChildExits": [
+        {
+          "pid": 19,
+          "returncode": 0
+        },
+        {
+          "pid": 20,
+          "returncode": 0
+        }
+      ],
+      "closedUnixPeers": [
+        "/tmp/plugin_socket_1793526983.8374114"
+      ],
+      "forcedPluginKills": 1,
+      "errors": [],
+      "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down AlarMe (v1.6.3)\n[plugin][INFO]: Stopping response listener for AlarMe (v1.6.3)\n[plugin][WARNING]: Plugin AlarMe (v1.6.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin AlarMe (v1.6.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+      "consoleSha256": "fc3f611fe3f17c05f264f01856f2694267ec08bcd7156a3644b67e841be49ebe",
+      "cleanShutdownVerified": false
+    },
+    "repairedRpcs": 39,
+    "originalRpcs": 38,
+    "all77ResponsesMatch": true,
+    "pinnedBackendsIndependentlyReconstructed": true,
+    "strictManagedStops": [
+      {
+        "parentOnlySignal": true,
+        "loaderPid": 9,
+        "returncode": 0,
+        "elapsedSeconds": 0.214,
+        "descendantsBefore": {
+          "10": {
+            "state": "S",
+            "parent": 9,
+            "start": "364729187"
+          },
+          "20": {
+            "state": "S",
+            "parent": 10,
+            "start": "364729216"
+          },
+          "21": {
+            "state": "S",
+            "parent": 10,
+            "start": "364729216"
+          },
+          "22": {
+            "state": "S",
+            "parent": 21,
+            "start": "364729226"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 20,
+            "returncode": 0
+          },
+          {
+            "pid": 21,
+            "returncode": 0
+          }
+        ],
+        "closedUnixPeers": [
+          "/tmp/plugin_socket_1793596542.3888938"
+        ],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down AlarMe (v1.6.3)\n[plugin][INFO]: Stopping response listener for AlarMe (v1.6.3)\nCalling Loader unload function for AlarMe (v1.6.3).\nAttempting to unload with plugin AlarMe (v1.6.3)'s \"_unload\" function.\n\nAlarMe: Plugin unloaded\nUnloaded AlarMe (v1.6.3)\n\nExpecting value: line 1 column 1 (char 0)\nExpecting value: line 1 column 1 (char 0)\n[plugin][INFO]: Plugin AlarMe (v1.6.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "2297b1ac400717cec4296ba87bf4c397e606010af8d98a23064d72997fa58e3f",
+        "cleanShutdownVerified": true
+      },
+      {
+        "parentOnlySignal": true,
+        "loaderPid": 24,
+        "returncode": 0,
+        "elapsedSeconds": 0.214,
+        "descendantsBefore": {
+          "25": {
+            "state": "S",
+            "parent": 24,
+            "start": "364729951"
+          },
+          "35": {
+            "state": "S",
+            "parent": 25,
+            "start": "364729982"
+          },
+          "36": {
+            "state": "S",
+            "parent": 25,
+            "start": "364729982"
+          },
+          "37": {
+            "state": "S",
+            "parent": 36,
+            "start": "364729992"
+          }
+        },
+        "exactDescendantsRemaining": {},
+        "adoptedChildExits": [
+          {
+            "pid": 35,
+            "returncode": 0
+          },
+          {
+            "pid": 36,
+            "returncode": 0
+          }
+        ],
+        "closedUnixPeers": [],
+        "forcedPluginKills": 0,
+        "errors": [],
+        "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down AlarMe (v1.6.3)\n[plugin][INFO]: Stopping response listener for AlarMe (v1.6.3)\nCalling Loader unload function for AlarMe (v1.6.3).\nAttempting to unload with plugin AlarMe (v1.6.3)'s \"_unload\" function.\n\nAlarMe: Plugin unloaded\nUnloaded AlarMe (v1.6.3)\n\n[plugin][INFO]: Plugin AlarMe (v1.6.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+        "consoleSha256": "1d54918ec8f394511d2e142e340fa8e2cdab8e46bd4743f0ecd4e561ea40ae7f",
+        "cleanShutdownVerified": true
+      }
+    ],
+    "consoleSummaries": [
+      {
+        "originalControl": false,
+        "rpcs": 39,
+        "consoleSha256": "12b5da649f50db1febfdba7631a82291df25be666a8a1d451b7cd24cc56e41ec",
+        "jsonDiagnostics": 2,
+        "genericCleanShutdownVerified": false
+      },
+      {
+        "originalControl": true,
+        "rpcs": 38,
+        "consoleSha256": "d7aefce69fd7a9cafe77e4c9058a0643dff04a88bb90917f089f2118d89def6f",
+        "jsonDiagnostics": 2,
+        "genericCleanShutdownVerified": false
+      }
+    ],
+    "completeFilesystemSnapshotsIndependentlyVerified": false,
+    "arm64Verified": false,
+    "realFrameContacted": false,
+    "mergeQualified": false,
+    "releaseQualified": false
+  },
+  "e2e": {
+    "implementation": "49ed48fc1972731f339f3066d414dac4ac624c6a",
+    "started": "2026-11-02T05:10:02.745462+00:00",
+    "priorImages": {
+      "fakeframe-frame:latest": "sha256:374a293e4d9839df617cdf72f3818315dfcac41ff9914538456eda4450015191",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "simulatorId": "cfcf8a78103af20a9dc46192c893dedd5606107b3d3f6c8bef804db0dace3729",
+    "simulatorStartedAt": "2026-10-30T08:17:01.714646486Z",
+    "simulatorRestartCount": 0,
+    "realFrameContacted": false,
+    "exit": 0,
+    "seconds": 430.2953135771677,
+    "restoredImages": {
+      "fakeframe-frame:latest": "sha256:374a293e4d9839df617cdf72f3818315dfcac41ff9914538456eda4450015191",
+      "fakeframe-host:latest": "sha256:abea666295e7c225d44ce91a470fc94f20a4d7b8626dfdf7f3747b68e49bbd5b"
+    },
+    "ownedResourcesRemaining": {
+      "containers": "",
+      "volumes": "",
+      "networks": ""
+    },
+    "sharedSimulatorUnchanged": true,
+    "tests": 53,
+    "skips": 0,
+    "testSeconds": 416.216,
+    "catalogPins": 116,
+    "outcomes": {
+      "blocked": 47,
+      "installed-removed": 69
+    },
+    "resourceWarnings": 0
+  },
+  "rawSha256": "62b19bda615198c15cb0f55b8bb69f99b62304ae040e8f6a33334c27c1141894",
+  "freshHostedBothArchitecturesRequired": true,
+  "previousFailedArm64EvidenceRetained": true,
+  "realFrameContacted": false,
+  "wearerControllerVerified": false,
+  "mergeQualified": false,
+  "releaseQualified": false
+}

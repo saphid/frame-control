@@ -694,7 +694,7 @@
         "https://github.com/sponsors/bschelst"
       ],
       "status": "partial",
-      "reason": "Settings render locally and read-only get_setting RPC returned the default through real Decky 3.3.0 on ARM64 Frame. Steam game-page badges have no patch target; live writes and VR controls unverified.",
+      "reason": "Settings render locally; the prior unmodified backend returned a read-only default on real ARM64 Frame. Exact managed 1.3.4 repairs child IPC EOF, with private AMD64 settings, restart and clean unload verified. Steam game-page badges have no patch target; repaired ARM64, Frame and worn/controller behavior remain unverified. Existing copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -2923,7 +2923,7 @@
         "https://github.com/andrewburgess/steamdeck-discord-status.git"
       ],
       "status": "partial",
-      "reason": "Disconnected panel renders; running-activity construction accepts a synthetic game in local Chromium. Exact official is_connected returned false in real Decky 3.3.0 ARM64. Empty live running-list reads and lifetime registration/cleanup passed. Real game transitions, Discord shortcut detection/connection/activity, local custom artwork and worn VR remain unverified/unsupported.",
+      "reason": "Disconnected panel renders; running-activity construction accepts a synthetic game in local Chromium. Exact official is_connected returned false in real Decky 3.3.0 ARM64. Empty live running-list reads and lifetime registration/cleanup passed. Real game transitions, Discord shortcut detection/connection/activity, local custom artwork and worn VR remain unverified/unsupported. Exact managed 1.5.0 now closes prior/failed IPC pipes and awaits unload. Disposable native Decky 3.3.0 AMD64 with a private wire peer passed activity/clear/rejected-handshake retry, replacement, two strict clean stops and restart. No real Discord account/activity, Steam callbacks, shortcut/artwork UI or worn Frame validation is claimed.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -2974,7 +2974,17 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
-      }
+      },
+      "ipcLifecycleFollowUp": {
+        "evidence": "docs/evidence/framey-discord-ipc-lifecycle-2026-11-01.md",
+        "mode": "native Decky 3.3.0 AMD64; disposable private Discord Unix wire peer",
+        "realDiscordContacted": false,
+        "realFrameContacted": false
+      },
+      "requiredShims": [
+        "discord-status-pipe-lifecycle",
+        "discord-status-ipc-eof"
+      ]
     },
     {
       "id": 38,
@@ -3048,7 +3058,7 @@
         "https://github.com/mk-fg/python-pulse-control"
       ],
       "status": "works",
-      "reason": "Per-app stream discovery and slider/keyboard volume changes pass in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session, with independent Pulse readback of a silent test stream. Bluetooth playback, audible output and worn-VR controls unverified.",
+      "reason": "Per-app stream discovery and slider/keyboard volume changes passed historically in local Chromium through real Decky 3.3.0 ARM64 on the Frame audio session. Exact managed installs now preserve actual user HOME/Pulse runtime and repair IPC EOF shutdown; native AMD64 private stereo volume/readback and restart are covered. Update/reinstall old copies. This adapted backend on ARM64/Frame, Bluetooth playback, audible output and worn-VR controls remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3091,6 +3101,15 @@
         "evidence": "docs/evidence/framey-audio-backends-2026-10-26.json",
         "audio": "private silent virtual targets",
         "realFrame": false
+      },
+      "requiredShims": [
+        "volume-mixer-user-audio",
+        "volume-mixer-ipc-eof"
+      ],
+      "volumeMixerRuntime": {
+        "evidence": "docs/evidence/framey-volume-mixer-user-runtime-2026-11-01.md",
+        "runtime": "published Decky 3.3.0 native AMD64; private silent PipeWire/Pulse and D-Bus; actual UID 1100; no PULSE_SERVER override",
+        "realFrameContacted": false
       }
     },
     {
@@ -5833,12 +5852,13 @@
         "https://github.com/safijari/reshadeck"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; ReShade deployment into Proton games is unverified.",
+      "reason": "Managed installs preserve existing shader/include files and leave the effect untouched on startup. Native AMD64 Decky verifies explicit selection with a private authenticated X11 server, spaces, disable, restart and clean unload. Requires xprop and a configured DISPLAY; gamescope shader rendering, ARM64, actual Frame and worn VR unverified. Update/reinstall required.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native Decky AMD64 private X11"
       ],
       "browser": {
         "id": 75,
@@ -5868,6 +5888,18 @@
         "sha256": "f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281",
         "archiveValidation": "accepted",
         "result": "installed-removed"
+      },
+      "requiredShims": [
+        "reshadeck-owned-shaders",
+        "reshadeck-ipc-eof"
+      ],
+      "reshadeckRuntime": {
+        "evidence": "docs/evidence/framey-reshadeck-preserve-shaders-2026-11-01.md",
+        "mode": "published Decky 3.3.0 AMD64; private authenticated Xvfb, no host display or gamescope",
+        "realFrameContacted": false,
+        "physicalShaderRenderingVerified": false,
+        "officialUiVerified": false,
+        "arm64Verified": false
       }
     },
     {
@@ -8158,12 +8190,13 @@
         "https://github.com/SteamDeckHomebrew/decky-frontend-lib"
       ],
       "status": "partial",
-      "reason": "Initializer succeeds; avatar proxy is unavailable and live audio-routing backend unverified.",
+      "reason": "Managed installs use private HRIR copies and an owned PipeWire filter instead of shared files, systemd units or Deck-only paths. Isolated native AMD64 Decky verifies real stream routing, 5.1/7.1 preset switches, settings/restart and clean unload. Update/reinstall required; actual audio, ARM64, official UI and worn VR unverified; avatar proxy unavailable.",
       "blockInstall": false,
       "verification": [
         "static archive",
         "local browser",
-        "fake-Frame"
+        "fake-Frame",
+        "native Decky AMD64 private PipeWire/Pulse"
       ],
       "browser": {
         "id": 100,
@@ -8204,6 +8237,18 @@
         "evidence": "docs/evidence/framey-running-context-2026-10-26.json",
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
+      },
+      "requiredShims": [
+        "surround-owned-runtime",
+        "surround-ipc-eof"
+      ],
+      "surroundRuntime": {
+        "evidence": "docs/evidence/framey-surround-owned-runtime-2026-11-01.md",
+        "mode": "published Decky 3.3.0 AMD64; private PipeWire/Pulse without host audio sockets/devices",
+        "realFrameContacted": false,
+        "physicalAudioVerified": false,
+        "officialUiVerified": false,
+        "arm64Verified": false
       }
     },
     {
@@ -8870,7 +8915,7 @@
         "https://github.com/mtkennerly/ludusavi"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.2.2 reports a missing Ludusavi executable without a version-RPC error and bounds each version probe to five seconds. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original negative control and restart. The exact frontend shows its missing-dependency message with in-memory replies in sandboxed local Chromium. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, ARM64, real Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
+      "reason": "Exact managed 1.2.2 retains bounded dependency discovery and repairs child IPC EOF. Published Decky 3.3.0 AMD64 verifies missing dependency, timed-out private executable fallback, original dependency-helper negative, restart and four clean parent-only unloads. Prior sandboxed local Chromium shows the missing-dependency UI with in-memory replies. Actual Ludusavi installation, backup/restore/cloud, command lifecycle, repaired ARM64/Frame and worn/controller use remain unverified; older copies need Update/reinstall.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -8983,7 +9028,7 @@
         "https://github.com/GedasFX/decky-cloud-save"
       ],
       "status": "partial",
-      "reason": "The exact managed 1.0.4 selection check resolves paths inside the configured sync root, refuses outside links and recursive directory cycles, and retains the 9,000-file count limit. Private actual Decky 3.3.0 x86_64 RPCs verify those read-only selections and setting restart persistence; original configuration discovery was also verified on ARM64. Existing copies need Update/reinstall. This does not constrain rclone execution or prove cloud sync: the published updater still names an amd64 download and default sync arguments include --copy-links. Cloud login, sync, process signals, the updated ARM64 selection check, real Frame and worn VR remain unverified.",
+      "reason": "The exact managed 1.0.4 selection check remains bounded to its configured sync root, and its child IPC EOF repair permits clean unload. Private actual Decky 3.3.0 AMD64 tests verify read-only selections, settings restart persistence and two strict parent-only unloads, including a real child-peer EOF. Existing copies need Update/reinstall. This does not constrain rclone execution or prove cloud sync: the published updater still names an amd64 download and default sync arguments include --copy-links. Cloud login/sync/process signals, this repair on ARM64/Frame, browser integration and worn/controller use remain unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11140,7 +11185,7 @@
         "https://github.com/mpcallahan/DeckyHourNotifications"
       ],
       "status": "partial",
-      "reason": "Silent labeled timer create/ticks/pause/cancel, preset save/cancel-confirm/delete and stopwatch start/lap/pause/reset/reopen pass in local Chromium with the official Decky 3.3.0 ARM64 backend. Audio, alarms/reminders, suspend inhibition, Steam overlays and worn VR remain unverified; notifications require the panel to stay open. Exact managed installs repair paused timers that incorrectly tick or disappear after a backend restart; native AMD64/ARM64 lifecycle checks and a private AMD64 browser restart/resume/cancel replay pass. Update/reinstall is required. Production HTTP integration, real Frame rendering and physical controllers remain unverified.",
+      "reason": "Exact AlarMe 1.6.3 archive gets paused-timer restart and child IPC EOF repairs. Historical native AMD64/ARM64 RPC and AMD64 browser evidence cover earlier source; a later ARM64 run forced a child kill and is rejected by the new strict shutdown gate. Fresh exact-head strict native qualification is required. Sound, actual sleep inhibition, Steam integration and worn Frame/controller use remain unverified; compatibility stays partial. Existing managed copies need Update/reinstall. Earlier silent browser timer/preset/stopwatch evidence remains historical; notifications require the panel to stay open. Production HTTP and Steam CEF are unverified.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11242,11 +11287,22 @@
         "browserEvidence": "docs/evidence/framey-alarme-browser-restart-2026-10-30.md",
         "nativeCiEvidence": "docs/evidence/framey-alarme-native-ci-2026-10-30.json",
         "nativeCiSourceRevision": "3ec43ad6a5af1df55a8190015f7802cc18190511",
-        "productionHttpParentVerified": false
+        "productionHttpParentVerified": false,
+        "qualificationLimit": "Historical source only; does not qualify the new EOF repair or supersede the later ARM64 forced-kill failure. Fresh strict AMD64/ARM64 shutdown evidence required."
       },
       "requiredShims": [
-        "alarme-paused-restart"
-      ]
+        "alarme-paused-restart",
+        "alarme-ipc-eof"
+      ],
+      "ipcEofFollowUp": {
+        "status": "partial",
+        "shim": "alarme-ipc-eof",
+        "mode": "exact-archive managed child IPC EOF repair; strict parent-only shutdown with real disconnected child peer",
+        "arm64Verified": false,
+        "browserVerified": false,
+        "realFrameVerified": false,
+        "physicalControllerVerified": false
+      }
     },
     {
       "id": 125,

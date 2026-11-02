@@ -212,14 +212,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
-                         ['ludusavi-dependency-discovery'])
+                         ['ludusavi-dependency-discovery', 'ludusavi-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             for item in original.infolist():
                 if item.is_dir():
                     continue
                 relative = item.filename.split('/', 1)[1]
-                if relative != 'py_modules/ludusavi.py':
+                if relative == 'main.py':
+                    self.assertEqual((folder/relative).read_bytes(), b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n' + original.read(item))
+                elif relative != 'py_modules/ludusavi.py':
                     self.assertEqual((folder/relative).read_bytes(), original.read(item), relative)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
         module = types.ModuleType('private_ludusavi_dependency')
         logger = logging.getLogger('private-ludusavi-dependency')
         with patch.dict(sys.modules, decky=types.SimpleNamespace(logger=logger)):
@@ -1138,7 +1142,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['alarme-paused-restart'])
+        self.assertEqual(receipt['compatShims'], ['alarme-paused-restart', 'alarme-ipc-eof'])
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            self.assertEqual((folder/'LICENSE').read_bytes(), original.read(plugin['folder']+'/LICENSE'))
         self.assertEqual(json.loads((folder/'plugin.json').read_text())['api_version'], 1)
         self.assertEqual(self.apply('remove', **args).returncode, 0)
         changed = io.BytesIO(data)
@@ -1149,6 +1157,16 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual((folder/'main.py').read_bytes(), original_main)
         self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+
+    def test_alarme_missing_ipc_payload_cannot_publish_an_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 124)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=124,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing AlarMe child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
 
     def test_exact_simple_timer_gets_lifecycle_repair_and_keeps_api1_and_license(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -1202,11 +1220,20 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['game-sync-bounded-selection'])
+        self.assertEqual(receipt['compatShims'], ['game-sync-bounded-selection', 'game-sync-ipc-eof'])
         with zipfile.ZipFile(io.BytesIO(data)) as original:
-            for name in ('LICENSE', 'plugin.json', 'dist/index.js', 'main.py',
-                         'py_modules/rclone_manager.py', 'py_modules/sync_target.py'):
-                self.assertEqual((folder/name).read_bytes(), original.read(plugin['folder']+'/'+name))
+            for item in original.infolist():
+                if item.is_dir():
+                    continue
+                name = item.filename.split('/', 1)[1]
+                if name == 'main.py':
+                    prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                              b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                    self.assertEqual((folder/name).read_bytes(), prefix+original.read(item))
+                elif name != 'py_modules/utils.py':
+                    self.assertEqual((folder/name).read_bytes(), original.read(item), name)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(__file__).resolve().parents[1]/'ui/framey_decky_ipc.py').read_bytes())
         contracts = subprocess.run([sys.executable, str(Path(__file__).parent/'game_sync_paths_contract.py'), str(folder)],
                                   capture_output=True, text=True, env=self.env, timeout=15)
         self.assertEqual(contracts.returncode, 0, contracts.stderr)

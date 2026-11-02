@@ -1,6 +1,66 @@
 """Private silent AlarMe lifecycle through published Decky's actual API1 RPC/events."""
 import asyncio
+import hashlib
+import os
+from pathlib import Path
+import socket
+import time
 from timer_lifecycle import Client
+from radiyo_private import descendants, identity
+
+
+def stop(backend, log, *, disconnect):
+    """Observe the loader's own cleanup; never signal its plugin children."""
+    children = descendants(backend.pid)
+    assert children
+    before = Path(log.name).read_text()
+    closed = []
+    if disconnect:
+        for path in Path('/tmp').glob('plugin_socket_*'):
+            assert path.is_socket() and path.stat().st_uid == os.getuid()
+            with socket.socket(socket.AF_UNIX) as peer:
+                peer.settimeout(.2)
+                peer.connect(str(path))
+                peer.shutdown(socket.SHUT_WR)
+            closed.append(str(path))
+        assert len(closed) == 1
+        time.sleep(.05)
+    began = time.monotonic()
+    backend.terminate()
+    backend.wait(timeout=8)
+    adopted = []
+    deadline = time.monotonic() + 2
+    while True:
+        for pid, old in children.items():
+            current = identity(pid)
+            if current and current['start'] == old['start']:
+                try:
+                    done, status = os.waitpid(pid, os.WNOHANG)
+                    if done:
+                        adopted.append(dict(pid=done, returncode=os.waitstatus_to_exitcode(status)))
+                except ChildProcessError:
+                    pass
+        remaining = {pid: current for pid, old in children.items()
+                     if (current := identity(pid)) and current['start'] == old['start']}
+        if not remaining or time.monotonic() >= deadline:
+            break
+        time.sleep(.01)
+    console = Path(log.name).read_text()[len(before):]
+    forced = console.count('still alive 5 seconds after stop request! Sending SIGKILL!')
+    errors = [marker for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+              'Task was destroyed but it is pending', 'Bad file descriptor') if marker in console]
+    elapsed = round(time.monotonic() - began, 3)
+    clean = (backend.returncode == 0 and elapsed < 5 and not remaining and not forced and not errors
+             and all(child['returncode'] == 0 for child in adopted)
+             and console.count('[main][INFO]: Shutdown finished.') == 1
+             and 'Plugin AlarMe (v1.6.3) has been stopped in ' in console
+             and 'AlarMe: Plugin unloaded' in console)
+    return dict(parentOnlySignal=True, loaderPid=backend.pid, returncode=backend.returncode,
+                elapsedSeconds=elapsed, descendantsBefore=children,
+                exactDescendantsRemaining=remaining, adoptedChildExits=adopted,
+                closedUnixPeers=closed, forcedPluginKills=forced, errors=errors,
+                console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+                cleanShutdownVerified=clean)
 
 
 async def initial(name, calls, transcript):
