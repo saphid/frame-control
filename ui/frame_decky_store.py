@@ -256,6 +256,11 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 100 and digest == 'b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4':
+        source = Path(__file__).with_name('framey_surround.py').read_text(encoding='utf-8')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
+                +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 14 and digest == '90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_PROTONDB_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -487,6 +492,30 @@ try:
             unpacked=stage/folder
             if not unpacked.is_dir(): raise RuntimeError('Missing plugin folder')
             compat_shims=[]
+            if (int(plugin_id)==100 and digest=='b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4'
+                    and folder=='decky-virtual-surround-sound'):
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if (manifest.get('name')!='Virtual Surround Sound' or manifest.get('flags')!=[]
+                        or manifest.get('api_version')!=1
+                        or hashlib.sha256(original).hexdigest()!='ed93c09f3aa2f37b917a0ed6539173096175fd277e69c47fc13127e22be35569'
+                        or hashlib.sha256((unpacked/'service.sh').read_bytes()).hexdigest()!='8709a0fa2106bce08d5fb9e9913ef3184850354098b5ce645dde411a14748cda'):
+                    raise RuntimeError('Virtual Surround Sound manifest or source differs from pinned archive')
+                for name,key in [('framey_surround','FRAMEY_SURROUND_SOURCE'),('framey_decky_ipc','FRAMEY_SURROUND_IPC_SOURCE')]:
+                    source=globals().get(key)
+                    if not isinstance(source,str) or not source:
+                        raise RuntimeError('Missing owned surround runtime helper')
+                    helper=unpacked/('py_modules/'+name+'.py')
+                    if helper.exists(): raise RuntimeError('Surround runtime helper collides with archive')
+                    helper.parent.mkdir(exist_ok=True)
+                    helper.write_text(source,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                suffix=(b'\nfrom framey_surround import install as _framey_install_surround\n'
+                        b'_framey_install_surround(globals())\ndel _framey_install_surround\n')
+                main.write_bytes(prefix+original+suffix)
+                compat_shims.append('surround-owned-runtime')
+                compat_shims.append('surround-ipc-eof')
             if (int(plugin_id)==14 and digest=='90a3453ac02709cad64096e7539fd8141fa56f99ae3441fc24a4990dc9684358'
                     and folder=='protondb-decky'):
                 main=unpacked/'main.py'

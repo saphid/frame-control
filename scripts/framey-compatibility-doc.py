@@ -40,6 +40,9 @@ def render(data):
         'python3 scripts/framey-audit-browser.py --cache /tmp/framey-archives',
         '```', '',
         'Open the browser audit URL in local Chromium, run `runAudit()` and inspect/download `results`. All backend/network actions remain denied.', '',
+        'A [Virtual Surround Sound follow-up](evidence/framey-surround-owned-runtime-2026-11-01.md) gives the exact managed 0.0.5 archive private HRIR copies and an owned PipeWire filter, replacing Deck-only paths, shared-file deletion and unowned systemd operations. '
+        'Published Decky 3.3.0 native AMD64 with private PipeWire/Pulse verifies real stream routing, 5.1/7.1 presets, settings persistence/restart and two clean parent-only stops while shared-file markers and an unrelated process survive. Existing copies need Update/reinstall; no older unmanaged service is stopped or migrated. '
+        'Physical sound, real user audio, ARM64, rendered official controls and Frame/worn/controller use remain unverified. The avatar proxy is still unavailable; compatibility stays partial.', '',
         'A [Game Sync selection follow-up](evidence/framey-game-sync-selection-2026-10-30.md) bounds the exact managed 1.0.4 read-only selection check to its configured root, including linked files and directories. '
         'Published Decky 3.3.0 x86_64 verifies private selection RPCs, outside-path and cycle refusals, and restart persistence. Existing copies need Update/reinstall. '
         'This does not sandbox rclone execution: its amd64 updater, default --copy-links arguments, cloud sync, process signals, revised ARM64 check, real Frame and worn/controller use remain unverified. Game Sync stays partial.', '',

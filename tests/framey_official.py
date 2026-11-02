@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 100, 'name': 'Virtual Surround Sound', 'version': '0.0.5', 'api_version': 1,
+     'folder': 'decky-virtual-surround-sound', 'sha256': 'b6c514d147cc46bad5331ca9da36628eb9c330976e13735687499a4a9f17f6d4'},
     {'id': 37, 'name': 'Discord Status', 'version': '1.5.0', 'api_version': 1,
      'folder': 'DiscordStatus', 'sha256': '00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45'},
     {'id': 38, 'name': 'Volume Mixer', 'version': '1.2.1-1', 'api_version': 'legacy', 'folder': 'VolumeMixer-decky', 'sha256': '11b259ad234d0e97cfef4e6a2af3f1edfb0908d5482765af56b86b0a4601c5f3'},

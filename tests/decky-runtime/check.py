@@ -367,6 +367,9 @@ def main():
                     env=env, stdout=log, stderr=log, start_new_session=True)
                 processes.append(player)
                 until_ready(lambda: Path('/tmp/mpris-state.json').is_file(), 'silent MPRIS player')
+            if case['probe'] == 'surround-private-audio':
+                import surround_private
+                surround_fixture = surround_private.start(env, log, processes, until_ready)
             backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log, start_new_session=True)
             processes.append(backend)
             discovered = until_ready(lambda: rpc('loader/get_plugins'), 'published Decky plugin discovery')
@@ -1728,6 +1731,11 @@ def main():
                 report['result'] = ('previous managed child IPC forced-kill reproduced; verified TLS retained'
                     if args.reproduce_radiyo_unload_regression else
                     'discovery, loopback HTTP fetch/redirect, self-signed HTTPS rejection, restart and two clean parent-only stops passed; external stations, trusted HTTPS, playback, Frame and VR unverified')
+            elif case['probe'] == 'surround-private-audio':
+                import surround_private
+                report['surroundAudio'] = surround_private.probe(backend, loader, env, log, processes,
+                    current, until_ready, surround_fixture, plugin)
+                report['result'] = 'private PipeWire/Pulse sinks, bundled presets, real stream routing, restart persistence and owned cleanup; physical audio, official UI and Frame unverified'
             elif case['probe'] == 'desktop-apps-private-entries':
                 import shlex
                 apps = current('get_apps')

@@ -109,6 +109,7 @@ def main():
               'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/radiyo_private.py',
               'tests/decky-runtime/screensaver_private.py', 'ui/framey_screensaver.py',
+              'tests/decky-runtime/surround_private.py', 'ui/framey_surround.py',
               'tests/decky-runtime/volume_mixer_private.py',
               'tests/decky-runtime/animation_private.py', 'ui/framey_animation_overrides.py',
               'tests/decky-runtime/Containerfile', 'tests/decky-runtime/cases.json',
