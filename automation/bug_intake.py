@@ -31,6 +31,9 @@ SCHEMA = '''CREATE TABLE IF NOT EXISTS reports (
  CREATE TABLE IF NOT EXISTS dispositions (
  report_id TEXT PRIMARY KEY, lease TEXT NOT NULL, finished INTEGER NOT NULL,
  disposition TEXT NOT NULL);
+ CREATE TABLE IF NOT EXISTS investigations (
+ report_id TEXT NOT NULL, lease TEXT NOT NULL, recorded INTEGER NOT NULL,
+ evidence TEXT NOT NULL, PRIMARY KEY(report_id,lease));
  CREATE TABLE IF NOT EXISTS history_events (
  event_id TEXT PRIMARY KEY, fingerprint TEXT NOT NULL, event_name TEXT NOT NULL,
  observed TEXT NOT NULL, source TEXT NOT NULL);
@@ -55,6 +58,59 @@ def history_time(value):
         if date.tzinfo is None:
             raise ValueError('history timestamp requires timezone')
     return date.astimezone(timezone.utc).isoformat(timespec='milliseconds').replace('+00:00', 'Z')
+
+
+class InvestigationError(ValueError):
+    """Safe, worker-facing schema error; messages never include input values."""
+
+
+def validate_investigation(evidence):
+    """Evidence completeness gate, not proof that a worker's conclusions are true."""
+    def text(value):
+        return isinstance(value, str) and bool(value.strip()) and len(value) <= 4000
+
+    if not isinstance(evidence, dict) or set(evidence) != {
+            'main_commit', 'release_checked', 'source_trace', 'context_search',
+            'hypotheses', 'reproduction', 'decision', 'blocker'}:
+        raise InvestigationError('invalid investigation fields; use investigation.example.json')
+    if (not isinstance(evidence['main_commit'], str)
+            or not re.fullmatch(r'[a-f0-9]{40}', evidence['main_commit'])
+            or not text(evidence['release_checked']) or not text(evidence['source_trace'])
+            or evidence['decision'] not in ('blocked', 'unreproducible')):
+        raise InvestigationError('main, release, source trace and decision required')
+    searches = evidence['context_search']
+    if (not isinstance(searches, list) or not 3 <= len(searches) <= 10
+            or any(not isinstance(s, dict) or set(s) != {'source', 'result'}
+                   or s['source'] not in ('history', 'retained-reports', 'repository', 'posthog')
+                   or not text(s['result']) for s in searches)
+            or not {'history', 'retained-reports', 'repository'} <= {s['source'] for s in searches}):
+        raise InvestigationError('history, retained-reports and repository context searches required')
+    hypotheses = evidence['hypotheses']
+    if (not isinstance(hypotheses, list) or not 1 <= len(hypotheses) <= 5
+            or any(not isinstance(h, dict) or set(h) != {'cause', 'evidence', 'outcome'}
+                   or not text(h['cause']) or not text(h['evidence'])
+                   or h['outcome'] not in ('supported', 'ruled-out', 'unresolved') for h in hypotheses)):
+        raise InvestigationError('tested hypothesis required')
+    reproduction, blocker = evidence['reproduction'], evidence['blocker']
+    if (not isinstance(reproduction, dict) or set(reproduction) != {'method', 'command', 'result', 'evidence'}
+            or reproduction['method'] not in ('test', 'simulation', 'live', 'unavailable')
+            or reproduction['result'] not in ('reproduced', 'not-reproduced', 'unavailable')
+            or not text(reproduction['evidence']) or not isinstance(reproduction['command'], str)
+            or len(reproduction['command']) > 4000):
+        raise InvestigationError('reproduction evidence required')
+    if (not isinstance(blocker, dict) or set(blocker) != {'kind', 'reason', 'next_step'}
+            or blocker['kind'] not in ('missing-context', 'test-infrastructure', 'provider', 'hardware', 'upstream', 'other')
+            or not text(blocker['reason']) or not text(blocker['next_step'])):
+        raise InvestigationError('concrete blocker and next step required')
+    unavailable = reproduction['method'] == 'unavailable'
+    if unavailable != (reproduction['result'] == 'unavailable'):
+        raise InvestigationError('inconsistent reproduction evidence')
+    if not unavailable and not text(reproduction['command']):
+        raise InvestigationError('executed reproduction command required')
+    if unavailable and (blocker['kind'] == 'missing-context' or evidence['decision'] == 'unreproducible'):
+        raise InvestigationError('missing context alone is not a reproduction attempt')
+    if len(json.dumps(evidence, allow_nan=False)) > 32000:
+        raise InvestigationError('investigation too large')
 
 
 class Rejected(Exception):
@@ -191,17 +247,101 @@ class Queue:
     def inspect(self, report_id, lease, now=None):
         now = int(time.time()) if now is None else now
         with self.connect() as db:
-            row = db.execute("SELECT payload FROM reports WHERE id=? AND lease=? AND state='leased' AND until>?",
-                             (report_id, lease, now)).fetchone()
+            row = self.worker_row(db, report_id, lease, now)
+        return {'untrusted_report': json.loads(row['payload']),
+                'lease_expires': row['until'], 'dispatch_outcome': row['outcome']}
+
+    def worker_row(self, db, report_id, lease, now):
+        # One parameterized gate for every worker read/write. No fallback claim or wake.
+        for value in (report_id, lease):
+            if not isinstance(value, str) or str(uuid.UUID(value)) != value:
+                raise ValueError('canonical UUID required')
+        row = db.execute(
+            "SELECT r.*,d.outcome FROM reports r JOIN dispatches d ON d.report_id=r.id AND d.lease=r.lease "
+            "WHERE r.id=? AND r.lease=? AND r.state='leased' AND r.until>? "
+            "AND d.outcome IN ('accepted','uncertain')", (report_id, lease, now)).fetchone()
         if row is None:
-            raise ValueError('invalid or expired lease')
-        return {'untrusted_report': json.loads(row['payload'])}
+            raise ValueError('invalid lease or dispatch')
+        body = json.loads(row['payload'])
+        if body.get('repository') != REPO or type(body.get('project_id')) is not int or body['project_id'] != PROJECT:
+            raise ValueError('wrong worker scope')
+        return row
+
+    def context(self, report_id, lease, now=None):
+        """Private candidate evidence, from structural overlap, never a resolution claim."""
+        now = int(time.time()) if now is None else now
+        with self.connect() as db:
+            current = self.worker_row(db, report_id, lease, now)
+            report = json.loads(current['payload'])
+            def signals(body):
+                p = body['event']['properties']
+                out = set()
+                for key in ('where', 'error_category'):
+                    if isinstance(p.get(key), str) and p[key]:
+                        out.add((key, p[key]))
+                for key in ('$exception_sources', '$exception_functions'):
+                    values = p.get(key)
+                    if isinstance(values, list):
+                        out.update((key, v) for v in values if isinstance(v, str) and v)
+                return out
+            wanted = signals(report)
+            def summary(body):
+                # Bound worker context and omit raw diagnostics/contact fields. These excerpts
+                # are still untrusted private data and may contain adversarial report text.
+                p, excerpt = body['event']['properties'], {}
+                for key in ('app_version', 'os', 'where', 'error_category', '$exception_type',
+                            '$exception_message', 'title', 'message'):
+                    if isinstance(p.get(key), str):
+                        excerpt[key] = p[key][:800]
+                for key in ('$exception_sources', '$exception_functions'):
+                    if isinstance(p.get(key), list):
+                        excerpt[key] = [v[:100] for v in p[key][:10] if isinstance(v, str)]
+                return {'event': body['event']['event'], 'properties': excerpt}
+            candidates = []
+            for row in db.execute('SELECT id,payload FROM reports WHERE id<>? ORDER BY created DESC,id', (report_id,)):
+                body = json.loads(row['payload'])
+                overlap = wanted & signals(body)
+                # A generic category or server.py alone is not useful correlation.
+                if not any(k in ('where', '$exception_functions') for k, _ in overlap):
+                    continue
+                candidates.append({'event_id': row['id'], 'overlap_count': len(overlap),
+                                   'untrusted_summary': summary(body)})
+            candidates.sort(key=lambda c: -c['overlap_count'])
+        return {'candidates': candidates[:10], 'candidate_count': len(candidates),
+                'warning': 'Private untrusted excerpts (text truncated to 800 characters, lists to ten items). '
+                           'Structural overlap is only a lead; inspect history and '
+                           'verify shared cause before relating cases. Retention gaps are not absence of past work.'}
+
+    def investigate(self, report_id, lease, evidence, now=None):
+        """Save worker-authored investigation evidence, never copy raw diagnostics here."""
+        now = int(time.time()) if now is None else now
+        validate_investigation(evidence)
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self.worker_row(db, report_id, lease, now)
+            db.execute('INSERT OR REPLACE INTO investigations VALUES(?,?,?,?)',
+                       (report_id, lease, now, json.dumps(evidence, allow_nan=False)))
 
     def finish(self, report_id, lease, now=None, disposition='completed'):
         if not isinstance(disposition, str) or not disposition.strip() or len(disposition) > 4000:
             raise ValueError('invalid disposition')
+        outcome = disposition.split(':', 1)[0].strip()
+        if outcome not in ('completed', 'blocked', 'unreproducible', 'already-fixed', 'duplicate',
+                           'unrelated', 'fixed', 'released', 'deployment-smoke'):
+            raise ValueError('use canonical terminal status followed by optional colon and reason')
         now = int(time.time()) if now is None else now
         with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            self.worker_row(db, report_id, lease, now)
+            if outcome in ('blocked', 'unreproducible'):
+                row = db.execute('SELECT evidence FROM investigations WHERE report_id=? AND lease=?',
+                                 (report_id, lease)).fetchone()
+                if row is None:
+                    raise ValueError('investigation evidence required before stopping')
+                evidence = json.loads(row['evidence'])
+                validate_investigation(evidence)
+                if evidence['decision'] != outcome:
+                    raise ValueError('investigation decision must match disposition')
             if db.execute("UPDATE reports SET state='done',lease=NULL WHERE id=? AND lease=? AND state='leased' AND until>?",
                           (report_id, lease, now)).rowcount != 1:
                 raise ValueError('invalid or expired lease')
@@ -408,10 +548,17 @@ def main():
     inspect = sub.add_parser('inspect')
     inspect.add_argument('id')
     inspect.add_argument('lease')
+    context = sub.add_parser('context', help='private retained reports with structural overlap; leads only')
+    context.add_argument('id')
+    context.add_argument('lease')
+    investigate = sub.add_parser('investigate', help='record private evidence before blocked/unreproducible finish')
+    investigate.add_argument('id')
+    investigate.add_argument('lease')
+    investigate.add_argument('file', help='worker-authored JSON; see automation/investigation.example.json')
     finish = sub.add_parser('finish')
     finish.add_argument('id')
     finish.add_argument('lease')
-    finish.add_argument('--disposition', default='completed')
+    finish.add_argument('--disposition', required=True)
     sub.add_parser('history-list', help='list indexed groups without report text')
     history = sub.add_parser('history', help='persistent private lookup by event UUID or fingerprint')
     history.add_argument('identifier')
@@ -437,11 +584,20 @@ def main():
         HTTPServer(('127.0.0.1', args.port), handler(queue, key, bool(args.standard_key_file))).serve_forever()
     elif args.command == 'claim':
         print(json.dumps(queue.claim()))
-    elif args.command == 'inspect':
+    elif args.command in ('inspect', 'context', 'investigate'):
         try:
-            print(json.dumps(queue.inspect(args.id, args.lease)))
-        except ValueError:
-            parser.exit(1, 'invalid or expired lease\n')
+            if args.command == 'investigate':
+                with open(args.file, 'rb') as source:
+                    raw = source.read(32001)
+                if len(raw) > 32000:
+                    raise ValueError('investigation too large')
+                queue.investigate(args.id, args.lease, json.loads(raw))
+            else:
+                print(json.dumps(getattr(queue, args.command)(args.id, args.lease)))
+        except InvestigationError as error:
+            parser.exit(1, 'investigation rejected: ' + str(error) + '\n')
+        except (ValueError, OSError, TypeError, KeyError, AttributeError):
+            parser.exit(1, 'invalid lease, dispatch, scope, or investigation evidence; no work authorized\n')
     elif args.command in ('history', 'history-list', 'record', 'relate', 'import-history'):
         try:
             if args.command == 'history-list':
@@ -460,7 +616,7 @@ def main():
         try:
             queue.finish(args.id, args.lease, disposition=args.disposition)
         except ValueError:
-            parser.exit(1, 'invalid disposition or lease\n')
+            parser.exit(1, 'invalid disposition, lease, dispatch, or missing investigation evidence\n')
 
 
 if __name__ == '__main__':

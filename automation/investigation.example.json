@@ -1,0 +1,25 @@
+{
+  "main_commit": "0000000000000000000000000000000000000000",
+  "release_checked": "Replace with remotely verified release/tag and applicability",
+  "source_trace": "Describe the versioned caller, request construction, failure boundary and cleanup. No raw diagnostics.",
+  "context_search": [
+    {"source": "history", "result": "Describe all activities and related cases checked."},
+    {"source": "retained-reports", "result": "Describe context command leads checked, or retention gaps."},
+    {"source": "repository", "result": "Describe current main, related PRs and release evidence checked."}
+  ],
+  "hypotheses": [
+    {"cause": "Specific falsifiable cause", "evidence": "Actual observation supporting or ruling out the cause", "outcome": "unresolved"}
+  ],
+  "reproduction": {
+    "method": "simulation",
+    "command": "Replace with the command actually executed",
+    "result": "not-reproduced",
+    "evidence": "Actual result; distinguish exercising an error branch from establishing the original cause."
+  },
+  "decision": "blocked",
+  "blocker": {
+    "kind": "missing-context",
+    "reason": "Specify what remains unknowable after the investigation and why it changes the fix.",
+    "next_step": "Smallest specific evidence or environment change needed to proceed."
+  }
+}
