@@ -150,13 +150,28 @@ class ServerRepair(unittest.TestCase):
         dropped = subprocess.CompletedProcess([], 1, "", "client_loop: send disconnect: Connection reset\n")
         copied = subprocess.CompletedProcess([], 0, "ok", "")
         link = mock.Mock(gen=7)
-        with mock.patch.object(frame_host, "run_ssh", side_effect=[dropped, copied]), \
+        address = ["HostName=old"]
+        # Reconnecting picked a new address for the same headset: the retry must use it.
+        with mock.patch.object(frame_host, "run_ssh", side_effect=[dropped, copied]) as run, \
                 mock.patch.object(self.server, "LINK", link), \
-                mock.patch.object(self.server, "ensure_master") as ensure:
-            result = self.server._run_retryable_ssh(["scp"])
+                mock.patch.object(self.server, "ensure_master",
+                                  side_effect=lambda: address.__setitem__(0, "HostName=new")) as ensure:
+            result = self.server._run_retryable_ssh(lambda: ["scp", address[0]])
         self.assertIs(result, copied)
         link.lost.assert_called_once_with(dropped.stderr, 7)
         ensure.assert_called_once()
+        self.assertEqual([c.args[0] for c in run.call_args_list], [["scp", "HostName=old"], ["scp", "HostName=new"]])
+
+    def test_safe_retry_never_goes_to_another_headset(self):
+        dropped = subprocess.CompletedProcess([], 1, "", "client_loop: send disconnect: Connection reset\n")
+        with mock.patch.object(frame_host, "run_ssh", return_value=dropped) as run, \
+                mock.patch.object(self.server, "LINK", mock.Mock(gen=7)), \
+                mock.patch.object(self.server, "FRAME", "frame-a"), \
+                mock.patch.object(self.server, "ensure_master",
+                                  side_effect=lambda: setattr(self.server, "FRAME", "frame-b")):
+            result = self.server._run_retryable_ssh(lambda: ["scp", self.server.FRAME])
+        self.assertIs(result, dropped)
+        run.assert_called_once()
 
     def test_ordinary_ssh_does_not_retry_pending_socket_failure(self):
         pending = subprocess.CompletedProcess([], 255, "", "close - IO is still pending on closed socket. "
