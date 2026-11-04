@@ -137,6 +137,46 @@ class ServerRepair(unittest.TestCase):
                 mock.patch.object(self.server, "LINK", None):
             self.assertEqual(self.server.ssh("true"), "ok")
 
+    def test_safe_ssh_retries_one_pending_socket_failure(self):
+        pending = "close - IO is still pending on closed socket. read:1, write:0, io:000001\n"
+        results = [subprocess.CompletedProcess([], 255, "", pending),
+                   subprocess.CompletedProcess([], 0, "ok", "")]
+        with mock.patch.object(frame_host, "run_ssh", side_effect=results) as run, \
+                mock.patch.object(self.server, "LINK", None):
+            self.assertEqual(self.server.ssh("true", retry=True), "ok")
+        self.assertEqual(run.call_count, 2)
+
+    def test_safe_retry_reconnects_the_selected_route(self):
+        dropped = subprocess.CompletedProcess([], 1, "", "client_loop: send disconnect: Connection reset\n")
+        copied = subprocess.CompletedProcess([], 0, "ok", "")
+        link = mock.Mock(gen=7)
+        with mock.patch.object(frame_host, "run_ssh", side_effect=[dropped, copied]), \
+                mock.patch.object(self.server, "LINK", link), \
+                mock.patch.object(self.server, "ensure_master") as ensure:
+            result = self.server._run_retryable_ssh(["scp"])
+        self.assertIs(result, copied)
+        link.lost.assert_called_once_with(dropped.stderr, 7)
+        ensure.assert_called_once()
+
+    def test_ordinary_ssh_does_not_retry_pending_socket_failure(self):
+        pending = subprocess.CompletedProcess([], 255, "", "close - IO is still pending on closed socket. "
+                                                               "read:1, write:0, io:000001\n")
+        with mock.patch.object(frame_host, "run_ssh", return_value=pending) as run, \
+                mock.patch.object(self.server, "LINK", None), \
+                self.assertRaises(self.server.Failure) as caught:
+            self.server.ssh("may-change-state")
+        run.assert_called_once()
+        body, status = self.server.error_body(str(caught.exception))
+        self.assertEqual(status, 503)
+        self.assertEqual(body["error"], "The connection to the Frame dropped. Try again.")
+
+    def test_only_panel_listing_uses_the_safe_retry(self):
+        with mock.patch.object(self.server, "ssh", return_value='{"panels": []}') as ssh:
+            self.assertEqual(self.server.panels_action({}), {"panels": []})
+            self.assertTrue(ssh.call_args.kwargs["retry"])
+            self.server.panels_action({"action": "focus", "key": "panel"})
+            self.assertFalse(ssh.call_args.kwargs["retry"])
+
 
 class LinkLocalZone(unittest.TestCase):
     """A .local name answering on fe80::: Windows' ssh needs fe80::1%12, not %wireless_32768."""
