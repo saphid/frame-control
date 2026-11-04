@@ -66,7 +66,10 @@ REPEAT_WINDOW = 600  # the same diagnostic error is sent at most once in this ma
 # peer", or a file name with ssh's words in it, keeps the usual window.
 EXPECTED_CATEGORIES = ('frame_unreachable', 'frame_not_set_up', 'frame_auth')
 # Expected outcomes still belong in fixed-category usage analytics, but not in error tracking.
-NON_EXCEPTION_CATEGORIES = frozenset(('apk_needs_newer_android', 'cancelled', 'desktop_closed', 'tool_missing'))
+NON_EXCEPTION_CATEGORIES = frozenset(('apk_needs_newer_android', 'cancelled', 'desktop_closed', 'rdp_client_missing'))
+# tool_missing is one of them only when the error names the local tool: a bare "[WinError 2]"
+# can just as well be a file missing from Frame Control itself, which is a bug worth seeing.
+NAMED_TOOL_MISSING = re.compile(r"No such file or directory: '(?:ssh|scp|rsync|adb)(?:\.exe)?'")
 DEFAULT_HOST = 'https://us.i.posthog.com'
 
 LEVELS = ('usage', 'compat', 'diagnostics')
@@ -280,8 +283,8 @@ CATEGORIES = [
     ('apk_wrong_abi', re.compile(r'no arm64-v8a build')),
     ('layer_missing', re.compile(r'OpenXR compatibility layer')),
     ('apk_repack_failed', re.compile(r'could not prepare the APK for the Frame')),
-    ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)|"
-                                r'No RDP client found: install Remmina or FreeRDP')),
+    ('rdp_client_missing', re.compile(r'No RDP client found: install Remmina or FreeRDP')),
+    ('tool_missing', re.compile(r"\[WinError 2\]|No such file or directory: '(?:ssh|scp|rsync|adb)")),
     ('desktop_closed', re.compile(r'plasmashell is not running')),
     ('apk_unreadable', re.compile(r'(?i)not a zip|bad apk|AndroidManifest|ApkError|unexpected package name|'
                                   r'not a readable APK|not an APK|APK manifest|in the APK (?:uses a compression|is )')),
@@ -482,7 +485,8 @@ def diagnostic(where, error, tb=None):
     if not enabled('diagnostics'):
         return
     category = categorize(error)[0]
-    if category in NON_EXCEPTION_CATEGORIES:
+    if category in NON_EXCEPTION_CATEGORIES or (category == 'tool_missing'
+                                                 and NAMED_TOOL_MISSING.search(str(error or ''))):
         return
     message = scrub(error)
     now = time.time()

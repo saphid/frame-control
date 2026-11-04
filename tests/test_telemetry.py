@@ -145,13 +145,19 @@ class Gates(Base):
         cases = {
             "apk_needs_newer_android": "Punch Fit needs Android API 32; Lepton is Android 11 (API 30)",
             "desktop_closed": "plasmashell is not running: open the desktop in the headset first.",
-            "tool_missing": "No RDP client found: install Remmina or FreeRDP",
+            "rdp_client_missing": "No RDP client found: install Remmina or FreeRDP",
             "cancelled": "ssh exited 3221225773",
         }
         for category, message in cases.items():
             self.assertEqual(tm.categorize(message)[0], category, message)
             tm.diagnostic("expected", RuntimeError(message))
         self.assertEqual(self.queued(), [])
+
+    def test_a_file_missing_from_frame_control_is_still_reported(self):
+        # "[WinError 2]" is also what a packaged build missing one of its own files raises.
+        tm.update_settings({"diagnostics": True})
+        tm.diagnostic("POST /api/panels list", FileNotFoundError("[WinError 2] The system cannot find the file specified"))
+        self.assertEqual([e["properties"]["error_category"] for e in self.queued()], ["tool_missing"])
 
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
