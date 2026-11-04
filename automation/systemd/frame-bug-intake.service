@@ -1,0 +1,22 @@
+[Unit]
+Description=Authenticated PostHog intake for Frame Control only
+After=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Services/frame-control-intake
+ExecStart=/usr/bin/python3 %h/Services/frame-control-intake/automation/bug_intake.py --db %h/.local/state/frame-control-intake/intake.sqlite serve --standard-key-file %h/.config/frame-control-intake/posthog.key
+Restart=on-failure
+RestartSec=5
+UMask=0077
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+ReadWritePaths=%h/.local/state/frame-control-intake
+RestrictAddressFamilies=AF_UNIX AF_INET AF_INET6
+MemoryMax=128M
+TasksMax=16
+
+[Install]
+WantedBy=default.target
