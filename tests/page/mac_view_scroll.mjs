@@ -11,6 +11,8 @@ assert.ok(match, 'wholeWheel is present in the viewer');
 assert.match(page, /const delta = wholeWheel\(wheelCarry, e\.deltaX \* unit, e\.deltaY \* unit\)/);
 assert.match(page, /if \(delta\.dx \|\| delta\.dy\)\s+send\(stamp\(\{ t: "wheel", \.\.\.delta,/,
   'only a non-zero accumulated delta is sent to the Mac');
+assert.match(page, /ws\.onclose = \(\) => \{\s+dropWheelCarry\(\);/, 'a dropped connection forgets the leftover fraction');
+assert.match(page, /addEventListener\("blur", \(\) => \{ dropWheelCarry\(\);/, 'losing focus forgets the leftover fraction');
 const context = vm.createContext({ Math });
 vm.runInContext(`${match[0]}\nglobalThis.wholeWheel = wholeWheel;`, context);
 const wholeWheel = context.wholeWheel;

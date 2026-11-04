@@ -270,6 +270,7 @@ async function connect() {
     if (codec === "h264") onH264(isKey, seq, payload); else onJPEG(seq, payload);
   };
   ws.onclose = () => {
+    dropWheelCarry();
     ws = null;
     clearInterval(pingTimer);
     if (closing) return;
@@ -390,6 +391,8 @@ function wholeWheel(carry, dx, dy) {
   return whole;
 }
 const wheelCarry = { x: 0, y: 0 };
+// A leftover fraction belongs to the gesture in progress, not the next one.
+function dropWheelCarry() { wheelCarry.x = wheelCarry.y = 0; }
 addEventListener("wheel", e => {
   if (e.target === switchButton) return;
   const p = toPicture(e), unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
@@ -440,7 +443,7 @@ function bench(m) {
 }
 addEventListener("keydown", e => onKey(e, true));
 addEventListener("keyup", e => onKey(e, false));
-addEventListener("blur", () => send({ t: "release" }));
+addEventListener("blur", () => { dropWheelCarry(); send({ t: "release" }); });
 
 show("Connecting to your computer…");
 connect();
