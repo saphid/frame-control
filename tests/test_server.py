@@ -679,6 +679,8 @@ class UnreachableMessages(unittest.TestCase):
             "No ED25519 host key is known for frame-control-f7b4e9ac and you have requested strict checking.\n"
             "Host key verification failed.": "isn't saved yet",
             "kex_exchange_identification: read: Connection reset by peer": "dropped",
+            "Connection to <ip> closed by remote host.": "dropped",
+            "close - IO is still pending on closed socket. read:1, write:0, io:0000": "dropped",
             "Timed out talking to frame": "too long",
         }
         for raw, words in cases.items():

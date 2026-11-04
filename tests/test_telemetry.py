@@ -140,6 +140,19 @@ class Gates(Base):
         self.assertEqual([e["properties"]["error_category"] for e in self.queued()],
                          ["frame_unreachable", "internal_error", "other", "other"])
 
+    def test_expected_outcomes_are_not_exceptions(self):
+        tm.update_settings({"diagnostics": True})
+        cases = {
+            "apk_needs_newer_android": "Punch Fit needs Android API 32; Lepton is Android 11 (API 30)",
+            "desktop_closed": "plasmashell is not running: open the desktop in the headset first.",
+            "tool_missing": "No RDP client found: install Remmina or FreeRDP",
+            "cancelled": "ssh exited 3221225773",
+        }
+        for category, message in cases.items():
+            self.assertEqual(tm.categorize(message)[0], category, message)
+            tm.diagnostic("expected", RuntimeError(message))
+        self.assertEqual(self.queued(), [])
+
     def test_page_events_are_checked(self):
         self.assertTrue(tm.page_event({"event": "tab_viewed", "properties": {"tab": "android", "extra": "x"}})["queued"])
         self.assertEqual(self.queued()[0]["properties"].get("extra"), None)
@@ -341,6 +354,9 @@ class Scrub(unittest.TestCase):
             "ssh: connect to host 192.168.1.20 port 22: Host is down",
             "client_loop: send disconnect: Connection reset",
             "banner exchange: Connection to UNKNOWN port -1: Connection refused",
+            "Connection to <ip> closed by remote host.",
+            "close - IO is still pending on closed socket. read:1, write:0, io:0000\n"
+            "close - IO is still pending on closed socket. read:1, write:0, io:0001",
             "Timed out talking to frame",
         ]
         for message in unreachable:
@@ -350,6 +366,8 @@ class Scrub(unittest.TestCase):
             self.assertEqual(tm.categorize(message)[0], "frame_not_set_up", message)
         self.assertEqual(tm.categorize("ssh exited 1")[0], "other")
         self.assertEqual(tm.categorize("ssh exited 255")[0], "other")  # may be the command's own exit code
+        self.assertEqual(tm.categorize("ssh exited 3221226091")[0], "ssh_crashed")
+        self.assertEqual(tm.categorize("ssh exited 3221225773")[0], "cancelled")
         self.assertEqual(tm.categorize("download failed: [Errno 54] Connection reset by peer")[0], "download_failed")
         self.assertEqual(tm.categorize("frame@10.0.0.2: Permission denied (publickey).")[0], "frame_auth")
 
@@ -492,8 +510,15 @@ class LinkFailureProvenance(Base):
         for stderr in ("Warning: Permanently added '10.0.0.5' (ED25519) to the list of known hosts.\r\n"
                        "kex_exchange_identification: read: Connection reset by peer\r\n",
                        "banner exchange: Connection to UNKNOWN port -1: Connection refused\r\n",
+                       "Connection to <ip> closed by remote host.\r\n",
+                       "close - IO is still pending on closed socket. read:1, write:0, io:0000\r\n"
+                       "close - IO is still pending on closed socket. read:1, write:0, io:0001\r\n",
                        "\x1b[0mssh: connect to host 10.0.0.5 port 22: Unknown error\n"):
             tm.diagnostic("POST /api/comfort status", self.ssh_fails(self.server, 255, stderr))
+        silent = self.ssh_fails(self.server, 255, "")
+        self.assertTrue(getattr(silent, "frame_link_failed", False))
+        self.assertEqual(tm.categorize(silent)[0], "frame_unreachable")
+        tm.diagnostic("POST /api/comfort status", silent)
         with mock.patch.object(frame_host, "run_ssh", side_effect=subprocess.TimeoutExpired("ssh", 30)):
             with self.assertRaises(self.server.Failure) as caught:
                 self.server.ssh("true")
@@ -525,13 +550,40 @@ class LinkFailureProvenance(Base):
     def test_a_command_that_fails_on_the_frame_is_not_marked(self):
         self.poll_fails()
         for module in (self.server, self.android):
-            for code, stderr in ((255, ""), (255, "x: ssh: connect to host frame port 22: Connection timed out\n"),
+            for code, stderr in ((255, "remote command exited 255\n"),
+                                 (255, "x: ssh: connect to host frame port 22: Connection timed out\n"),
                                  (1, "ssh: connect to host 10.0.0.5 port 22: Connection timed out\n")):
                 e = self.ssh_fails(module, code, stderr)
                 self.assertFalse(getattr(e, "frame_link_failed", False), (module.__name__, code, stderr))
             # Review round 4: the command's own output (stdout) isn't ssh speaking.
             e = self.ssh_fails(module, 255, "", stdout="ssh: connect to host frame port 22: Connection timed out\n")
             self.assertFalse(getattr(e, "frame_link_failed", False), module.__name__)
+
+    def test_silent_255_tells_the_connector_the_link_was_lost(self):
+        link = mock.Mock(gen=7)
+        done = subprocess.CompletedProcess(["ssh"], 255, "", "")
+        with mock.patch.object(self.server, "LINK", link), \
+                mock.patch.object(frame_host, "run_ssh", return_value=done), self.assertRaises(self.server.Failure):
+            self.server.ssh("true")
+        link.lost.assert_called_once_with("", 7)
+
+    def test_scp_connection_output_is_marked_as_a_link_failure(self):
+        message = ("close - IO is still pending on closed socket. read:1, write:0, io:0000\n"
+                   "close - IO is still pending on closed socket. read:1, write:0, io:0001\n")
+        result = subprocess.CompletedProcess(["scp"], 255, "", message)
+        error = self.server.openssh_failure("scp", result)
+        self.assertTrue(getattr(error, "frame_link_failed", False))
+        self.assertEqual(tm.categorize(error)[0], "frame_unreachable")
+
+    def test_windows_ssh_statuses_are_readable_and_categorized(self):
+        crashed = self.ssh_fails(self.server, 3221226091, "")
+        cancelled = self.ssh_fails(self.server, 3221225773, "")
+        self.assertEqual(str(crashed), "ssh crashed on this computer")
+        self.assertEqual(tm.categorize(crashed)[0], "ssh_crashed")
+        self.assertEqual(str(cancelled), "ssh was cancelled on this computer")
+        self.assertEqual(tm.categorize(cancelled)[0], "cancelled")
+        self.assertFalse(getattr(crashed, "frame_link_failed", False))
+        self.assertFalse(getattr(cancelled, "frame_link_failed", False))
 
     def request(self, path, body):
         """POST to the real server, as the page does."""
@@ -620,6 +672,15 @@ class LinkFailureProvenance(Base):
 
 
 class InstallFinished(unittest.TestCase):
+    def test_expected_incompatibility_keeps_usage_category_without_exception(self):
+        sent = []
+        with mock.patch.object(tm, "enabled", return_value=True), \
+                mock.patch.object(tm, "capture", side_effect=lambda e, p=None, level="usage": sent.append((e, p))):
+            tm.install_finished("apk", False, error=RuntimeError(
+                "Punch Fit needs Android API 32; Lepton is Android 11 (API 30)"))
+        self.assertEqual([event for event, _ in sent], ["install_finished"])
+        self.assertEqual(sent[0][1]["error_category"], "apk_needs_newer_android")
+
     def test_failure_category_only_no_text(self):
         """install_finished carries a fixed category for a failure, never the message or a file name."""
         import frame_android
@@ -674,7 +735,7 @@ class ApkInstallJobs(unittest.TestCase):
             state = self.run_job({"action": "install", "package": "org.test.vr"})
         self.assertNotIn("OpenXR", state["message"])
 
-    def test_unexpected_failure_is_one_event_and_one_diagnostic(self):
+    def test_missing_copy_tool_is_usage_failure_without_diagnostic(self):
         info = {"package": "org.test.flat", "label": "Flat", "abis": [], "min_sdk": None, "vr": False,
                 "vr_activity": False, "launchable": True, "repairable": False}
         sent = []
@@ -690,10 +751,10 @@ class ApkInstallJobs(unittest.TestCase):
         self.assertIn("FileNotFoundError", state["error"])
         events = [e for e, _ in sent]
         self.assertEqual(events.count("install_finished"), 1)
-        self.assertEqual(events.count("$exception"), 1, events)
+        self.assertEqual(events.count("$exception"), 0, events)
         finished = next(p for e, p in sent if e == "install_finished")
         self.assertEqual((finished["ok"], finished["error_category"]), (False, "tool_missing"))
-        # The same failure through a web link: one event and one diagnostic there too.
+        # The same failure through a web link keeps the usage event and no exception.
         sent.clear()
         tm._seen_errors.clear()
         job = {"phase": "download", "done": 0, "total": None, "detail": "", "message": None, "error": None,
@@ -711,7 +772,7 @@ class ApkInstallJobs(unittest.TestCase):
         self.assertIn("FileNotFoundError", job["error"])
         events = [e for e, _ in sent]
         self.assertEqual(events.count("install_finished"), 1, events)
-        self.assertEqual(events.count("$exception"), 1, events)
+        self.assertEqual(events.count("$exception"), 0, events)
         finished = next(p for e, p in sent if e == "install_finished")
         self.assertEqual((finished["kind"], finished["error_category"]), ("apk", "tool_missing"))
         # A FrameError still gets its install diagnostic (the job reports it as well, as before).
