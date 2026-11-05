@@ -69,6 +69,36 @@ The build packs the Frame bundle from the checkout, so the phone always runs
 the page and server from the same commit. Running on a phone needs your own
 signing team in Xcode (Signing & Capabilities).
 
+## TestFlight beta
+
+The repository does not contain Apple signing credentials or an App Store
+Connect app record. The bundle ID is `com.saphid.framecontrol`. Once that ID
+belongs to the target Apple team and the app exists in App Store Connect, use
+`ios/scripts/testflight.sh` on a Mac with Xcode, an Apple Distribution signing
+identity, and an App Store Connect API key with upload access. Keep the `.p8`
+key outside the checkout. The script uses the key only to ask Xcode for
+provisioning and to export or upload the archive.
+Select an Xcode installation with the iOS device SDK before running it; on a
+Mac with multiple Xcode versions, set `DEVELOPER_DIR` to the intended
+`Xcode.app/Contents/Developer` directory.
+
+Set `FRAME_IOS_TEAM_ID`, `FRAME_ASC_KEY_ID`, `FRAME_ASC_ISSUER_ID`, and the
+absolute `FRAME_ASC_KEY_PATH` to that account's values. Set
+`FRAME_IOS_OUTPUT` to an absolute build directory. Set `FRAME_IOS_VERSION`
+to the intended app version and `FRAME_IOS_BUILD` to a new, unused integer
+build number. Then run, in order:
+
+```sh
+ios/scripts/testflight.sh archive
+ios/scripts/testflight.sh export  # inspect the signed IPA before upload
+ios/scripts/testflight.sh upload
+```
+
+`archive` verifies the bundle ID, version, build number, and code signature.
+`upload` submits the archive to App Store Connect; TestFlight processing and
+tester access must then be confirmed there. The simulator CI job checks a
+separate, unsigned build and does not upload a beta.
+
 ## Verified
 
 <img src="img/iphone-tabs.jpg" alt="The four tabs in the iPhone app, connected to a Frame" width="900">
