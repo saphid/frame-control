@@ -247,11 +247,11 @@ class StoreSearch(unittest.TestCase):
 
     def test_tag_allowlists_match_ui_and_live_steam_evidence(self):
         import re
-        html = (ROOT / "ui/index.html").read_text()
+        html = (ROOT / "ui/index.html").read_text(encoding="utf-8")
         ui_tags = json.loads(re.search(r"const STEAM_TAGS = (.*?);", html)[1])
         self.assertEqual(ui_tags, frame_store.SEARCH_TAGS)
         self.assertEqual(len(ui_tags), 40)
-        evidence = json.loads((ROOT / "docs/evidence/steam-hill-climb/live-endpoints-pass4.json").read_text())
+        evidence = json.loads((ROOT / "docs/evidence/steam-hill-climb/live-endpoints-pass4.json").read_text(encoding="utf-8"))
         self.assertEqual({key: evidence["live_tags"][key] for key in ui_tags}, ui_tags)
         self.assertEqual(int(re.search(r"const STEAM_TAG_LIMIT = (\d+);", html)[1]), frame_store.SEARCH_TAG_LIMIT)
 
