@@ -91,7 +91,7 @@ final class SshFrame implements AutoCloseable {
             check("mkdir -p .cache/frame-control", 10000);
             ChannelSftp sftp = (ChannelSftp) session.openChannel("sftp");
             sftp.connect(10000);
-            try (InputStream in = context.getAssets().open("frame-bundle.tar.gz")) {
+            try (InputStream in = context.getAssets().open("frame-bundle.bin")) {
                 sftp.put(in, dir + ".tar.gz");
             } finally { sftp.disconnect(); }
             check("rm -rf " + dir + ".tmp && mkdir " + dir + ".tmp && tar xzf " + dir

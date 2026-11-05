@@ -29,6 +29,16 @@ jobs:
           "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build shared-page Android app
         run: android/gradlew -p android --no-daemon assembleDebug testDebugUnitTest
+      - name: Check the APK contains the compressed Frame bundle
+        run: |
+          python3 - <<'PY'
+          import zipfile
+          from pathlib import Path
+          apk = next(Path('android/app/build/outputs/apk/debug').glob('*.apk'))
+          with zipfile.ZipFile(apk) as archive:
+              assert archive.read('assets/frame-bundle.bin')[:2] == b'\x1f\x8b'
+              assert len(archive.read('assets/frame-bundle.version').strip()) == 16
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: frame-control-android-debug

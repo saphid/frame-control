@@ -45,7 +45,7 @@ tasks.register('packFrameBundle') {
         out.mkdirs()
         def version = new ByteArrayOutputStream()
         project.exec {
-            commandLine 'python3', '../ios/scripts/make_frame_bundle.py', new File(out, 'frame-bundle.tar.gz')
+            commandLine 'python3', '../ios/scripts/make_frame_bundle.py', new File(out, 'frame-bundle.bin')
             workingDir rootProject.projectDir
             standardOutput = version
         }

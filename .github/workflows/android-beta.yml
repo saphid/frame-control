@@ -58,6 +58,12 @@ jobs:
           [[ "$VERSION_CODE" =~ ^[1-9][0-9]*$ ]]
           android/gradlew -p android --no-daemon bundleRelease \
             -PframeApplicationId="$PACKAGE_NAME" -PframeVersionCode="$VERSION_CODE" -PframeVersionName="$VERSION_NAME"
+          python3 - <<'PY'
+          import zipfile
+          with zipfile.ZipFile('android/app/build/outputs/bundle/release/app-release.aab') as bundle:
+              assert bundle.read('base/assets/frame-bundle.bin')[:2] == b'\x1f\x8b'
+              assert len(bundle.read('base/assets/frame-bundle.version').strip()) == 16
+          PY
       - uses: actions/upload-artifact@v4
         with:
           name: frame-control-android-beta-${{ inputs.version_code }}
