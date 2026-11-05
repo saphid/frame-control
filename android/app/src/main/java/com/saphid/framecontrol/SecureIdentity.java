@@ -12,7 +12,6 @@ import com.jcraft.jsch.KeyPair;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyStore;
-import java.security.SecureRandom;
 import java.util.Arrays;
 
 import javax.crypto.Cipher;
@@ -60,10 +59,12 @@ final class SecureIdentity {
         try {
             pair.writePrivateKey(secret);
             pair.writePublicKey(pub, "frame-control@Android");
-            byte[] iv = new byte[12];
-            new SecureRandom().nextBytes(iv);
             Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
-            cipher.init(Cipher.ENCRYPT_MODE, wrapKey(), new GCMParameterSpec(128, iv));
+            // Android Keystore generates its own GCM IV; supplying one for
+            // encryption is rejected by its randomized-encryption policy.
+            cipher.init(Cipher.ENCRYPT_MODE, wrapKey());
+            byte[] iv = cipher.getIV();
+            if (iv == null || iv.length != 12) throw new IllegalStateException("Invalid Keystore IV");
             byte[] encrypted = cipher.doFinal(secret.toByteArray());
             byte[] sealed = new byte[iv.length + encrypted.length];
             System.arraycopy(iv, 0, sealed, 0, iv.length);

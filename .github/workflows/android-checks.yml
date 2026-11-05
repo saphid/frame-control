@@ -28,7 +28,7 @@ jobs:
           echo "$sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
           "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build shared-page Android app
-        run: android/gradlew -p android --no-daemon assembleDebug testDebugUnitTest
+        run: android/gradlew -p android --no-daemon assembleDebug assembleDebugAndroidTest testDebugUnitTest
       - name: Check the APK contains the compressed Frame bundle
         run: |
           python3 - <<'PY'

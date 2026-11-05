@@ -13,6 +13,7 @@ android {
         targetSdk 36
         versionCode = Integer.parseInt((project.findProperty('frameVersionCode') ?: '1').toString())
         versionName = (project.findProperty('frameVersionName') ?: '0.1.0').toString()
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
     }
     buildTypes {
         release {
@@ -62,4 +63,6 @@ dependencies {
     implementation 'com.github.mwiede:jsch:2.27.5'
     implementation 'androidx.webkit:webkit:1.14.0'
     testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
 }
