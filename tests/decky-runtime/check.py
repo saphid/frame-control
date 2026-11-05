@@ -79,6 +79,7 @@ def main():
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-alarme-pause-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
@@ -282,6 +283,12 @@ def main():
             source = source.replace(old, new)
         (plugin/'main.py').write_text(source)
 
+    if args.reproduce_alarme_pause_regression:
+        assert record['id'] == 124
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+
     if args.reproduce_download_all_unload_regression:
         assert record['id'] == 131
         main = plugin/'main.py'
@@ -361,7 +368,8 @@ def main():
         animation_fixture = animation_private.prepare(home, base, record['folder'])
     processes = []
     report = {'id': record['id'], 'name': record['name'], 'version': record['version'],
-              'sha256': record['sha256'], 'shim': case['shim'], 'calls': []}
+              'sha256': record['sha256'],
+              'shim': None if args.reproduce_alarme_pause_regression else case['shim'], 'calls': []}
     with (home/'runtime.log').open('w+') as log:
         with ExitStack() as fixtures, capture_runtime(log, report, processes, loader=loader):
             if case['probe'] == 'discord-private-activity':
@@ -446,6 +454,70 @@ def main():
                 report['result'] = ('published Decky legacy discovery and private default/apply/repeat/switch/reset '
                     'RPCs preserve three original override files including bytes and inodes; '
                     'actual Steam playback, repository downloads, browser and VR unverified')
+            elif case['probe'] == 'alarme-private-lifecycle':
+                from alarme_lifecycle import probe
+
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    source = original.read(record['folder']+'/main.py')
+                    if not args.reproduce_alarme_pause_regression:
+                        old = b'        for timer_id, timer in timers.items():\r\n            remaining = timer["end_time"] - current_time\r\n'
+                        source = source.replace(old, old.replace(b'            remaining =',
+                            b'            if timer.get("paused", False):\r\n                continue\r\n            remaining ='))
+                        source = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n') + source
+                        installed_ipc = (plugin/'py_modules/framey_decky_ipc.py').read_bytes()
+                        assert installed_ipc == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                        report['ipcHelperSha256'] = hashlib.sha256(installed_ipc).hexdigest()
+                    assert (plugin/'main.py').read_bytes() == source
+                    preserved = []
+                    for member in original.namelist():
+                        if member.endswith(('.py', '.js', '/LICENSE', '/plugin.json')) and not member.endswith('/main.py'):
+                            path = member.removeprefix(record['folder']+'/')
+                            assert (plugin/path).read_bytes() == original.read(member), path
+                            preserved.append(path)
+
+                stops = []
+                def stop_loader():
+                    if not args.reproduce_alarme_pause_regression:
+                        from alarme_lifecycle import stop
+                        observation = stop(backend, log, disconnect=not stops)
+                        stops.append(observation)
+                        assert observation['cleanShutdownVerified'], observation
+                    else:
+                        started = time.monotonic()
+                        backend.terminate()
+                        status = backend.wait(timeout=8)
+                        assert status == 0, status
+                        stops.append(dict(returncode=status, elapsedSeconds=round(time.monotonic()-started, 3)))
+
+                def restart():
+                    nonlocal backend
+                    stop_loader()
+                    backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                               start_new_session=True)
+                    processes.append(backend)
+                    until_ready(lambda: rpc('loader/get_plugins'), 'restarted AlarMe discovery')
+                    until_ready(lambda: rpc('loader/call_plugin_method', record['name'],
+                                           'get_version'), 'restarted AlarMe RPC')
+
+                report['alarmeLifecycle'] = probe(record['name'], restart, report['calls'],
+                                                args.reproduce_alarme_pause_regression)
+                stop_loader()
+                log.flush()
+                text = (home/'runtime.log').read_text()
+                assert 'AlarMe: Plugin unloaded' in text
+                assert not any(marker in text for marker in (
+                    'Error during shutdown:', 'asyncio.exceptions.CancelledError',
+                    'Task was destroyed but it is pending'))
+                assert text.count('Shutdown finished.') == 2
+                report['alarmeLifecycle']['ownedLoaderStops'] = stops
+                report['alarmeLifecycle']['completeLoaderShutdownLogged'] = True
+                report['alarmeLifecycle']['unchangedPublishedFiles'] = preserved
+                report['alarmeLifecycle']['backendSha256'] = hashlib.sha256(source).hexdigest()
+                report['result'] = ('original paused timer incorrectly ticks after restart; regression reproduced'
+                    if args.reproduce_alarme_pause_regression else
+                    'published Decky discovery and private silent timer, preset, stopwatch and restart lifecycle passed; '
+                    'audio, inhibition, browser and VR unverified')
             elif case['probe'] == 'ludusavi-dependency-discovery':
                 import ludusavi_private
                 report['dependencyDiscovery'] = ludusavi_private.exercise(

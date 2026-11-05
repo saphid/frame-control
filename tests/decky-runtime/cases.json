@@ -1,5 +1,13 @@
 [
   {
+    "id": 124,
+    "shim": "alarme-paused-restart",
+    "probe": "alarme-private-lifecycle",
+    "additionalShims": [
+      "alarme-ipc-eof"
+    ]
+  },
+  {
     "id": 75,
     "shim": "reshadeck-owned-shaders",
     "additionalShims": [
@@ -250,7 +258,9 @@
   {
     "id": 100,
     "shim": "surround-owned-runtime",
-    "additionalShims": ["surround-ipc-eof"],
+    "additionalShims": [
+      "surround-ipc-eof"
+    ],
     "probe": "surround-private-audio"
   }
 ]

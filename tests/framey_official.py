@@ -12,6 +12,8 @@ MANAGED_FRONTENDS = {
     130: '87dfd36612e6c049060b4147e3d99ebb8e500b292e7737491009bb51571e177a',
 }
 PLUGINS = (
+    {'id': 124, 'name': 'AlarMe', 'version': '1.6.3', 'api_version': 1,
+     'folder': 'alarme-decky-plugin', 'sha256': '17d4166a9e98979df5fdb07c7eae42317acd54a453d3b82757508f971193c0fe'},
     {'id': 75, 'name': 'Reshadeck', 'version': '0.2.0', 'api_version': 'legacy',
      'folder': 'reshadeck', 'sha256': 'f7f79c3f5d12d92d14adfdebad62053d6e10982fb7b662b6777cb06945dc4281'},
     {'id': 100, 'name': 'Virtual Surround Sound', 'version': '0.0.5', 'api_version': 1,
