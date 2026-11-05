@@ -1,0 +1,71 @@
+name: Android internal beta
+
+on:
+  workflow_dispatch:
+    inputs:
+      package_name:
+        description: Existing Google Play application ID
+        required: true
+        type: string
+      version_code:
+        description: New integer version code, greater than every prior Play build
+        required: true
+        type: string
+      version_name:
+        description: Human-readable beta version
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  internal:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-java@dded0888837ed1f317902acf8a20df0ad188d165 # v4.7.1
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Decode signing and publisher credentials
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PLAY_JSON: ${{ secrets.ANDROID_PLAY_SERVICE_ACCOUNT_JSON }}
+        run: |
+          test -n "$KEYSTORE_B64" && test -n "$PLAY_JSON"
+          printf '%s' "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/frame-control-play.jks"
+          printf '%s' "$PLAY_JSON" > "$RUNNER_TEMP/play-service-account.json"
+          chmod 600 "$RUNNER_TEMP/frame-control-play.jks" "$RUNNER_TEMP/play-service-account.json"
+      - name: Build signed Android App Bundle
+        env:
+          ANDROID_KEYSTORE_FILE: ${{ runner.temp }}/frame-control-play.jks
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          VERSION_CODE: ${{ inputs.version_code }}
+          VERSION_NAME: ${{ inputs.version_name }}
+        run: |
+          test -n "$ANDROID_KEYSTORE_PASSWORD" && test -n "$ANDROID_KEY_ALIAS" && test -n "$ANDROID_KEY_PASSWORD"
+          [[ "$VERSION_CODE" =~ ^[1-9][0-9]*$ ]]
+          android/gradlew -p android --no-daemon bundleRelease \
+            -PframeApplicationId="$PACKAGE_NAME" -PframeVersionCode="$VERSION_CODE" -PframeVersionName="$VERSION_NAME"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: frame-control-android-beta-${{ inputs.version_code }}
+          path: android/app/build/outputs/bundle/release/*.aab
+          if-no-files-found: error
+      - name: Upload to existing Play internal-testing track
+        env:
+          PACKAGE_NAME: ${{ inputs.package_name }}
+          VERSION_CODE: ${{ inputs.version_code }}
+        run: |
+          python3 -m pip install --disable-pip-version-check -r android/scripts/requirements-upload.txt
+          python3 android/scripts/upload_internal.py \
+            --service-account "$RUNNER_TEMP/play-service-account.json" \
+            --package "$PACKAGE_NAME" --version-code "$VERSION_CODE" \
+            --bundle android/app/build/outputs/bundle/release/app-release.aab
