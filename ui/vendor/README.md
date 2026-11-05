@@ -7,3 +7,10 @@ package tarballs were downloaded with `npm pack` on 25 October 2026.
 
 Both packages use the MIT license. Their license texts are alongside the
 bundled JavaScript files and are included in the headset app bundle.
+
+Steam trailers use the light build of `hls.js@1.6.13`, loaded only when a
+trailer needs HLS playback without native browser support. The file is from
+`https://registry.npmjs.org/hls.js/-/hls.js-1.6.13.tgz` (`package/dist/hls.light.min.js`).
+SHA-256: `3ff29c965f23f6e45d0a33886ea959bd87a9fc4565825e9b7e85270d40fdaaaa`.
+Its Apache-2.0 license is in `hls-LICENSE`. Trailers stream directly from Steam;
+no media is bundled and playback never starts automatically.

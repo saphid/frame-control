@@ -73,12 +73,15 @@ test('only a preview matching current diagnostics consent can be sent or copied'
   pending[2].resolve({text:'LATE SECRET'});await late;
   assert.doesNotMatch(vm.runInContext('bugReportText().body',c),/SECRET/);
 });
-test('clearing Steam search invalidates a pending query and pending country lookup',async()=>{
-  const el={value:'Portal'},gm={country:'US',src:'store',store:[],storeQ:null,seq:0,shownBySource:{}};let resolve;
-  const c={$:()=>el,gm,api:()=>new Promise(r=>resolve=r),renderChips(){},filterGames(){},encodeURIComponent};vm.createContext(c);
-  vm.runInContext(pick(html,'async function searchStore() {','function setGameSource('),c);
-  const a=vm.runInContext('searchStore()',c);el.value='';await vm.runInContext('searchStore()',c);resolve({results:[{name:'Portal'}]});await a;
-  assert.equal(gm.storeQ,null);assert.equal(gm.store.length,0);
+test('clearing Steam search invalidates a pending query and loads browse instead',async()=>{
+  const el={value:'Portal'},gm={country:'US',src:'store',tags:[],store:[],storeQ:null,seq:0,shownBySource:{}};const pending=[];
+  const c={$:()=>el,gm,api:path=>new Promise(resolve=>pending.push({path,resolve})),renderChips(){},filterGames(){},encodeURIComponent};vm.createContext(c);
+  vm.runInContext(pick(html,'async function searchStore(','function setGameSource('),c);
+  const a=vm.runInContext('searchStore()',c);el.value='';const b=vm.runInContext('searchStore()',c);
+  assert.match(pending[1].path,/\/browse\?cc=US/);
+  pending[1].resolve({results:[{name:'VR starting point'}]});await b;
+  pending[0].resolve({results:[{name:'Portal'}]});await a;
+  assert.equal(gm.storeQ,null);assert.equal(gm.store[0].name,'VR starting point');assert.equal(gm.loading,false);
 });
 test('failed installed reads remain unknown or stale with retry, never successful empty',async()=>{
   const els=new Map(),$=id=>{if(!els.has(id))els.set(id,{textContent:'',innerHTML:'',setAttribute(){}});return els.get(id);};
