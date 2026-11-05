@@ -22,7 +22,11 @@ jobs:
           distribution: temurin
           java-version: '17'
       - name: Android 16 SDK
-        run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+        run: |
+          sdk=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "$sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" 'platforms;android-36' 'build-tools;36.0.0'
       - name: Build shared-page Android app
         run: android/gradlew -p android --no-daemon assembleDebug testDebugUnitTest
       - uses: actions/upload-artifact@v4

@@ -29,7 +29,12 @@ jobs:
         with:
           distribution: temurin
           java-version: '17'
-      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - name: Android 16 SDK
+        run: |
+          sdk=/usr/local/lib/android/sdk
+          echo "ANDROID_HOME=$sdk" >> "$GITHUB_ENV"
+          echo "$sdk/cmdline-tools/latest/bin" >> "$GITHUB_PATH"
+          "$sdk/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$sdk" 'platforms;android-36' 'build-tools;36.0.0'
       - name: Decode signing and publisher credentials
         env:
           KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
