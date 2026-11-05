@@ -14,6 +14,8 @@ const crypto = require("crypto");
 
 const REQUIRED = [
   "ui/server.py",
+  "ui/vendor/hls-1.6.13.light.min.js",
+  "ui/vendor/hls-LICENSE",
   "ui/vendor/deckyfileserver-1.2.0/aarch64.gz",
   "ui/vendor/deckyfileserver-1.2.0/x86_64.gz",
   "ui/vendor/deckyfileserver-1.2.0/source.tar.gz",

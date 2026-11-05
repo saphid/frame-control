@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Bring Games browsing and Steam search closer to Steam's store: show useful
+  titles before a search, page through full result counts, filter and sort the
+  catalog, and show regional prices, discounts, ownership and Frame ratings in
+  compact rows. Game details now include Steam trailers, screenshots, review
+  summaries, tags and VR requirements. Purchases still happen on Steam.
+  [Screenshot comparison and scorecard](docs/evidence/steam-hill-climb/README.md).
+
 - Add the Frame simulator, `scripts/frame-sim.sh`: the fake Frame kept running
   on 127.0.0.1 under the `frame-sim` SSH alias, for trying the app, scripts and
   smoke test without the headset. It adds a test-picture headset view, live view

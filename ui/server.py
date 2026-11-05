@@ -1214,15 +1214,37 @@ def mods(body):
     return steam_frame(action, appid, timeout=MOD_TIMEOUT[action], script="frame_mods.py")
 
 
-def steam_search(query):
-    q = parse_qs(query)
+def steam_search(query, view="search"):
+    q = parse_qs(query, keep_blank_values=True)
     cc = (q.get("cc") or [""])[0].upper()
     if not re.fullmatch(r"[A-Z]{2}", cc):
         raise Failure("cc must be a two-letter country code", 400)
+    appid = (q.get("appid") or [""])[0]
+    if view == "details" and not APPID.fullmatch(appid):
+        raise Failure("bad appid", 400)
     try:
-        return {"results": frame_store.search((q.get("q") or [""])[0], cc)}
+        if view == "details":
+            return {"game": frame_store.details(int(appid), cc)}
+        if view == "browse":
+            return {"results": frame_store.browse(cc)}
+        start = (q.get("start") or ["0"])[0]
+        item_type = (q.get("type") or ["all"])[0]
+        sort = (q.get("sort") or ["relevance"])[0]
+        vr = (q.get("vr") or ["all"])[0]
+        price = (q.get("price") or ["any"])[0]
+        discount = (q.get("discount") or ["0"])[0]
+        tags = (q.get("tags") or [""])[0]
+        hidef2p = (q.get("hidef2p") or ["0"])[0]
+        if (not start.isascii() or not start.isdigit() or len(start) > 7 or int(start) > 1000000
+                or item_type not in frame_store.SEARCH_TYPES or sort not in frame_store.SEARCH_SORTS
+                or vr not in frame_store.SEARCH_VR or price not in frame_store.SEARCH_PRICES
+                or discount not in ("0", "1") or not frame_store.valid_search_tags(tags) or hidef2p not in ("0", "1")
+                or set(q) - {"q", "cc", "start", "type", "sort", "vr", "price", "discount", "tags", "hidef2p"}
+                or any(len(values) != 1 for values in q.values())):
+            raise Failure("Invalid Steam search options", 400)
+        return frame_store.search((q.get("q") or [""])[0], cc, int(start), item_type, sort, vr, price, discount == "1", tags, hidef2p == "1")
     except (OSError, ValueError, TypeError, AttributeError, http.client.HTTPException) as e:
-        raise Failure(f"Steam store search failed: {e}")
+        raise Failure(f"Steam store request failed: {e}")
 
 
 def set_volume(body):
@@ -3813,6 +3835,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
                 self.send_bytes((HERE / 'artwork-settings.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/steam-hls.js":
+                self.send_bytes((HERE / 'vendor/hls-1.6.13.light.min.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.js":
                 self.send_bytes((HERE / 'control-center.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.css":
@@ -3952,6 +3976,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":
                 self.send_json(steam_search(url.query))
+            elif path == "/api/steam/browse":
+                self.send_json(steam_search(url.query, "browse"))
+            elif path == "/api/steam/details":
+                self.send_json(steam_search(url.query, "details"))
             elif path == "/api/webinstall/job":
                 self.send_json(webinstall_job(url.query))
             elif path == "/api/shots":

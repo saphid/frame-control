@@ -11,6 +11,7 @@ ship other people's software, unchanged, each under its own licence:
 | adb (Android SDK Platform-Tools) | Desktop apps (not Linux arm64) | Apache-2.0 and others | `NOTICE.txt` in the app's `tools` folder |
 | Mozilla's CA certificate list, as published by curl | Desktop apps | MPL-2.0 | https://curl.se/docs/caextract.html |
 | Electron | Desktop apps | MIT (Chromium: BSD-3-Clause and others) | `LICENSE` and `LICENSES.chromium.html` in the app |
+| hls.js 1.6.13 light build | Desktop apps, for Steam trailers where the browser lacks native HLS playback | Apache-2.0 | [provenance](ui/vendor/README.md), [license](ui/vendor/hls-LICENSE) |
 | GStreamer 1.x, a few of its plugins and the libraries they need, as [MSYS2](https://packages.msys2.org/) builds them | Windows app only, for the experimental [PC in the headset](docs/pc-in-headset.md) | LGPL-2.1-or-later and others (per package); the GPL x264 encoder is left out | `libraries.json` (exact package versions) and the `licenses` folder in the app's `desktop/bundle` folder |
 
 Frame Control starts KDE Connect and talks to it over its network protocol;
