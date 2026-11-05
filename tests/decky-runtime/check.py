@@ -68,6 +68,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('id', type=int)
     parser.add_argument('version', nargs='?', default='-')
+    parser.add_argument('--reproduce-desktop-apps-unload-regression', action='store_true')
     parser.add_argument('--reproduce-localsend-unload-regression', action='store_true')
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
@@ -121,6 +122,11 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_desktop_apps_unload_regression:
+        assert record['id'] == 143
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_volume_mixer_user_regression:
         assert record['id'] == 38
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -1838,13 +1844,29 @@ def main():
                 assert current('get_temporary_shortcuts') == []
                 assert json.loads(state.read_text())['temporaryShortcuts'] == []
                 assert not canary.exists()
+                import desktop_apps_private
+                def verify_desktop_restart():
+                    restored = current('get_apps')['framey-private']
+                    assert restored['favorite'] is True and restored['hidden'] is True
+                    assert restored['lastOpened'] == 424242
+                    assert current('get_temporary_shortcuts') == []
+                    assert not canary.exists()
+                desktop_apps_private.probe(backend, loader, env, log, processes,
+                    verify_desktop_restart, rpc, until_ready, report, state,
+                    regression=args.reproduce_desktop_apps_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_desktop_apps_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_desktop_apps_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        originalBackendRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
                 report['desktopEntries'] = dict(discovery=True, xdgPrecedence=True, filteredEntries=7,
                     fieldCodes=True, flatpakMetadata=True, privateSettingsPersisted=True,
                     temporaryShortcutBookkeeping=True, loaderRestart=True, noApplicationLaunched=True,
                     actualFlatpakDiscovery=False, actualSteamShortcutChanges=False,
                     realFrameContacted=False, physicalControllerVerified=False)
-                report['result'] = ('published Decky discovery, private desktop-entry parsing/filtering, '
-                    'settings and temporary-shortcut bookkeeping across restart passed; actual Flatpak installation, '
+                report['result'] = ('original Desktop Apps EOF forced-kill reproduced; negative only; ' if args.reproduce_desktop_apps_unload_regression else
+                    'managed Decky discovery, private desktop-entry parsing/filtering, settings/bookkeeping, EOF recovery and two clean parent-only stops passed; ') + ('actual Flatpak installation, '
                     'Steam shortcut changes, app launch, real Frame and VR unverified')
             elif case['probe'] == 'shelves-settings':
                 # Private configuration only. Never register a Steam Home
