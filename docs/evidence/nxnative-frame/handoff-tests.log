@@ -1,0 +1,31 @@
+clang -O1 -Wno-unused-function -I.. -I../gen/010093801237C000 -I../../games/010093801237C000 -o build/t_frame_handoff t_frame_handoff.c t_condvar_stub.c
+build/t_frame_handoff
+PASS: condition waiters selected by priority, then FIFO; mutex reacquired before return
+PASS: handoff scope, woken worker beside a busy unrelated peer: signaller returned, payload 2, worker exited 1
+PASS: handoff scope, worker woken by the woken dispatcher: signaller returned, payload 2, worker exited 1
+PASS: handoff scope, woken thread yielding to any thread: signaller returned, payload 1, worker exited 0
+PASS: handoff scope, woken thread waiting for the signaller's host lock: signaller returned, payload 1, worker exited 0
+PASS: wait kind 0, dispatch delay 1000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 1, dispatch delay 1000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 1, dispatch delay 20000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 2, dispatch delay 1000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 2, dispatch delay 20000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 4, dispatch delay 1000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 0, payload before signaller returns 1
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 1, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 1, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 2, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 2, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 3, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 3, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 4, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 4, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 5, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 5, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 6, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 6, payload before signaller returns 0
+PASS: wait kind 0, dispatch delay 20000 us, exclusion 7, payload before signaller returns 0
+PASS: wait kind 4, dispatch delay 20000 us, exclusion 7, payload before signaller returns 0
+build/t_frame_handoff --profile-preempt
+PASS: profile preemption waits for an already-runnable worker

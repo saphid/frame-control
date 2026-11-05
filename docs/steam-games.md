@@ -1,7 +1,11 @@
-# Installing and buying Steam games from the Mac
+# Installing and buying Steam games
 
-Frame Control's **Get games** section lists the games you own with each one's
-Steam Frame rating, installs them on the Frame, and searches the Steam store.
+Frame Control's **Games** section lists games you own with each one's Steam
+Frame rating, installs them on the Frame, and browses the Steam store. Store
+search shows Steam's total count and pages through results 50 at a time. Type,
+VR, price, sale, free-to-play, tag and sort controls query Steam's full catalog;
+Frame rating filters apply to the current page. Game details show Steam's
+trailers, screenshots, review summaries, tags and VR requirements when available.
 This page covers how it works underneath, so you can do the same from a shell.
 
 Installed Unreal Engine games also have a **VR mod** button that installs,
@@ -87,19 +91,23 @@ login is needed.
 Frame Control doesn't buy anything. Purchases happen on Steam's own store page,
 signed in as you:
 
-- **Buy on Steam ↗** opens `store.steampowered.com/app/<id>/` in the Mac's
+- **View on Steam ↗** opens `store.steampowered.com/app/<id>/` in the computer's
   browser (the Electron app sends `target=_blank` links there).
-- **Store on Frame** runs `steam steam://store/<id>`, which opens the page in the
+- **Store in headset** runs `steam steam://store/<id>`, which opens the page in the
   Steam client on the headset. **Verified 2026-09-25:** a "Hades on Steam" page
   appeared in the DevTools page list. It wasn't visible in the headset capture
   because an app was in the foreground; it opens in Steam's dashboard.
 
-After buying, press **Refresh** in Get games. The game shows up as owned, and
+After buying, press **Refresh library** in Games. The game shows up as owned, and
 **Install on Frame** installs it.
 
-Store search uses `store.steampowered.com/api/storesearch/?term=…&cc=…`. It
-returns nothing without `cc`, so Frame Control takes the country from
-`SteamClient.User.GetIPCountry()` on the Frame.
+Store search uses `store.steampowered.com/search/results/?term=…&cc=…&count=50&start=…&infinite=1`.
+Its response includes the total count and result-row HTML; Frame Control parses
+the rows into plain data and never injects Steam's HTML into its page. It takes
+the store country from `SteamClient.User.GetIPCountry()` on the Frame so Steam
+returns the right regional prices. Steam can return loose title matches when
+sale and other filters are combined; Frame Control keeps the upstream count and
+order and explains that beside the results.
 
 ## Force quitting a running game
 

@@ -18,7 +18,12 @@ import tarfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
-PATTERNS = ["ui/*.py", "ui/*.html", "ui/*.js", "ui/*.css", "ui/local-bin/*", "ui/apk_sources/*.py", "ui/apk_sources/*.json", "scripts/*.sh", "frame/android/*.sh", "frame/android/*.py", "frame/android/*.js",
+PATTERNS = ["ui/*.py", "ui/*.html", "ui/*.js", "ui/*.css",
+            "ui/vendor/hls-1.6.13.light.min.js", "ui/vendor/hls-LICENSE",
+            "ui/vendor/react-18.3.1.min.js", "ui/vendor/REACT-LICENSE.txt",
+            "ui/vendor/react-dom-18.3.1.min.js", "ui/vendor/REACT-DOM-LICENSE.txt",
+            "ui/local-bin/*", "ui/apk_sources/*.py", "ui/apk_sources/*.json", "scripts/*.sh", "frame/android/*.sh", "frame/android/*.py", "frame/android/*.js",
+            "frame/nxnative/*.py", "frame/nxnative/*.patch", "frame/nxnative/README.md", "frame/nxnative/LICENSE.nxnative",
             "frame/openxr-compat/XrApiLayer_FRAME_compat.json", "frame/openxr-compat/prebuilt/arm64-v8a/*.so.gz",
             "frame/devkit-utils/**/*", "apk-catalog/*.py", "apk-catalog/pins.json", "apk-catalog/site/apps.js",
             "frame/kdeconnect/packages.json", "frame/kdeconnect/NOTICE.md", "frame/kdeconnect/LICENSES/*/*",
