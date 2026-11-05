@@ -1,0 +1,55 @@
+boot: DM_OPMODE=0
+boot: DM_FPS=60
+boot: DM_SCREEN_FIT=keep
+boot: DM_LANG=en-US
+boot: DM_SHOW_FPS=0
+boot: DM_CHEATS_ON=
+[dm] thread slots behind TLS_SLOT_APP, indices K18=1 KTLS=2 KTLR=3 KGATE=4
+[dm] front end: input queue 0xffff35b27f80, looper 0xffff2005d3e0
+[dm] [RED] audio #1: the device has not called back for 247 ms while playing: the silent sink stands in, retrying the AudioUnit
+[dm] [movie] decoder 0xfffe27f06060 destroyed: 700 packets in, 690 frames out; decoded 688 packets, average 4.56 ms per packet, longest 14.18 ms
+[dm] [movie] decoder 0xfffe257cc890 destroyed: 1840 packets in, 1833 frames out; decoded 1756 packets, average 4.85 ms per packet, longest 11.89 ms
+[dm] [movie] decoder 0xfffe257ac6b0 destroyed: 2538 packets in, 2514 frames out; decoded 2415 packets, average 4.48 ms per packet, longest 9.74 ms
+[dm] [RED] vk: vertex attribute 6 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 7 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 6 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 7 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 6 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 7 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 6 format 0 has no Vulkan format
+[dm] [RED] vk: vertex attribute 7 format 0 has no Vulkan format
+[dm] vk: per frame over the last 600: GPU 9.35 ms, recording 6.04 ms, waiting for the GPU 0.00 ms, present waiting 0.01 ms
+[dm] [nvn] timing up to frame 10200: frame time p50 16.53 / p95 18.80 / max 20.38 ms (300 frames); frame work p50 16.21 / p95 18.47 / max 20.01 ms (300 frames); NVN submit+present p50 6.58 / p95 7.73 / max 9.04 ms (300 frames); GPU p50 0.00 / p95 0.00 / max 0.00 ms (300 frames);
+[dm] [nvn] frame interval up to frame 10200: >16.7ms 146 / 300 frames, p99 19.53 ms
+[dm] [nvn] vertex bindings up to frame 10200: per frame address lookups 0 / reused 0, vertex table writes 0 / skipped 0
+[dm] [nvn] translation up to frame 10200: 0 instructions per draw, submit per frame 0.00 M instructions / CPU 5.952 ms, 269 draws per frame
+[dm] [nvn] thread policy: main thread real-time computation 0.00 ms / period 0.00 ms, real-time policy not in effect, current priority -1 (base -1, policy -1); 10 worker threads QoS 0x21; present QoS 0
+[dm] [nvn] packaged textures: first uploads 0, re-uploads on pool content change 0; write-protection faults 270, pages unprotected before host writes 4387926; missed 0 (cumulative)
+[dm] [nvn] frame 10200: 58 functions 17005 calls
+[dm] audio #1 device callbacks 20000: 32–480 frames each, 4.0 blocks queued on average at callback; in these 2000, 0 underruns, 0.0 ms zero-padded
+[dm] [nvn] timing up to frame 10500: frame time p50 16.44 / p95 18.79 / max 20.33 ms (300 frames); frame work p50 16.05 / p95 18.47 / max 19.93 ms (300 frames); NVN submit+present p50 6.68 / p95 7.73 / max 9.63 ms (300 frames); GPU p50 0.00 / p95 0.00 / max 0.00 ms (300 frames);
+[dm] [nvn] frame interval up to frame 10500: >16.7ms 137 / 300 frames, p99 19.53 ms
+[dm] [nvn] vertex bindings up to frame 10500: per frame address lookups 0 / reused 0, vertex table writes 0 / skipped 0
+[dm] [nvn] translation up to frame 10500: 0 instructions per draw, submit per frame 0.00 M instructions / CPU 6.016 ms, 269 draws per frame
+[dm] [nvn] thread policy: main thread real-time computation 0.00 ms / period 0.00 ms, real-time policy not in effect, current priority -1 (base -1, policy -1); 10 worker threads QoS 0x21; present QoS 0
+[dm] [nvn] packaged textures: first uploads 0, re-uploads on pool content change 0; write-protection faults 270, pages unprotected before host writes 4387926; missed 0 (cumulative)
+[dm] [nvn] frame 10500: 58 functions 17005 calls
+[dm] audren: render time mean 0.06 ms / max 0.33 ms (5 ms budget per frame, last 2000 frames); catch-up renders so far 1
+[dm] vk: 10800 frames presented, 720589 draws, 0 dropped (no program 0, shader 0, no target 0, indirect 0, primitive 0, pipeline 0, descriptors 0), 55 pipelines, 48 shaders
+[dm] vk: image memory: 4 blocks of 64 MB (256 MB, 114 live images in them), big images 0 MB now; rings 0 MB extra
+[dm] vk: texture slots read as black so far: no handle 5425, handle not registered 0, texture not created 0, no view 0
+[dm] vk: per frame over the last 600: GPU 9.22 ms, recording 6.03 ms, waiting for the GPU 0.00 ms, present waiting 0.01 ms
+[dm] [nvn] timing up to frame 10800: frame time p50 16.65 / p95 18.56 / max 20.71 ms (300 frames); frame work p50 16.30 / p95 18.22 / max 20.31 ms (300 frames); NVN submit+present p50 6.56 / p95 7.52 / max 9.82 ms (300 frames); GPU p50 0.00 / p95 0.00 / max 0.00 ms (300 frames);
+[dm] [nvn] frame interval up to frame 10800: >16.7ms 148 / 300 frames, p99 19.63 ms
+[dm] [nvn] vertex bindings up to frame 10800: per frame address lookups 0 / reused 0, vertex table writes 0 / skipped 0
+[dm] [nvn] translation up to frame 10800: 0 instructions per draw, submit per frame 0.00 M instructions / CPU 5.894 ms, 268 draws per frame
+[dm] [nvn] thread policy: main thread real-time computation 0.00 ms / period 0.00 ms, real-time policy not in effect, current priority -1 (base -1, policy -1); 10 worker threads QoS 0x21; present QoS 0
+[dm] [nvn] packaged textures: first uploads 0, re-uploads on pool content change 0; write-protection faults 270, pages unprotected before host writes 4387926; missed 0 (cumulative)
+[dm] [nvn] frame 10800: 58 functions 15982 calls
+[dm] [nvn] timing up to frame 11100: frame time p50 16.63 / p95 18.81 / max 20.22 ms (300 frames); frame work p50 16.21 / p95 18.50 / max 19.77 ms (300 frames); NVN submit+present p50 6.17 / p95 7.55 / max 9.22 ms (300 frames); GPU p50 0.00 / p95 0.00 / max 0.00 ms (300 frames);
+[dm] [nvn] frame interval up to frame 11100: >16.7ms 148 / 300 frames, p99 19.69 ms
+[dm] [nvn] vertex bindings up to frame 11100: per frame address lookups 0 / reused 0, vertex table writes 0 / skipped 0
+[dm] [nvn] translation up to frame 11100: 0 instructions per draw, submit per frame 0.00 M instructions / CPU 5.575 ms, 260 draws per frame
+[dm] [nvn] thread policy: main thread real-time computation 0.00 ms / period 0.00 ms, real-time policy not in effect, current priority -1 (base -1, policy -1); 10 worker threads QoS 0x21; present QoS 0
+[dm] [nvn] packaged textures: first uploads 0, re-uploads on pool content change 0; write-protection faults 270, pages unprotected before host writes 4387926; missed 0 (cumulative)
+[dm] [nvn] frame 11100: 58 functions 15982 calls

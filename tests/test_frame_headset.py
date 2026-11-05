@@ -26,6 +26,10 @@ class HeadsetBundle(unittest.TestCase):
         self.assertIn('ui/headset.html', names)
         self.assertIn('ui/frame_headset_runtime.py', names)
         self.assertIn('ui/server.py', names)
+        for name in ('stage.py', 'build.py', 'extract_romfs.py', 'android-frame.patch', 'LICENSE.nxnative'):
+            self.assertIn('frame/nxnative/' + name, names)
+        self.assertIn('ui/frame_nxnative.py', names)
+        self.assertIn('ui/nxnative.js', names)
         for filename in ('aarch64.gz', 'x86_64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):
             self.assertIn('ui/vendor/deckyfileserver-1.2.0/'+filename, names)
         for filename in ('aarch64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):

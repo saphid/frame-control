@@ -94,6 +94,27 @@ class ServerGuards(unittest.TestCase):
         self.assertEqual(headers["X-Frame-Options"], "DENY")
         self.assertIn(b"<title>APK Store</title>", payload)
 
+    def test_nxnative_ui_and_private_source_status(self):
+        code, headers, body = self.request('GET', '/nxnative.js')
+        self.assertEqual(code, 200)
+        self.assertIn('text/javascript', headers['Content-Type'])
+        self.assertIn(b'Preparation steps', body)
+        self.assertEqual(self.request('GET', '/api/nxnative')[0], 403)
+        code, _, body = self.request('GET', '/api/nxnative', headers={'X-Frame-UI':'1'})
+        self.assertEqual(code, 200)
+        result = json.loads(body)
+        self.assertIsInstance(result['sources'], list)
+        self.assertIsInstance(result['games'], list)
+        self.assertIn('command', result['preparation'])
+
+    def test_nxnative_invalid_operations_do_not_start_installs(self):
+        for payload in ({'action':'install','source':'s'}, {'action':'remove'},
+                        {'action':'add','location':False}, {'action':'unknown'}):
+            with self.subTest(payload=payload):
+                code, result = self.post('/api/nxnative', payload)
+                self.assertEqual(code, 400)
+                self.assertNotIn('job', result)
+
     def test_local_extension_is_listed_and_sandboxed(self):
         folder = Path(os.environ["FRAME_CONTROL_DATA_DIR"]) / "extensions" / "test-glance"
         folder.mkdir(parents=True, exist_ok=True)

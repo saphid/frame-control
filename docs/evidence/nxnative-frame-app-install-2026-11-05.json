@@ -1,0 +1,15 @@
+{
+  "message": "Metroid Dread (NxNative) is ready in your Steam library",
+  "package": "com.nxnative.t010093801237c000",
+  "dataset": "74fd0fe85d985e5c5ab65defc726920fe2a025e386e8242c3fb2bfb1e1c9872d",
+  "instance": 2843545929,
+  "transport": "real app HTTP API and install queue on Mac, selected Frame over LAN SSH",
+  "source": "user-added local prepared build folder",
+  "dataset_bytes": 5418485729,
+  "dataset_files": 11814,
+  "source_removed_after_install": true,
+  "save_hashes_unchanged": true,
+  "game_reopened_to_title": true,
+  "startup_race_found_and_fixed": "wait for Android boot, emulated storage and package availability before staging",
+  "physical_controllers_and_comfort": "unverified; remote tests only"
+}

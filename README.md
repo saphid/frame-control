@@ -58,7 +58,7 @@ use the [power and heat sampler](docs/power-and-heat.md).
 <td valign="top">
 
 **🎮 Steam games**<br>
-Everything you own with its Steam Frame rating. Install onto the headset with live progress, search the store, and force quit a game that stops responding.
+Everything you own with its Steam Frame rating. Install onto the headset with live progress; browse and search the Steam catalog with filters, prices and game details; or force quit a game that stops responding.
 
 </td>
 <td valign="top">
