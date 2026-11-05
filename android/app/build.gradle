@@ -8,11 +8,11 @@ android {
     compileSdk 36
 
     defaultConfig {
-        applicationId project.findProperty('frameApplicationId') ?: 'com.saphid.framecontrol'
+        applicationId = (project.findProperty('frameApplicationId') ?: 'com.saphid.framecontrol').toString()
         minSdk 29
         targetSdk 36
-        versionCode (project.findProperty('frameVersionCode') ?: '1').toString().toInteger()
-        versionName project.findProperty('frameVersionName') ?: '0.1.0'
+        versionCode = Integer.parseInt((project.findProperty('frameVersionCode') ?: '1').toString())
+        versionName = (project.findProperty('frameVersionName') ?: '0.1.0').toString()
     }
     buildTypes {
         release {

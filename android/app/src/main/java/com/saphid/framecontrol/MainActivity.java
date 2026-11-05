@@ -368,7 +368,7 @@ public final class MainActivity extends Activity {
     }
     private void closeFrame() {
         if (web != null) { web.destroy(); web = null; }
-        if (frame != null) { SshFrame old = frame; frame = null; worker.execute(old::close); }
+        if (frame != null) { SshFrame old = frame; frame = null; old.close(); }
         localPort = 0;
     }
     @Override protected void onDestroy() {

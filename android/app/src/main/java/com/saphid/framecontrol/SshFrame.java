@@ -81,8 +81,9 @@ final class SshFrame implements AutoCloseable {
         String version;
         try (InputStream in = context.getAssets().open("frame-bundle.version")) {
             byte[] bytes = new byte[64];
-            int count = in.read(bytes);
-            version = new String(bytes, 0, Math.max(0, count), StandardCharsets.US_ASCII).trim();
+            int count = 0, read;
+            while (count < bytes.length && (read = in.read(bytes, count, bytes.length - count)) > 0) count += read;
+            version = new String(bytes, 0, count, StandardCharsets.US_ASCII).trim();
         }
         if (!version.matches("[0-9a-f]{16}")) throw new IllegalStateException("Invalid app bundle version");
         String dir = ".cache/frame-control/" + version;
@@ -188,7 +189,7 @@ final class SshFrame implements AutoCloseable {
         try { if (serverInput != null) serverInput.close(); } catch (Exception ignored) {}
         if (server != null) server.disconnect();
         if (session != null) session.disconnect();
-        serverInput = null; server = null; session = null; localPort = 0;
+        serverInput = null; server = null; session = null; localPort = 0; currentKey = null;
     }
 
     /** Pins exactly the SSH host key bytes after a first-pair fingerprint confirmation. */
