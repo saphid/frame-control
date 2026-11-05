@@ -26,6 +26,10 @@ password. Confirm its SSH host-key SHA-256 fingerprint against a trusted view
 of the Frame. The password is used once to add the phone's public key to
 `~/.ssh/authorized_keys` and is not saved. Future sessions use a per-install
 RSA 3072 key; its private bytes are encrypted with Android Keystore AES-GCM.
+If a trusted computer already reaches the Frame over SSH, tap **Or add this
+phone's key yourself**, copy the displayed public key into that same file,
+then leave the password blank and tap **Connect**. The private key never leaves
+this phone.
 The app refuses a changed host key until the pairing is explicitly forgotten.
 Android backup is disabled for this app. The WebView bridge accepts only
 main-frame messages from the current loopback tunnel origin. Cleartext HTTP

@@ -144,6 +144,7 @@ public final class MainActivity extends Activity {
             showMessage("Connecting to " + host + "…");
             connect(host, user, password.isEmpty() ? null : password);
         }), 24);
+        add(root, button("Or add this phone's key yourself", this::showPublicKey), 12);
         if (getPreferences(MODE_PRIVATE).contains("host")) {
             add(root, button("Forget this Frame", () -> {
                 getPreferences(MODE_PRIVATE).edit().clear().apply();
@@ -155,6 +156,31 @@ public final class MainActivity extends Activity {
         scroll.setFillViewport(true);
         scroll.addView(root);
         setContentView(scroll);
+    }
+
+    private void showPublicKey() {
+        worker.execute(() -> {
+            try {
+                String line = new SecureIdentity(this).publicLine();
+                runOnUiThread(() -> {
+                    TextView instructions = label("Add this exact line to ~/.ssh/authorized_keys on the Frame from a trusted computer. Then leave the Developer password blank and tap Connect.\n\n" + line, 14, TEXT);
+                    instructions.setTextIsSelectable(true);
+                    instructions.setPadding(dp(16), dp(12), dp(16), dp(12));
+                    ScrollView scroll = new ScrollView(this);
+                    scroll.addView(instructions);
+                    new AlertDialog.Builder(this).setTitle("This phone's public SSH key")
+                            .setView(scroll)
+                            .setPositiveButton("Copy key", (dialog, which) -> {
+                                ClipboardManager clipboard = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+                                clipboard.setPrimaryClip(ClipData.newPlainText("Frame Control public key", line));
+                            })
+                            .setNegativeButton("Done", null).show();
+                });
+            } catch (Exception error) {
+                runOnUiThread(() -> new AlertDialog.Builder(this).setTitle("Couldn't make this phone's key")
+                        .setMessage(error.getMessage()).setPositiveButton("OK", null).show());
+            }
+        });
     }
 
     private void connect(String host, String user, String password) {
