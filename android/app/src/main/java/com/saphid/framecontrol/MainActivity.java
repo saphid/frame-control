@@ -32,6 +32,7 @@ import android.webkit.WebResourceRequest;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
+import android.widget.ScrollView;
 import android.widget.TextView;
 
 import androidx.webkit.WebMessageCompat;
@@ -131,7 +132,7 @@ public final class MainActivity extends Activity {
         String savedUser = getPreferences(MODE_PRIVATE).getString("user", "steamos");
         hostField = field("Frame address", savedHost, false);
         userField = field("Frame user", savedUser, false);
-        passwordField = field("Developer Mode password (only for pairing)", "", true);
+        passwordField = field("Developer password", "", true);
         add(root, hostField, 24); add(root, userField, 10); add(root, passwordField, 10);
         add(root, label("On first connection, confirm the Frame's SSH fingerprint. Your password is used once to add this phone's key; it is never saved.", 13, MUTED), 16);
         add(root, button("Connect", () -> {
@@ -150,7 +151,10 @@ public final class MainActivity extends Activity {
                 showSetup(null);
             }), 12);
         }
-        setContentView(root);
+        ScrollView scroll = new ScrollView(this);
+        scroll.setFillViewport(true);
+        scroll.addView(root);
+        setContentView(scroll);
     }
 
     private void connect(String host, String user, String password) {
