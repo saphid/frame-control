@@ -18,8 +18,17 @@ The Xcode App Store Connect upload returned success. A subsequent read-only
 App Store Connect API query found build
 `04c02405-604f-42a0-8c1b-3a3b822ceacf` under app `6822547223`, with
 marketing version `0.4.59`, build `202611050600`, platform iOS, and
-processing state **VALID**. A beta-group read returned HTTP 403, so tester
-group assignment and availability were not verified.
+processing state **VALID**. The build initially had missing export compliance
+and was not in the public beta group. The earlier HTTP 403 came from a
+relationship endpoint that does not support GET; the beta-group resource is
+readable.
+
+On 5 November, the build's exempt-encryption answer was set to match the
+previous approved Frame Control build. The build then became eligible for
+external beta review, and App Store Connect accepted the submission. Its
+review state is **WAITING_FOR_REVIEW**. The public beta group still lists only
+builds `202610160824` and `202610140516`; build `202611050600` is not yet
+available through the public TestFlight link.
 
 The earlier direct signed-archive attempt over SSH failed because the local
 Apple Development key was unavailable to the noninteractive signing process
