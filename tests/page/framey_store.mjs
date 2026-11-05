@@ -158,6 +158,36 @@ assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textCon
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,false);
 
+// A 4xx from job polling is not a rejected submission. The server already
+// accepted the change; retain its ID and block a duplicate until it resolves.
+for(const status of [403,429]){
+  let acceptedId, posts=0;
+  ctx.mockApi=async (path,body)=>{
+    if(path==='/api/decky/plugin'){posts++;acceptedId=body.requestId;return {job:acceptedId};}
+    if(path.startsWith('/api/job')){const error=Error('Polling temporarily denied');error.status=status;throw error;}
+    if(path==='/api/decky')return {managed:true,running:true,
+      plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+    throw Error(`unexpected ${path}`);
+  };
+  vm.runInContext('api=mockApi',ctx);
+  await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+  assert.equal(JSON.parse(session.get('frameyPluginJob')).job,acceptedId);
+  assert.equal(el('deckyJobCheck').hidden,false);
+  assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,true);
+  await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
+  assert.equal(posts,1);
+  ctx.mockApi=async path=>{
+    if(path.startsWith('/api/job'))return {done:true,message:'Recovered accepted update'};
+    if(path==='/api/decky')return {managed:true,running:true,
+      plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+    throw Error(`unexpected ${path}`);
+  };
+  vm.runInContext('api=mockApi',ctx);
+  await vm.runInContext('checkDeckyJob()',ctx);
+  assert.equal(session.has('frameyPluginJob'),false);
+  assert.equal(el('deckyJobStatus').textContent,'Recovered accepted update');
+}
+
 // A failed refresh must remove old install buttons. A late older response
 // must not replace the newer catalog the wearer just requested.
 ctx.mockApi=async path => {assert.equal(path,'/api/decky/store');throw Error('offline');};
