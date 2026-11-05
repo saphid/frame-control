@@ -349,7 +349,7 @@ public final class MainActivity extends Activity {
         if (text.isEmpty() || text.length() > 500) throw new IllegalArgumentException("Invalid notification");
         if (Build.VERSION.SDK_INT >= 33 && checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
             if (arg.optBoolean("request")) requestPermissions(new String[]{Manifest.permission.POST_NOTIFICATIONS}, 72);
-            return false;
+            throw new IllegalStateException("Allow notifications, then tap Enable / test notifications again.");
         }
         NotificationManager manager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
         manager.createNotificationChannel(new NotificationChannel(NOTIFICATIONS, "Frame Control reminders", NotificationManager.IMPORTANCE_DEFAULT));
