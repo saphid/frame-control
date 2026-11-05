@@ -4,6 +4,7 @@ import runpy
 import struct
 import hashlib
 import io
+import os
 import subprocess
 import tarfile
 import tempfile
@@ -50,6 +51,7 @@ class RomfsExtractionTests(unittest.TestCase):
 publish = runpy.run_path(str(ROOT / 'frame/nxnative/stage.py'))['publish_script']
 
 
+@unittest.skipIf(os.name == 'nt', 'publication script runs inside Android/POSIX, not Windows Git Bash')
 class DatasetPublicationTests(unittest.TestCase):
     def test_bad_hash_or_truncated_stream_keeps_old_selection_and_saves(self):
         for truncated in (False, True):
