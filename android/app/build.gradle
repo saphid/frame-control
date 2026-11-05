@@ -1,0 +1,69 @@
+plugins { id 'com.android.application' }
+
+def env = System.getenv()
+def bundleDir = layout.buildDirectory.dir('generated/frameBundle')
+
+android {
+    namespace 'com.saphid.framecontrol'
+    compileSdk 36
+
+    defaultConfig {
+        applicationId = (project.findProperty('frameApplicationId') ?: 'com.saphid.framecontrol').toString()
+        minSdk 29
+        targetSdk 36
+        versionCode = Integer.parseInt((project.findProperty('frameVersionCode') ?: '1').toString())
+        versionName = (project.findProperty('frameVersionName') ?: '0.1.0').toString()
+        testInstrumentationRunner 'androidx.test.runner.AndroidJUnitRunner'
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            if (env.ANDROID_KEYSTORE_FILE && env.ANDROID_KEYSTORE_PASSWORD &&
+                    env.ANDROID_KEY_ALIAS && env.ANDROID_KEY_PASSWORD) {
+                signingConfig signingConfigs.create('play') {
+                    storeFile file(env.ANDROID_KEYSTORE_FILE)
+                    storePassword env.ANDROID_KEYSTORE_PASSWORD
+                    keyAlias env.ANDROID_KEY_ALIAS
+                    keyPassword env.ANDROID_KEY_PASSWORD
+                }
+            }
+        }
+    }
+    sourceSets.main.assets.srcDir(bundleDir)
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+tasks.register('packFrameBundle') {
+    inputs.files(fileTree(rootProject.projectDir.parentFile) {
+        include 'ui/**', 'frame/**', 'scripts/**', 'apk-catalog/**', 'THIRD_PARTY_NOTICES.md', 'LICENSE'
+    })
+    outputs.dir(bundleDir)
+    doLast {
+        def out = bundleDir.get().asFile
+        out.mkdirs()
+        def version = new ByteArrayOutputStream()
+        project.exec {
+            commandLine 'python3', '../ios/scripts/make_frame_bundle.py', new File(out, 'frame-bundle.bin')
+            workingDir rootProject.projectDir
+            standardOutput = version
+        }
+        new File(out, 'frame-bundle.version').text = version.toString('UTF-8').trim() + '\n'
+    }
+}
+tasks.configureEach { task ->
+    if ((task.name.startsWith('merge') && task.name.endsWith('Assets')) ||
+            task.name.toLowerCase().contains('lintvital')) {
+        task.dependsOn tasks.named('packFrameBundle')
+    }
+}
+
+dependencies {
+    implementation 'com.github.mwiede:jsch:2.27.5'
+    implementation 'androidx.webkit:webkit:1.14.0'
+    testImplementation 'junit:junit:4.13.2'
+    androidTestImplementation 'androidx.test:runner:1.6.2'
+    androidTestImplementation 'androidx.test.ext:junit:1.2.1'
+}

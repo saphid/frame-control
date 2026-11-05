@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- Add experimental NxNative games for Steam Frame: private user-added web
+  catalogs, URL lists, EmulationStation lists and mounted network folders;
+  verified prepared APK/data installation with progress and Steam shortcuts.
+  No ROM sources, games or keys ship with the app. Metroid Dread 2.1.0 has
+  remote gameplay, focus, checkpoint persistence and suspend/resume evidence.
+  Physical controller feel and worn comfort remain untested.
+
+- Bring Games browsing and Steam search closer to Steam's store: show useful
+  titles before a search, page through full result counts, filter and sort the
+  catalog, and show regional prices, discounts, ownership and Frame ratings in
+  compact rows. Game details now include Steam trailers, screenshots, review
+  summaries, tags and VR requirements. Purchases still happen on Steam.
+  [Screenshot comparison and scorecard](docs/evidence/steam-hill-climb/README.md).
+
 - Add the Frame simulator, `scripts/frame-sim.sh`: the fake Frame kept running
   on 127.0.0.1 under the `frame-sim` SSH alias, for trying the app, scripts and
   smoke test without the headset. It adds a test-picture headset view, live view

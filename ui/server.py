@@ -46,6 +46,7 @@ import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 import frame_android_import  # noqa: E402
+import frame_nxnative  # noqa: E402
 import frame_backup  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
@@ -1214,15 +1215,37 @@ def mods(body):
     return steam_frame(action, appid, timeout=MOD_TIMEOUT[action], script="frame_mods.py")
 
 
-def steam_search(query):
-    q = parse_qs(query)
+def steam_search(query, view="search"):
+    q = parse_qs(query, keep_blank_values=True)
     cc = (q.get("cc") or [""])[0].upper()
     if not re.fullmatch(r"[A-Z]{2}", cc):
         raise Failure("cc must be a two-letter country code", 400)
+    appid = (q.get("appid") or [""])[0]
+    if view == "details" and not APPID.fullmatch(appid):
+        raise Failure("bad appid", 400)
     try:
-        return {"results": frame_store.search((q.get("q") or [""])[0], cc)}
+        if view == "details":
+            return {"game": frame_store.details(int(appid), cc)}
+        if view == "browse":
+            return {"results": frame_store.browse(cc)}
+        start = (q.get("start") or ["0"])[0]
+        item_type = (q.get("type") or ["all"])[0]
+        sort = (q.get("sort") or ["relevance"])[0]
+        vr = (q.get("vr") or ["all"])[0]
+        price = (q.get("price") or ["any"])[0]
+        discount = (q.get("discount") or ["0"])[0]
+        tags = (q.get("tags") or [""])[0]
+        hidef2p = (q.get("hidef2p") or ["0"])[0]
+        if (not start.isascii() or not start.isdigit() or len(start) > 7 or int(start) > 1000000
+                or item_type not in frame_store.SEARCH_TYPES or sort not in frame_store.SEARCH_SORTS
+                or vr not in frame_store.SEARCH_VR or price not in frame_store.SEARCH_PRICES
+                or discount not in ("0", "1") or not frame_store.valid_search_tags(tags) or hidef2p not in ("0", "1")
+                or set(q) - {"q", "cc", "start", "type", "sort", "vr", "price", "discount", "tags", "hidef2p"}
+                or any(len(values) != 1 for values in q.values())):
+            raise Failure("Invalid Steam search options", 400)
+        return frame_store.search((q.get("q") or [""])[0], cc, int(start), item_type, sort, vr, price, discount == "1", tags, hidef2p == "1")
     except (OSError, ValueError, TypeError, AttributeError, http.client.HTTPException) as e:
-        raise Failure(f"Steam store search failed: {e}")
+        raise Failure(f"Steam store request failed: {e}")
 
 
 def set_volume(body):
@@ -3501,6 +3524,41 @@ def source_manage(body):
         raise Failure(str(e), 400)
 
 
+def nxnative_action(body):
+    """Private user game sources; prepared installs share the Android install queue."""
+    def text(key, optional=False, maximum=4096):
+        value = body.get(key, '')
+        if not isinstance(value, str) or len(value) > maximum or ('\x00' in value):
+            raise Failure('Invalid ' + key, 400)
+        value = value.strip()
+        if not value and not optional:
+            raise Failure('Choose a ' + key, 400)
+        return value
+
+    def call(fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except ValueError as exc:
+            raise Failure(str(exc), 400) from exc
+
+    action = body.get('action')
+    if action == 'add':
+        location, name = text('location'), text('name', optional=True, maximum=200)
+        return start_job('Add game source', lambda: call(frame_nxnative.add_source, location, name))
+    if action == 'refresh':
+        source = text('source', optional=True, maximum=128)
+        return start_job('Refresh game sources', lambda: call(frame_nxnative.refresh, source or None))
+    if action == 'remove':
+        result = call(frame_nxnative.remove_source, text('source', maximum=128))
+        return dict(result, message='Game source removed. Installed games were kept.')
+    if action == 'install':
+        source, entry = text('source', maximum=128), text('id', maximum=256)
+        ensure_master()
+        return queue_job('Install NxNative game',
+                         lambda report: call(frame_nxnative.install, source, entry, report=report), progress=True)
+    raise Failure('Unknown NxNative action', 400)
+
+
 def power_action(body):
     action = body.get('action')
     if LOCAL:
@@ -3540,6 +3598,7 @@ def transfer_local(body):
 
 
 POST = {
+    "/api/nxnative": nxnative_action,
     "/api/steam-pipewire": steam_pipewire_action,
     "/api/transfer": transfer_local,
     "/api/power": power_action,
@@ -3813,8 +3872,12 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(frame_steamgriddb.settings())
             elif path == "/artwork-settings.js":
                 self.send_bytes((HERE / 'artwork-settings.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/steam-hls.js":
+                self.send_bytes((HERE / 'vendor/hls-1.6.13.light.min.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.js":
                 self.send_bytes((HERE / 'control-center.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/nxnative.js":
+                self.send_bytes((HERE / 'nxnative.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.css":
                 self.send_bytes((HERE / 'control-center.css').read_bytes(), 'text/css; charset=utf-8')
             elif path == "/assistant":
@@ -3874,6 +3937,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise Failure(str(e), 400)
             elif path == "/api/sources":
                 self.send_json({"sources": apk_search.sources()})
+            elif path == "/api/nxnative":
+                self.send_json(frame_nxnative.status())
             elif path == "/api/search":
                 self.send_json(source_search(url.query))
             elif path == "/api/apk-versions":
@@ -3952,6 +4017,10 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(steam_frame("owned"))
             elif path == "/api/steam/search":
                 self.send_json(steam_search(url.query))
+            elif path == "/api/steam/browse":
+                self.send_json(steam_search(url.query, "browse"))
+            elif path == "/api/steam/details":
+                self.send_json(steam_search(url.query, "details"))
             elif path == "/api/webinstall/job":
                 self.send_json(webinstall_job(url.query))
             elif path == "/api/shots":

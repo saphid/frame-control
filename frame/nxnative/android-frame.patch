@@ -1,0 +1,1191 @@
+diff --git a/dm/android/app/frame_probe.h b/dm/android/app/frame_probe.h
+new file mode 100644
+index 0000000..f290c5a
+--- /dev/null
++++ b/dm/android/app/frame_probe.h
+@@ -0,0 +1,66 @@
++// Opt-in bring-up check, executed on the game's boot thread in its app domain.
++#pragma once
++#include <dlfcn.h>
++#include <sys/mman.h>
++#include <vulkan/vulkan.h>
++static void **frame_tp(void) { void **p; __asm__ volatile("mrs %0, tpidr_el0" : "=r"(p)); return p; }
++static _Atomic int frame_probe_failures;
++#define FRAME_CHECK(c) do { if (!(c)) { atomic_fetch_add(&frame_probe_failures, 1); fprintf(stderr, "frame-probe: FAIL %s\n", #c); } } while (0)
++static void *frame_probe_worker(void *arg) {
++    void **tp = frame_tp();
++    FRAME_CHECK(tp[2] == NULL);
++    if (tp[2]) return NULL;
++    uint64_t block[8] = {0}; block[3] = (uintptr_t)arg;
++    tp[2] = block;
++    for (int i = 0; i < 1000; ++i) { void *p = malloc(64 + i); free(p); char b[64]; snprintf(b, sizeof b, "%d %f", i, i * .5); }
++    void *h = dlopen("libvulkan.so", RTLD_NOW);
++    FRAME_CHECK(h != NULL);
++    if (h) { FRAME_CHECK(dlsym(h, "vkCreateInstance") != NULL); dlclose(h); }
++    VkApplicationInfo ai = {.sType=VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName="Frame TLS check", .apiVersion=VK_API_VERSION_1_1};
++    VkInstanceCreateInfo ci = {.sType=VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo=&ai};
++    VkInstance instance = VK_NULL_HANDLE;
++    VkResult rc = vkCreateInstance(&ci, NULL, &instance);
++    FRAME_CHECK(rc == VK_SUCCESS);
++    if (rc == VK_SUCCESS) vkDestroyInstance(instance, NULL);
++    sched_yield();
++    FRAME_CHECK(tp[2] == block);
++    uint64_t value;
++    __asm__ volatile("mrs %0, tpidr_el0\n ldr %0, [%0, #16]\n ldr %0, [%0, #24]" : "=&r"(value));
++    FRAME_CHECK(value == (uintptr_t)arg);
++    tp[2] = NULL;
++    return NULL;
++}
++static int frame_probe(void) {
++    FRAME_CHECK(frame_tp()[2] == NULL);
++    pthread_t threads[16]; int started = 0;
++    for (int i = 0; i < 16; ++i) { int rc = pthread_create(&threads[started], NULL, frame_probe_worker, (void *)(uintptr_t)(0x1000 + i)); FRAME_CHECK(rc == 0); if (!rc) ++started; }
++    for (int i = 0; i < started; ++i) FRAME_CHECK(pthread_join(threads[i], NULL) == 0);
++    size_t page = (size_t)sysconf(_SC_PAGESIZE);
++    uint32_t *code = mmap(NULL, page, PROT_READ | PROT_WRITE, MAP_PRIVATE | MAP_ANONYMOUS, -1, 0);
++    FRAME_CHECK(code != MAP_FAILED);
++    if (code != MAP_FAILED) {
++        code[0] = 0x52800540; code[1] = 0xd65f03c0; // mov w0, #42; ret
++        __builtin___clear_cache((char *)code, (char *)(code + 2));
++        int rc = mprotect(code, page, PROT_READ | PROT_EXEC); FRAME_CHECK(rc == 0);
++        if (!rc) FRAME_CHECK(((int (*)(void))code)() == 42);
++        munmap(code, page);
++    }
++    VkApplicationInfo ai = {.sType=VK_STRUCTURE_TYPE_APPLICATION_INFO, .pApplicationName="NxNative Frame probe", .apiVersion=VK_API_VERSION_1_1};
++    VkInstanceCreateInfo ci = {.sType=VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO, .pApplicationInfo=&ai};
++    VkInstance instance = VK_NULL_HANDLE;
++    VkResult rc = vkCreateInstance(&ci, NULL, &instance); FRAME_CHECK(rc == VK_SUCCESS);
++    if (rc == VK_SUCCESS) {
++        VkPhysicalDevice devices[8]; uint32_t n = 8;
++        rc = vkEnumeratePhysicalDevices(instance, &n, devices); FRAME_CHECK(rc == VK_SUCCESS && n > 0);
++        if (rc == VK_SUCCESS) for (uint32_t i = 0; i < n; ++i) {
++            VkPhysicalDeviceSubgroupProperties sg = {.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_SUBGROUP_PROPERTIES};
++            VkPhysicalDeviceProperties2 p = {.sType=VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_PROPERTIES_2,.pNext=&sg};
++            VkPhysicalDeviceFeatures f; vkGetPhysicalDeviceProperties2(devices[i], &p); vkGetPhysicalDeviceFeatures(devices[i], &f);
++            fprintf(stderr, "frame-probe: Vulkan device=%s api=%u.%u.%u driver=%u BC=%u float64=%u int64=%u subgroup=%u\n", p.properties.deviceName, VK_VERSION_MAJOR(p.properties.apiVersion), VK_VERSION_MINOR(p.properties.apiVersion), VK_VERSION_PATCH(p.properties.apiVersion), p.properties.driverVersion, f.textureCompressionBC, f.shaderFloat64, f.shaderInt64, sg.subgroupSize);
++        }
++        vkDestroyInstance(instance, NULL);
++    }
++    fprintf(stderr, "frame-probe: %s failures=%d threads=%d page=%zu\n", frame_probe_failures ? "FAIL" : "PASS", (int)frame_probe_failures, started, page);
++    return frame_probe_failures;
++}
++#undef FRAME_CHECK
+diff --git a/dm/android/app/front_android.c b/dm/android/app/front_android.c
+index 6fd6c29..f6322cf 100644
+--- a/dm/android/app/front_android.c
++++ b/dm/android/app/front_android.c
+@@ -42,7 +42,7 @@ void front_run(void (*guest)(void)) { dm_cheats_start(); guest(); }
+ 
+ // ---------- Controllers: one state per input device; buttons are ORed, each stick comes from the device that moves it furthest ----------
+ #define NDEV 8
+-static struct { int32_t id, used; uint64_t btn; float ax[10]; } g_dev[NDEV];   // id: Android's device ID (adb's injected events come from -1)
++static struct { int32_t id, used; uint32_t keys; uint64_t btn; float ax[10]; } g_dev[NDEV];   // id: Android's device ID (adb's injected events come from -1)
+ enum { AX_LX, AX_LY, AX_RX, AX_RY, AX_HX, AX_HY, AX_LT, AX_RT, AX_BRAKE, AX_GAS };
+ static int dev_slot(int32_t id) {
+     for (int i = 0; i < NDEV; i++) if (g_dev[i].used && g_dev[i].id == id) return i;
+@@ -51,12 +51,12 @@ static int dev_slot(int32_t id) {
+ }
+ static uint64_t key_bit(int32_t k) {
+     switch (k) {
+-        case AKEYCODE_BUTTON_B: return DM_BTN_A;  case AKEYCODE_BUTTON_A: return DM_BTN_B;   // by position: right = A, bottom = B
+-        case AKEYCODE_BUTTON_Y: return DM_BTN_X;  case AKEYCODE_BUTTON_X: return DM_BTN_Y;   // top = X, left = Y
++        case AKEYCODE_ENTER: case AKEYCODE_Z: case AKEYCODE_BUTTON_B: return DM_BTN_A;  case AKEYCODE_SPACE: case AKEYCODE_BUTTON_A: return DM_BTN_B;   // by position: right = A, bottom = B
++        case AKEYCODE_C: case AKEYCODE_BUTTON_Y: return DM_BTN_X;  case AKEYCODE_X: case AKEYCODE_BUTTON_X: return DM_BTN_Y;   // top = X, left = Y
+         case AKEYCODE_BUTTON_L1: return DM_BTN_L; case AKEYCODE_BUTTON_R1: return DM_BTN_R;
+         case AKEYCODE_BUTTON_L2: return DM_BTN_ZL; case AKEYCODE_BUTTON_R2: return DM_BTN_ZR;
+         case AKEYCODE_BUTTON_THUMBL: return DM_BTN_LS; case AKEYCODE_BUTTON_THUMBR: return DM_BTN_RS;
+-        case AKEYCODE_BUTTON_START: return DM_BTN_PLUS; case AKEYCODE_BUTTON_SELECT: case AKEYCODE_BACK: return DM_BTN_MINUS;
++        case AKEYCODE_ESCAPE: case AKEYCODE_BUTTON_START: return DM_BTN_PLUS; case AKEYCODE_BUTTON_SELECT: case AKEYCODE_BACK: return DM_BTN_MINUS;
+         case AKEYCODE_DPAD_LEFT: return DM_BTN_LEFT; case AKEYCODE_DPAD_UP: return DM_BTN_UP; case AKEYCODE_DPAD_RIGHT: return DM_BTN_RIGHT; case AKEYCODE_DPAD_DOWN: return DM_BTN_DOWN;
+     }
+     return 0;
+@@ -168,6 +168,17 @@ static int on_input(AInputEvent *e) {
+     if (type == AINPUT_EVENT_TYPE_MOTION && (src & AINPUT_SOURCE_TOUCHSCREEN) == AINPUT_SOURCE_TOUCHSCREEN) { touch_event(e); return 1; }
+     if (src & (AINPUT_SOURCE_GAMEPAD | AINPUT_SOURCE_JOYSTICK | AINPUT_SOURCE_DPAD)) atomic_store(&g_ovl_show, 0);   // a controller in use: the on-screen controls go
+     if (type == AINPUT_EVENT_TYPE_KEY) {
++        // Steam Input can supply keyboard events through Lepton's Wayland
++        // bridge. Keep opposing WASD keys independent, including releases.
++        int key = AKeyEvent_getKeyCode(e);
++        uint32_t axis = key == AKEYCODE_W ? 1 : key == AKEYCODE_A ? 2 : key == AKEYCODE_S ? 4 : key == AKEYCODE_D ? 8 : 0;
++        if (axis) {
++            if (AKeyEvent_getAction(e) == AKEY_EVENT_ACTION_DOWN) g_dev[s].keys |= axis;
++            else if (AKeyEvent_getAction(e) == AKEY_EVENT_ACTION_UP) g_dev[s].keys &= ~axis;
++            g_dev[s].ax[AX_LX] = !!(g_dev[s].keys & 8) - !!(g_dev[s].keys & 2);
++            g_dev[s].ax[AX_LY] = !!(g_dev[s].keys & 4) - !!(g_dev[s].keys & 1);
++            pads_push(); return 1;
++        }
+         uint64_t b = key_bit(AKeyEvent_getKeyCode(e)); if (!b) return AKeyEvent_getKeyCode(e) == AKEYCODE_BACK;
+         if (AKeyEvent_getAction(e) == AKEY_EVENT_ACTION_DOWN) g_dev[s].btn |= b; else if (AKeyEvent_getAction(e) == AKEY_EVENT_ACTION_UP) g_dev[s].btn &= ~b;
+         pads_push(); return 1;
+@@ -184,7 +195,7 @@ static AInputQueue *g_iq;
+ static int input_cb(int fd, int events, void *data) {
+     (void)fd; (void)events; (void)data; AInputEvent *e;
+     while (g_iq && AInputQueue_getEvent(g_iq, &e) >= 0) {
+-        if (AInputQueue_preDispatchEvent(g_iq, e)) continue;
++        if (AInputQueue_preDispatchEvent(g_iq, e)) { static int n; if (n++ < 3) LOG("front end: input sent to IME before dispatch"); continue; }
+         AInputQueue_finishEvent(g_iq, e, on_input(e));
+     }
+     return 1;
+@@ -213,17 +224,32 @@ static void boot_env(const char *files, const char *ext) {
+     else fprintf(stderr, "boot: no settings.env, the defaults apply\n");
+     snprintf(p, sizeof p, "%s/env.txt", ext);   // diagnostics: switches in <external>/env.txt (one KEY=VALUE per line) win
+     if ((f = fopen(p, "r"))) { char ln[1024]; while (fgets(ln, sizeof ln, f)) { ln[strcspn(ln, "\r\n")] = 0; char *eq = strchr(ln, '='); if (!eq || ln[0] == '#') continue; *eq = 0; setenv(ln, eq + 1, 1); fprintf(stderr, "boot: env %s=%s\n", ln, eq + 1); } fclose(f); }
++    // A verified, versioned dataset is published by Frame's staging tool.
++    char data_root[1024]; snprintf(data_root, sizeof data_root, "%s", ext);
++    snprintf(p, sizeof p, "%s/frame-data.current", ext);
++    if ((f = fopen(p, "r"))) {
++        char digest[66] = {0};
++        if (fgets(digest, sizeof digest, f)) {
++            digest[strcspn(digest, "\r\n")] = 0;
++            if (strlen(digest) != 64 || strspn(digest, "0123456789abcdef") != 64) die("invalid Frame dataset pointer");
++            snprintf(data_root, sizeof data_root, "%s/frame-data/%s", ext, digest);
++        } else die("empty Frame dataset pointer");
++        fclose(f);
++    }
+     const char *sub[][2] = {{"DM_ROMFS", "romfs"}, {"DM_VK_DIR", "vk"}, {"DM_FONT_DIR", "font"}};
+-    for (int i = 0; i < 3; i++) { snprintf(p, sizeof p, "%s/%s", ext, sub[i][1]); setenv(sub[i][0], p, 0); }
++    for (int i = 0; i < 3; i++) { snprintf(p, sizeof p, "%s/%s", data_root, sub[i][1]); setenv(sub[i][0], p, 0); }
+     snprintf(p, sizeof p, "%s/save", files); mkdir(p, 0755); setenv("DM_SAVE", p, 0);
+     snprintf(p, sizeof p, "%s/temp", files); mkdir(p, 0755); setenv("DM_TEMP", p, 0);
+     snprintf(p, sizeof p, "%s/cheats.txt", files); if (!access(p, R_OK)) setenv("DM_CHEATS", p, 0);
+     chdir(files);
+-    g_argv[0] = strdup("dmhost"); snprintf(p, sizeof p, "%s/dm", ext); g_argv[1] = strdup(p);
++    g_argv[0] = strdup("dmhost"); snprintf(p, sizeof p, "%s/dm", data_root); g_argv[1] = strdup(p);
+ }
++#include "frame_probe.h"
+ static void *boot_thread(void *a) {
+     (void)a;
+     static char alt[65536]; stack_t ss = {.ss_sp = alt, .ss_size = sizeof alt}; sigaltstack(&ss, 0);
++    if (getenv("DM_FRAME_PROBE") && frame_probe()) return NULL;
++    if (getenv("DM_FRAME_PROBE_ONLY")) return NULL;
+     int rc = dm_main(2, g_argv);
+     fprintf(stderr, "boot: dm_main returned %d\n", rc);
+     return NULL;
+@@ -243,7 +269,7 @@ static void immersive(ANativeActivity *a) {
+ static void on_window_created(ANativeActivity *a, ANativeWindow *w) { (void)a; pthread_mutex_lock(&g_wmu); g_win = w; atomic_fetch_add(&g_win_gen, 1); pthread_mutex_unlock(&g_wmu); LOG("front end: window %dx%d", ANativeWindow_getWidth(w), ANativeWindow_getHeight(w)); }
+ static void on_window_destroyed(ANativeActivity *a, ANativeWindow *w) { (void)a; (void)w; pthread_mutex_lock(&g_wmu); g_win = NULL; atomic_fetch_add(&g_win_gen, 1); pthread_mutex_unlock(&g_wmu); }
+ static void on_window_resized(ANativeActivity *a, ANativeWindow *w) { (void)a; (void)w; atomic_fetch_add(&g_win_gen, 1); }
+-static void on_input_created(ANativeActivity *a, AInputQueue *q) { (void)a; g_iq = q; AInputQueue_attachLooper(q, ALooper_forThread(), 1, input_cb, NULL); }
++static void on_input_created(ANativeActivity *a, AInputQueue *q) { (void)a; g_iq = q; LOG("front end: input queue %p, looper %p", q, ALooper_forThread()); AInputQueue_attachLooper(q, ALooper_forThread(), 1, input_cb, NULL); }
+ static void on_input_destroyed(ANativeActivity *a, AInputQueue *q) { (void)a; AInputQueue_detachLooper(q); g_iq = NULL; }
+ static void on_resume(ANativeActivity *a) { (void)a; dm_focus_set(1); dm_audio_suspend(0); }
+ static void on_pause(ANativeActivity *a) { (void)a; dm_audio_suspend(1); dm_focus_set(3); }
+@@ -258,6 +284,7 @@ __attribute__((visibility("default"))) void ANativeActivity_onCreate(ANativeActi
+     a->callbacks->onInputQueueCreated = on_input_created; a->callbacks->onInputQueueDestroyed = on_input_destroyed;
+     a->callbacks->onResume = on_resume; a->callbacks->onPause = on_pause; a->callbacks->onWindowFocusChanged = on_focus; a->callbacks->onDestroy = on_destroy;
+     ANativeActivity_setWindowFlags(a, 0x80 /* KEEP_SCREEN_ON */ | 0x400 /* FULLSCREEN */, 0);
++    ANativeActivity_setWindowFormat(a, WINDOW_FORMAT_RGBX_8888); // flat game output is opaque, including cinematics
+     immersive(a);
+     static int booted; if (booted++) return;   // the activity can be made again (rotation, a return): the host runs once per process
+     snprintf(g_files, sizeof g_files, "%s", a->internalDataPath);
+diff --git a/dm/android/app/java/com/nxnative/MenuActivity.java b/dm/android/app/java/com/nxnative/MenuActivity.java
+index 5fd8e6a..607dc5f 100644
+--- a/dm/android/app/java/com/nxnative/MenuActivity.java
++++ b/dm/android/app/java/com/nxnative/MenuActivity.java
+@@ -55,7 +55,7 @@ public class MenuActivity extends Activity {
+         buildUi();
+         if (needsUnpack()) { if (pendingData() != null) askData(null); else unpack(); return; }
+         boolean forced = new File(getFilesDir(), "show_menu").delete();
+-        if (prefs.getBoolean("skip", false) && !forced && b == null && gameFilesPresent()) play();
++        if ((prefs.getBoolean("skip", true) || getIntent().getBooleanExtra("nxnative_autostart", false)) && !forced && b == null && gameFilesPresent()) play();
+     }
+     @Override protected void onPause() { super.onPause(); if (mode != null) save(); }   // choices are kept also when the menu is left without playing
+     @Override protected void onResume() {
+@@ -214,6 +214,14 @@ public class MenuActivity extends Activity {
+     }
+     private boolean gameFilesPresent() {
+         File ext = getExternalFilesDir(null);
++        File pointer = new File(ext, "frame-data.current");
++        if (pointer.exists()) {
++            try (BufferedReader r = new BufferedReader(new InputStreamReader(new java.io.FileInputStream(pointer), StandardCharsets.UTF_8))) {
++                String digest = r.readLine();
++                if (digest == null || !digest.matches("[0-9a-f]{64}")) return false;
++                ext = new File(ext, "frame-data/" + digest);
++            } catch (Exception e) { return false; }
++        }
+         return ext != null && new File(ext, "romfs").isDirectory() && new File(ext, "dm").isDirectory() && new File(ext, "vk").isDirectory();
+     }
+ 
+@@ -254,38 +262,38 @@ public class MenuActivity extends Activity {
+         ScrollView sv = new ScrollView(this); sv.setBackgroundColor(Color.rgb(16, 18, 28));
+         LinearLayout col = new LinearLayout(this); col.setOrientation(LinearLayout.VERTICAL); col.setPadding(56, 32, 56, 48);
+         sv.addView(col, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+-        col.addView(text(getApplicationInfo().loadLabel(getPackageManager()) + " — Configuración", 24, true));
+-        col.addView(text("Elige cómo quieres jugar. Durante el juego, mantén − y + dos segundos para volver aquí.", 14, false));
++        col.addView(text(getApplicationInfo().loadLabel(getPackageManager()) + " — Settings", 24, true));
++        col.addView(text("Choose your settings. Hold − and + for two seconds in game to return.", 14, false));
+         status = text("", 15, true); status.setVisibility(View.GONE); col.addView(status);
+         bar = new android.widget.ProgressBar(this, null, android.R.attr.progressBarStyleHorizontal); bar.setMax(100); bar.setVisibility(View.GONE); col.addView(bar);
+         dataButton = new Button(this); dataButton.setText("Elegir archivo de datos"); dataButton.setTextSize(18); dataButton.setVisibility(View.GONE);
+         dataButton.setOnClickListener(v -> pickData()); col.addView(dataButton);
+         if (!gameFilesPresent() && !bundled()) {
+-            TextView w = text("Faltan los archivos del juego en " + getExternalFilesDir(null) + " (romfs, dm, vk). Cópialos desde la computadora y vuelve a abrir la app.", 15, true);
++            TextView w = text("Game files are missing from " + getExternalFilesDir(null) + " (romfs, dm, vk). Stage the game data, then reopen the app.", 15, true);
+             w.setTextColor(Color.rgb(255, 120, 120)); col.addView(w);
+         }
+-        mode = spinner(col, "Modo de consola", new String[]{"Portátil (más fluido)", "Dock (TV, más resolución)"}, prefs.getInt("opmode", 0) == 1 ? 1 : 0);
+-        fps = spinner(col, "Cuadros por segundo", new String[]{"60 (predeterminado)", "30 (ahorra batería)"}, prefs.getInt("fps", 60) == 30 ? 1 : 0);
+-        fit = spinner(col, "Pantalla", new String[]{"Mantener proporción (franjas negras)", "Llenar la pantalla (estirar)"}, prefs.getBoolean("stretch", false) ? 1 : 0);
++        mode = spinner(col, "Console mode", new String[]{"Handheld", "Docked (higher resolution)"}, prefs.getInt("opmode", 0) == 1 ? 1 : 0);
++        fps = spinner(col, "Frame rate", new String[]{"60 (default)", "30 (save battery)"}, prefs.getInt("fps", 60) == 30 ? 1 : 0);
++        fit = spinner(col, "Display", new String[]{"Keep aspect ratio", "Stretch to fill"}, prefs.getBoolean("stretch", false) ? 1 : 0);
+         String sys = systemLang();
+         String[] langs = {"es-419", "en-US", "system"};
+-        int ls = 0; for (int i = 0; i < langs.length; i++) if (langs[i].equals(prefs.getString("lang", "es-419"))) ls = i;
+-        lang = spinner(col, "Idioma", new String[]{"Español (Latinoamérica)", "English", "Idioma del sistema (" + sys + ")"}, ls);
+-        showFps = new CheckBox(this); showFps.setText("Mostrar los FPS en pantalla"); showFps.setTextColor(Color.WHITE); showFps.setChecked(prefs.getBoolean("showfps", false));
++        int ls = 0; for (int i = 0; i < langs.length; i++) if (langs[i].equals(prefs.getString("lang", "en-US"))) ls = i;
++        lang = spinner(col, "Language", new String[]{"Spanish (Latin America)", "English", "System language (" + sys + ")"}, ls);
++        showFps = new CheckBox(this); showFps.setText("Show frame rate"); showFps.setTextColor(Color.WHITE); showFps.setChecked(prefs.getBoolean("showfps", false));
+         col.addView(showFps);
+         List<String> cheats = cheatNames();
+         Set<String> on = prefs.getStringSet("cheats", new HashSet<>());
+-        if (cheats.isEmpty()) col.addView(text("Este juego no tiene trucos para esta versión.", 15, false));
++        if (cheats.isEmpty()) col.addView(text("No cheats for this game version.", 15, false));
+         else {
+-            col.addView(text("Trucos (activa solo los que quieras)", 18, true));
++            col.addView(text("Cheats", 18, true));
+             for (int i = 0; i < cheats.size(); i++) {
+                 CheckBox c = new CheckBox(this); c.setText(cheats.get(i)); c.setTextColor(Color.WHITE); c.setChecked(on.contains(String.valueOf(i + 1)));
+                 cheatBoxes.add(c); col.addView(c);
+             }
+         }
+-        skip = new CheckBox(this); skip.setText("No volver a mostrar este menú (− y + durante el juego lo abre otra vez)"); skip.setTextColor(Color.WHITE);
+-        skip.setChecked(prefs.getBoolean("skip", false)); col.addView(skip);
+-        Button play = playButton = new Button(this); play.setText("Jugar (START)"); play.setTextSize(20);
++        skip = new CheckBox(this); skip.setText("Skip this menu (hold − and + in game to return)"); skip.setTextColor(Color.WHITE);
++        skip.setChecked(prefs.getBoolean("skip", true)); col.addView(skip);
++        Button play = playButton = new Button(this); play.setText("Play (START)"); play.setTextSize(20);
+         LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT); lp.topMargin = 28;
+         play.setOnClickListener(v -> { save(); play(); });
+         col.addView(play, lp);
+@@ -314,7 +322,7 @@ public class MenuActivity extends Activity {
+         try (OutputStream o = new FileOutputStream(new File(getFilesDir(), "settings.env"))) { o.write(env.getBytes(StandardCharsets.UTF_8)); } catch (Exception e) { /* the defaults apply */ }
+     }
+     private void play() {
+-        if (unpacking) return;
++        if (unpacking || !gameFilesPresent()) return;
+         if (!new File(getFilesDir(), "settings.env").exists()) save();
+         launched = true;
+         Intent i = new Intent(); i.setClassName(this, "android.app.NativeActivity");
+diff --git a/dm/android/src_vk/nvn_vk.c b/dm/android/src_vk/nvn_vk.c
+index accfc79..337c7bd 100644
+--- a/dm/android/src_vk/nvn_vk.c
++++ b/dm/android/src_vk/nvn_vk.c
+@@ -17,6 +17,7 @@
+ #define VK_USE_PLATFORM_ANDROID_KHR
+ #include <vulkan/vulkan.h>
+ #include <android/native_window.h>
++#include "opaque_spv.h"
+ #include <stdatomic.h>
+ #include <sys/stat.h>
+ 
+@@ -1752,11 +1753,17 @@ static void rt_dump(uint64_t n) {
+ // ---------- Window ----------
+ __attribute__((weak)) void *front_native_window(int *gen) { (void)gen; return NULL; }   // app/front_android.c; none in the adb front end
+ __attribute__((weak)) void front_window_lock(int on) { (void)on; }
+-static struct { VkSurfaceKHR surf; VkSwapchainKHR sc; VkImage img[8]; VkImageView view[8]; uint32_t n; VkFormat fmt; VkExtent2D ext; int gen; } W;
++static struct { VkSurfaceKHR surf; VkSwapchainKHR sc; VkImage img[8]; VkImageView view[8]; uint32_t n; VkFormat fmt; VkExtent2D ext; int gen; VkPipeline alpha; VkPipelineLayout alpha_layout; int force_alpha; } W;
+ #define NPRES 3
+ static struct { VkCommandPool pool; VkCommandBuffer cb; VkFence fence; VkSemaphore acq, done; VkFramebuffer fb; } g_pres[NPRES]; static int g_pi;
+ static void win_drop(void) {
+-    if (W.sc) { vkDeviceWaitIdle(g_dev); for (uint32_t i = 0; i < W.n; i++) vkDestroyImageView(g_dev, W.view[i], NULL); vkDestroySwapchainKHR(g_dev, W.sc, NULL); W.sc = VK_NULL_HANDLE; }
++    if (W.sc) {
++        vkDeviceWaitIdle(g_dev);
++        if (W.alpha) { vkDestroyPipeline(g_dev, W.alpha, NULL); W.alpha = VK_NULL_HANDLE; }
++        if (W.alpha_layout) { vkDestroyPipelineLayout(g_dev, W.alpha_layout, NULL); W.alpha_layout = VK_NULL_HANDLE; }
++        for (uint32_t i = 0; i < W.n; i++) vkDestroyImageView(g_dev, W.view[i], NULL);
++        vkDestroySwapchainKHR(g_dev, W.sc, NULL); W.sc = VK_NULL_HANDLE;
++    }
+     if (W.surf) { vkDestroySurfaceKHR(g_inst, W.surf, NULL); W.surf = VK_NULL_HANDLE; }
+ }
+ static int win_make(ANativeWindow *aw) {
+@@ -1764,6 +1771,7 @@ static int win_make(ANativeWindow *aw) {
+     if (vkCreateAndroidSurfaceKHR(g_inst, &si, NULL, &W.surf) != VK_SUCCESS) { RED_ONCE(90, "no Vulkan surface for the window"); return 0; }
+     VkBool32 ok = 0; vkGetPhysicalDeviceSurfaceSupportKHR(g_pd, g_qf, W.surf, &ok); if (!ok) { RED_ONCE(91, "the queue cannot present to the window"); return 0; }
+     VkSurfaceCapabilitiesKHR cap; vkGetPhysicalDeviceSurfaceCapabilitiesKHR(g_pd, W.surf, &cap);
++    W.force_alpha = !(cap.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR);
+     uint32_t nf = 0; vkGetPhysicalDeviceSurfaceFormatsKHR(g_pd, W.surf, &nf, NULL); VkSurfaceFormatKHR sf[32]; if (nf > 32) nf = 32; vkGetPhysicalDeviceSurfaceFormatsKHR(g_pd, W.surf, &nf, sf);
+     VkSurfaceFormatKHR pick = sf[0]; for (uint32_t i = 0; i < nf; i++) if (sf[i].format == VK_FORMAT_R8G8B8A8_UNORM || sf[i].format == VK_FORMAT_B8G8R8A8_UNORM) { pick = sf[i]; break; }
+     uint32_t npm = 0; vkGetPhysicalDeviceSurfacePresentModesKHR(g_pd, W.surf, &npm, NULL); VkPresentModeKHR pm[8]; if (npm > 8) npm = 8; vkGetPhysicalDeviceSurfacePresentModesKHR(g_pd, W.surf, &npm, pm);
+@@ -1777,6 +1785,7 @@ static int win_make(ANativeWindow *aw) {
+     if (W.ext.height < cap.minImageExtent.height) W.ext.height = cap.minImageExtent.height; if (W.ext.height > cap.maxImageExtent.height) W.ext.height = cap.maxImageExtent.height;
+     uint32_t nimg = cap.minImageCount + 1; if (cap.maxImageCount && nimg > cap.maxImageCount) nimg = cap.maxImageCount;
+     VkCompositeAlphaFlagBitsKHR ca = cap.supportedCompositeAlpha & VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR ? VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR : VK_COMPOSITE_ALPHA_INHERIT_BIT_KHR;
++    LOG("vk: surface alpha supported %#x, selected %#x", cap.supportedCompositeAlpha, ca);
+     VkSwapchainCreateInfoKHR ci = {VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR, NULL, 0, W.surf, nimg, pick.format, pick.colorSpace, W.ext, 1,
+                                    VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_SHARING_MODE_EXCLUSIVE, 0, NULL, pre, ca, mode, VK_TRUE, VK_NULL_HANDLE};
+     if (vkCreateSwapchainKHR(g_dev, &ci, NULL, &W.sc) != VK_SUCCESS) { RED_ONCE(92, "no swapchain for the window"); return 0; }
+@@ -1809,9 +1818,50 @@ static uint32_t text_rects(VkClearRect *r, uint32_t nr, uint32_t max, const char
+             r[nr++] = (VkClearRect){{{x0 + (int32_t)((d * 4 + c) * cell), y0 + (int32_t)(row * cell)}, {cell, cell}}, 0, 1}; }
+     return nr;
+ }
++// Lepton exposes only INHERIT composite alpha. NVN window alpha is not desktop
++// transparency: force it to one in the presentation copy, after all game blending.
++// The alpha-only color mask preserves the rendered RGB and letterbox pixels.
++static void opaque_draw(VkCommandBuffer cb) {
++    if (!W.alpha) {
++        VkShaderModule mods[2];
++        VkShaderModuleCreateInfo mc = {.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO, .codeSize = sizeof opaque_vert_spv, .pCode = opaque_vert_spv};
++        VKCHECK(vkCreateShaderModule(g_dev, &mc, NULL, &mods[0]));
++        mc.codeSize = sizeof opaque_frag_spv; mc.pCode = opaque_frag_spv;
++        VKCHECK(vkCreateShaderModule(g_dev, &mc, NULL, &mods[1]));
++        VkPipelineLayoutCreateInfo lc = {.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO};
++        VKCHECK(vkCreatePipelineLayout(g_dev, &lc, NULL, &W.alpha_layout));
++        VkPipelineShaderStageCreateInfo stages[2] = {
++            {.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, .stage = VK_SHADER_STAGE_VERTEX_BIT, .module = mods[0], .pName = "main"},
++            {.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO, .stage = VK_SHADER_STAGE_FRAGMENT_BIT, .module = mods[1], .pName = "main"}};
++        VkPipelineVertexInputStateCreateInfo vi = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO};
++        VkPipelineInputAssemblyStateCreateInfo ia = {.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO, .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST};
++        VkPipelineViewportStateCreateInfo vp = {.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO, .viewportCount = 1, .scissorCount = 1};
++        VkPipelineRasterizationStateCreateInfo rs = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO, .polygonMode = VK_POLYGON_MODE_FILL, .cullMode = VK_CULL_MODE_NONE, .lineWidth = 1};
++        VkPipelineMultisampleStateCreateInfo ms = {.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO, .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT};
++        VkPipelineColorBlendAttachmentState ba = {.colorWriteMask = VK_COLOR_COMPONENT_A_BIT};
++        VkPipelineColorBlendStateCreateInfo blend = {.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO, .attachmentCount = 1, .pAttachments = &ba};
++        VkDynamicState dynamic[] = {VK_DYNAMIC_STATE_VIEWPORT, VK_DYNAMIC_STATE_SCISSOR};
++        VkPipelineDynamicStateCreateInfo dy = {.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO, .dynamicStateCount = 2, .pDynamicStates = dynamic};
++        VkPipelineRenderingCreateInfo ri = {.sType = VK_STRUCTURE_TYPE_PIPELINE_RENDERING_CREATE_INFO, .colorAttachmentCount = 1, .pColorAttachmentFormats = &W.fmt};
++        VkAttachmentLoadOp load = VK_ATTACHMENT_LOAD_OP_LOAD;
++        VkRenderPass rp = g_dynrend ? VK_NULL_HANDLE : rp_get(&W.fmt, &load, 1, VK_FORMAT_UNDEFINED, 0, 0, 0, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL);
++        VkGraphicsPipelineCreateInfo pc = {.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO, .pNext = g_dynrend ? &ri : NULL,
++            .stageCount = 2, .pStages = stages, .pVertexInputState = &vi, .pInputAssemblyState = &ia, .pViewportState = &vp,
++            .pRasterizationState = &rs, .pMultisampleState = &ms, .pColorBlendState = &blend, .pDynamicState = &dy, .layout = W.alpha_layout, .renderPass = rp};
++        VKCHECK(vkCreateGraphicsPipelines(g_dev, g_pcache, 1, &pc, NULL, &W.alpha));
++        for (int i = 0; i < 2; i++) vkDestroyShaderModule(g_dev, mods[i], NULL);
++        LOG("vk: opaque presentation alpha enabled");
++    }
++    VkViewport vp = {0, 0, W.ext.width, W.ext.height, 0, 1};
++    VkRect2D scissor = {{0, 0}, W.ext};
++    vkCmdBindPipeline(cb, VK_PIPELINE_BIND_POINT_GRAPHICS, W.alpha);
++    vkCmdSetViewport(cb, 0, 1, &vp); vkCmdSetScissor(cb, 0, 1, &scissor);
++    vkCmdDraw(cb, 3, 1, 0, 0);
++}
+ static VkFramebuffer overlay_draw(VkCommandBuffer cb, uint32_t img, int show_fps, const dm_ovl *ov, int nov) {
+     rp_desc d = {.n = 1, .cv = {W.view[img]}, .cf = {W.fmt}, .cl = {VK_ATTACHMENT_LOAD_OP_LOAD}, .w = W.ext.width, .h = W.ext.height, .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL};
+     VkFramebuffer fb = rp_begin(cb, &d);
++    if (W.force_alpha) opaque_draw(cb);
+     enum { MAXR = 1024 }; static VkClearRect lines[MAXR], fills[MAXR], fg[MAXR], bg[64]; uint32_t nl = 0, nf = 0, ng = 0, nb = 0;
+     #define CLIP(x0, y0, w_, h_) do { int32_t X = (int32_t)(x0), Y = (int32_t)(y0), XW = X + (int32_t)(w_), YH = Y + (int32_t)(h_); if (X < 0) X = 0; if (Y < 0) Y = 0; \
+         if (XW > (int32_t)W.ext.width) XW = (int32_t)W.ext.width; if (YH > (int32_t)W.ext.height) YH = (int32_t)W.ext.height; \
+@@ -1876,7 +1926,7 @@ static void win_present(const tex_t *t, const int crop[4]) {
+     vkCmdBlitImage(cb, v->img, VK_IMAGE_LAYOUT_GENERAL, W.img[idx], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &b, VK_FILTER_LINEAR);
+     static int show = -1; if (show < 0) { const char *e = getenv("DM_SHOW_FPS"); show = e && atoi(e); }
+     static dm_ovl ov[32]; int nov = front_overlay(ov, 32);
+-    if (show || nov) { img_barrier(cb, W.img[idx], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL); P_->fb = overlay_draw(cb, idx, show, ov, nov);
++    if (show || nov || W.force_alpha) { img_barrier(cb, W.img[idx], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL); P_->fb = overlay_draw(cb, idx, show, ov, nov);
+                 img_barrier(cb, W.img[idx], VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR); }
+     else img_barrier(cb, W.img[idx], VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_PRESENT_SRC_KHR);
+     vkEndCommandBuffer(cb);
+diff --git a/dm/android/src_vk/opaque.frag b/dm/android/src_vk/opaque.frag
+new file mode 100644
+index 0000000..c59148d
+--- /dev/null
++++ b/dm/android/src_vk/opaque.frag
+@@ -0,0 +1,3 @@
++#version 450
++layout(location = 0) out vec4 color;
++void main() { color = vec4(0.0, 0.0, 0.0, 1.0); }
+diff --git a/dm/android/src_vk/opaque.vert b/dm/android/src_vk/opaque.vert
+new file mode 100644
+index 0000000..d6fb0f0
+--- /dev/null
++++ b/dm/android/src_vk/opaque.vert
+@@ -0,0 +1,5 @@
++#version 450
++void main() {
++    vec2 p = vec2((gl_VertexIndex << 1) & 2, gl_VertexIndex & 2);
++    gl_Position = vec4(p * 2.0 - 1.0, 0.0, 1.0);
++}
+diff --git a/dm/android/src_vk/opaque_spv.h b/dm/android/src_vk/opaque_spv.h
+new file mode 100644
+index 0000000..e138d21
+--- /dev/null
++++ b/dm/android/src_vk/opaque_spv.h
+@@ -0,0 +1,51 @@
++// Generated from opaque.vert / opaque.frag with glslangValidator -V -Os.
++// Only alpha is written by the pipeline; RGB is preserved.
++
++static const uint32_t opaque_vert_spv[] = {
++    0x07230203, 0x00010000, 0x0008000b, 0x0000002c, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
++    0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
++    0x0007000f, 0x00000000, 0x00000004, 0x6e69616d, 0x00000000, 0x0000000c, 0x0000001d, 0x00030003,
++    0x00000002, 0x000001c2, 0x00040005, 0x00000004, 0x6e69616d, 0x00000000, 0x00060005, 0x0000000c,
++    0x565f6c67, 0x65747265, 0x646e4978, 0x00007865, 0x00060005, 0x0000001b, 0x505f6c67, 0x65567265,
++    0x78657472, 0x00000000, 0x00060006, 0x0000001b, 0x00000000, 0x505f6c67, 0x7469736f, 0x006e6f69,
++    0x00070006, 0x0000001b, 0x00000001, 0x505f6c67, 0x746e696f, 0x657a6953, 0x00000000, 0x00070006,
++    0x0000001b, 0x00000002, 0x435f6c67, 0x4470696c, 0x61747369, 0x0065636e, 0x00070006, 0x0000001b,
++    0x00000003, 0x435f6c67, 0x446c6c75, 0x61747369, 0x0065636e, 0x00030005, 0x0000001d, 0x00000000,
++    0x00040047, 0x0000000c, 0x0000000b, 0x0000002a, 0x00030047, 0x0000001b, 0x00000002, 0x00050048,
++    0x0000001b, 0x00000000, 0x0000000b, 0x00000000, 0x00050048, 0x0000001b, 0x00000001, 0x0000000b,
++    0x00000001, 0x00050048, 0x0000001b, 0x00000002, 0x0000000b, 0x00000003, 0x00050048, 0x0000001b,
++    0x00000003, 0x0000000b, 0x00000004, 0x00020013, 0x00000002, 0x00030021, 0x00000003, 0x00000002,
++    0x00030016, 0x00000006, 0x00000020, 0x00040017, 0x00000007, 0x00000006, 0x00000002, 0x00040015,
++    0x0000000a, 0x00000020, 0x00000001, 0x00040020, 0x0000000b, 0x00000001, 0x0000000a, 0x0004003b,
++    0x0000000b, 0x0000000c, 0x00000001, 0x0004002b, 0x0000000a, 0x0000000e, 0x00000001, 0x0004002b,
++    0x0000000a, 0x00000010, 0x00000002, 0x00040017, 0x00000017, 0x00000006, 0x00000004, 0x00040015,
++    0x00000018, 0x00000020, 0x00000000, 0x0004002b, 0x00000018, 0x00000019, 0x00000001, 0x0004001c,
++    0x0000001a, 0x00000006, 0x00000019, 0x0006001e, 0x0000001b, 0x00000017, 0x00000006, 0x0000001a,
++    0x0000001a, 0x00040020, 0x0000001c, 0x00000003, 0x0000001b, 0x0004003b, 0x0000001c, 0x0000001d,
++    0x00000003, 0x0004002b, 0x0000000a, 0x0000001e, 0x00000000, 0x0004002b, 0x00000006, 0x00000020,
++    0x40000000, 0x0004002b, 0x00000006, 0x00000022, 0x3f800000, 0x0004002b, 0x00000006, 0x00000025,
++    0x00000000, 0x00040020, 0x00000029, 0x00000003, 0x00000017, 0x0005002c, 0x00000007, 0x0000002b,
++    0x00000022, 0x00000022, 0x00050036, 0x00000002, 0x00000004, 0x00000000, 0x00000003, 0x000200f8,
++    0x00000005, 0x0004003d, 0x0000000a, 0x0000000d, 0x0000000c, 0x000500c4, 0x0000000a, 0x0000000f,
++    0x0000000d, 0x0000000e, 0x000500c7, 0x0000000a, 0x00000011, 0x0000000f, 0x00000010, 0x0004006f,
++    0x00000006, 0x00000012, 0x00000011, 0x000500c7, 0x0000000a, 0x00000014, 0x0000000d, 0x00000010,
++    0x0004006f, 0x00000006, 0x00000015, 0x00000014, 0x00050050, 0x00000007, 0x00000016, 0x00000012,
++    0x00000015, 0x0005008e, 0x00000007, 0x00000021, 0x00000016, 0x00000020, 0x00050083, 0x00000007,
++    0x00000024, 0x00000021, 0x0000002b, 0x00050051, 0x00000006, 0x00000026, 0x00000024, 0x00000000,
++    0x00050051, 0x00000006, 0x00000027, 0x00000024, 0x00000001, 0x00070050, 0x00000017, 0x00000028,
++    0x00000026, 0x00000027, 0x00000025, 0x00000022, 0x00050041, 0x00000029, 0x0000002a, 0x0000001d,
++    0x0000001e, 0x0003003e, 0x0000002a, 0x00000028, 0x000100fd, 0x00010038,
++};
++static const uint32_t opaque_frag_spv[] = {
++    0x07230203, 0x00010000, 0x0008000b, 0x0000000d, 0x00000000, 0x00020011, 0x00000001, 0x0006000b,
++    0x00000001, 0x4c534c47, 0x6474732e, 0x3035342e, 0x00000000, 0x0003000e, 0x00000000, 0x00000001,
++    0x0006000f, 0x00000004, 0x00000004, 0x6e69616d, 0x00000000, 0x00000009, 0x00030010, 0x00000004,
++    0x00000007, 0x00030003, 0x00000002, 0x000001c2, 0x00040005, 0x00000004, 0x6e69616d, 0x00000000,
++    0x00040005, 0x00000009, 0x6f6c6f63, 0x00000072, 0x00040047, 0x00000009, 0x0000001e, 0x00000000,
++    0x00020013, 0x00000002, 0x00030021, 0x00000003, 0x00000002, 0x00030016, 0x00000006, 0x00000020,
++    0x00040017, 0x00000007, 0x00000006, 0x00000004, 0x00040020, 0x00000008, 0x00000003, 0x00000007,
++    0x0004003b, 0x00000008, 0x00000009, 0x00000003, 0x0004002b, 0x00000006, 0x0000000a, 0x00000000,
++    0x0004002b, 0x00000006, 0x0000000b, 0x3f800000, 0x0007002c, 0x00000007, 0x0000000c, 0x0000000a,
++    0x0000000a, 0x0000000a, 0x0000000b, 0x00050036, 0x00000002, 0x00000004, 0x00000000, 0x00000003,
++    0x000200f8, 0x00000005, 0x0003003e, 0x00000009, 0x0000000c, 0x000100fd, 0x00010038,
++};
+diff --git a/dm/android/tools/make_apk.py b/dm/android/tools/make_apk.py
+index a01a92b..3679b44 100644
+--- a/dm/android/tools/make_apk.py
++++ b/dm/android/tools/make_apk.py
+@@ -12,7 +12,8 @@
+ import argparse, glob, hashlib, os, re, shutil, struct, subprocess, sys, tempfile, zipfile
+ HERE = os.path.dirname(os.path.abspath(__file__)); ANDROID = os.path.dirname(HERE)
+ SDK = os.environ.get('ANDROID_SDK', '/opt/homebrew/share/android-commandlinetools')
+-BT = os.path.join(SDK, 'build-tools', '34.0.0'); JAR = os.path.join(SDK, 'platforms', 'android-33', 'android.jar')
++BT = os.environ.get('ANDROID_BUILD_TOOLS', os.path.join(SDK, 'build-tools', '34.0.0'))
++JAR = os.environ.get('ANDROID_JAR', os.path.join(SDK, 'platforms', 'android-33', 'android.jar'))
+ JAVA = os.environ.get('JAVA_HOME', '/opt/homebrew/opt/openjdk@21/libexec/openjdk.jdk/Contents/Home')
+ APK_GAME_LIMIT = int(os.environ.get('APK_GAME_LIMIT', 3_800_000_000))   # bytes of game in the APK before the rest goes to the data file (Android and its tools read no ZIP64: an APK stays below 4 GB)
+ ENV = dict(os.environ, JAVA_HOME=JAVA, PATH=os.path.join(JAVA, 'bin') + os.pathsep + os.environ['PATH'])
+@@ -53,7 +54,7 @@ def build(a):
+     run(os.path.join(BT, 'aapt2'), 'link', '-o', base, '-I', JAR, '--manifest', os.path.join(w, 'AndroidManifest.xml'), os.path.join(w, 'res.zip'))
+     cls = os.path.join(w, 'classes'); os.makedirs(cls)
+     run(os.path.join(JAVA, 'bin', 'javac'), '--release', '11', '-cp', JAR, '-d', cls, *glob.glob(os.path.join(ANDROID, 'app', 'java', '**', '*.java'), recursive=True))
+-    run(os.path.join(BT, 'd8'), '--release', '--min-api', '33', '--lib', JAR, '--output', w, *glob.glob(os.path.join(cls, '**', '*.class'), recursive=True))
++    run(os.path.join(BT, 'd8'), '--release', '--min-api', '30', '--lib', JAR, '--output', w, *glob.glob(os.path.join(cls, '**', '*.class'), recursive=True))
+     with zipfile.ZipFile(base, 'a', zipfile.ZIP_DEFLATED) as z:
+         z.write(os.path.join(w, 'classes.dex'), 'classes.dex')
+         z.write(lib, 'lib/arm64-v8a/libdmhost.so')
+diff --git a/dm/host/hle_movie.c b/dm/host/hle_movie.c
+index 4c89df0..1893f93 100644
+--- a/dm/host/hle_movie.c
++++ b/dm/host/hle_movie.c
+@@ -123,11 +123,13 @@ static void md_event(mdec_t *d, int i) { if (d->ev[i]) G.signal(d->ev[i]); }   /
+ // (it showed only when a decoder was built a second time in the same memory). A guest thread now signals it about 2 ms later (SignalEvent is guest code and must be called on a guest thread); the destructor drops that decoder's pending signals under the same lock.
+ // The root of that crash and of the worker crash at main+0x225338 was missing same-core preemption (the game's dispatcher and worker preempt the main thread on hardware); hle_thread.c now approximates it (svc_thread, dm_yield_to_core_peers)
+ void *dm_guest_thread_spawn(void (*fn)(void *), void *arg, int prio, size_t stack_size);
++void dm_host_lock(pthread_mutex_t *m);
++void dm_thread_native_wait(int entering);
+ static pthread_mutex_t g_dfmu = PTHREAD_MUTEX_INITIALIZER; static pthread_cond_t g_dfcv = PTHREAD_COND_INITIALIZER;
+ static struct { void *d; int ev; uint64_t due; } g_dfq[64]; static int g_ndfq, g_dfthr;
+ static void md_defer_body(void *arg);
+ static void md_defer_at(void *d, int ev, uint64_t due) {
+-    pthread_mutex_lock(&g_dfmu);
++    dm_host_lock(&g_dfmu);
+     if (!g_dfthr) { g_dfthr = 1; dm_guest_thread_spawn(md_defer_body, NULL, 16, 64 << 10); }
+     for (int i = 0; i < g_ndfq; i++) if (g_dfq[i].d == d && g_dfq[i].ev == ev && g_dfq[i].due <= due) { pthread_mutex_unlock(&g_dfmu); return; }   // already due by then
+     if (g_ndfq < 64) g_dfq[g_ndfq++] = (__typeof__(g_dfq[0])){d, ev, due};
+@@ -136,14 +138,14 @@ static void md_defer_at(void *d, int ev, uint64_t due) {
+ }
+ static void md_defer(void *d, int ev) { md_defer_at(d, ev, now_ns() + 2000000); }
+ static void md_defer_drop(void *d) {
+-    pthread_mutex_lock(&g_dfmu);
++    dm_host_lock(&g_dfmu);
+     int n = 0; for (int i = 0; i < g_ndfq; i++) if (g_dfq[i].d != d) g_dfq[n++] = g_dfq[i];
+     g_ndfq = n; pthread_mutex_unlock(&g_dfmu);
+ }
+ // signal under the lock: the destructor first drops pending entries under it, so a signal never interleaves with destruction
+ static void md_defer_body(void *arg) {
+     (void)arg;
+-    pthread_mutex_lock(&g_dfmu);
++    dm_host_lock(&g_dfmu);
+     for (;;) {
+         uint64_t now = now_ns(), next = 0; int k = -1;
+         for (int i = 0; i < g_ndfq && k < 0; i++) { if (g_dfq[i].due <= now) k = i; else if (!next || g_dfq[i].due < next) next = g_dfq[i].due; }
+@@ -153,26 +155,14 @@ static void md_defer_body(void *arg) {
+             if (d->started) md_event(d, e);   // not after Stop: the game takes its events apart right after Stop (a Stop within 2 ms of a Flush let the deferred signal hit events being torn down)
+             continue;
+         }
++        dm_thread_native_wait(1);
+         if (!next) pthread_cond_wait(&g_dfcv, &g_dfmu);
+         else { uint64_t w = next - now; struct timespec ts = { (time_t)(w / 1000000000u), (long)(w % 1000000000u) }; pthread_cond_timedwait_relative_np(&g_dfcv, &g_dfmu, &ts); }
++        dm_thread_native_wait(0);
+     }
+ }
+-// Metroid Dread 2.1.0's movie player: the main thread posts "link / unlink holders" requests into the dispatcher thread's request ring (main+0x222cc8: ring +0x368 write pointer, +0x370 pending count;
+-// the dispatcher links or unlinks each entry in main+0x222d94, finalizes the holders and events, and counts the pending number down to 0) and goes on without waiting: after an unlink it frees the wrapper object and builds a new one in place, after a link it calls Start at once.
+-// On hardware the dispatcher thread (priority 30, core 0 only) preempts the main thread (priority 44, core 0) and the requests are done first; on the host the threads run in parallel, the memory was reused while the old holders were still linked into the dispatcher's MultiWait,
+-// and WaitAny / SignalEvent walked into freed holders (the core_preempt approximation does not cover it: with the dispatcher busy, posting wakes nobody, and the main thread makes no SVC on the way).
+-// The rewriter puts observation gates on the instruction after each "one request posted" (patch_nso.py OBS 19 / 20, for this build only); here we wait for the pending count to reach zero, for at most 3 s.
+-// 100 ms was too short once the Mac was saturated (an iOS shader build in parallel): the wait ran out with one request pending and WaitAny crashed right after. Waits over 50 ms are logged (the first eight)
+-static void movie_ring_wait(const uint64_t *regs) {
+-    const volatile uint64_t *pending = (const volatile uint64_t *)(regs[19] + 0x370);
+-    uint64_t t0 = now_ns();
+-    while (*pending) {
+-        if (now_ns() - t0 > 3000000000ull) { static int r; if (!r++) LOG("[RED] movie: player request ring not drained in 3 s (%llu pending), letting it through anyway", (unsigned long long)*pending); return; }
+-        struct timespec ts = {0, 50000}; nanosleep(&ts, 0);
+-    }
+-    uint64_t dt = now_ns() - t0; static _Atomic int nlong; if (dt > 50000000ull && nlong++ < 8) LOG("[movie] waited %.1f ms on the player request ring", dt / 1e6);
+-}
+-__attribute__((constructor)) static void movie_ring_gates(void) { gate_obs_set(OBS_MOVIE_RING_LINK, movie_ring_wait); gate_obs_set(OBS_MOVIE_RING_UNLINK, movie_ring_wait); }
++// Movie lifetime ordering now comes from SVC wake handoffs in hle_thread.c.
++// The old per-request three-second gate could return while holders were still live.
+ // log the first 12 calls one by one, then every 2^k-th (DM_MOVIE_TRACE=1: every call, with the calling thread)
+ static int md_trace_all(void) { static int on = -1; if (on < 0) on = getenv("DM_MOVIE_TRACE") != NULL; return on; }
+ #define MD_TRACE(d, slot, fmt, ...) do { unsigned long n_ = ++(d)->ncall[slot]; if (md_trace_all()) LOG("[movie] [%p] " fmt, (void *)pthread_self(), ##__VA_ARGS__); \
+@@ -386,7 +376,7 @@ static void *md_worker(void *arg) {
+     mdec_t *d = arg;
+     pthread_setname_np("dm movie decoder");
+     dm_host_helper_qos(QOS_CLASS_USER_INITIATED);   // under DM_QOS_MAP: decodes ahead of playback, not on the frame's critical path
+-    pthread_mutex_lock(&d->wmu);
++    dm_host_lock(&d->wmu);
+     for (;;) {
+         while (d->job == MDJ_NONE) pthread_cond_wait(&d->wcv, &d->wmu);
+         int job = d->job;
+@@ -398,7 +388,7 @@ static void *md_worker(void *arg) {
+             uint64_t dt = now_ns() - t0; d->dec_n++; d->dec_ns += dt; if (dt > d->dec_max) d->dec_max = dt;
+         }
+         else md_close(d);
+-        pthread_mutex_lock(&d->wmu);
++        dm_host_lock(&d->wmu);
+         d->job = MDJ_NONE; pthread_cond_broadcast(&d->wcv);
+         if (job == MDJ_QUIT) break;
+     }
+@@ -407,22 +397,24 @@ static void *md_worker(void *arg) {
+ }
+ // hand one job to the host thread and wait for it (the caller holds dmu)
+ static void md_job(mdec_t *d, int job) {
+-    pthread_mutex_lock(&d->wmu);
++    dm_host_lock(&d->wmu);
+     d->job = job; pthread_cond_broadcast(&d->wcv);
++    dm_thread_native_wait(1);
+     while (d->job != MDJ_NONE) pthread_cond_wait(&d->wcv, &d->wmu);
++    dm_thread_native_wait(0);
+     pthread_mutex_unlock(&d->wmu);
+ }
+ // while packets are queued and an output slot is free, decode the head packet, until the queue is empty or every slot is taken; signal the input / output events by the result
+ static void md_pump(mdec_t *d) {
+-    pthread_mutex_lock(&d->dmu);
++    dm_host_lock(&d->dmu);
+     for (;;) {
+-        pthread_mutex_lock(&d->mu);
++        dm_host_lock(&d->mu);
+         if (d->avc_drain) {   // H.264 end of stream: the pictures still queued leave one per free slot; the last carries the end-of-stream flag
+             int s = -1; for (int k = 0; k < MD_NOUT; k++) if (!d->out[k].used) { s = k; break; }
+             if (s < 0) { pthread_mutex_unlock(&d->mu); break; }
+             d->out[s].used = 1; pthread_mutex_unlock(&d->mu);
+             d->jslot = s; d->jflush = 1; md_job(d, MDJ_TAKE); int got = d->jgot, left = d->avc ? mavc_queued(d->avc) : 0;
+-            pthread_mutex_lock(&d->mu);
++            dm_host_lock(&d->mu);
+             d->out[s].pic = got; d->out[s].pts = got ? d->jpts_out : 0; d->out[s].flags = left ? 0 : 4; d->outq[d->noutq++] = s;
+             if (!left) d->avc_drain = 0;
+             pthread_mutex_unlock(&d->mu);
+@@ -442,7 +434,7 @@ static void md_pump(mdec_t *d) {
+         if ((pk.size > 0 && (d->type == MD_TYPE_VP9 || MD_AUDIO(d) || avc)) || (avc && eos)) {
+             d->jp = d->in[pk.in] + pk.off; d->jn = pk.size; d->jslot = slot; d->jpts = pk.pts; d->jflush = 0; md_job(d, MDJ_DECODE); got = d->jgot; }
+         int more = avc && eos && d->avc && mavc_queued(d->avc) > 0;   // H.264 pictures still queued: they follow this output, the last of them carries the end-of-stream flag
+-        pthread_mutex_lock(&d->mu);
++        dm_host_lock(&d->mu);
+         d->infree[d->ninfree++] = pk.in;
+         int ready = got || eos || (d->type != MD_TYPE_VP9 && !MD_AUDIO(d) && !avc);   // an end-of-stream packet without a picture still yields an output to carry the flag back; VP8 has no decoder and gives black frames
+         if (ready) { d->out[slot].pic = got; d->out[slot].pts = got && avc ? d->jpts_out : pk.pts; d->out[slot].flags = more ? pk.flags & ~4u : pk.flags; d->outq[d->noutq++] = slot; }
+@@ -483,7 +475,7 @@ static void md_free(void **self) {
+     self[1] = NULL;
+     LOG("[movie] decoder %p destroyed: %lu packets in, %lu frames out; decoded %llu packets, average %.2f ms per packet, longest %.2f ms", (void *)self, d->ncall[7], d->ncall[8],
+         (unsigned long long)d->dec_n, d->dec_n ? d->dec_ns / 1e6 / d->dec_n : 0.0, d->dec_max / 1e6);
+-    pthread_mutex_lock(&d->dmu); md_job(d, MDJ_QUIT); pthread_mutex_unlock(&d->dmu);
++    dm_host_lock(&d->dmu); md_job(d, MDJ_QUIT); pthread_mutex_unlock(&d->dmu);
+     pthread_join(d->wk, NULL);
+     for (int i = 0; i < MD_NIN; i++) free(d->in[i]);
+     for (int k = 0; k < MD_NOUT; k++) free(d->out[k].frm);
+@@ -518,7 +510,7 @@ HLE_FORCE("_ZN5movie7Decoder9ConfigureEPNS_9MediaDataE", "movie decoder configur
+         if (G.find_buf(md, "avcc", &b) && b && G.data(b) && G.size(b)) mavc_avcc(d->avc, G.data(b), G.size(b));
+     }
+     int w = 0, h = 0; if (md) { G.find_i32(md, "width", &w); G.find_i32(md, "height", &h); }
+-    pthread_mutex_lock(&d->mu); if (w > 0 && h > 0 && !d->fmt_sent) { d->w = w; d->h = h; } pthread_mutex_unlock(&d->mu);
++    dm_host_lock(&d->mu); if (w > 0 && h > 0 && !d->fmt_sent) { d->w = w; d->h = h; } pthread_mutex_unlock(&d->mu);
+     MD_TRACE(d, 0, "Configure: MediaData width %d height %d", w, h);
+     return 0;
+ }
+@@ -530,17 +522,17 @@ HLE_FORCE("_ZN5movie7Decoder20RegisterClientEventsEPNS_13DecoderEventsE", "movie
+ }
+ HLE_FORCE("_ZN5movie7Decoder5StartEv", "movie decoder start: all inputs empty, notify the client", int, h_movie_Start, void **self) {
+     mdec_t *d = md_of(self); if (!d) return 0x2002;
+-    pthread_mutex_lock(&d->mu); d->started = 1; pthread_mutex_unlock(&d->mu);
++    dm_host_lock(&d->mu); d->started = 1; pthread_mutex_unlock(&d->mu);
+     MD_TRACE(d, 2, "Start");
+     md_defer(d, 0);
+     return 0;
+ }
+ // clear the queues and slots; with close, the libvpx decoder is closed too (rebuilt at the next packet)
+ static void md_reset(mdec_t *d, int close) {
+-    pthread_mutex_lock(&d->dmu);   // wait for the packet being decoded
++    dm_host_lock(&d->dmu);   // wait for the packet being decoded
+     if (close) md_job(d, MDJ_CLOSE);
+     if (d->avc) mavc_drop(d->avc);   // H.264 pictures waiting for their turn belong to the old position
+-    pthread_mutex_lock(&d->mu);
++    dm_host_lock(&d->mu);
+     // Every input goes back to the free list, as with MediaCodec, but one the client holds may still be sent: Big Brain Academy: Brain vs. Brain's event thread acquires inputs while its
+     // control thread flushes to loop an activity preview, and sends them after the flush (SendInputBufferForDecode claims them back). Those are withheld for a while (h_movie_AcqIn)
+     uint64_t now = now_ns();
+@@ -554,7 +546,7 @@ static void md_reset(mdec_t *d, int close) {
+ HLE_FORCE("_ZN5movie7Decoder4StopEv", "movie decoder stop", int, h_movie_Stop, void **self) {
+     mdec_t *d = md_of(self); if (!d) return 0x2003;
+     MD_TRACE(d, 3, "Stop");
+-    pthread_mutex_lock(&g_dfmu); pthread_mutex_lock(&d->mu); d->started = 0; pthread_mutex_unlock(&d->mu); pthread_mutex_unlock(&g_dfmu);   // the deferred thread signals holding g_dfmu: taking it guarantees no signal afterwards
++    dm_host_lock(&g_dfmu); dm_host_lock(&d->mu); d->started = 0; pthread_mutex_unlock(&d->mu); pthread_mutex_unlock(&g_dfmu);   // the deferred thread signals holding g_dfmu: taking it guarantees no signal afterwards
+     md_defer_drop(d);
+     md_reset(d, 1); return 0;
+ }
+@@ -567,7 +559,7 @@ HLE_FORCE("_ZN5movie7Decoder5ResetEv", "movie decoder reset", int, h_movie_Reset
+ HLE_FORCE("_ZN5movie7Decoder5FlushEv", "movie decoder flush: all inputs and outputs returned", int, h_movie_Flush, void **self) {
+     mdec_t *d = md_of(self); if (!d) return 0x1000;
+     MD_TRACE(d, 5, "Flush"); md_defer_drop(d); md_reset(d, 0);
+-    if (d->vb) { pthread_mutex_lock(&d->dmu); stb_vorbis_flush_pushdata(d->vb); pthread_mutex_unlock(&d->dmu); }   // a seek: start the overlap afresh
++    if (d->vb) { dm_host_lock(&d->dmu); stb_vorbis_flush_pushdata(d->vb); pthread_mutex_unlock(&d->dmu); }   // a seek: start the overlap afresh
+     return 0;
+ }
+ HLE_FORCE("_ZN5movie7Decoder23AcquireInputBufferIndexEPiS1_", "movie decoder: acquire a free input index", int, h_movie_AcqIn, void **self, int *idx, int *left) {
+@@ -575,7 +567,7 @@ HLE_FORCE("_ZN5movie7Decoder23AcquireInputBufferIndexEPiS1_", "movie decoder: ac
+     if (!idx || !left) return 0x100b;
+     // No input indices after Stop (as with MediaCodec): Metroid Dread's "input available" handler (main+0x222f14) posts the decoder wrapper object to the player manager's message queue once it gets an index;
+     // after Stop returned every input index, a late input event could still get one, the wrapper was destroyed afterwards, and the worker thread (main+0x223bd4) read the freed object and crashed
+-    pthread_mutex_lock(&d->mu);
++    dm_host_lock(&d->mu);
+     int r = MD_NO_INPUT; *idx = -1; *left = 0;
+     // An input the client held across a flush (md_reset) is not handed out again for MD_STALE_NS unless the client sends it first: handing it out while the client still meant to send
+     // it gave the client one buffer twice (a packet dropped as sent twice, VideoToolbox -12909). A client that abandons it gets it back after that time instead of losing a buffer
+@@ -602,7 +594,7 @@ HLE_FORCE("_ZN5movie7Decoder24SendInputBufferForDecodeEiiilj", "movie decoder: s
+           void **self, int i, int off, int size, int64_t pts, uint32_t flags) {
+     mdec_t *d = md_of(self); if (!d) return 0x1000;
+     if (i < 0 || i >= MD_NIN || off < 0 || size < 0 || (uint32_t)off + (uint32_t)size > MD_INCAP) return 0x100b;
+-    pthread_mutex_lock(&d->mu);
++    dm_host_lock(&d->mu);
+     // An index the client acquired before a Flush and sends after it (Big Brain Academy: Brain vs. Brain loops its activity previews this way): the flush put it back in the free list,
+     // so it is claimed from there now. Before, it could be handed out a second time, two packets shared one buffer (VideoToolbox -12909 on the overwritten one) and the fifth pending
+     // packet wrote past pend[] into npend and dmu (the process died destroying dmu, 2 runs in 5)
+@@ -630,7 +622,7 @@ HLE_FORCE("_ZN5movie7Decoder24AcquireOutputBufferIndexEPiPlPjS1_", "movie decode
+           void **self, int *idx, int64_t *pts, uint32_t *flags, int *left) {
+     mdec_t *d = md_of(self); if (!d) return 0x1000;
+     if (!idx || !pts || !flags || !left) return 0x100b;
+-    pthread_mutex_lock(&d->mu);
++    dm_host_lock(&d->mu);
+     int r = MD_NO_OUTPUT; *idx = -1; *left = 0;
+     if (d->noutq && d->started) {
+         int s = d->outq[0]; memmove(d->outq, d->outq + 1, --d->noutq * sizeof *d->outq);
+@@ -723,7 +715,7 @@ HLE_FORCE("_ZN5movie7Decoder15GetOutputBufferEiPNS_6BufferEPNS_9MediaDataE", "mo
+ HLE_FORCE("_ZN5movie7Decoder24ReleaseOutputBufferIndexEi", "movie decoder: release an output index (decodes queued packets again)", int, h_movie_RelOut, void **self, int i) {
+     mdec_t *d = md_of(self); if (!d) return 0x1000;
+     if (i < 0 || i >= MD_NOUT) return 0x100b;
+-    pthread_mutex_lock(&d->mu);
++    dm_host_lock(&d->mu);
+     d->out[i].used = 0; d->out[i].pic = 0;
+     int queued = d->npend;
+     pthread_mutex_unlock(&d->mu);
+diff --git a/dm/host/hle_thread.c b/dm/host/hle_thread.c
+index b585d41..c0f7ced 100644
+--- a/dm/host/hle_thread.c
++++ b/dm/host/hle_thread.c
+@@ -59,6 +59,9 @@ typedef struct thr {
+     int resume_pending;        // woken by another thread and not yet back from block(): runnable on Horizon even while its host thread still waits for G (thr_running)
+     _Atomic int sleeping;      // inside SleepThread's timed sleep (not runnable; used by dm_yield_to_core_peers)
+     int yield_pending;         // this SVC woke a higher-priority thread pinned to this core: let it run before the SVC returns (svc_thread)
++    _Atomic uint64_t hand_epoch;
++    struct { struct thr *by; uint64_t epoch; } hand[4]; int nhand;
++    int native_wait; // blocking native codec locks/conditions (under G)
+     _Atomic int *host_work;    // points at the thread's dm_host_work (registered when the thread starts)
+     int host_owned;            // a guest thread the host created itself (dm_guest_thread_spawn): it waits in host code and is not one of the game's threads
+     int core_held, core_want;  // core_serial: the core whose token this thread holds / waits for (-1: none)
+@@ -119,12 +122,67 @@ static thr_t *cur(void) {
+     if (!t) die("thread SVC called from a non-guest thread");
+     return t;
+ }
+-// Let higher-priority threads of the same core run first: Horizon schedules per core, and when a signal from one thread wakes a higher-priority thread pinned to the same core, that thread preempts at once and runs until it blocks again before the signalling thread continues.
+-// Some games rely on this as synchronization: in Metroid Dread's movie player the main thread (priority 44, core 0) posts "tear down the decoder" to the dispatcher and worker threads (priority 30, core 0 only), then frees the object without waiting
+-// and builds the next one in the same memory; on the host the threads truly run in parallel, the dispatcher still had the old holders linked and the worker still had the old object queued, so SignalEvent hit a null MultiWait and the worker read a freed object.
+-// svc_thread calls it after an SVC that woke such a thread: it waits until every started, unexited, not host-created thread allowed only on this core with a higher priority is waiting or sleeping, for at most max_us; returns −1 on timeout
++// Horizon's per-core priority ordering: a woken higher-priority thread pinned to
++// the caller's core runs until it blocks before the signalling thread continues.
++// See docs/reference/threads.md, "Same-core wake handoffs", for the movie lifetime failure this prevents.
++// svc_thread calls it after waking such a thread. Wait for guest blocking, not a host dispatch snapshot or a wall-clock deadline: neither establishes that the work has finished.
+ void dm_thread_mark_host(void) { thr_t *t = pthread_getspecific(g_keythr); if (t) t->host_owned = 1; }
+-// Whether a thread is really running: besides guest waits / timed sleeps it may be blocked in host code (an HLE call waiting on a host condition variable, the GPU, a file), which has no guest wait kind; only the kernel's thread state tells
++// Holding G. wake() clears wkind before the pthread resumes; it must already count as runnable in that window, even if Mach still reports WAITING / STOPPED.
++// Explicit host GPU work and contended native codec locks do not occupy a guest core. Ordinary host dispatch delays and HLE calls do, until a guest wait / sleep / exit or a service request (dm_thread_service_request) says otherwise.
++static int thr_runnable(const thr_t *t) {
++    return !t->wkind && !t->sleeping && !t->native_wait && !t->pause_req && !(t->host_work && *t->host_work);
++}
++// Holding G. Whether t was made runnable for self's current handoff (by self, or by a thread that was) and has not blocked since
++static int thr_in_handoff(const thr_t *t, const thr_t *self) {
++    for (int i = 0; i < t->nhand; i++) if (t->hand[i].by == self && t->hand[i].epoch == self->hand_epoch) return 1;
++    return 0;
++}
++// Holding G. t blocked (a guest wait, a timed sleep, YieldToAnyThread): it gave its core back, so it no longer holds the threads whose handoff made it runnable
++static void hand_leave(thr_t *t) { t->nhand = 0; }
++static int frame_handoffs(void) { return DM_GAME_PROGRAM_ID == 0x010093801237C000ull; }
++void dm_thread_native_wait(int entering) {
++    thr_t *t = pthread_getspecific(g_keythr);
++    if (!t) return;
++    pthread_mutex_lock(&G);
++    if (entering) { t->native_wait++; hand_leave(t); }
++    else { if (!t->native_wait) die("unbalanced native HLE wait"); t->native_wait--; }
++    pthread_mutex_unlock(&G);
++}
++
++// The peers a handoff waits for are the ones it made runnable, not every runnable higher-priority thread of the core. The host runs a
++// lower-priority thread beside busy higher-priority threads of its core all the time (it has no per-core scheduler; core_preempt aside),
++// and waiting for those threads at a wake had no bound: Tears of the Kingdom's BootupBackgroundWorkThread (priority 58) waited at each
++// wake for its core's busy loaders and workers (issue #247: black screen, no texture loaded), and Donkey Kong Country: Tropical Freeze's
++// priority-58 job thread for threads that poll with short sleeps (issue #259). all = 1 (core_preempt): every runnable higher-priority peer
++// A caller whose affinity mask allows another core does not wait: Horizon's scheduler moves a preempted thread to another core of its mask that runs nothing of higher
++// priority (Mesosphere's KScheduler migrates suggested threads), and the host never counts peers the wake did not make runnable as busy. Batman: Arkham Knight's job workers
++// (priority 43, mask 0x5) finish a job and signal the main thread (priority 29, core 0), which then spin-waits for the next two jobs it hands them; waiting for it to block
++// left both workers in this loop for good, and the game stopped presenting as New Story loaded
++int dm_yield_to_core_peers(int all) {
++    thr_t *self = pthread_getspecific(g_keythr); if (!self) return 0;
++    uint64_t bit = 1ull << (self->core & 63); int waited = 0;
++    if (self->mask & ~bit) return 0;
++    for (;;) {
++        int busy = 0;
++        pthread_mutex_lock(&G);
++        for (thr_t *t = g_all; t && !busy; t = t->all)
++            if (t != self && t->started && !t->exited && !t->host_owned && t->mask == bit && t->prio < self->prio && thr_runnable(t) && (all || thr_in_handoff(t, self))) busy = 1;
++        pthread_mutex_unlock(&G);
++        if (!busy) return waited;
++        { struct timespec ts = {0, 50000}; nanosleep(&ts, 0); } waited = 1;
++    }
++}
++// Take a host lock that an HLE call holds while it runs guest code. A guest thread waiting for it is in a native HLE wait (dm_thread_native_wait), blocked as it would be
++// on the guest-visible lock the SDK's own code uses there, so it does not hold a same-core handoff: Kirby and the Forgotten Land's guide movies froze the game when the movie decoder's decode lock was held across the
++// "input available" SignalEvent, the signal woke the priority-44 movie threads of core 0, and the signaller (a priority-46 job worker) waited for its woken input thread,
++// which was itself waiting for that lock (hle_movie.c md_pump)
++void dm_host_lock(pthread_mutex_t *m) {
++    if (!pthread_mutex_trylock(m)) return;
++    dm_thread_native_wait(1);
++    pthread_mutex_lock(m);
++    dm_thread_native_wait(0);
++}
++
+ static int thr_running(const thr_t *t) {
+     if (t->resume_pending) return 1;   // just woken: its host thread may be blocked on G or not yet scheduled (on Linux /proc shows it sleeping then), yet on hardware it would run now
+     if (t->wkind || t->sleeping || !t->mport || (t->host_work && *t->host_work)) return 0;
+@@ -132,7 +190,7 @@ static int thr_running(const thr_t *t) {
+     if (thread_info(t->mport, THREAD_BASIC_INFO, (thread_info_t)&bi, &n) != KERN_SUCCESS) return 0;
+     return bi.run_state == TH_STATE_RUNNING;
+ }
+-int dm_yield_to_core_peers(unsigned max_us) {
++static int dm_yield_to_core_peers_legacy(unsigned max_us) {
+     thr_t *self = pthread_getspecific(g_keythr); if (!self) return 0;
+     uint64_t bit = 1ull << (self->core & 63), t0 = now_ns(); int waited = 0;
+     for (;;) {
+@@ -167,10 +225,22 @@ static thr_t *pick(int kind, uint64_t a) {
+     }
+     return b;
+ }
++static void note_runnable(thr_t *t) {
++    thr_t *self = pthread_getspecific(g_keythr);
++    t->nhand = 0;
++    if (!self || self == t || t->host_owned) return;
++    t->hand[t->nhand].by = self; t->hand[t->nhand++].epoch = self->hand_epoch;
++    for (int i = 0; i < self->nhand && t->nhand < 4; i++)
++        if (self->hand[i].by != t && self->hand[i].by->hand_epoch == self->hand[i].epoch) t->hand[t->nhand++] = self->hand[i];   // only handoffs still in progress
++    if (t->prio < self->prio && t->mask == 1ull << (self->core & 63) && !(self->mask & ~t->mask)) self->yield_pending = 1;   // a waker that can run on another core is not held (dm_yield_to_core_peers)
++}
+ static void wake(thr_t *t, int64_t res) {
+     wait_unlink(t); t->wkind = 0; t->woke = 1; t->resume_pending = 1; t->wres = res; pthread_cond_signal(&t->cv);
+-    thr_t *self = pthread_getspecific(g_keythr);   // the woken thread is pinned to this core with a higher priority: on Horizon it preempts at once (see dm_yield_to_core_peers)
+-    if (self && self != t && !t->host_owned && t->prio < self->prio && t->mask == 1ull << (self->core & 63)) self->yield_pending = 1;
++    note_runnable(t);
++    if (!frame_handoffs()) {
++        thr_t *self = pthread_getspecific(g_keythr);
++        if (self && self != t && !t->host_owned && t->prio < self->prio && t->mask == 1ull << (self->core & 63)) self->yield_pending = 1;
++    }
+ }
+ // ---------- One thread per core at a time (core_serial) ----------
+ // Horizon runs one thread at a time on each core, the highest-priority ready one, until it blocks, sleeps or yields (or a higher-priority one becomes ready); games whose
+@@ -191,7 +261,7 @@ static _Atomic int g_core_wantprio[NCORE];   // the best priority now waiting fo
+ static const char *thr_name(thr_t *t, char *buf, size_t n);
+ static int core_serial_on(void) {
+     static int on = -1;
+-    if (on < 0) { const char *e = getenv("DM_CORE_SERIAL"); for (int c = 0; c < NCORE; c++) atomic_store(&g_core_wantprio[c], INT_MAX); on = e ? atoi(e) != 0 : CORE_SERIAL_DEFAULT; }
++    if (on < 0) { const char *e = getenv("DM_CORE_SERIAL"); for (int c = 0; c < NCORE; c++) atomic_store(&g_core_wantprio[c], INT_MAX); on = e ? atoi(e) != 0 : (frame_handoffs() ? 0 : CORE_SERIAL_DEFAULT); }
+     return on;
+ }
+ static int core_of(const thr_t *t) { return t->host_owned || !t->mask || (t->mask & (t->mask - 1)) || __builtin_ctzll(t->mask) >= NCORE ? -1 : __builtin_ctzll(t->mask); }
+@@ -270,6 +340,7 @@ static int64_t block(thr_t *t, int kind, int64_t ns) {   // the core's token is
+ static int64_t block_(thr_t *t, int kind, int64_t ns) {
+     t->wkind = kind; t->woke = 0; t->next = g_wait; g_wait = t; t->wseq = ++g_wseq;
+     if (ns == 0) { wait_unlink(t); t->wkind = 0; return R_TIMEOUT; }
++    t->nhand = 0;
+     struct timespec dl;
+     int det_wait = ns > 0 && dm_detclock_enabled();
+     uint64_t guest_deadline = det_wait ? guest_ns() + (uint64_t)ns : 0;
+@@ -354,6 +425,10 @@ static void *thread_main(void *p) {
+ }
+ static void thr_free(thr_t *t) {   // Holding G; unlink from the all-threads chain and free
+     for (thr_t **p = &g_all; *p; p = &(*p)->all) if (*p == t) { *p = t->all; break; }
++    for (thr_t *u = g_all; u; u = u->all)
++        for (int i = 0; i < u->nhand; ) {
++            if (u->hand[i].by == t) u->hand[i] = u->hand[--u->nhand]; else i++;
++        }
+     pthread_cond_destroy(&t->cv); pthread_cond_destroy(&t->pcv); free(t);
+ }
+ static void wake_sync_waiters(const void *obj);
+@@ -444,7 +519,7 @@ uint32_t svc_thread_main_init(void) {
+     pause_install();
+     thr_t *t = calloc(1, sizeof *t);
+     pthread_cond_init(&t->cv, NULL); pthread_cond_init(&t->pcv, NULL);
+-    t->started = 1; t->prio = 44; t->core = 0; t->mask = 7; t->core_held = t->core_want = -1; t->pt = pthread_self(); t->mport = pthread_mach_thread_np(t->pt); t->host_work = &dm_host_work;
++    t->started = 1; t->prio = 44; t->core = 0; t->mask = frame_handoffs() ? 1 : 7; t->core_held = t->core_want = -1; t->pt = pthread_self(); t->mport = pthread_mach_thread_np(t->pt); t->host_work = &dm_host_work;
+     pthread_mutex_lock(&G); t->handle = h_new(O_THREAD, t); t->id = g_next_id++; t->all = g_all; g_all = t; pthread_mutex_unlock(&G);
+     pthread_setspecific(g_keythr, t);
+     qos_class_t qc = QOS_CLASS_UNSPECIFIED; int rp = 0;
+@@ -703,15 +778,21 @@ int svc_thread(int num, uint64_t *regs) {
+     int r = svc_thread_impl(num, regs);
+     thr_t *me = pthread_getspecific(g_keythr);
+     static int on = -1; if (on < 0) { const char *e = getenv("DM_PREEMPT"); on = e ? atoi(e) != 0 : DM_GAME_CORE_PREEMPT; }
+-    // Not only "whom did this SVC wake": when a higher-priority thread of the same core is already running (busy, not waiting, at the time of the signal), on hardware the calling thread does not get the CPU at all.
+-    // Metroid Dread: with the dispatcher thread busy, the main thread's "unlink the holders" request woke nobody, the object was freed right away, and the dispatcher later walked the freed holders in WaitAny and crashed
+-    // core_serial hands the core to the woken thread instead of the wait below; a thread without a token (allowed on several cores, as Dread's main thread) still waits below
+-    if (me && core_serial_on() && me->core_held >= 0) { if (me->yield_pending) dm_core_handoff(); else core_yield_to_better(me); }
+-    else if (me && on) {
+-        uint64_t t0 = now_ns(); int w = dm_yield_to_core_peers(5000);
+-        if (w) { if (w < 0) g_preempt_cap++; g_preempt_n++; g_preempt_ns += now_ns() - t0; }
+-    }
+-    if (me) me->yield_pending = 0;
++    if (frame_handoffs()) {
++        // A wake owns its runnable descendants until each reaches a blocking boundary.
++        // Host dispatch latency is not completion and cannot release the handoff.
++        // Dread's profile also requires already-runnable movie workers to finish.
++        // A queue notification need not wake a waiter when that worker is running.
++        if (me && (on || me->yield_pending)) {
++            uint64_t t0 = now_ns(); int w = dm_yield_to_core_peers(on);
++            if (w) { g_preempt_n++; g_preempt_ns += now_ns() - t0; }
++        }
++        if (me) { me->yield_pending = 0; me->hand_epoch++; }
++    } else {
++        if (me && core_serial_on() && me->core_held >= 0) { if (me->yield_pending) dm_core_handoff(); else core_yield_to_better(me); }
++        else if (me && on) dm_yield_to_core_peers_legacy(5000);
++        if (me) { me->yield_pending = 0; me->hand_epoch++; }
++    }
+     return r;
+ }
+ static int svc_thread_impl(int num, uint64_t *regs) {
+@@ -737,7 +818,7 @@ static int svc_thread_impl(int num, uint64_t *regs) {
+     case 0x09: {  // StartThread(w0)
+         pthread_mutex_lock(&G);
+         thr_t *t = h_get((uint32_t)regs[0], O_THREAD);
+-        if (t) { t->started = 1; pthread_cond_signal(&t->cv); }
++        if (t) { t->started = 1; pthread_cond_signal(&t->cv); if (frame_handoffs()) note_runnable(t); }
+         pthread_mutex_unlock(&G);
+         regs[0] = t ? 0 : R_BAD_HANDLE; return 1;
+     }
+@@ -745,6 +826,7 @@ static int svc_thread_impl(int num, uint64_t *regs) {
+     case 0x0B: {  // SleepThread(x0 ns); 0/-1/-2 = the various kinds of yield
+         int64_t ns = (int64_t)regs[0];
+         thr_t *sme = pthread_getspecific(g_keythr);
++        if (sme && (ns > 0 || ns == -2)) { pthread_mutex_lock(&G); sme->nhand = 0; pthread_mutex_unlock(&G); }
+         if (sme && core_serial_on()) { pthread_mutex_lock(&G); core_release(sme); pthread_mutex_unlock(&G); }   // a sleep or a yield gives the core away
+         if (ns > 0 && dm_detclock_enabled()) {
+             uint64_t deadline = guest_ns() + (uint64_t)ns;
+diff --git a/dm/host/tests/Makefile b/dm/host/tests/Makefile
+index f4712a2..c675d94 100644
+--- a/dm/host/tests/Makefile
++++ b/dm/host/tests/Makefile
+@@ -56,3 +56,11 @@ $(B):
+ .PHONY: run tsan
+ tsan: $(B)/t_audio_spsc_tsan
+ 	$(B)/t_audio_spsc_tsan
++
++# Dread's Frame backport: delayed dispatch, transitive wake ordering and native locks.
++.PHONY: frame-handoff
++frame-handoff: $(B)/t_frame_handoff
++	$(B)/t_frame_handoff
++	$(B)/t_frame_handoff --profile-preempt
++$(B)/t_frame_handoff: t_frame_handoff.c t_condvar_stub.c ../hle_thread.c ../dm.h $(GAME_H) | $(B)
++	clang -O1 -Wno-unused-function -I.. $(GINC) -o $@ t_frame_handoff.c t_condvar_stub.c
+diff --git a/dm/host/tests/t_frame_handoff.c b/dm/host/tests/t_frame_handoff.c
+new file mode 100644
+index 0000000..ef6924f
+--- /dev/null
++++ b/dm/host/tests/t_frame_handoff.c
+@@ -0,0 +1,269 @@
++// Start/wake-to-run ordering through real thread SVCs. Suspend the child pthread
++// to model a host dispatch delay: it is guest-runnable as soon as StartThread or
++// a signal makes it ready, even though Mach still reports it stopped. Its payload
++// must precede the lower-priority caller's return, including delays over 5 ms.
++#include "../hle_thread.c"
++#include <assert.h>
++#include <unistd.h>
++
++static thr_t worker;
++static uint32_t event_read, event_write;
++static _Atomic int payload;
++static unsigned dispatch_us;
++static _Atomic uint32_t mutex_word, condition_key;
++static uint32_t main_handle;
++static int wait_kind;
++static _Atomic int worker_host_work;
++static int worker_ready;
++
++// FFT's SDK auto-clear event wakes one condition waiter. Its private worker
++// queues cannot influence the kernel's priority/FIFO selection.
++static thr_t fifo_workers[3];
++static _Atomic int fifo_done;
++static void *fifo_wait(void *arg) {
++    thr_t *t = arg;
++    pthread_setspecific(g_keythr, t);
++    atomic_store(&mutex_word, t->handle);
++    uint64_t r[32] = {(uint64_t)&mutex_word, (uint64_t)&condition_key, t->handle, (uint64_t)-1};
++    svc_thread(0x1C, r);
++    assert(r[0] == 0 && atomic_load(&mutex_word) == t->handle);
++    r[0] = (uint64_t)&mutex_word; svc_thread(0x1B, r);
++    atomic_fetch_add(&fifo_done, 1);
++    thread_exit(t);
++    return NULL;
++}
++static void condition_order(void) {
++    pthread_t threads[3];
++    atomic_store(&mutex_word, 0); atomic_store(&condition_key, 0); atomic_store(&fifo_done, 0);
++    for (int i = 0; i < 3; i++) {
++        thr_t *t = &fifo_workers[i]; memset(t, 0, sizeof *t);
++        pthread_cond_init(&t->cv, NULL); pthread_cond_init(&t->pcv, NULL);
++        t->started = 1; t->prio = i == 2 ? 45 : 46; t->core = 0; t->mask = 7;
++        pthread_mutex_lock(&G);
++        t->handle = h_new(O_THREAD, t); t->all = g_all; g_all = t;
++        pthread_mutex_unlock(&G);
++        assert(!pthread_create(&threads[i], NULL, fifo_wait, t));
++        for (;;) {
++            pthread_mutex_lock(&G); int waiting = t->wkind == 2; pthread_mutex_unlock(&G);
++            if (waiting) break;
++            usleep(100);
++        }
++    }
++    int expected[] = {2, 0, 1}; // priority first, then registration order
++    for (int i = 0; i < 3; i++) {
++        atomic_store(&mutex_word, main_handle);
++        uint64_t r[32] = {(uint64_t)&condition_key, 1}; svc_thread(0x1D, r);
++        pthread_mutex_lock(&G);
++        assert(fifo_workers[expected[i]].wkind == 1);
++        assert(atomic_load(&mutex_word) == (main_handle | WAITERS_BIT));
++        pthread_mutex_unlock(&G);
++        r[0] = (uint64_t)&mutex_word; svc_thread(0x1B, r);
++        while (atomic_load(&fifo_done) != i + 1) usleep(100);
++    }
++    assert(atomic_load(&condition_key) == 0);
++    for (int i = 2; i >= 0; i--) {
++        thr_t *t = &fifo_workers[i]; pthread_join(threads[i], NULL);
++        pthread_mutex_lock(&G); assert(g_all == t); g_all = t->all;
++        g_h[t->handle - 0x1000].type = O_FREE; g_h[t->handle - 0x1000].obj = NULL;
++        pthread_mutex_unlock(&G);
++        pthread_cond_destroy(&t->cv); pthread_cond_destroy(&t->pcv);
++    }
++    puts("PASS: condition waiters selected by priority, then FIFO; mutex reacquired before return");
++}
++
++static void *work(void *arg) {
++    (void)arg;
++    pthread_setspecific(g_keythr, &worker);
++    worker.mport = pthread_mach_thread_np(pthread_self());
++    if (wait_kind == 0) {
++        pthread_mutex_lock(&G);
++        worker_ready = 1;
++        while (!worker.started) pthread_cond_wait(&worker.cv, &G);
++        pthread_mutex_unlock(&G);
++    }
++    uint32_t handle = event_read; uint64_t r[32] = {0};
++    if (wait_kind == 4) {
++        r[1] = (uint64_t)&handle; r[2] = 1; r[3] = (uint64_t)-1;
++        svc_thread(0x18, r);
++    } else if (wait_kind == 2) {
++        atomic_store(&mutex_word, worker.handle);
++        r[0] = (uint64_t)&mutex_word; r[1] = (uint64_t)&condition_key;
++        r[2] = worker.handle; r[3] = (uint64_t)-1;
++        svc_thread(0x1C, r);
++    } else if (wait_kind == 1) {
++        r[0] = main_handle; r[1] = (uint64_t)&mutex_word; r[2] = worker.handle;
++        svc_thread(0x1A, r);
++    }
++    assert(r[0] == 0);
++    atomic_store(&payload, 1);
++    usleep(1000);   // dispatching the work is insufficient: its teardown must finish too
++    atomic_store(&payload, 2);
++    thread_exit(&worker);
++    return NULL;
++}
++static void *dispatch(void *arg) {
++    (void)arg;
++    usleep(dispatch_us);
++    assert(thread_resume(worker.mport) == KERN_SUCCESS);
++    return NULL;
++}
++static int delayed_wake(unsigned delay, int kind, int exclusion) {
++    uint64_t r[32] = {0};
++    svc_thread(0x45, r); assert(r[0] == 0);
++    event_write = r[1]; event_read = r[2];
++    memset(&worker, 0, sizeof worker);
++    pthread_cond_init(&worker.cv, NULL); pthread_cond_init(&worker.pcv, NULL);
++    worker.started = kind != 0; worker.prio = 30; worker.core = 0; worker.mask = 1;
++    if (exclusion == 1) worker.prio = 44;   // equal priority
++    if (exclusion == 2) worker.core = 1, worker.mask = 2;   // another guest core
++    if (exclusion == 3) worker.mask = 7;   // can run on another guest core
++    if (exclusion == 4) worker.host_owned = 1;   // host helper, no guest core
++    if (exclusion == 5) worker.pause_req = 1;   // guest suspension
++    if (exclusion == 6) { worker_host_work = 1; worker.host_work = &worker_host_work; }   // host GPU work
++    thr_t *self = pthread_getspecific(g_keythr); uint64_t self_mask = self->mask;
++    if (exclusion == 7) self->mask = 5;   // the signaller can run on another guest core (Batman: Arkham Knight's job workers, mask 0x5)
++    pthread_mutex_lock(&G);
++    worker.handle = h_new(O_THREAD, &worker); worker.all = g_all; g_all = &worker;
++    pthread_mutex_unlock(&G);
++    atomic_store(&payload, 0);
++    atomic_store(&mutex_word, main_handle | WAITERS_BIT); atomic_store(&condition_key, 0);
++    wait_kind = kind;
++    worker_ready = 0;
++    pthread_t w, d; assert(!pthread_create(&w, NULL, work, NULL));
++    for (;;) {
++        pthread_mutex_lock(&G); int waiting = kind == 0 ? worker_ready : worker.wkind == kind; pthread_mutex_unlock(&G);
++        if (waiting) break;
++        usleep(100);
++    }
++    assert(thread_suspend(worker.mport) == KERN_SUCCESS);
++    dispatch_us = delay; assert(!pthread_create(&d, NULL, dispatch, NULL));
++    if (kind == 0) { r[0] = worker.handle; svc_thread(0x09, r); }
++    else if (kind == 4) { r[0] = event_write; svc_thread(0x11, r); }
++    else if (kind == 2) { r[0] = (uint64_t)&condition_key; r[1] = 1; svc_thread(0x1D, r); }
++    else { r[0] = (uint64_t)&mutex_word; svc_thread(0x1B, r); }
++    assert(r[0] == 0);
++    self->mask = self_mask;
++    pthread_mutex_lock(&G); int ordered = atomic_load(&payload) == 2 && worker.exited; pthread_mutex_unlock(&G);
++    pthread_join(d, NULL); pthread_join(w, NULL);
++    pthread_mutex_lock(&G); g_all = worker.all;
++    unsigned slot = worker.handle - 0x1000; g_h[slot].type = O_FREE; g_h[slot].obj = NULL;
++    pthread_mutex_unlock(&G);
++    pthread_cond_destroy(&worker.cv); pthread_cond_destroy(&worker.pcv);
++    r[0] = event_read; svc_thread(0x16, r);
++    r[0] = event_write; svc_thread(0x16, r);
++    int ok = exclusion ? !ordered : ordered;
++    printf("%s: wait kind %d, dispatch delay %u us, exclusion %d, payload before signaller returns %d\n", ok ? "PASS" : "FAIL", kind, delay, exclusion, ordered);
++    return ok;
++}
++// The scope of a handoff: the threads the signaller's wake made runnable, and those they wake in turn, each until it blocks.
++// A busy higher-priority peer of the core that the signaller never woke must not hold it (issue #247: Tears of the Kingdom's
++// boot thread waited for its core's busy loaders at every wake; issue #259: Tropical Freeze's job thread for pollers).
++static thr_t scope_peer[3];
++static uint32_t scope_ev[2][2];   // [event][write, read]
++static _Atomic int scope_payload, scope_release;
++static thr_t *scope_new(thr_t *t, int prio) {
++    memset(t, 0, sizeof *t);
++    pthread_cond_init(&t->cv, NULL); pthread_cond_init(&t->pcv, NULL);
++    t->started = 1; t->prio = prio; t->core = 0; t->mask = 1;
++    pthread_mutex_lock(&G); t->handle = h_new(O_THREAD, t); t->all = g_all; g_all = t; pthread_mutex_unlock(&G);
++    return t;
++}
++static void scope_free(thr_t *t) {
++    pthread_mutex_lock(&G);
++    for (thr_t **p = &g_all; *p; p = &(*p)->all) if (*p == t) { *p = t->all; break; }
++    g_h[t->handle - 0x1000].type = O_FREE; g_h[t->handle - 0x1000].obj = NULL;
++    pthread_mutex_unlock(&G);
++    pthread_cond_destroy(&t->cv); pthread_cond_destroy(&t->pcv);
++}
++static void scope_wait(int ev) { uint32_t h = scope_ev[ev][1]; uint64_t r[32] = {0, (uint64_t)&h, 1, (uint64_t)-1}; svc_thread(0x18, r); assert(r[0] == 0); }
++static void scope_signal(int ev) { uint64_t r[32] = {scope_ev[ev][0]}; svc_thread(0x11, r); assert(r[0] == 0); }
++static void *scope_worker(void *arg) {   // waits on event 1, then finishes its payload (1 ms of host work) and exits
++    thr_t *t = arg; pthread_setspecific(g_keythr, t);
++    scope_wait(1);
++    atomic_store(&scope_payload, 1); usleep(1000); atomic_store(&scope_payload, 2);
++    thread_exit(t); return NULL;
++}
++static void *scope_dispatcher(void *arg) {   // waits on event 0, wakes the worker (its equal priority: no handoff of its own) and exits
++    thr_t *t = arg; pthread_setspecific(g_keythr, t);
++    scope_wait(0); scope_signal(1);
++    thread_exit(t); return NULL;
++}
++static void *scope_any_yield(void *arg) {   // waits on event 1, then yields to any thread (-2) until the signaller has returned
++    thr_t *t = arg; pthread_setspecific(g_keythr, t);
++    scope_wait(1);
++    atomic_store(&scope_payload, 1);
++    while (!atomic_load(&scope_release)) { uint64_t r[32] = {(uint64_t)-2}; svc_thread(0x0B, r); }
++    thread_exit(t); return NULL;
++}
++static pthread_mutex_t scope_mu = PTHREAD_MUTEX_INITIALIZER;   // a host lock the signaller holds across its signal (hle_movie.c: the decoder's dmu)
++static void *scope_host_lock(void *arg) {   // waits on event 1, then waits for the host lock, finishes its payload and exits
++    thr_t *t = arg; pthread_setspecific(g_keythr, t);
++    scope_wait(1);
++    atomic_store(&scope_payload, 1);
++    dm_host_lock(&scope_mu); atomic_store(&scope_payload, 2); pthread_mutex_unlock(&scope_mu);
++    thread_exit(t); return NULL;
++}
++static void scope_until_waiting(thr_t *t) {
++    for (;;) { pthread_mutex_lock(&G); int w = t->wkind == 4; pthread_mutex_unlock(&G); if (w) break; usleep(100); }
++}
++// kind 0: a busy unrelated peer and one woken worker; 1: a dispatcher that wakes the worker; 2: a woken thread that yields to any thread;
++// 3: a woken thread that waits for a host lock the signaller holds (it never returned before that wait counted as blocked)
++static int handoff_scope(int kind) {
++    for (int e = 0; e < 2; e++) { uint64_t r[32] = {0}; svc_thread(0x45, r); assert(r[0] == 0); scope_ev[e][0] = r[1]; scope_ev[e][1] = r[2]; }
++    atomic_store(&scope_payload, 0); atomic_store(&scope_release, 0);
++    thr_t *busy = scope_new(&scope_peer[0], 30);   // runnable in guest code the whole time, woken by nobody
++    thr_t *w = scope_new(&scope_peer[1], 30), *d = kind == 1 ? scope_new(&scope_peer[2], 30) : NULL;
++    pthread_t pw, pd;
++    assert(!pthread_create(&pw, NULL, kind == 2 ? scope_any_yield : kind == 3 ? scope_host_lock : scope_worker, w)); scope_until_waiting(w);
++    if (d) { assert(!pthread_create(&pd, NULL, scope_dispatcher, d)); scope_until_waiting(d); }
++    if (kind == 3) pthread_mutex_lock(&scope_mu);
++    scope_signal(d ? 0 : 1);
++    pthread_mutex_lock(&G); int payload = atomic_load(&scope_payload), done = w->exited; pthread_mutex_unlock(&G);
++    if (kind == 3) pthread_mutex_unlock(&scope_mu);
++    atomic_store(&scope_release, 1);
++    pthread_join(pw, NULL); if (d) pthread_join(pd, NULL);
++    if (d) scope_free(d);
++    scope_free(w); scope_free(busy);
++    for (int e = 0; e < 2; e++) for (int i = 0; i < 2; i++) { uint64_t r[32] = {scope_ev[e][i]}; svc_thread(0x16, r); }
++    int ok = kind >= 2 ? payload == 1 : payload == 2 && done;
++    static const char *what[] = {"woken worker beside a busy unrelated peer", "worker woken by the woken dispatcher", "woken thread yielding to any thread",
++                                 "woken thread waiting for the signaller's host lock"};
++    printf("%s: handoff scope, %s: signaller returned, payload %d, worker exited %d\n", ok ? "PASS" : "FAIL", what[kind], payload, done);
++    return ok;
++}
++static void *already_runnable(void *arg) {
++    thr_t *t = arg; pthread_setspecific(g_keythr, t);
++    usleep(20000); atomic_store(&scope_payload, 1); thread_exit(t); return NULL;
++}
++static int profile_preempt(void) {
++    // No wake and no handoff ownership: a profile-enabled SVC must still wait
++    // for a higher-priority same-core worker already processing a queue entry.
++    thr_t *t = scope_new(&scope_peer[0], 30); pthread_t p;
++    atomic_store(&scope_payload, 0);
++    assert(!pthread_create(&p, NULL, already_runnable, t));
++    uint64_t r[32] = {0}; svc_thread(0x45, r);
++    int ok = atomic_load(&scope_payload) == 1;
++    pthread_join(p, NULL); scope_free(t);
++    printf("%s: profile preemption waits for an already-runnable worker\n", ok ? "PASS" : "FAIL");
++    return ok;
++}
++int main(int argc, char **argv) {
++    alarm(10);
++    setenv("DM_CORE_SERIAL", "0", 1);
++    setenv("DM_PREEMPT", argc > 1 ? "1" : "0", 1);
++    setenv("DM_YIELD_BACKOFF", "0", 1);
++    main_handle = svc_thread_main_init();
++    if (argc > 1) return profile_preempt() ? 0 : 1;
++    condition_order();
++    int ok = 1;
++    for (int kind = 0; kind <= 3; kind++) ok &= handoff_scope(kind);
++    for (int kind = 0; kind <= 4; kind++) if (kind != 3) {
++        ok &= delayed_wake(1000, kind, 0);
++        ok &= delayed_wake(20000, kind, 0);
++    }
++    for (int exclusion = 1; exclusion <= 7; exclusion++) {
++        ok &= delayed_wake(20000, 0, exclusion);
++        ok &= delayed_wake(20000, 4, exclusion);
++    }
++    return ok ? 0 : 1;
++}

@@ -1,0 +1,188 @@
+{
+  "date": "2026-11-05",
+  "android_fork": "32b0ef2c5408e1e32cb5c0bc49f84d1e63653dc3",
+  "game": {
+    "name": "Metroid Dread",
+    "version": "2.1.0",
+    "title_id": "010093801237C000"
+  },
+  "package": "com.nxnative.t010093801237c000",
+  "instance": 2843545929,
+  "shortcut": 2439313234,
+  "build": {
+    "native": true,
+    "android_rewrite_modules": [
+      "main",
+      "subsdk0",
+      "sdk"
+    ],
+    "saved_workflow_passed": true,
+    "shader_validation": {
+      "checked": 1010,
+      "failed": 0,
+      "target": "vulkan1.3"
+    },
+    "shader_audit": {
+      "unknown_bindings": 0,
+      "float64": 0,
+      "subgroup_instructions": 0
+    },
+    "apk_sha256": "616177663bb9cc6cc215fb593f75d445fa75af260123c42998f91e425f7094d6",
+    "libdmhost_sha256": "19e12d40890b8a90729307b9355e4d2454a8b0906bd448a9d338213bf6772256",
+    "android_frame_patch_sha256": "c87a406e529c9cb12a315912b20e58dadb274df3d30335d238a4292497743581",
+    "native_regression_cases": 28
+  },
+  "app_probe": {
+    "passed": true,
+    "failures": 0,
+    "threads": 16,
+    "page_size": 4096,
+    "gpu": "Turnip Adreno (TM) 750",
+    "api": "1.4.362",
+    "driver": 109060195,
+    "texture_compression_BC": true,
+    "float64": false,
+    "int64": true,
+    "subgroup_size": 128
+  },
+  "runtime": {
+    "game_rendering": "verified title, menus, narrative, opening 3D cinematic and Artaria gameplay on physical Frame",
+    "gameplay": {
+      "verified": true,
+      "route": "opening Artaria room: movement/release, scrolling, jump/ledge traversal, shooting, missiles, melee, slide, free aim, destroy ceiling obstacle, combat damage",
+      "input": "Linux input events through selected Lepton Wayland keyboard FIFO",
+      "physical_frame_controllers": "not tested"
+    },
+    "audio": {
+      "verified": true,
+      "source": "Lepton output monitor (not microphone)",
+      "rate": 48000,
+      "channels": 2,
+      "format": "signed 16-bit little endian",
+      "seconds": 3.072,
+      "peak": 15093,
+      "rms": 3583
+    },
+    "save_restart": {
+      "initial_slot_and_settings_survive_apk_update_and_container_restart": true,
+      "progressed_save_station_reload": "not tested",
+      "save_sha256": {
+        "userdata/userdata.bmssv": "1ef25c5beb64f8622dc96ebf9da4dc5ec37f0ed02083b3021522b2549009e242",
+        "profile0/common.bmssv": "da1d30056a3280477285767c84d06c259ba56e24dbace6d10d4714df129d5217",
+        "profile0/pkprfl.bmssv": "232a3142ae24dd8e4d2f3cb6a7bc1c14cd1f81446c730dc1dd1d91e9048c9f6b",
+        "profile0/samus.bmssv": "c595c93912cb0b7e6d7eca5d66b504becd6d44d44d9397e85df626fb320071f9"
+      },
+      "restored_checkpoint": {
+        "slot": 1,
+        "mode": "Normal",
+        "time": "00:03:33",
+        "Continue_restored_opening_room": true,
+        "movement_and_shooting_after_reload": true
+      }
+    },
+    "long_session": {
+      "frames_presented": 74400,
+      "draws": 12780951,
+      "dropped_draws": 0,
+      "duration": "over 20 minutes, including cinematic and idle time",
+      "stationary_opening_room_sample_ms": {
+        "p50": "16.7\u201316.8",
+        "p95": "18.5\u201318.9"
+      },
+      "sustained_active_gameplay_benchmark": false,
+      "build": "before final already-runnable preemption fix"
+    },
+    "fixes": [
+      "Dread-specific explicit runnable state, transitive wake ownership and native codec blocking boundaries",
+      "honor Dread core_preempt profile for already-runnable movie workers; regression caught by final title-loop restart check",
+      "alpha-only final Vulkan presentation pass when OPAQUE composite alpha unavailable"
+    ],
+    "limitations": [
+      "only Dread 2.1.0 tested",
+      "flat SteamVR panel",
+      "physical controllers and worn comfort untested",
+      "progressed save-station reload untested",
+      "vertex attributes 6/7 format-0 warnings in 3D; no backend-reported dropped draws",
+      "initial audio callback warning recovers",
+      "Android status/navigation bars visible"
+    ],
+    "evidence": {
+      "headset_gameplay": "nxnative-frame/headset-gameplay.png",
+      "native_tests": "nxnative-frame/handoff-tests.log",
+      "restored_gameplay": "nxnative-frame/final-gameplay.png",
+      "runtime_excerpt": "nxnative-frame/runtime-excerpt.log",
+      "final_runtime_excerpt": "nxnative-frame/final-runtime-excerpt.log"
+    },
+    "final_build_checks": {
+      "title_video_loop_survived": true,
+      "saved_checkpoint_loaded": true,
+      "movement_and_shooting": true,
+      "diagnostic_env_removed": true,
+      "movie_decoders_destroyed_without_crash": 3
+    },
+    "cleanup": {
+      "app_stopped": true,
+      "diagnostic_env_empty": true,
+      "keep_awake_inhibitor": false,
+      "steam_idle_ac_seconds": 3600,
+      "steam_idle_battery_seconds": 900,
+      "steamvr_screen_timeout_seconds": 5,
+      "steamvr_pause_compositor_on_standby": false
+    }
+  },
+  "import_checks": {
+    "rejected_pax_upload": true,
+    "selection_published_on_failure": false,
+    "long_filename_on_android": {
+      "pax": false,
+      "gnu": true,
+      "ustar": true,
+      "patched_streaming_importer": true
+    },
+    "fixture": "romfs/textures/actors/characters/chozowarriorelite/models/textures/chozowarriorelite_body_02_at.bctex",
+    "local_fault_tests": {
+      "bad_checksum_preserves_old_selection_and_save": true,
+      "truncated_stream_preserves_old_selection_and_save": true,
+      "verified_publication_and_reuse": true
+    },
+    "completed": {
+      "dataset": "74fd0fe85d985e5c5ab65defc726920fe2a025e386e8242c3fb2bfb1e1c9872d",
+      "files": 11814,
+      "bytes": 5418485729,
+      "verified_inside_android": true
+    }
+  },
+  "android": {
+    "sdk": 30,
+    "release": "11"
+  },
+  "extended_remote_checks": {
+    "focus": {
+      "settings_foreground": true,
+      "same_pid_on_return": 1051,
+      "movement_after_return": true
+    },
+    "system_suspend": {
+      "entered_utc": "2026-11-05T09:58:15Z",
+      "resumed_utc": "2026-11-05T09:59:04Z",
+      "wake": "RTC alarm",
+      "pid_before_and_after": 1021,
+      "rendered_gameplay_after_resume": true,
+      "movement_after_resume": true,
+      "started_during": "saved-checkpoint load"
+    },
+    "limits": [
+      "physical controller axes, buttons and feel unverified",
+      "worn comfort unverified",
+      "later save-station write/reload unverified",
+      "other games unverified"
+    ],
+    "user_instruction": "Continue remotely; record those limits",
+    "evidence": [
+      "nxnative-frame/suspend-resumed.png",
+      "nxnative-frame/suspend-input.png",
+      "nxnative-frame/focus-settings.png",
+      "nxnative-frame/focus-resumed.png"
+    ]
+  }
+}
