@@ -5,6 +5,7 @@ ship other people's software, unchanged, each under its own licence:
 
 | What | Where | Licence | Details |
 |---|---|---|---|
+| NxNative Android fork patch context and adapted host changes | Build tools shipped in desktop and iPhone/headset bundles; the game runtime is built separately by the user | MIT | [upstream license](frame/nxnative/LICENSE.nxnative), [pinned source and changes](frame/nxnative/README.md) |
 | KDE Connect 24.02.2 and five libraries, as Valve builds them for the Frame | Desktop apps and the iPhone app; copied to the Frame for the keyboard and trackpad | GPL and LGPL (per package) | [frame/kdeconnect/NOTICE.md](frame/kdeconnect/NOTICE.md), licence texts in [frame/kdeconnect/LICENSES](frame/kdeconnect/LICENSES), complete source in the [kdeconnect-frame-24.02.2-1 release](https://github.com/saphid/frame-control/releases/tag/kdeconnect-frame-24.02.2-1) |
 | psutil 7.2.2, unchanged stable-ABI Linux amd64/ARM64 wheels | Desktop and headset app bundles; copied only into exact managed DeckySpy 0.6.7 installs | BSD-3-Clause | [pins and provenance](ui/vendor/psutil-7.2.2/README.md), [license](ui/vendor/psutil-7.2.2/LICENSE.txt) |
 | Python 3.12 ([python-build-standalone](https://github.com/astral-sh/python-build-standalone)) | Desktop apps | PSF License and others | Included with it, in the app's `python` folder |

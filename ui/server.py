@@ -46,6 +46,7 @@ import frame_agent  # noqa: E402
 import frame_assistant  # noqa: E402
 import frame_android  # noqa: E402
 import frame_android_import  # noqa: E402
+import frame_nxnative  # noqa: E402
 import frame_backup  # noqa: E402
 from apk_sources import search as apk_search, SourceError  # noqa: E402
 from apk_sources import fdroid as apk_fdroid  # noqa: E402
@@ -3523,6 +3524,41 @@ def source_manage(body):
         raise Failure(str(e), 400)
 
 
+def nxnative_action(body):
+    """Private user game sources; prepared installs share the Android install queue."""
+    def text(key, optional=False, maximum=4096):
+        value = body.get(key, '')
+        if not isinstance(value, str) or len(value) > maximum or ('\x00' in value):
+            raise Failure('Invalid ' + key, 400)
+        value = value.strip()
+        if not value and not optional:
+            raise Failure('Choose a ' + key, 400)
+        return value
+
+    def call(fn, *args, **kwargs):
+        try:
+            return fn(*args, **kwargs)
+        except ValueError as exc:
+            raise Failure(str(exc), 400) from exc
+
+    action = body.get('action')
+    if action == 'add':
+        location, name = text('location'), text('name', optional=True, maximum=200)
+        return start_job('Add game source', lambda: call(frame_nxnative.add_source, location, name))
+    if action == 'refresh':
+        source = text('source', optional=True, maximum=128)
+        return start_job('Refresh game sources', lambda: call(frame_nxnative.refresh, source or None))
+    if action == 'remove':
+        result = call(frame_nxnative.remove_source, text('source', maximum=128))
+        return dict(result, message='Game source removed. Installed games were kept.')
+    if action == 'install':
+        source, entry = text('source', maximum=128), text('id', maximum=256)
+        ensure_master()
+        return queue_job('Install NxNative game',
+                         lambda report: call(frame_nxnative.install, source, entry, report=report), progress=True)
+    raise Failure('Unknown NxNative action', 400)
+
+
 def power_action(body):
     action = body.get('action')
     if LOCAL:
@@ -3562,6 +3598,7 @@ def transfer_local(body):
 
 
 POST = {
+    "/api/nxnative": nxnative_action,
     "/api/steam-pipewire": steam_pipewire_action,
     "/api/transfer": transfer_local,
     "/api/power": power_action,
@@ -3839,6 +3876,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_bytes((HERE / 'vendor/hls-1.6.13.light.min.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.js":
                 self.send_bytes((HERE / 'control-center.js').read_bytes(), 'text/javascript; charset=utf-8')
+            elif path == "/nxnative.js":
+                self.send_bytes((HERE / 'nxnative.js').read_bytes(), 'text/javascript; charset=utf-8')
             elif path == "/control-center.css":
                 self.send_bytes((HERE / 'control-center.css').read_bytes(), 'text/css; charset=utf-8')
             elif path == "/assistant":
@@ -3898,6 +3937,8 @@ class Handler(BaseHTTPRequestHandler):
                     raise Failure(str(e), 400)
             elif path == "/api/sources":
                 self.send_json({"sources": apk_search.sources()})
+            elif path == "/api/nxnative":
+                self.send_json(frame_nxnative.status())
             elif path == "/api/search":
                 self.send_json(source_search(url.query))
             elif path == "/api/apk-versions":

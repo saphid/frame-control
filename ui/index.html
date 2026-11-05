@@ -975,6 +975,18 @@
   .scope-tabs button { min-height:44px; height:auto; padding:10px 16px; border-radius:7px; background:transparent; color:var(--muted); }
   .scope-tabs [aria-pressed=true] { background:#28455e; color:white; box-shadow:inset 0 0 0 1px #66c0f440; }
   #librarySources { padding-bottom:14px; border-bottom:1px solid #ffffff12; }
+  #nxnativeDlg { width:min(760px, calc(100vw - 32px)); }
+  #nxnativeDlg h2 { margin:0 0 12px; }
+  #nxnativeDlg .source-repo-form { margin:20px 0; }
+  .nxnative-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .nxnative-source, .nxnative-game { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #ffffff12; }
+  .nxnative-source > div, .nxnative-game > div { min-width:0; flex:1; }
+  .nxnative-source p, .nxnative-game p { margin:5px 0 0; overflow-wrap:anywhere; }
+  .nxnative-source .small, .nxnative-game .small { flex-shrink:0; }
+  .nxnative-help { margin-top:22px; }
+  #nxnativeStatus { margin:12px 0; min-height:1.4em; }
+  #nxnativeDlg input { width:100%; box-sizing:border-box; }
+
   .lib-head { margin-bottom:12px; gap:12px; }
   .lib-head h2 { margin:0 0 5px; font-size:17px; color:white; }
   .lib-head p { font-size:13px; }
@@ -2227,10 +2239,28 @@
 <dialog id="installChooser" class="dlg installed-detail install-chooser" aria-labelledby="installChooserTitle">
   <div class="install-chooser-head"><span class="eyebrow">Add to your Frame</span><button type="button" id="installChooserClose" class="store-close" aria-label="Close Add or install">×</button></div>
   <h2 id="installChooserTitle">What would you like to install?</h2>
-  <div class="install-choices"><a href="#appStore"><strong>Browse apps</strong><span>VR, Android games, media and utilities</span></a><a href="#getgames"><strong>Owned Steam games</strong><span>Install straight from your Steam library</span></a><a href="#steamStore"><strong>Find a Steam game</strong><span>Search the store, buy or get, then install</span></a><a href="#linuxApps"><strong>Linux apps</strong><span>Desktop apps from Flathub</span></a><button type="button" id="installChooseFile"><strong>Choose a file</strong><span>Android APK · Windows EXE · game ZIP</span></button><button type="button" id="androidBackupOpen"><strong>Import Android game</strong><span>A SideQuest backup: APK with its OBB game data</span></button></div>
+  <div class="install-choices"><a href="#appStore"><strong>Browse apps</strong><span>VR, Android games, media and utilities</span></a><a href="#getgames"><strong>Owned Steam games</strong><span>Install straight from your Steam library</span></a><a href="#steamStore"><strong>Find a Steam game</strong><span>Search the store, buy or get, then install</span></a><a href="#linuxApps"><strong>Linux apps</strong><span>Desktop apps from Flathub</span></a><button type="button" id="installChooseFile"><strong>Choose a file</strong><span>Android APK · Windows EXE · game ZIP</span></button><button type="button" id="androidBackupOpen"><strong>Import Android game</strong><span>A SideQuest backup: APK with its OBB game data</span></button><button type="button" data-open-nxnative><strong>NxNative games</strong><span>Your game catalogs and network folders</span></button></div>
   <input type="file" id="installFileInput" accept=".apk,.zip,.exe" multiple hidden>
   <form id="installLinkForm"><label for="installUrl">Or paste a download or Frame Control install link</label><div class="install-link-row"><input id="installUrl" type="text" inputmode="url" placeholder="https://example.com/game.zip" autocomplete="off" required><button class="action" type="submit">Review link</button></div><p id="installLinkError" class="sub" role="alert" hidden></p></form>
   <p class="sub">Link installs show the title, source and file before you confirm, then use automatic launch and runtime settings. Choose a ZIP or EXE file to pick those settings yourself. Compatibility varies by title.</p>
+</dialog>
+<dialog id="nxnativeDlg" class="dlg installed-detail" aria-labelledby="nxnativeTitle">
+  <div class="install-chooser-head"><span class="eyebrow">Your own library</span><button type="button" id="nxnativeClose" class="store-close" aria-label="Close NxNative games">×</button></div>
+  <h2 id="nxnativeTitle">NxNative games</h2>
+  <p class="sub">Add your own game catalog or folder. Frame Control includes no ROM sources. Prepared NxNative packages install as flat games in SteamVR.</p>
+  <p class="sub">Experimental: Metroid Dread 2.1.0 has been tested on Frame. Other games need separate compatibility checks.</p>
+  <div id="nxnativeStatus" class="sub" role="status" aria-live="polite"></div>
+  <form id="nxnativeAdd" class="source-repo-form">
+    <label>Catalog address or folder path<input name="location" type="text" required maxlength="4096" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="HTTPS catalog or mounted folder path"></label>
+    <label>Source name (optional)<input name="name" type="text" maxlength="200" autocomplete="off"></label>
+    <p class="sub" id="nxnativePathNote">Use a JSON or text URL-list catalog, or a local folder. Mount an SMB, NFS or WebDAV share on this computer first, then enter its folder path.</p>
+    <button class="action" type="submit">Add source</button>
+  </form>
+  <div class="nxnative-toolbar"><h3>Your sources</h3><button type="button" class="small" id="nxnativeRefresh">Refresh</button></div>
+  <div id="nxnativeSources"></div>
+  <label>Find a game<input type="search" id="nxnativeSearch" placeholder="Filter your games"></label>
+  <div id="nxnativeGames" aria-live="polite"></div>
+  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing games for NxNative</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
 </dialog>
 <dialog id="wiDlg" aria-labelledby="wiTitle">
   <h2 id="wiTitle">Install from a website</h2>
@@ -8320,6 +8350,8 @@ api("/api/host").then(h => {
   watchConnection();
 }).catch(() => watchConnection());
 </script>
+<script src="/nxnative.js"></script>
+<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
 <script src="/artwork-settings.js"></script>
 <script src="/control-center.js"></script>
 <script>

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Add experimental NxNative games for Steam Frame: private user-added web
+  catalogs, URL lists, EmulationStation lists and mounted network folders;
+  verified prepared APK/data installation with progress and Steam shortcuts.
+  No ROM sources, games or keys ship with the app. Metroid Dread 2.1.0 has
+  remote gameplay, focus, checkpoint persistence and suspend/resume evidence.
+  Physical controller feel and worn comfort remain untested.
+
 - Bring Games browsing and Steam search closer to Steam's store: show useful
   titles before a search, page through full result counts, filter and sort the
   catalog, and show regional prices, discounts, ownership and Frame ratings in
