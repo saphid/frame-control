@@ -58,6 +58,10 @@
           "*.css",
           "vendor/hls-1.6.13.light.min.js",
           "vendor/hls-LICENSE",
+          "vendor/react-18.3.1.min.js",
+          "vendor/REACT-LICENSE.txt",
+          "vendor/react-dom-18.3.1.min.js",
+          "vendor/REACT-DOM-LICENSE.txt",
           "telemetry.json",
           "framey-compatibility.json"
         ]
