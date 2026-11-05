@@ -1,5 +1,11 @@
 # Frame Control for Android phones
 
+The public Android beta is distributed as a signed APK on the
+[GitHub releases page](https://github.com/saphid/frame-control/releases). It
+uses package `com.saphid.framecontrol`. The current beta can update the
+existing 0.1.0 beta installation in place. Google Play internal testing needs
+a Play Console app record and publisher credentials, which are not configured.
+
 The Android app is a phone shell for the same Frame-hosted web page as the iOS
 and desktop apps. Its build packs `ui/` and the headset helpers with
 `ios/scripts/make_frame_bundle.py`. After pairing, it copies that archive to
