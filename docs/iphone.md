@@ -71,13 +71,14 @@ signing team in Xcode (Signing & Capabilities).
 
 ## TestFlight beta
 
-The repository does not contain Apple signing credentials or an App Store
-Connect app record. The bundle ID is `com.saphid.framecontrol`. Once that ID
-belongs to the target Apple team and the app exists in App Store Connect, use
-`ios/scripts/testflight.sh` on a Mac with Xcode, an Apple Distribution signing
-identity, and an App Store Connect API key with upload access. Keep the `.p8`
-key outside the checkout. The script uses the key only to ask Xcode for
-provisioning and to export or upload the archive.
+The existing Frame Control App Store Connect app is `6822547223`, with bundle
+ID `com.saphid.framecontrol` under Apple team `NJZUMEA4BN`. The repository
+does not contain its signing credentials. Use `ios/scripts/testflight.sh` on a
+Mac with Xcode and an App Store Connect API key with upload access. Keep the
+`.p8` key outside the checkout. The script makes an unsigned device archive,
+then asks Xcode to sign the exported IPA for App Store Connect. This worked
+through Xcode's managed distribution signing without a local Apple
+Distribution identity. The key is used only for export and upload.
 Select an Xcode installation with the iOS device SDK before running it; on a
 Mac with multiple Xcode versions, set `DEVELOPER_DIR` to the intended
 `Xcode.app/Contents/Developer` directory.
@@ -94,10 +95,14 @@ ios/scripts/testflight.sh export  # inspect the signed IPA before upload
 ios/scripts/testflight.sh upload
 ```
 
-`archive` verifies the bundle ID, version, build number, and code signature.
-`upload` submits the archive to App Store Connect; TestFlight processing and
-tester access must then be confirmed there. The simulator CI job checks a
-separate, unsigned build and does not upload a beta.
+`archive` verifies the bundle ID, version, and build number in the unsigned
+archive. `export` verifies the IPA's Apple Distribution signature, team,
+non-debuggable Store profile, bundle ID, version, and build number. `upload`
+rechecks that IPA before Xcode signs and submits the same archive to App Store
+Connect. Confirm processing and tester access there. The simulator CI job
+checks a separate, unsigned build and does not upload a beta. The
+[0.4.59 TestFlight upload evidence](evidence/ios-testflight-0.4.59-2026-11-05.md)
+records the verified build.
 
 ## Verified
 
