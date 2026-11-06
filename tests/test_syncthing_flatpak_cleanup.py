@@ -1,5 +1,6 @@
 """Instance cleanup tolerates registry lag, but never ignores a live entry."""
 import ast
+from contextlib import ExitStack
 import io
 import json
 from pathlib import Path
@@ -130,6 +131,75 @@ class DeckyShutdownLog(unittest.TestCase):
 
     def test_normal_shutdown_task_cleanup_is_allowed(self):
         self.check_log('[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n')
+
+
+class MigrationFailedStopCleanup(unittest.TestCase):
+    def probe(self, stop_error=None, log_error=None):
+        root = Path(__file__).resolve().parent/'decky-runtime'
+        main = next(node for node in ast.parse((root/'syncthing_migration.py').read_text()).body
+                    if isinstance(node, ast.FunctionDef) and node.name == 'main')
+        final = next(node for node in main.body if isinstance(node, ast.Try)).finalbody
+        log = io.StringIO('last loader phase before the stop failure\n')
+        emitted = []
+        def check_log(stream):
+            stream.seek(0)
+            emitted.append(stream.read())
+            if log_error:
+                raise log_error
+        scope = dict(ExitStack=ExitStack, report={}, helper_pid=811,
+                     decky_unit=SimpleNamespace(name='owned-decky', unlink=Mock()),
+                     unit=SimpleNamespace(name='owned-legacy', exists=lambda: True,
+                                          read_bytes=lambda: b'owned fixture', unlink=Mock()),
+                     unit_bytes=b'owned fixture', ctl=Mock(), prop=Mock(return_value='0'),
+                     stop_decky_service=Mock(side_effect=stop_error),
+                     unrelated=SimpleNamespace(poll=Mock(return_value=None),
+                                               terminate=Mock(), wait=Mock()),
+                     wait=Mock(), Path=Mock(), logs=[log], verify_decky_log=check_log)
+        def finish():
+            exec(compile(ast.Module(body=final, type_ignores=[]), str(root/'syncthing_migration.py'),
+                         'exec'), scope)
+        return scope, finish, log, emitted
+
+    def test_forced_stop_still_reaps_fixtures_and_emits_loader_log(self):
+        error = AssertionError('systemd Result=timeout; ExecMainStatus=9')
+        scope, finish, log, emitted = self.probe(stop_error=error)
+        with self.assertRaises(AssertionError) as raised:
+            finish()
+        self.assertIs(raised.exception, error)
+        scope['wait'].assert_called_once()
+        scope['unrelated'].terminate.assert_called_once()
+        scope['unrelated'].wait.assert_called_once_with(timeout=5)
+        scope['ctl'].assert_any_call('stop', 'owned-legacy')
+        scope['unit'].unlink.assert_called_once()
+        self.assertEqual(emitted, ['last loader phase before the stop failure\n'])
+        self.assertTrue(log.closed)
+        self.assertNotIn('ownedMigrationDeckyServiceRemoved', scope['report'])
+        self.assertNotIn('ownedProcessesReaped', scope['report'])
+
+    def test_log_failure_retains_stop_failure_and_closes_log(self):
+        error = AssertionError('systemd Result=timeout')
+        bad_log = AssertionError('Decky shutdown errors')
+        scope, finish, log, emitted = self.probe(stop_error=error, log_error=bad_log)
+        with self.assertRaises(AssertionError) as raised:
+            finish()
+        self.assertIs(raised.exception, bad_log)
+        self.assertIs(raised.exception.__context__, error)
+        scope['unrelated'].wait.assert_called_once_with(timeout=5)
+        self.assertTrue(emitted)
+        self.assertTrue(log.closed)
+        self.assertNotIn('deckyShutdownLogChecked', scope['report'])
+
+    def test_successful_stop_keeps_strict_cleanup_evidence(self):
+        scope, finish, log, emitted = self.probe()
+        finish()
+        scope['stop_decky_service'].assert_called_once_with('owned-decky', scope['report'])
+        scope['decky_unit'].unlink.assert_called_once()
+        scope['unit'].unlink.assert_called_once()
+        scope['unrelated'].wait.assert_called_once_with(timeout=5)
+        self.assertTrue(scope['report']['ownedMigrationDeckyServiceRemoved'])
+        self.assertTrue(scope['report']['deckyShutdownLogChecked'])
+        self.assertTrue(log.closed)
+        self.assertTrue(emitted)
 
 
 class OwnedDeckyStop(unittest.TestCase):
