@@ -44,6 +44,16 @@ helper. Compilation and whitespace checks passed. Fake-Frame e2e assertions
 now require both receipt markers and the delivered helper digest; fresh
 hosted e2e and native AMD64/ARM64 qualification remain pending.
 
+The first hosted `checks` job on `7c996df3` ran 2,107 tests and failed the
+CLI gate fixture's stale two-case count: case 111 now also has the explicit
+shutdown negative, so the CLI correctly retained three cases. The fixture
+now requires the primary plus both named controls and checks the forced-kill
+marker on each negative separately. The primary forced-kill rejection,
+shutdown-error rejection and incomplete/digest-mismatch tests remain intact.
+The expanded local suite passes all 132 tests without skips. This is a test
+expectation repair; runtime sources and prior local runtime evidence are
+unchanged, and new-commit hosted gates are still required.
+
 Both compatibility entries stay partial. Existing managed copies need an
 explicit update or reinstall; their old receipts now say so. No new browser,
 real Frame playback, wearer-visible UI or controller test was performed.
