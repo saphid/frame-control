@@ -256,6 +256,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 52 and digest == '9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e':
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_THEME_MUSIC_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 103 and digest == '8a69f45aadce763406b5c27bfef194761006d5e01c5e8841badeb13a27dd0d88':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_LUDUSAVI_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1242,6 +1245,25 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compile(source,str(main),'exec')
                 main.write_bytes(source)
                 compat_shims.append('free-loader-ipc-eof')
+            # Repair only the exact Game Theme Music child; preserve all of
+            # its original media, settings and unload implementation bytes.
+            if int(plugin_id)==52 and digest=='9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e' and folder=='SDH-GameThemeMusic':
+                main=unpacked/'main.py'
+                original=main.read_bytes()
+                if hashlib.sha256(original).hexdigest()!='99ace543c6b3b639ab66fa523aa455f1ab4644f536bad7e1dad644f467db52f8':
+                    raise RuntimeError('Game Theme Music backend differs from pinned archive')
+                ipc=globals().get('FRAMEY_THEME_MUSIC_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Game Theme Music child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Game Theme Music child IPC helper collides with archive')
+                helper.parent.mkdir(exist_ok=True)
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+original
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
+                compat_shims.append('game-theme-music-ipc-eof')
             # TabMaster 2.15.1 passes a file object to json.loads, so every
             # restore fails. Read its JSON stream and refuse non-object state.
             if int(plugin_id)==61 and digest=='e08333859a32b0c177b8e9a7959c5eeeafe38f946578f7f1d161c721f0e05da5' and folder=='TabMaster':

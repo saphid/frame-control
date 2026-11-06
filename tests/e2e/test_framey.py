@@ -396,6 +396,14 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      '7fb87f779459bfe2792331c038dd026eff06122617c1b9528863d517af602ba3')
                     self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
                                      '43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8')
+                if plugin['id'] == 52:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['game-theme-music-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     'cfac245371ec85776983f7a5664304d84a8d406d4127cd790f154504f85b59e8')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 89:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])
