@@ -3870,7 +3870,7 @@
         "https://github.com/yt-dlp/yt-dlp"
       ],
       "status": "partial",
-      "reason": "An inert local component lets the exact frontend render its Settings view in opaque Chromium. A private in-memory panel replay verifies mute, volume and yt-dlp setting calls across iframe reopen. Separately, the unmodified official backend passes published Decky 3.3.0 discovery and a private setting saved across loader restart in an isolated x86_64 container. The panel was not connected to that backend. Steam game-page theme injection has no verified target in Framey; music search, playback, downloads, real Frame backend and worn VR remain unverified.",
+      "reason": "Local Chromium renders Settings through an inert component; in-memory get/set and iframe reopen pass. Earlier unmodified backend checks read and wrote a private setting, but a later strict ARM64 test exposed forced shutdown. Exact managed installs add child IPC EOF repair; isolated native AMD64 verifies settings RPC after EOF, original unload, two clean parent-only stops and restart persistence. Existing copies need update/reinstall. Search, downloads, playback, Steam game-page injection, browser/backend integration, repaired ARM64, real Frame and worn/controller use remain unverified; compatibility stays partial.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3920,7 +3920,10 @@
       "settingsFollowUp": {
         "evidence": "docs/evidence/framey-game-theme-music-settings-2026-10-29.md",
         "mode": "exact official frontend in opaque local Chromium; in-memory settings get/set and iframe reopen; no official backend or network"
-      }
+      },
+      "requiredShims": [
+        "game-theme-music-ipc-eof"
+      ]
     },
     {
       "id": 53,
@@ -7156,7 +7159,7 @@
         "https://github.com/Seraphli/decky-spy.git"
       ],
       "status": "works",
-      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
+      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. New managed installs also repair child IPC EOF, with clean unload/restart verified in isolated native amd64 Decky. This new repair has not been verified on ARM64 or the real Frame. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7207,7 +7210,8 @@
         "existingInstallRequires": "explicit managed update or reinstall"
       },
       "requiredShims": [
-        "deckyspy-psutil-and-battery"
+        "deckyspy-psutil-and-battery",
+        "deckyspy-ipc-eof"
       ]
     },
     {
@@ -13745,7 +13749,11 @@
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       },
-      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md"
+      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md",
+      "requiredShims": [
+        "desktop-apps-ipc-eof"
+      ],
+      "missingShimStatus": "partial"
     },
     {
       "id": 144,

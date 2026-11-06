@@ -99,6 +99,7 @@ def main():
               'ui/framey_discord_lifecycle.py', 'tests/decky-runtime/discord_private.py',
               'tests/decky-runtime/runtime_console.py', 'tests/decky-runtime/timer_lifecycle.py',
               'tests/decky-runtime/download_all_private.py',
+              'tests/decky-runtime/desktop_apps_private.py',
               'tests/decky-runtime/steam_status_private.py',
               'tests/decky-runtime/suggestme_private.py',
               'tests/decky-runtime/localsend_private.py',
@@ -108,6 +109,8 @@ def main():
               'tests/decky-runtime/free_loader_private.py',
               'tests/decky-runtime/deck_shelves_private.py',
               'tests/decky-runtime/battery_private.py',
+              'tests/decky-runtime/deckyspy_private.py',
+              'tests/decky-runtime/theme_music_private.py',
               'tests/decky-runtime/steamback_private.py',
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
@@ -140,6 +143,7 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (143, '--reproduce-desktop-apps-unload-regression'),
                     (38, '--reproduce-volume-mixer-user-regression'),
                     (131, '--reproduce-download-all-unload-regression'),
                     (125, '--reproduce-localsend-unload-regression'),
@@ -159,6 +163,8 @@ def main():
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression'),
                     (67, '--reproduce-battery-tracker-unload-regression'),
+                    (89, '--reproduce-deckyspy-unload-regression'),
+                    (52, '--reproduce-theme-music-unload-regression'),
                     (36, '--reproduce-steamgriddb-unload-regression'),
                     (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
@@ -174,6 +180,11 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
+                if plugin_id == 143 and negative:
+                    # The original EOF spin allocates tasks without yielding.
+                    # Keep this negative below OOM pressure until Decky's own
+                    # five-second forced-stop deadline proves the regression.
+                    command += ['--cpus', '0.5', '--memory', '2g']
                 # Copyparty deliberately refuses uploads to tmpfs. Use an
                 # anonymous Docker volume, populated with the image's owned
                 # tester home and removed with this container, for this case.
