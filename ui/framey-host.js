@@ -648,6 +648,36 @@
       renderModals();
     }};
   };
+  const ModalRoot = ({children, onOK, bOKDisabled, closeModal, onCancel, onEscKeypress,
+    frameySetModalBusy, ...props}) => {
+    const pending = R.useRef(false);
+    const [busy, setBusy] = R.useState(false);
+    const [failure, setFailure] = R.useState('');
+    // Custom plugin dialogs pass their injected closeModal into ModalRoot.
+    // Bind busy state to that dialog, even if a nested dialog is opened later.
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    const markBusy = value => {
+      pending.current = value; setBusy(value);
+      if (modal && modals.includes(modal)) {modal.running=value; renderModals();}
+    };
+    const submit = event => {
+      if (bOKDisabled || pending.current || event?.defaultPrevented) return;
+      setFailure('');
+      let result;
+      try {result = onOK(event);}
+      catch (error) {setFailure(String(error?.message || error)); return;}
+      if (result && typeof result.then === 'function') {
+        markBusy(true);
+        return Promise.resolve(result).then(()=>markBusy(false), error=>{
+          markBusy(false); setFailure(String(error?.message || error));
+        });
+      }
+    };
+    return R.createElement('section', props, children,
+      failure && R.createElement('p', {role:'alert'}, failure),
+      typeof onOK==='function' && R.createElement('button', {
+        type:'button', disabled:!!bOKDisabled || busy, onClick:submit}, 'OK'));
+  };
   // These are Framey's own styles and components, never Steam's webpack cache.
   // Keep the registry finite: an unknown Steam implementation stays unavailable.
   const classModules = new Map(Object.entries({
@@ -704,7 +734,7 @@
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
-    DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot,
     ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
     ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
