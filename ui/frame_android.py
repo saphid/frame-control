@@ -76,8 +76,8 @@ def ssh(cmd, input=None, timeout=120):
         # Bytes input gives bytes output: decode it, so the message isn't "b'...'".
         stderr, stdout = (v if isinstance(v, str) else (v or b'').decode(errors='replace')
                           for v in (p.stderr, p.stdout))
-        error = FrameError((stderr or stdout or f'ssh exited {p.returncode}').strip()[-600:])
-        raise frame_host.link_failure(error) if frame_host.ssh_link_failed(p.returncode, stderr) else error
+        error = FrameError((stderr or stdout or frame_host.ssh_exit_message(p.returncode)).strip()[-600:])
+        raise frame_host.link_failure(error) if frame_host.ssh_link_failed(p.returncode, stderr, stdout) else error
     return p.stdout
 
 
