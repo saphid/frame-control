@@ -417,10 +417,13 @@
     R.createElement('label', null,
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
-    mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
+  const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+    mustBeNumeric, mustBeURL, mustBeEmail, onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, placeholder, disabled:!!disabled, onChange:e=>{if(!disabled)onChange?.(e);}}));
+      value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled,
+      onChange:e=>{if(!disabled)onChange?.(e);}, onBlur:e=>{if(!disabled)onBlur?.(e);},
+      onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+      onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
