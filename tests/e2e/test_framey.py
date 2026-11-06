@@ -322,12 +322,14 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      else frame_decky_store.LOCALSEND_ORIGINAL)
                 if plugin['id'] == 28:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+                    self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/hash').split()[0],
                                      frame_decky_store.EMU_BINARIES[arch])
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
-                                     frame_decky_store.EMU_MANAGED_MAIN)
+                                     'c3314c4202a2523fe0d68b50683c3640ab7cd0da074364eb65a28b34c9af1d3c')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))

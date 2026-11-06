@@ -136,6 +136,7 @@
   {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
+    "additionalShims": ["emuchievements-ipc-eof"],
     "probe": "emuchievements-private-hash"
   },
   {
