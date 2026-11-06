@@ -7,7 +7,14 @@
   verified prepared APK/data installation with progress and Steam shortcuts.
   No ROM sources, games or keys ship with the app. Metroid Dread 2.1.0 has
   remote gameplay, focus, checkpoint persistence and suspend/resume evidence.
-  Physical controller feel and worn comfort remain untested.
+  Physical controller feel and worn comfort remain untested. Typed black texture
+  fallbacks restore Dread shading; an intermittent title-movie startup stall
+  still needs a cold restart.
+- Add Celeste 1.4.1.1 preparation and renderer fixes, with visible Frame gameplay,
+  audio and cold save reload after an APK update. Add a separate LÖVE preparation
+  path tested with Balatro gameplay and cold saved-run continuation. Wonder
+  still has black foreground/player rendering; Pokopia remains experimental and
+  Odyssey needs usable decrypted inputs. User-supplied game content stays private.
 
 - Bring Games browsing and Steam search closer to Steam's store: show useful
   titles before a search, page through full result counts, filter and sort the

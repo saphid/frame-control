@@ -11,8 +11,9 @@
   "test_scope": {
     "input": "remote input; not physical Frame-controller validation",
     "shared_shader_image_view_patch_present": false,
-    "final_shared_renderer_regression": "pending",
-    "exact_release_candidate_verified": false
+    "final_shared_renderer_regression": "passed on physical Frame after image-view, feedback-shape, attachment-format, initialization and layered-copy fixes",
+    "exact_release_candidate_verified": false,
+    "final_shared_renderer_patch_sha256": "004b5c326761ba86356af54451e1531c6f690e1ef47698c56fb32332c89baa51"
   },
   "cold_save_reload": {
     "result": "passed",
@@ -50,7 +51,6 @@
     }
   },
   "remaining": [
-    "Runtime regression after the final shared shader image-view changes",
     "Physical Frame-controller axes, buttons and feel",
     "Worn-headset comfort"
   ],
@@ -72,7 +72,74 @@
       "sha256": "52f9a2a7157e899650e5423d77fafd3b2bae840704525d79f5a73026bab1f777",
       "bytes": 272635,
       "observed": "Remote movement after reload changed the player position"
+    },
+    {
+      "path": "nxnative-frame/celeste-final-renderer-saved-slot-2026-11-06.png",
+      "sha256": "52195159a2cb41330af0c90276b07dc6bfeebcdc3f300fd5480a43a7aadcdc0a",
+      "bytes": 1802073,
+      "observed": "Saved slot retained after final shared-runtime APK update"
+    },
+    {
+      "path": "nxnative-frame/celeste-final-renderer-gameplay-2026-11-06.png",
+      "sha256": "67874331f6c3ee21453be38f6a4616aa23ef721b47ef36ec8f11311eae0d5dfa",
+      "bytes": 271963,
+      "observed": "Continue restored visible gameplay on final shared runtime"
+    },
+    {
+      "path": "nxnative-frame/celeste-final-renderer-input-2026-11-06.png",
+      "sha256": "bc3c9d1adbf075dadce1d5d4aefc11649dd4e87860160213285b9b38b59feb4c",
+      "bytes": 272417,
+      "observed": "Remote movement changed visible player position on final shared runtime"
+    },
+    {
+      "path": "nxnative-frame/celeste-typed-null-slot-2026-11-06.png",
+      "sha256": "7a065fecc406b7e990f3063cda7c075127b98c41723b8c1fe94667b4f403e191",
+      "bytes": 1911859,
+      "observed": "Saved Prologue slot retained after typed-null renderer update"
+    },
+    {
+      "path": "nxnative-frame/celeste-typed-null-gameplay-2026-11-06.png",
+      "sha256": "18587c03bfc509a42701236456026998144d65ad66848633d45f998e06025058",
+      "bytes": 273554,
+      "observed": "Cold Continue restored visible gameplay"
+    },
+    {
+      "path": "nxnative-frame/celeste-typed-null-input-2026-11-06.png",
+      "sha256": "62d43c8d05f6dadca34e92582931fcf741c2de84b57ecb10906934bc0a094d35",
+      "bytes": 269380,
+      "observed": "Remote right movement visibly changed player position"
     }
   ],
-  "publication_boundary": "Only screenshots and this text receipt are included. No save files, APKs, ROMs, extracted game assets, shader bytecode, keys or private catalogs are copied."
+  "publication_boundary": "Only screenshots and this text receipt are included. No save files, APKs, ROMs, extracted game assets, shader bytecode, keys or private catalogs are copied.",
+  "final_shared_renderer_regression": {
+    "apk_sha256": "4bf52feb29c764ff26b682c696ca465c63cd7602673f0ad8eabd26c5a45eb7ac",
+    "installation": "APK updated via Frame Control Android backend in the same persistent instance; saves retained",
+    "cold_continue": "Prologue / 3 deaths / 09:55.238 retained; Continue restored visible gameplay",
+    "input": "Remote right movement visibly changed player position; jump input sent",
+    "audio": {
+      "duration_seconds": 1,
+      "sample_rate_hz": 48000,
+      "channels": 2,
+      "peak": 8926,
+      "rms": 1271.25
+    },
+    "exact_release_candidate_verified": false
+  },
+  "typed_null_renderer_regression": {
+    "apk_sha256": "5005b5a93d96036711baa5009b922c7a949954cd4095681e5a3d3dbf26da7c8e",
+    "patch_sha256": "2df661dc3c4834ef529d3d2009e071cfb6fd19fc4740e583fdae3006e753452f",
+    "installation": "Frame Control Android backend APK update in same persistent instance",
+    "cold_continue": "Prologue / 3 deaths / 09:55.238 retained; Continue restored visible gameplay",
+    "input": "Remote right movement visibly changed player position; jump input sent",
+    "exact_release_candidate_verified": false,
+    "audio": {
+      "seconds": 2.048,
+      "sample_rate_hz": 48000,
+      "channels": 2,
+      "peak": 10326,
+      "rms": 1075.72,
+      "source": "Lepton output monitor",
+      "microphone_recorded": false
+    }
+  }
 }

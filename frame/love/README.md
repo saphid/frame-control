@@ -75,8 +75,13 @@ Packaging and manifest-identity tests do not establish a game's compatibility.
 Verify startup, controller input, display, audio and save/reload on the physical
 Frame for each game before describing that game as working.
 
-The private Balatro build was exercised on Frame through actual remote touch
-gameplay and produced nonzero audio. Continue after a cold restart, restoration
-of an in-progress run, physical controller feel and worn-headset comfort remain
-unverified. These observations do not establish compatibility for other LÖVE
-games.
+The private Balatro build accepted remote touch gameplay and produced nonzero
+audio. The tutorial Small Blind was defeated with a round score of 452; cashing
+out left $7. After a full persistent-instance stop/launch, Continue retained
+Round 1, Ante 1, Money $7 and Best Hand 252, then opened the saved run with the
+legitimate “Continue a saved run from the main menu” unlock popup. No save files
+were edited. After dismissing the unlock popups, the restored Big Blind selector
+and $7 were visible; selecting it opened Round 2 and dealt an eight-card hand.
+Physical controller feel, worn-headset comfort and final app/release-candidate
+smoke remain pending. See the [follow-up evidence](../../docs/evidence/love-frame-followup-2026-11-06.json).
+These observations do not establish compatibility for other LÖVE games.

@@ -192,8 +192,14 @@ def _entry(raw, base, source_id):
     prepared = bundle or build
     checksum = _sha(raw.get('sha256'))
     installable = prepared and (not _remote(ref) or bool(checksum)) and not (build and _remote(ref))
-    reason = ('' if installable else 'Add a SHA-256 checksum for this prepared online build' if prepared else
-              'Preparation required: raw ROMs need matching extracted inputs and the Mac NxNative build tools')
+    if installable:
+        reason = ''
+    elif build and _remote(ref):
+        reason = 'Export this online build folder as a portable .nxnative.zip, then add it with its SHA-256 checksum'
+    elif prepared:
+        reason = 'Add a SHA-256 checksum for this prepared online build'
+    else:
+        reason = 'Preparation required: raw ROMs need matching extracted inputs and the Mac NxNative build tools'
     ident = str(raw.get('id') or hashlib.sha256(ref.encode()).hexdigest()[:20])
     _text(ident, 'game ID', 100)
     return {'id': ident, 'source_id': source_id, 'name': name,

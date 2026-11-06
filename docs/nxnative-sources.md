@@ -14,6 +14,14 @@ You can add:
 - A prepared build folder containing `game.apk`, `patched_android`, `shader/vk`,
   `font` and exactly one `extract/*/RomFS` directory.
 
+For a completed build on a local disk or mounted share, add that exact build
+folder to avoid exporting and copying a multi-gigabyte ZIP. To share prepared
+games online or across computers, use the versioned JSON catalog below with
+`.nxnative.zip` files and their SHA-256 checksums. A library folder without a
+catalog is scanned recursively for raw ROM files and `.nxnative.zip` files;
+prepared build subfolders need their own source or an explicit `build` entry in
+the catalog.
+
 The list distinguishes **Prepared build** from **Preparation required**. A raw
 NSP/XCI library is useful for browsing, but raw ROM files are not Android apps.
 The preparation action explains the exact Mac tools and matching game inputs
@@ -22,8 +30,9 @@ needed. It does not pretend arbitrary games or versions can be converted.
 The builder verifies modules against each game's exact profile, including games
 with `main`/`sdk` and no `subsdk0`. The bundled Celeste 1.4.1.1 metadata is for
 experimental bring-up: visible gameplay, remote movement/jump input, audio and
-cold save reload were observed on Frame. Final shared renderer regression,
-physical controller feel and worn-headset comfort remain unverified. Its MGFX
+cold save reload were observed on Frame, including after the shared renderer
+update. Exact release-candidate checks, physical controller feel and
+worn-headset comfort remain unverified. Its MGFX
 shader packages also need the newer upstream extraction tool described in the
 [profile notes](../frame/nxnative/profiles/01002B30028F6000/README.md).
 
@@ -48,13 +57,15 @@ install them as `.nxnative.zip` bundles.
 | [WebDAV (RFC 4918)](https://www.rfc-editor.org/rfc/rfc4918) | Standard HTTP collection/property operations; it is a transport, not a ROM metadata schema | Mount a WebDAV share on the desktop, or serve a catalog and bundles over HTTP(S). No built-in PROPFIND client. |
 | SMB / NFS | Authenticated network filesystems managed by the operating system | Add a mounted folder. Frame Control does not mount shares, store SMB passwords or install a filesystem client. |
 
-There is no adopted generic ROM-repository format that also describes a game's
-NxNative executable rewrite, Vulkan shaders, fonts, package identity and atomic
-data publication. A small versioned JSON catalog and portable build manifest
-supply that missing part while reusing existing gamelist paths and transports.
+The formats above do not describe the complete NxNative installation: executable
+rewrite, Vulkan shaders, fonts, package identity and atomic data publication.
+A small versioned JSON catalog and portable build manifest supply that missing
+part while reusing existing gamelist paths and transports.
 
 On iPhone/iPad, a prepared HTTP(S) catalog works without a Mac builder online.
-Desktop mount paths are paths on that desktop and cannot be opened by the phone.
+The source server runs on the Frame, so a local source must be mounted on the
+Frame and use its path there. A phone Files location or a desktop mount path is
+not automatically available to that server.
 Native SMB/WebDAV browsing, HTTP login forms, automatic RomM synchronization,
 raw-ROM downloads and remote Mac build orchestration remain future work.
 Embedded usernames/passwords in URLs are rejected. Use a mounted authenticated

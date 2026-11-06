@@ -25,9 +25,11 @@ gameplay, including movement and jumping through remote input. **Save and Quit**
 created real `0.celeste` and `settings.celeste` files. After a full persistent
 instance stop/relaunch without diagnostic overrides, the slot retained Prologue,
 3 deaths and `09:55.238`. Continue restored visible gameplay and remote movement
-worked again; the save files were not edited. This cold reload was checked before
-the shared shader image-view change, whose final runtime regression remains
-pending. Frame controller feel and worn-headset comfort have not been tested.
+worked again; the save files were not edited. The same slot and visible gameplay
+were restored again after updating the APK with the final shared renderer fixes;
+remote movement and nonzero output audio passed that regression. Exact final
+release-candidate smoke, Frame controller feel and worn-headset comfort remain
+separate checks.
 This profile remains experimental. See the
 [follow-up receipt](../../../../docs/evidence/nxnative-frame-followup-2026-11-06.json).
 

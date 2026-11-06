@@ -5,8 +5,8 @@ Lepton instance. This runs a flat game panel; it does not convert the game to VR
 Metroid Dread 2.1.0 has physical Frame installation and runtime evidence. The
 bundled [Celeste 1.4.1.1 profile](profiles/01002B30028F6000/README.md) has visible
 gameplay, remote movement/jump input, audio and a successful cold save reload.
-The final shared renderer changes still need a runtime regression check. Both
-games remain experimental; physical controller feel and worn-headset comfort
+Celeste also passed cold Continue, movement and output audio after the final
+shared renderer APK update. Both games remain experimental; physical controller feel and worn-headset comfort
 are untested.
 See [research and device results](../../docs/nxnative-on-frame.md).
 

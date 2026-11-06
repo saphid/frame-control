@@ -42,6 +42,8 @@ static int reflect(frame_vk_image_binding *out) {
 static void good(int dim,int array,int ms,int wanted) {
     frame_vk_image_binding out[4]; module(dim,array,ms,0);
     assert(reflect(out)); assert(out[0].view==wanted);
+    assert(out[0].float32 && out[0].depth==0 && out[0].sampled==1);
+    assert(frame_vk_image_null_black(out)==((dim==1 || dim==3) && !array && !ms));
     assert(out[0].set==0 && out[0].binding==7 && out[0].ms==ms && !out[0].descriptor_array);
 }
 int main(void) {
