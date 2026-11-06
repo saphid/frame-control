@@ -12,6 +12,35 @@ import server
 
 
 class StoreJobs(unittest.TestCase):
+    def test_worker_start_failure_is_terminal_and_request_can_be_checked(self):
+        for stage in ('construct', 'start'):
+            request_id = ('c' if stage == 'construct' else 'd') * 32
+            body = {'action': 'install', 'id': 2, 'sha256': 'b' * 64,
+                    'acknowledged': True, 'requestId': request_id}
+            work_before = server._work[0]
+            try:
+                with patch.object(server.threading, 'Thread') as worker, \
+                     patch.object(server.frame_decky_store, 'change') as change:
+                    if stage == 'construct':
+                        worker.side_effect = RuntimeError('No worker available')
+                    else:
+                        worker.return_value.start.side_effect = RuntimeError('No worker available')
+                    with self.assertRaisesRegex(RuntimeError, 'No worker available'):
+                        server.decky_plugin(body)
+                    result = server.job_status('id=' + request_id)
+                    self.assertTrue(result['done'], 'failed startup cannot leave a phantom running job')
+                    self.assertIn('No worker available', result['error'])
+                    self.assertEqual(server._work[0], work_before, 'release headset-switch protection')
+                    self.assertEqual(server.decky_plugin(body)['job'], request_id)
+                    self.assertEqual(worker.call_count, 1, 'reconnect must not start work again')
+                    with self.assertRaises(server.Failure) as conflict:
+                        server.decky_plugin({**body, 'id': 3})
+                    self.assertEqual(conflict.exception.status, 409)
+                    change.assert_not_called()
+            finally:
+                with server._jobs_lock:
+                    server._jobs.pop(request_id, None)
+
     def test_same_request_id_runs_once_and_conflicting_reuse_is_rejected(self):
         request_id = 'a' * 32
         started = threading.Event()
