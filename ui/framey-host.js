@@ -473,12 +473,30 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
-      onChange:e=>{if(!disabled)onChange?.(e);}, onBlur:e=>{if(!disabled)onBlur?.(e);},
-      onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
-      onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
+    bShowClearAction, bAlwaysShowClearAction,
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
+    const input = R.useRef(null);
+    const [draft, setDraft] = R.useState(defaultValue ?? '');
+    const clear = () => {
+      const node = input.current;
+      if (disabled || !node || node.disabled || node.value==='') return;
+      // Bypass React's value tracker, then let its normal input listener emit
+      // onChange with the real input as both target and currentTarget.
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
+      node.dispatchEvent(new Event('input', {bubbles:true}));
+    };
+    return R.createElement(Field, {label, description},
+      R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
+        ref:input,
+        value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
+        onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
+        onBlur:e=>{if(!disabled)onBlur?.(e);},
+        onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+        onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}),
+      bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
+        R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
+          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'));
+  };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
