@@ -4,6 +4,7 @@ import contextlib
 import importlib.util
 import io
 import json
+import secrets
 from pathlib import Path
 from types import SimpleNamespace
 import unittest
@@ -17,6 +18,81 @@ spec.loader.exec_module(worn)
 
 
 class WornGate(unittest.TestCase):
+    def complete_check(self, *, nonce=None, after=None, cleanup_error=None):
+        token = secrets.token_hex(12)
+        state = {'battery':[{'percent':99}], 'activity':1, 'proximity':[200.0],
+                 'panelService':True, 'plugins':[{'id':14,'name':'Sample'}], 'panel':'registered'}
+        interaction = {'nonce':nonce or 'framey-' + token,'started':100.0,
+                       'panel':{'at':101.0,'pluginId':14},'input':{'at':102.0}}
+        def remote(command, stdin=None, **kwargs):
+            if cleanup_error == 'challenge' and 'p.unlink()' in command:
+                raise RuntimeError('challenge cleanup failed')
+            if cleanup_error == 'lock' and command.startswith('test '):
+                raise RuntimeError('lock cleanup failed')
+            if stdin == worn.OVERLAY_PROBE:
+                return json.dumps({'visible':True})
+            if stdin is not None:
+                return json.dumps({'path':'/tmp/framey-worn-test-shot.png'})
+            return ''
+        def run(argv, **kwargs):
+            if argv[0] == 'convert':
+                return SimpleNamespace(returncode=0,stdout=' '.join(f'#{n:06x}' for n in range(10)))
+            kwargs['stdout'].write(b'private synthetic screenshot')
+            return SimpleNamespace(returncode=0)
+        with patch.object(worn.secrets,'token_hex',return_value=token), \
+             patch.object(worn,'probe',side_effect=[state,state,after or state]), \
+             patch.object(worn,'check_file',return_value=interaction), \
+             patch.object(worn,'remote',side_effect=remote) as calls, \
+             patch.object(worn.subprocess,'run',side_effect=run), \
+             patch.object(worn.time,'time',side_effect=[100.0,103.0,103.0]), \
+             patch.object(worn.time,'monotonic',side_effect=[0,1,36]), \
+             patch.object(worn.time,'sleep'), contextlib.redirect_stdout(io.StringIO()) as out:
+            code = worn.main(worn_confirmed=True)
+        report = json.loads(out.getvalue()[out.getvalue().index('{'):])
+        return code, report, calls
+
+    def test_foreign_challenge_never_counts_as_this_runs_input(self):
+        code, report, calls = self.complete_check(nonce='another-run')
+        self.assertEqual(code, 1)
+        self.assertFalse(report.get('passed', False))
+        self.assertFalse(any(c.kwargs.get('stdin') == worn.OVERLAY_PROBE for c in calls.call_args_list),
+                         'no overlay or screenshot request after the challenge times out')
+
+    def test_matching_challenge_and_cleanup_pass_machine_checks_only(self):
+        code, report, _ = self.complete_check()
+        self.assertEqual(code, 0, report)
+        self.assertTrue(report['passed'])
+        self.assertTrue(report['lockReleased'])
+        self.assertFalse(report['wornVisualComfortVerified'])
+        self.assertFalse(report['controllerHardwareVerified'])
+
+    def test_cleanup_failures_cannot_return_a_passing_result(self):
+        for cleanup in ('challenge', 'lock'):
+            with self.subTest(cleanup=cleanup):
+                code, report, _ = self.complete_check(cleanup_error=cleanup)
+                self.assertEqual(code, 1, report)
+                self.assertFalse(report['passed'])
+
+    def test_final_sensor_failure_stops_before_overlay_or_screenshot(self):
+        state = {'battery':[{'percent':99}], 'activity':1, 'proximity':[200.0],
+                 'panelService':True, 'plugins':[{'id':14,'name':'Sample'}], 'panel':'registered'}
+        for changed in ({'proximity':[]}, {'battery':[]}, {'battery':[{'percent':19}]}, {'activity':3}):
+            with self.subTest(changed=changed):
+                code, report, calls = self.complete_check(after={**state, **changed})
+                self.assertEqual(code, 1)
+                self.assertIn('changed during the check', report['error'])
+                self.assertFalse(any(c.kwargs.get('stdin') == worn.OVERLAY_PROBE for c in calls.call_args_list))
+
+    def test_fresh_evidence_rejects_wrong_start_stale_future_or_malformed_events(self):
+        good = {'nonce':'own','started':100.0,'panel':{'pluginId':14,'at':101.0},'input':{'at':102.0}}
+        self.assertTrue(worn.fresh_interaction(good, 'own', 100.0, {14}, 103.0))
+        for changed in ({'started':99.0}, {'panel':{'pluginId':15,'at':101.0}},
+                        {'input':{'at':99.0}}, {'input':{'at':104.0}},
+                        {'input':{'at':float('nan')}}, {'input':{'at':float('inf')}},
+                        {'panel':None}, {'input':{'at':'102'}}):
+            with self.subTest(changed=changed):
+                self.assertFalse(worn.fresh_interaction({**good,**changed}, 'own', 100.0, {14}, 103.0))
+
     def run_gate(self, state, remote_side_effect=None):
         out = io.StringIO()
         with patch.object(worn, 'probe', return_value=state) as probe, \
