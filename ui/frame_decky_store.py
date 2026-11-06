@@ -257,6 +257,11 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if (plugin_id, digest) in (
+            (12, '246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62'),
+            (111, '3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9')):
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_MUSIC_CONTROL_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 52 and digest == '9ce293ab4db212c03c6b96dfbc5e4d92e874d33387463f53223773921f75a80e':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_THEME_MUSIC_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -1868,8 +1873,20 @@ def split_by_app(data):
                 if source.count(old)!=1:
                     raise RuntimeError('Music Control compatibility source changed')
                 source=source.replace(old,old+'        env["LD_LIBRARY_PATH"] = env.get("LD_LIBRARY_PATH_ORIG", "")\n')
+                ipc=globals().get('FRAMEY_MUSIC_CONTROL_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing Music Control child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Music Control child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('music-control-system-dbus-env')
+                compat_shims.append('music-control-ipc-eof')
             # RadiYo's exact 1.3 backend turns off certificate and hostname
             # checks for both outbound requests. Restore Python's default TLS
             # policy only for the pinned official source in this managed copy.
