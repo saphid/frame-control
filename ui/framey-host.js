@@ -86,7 +86,7 @@
       })]);
     } finally {clearTimeout(timer);}
   }
-  const storage = {
+  const storage = new Proxy({
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
     getItem(key) {return cache.get(String(key)) ?? null;},
@@ -100,7 +100,10 @@
     },
     removeItem(key) {cache.delete(String(key)); persistCache();},
     clear() {cache.clear(); persistCache();},
-  };
+  }, {
+    // Game Sync uses key presence, including empty values, to track sync state.
+    has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+  });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
       entries:Object.fromEntries(cache)}, '*');
