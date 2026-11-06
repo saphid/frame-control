@@ -232,6 +232,10 @@ installed list. An automatic status read does not clear this unknown outcome.
 If browser session storage is denied, the unknown-result gate lasts for the
 current open panel only; refresh installed status after reopening it.
 
+If the server cannot create or start the background worker, **Check result**
+reports a completed startup error. Checking does not retry the plugin change.
+Refresh installed status before starting a fresh action after the error.
+
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
 store job is pending. A later installed-status refresh also closes an open panel
