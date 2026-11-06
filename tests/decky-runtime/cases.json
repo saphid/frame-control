@@ -129,6 +129,7 @@
   {
     "id": 123,
     "shim": "steam-status-verified-tls",
+    "additionalShims": ["steam-status-ipc-eof"],
     "probe": "steam-status-private-settings"
   },
   {
@@ -165,6 +166,7 @@
   {
     "id": 132,
     "shim": "suggestme-verified-tls",
+    "additionalShims": ["suggestme-ipc-eof"],
     "probe": "suggestme-private"
   },
   {

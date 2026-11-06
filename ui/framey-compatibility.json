@@ -11034,7 +11034,7 @@
         "https://github.com/sponsors/bschelst"
       ],
       "status": "partial",
-      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Exact managed 1.2.3 installs keep certificate and hostname verification for public CM-list and speed-test downloads; older managed copies need Update. Isolated Decky 3.3.0 x86_64 and ARM64 passed private setting write/read and persistence after a loader restart. Live public diagnostics, real Frame use of the adapted backend and VR controls remain unverified.",
+      "reason": "Settings/public status rendered locally; cache errors fixed. Read-only get_settings RPC returned actual Decky 3.3.0 defaults on ARM64 Frame. Exact managed 1.2.3 installs keep certificate and hostname verification for public CM-list and speed-test downloads; older managed copies need Update. Isolated Decky 3.3.0 x86_64 and ARM64 passed private setting write/read and persistence after a loader restart. Live public diagnostics, real Frame use of the adapted backend and VR controls remain unverified. The exact managed archive now includes a child IPC EOF adapter so the original unload callback can run; existing copies require Update/reinstall. Historical persistence passes do not qualify this repair; fresh strict native shutdown checks are required.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -11124,7 +11124,8 @@
         "mode": "isolated Decky 3.3.0 x86_64 and ARM64; private setting write/read and persistence after loader restart"
       },
       "requiredShims": [
-        "steam-status-verified-tls"
+        "steam-status-verified-tls",
+        "steam-status-ipc-eof"
       ]
     },
     {
@@ -12099,10 +12100,11 @@
         "https://github.com/lemossilva/suggestme-decky-plugin.git"
       ],
       "status": "partial",
-      "reason": "The exact managed install keeps certificate and hostname verification when SuggestMe's certifi context fails. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the backend, returned empty-library defaults and kept a private filter preset after restart. Existing managed copies need update or reinstall; older copies may disable TLS verification on certifi failure. Real Steam library recommendations, credentials, external requests, ARM64 Frame backend and worn VR remain unverified.",
+      "reason": "The exact managed install keeps certificate and hostname verification when SuggestMe's certifi context fails. Isolated published Decky 3.3.0 amd64 and ARM64 discovered the backend, returned empty-library defaults and kept a private filter preset after restart. Existing managed copies need update or reinstall; older copies may disable TLS verification on certifi failure. Real Steam library recommendations, credentials, external requests, ARM64 Frame backend and worn VR remain unverified. The exact managed archive now includes a child IPC EOF adapter so the original unload callback can run; existing copies require Update/reinstall. Historical persistence passes do not qualify this repair; fresh strict native shutdown checks are required.",
       "blockInstall": false,
       "requiredShims": [
-        "suggestme-verified-tls"
+        "suggestme-verified-tls",
+        "suggestme-ipc-eof"
       ],
       "verification": [
         "static archive",
