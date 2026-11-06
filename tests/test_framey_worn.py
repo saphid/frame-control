@@ -7,6 +7,7 @@ import json
 import secrets
 from pathlib import Path
 from types import SimpleNamespace
+import tempfile
 import unittest
 from unittest.mock import patch
 
@@ -18,7 +19,7 @@ spec.loader.exec_module(worn)
 
 
 class WornGate(unittest.TestCase):
-    def complete_check(self, *, nonce=None, after=None, cleanup_error=None):
+    def complete_check(self, *, nonce=None, after=None, cleanup_error=None, screenshot_paths=None):
         token = secrets.token_hex(12)
         state = {'battery':[{'percent':99}], 'activity':1, 'proximity':[200.0],
                  'panelService':True, 'plugins':[{'id':14,'name':'Sample'}], 'panel':'registered'}
@@ -36,6 +37,9 @@ class WornGate(unittest.TestCase):
             return ''
         def run(argv, **kwargs):
             if argv[0] == 'convert':
+                if screenshot_paths is not None:
+                    screenshot_paths.append(Path(argv[1]))
+                self.assertEqual(Path(argv[1]).read_bytes(), b'private synthetic screenshot')
                 return SimpleNamespace(returncode=0,stdout=' '.join(f'#{n:06x}' for n in range(10)))
             kwargs['stdout'].write(b'private synthetic screenshot')
             return SimpleNamespace(returncode=0)
@@ -65,6 +69,19 @@ class WornGate(unittest.TestCase):
         self.assertTrue(report['lockReleased'])
         self.assertFalse(report['wornVisualComfortVerified'])
         self.assertFalse(report['controllerHardwareVerified'])
+
+    def test_screenshot_uses_local_os_temp_directory_and_cleans_only_its_files(self):
+        with tempfile.TemporaryDirectory() as folder:
+            marker = Path(folder)/'unrelated.txt'
+            marker.write_bytes(b'keep')
+            screenshots = []
+            with patch.object(tempfile, 'tempdir', folder):
+                code, report, _ = self.complete_check(screenshot_paths=screenshots)
+            self.assertEqual(code, 0, report)
+            self.assertEqual(len(screenshots), 1)
+            self.assertEqual(screenshots[0].parent.parent, Path(folder))
+            self.assertFalse(screenshots[0].parent.exists(), 'remove the owned private screenshot directory')
+            self.assertEqual(marker.read_bytes(), b'keep')
 
     def test_cleanup_failures_cannot_return_a_passing_result(self):
         for cleanup in ('challenge', 'lock'):

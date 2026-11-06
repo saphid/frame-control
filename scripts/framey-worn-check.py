@@ -14,6 +14,7 @@ import secrets
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -181,17 +182,17 @@ def main(worn_confirmed=False):
                                           and state['panel'].get('pluginId') in installed_ids)
         if result['panelVisible'] and result['pluginPanelReady']:
             shot = json.loads(remote('python3 -', stdin=(ROOT/'ui/frame_vrshot.py').read_text(), timeout=20))['path']
-            local = Path('/tmp')/('framey-worn-' + token + '.png')
             try:
-                with local.open('wb') as out:
-                    copy = subprocess.run(ssh_argv('cat ' + shlex.quote(shot)), stdout=out, stderr=subprocess.PIPE, timeout=20)
-                if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
-                result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
-                pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
-                                        capture_output=True, text=True, timeout=15)
-                result['screenshotColors'] = color_count(pixels.stdout) if pixels.returncode == 0 else None
+                with tempfile.TemporaryDirectory(prefix='framey-worn-') as folder:
+                    local = Path(folder)/'screenshot.png'
+                    with local.open('wb') as out:
+                        copy = subprocess.run(ssh_argv('cat ' + shlex.quote(shot)), stdout=out, stderr=subprocess.PIPE, timeout=20)
+                    if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
+                    result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
+                    pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
+                                            capture_output=True, text=True, timeout=15)
+                    result['screenshotColors'] = color_count(pixels.stdout) if pixels.returncode == 0 else None
             finally:
-                local.unlink(missing_ok=True)
                 remote('rm -f ' + shlex.quote(shot))
         result['passed'] = (result['activeHeadset'] and result['panelVisible'] and result['trustedPointerInput'] and
                             result['pluginPanelReady'] and (result.get('screenshotColors') or 0) > 8)
