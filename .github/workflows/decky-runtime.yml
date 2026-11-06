@@ -20,8 +20,8 @@ jobs:
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm]
     runs-on: ${{ matrix.os }}
-    # All 65 native probes, including expected five-second shutdown failures,
-    # plus image setup/cleanup can exceed ten minutes on hosted runners.
+    # The full native suite includes 40 primary probes and growing negative
+    # controls. Keep room for image build and cleanup without relaxing probes.
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
