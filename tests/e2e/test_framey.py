@@ -202,6 +202,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                 expected = MANAGED_FRONTENDS.get(plugin['id'], expected)
                 self.assertEqual(ssh(f'sha256sum {installed}/dist/index.js').split()[0], expected)
                 self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json')).get('api_version', 'legacy'), plugin['api_version'])
+                if plugin['id'] == 123:
+                    self.assertEqual(found[0]['compatShims'], ['steam-status-verified-tls', 'steam-status-ipc-eof'])
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0], 'a16ab5869a93d64fb87f0cf836d98148ef83fb3000daafd32d37ee64dc1aba13')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                        hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 131:
                     self.assertEqual(found[0]['compatShims'], ['download-all-local-queue', 'download-all-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
@@ -372,8 +378,12 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 132:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])
+                    self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls', 'suggestme-ipc-eof'])
+                    self.assertEqual(found[0]['compatShims'], ['suggestme-verified-tls', 'suggestme-ipc-eof'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0], 'e3cc595e706d79907d3c8f6203ee0b1762a015230b17b4c444974e479d5d2b95')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                        hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 79:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
