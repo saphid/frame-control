@@ -1,5 +1,6 @@
 """Exercise feedback image copies and pass boundaries from the shipped backend patch."""
 import sandbox  # noqa: F401
+from nxnative_c import sanitizer_flags
 from pathlib import Path
 import shutil
 import subprocess
@@ -33,7 +34,7 @@ class VulkanFeedbackTests(unittest.TestCase):
             binary = temporary / 'check'
             subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
                             '-Wno-missing-field-initializers', '-Wno-misleading-indentation',
-                            '-fsanitize=address,undefined', '-fno-sanitize-recover=all',
+                            *sanitizer_flags('address,undefined'),
                             '-pthread', str(temporary / 'check.c'), '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True)
 

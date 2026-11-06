@@ -1,5 +1,6 @@
 """Exercise texture initialization and attachment formats from the shipped patch."""
 import sandbox  # noqa: F401
+from nxnative_c import sanitizer_flags
 from pathlib import Path
 import re
 import shutil
@@ -44,7 +45,7 @@ class VulkanTextureTests(unittest.TestCase):
             binary = temporary / 'check'
             subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
                             '-Wno-missing-field-initializers', '-Wno-misleading-indentation',
-                            '-fsanitize=address,undefined', '-fno-sanitize-recover=all',
+                            *sanitizer_flags('address,undefined'),
                             str(temporary / 'check.c'), '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True)
 

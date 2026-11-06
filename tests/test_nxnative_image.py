@@ -1,5 +1,6 @@
 """Compile the image reflection/view guards from the Android patch we ship."""
 import sandbox  # noqa: F401
+from nxnative_c import sanitizer_flags
 from pathlib import Path
 import shutil
 import subprocess
@@ -119,6 +120,6 @@ int main(void) {
             (root / 'test.c').write_text(program)
             binary = root / 'check'
             subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-                            '-fsanitize=address,undefined', '-fno-sanitize-recover=all',
+                            *sanitizer_flags('address,undefined'),
                             str(root / 'test.c'), '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True)

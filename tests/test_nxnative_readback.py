@@ -1,5 +1,6 @@
 """Compile the shipped CPU readback helper against independent tile fixtures."""
 import sandbox  # noqa: F401
+from nxnative_c import sanitizer_flags
 from pathlib import Path
 import shutil
 import subprocess
@@ -130,7 +131,6 @@ class VulkanReadbackTests(unittest.TestCase):
             (root / 'src_vk/test.c').write_text(PROGRAM)
             binary = root / 'check'
             subprocess.run(['cc', '-std=c11', '-Wall', '-Wextra', '-Werror',
-                            '-Wno-misleading-indentation', '-fsanitize=undefined',
-                            '-fno-sanitize-recover=all', str(root / 'src_vk/test.c'),
+                            '-Wno-misleading-indentation', *sanitizer_flags('undefined'), str(root / 'src_vk/test.c'),
                             '-o', str(binary)], check=True)
             subprocess.run([str(binary)], check=True)
