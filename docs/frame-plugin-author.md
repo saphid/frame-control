@@ -42,6 +42,10 @@ types when reading, write through a temporary file before replacing the old
 file, and give the panel a safe default if settings are missing or damaged.
 Removing a managed plugin leaves its Decky settings behind; document how users
 can reset data your plugin owns.
+Keep setting mutations disabled after a failed backend read until an explicit
+reload succeeds. An initial display default or a stale value is not a recovered
+saved setting. The settings sample demonstrates this guard for its toggle and
+Reset action, including callbacks retained before React redraws.
 
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
@@ -122,7 +126,13 @@ webpack IDs, function-source signatures, or Steam-only CSS class names; a
 lookup that works in the Steam Deck QAM can still return `undefined` here.
 Use a local control or a visible unsupported message when it does. For a
 confirmation, call `showModal` with a `ConfirmModal` and keep any irreversible
-operation behind its OK action. `Focusable.onActivate` accepts pointer and
+operation behind its OK action. Return an asynchronous save from `onOK`, such
+as `onOK={() => saveSetting()}`, and let failures reject that promise. Framey
+keeps the dialog busy until the save settles, displays an error and permits
+retry after failure, and closes after success. The
+[settings sample](../examples/framey-settings/README.md) tests delayed replies,
+failed saves and retry through the built bundle and local modal host.
+`Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
 physical controller reaches it. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
