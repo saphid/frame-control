@@ -10,7 +10,10 @@
     const shown = games.filter(g => `${g.name} ${g.title_id || ''} ${g.version || ''}`.toLocaleLowerCase().includes(q));
     return shown.map(g => `<div class="nxnative-game"><div><strong>${escape(g.name)}</strong><p class="sub">${escape([g.version, g.title_id].filter(Boolean).join(' · '))}</p><p class="sub">${escape(g.installable ? 'Prepared NxNative package' : g.reason || 'Needs preparation on a supported build computer.')}</p></div><button type="button" class="small ${g.installable ? 'action' : ''}" ${g.installable ? `data-nx-install="${escape(g.id)}" data-nx-source="${escape(g.source_id)}"` : 'data-nx-prepare'} ${busy ? 'disabled' : ''}>${g.installable ? 'Install' : 'Preparation steps'}</button></div>`).join('') || `<p class="sub">${q ? 'No games match your search.' : 'Games from your sources will appear here.'}</p>`;
   }
-  function mount({document, api, onInstalled = () => {}, mobile = () => false, sleep = ms => new Promise(resolve => setTimeout(resolve, ms))}) {
+  function guideSection(guide) {
+    return `<h3>${escape(guide.title || 'Prepare on a Mac')}</h3><ol>${(guide.steps || []).map(step => `<li>${escape(step)}</li>`).join('')}</ol>${guide.command ? `<pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escape(guide.command)}</pre>` : ''}${guide.requirements?.length ? `<p class="sub">Needs: ${guide.requirements.map(escape).join(' · ')}</p>` : ''}`;
+  }
+  function mount({document, api, onInstalled = () => {}, onInstallApk = () => {}, mobile = () => false, sleep = ms => new Promise(resolve => setTimeout(resolve, ms))}) {
     const get = id => document.getElementById(id);
     const state = {sources:[], games:[], busy:false, loaded:false};
     const status = message => { get('nxnativeStatus').textContent = message || ''; };
@@ -25,7 +28,7 @@
       state.sources = data.sources || []; state.games = data.games || []; state.loaded = true;
       if (data.preparation) {
         const guide = data.preparation;
-        get('nxnativeGuide').innerHTML = `<h3>${escape(guide.title || 'Prepare on a Mac')}</h3><ol>${(guide.steps || []).map(step => `<li>${escape(step)}</li>`).join('')}</ol>${guide.command ? `<pre style="white-space:pre-wrap;overflow-wrap:anywhere">${escape(guide.command)}</pre>` : ''}${guide.requirements?.length ? `<p class="sub">Needs: ${guide.requirements.map(escape).join(' · ')}</p>` : ''}`;
+        get('nxnativeGuide').innerHTML = guideSection(guide) + (guide.love ? guideSection(guide.love) + '<button type="button" class="small" data-nx-install-apk>Install a prepared APK</button>' : '');
       }
       render(); return data;
     }
@@ -68,6 +71,11 @@
     get('nxnativeClose').onclick = () => get('nxnativeDlg').close();
     get('nxnativeRefresh').onclick = () => action({action:'refresh'}, 'Refresh game sources');
     get('nxnativeSearch').oninput = render;
+    get('nxnativeGuide').onclick = event => {
+      if (state.busy || !event.target.closest('[data-nx-install-apk]')) return;
+      get('nxnativeDlg').close();
+      onInstallApk();
+    };
     get('nxnativeAdd').onsubmit = async event => {
       event.preventDefault();
       const form = get('nxnativeAdd');

@@ -30,6 +30,14 @@ class HeadsetBundle(unittest.TestCase):
             self.assertIn('frame/nxnative/' + name, names)
         self.assertIn('ui/frame_nxnative.py', names)
         self.assertIn('ui/nxnative.js', names)
+        for path in (frame_headset.ROOT / 'frame/nxnative/profiles').rglob('*'):
+            if path.is_file():
+                self.assertIn(path.relative_to(frame_headset.ROOT).as_posix(), names)
+        self.assertIn('frame/love/package.py', names)
+        self.assertIn('frame/love/README.md', names)
+        self.assertIn('frame/love/clipboard.py', names)
+        self.assertIn('frame/love/SDLClipboardHandler.java', names)
+        self.assertIn('frame/love/LICENSE.SDL.txt', names)
         for filename in ('aarch64.gz', 'x86_64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):
             self.assertIn('ui/vendor/deckyfileserver-1.2.0/'+filename, names)
         for filename in ('aarch64.gz', 'source.tar.gz', 'LICENSE.txt', 'GO-LICENSE.txt', 'README.md'):
@@ -39,6 +47,32 @@ class HeadsetBundle(unittest.TestCase):
             self.assertIn('ui/vendor/psutil-7.2.2/'+name, names)
         self.assertFalse(any('\\' in name for name in names))
         self.assertFalse(any('__pycache__' in name for name in names))
+
+    def test_game_builds_private_sources_and_keys_are_not_shipped(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            public = ['frame/nxnative/build.py', 'frame/nxnative/android-frame.patch',
+                      'frame/nxnative/LICENSE.nxnative',
+                      'frame/nxnative/profiles/01002B30028F6000/game.tsv',
+                      'frame/nxnative/profiles/01002B30028F6000/dmsh_chain.h',
+                      'frame/love/package.py', 'frame/love/README.md']
+            private = ['frame/nxnative/game.apk', 'frame/nxnative/game.nxnative.zip',
+                       'frame/nxnative/prod.keys', 'frame/nxnative/catalog.json',
+                       'frame/nxnative/build/frame-inputs.json',
+                       'frame/nxnative/build/modules.txt',
+                       'frame/nxnative/build/romfs/main.lua',
+                       'frame/nxnative/build/libdmhost.so',
+                       'frame/nxnative/build/shader/vk/effect.spv',
+                       'frame/love/game.apk', 'frame/love/catalog.json',
+                       'frame/love/assets/game.love', 'frame/love/game/main.lua']
+            for name in public + private:
+                path = root / name
+                path.parent.mkdir(parents=True, exist_ok=True)
+                path.write_text('sentinel')
+            with patch.object(frame_headset, 'ROOT', root):
+                packed = frame_headset.bundle()
+            with tarfile.open(fileobj=io.BytesIO(packed), mode='r:gz') as archive:
+                self.assertEqual(set(archive.getnames()), set(public))
 
     def test_incompatible_device_is_rejected_before_upload(self):
         state = {'arch': 'x86_64', 'variant': 'vr'}

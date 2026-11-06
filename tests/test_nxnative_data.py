@@ -5,13 +5,43 @@ import struct
 import hashlib
 import io
 import os
+import sys
 import subprocess
 import tarfile
 import tempfile
 import unittest
+from unittest.mock import patch
 
 ROOT = Path(__file__).resolve().parents[1]
 extract = runpy.run_path(str(ROOT / 'frame/nxnative/extract_romfs.py'))['extract']
+with patch.object(sys, 'path', [str(ROOT / 'frame/nxnative'), *sys.path]):
+    profile_inputs = runpy.run_path(str(ROOT / 'frame/nxnative/build.py'))['profile_inputs']
+
+
+class BuildProfileTests(unittest.TestCase):
+    def test_profile_module_list_and_exact_build_are_checked_before_rewrite(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            games = root / 'source/dm/games'
+            games.mkdir(parents=True)
+            (games / 'game.py').write_text(
+                "class Game:\n"
+                " def words(self, key): return ['main', 'sdk']\n"
+                " def builds(self): return {'v1': {'main': '11'*16, 'sdk': '22'*16}}\n"
+                "def load(title): return Game()\n")
+            exefs = root / 'input/ExeFS'
+            exefs.mkdir(parents=True)
+            for name, byte in [('main', 0x11), ('sdk', 0x22)]:
+                header = bytearray(0x60)
+                header[:4] = b'NSO0'
+                header[0x40:0x50] = bytes([byte]) * 16
+                (exefs / name).write_bytes(header)
+            args = (root / 'source', '010015100B514000', root / 'input', dict(os.environ))
+            self.assertEqual(profile_inputs(*args), ['main', 'sdk'])
+            header[0x40:0x50] = bytes([0x33]) * 16
+            (exefs / 'sdk').write_bytes(header)
+            with self.assertRaisesRegex(ValueError, 'No verified profile build matches'):
+                profile_inputs(*args)
 
 
 def image(name=b'hello', flags=0, child=1, start=32):
