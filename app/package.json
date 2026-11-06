@@ -1,7 +1,7 @@
 {
   "name": "frame-control",
   "productName": "Frame Control",
-  "version": "0.4.61",
+  "version": "0.4.62",
   "description": "Desktop app for managing a Valve Steam Frame over SSH",
   "private": true,
   "main": "main.js",
@@ -113,7 +113,12 @@
       {
         "from": "../frame/nxnative",
         "to": "frame/nxnative",
-        "filter": ["*.py", "*.patch", "README.md", "LICENSE.nxnative"]
+        "filter": ["*.py", "*.patch", "README.md", "LICENSE.nxnative", "profiles/**/*.tsv", "profiles/**/*.h", "profiles/**/*.md"]
+      },
+      {
+        "from": "../frame/love",
+        "to": "frame/love",
+        "filter": ["*.py", "*.java", "README.md", "LICENSE.SDL.txt"]
       },
       {
         "from": "../frame/openxr-compat",
