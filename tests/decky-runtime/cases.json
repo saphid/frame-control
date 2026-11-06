@@ -115,7 +115,7 @@
   },
   {
     "id": 52,
-    "shim": null,
+    "shim": "game-theme-music-ipc-eof",
     "probe": "theme-music-settings"
   },
   {
@@ -224,6 +224,7 @@
   {
     "id": 89,
     "shim": "deckyspy-psutil-and-battery",
+    "additionalShims": ["deckyspy-ipc-eof"],
     "probe": "system-monitor"
   },
   {
