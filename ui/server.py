@@ -396,7 +396,15 @@ def start_job(label, work, progress=False, *, request_id=None, request=None):
                 return {"message": f"{label}…", "job": request_id}
         job = _new_job_locked(label, job_id=request_id,
                               **({'_request': request} if request_id is not None else {}))
-    busy_thread(_run_job, job, label, work, progress).start()
+    try:
+        busy_thread(_run_job, job, label, work, progress).start()
+    except Exception as error:
+        # The panel reserves its request ID before POSTing. Retain a terminal
+        # result for Check result instead of an unstarted job that runs forever.
+        with _jobs_lock:
+            _jobs[job].update(error=f'Could not start background job: {error}',
+                              done=True, time=time.time())
+        raise
     return {"message": f"{label}…", "job": job}
 
 

@@ -52,8 +52,11 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If storage is denied or cleared, the cache lasts only for the current
-panel. The host waits for the parent's cache reply before loading plugin code;
+available. If browser storage rejects a write, the parent keeps the latest
+bounded snapshot in memory across plugin close/reopen and switches back to disk
+on the next successful write. Reloading the Frame Control page loses that memory
+fallback; an older disk snapshot may then return. Cleared browser storage also
+loses saved caches. The host waits for the parent's cache reply before loading plugin code;
 if the reply is missing or invalid after five seconds, the panel shows an error
 instead of opening with empty settings that could overwrite saved values. Use
 the plugin backend for settings that must survive cache loss.
@@ -231,6 +234,10 @@ keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.
 If browser session storage is denied, the unknown-result gate lasts for the
 current open panel only; refresh installed status after reopening it.
+
+If the server cannot create or start the background worker, **Check result**
+reports a completed startup error. Checking does not retry the plugin change.
+Refresh installed status before starting a fresh action after the error.
 
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
