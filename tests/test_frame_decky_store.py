@@ -1041,13 +1041,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
         helper = folder/'bin/hash'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
                          frame_decky_store.EMU_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         source = folder/'main.py'
-        self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.read_bytes().startswith(prefix))
+        self.assertEqual(hashlib.sha256(source.read_bytes()[len(prefix):]).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+            Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         self.assertIn('asyncio.create_subprocess_exec', source.read_text())
         self.assertNotIn('os.popen', source.read_text())
         self.assertEqual(self.apply('remove', plugin_id=28, folder=record['folder']).returncode, 0)
@@ -1543,6 +1548,27 @@ assert copied.read_bytes() == b'local screenshot fixture'
         self.assertFalse((shotty / 'py_modules/click.py').exists())
         self.assertNotIn('compatShims', json.loads((shotty / '.frame-control-store.json').read_text()))
 
+    def test_music_control_missing_ipc_helper_preserves_existing_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        for plugin_id in (12, 111):
+            plugin = next(p for p in PLUGINS if p['id'] == plugin_id)
+            data = official_archive(plugin)
+            args = dict(plugin_id=plugin_id, folder=plugin['folder'], version=plugin['version'])
+            self.assertEqual(self.apply('install', data, **args).returncode, 0)
+            folder = self.folder.parent / plugin['folder']
+            marker = folder / 'private-marker'
+            marker.write_bytes(b'private settings must survive a rejected update')
+            before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+            broken = frame_decky_store.apply_script(plugin_id, plugin['sha256']).replace(
+                'FRAMEY_MUSIC_CONTROL_IPC_SOURCE =', 'OMITTED_MUSIC_CONTROL_IPC_SOURCE =', 1)
+            with patch.object(frame_decky_store, 'apply_script', return_value=broken):
+                result = self.apply('update', data, expected=plugin['sha256'], **args)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Missing Music Control child IPC EOF repair', result.stderr)
+            after = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+            self.assertEqual(before, after)
+            self.assertEqual(self.apply('remove', expected=plugin['sha256'], **args).returncode, 0)
+
     def test_legacy_music_control_keeps_decky_class_calling_convention(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 111)
@@ -1554,7 +1580,10 @@ assert copied.read_bytes() == b'local screenshot fixture'
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
         self.assertEqual(receipt['sha256'], plugin['sha256'])
-        self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env'])
+        self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env', 'music-control-ipc-eof'])
+        helper = folder / 'py_modules/framey_decky_ipc.py'
+        ipc_source = Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes()
+        self.assertEqual(helper.read_bytes(), ipc_source)
         self.assertNotIn('api_version', json.loads((folder / 'plugin.json').read_text()))
         self.assertIn('self._get_dbus_env(self)', (folder / 'main.py').read_text())
 
@@ -1578,6 +1607,11 @@ else:
 from pathlib import Path
 decky = types.ModuleType('decky_plugin')
 sys.modules['decky_plugin'] = decky
+# The native Decky probe exercises the actual transport. This unit test
+# independently checks that the remaining legacy methods keep their contract.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('music_control', Path(sys.argv[1])/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -1629,7 +1663,8 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
         result = self.apply('install', old_data, **old_args)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text())['compatShims'],
-                         ['music-control-system-dbus-env'])
+                         ['music-control-system-dbus-env', 'music-control-ipc-eof'])
+        self.assertEqual((folder / 'py_modules/framey_decky_ipc.py').read_bytes(), ipc_source)
         self.assertNotIn('api_version', json.loads((folder / 'plugin.json').read_text()))
         self.assertIn('self._get_dbus_env(self)', (folder / 'main.py').read_text())
         old_env = {**self.env, 'MPRIS_CALLS': str(calls), 'LD_LIBRARY_PATH': 'FrameyBundledLibraries'}

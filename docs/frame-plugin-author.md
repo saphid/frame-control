@@ -42,6 +42,10 @@ types when reading, write through a temporary file before replacing the old
 file, and give the panel a safe default if settings are missing or damaged.
 Removing a managed plugin leaves its Decky settings behind; document how users
 can reset data your plugin owns.
+Keep setting mutations disabled after a failed backend read until an explicit
+reload succeeds. An initial display default or a stale value is not a recovered
+saved setting. The settings sample demonstrates this guard for its toggle and
+Reset action, including callbacks retained before React redraws.
 
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
@@ -82,6 +86,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
@@ -114,13 +119,26 @@ names are rejected. Removing an active route returns to the plugin panel.
 `Navigation.NavigateBack()` returns to the preceding local page, then the
 plugin root. `Navigation.CloseSideMenus()` returns directly to the root and
 clears that panel's history. Neither operation navigates Steam's own UI.
+For a dropdown that fetches its choices on demand, populate `rgOptions` and
+call the `showMenu` callback passed to `onMenuWillOpen` when the options are
+ready. Framey presents a Load options action followed by a native select;
+it does not open a Steam context menu. A resolved promise alone does not expose
+the choices. Return the promise if you want Framey to display its rejection,
+or show the error in your plugin. Cancel loading ends Framey's wait, leaving
+your own request lifecycle under your plugin's control; the user can then retry.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 Treat module lookup results as Framey-local exports. Do not depend on Steam
 webpack IDs, function-source signatures, or Steam-only CSS class names; a
 lookup that works in the Steam Deck QAM can still return `undefined` here.
 Use a local control or a visible unsupported message when it does. For a
 confirmation, call `showModal` with a `ConfirmModal` and keep any irreversible
-operation behind its OK action. `Focusable.onActivate` accepts pointer and
+operation behind its OK action. Return an asynchronous save from `onOK`, such
+as `onOK={() => saveSetting()}`, and let failures reject that promise. Framey
+keeps the dialog busy until the save settles, displays an error and permits
+retry after failure, and closes after success. The
+[settings sample](../examples/framey-settings/README.md) tests delayed replies,
+failed saves and retry through the built bundle and local modal host.
+`Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
 physical controller reaches it. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and

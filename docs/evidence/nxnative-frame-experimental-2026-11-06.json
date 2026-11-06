@@ -1,0 +1,99 @@
+{
+  "date": "2026-11-06",
+  "device": "physical Steam Frame",
+  "test_scope": {
+    "input": "remote injected keyboard/touch, not physical Frame-controller validation",
+    "exact_release_candidate": false,
+    "wearer_comfort": "not tested"
+  },
+  "games": {
+    "Dread": {
+      "final_shared_runtime_apk_sha256": "0cbbeeee75c4bd293b413ca3046d98b1fc85b38fce43669a8043fda094ffa0fe",
+      "apk_update_preserved_checkpoint": "Normal slot1 / 00:03:33 / 99energy / 15missiles",
+      "cold_continue_visible_gameplay": true,
+      "remote_movement_jump_shooting": true,
+      "output_audio": {
+        "seconds": 1,
+        "sample_rate": 48000,
+        "channels": 2,
+        "peak": 10800,
+        "rms": 2897.43
+      },
+      "graphics_regression": "Resolved in typed-null candidate: exact float32 nondepth sampled single-sample2D/Cube literal-zero bindings use matching black images; pedestal shading restored and0drawdrops over28800frames. Other unsupported bindings remain rejected.",
+      "later_save_station_write_reload": "not yet verified",
+      "typed_null_renderer": {
+        "apk_sha256": "3a1ba5c6f38e29e8967d422168e2efbe78495b05d45ec272b7b84401b2341282",
+        "backend_sha256": "61ce8976d4e91c239cba6862db9c061ba9c1e26895223ef5e6e3631e37ee35cb",
+        "restored_pedestal_shading": true,
+        "presented_frames": 28800,
+        "draws": 5406578,
+        "dropped_draws": 0,
+        "null_handle_resolutions": 69742,
+        "cold_continue_existing_checkpoint": true,
+        "remote_movement_jump_shooting": true,
+        "output_audio": {
+          "seconds": 1,
+          "sample_rate": 48000,
+          "channels": 2,
+          "peak": 11084,
+          "rms": 1600.74,
+          "microphone_recorded": false
+        },
+        "startup_limit": "One title-movie transition stalled; a full instance stop/relaunch then reached title, Continue and visible gameplay. Intermittent startup issue remains unresolved.",
+        "screenshots": {
+          "dread-nullcube-input-2026-11-06.png": "c6b87ee83c312d15fce3ceadcf8d93abd45c647f4987614cf27d8485e463725a",
+          "dread-nullcube-ledge-2026-11-06.png": "d367afbcf45078fd3c7e409a8ad43188a3991360be3cfb23556d668c613126c8"
+        }
+      }
+    },
+    "Wonder": {
+      "latest_layered_copy_fix_physically_tested": true,
+      "result": "Correct background, interface and water; player and foreground still black",
+      "backend_reported_drops": "0 at3600frames /765008draws /249shaders",
+      "gameplay_compatibility": "not established"
+    },
+    "Pokopia": {
+      "isolated_candidate": true,
+      "rev3_apk_sha256": "df158be7f1d888a333aca145ae2cd90741f33ae20d5295c30bbc69acb800ecdf",
+      "dataset": "2f0ead5614399271ce8110246cce0f911b2002a21d4da7d844c91e14f12d1d40",
+      "init_abort_fixed": "GetInfo33 host page granule matches Android direct mappings; subsdk0/sdkinitializers and nnMain now run",
+      "first_frame": "One Vulkan frame presented; black/FPS0, engine resource initialization stalls",
+      "memory_limit_bytes": 12884901888,
+      "swap_limit_bytes": 0,
+      "oom_events": 0,
+      "read_only_registered_shader_census_pairs": 2669,
+      "census_corpus_validation": "pending; not a gameplay or shader compatibility pass"
+    },
+    "Odyssey": {
+      "input": "Encrypted NSP",
+      "keys": "No usable existing Switch key file found in expanded Mac-local and bounded mounted-share searches on 2026-11-06; filename hits were metadata or unrelated files.",
+      "status": "Decryption blocked; not tested as working",
+      "key_search": {
+        "local_directories_scanned": 510763,
+        "scope": [
+          "user home (including game, download, document, application-support and hidden configuration folders)",
+          "/Users/Shared",
+          "/private/tmp",
+          "/opt",
+          "/usr/local",
+          "/Library/Application Support"
+        ],
+        "excluded": [
+          "dependency/cache folders",
+          "full recursive network archive traversal"
+        ],
+        "mounted_share": {
+          "bounded_depth": 4,
+          "directories_scanned": 559,
+          "key_filename_hits": 0
+        },
+        "small_candidate_files_content_checked": 25750,
+        "usable_key_files_found": 0,
+        "protected_directories_inaccessible": 12,
+        "key_contents_logged": false,
+        "metadata_cache_hits_are_keys": false
+      }
+    }
+  },
+  "publication_boundary": "Only metadata receipt; no keys, ROM files, extracted assets, shader/control/code dumps, APKs, private catalogs or saves."
+}
