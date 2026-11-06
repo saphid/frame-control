@@ -77,6 +77,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
 | `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` omits its value so it animates as unfinished, and `sOperationText` appears with the bar. Estimated completion time is not shown. | Host contract tests; official plugin progress behavior in worn VR remains unverified. |
@@ -108,6 +109,13 @@ names are rejected. Removing an active route returns to the plugin panel.
 `Navigation.NavigateBack()` returns to the preceding local page, then the
 plugin root. `Navigation.CloseSideMenus()` returns directly to the root and
 clears that panel's history. Neither operation navigates Steam's own UI.
+For a dropdown that fetches its choices on demand, populate `rgOptions` and
+call the `showMenu` callback passed to `onMenuWillOpen` when the options are
+ready. Framey presents a Load options action followed by a native select;
+it does not open a Steam context menu. A resolved promise alone does not expose
+the choices. Return the promise if you want Framey to display its rejection,
+or show the error in your plugin. Cancel loading ends Framey's wait, leaving
+your own request lifecycle under your plugin's control; the user can then retry.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 Treat module lookup results as Framey-local exports. Do not depend on Steam
 webpack IDs, function-source signatures, or Steam-only CSS class names; a
