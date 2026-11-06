@@ -34,6 +34,7 @@
   {
     "id": 23,
     "shim": "animation-preserve-overrides",
+    "additionalShims": ["animation-ipc-eof"],
     "probe": "animation-private-overrides"
   },
   {
@@ -135,6 +136,7 @@
   {
     "id": 28,
     "shim": "emuchievements-safe-arm64",
+    "additionalShims": ["emuchievements-ipc-eof"],
     "probe": "emuchievements-private-hash"
   },
   {

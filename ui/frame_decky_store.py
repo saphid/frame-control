@@ -304,7 +304,9 @@ def apply_script(plugin_id, digest):
         return 'FRAMEY_SCREENSAVER_SOURCE = '+repr(source)+'\nFRAMEY_SCREENSAVER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 23 and digest == 'f2c62b90ca60d8a80b6d0f75d8027552b1509c7a05842c6f4a24a9072846d133':
         source = Path(__file__).with_name('framey_animation_overrides.py').read_text(encoding='utf-8')
-        return 'FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'+APPLY
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return ('FRAMEY_ANIMATION_OVERRIDES_SOURCE = '+repr(source)+'\n'
+                +'FRAMEY_ANIMATION_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 135 and digest == 'b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91':
         source = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_DECK_SHELVES_IPC_SOURCE = '+repr(source)+'\n'+APPLY
@@ -364,8 +366,10 @@ def apply_script(plugin_id, digest):
         main = (assets/'main.py.gz').read_bytes()
         if hashlib.sha256(gzip.decompress(main)).hexdigest() != EMU_MANAGED_MAIN:
             raise ValueError('Bundled Emuchievements Python SHA-256 mismatch')
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_EMU_BINARIES = '+repr(payloads)+'\n'
-                +'FRAMEY_EMU_MAIN = '+repr(base64.b64encode(main).decode('ascii'))+'\n'+APPLY)
+                +'FRAMEY_EMU_MAIN = '+repr(base64.b64encode(main).decode('ascii'))+'\n'
+                +'FRAMEY_EMU_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 125 and digest == LOCALSEND_DIGEST:
         packed = (Path(__file__).parent/'vendor/localsend-0.4.5/aarch64.gz').read_bytes()
         data = gzip.decompress(packed)
@@ -675,10 +679,21 @@ try:
                 if helper.exists(): raise RuntimeError('Animation override helper collides with archive')
                 helper.parent.mkdir(exist_ok=True)
                 helper.write_text(repair,encoding='utf-8')
+                ipc=globals().get('FRAMEY_ANIMATION_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Animation Changer child IPC EOF repair')
+                ipc_helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if ipc_helper.exists(): raise RuntimeError('Animation child IPC helper collides with archive')
+                compile(ipc,str(ipc_helper),'exec')
+                ipc_helper.write_text(ipc,encoding='utf-8')
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
                 suffix=(b'\nfrom framey_animation_overrides import install as _framey_install_overrides\n'
                         b'_framey_install_overrides(globals())\ndel _framey_install_overrides\n')
-                main.write_bytes(original+suffix)
+                compile(prefix+original+suffix,str(main),'exec')
+                main.write_bytes(prefix+original+suffix)
                 compat_shims.append('animation-preserve-overrides')
+                compat_shims.append('animation-ipc-eof')
             if (int(plugin_id)==135 and digest=='b566280ad38fd3ecd584b5b46a855f301539eb9a86063834c64b7045f7063f91'
                     and folder=='Deck-Shelves'):
                 main=unpacked/'main.py'
@@ -1051,8 +1066,15 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                     raise RuntimeError('Emuchievements managed Python mismatch')
                 helper.write_bytes(native)
                 helper.chmod(0o700)
-                source.write_bytes(managed)
+                ipc=globals().get('FRAMEY_EMU_IPC_SOURCE')
+                if not isinstance(ipc,str): raise RuntimeError('Missing Emuchievements child IPC EOF repair')
+                (unpacked/'py_modules').mkdir(exist_ok=True)
+                (unpacked/'py_modules/framey_decky_ipc.py').write_text(ipc)
+                prefix=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                source.write_bytes(prefix+managed)
                 compat_shims.append('emuchievements-safe-arm64')
+                compat_shims.append('emuchievements-ipc-eof')
             if localsend:
                 helper=unpacked/'bin/localsend-core'
                 source=unpacked/'main.py'
