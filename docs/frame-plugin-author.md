@@ -110,6 +110,13 @@ none of these frontend controls has passed a worn-headset check yet.
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
 
+For `SliderField`, supply a finite `resetValue` within `min` and `max` to show
+a Reset button. It sends the numeric default through the same `onChange(value)`
+callback as a slider adjustment, so save it through the normal setting path.
+`disabled` also disables Reset. The exact published Battery Tracker 0.2.0
+lookback control is replayed in local host tests with synthetic history replies;
+real history, controller activation and worn VR remain unverified.
+
 Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the
 Frame Control store; only paths registered by that same plugin can navigate.
