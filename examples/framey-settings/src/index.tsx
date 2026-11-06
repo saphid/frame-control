@@ -44,6 +44,7 @@ function Content() {
         body: <span>Setting saved: <strong>{value ? 'on' : 'off'}</strong></span>});
     } catch (error) {
       setMessage(`Could not save setting: ${String(error)}`);
+      throw error;
     } finally {
       pending.current = false;
       setBusy(false);
@@ -55,7 +56,7 @@ function Content() {
     const dialog = showModal(<ConfirmModal strTitle="Reset example setting?"
       strDescription="This changes only the sample plugin's saved setting."
       strOKButtonText="Reset" strCancelButtonText="Keep setting"
-      onOK={() => {void change(false);}} />);
+      onOK={() => change(false)} />);
     resetModalOpen.current = true;
     void dialog.ClosedPromise.then(() => {resetModalOpen.current = false;});
   }
@@ -63,7 +64,7 @@ function Content() {
   return <PanelSection title="Framey settings sample">
     <PanelSectionRow>
       <ToggleField label="Example setting" description="Stored by the Decky Python backend"
-        checked={enabled} disabled={busy} onChange={(value: boolean) => {void change(value);}} />
+        checked={enabled} disabled={busy} onChange={(value: boolean) => {void change(value).catch(() => {});}} />
     </PanelSectionRow>
     <PanelSectionRow><ButtonItem disabled={busy} onClick={() => {void refresh();}}>Reload saved setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><ButtonItem disabled={busy} onClick={confirmReset}>Reset example setting</ButtonItem></PanelSectionRow>

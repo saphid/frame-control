@@ -67,6 +67,7 @@ function Content() {
         }
         catch (error) {
             setMessage(`Could not save setting: ${String(error)}`);
+            throw error;
         }
         finally {
             pending.current = false;
@@ -76,11 +77,11 @@ function Content() {
     function confirmReset() {
         if (pending.current || resetModalOpen.current)
             return;
-        const dialog = DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Reset example setting?", strDescription: "This changes only the sample plugin's saved setting.", strOKButtonText: "Reset", strCancelButtonText: "Keep setting", onOK: () => { void change(false); } }));
+        const dialog = DFL.showModal(SP_JSX.jsx(DFL.ConfirmModal, { strTitle: "Reset example setting?", strDescription: "This changes only the sample plugin's saved setting.", strOKButtonText: "Reset", strCancelButtonText: "Keep setting", onOK: () => change(false) }));
         resetModalOpen.current = true;
         void dialog.ClosedPromise.then(() => { resetModalOpen.current = false; });
     }
-    return SP_JSX.jsxs(DFL.PanelSection, { title: "Framey settings sample", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Example setting", description: "Stored by the Decky Python backend", checked: enabled, disabled: busy, onChange: (value) => { void change(value); } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: () => { void refresh(); }, children: "Reload saved setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: confirmReset, children: "Reset example setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { onClick: () => DFL.Navigation.Navigate('/framey-sample/details/saved-setting'), children: "About this setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { role: "status", children: message }) })] });
+    return SP_JSX.jsxs(DFL.PanelSection, { title: "Framey settings sample", children: [SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ToggleField, { label: "Example setting", description: "Stored by the Decky Python backend", checked: enabled, disabled: busy, onChange: (value) => { void change(value).catch(() => { }); } }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: () => { void refresh(); }, children: "Reload saved setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { disabled: busy, onClick: confirmReset, children: "Reset example setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx(DFL.ButtonItem, { onClick: () => DFL.Navigation.Navigate('/framey-sample/details/saved-setting'), children: "About this setting" }) }), SP_JSX.jsx(DFL.PanelSectionRow, { children: SP_JSX.jsx("p", { role: "status", children: message }) })] });
 }
 function Details() {
     const { topic } = DFL.useParams();
