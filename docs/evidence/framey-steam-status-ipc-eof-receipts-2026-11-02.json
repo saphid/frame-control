@@ -1,0 +1,20 @@
+{
+  "at": "2026-11-02T08:47:59.884780+00:00",
+  "implementation": "d11ba8293d9cd01301fc0a9e3333fd31d1eafc09",
+  "previousFailedPublication": "cb1519a8f478b07702f561e7bb0ec2a141d68441",
+  "onlyTestFixtureChanged": true,
+  "native43SourceInputsUnchanged": true,
+  "compatibilityTests": 25,
+  "skips": 0,
+  "oldAndTlsOnlyCopiesRequireUpdate": true,
+  "fullTlsAndEofReceiptClearsUpgradeNotice": true,
+  "retainedFailedJobs": [
+    125175388115,
+    125175387970,
+    125175387962
+  ],
+  "rawSha256": "a925085922bb43af125f439eb0e8a7e94d6a9dacfaf22039b81922b07cfb82ce",
+  "freshFullCIRequired": true,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}
