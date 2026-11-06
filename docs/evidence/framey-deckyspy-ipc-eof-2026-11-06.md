@@ -38,3 +38,25 @@ Existing copies without the EOF receipt require explicit update/reinstall.
 Earlier read-only real-Frame/browser evidence remains limited to that earlier
 backend. No real Frame, wearer-visible UI, controller, alerts or audio verification
 was performed for this repair. No release is qualified by this evidence alone.
+
+## Hosted suite time budget
+
+The integrated head `77a9bcb84c5b3222d25dd1d0e35d4fa591b61166` reached
+all 40 primary probes and 26 expected negative controls on native AMD64, but
+[job 127673689925](https://github.com/saphid/frame-control/actions/runs/42150922018/job/127673689925)
+was cancelled at the workflow's ten-minute limit. GitHub's annotation explicitly
+reports that limit. The last PASS was at `02:52:17.164Z`; cancellation followed
+at `02:52:18.096Z` during final cleanup. This remains a cancelled gate.
+
+Artifact `13473900852`, ZIP SHA-256
+`7179051688522dc2156e823970ff50927114af35f4601cf5a1f446f470926428`,
+binds all 46 source inputs to that exact head and matches its producer checkout
+and uploaded digest. All case consoles record completed probes and cleanup;
+all primary consoles pass the strict no-forced-kill/no-shutdown-error gate.
+Expected negative forced kills are regression evidence only.
+
+The job budget is now fifteen minutes to allow the full serial suite, image
+build and final cleanup. The 120-second per-probe timeout, 300-second image-build
+timeout, isolation and strict primary shutdown checks are unchanged. Fresh
+exact-head native AMD64/ARM64, e2e and package results are required after this
+workflow change; the cancelled run cannot qualify a merge or release.
