@@ -102,3 +102,54 @@ const invalidFailure=assert.rejects(invalid.waitForSeed(),/storage returned inva
 invalid.receive({type:'framey:cache:seed',session,entries:{huge:'x'.repeat(65537)}});
 await invalidFailure;
 assert.equal(invalid.storage.length,0);
+
+// A full/denied browser store can still return an older saved value. Keep the
+// newest valid snapshot across iframe replacement instead of restoring it.
+const diskWrite=localStorage.setItem;
+localStorage.setItem=()=>{throw new DOMException('Full', 'QuotaExceededError');};
+const beforeDenial=iframe();
+beforeDenial.storage.setItem('saved','latest');
+assert.equal(values.get('framey-plugin-cache-v1:14'),'{"saved":"true"}');
+vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
+session=vm.runInContext('frameySession',parent);
+const deniedReopen=iframe();
+assert.equal(deniedReopen.storage.getItem('saved'),'latest');
+await deniedReopen.steamStorage.SetObject('settings',{enabled:true});
+deniedReopen.send({type:'framey:cache:save',session,entries:{huge:'x'.repeat(65537)}});
+
+// Reopening another plugin cannot see the failed write or clear its cache.
+vm.runInContext('deckyState.plugins.push({storeId:15,sha256:"b",version:"1"});openFrameyPanel(15,"Other")',parent);
+session=vm.runInContext('frameySession',parent);
+const other=iframe();
+assert.equal(other.storage.getItem('saved'),null);
+other.storage.clear();
+vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
+session=vm.runInContext('frameySession',parent);
+const stillDenied=iframe();
+assert.equal(stillDenied.storage.getItem('saved'),'latest');
+assert.equal(await stillDenied.steamStorage.GetJSON('settings'),'{"enabled":true}');
+stillDenied.storage.removeItem('saved');
+vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
+session=vm.runInContext('frameySession',parent);
+assert.equal(iframe().storage.getItem('saved'),null,'removal must also survive a denied write');
+
+// Storage recovery flushes the latest complete snapshot; a fresh parent page
+// can then read it from disk without any in-memory fallback.
+localStorage.setItem=diskWrite;
+const recovered=iframe();
+recovered.storage.setItem('saved','durable');
+assert.deepEqual(JSON.parse(values.get('framey-plugin-cache-v1:14')),
+  {'steam-client:settings':'{"enabled":true}',saved:'durable'});
+recovered.storage.clear();
+assert.equal(values.get('framey-plugin-cache-v1:14'),'{}');
+
+// Entirely denied storage still retains settings for this parent page.
+localStorage.setItem=()=>{throw Error('storage denied');};
+const diskRead=localStorage.getItem;
+localStorage.getItem=()=>{throw Error('storage denied');};
+iframe().storage.setItem('memory-only','kept');
+vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
+session=vm.runInContext('frameySession',parent);
+assert.equal(iframe().storage.getItem('memory-only'),'kept');
+localStorage.getItem=diskRead;
+localStorage.setItem=diskWrite;

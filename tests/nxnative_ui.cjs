@@ -77,6 +77,36 @@ test('raw entries open the preparation guide without starting a download', async
   assert.equal(calls.length,1);
 });
 
+test('LÖVE guide escapes metadata and hands prepared APKs to the existing chooser without downloading', async () => {
+  const p=page(), calls=[]; let chooser=0;
+  const controller=ui.mount({document:p.document,onInstallApk:()=>{
+    assert.equal(p.get('nxnativeDlg').open,false);
+    chooser++;
+  },api:async(path,body)=>{
+    calls.push([path,body]);
+    return {sources:[],games:[],preparation:{title:'NxNative',steps:[],love:{
+      title:'LÖVE <img src=x onerror=bad>',steps:['Use your own main.lua & assets'],
+      command:'python3 frame/love/package.py --game <your-folder>',requirements:['Pinned runtime']}}};
+  }});
+  await controller.open();
+  const guide=p.get('nxnativeGuide');
+  assert.match(guide.innerHTML,/LÖVE &lt;img/);
+  assert.doesNotMatch(guide.innerHTML,/<img/);
+  assert.match(guide.innerHTML,/main.lua &amp; assets/);
+  assert.match(guide.innerHTML,/--game &lt;your-folder&gt;/);
+  assert.match(guide.innerHTML,/data-nx-install-apk/);
+  guide.onclick({target:{closest:()=>null}});
+  assert.equal(chooser,0);
+  controller.state.busy=true;
+  guide.onclick({target:{closest:()=>({})}});
+  assert.equal(chooser,0);
+  assert.equal(p.get('nxnativeDlg').open,true);
+  controller.state.busy=false;
+  guide.onclick({target:{closest:()=>({})}});
+  assert.equal(chooser,1);
+  assert.deepEqual(calls,[['/api/nxnative',undefined]]);
+});
+
 test('queued install follows progress, refreshes metadata and calls installed only on success', async () => {
   const p=page(); let polls=0, installed=0;
   const controller=ui.mount({document:p.document,sleep:async()=>{},onInstalled:()=>installed++,api:async(path,body)=>{

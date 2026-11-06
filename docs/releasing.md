@@ -139,6 +139,57 @@ To pull a bad release, mark the previous one as latest
 (`gh release edit v0.3.9 --latest`) or turn the bad one back into a draft.
 Copies that already updated stay on it. Nothing downgrades them.
 
+## NxNative and LÖVE candidate checks
+
+Before tagging a candidate, run the NxNative data/source/UI suites, headset
+bundle tests, LÖVE packaging tests and iOS contracts. Check the desktop resource
+gate includes every bundled profile's shader metadata, not just `game.tsv` and
+`dmsh_chain.h`. Desktop, iOS server and headset bundles must include the same
+helpers and metadata. No generated game APK, `.nxnative.zip`, rewritten module,
+shader bytecode, RomFS, private catalog, ROM URL, or key belongs in those packages
+or in public release assets. The official LÖVE engine download URL is a runtime
+source, not a game source.
+
+Record physical results for each game and version separately: installation via
+the app, cold launch, visible gameplay, controller input, audio, and save/reload
+after an APK or dataset update. Menu rendering or successful package creation
+does not satisfy gameplay or save checks. Keep experimental failures visible in
+the profile notes and release notes. Distinguish injected keyboard/touch input
+from physical Frame controller checks; record worn-headset comfort separately.
+Save-file creation alone does not establish a successful cold save reload.
+The locked release smoke above must still
+run on the exact clean candidate commit after the final changes.
+
+## TestFlight from the same candidate
+
+Use a clean checkout of the desktop candidate commit on the Mac. Generate the
+Xcode project with `(cd ios && xcodegen generate)` when needed. The Xcode build
+phase generates a fresh server bundle from that checkout; never reuse a bundle
+from an earlier candidate. See [iPhone signing setup](iphone.md#testflight-beta)
+for the existing App Store Connect app and account.
+
+Set `FRAME_IOS_VERSION` to the candidate's `app/package.json` version,
+`FRAME_IOS_BUILD` to a new unused positive integer, `FRAME_IOS_OUTPUT` to a fresh
+absolute output directory, and `FRAME_IOS_TEAM_ID` to the configured team. Select
+Xcode's device SDK with `DEVELOPER_DIR` if needed. Keep the existing App Store
+Connect API key outside the checkout; export/upload also need
+`FRAME_ASC_KEY_ID`, `FRAME_ASC_ISSUER_ID`, and `FRAME_ASC_KEY_PATH`.
+
+```sh
+ios/scripts/testflight.sh archive
+ios/scripts/testflight.sh export
+ios/scripts/testflight.sh upload
+```
+
+The archive checks bundle ID and version. Export checks the signed IPA's team,
+Store provisioning profile, version and build; upload rechecks it and submits
+the same archive. Save those results with the candidate commit and server-bundle
+digest. Confirm App Store Connect processing becomes valid, add the build to the
+intended tester group, and submit external beta review when required. Upload,
+processing, tester availability and external review are separate states; report
+the state actually observed. Exercise the phone's user-source UI against Frame
+after installing that build before calling the TestFlight path tested.
+
 ## How a copy updates itself
 
 `app/updater.js` reads `update.json` from

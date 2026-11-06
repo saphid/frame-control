@@ -52,8 +52,11 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If storage is denied or cleared, the cache lasts only for the current
-panel. The host waits for the parent's cache reply before loading plugin code;
+available. If browser storage rejects a write, the parent keeps the latest
+bounded snapshot in memory across plugin close/reopen and switches back to disk
+on the next successful write. Reloading the Frame Control page loses that memory
+fallback; an older disk snapshot may then return. Cleared browser storage also
+loses saved caches. The host waits for the parent's cache reply before loading plugin code;
 if the reply is missing or invalid after five seconds, the panel shows an error
 instead of opening with empty settings that could overwrite saved values. Use
 the plugin backend for settings that must survive cache loss.
@@ -93,7 +96,10 @@ record the resulting TabMaster documentation support and remaining blockers.
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
-and backend calls for the plugin that owns the panel. The headset's scroll
+and backend calls for the plugin that owns the panel. Text fields support
+controlled values, uncontrolled defaults, and change, blur, focus, click and key
+callbacks. These are ordinary input events; they do not open or verify SteamVR's
+keyboard. The headset's scroll
 buttons send only a direction to the isolated iframe. They target the last
 scrollable region reached by a trusted pointer move and fall back to the iframe
 document when that region disappears. A result message reports whether content
@@ -210,7 +216,9 @@ rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
 reusing the ID for a different change is rejected. **Check result** can resume
-polling even if the POST response is lost. After a connection error, Install, Update, and Remove
+polling even if the POST response is lost. A rejected polling request also keeps
+an accepted job's ID; it cannot establish that the install or update stopped.
+After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
 If Chromium denies session storage, the open panel keeps the request ID in
@@ -233,6 +241,10 @@ keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.
 If browser session storage is denied, the unknown-result gate lasts for the
 current open panel only; refresh installed status after reopening it.
+
+If the server cannot create or start the background worker, **Check result**
+reports a completed startup error. Checking does not retry the plugin change.
+Refresh installed status before starting a fresh action after the error.
 
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a

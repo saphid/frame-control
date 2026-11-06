@@ -5,7 +5,7 @@ The unmodified official Decky ZIP is pinned at SHA-256
 in `tests/fixtures/framey-official/28.zip`. Its x86 helper and Python entry
 point cannot be used as-is on Frame. The installer accepts the exception only
 for that complete ZIP digest and checks the original members before replacing
-them. The managed receipt records `emuchievements-safe-arm64`.
+them. The managed receipt records `emuchievements-safe-arm64` and `emuchievements-ipc-eof`. The installer prefixes the verified managed Python source with the existing plugin-local IPC EOF repair and installs that adapter under `py_modules`; the compressed source and native helper hashes below remain unchanged. Update or reinstall existing copies to receive the repair.
 
 The corresponding source archive, `source.tar.gz`, contains EmuDeck's
 [Emuchievements](https://github.com/EmuDeck/Emuchievements) source at commit

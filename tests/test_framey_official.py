@@ -22,6 +22,76 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_emuchievements_old_settings_keep_values_through_tree_lookup(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 28)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        settings = re.search(r'  const CONFIG_VERSION = "1\.1\.0";[\s\S]*?(?=\n  class EmuchievementsState)', frontend)
+        self.assertIsNotNone(settings)
+        self.assertIn('deckyFrontendLib.findInTree(config', settings.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_settings_tree.mjs')],
+                                input=settings.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_radiyo_text_dialog_can_submit_through_modal_root(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 24)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        component = re.search(r'const TextFieldModal = \(\{ closeModal, onClosed, label, placeholder \}\) => \{'
+                              r'[\s\S]*?\n  \};', frontend)
+        self.assertIsNotNone(component)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_modal_root.mjs')],
+                                input=component.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_search_preserves_its_accessible_name(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.TextField, '
+                            r'\{ "aria-label": "Search installed Steam games[^\n]+? \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield_label.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_waits_for_published_option_loader(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        callback = re.search(r'const openToolMenu = SP_REACT\.useCallback\([\s\S]+?\}, \[toolOptions\]\);', frontend)
+        self.assertIsNotNone(callback)
+        self.assertIn('void openToolMenu(application, showMenu);', frontend)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_load.mjs')],
+                                input=json.dumps({'callback': callback.group()}),
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_game_sync_text_dialog_commits_the_edited_value_on_blur(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 104)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle, tempfile.TemporaryDirectory() as root:
+            frontend = Path(root) / 'index.js'
+            frontend.write_bytes(bundle.read(plugin['folder'] + '/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield.mjs'), str(frontend)],
+                                    capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_pause_games_toggle_renders_saved_value_and_dispatches_settings_only(self):
         plugin = next(p for p in PLUGINS if p['id'] == 13)
         with zipfile.ZipFile(io.BytesIO(archive(plugin))) as bundle, tempfile.TemporaryDirectory() as root:
