@@ -305,6 +305,11 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_desktop_store_discards_stale_status_and_catalog_replies(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_desktop_store.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_plugin_quick_actions_and_settings(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_actions.mjs')],
                                 capture_output=True, text=True, timeout=10)

@@ -2374,13 +2374,22 @@ $('extensionClose').onclick = () => {
 function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyInfo = null;
 let deckyCatalog = [];
+let deckyStatusRequest = 0, deckyStoreRequest = 0;
 async function loadDecky() {
+  const request = ++deckyStatusRequest;
+  deckyInfo = null;
+  const managedList=$('deckyManagedList');managedList.replaceChildren();
+  $('deckyPlugins').textContent = 'Checking installed plugins…';
+  $('deckyState').textContent = 'Checking Decky status…';
+  deckyButtons();showDeckyStore();
   try {
-    const d = deckyInfo = await api('/api/decky');
+    const d = await api('/api/decky');
+    if (request !== deckyStatusRequest) return;
+    deckyInfo = d;
     $('deckyState').textContent = `${d.frameOS || 'Unknown'} ${d.variant || ''} · ${d.arch} · CEF ${d.cef ? 'ready' : 'unavailable'} · ${d.managed ? `managed Decky ${d.version || ''} ${d.running ? 'running' : 'stopped'}` : d.upstreamInstall ? 'upstream Decky installation found' : 'Decky not installed'}`;
     const plugins = [...d.plugins.map(x => `${x.name} (managed)`), ...d.upstreamPlugins.map(x => `${x.name} (upstream)`)];
     $('deckyPlugins').textContent = plugins.length ? `Installed plugins: ${plugins.join(', ')}` : 'No Decky plugins found.';
-    const managedList=$('deckyManagedList');managedList.replaceChildren();
+    managedList.replaceChildren();
     for(const plugin of d.plugins||[]){if(!plugin.storeId)continue;
       const row=document.createElement('div');row.className='hint';
       const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''} · ${deckyCompatibilityText(plugin)}`;
@@ -2390,14 +2399,29 @@ async function loadDecky() {
       row.append(label,remove);managedList.append(row);}
     deckyButtons();
     showDeckyStore();
-  } catch (error) { deckyInfo = null; $('deckyState').textContent = error.message; deckyButtons(); showDeckyStore(); }
+  } catch (error) {
+    if (request !== deckyStatusRequest) return;
+    deckyInfo = null;
+    $('deckyState').textContent = error.message;
+    $('deckyPlugins').textContent = 'Installed plugins unavailable.';
+    managedList.replaceChildren();managedList.textContent = 'Refresh plugins to check installed status.';
+    deckyButtons();showDeckyStore();
+  }
 }
 async function loadDeckyStore() {
+  const request = ++deckyStoreRequest;
+  deckyCatalog = [];showDeckyStore();
   $('deckyStoreState').textContent = 'Loading the official store…';
-  try { deckyCatalog = (await api('/api/decky/store')).plugins;
+  try { const catalog = await api('/api/decky/store');
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = catalog.plugins;
     $('deckyStoreState').textContent = `${deckyCatalog.length} plugins in the official store. Select a plugin to install it.`;
     showDeckyStore();
-  } catch(error) { $('deckyStoreState').textContent = error.message; }
+  } catch(error) {
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = [];showDeckyStore();
+    $('deckyStoreState').textContent = error.message;
+  }
 }
 function showDeckyStore() {
   const list = $('deckyStoreList'); list.replaceChildren();
@@ -2427,7 +2451,12 @@ function showDeckyStore() {
   }
 }
 async function changeDeckyPlugin(action, plugin) {
-  if (!$('deckyAck').checked || !confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
+  if (!$('deckyAck').checked) return;
+  if (!deckyInfo?.managed || (action !== 'remove' && !deckyInfo.running)) {
+    $('deckyStoreState').textContent = 'Refresh plugins to check Decky status before changing plugins.';
+    return;
+  }
+  if (!confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
   try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
     {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true}));
     await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
