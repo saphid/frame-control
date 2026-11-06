@@ -22,6 +22,20 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_radiyo_text_dialog_can_submit_through_modal_root(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 24)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        component = re.search(r'const TextFieldModal = \(\{ closeModal, onClosed, label, placeholder \}\) => \{'
+                              r'[\s\S]*?\n  \};', frontend)
+        self.assertIsNotNone(component)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_modal_root.mjs')],
+                                input=component.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_wine_cellar_search_preserves_its_accessible_name(self):
         plugin = next(p for p in PLUGINS if p['id'] == 68)
         data = archive(plugin)
