@@ -281,7 +281,12 @@
         for (const event of data.events) {
           if (!Array.isArray(event.args)) continue;
           for (const listener of eventListeners.get(event.event) || [])
-            Promise.resolve().then(() => listener(...event.args)).catch(failure =>
+            // A previous queued callback can unmount a view and remove this
+            // listener. Recheck at delivery, including late replies on close.
+            Promise.resolve().then(() => {
+              if (!eventClosed && eventListeners.get(event.event)?.has(listener))
+                return listener(...event.args);
+            }).catch(failure =>
               console.warn('Decky event listener failed', failure));
         }
       }).finally(() => {eventRequest = null;});
