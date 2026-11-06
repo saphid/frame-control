@@ -22,6 +22,18 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_game_sync_text_dialog_commits_the_edited_value_on_blur(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 104)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle, tempfile.TemporaryDirectory() as root:
+            frontend = Path(root) / 'index.js'
+            frontend.write_bytes(bundle.read(plugin['folder'] + '/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield.mjs'), str(frontend)],
+                                    capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_pause_games_toggle_renders_saved_value_and_dispatches_settings_only(self):
         plugin = next(p for p in PLUGINS if p['id'] == 13)
         with zipfile.ZipFile(io.BytesIO(archive(plugin))) as bundle, tempfile.TemporaryDirectory() as root:
