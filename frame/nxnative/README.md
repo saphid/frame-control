@@ -1,8 +1,14 @@
 # NxNative on Steam Frame
 
-Experimental Metroid Dread 2.1.0 bring-up through the Android/Vulkan fork in a
-persistent Lepton instance. This runs a flat game panel; it does not convert the
-game to VR. See [research and device results](../../docs/nxnative-on-frame.md).
+Experimental game bring-up through the Android/Vulkan fork in a persistent
+Lepton instance. This runs a flat game panel; it does not convert the game to VR.
+Metroid Dread 2.1.0 has physical Frame installation and runtime evidence. The
+bundled [Celeste 1.4.1.1 profile](profiles/01002B30028F6000/README.md) has visible
+gameplay, remote movement/jump input, audio and a successful cold save reload.
+The final shared renderer changes still need a runtime regression check. Both
+games remain experimental; physical controller feel and worn-headset comfort
+are untested.
+See [research and device results](../../docs/nxnative-on-frame.md).
 
 The fork is pinned to `32b0ef2c5408e1e32cb5c0bc49f84d1e63653dc3`.
 `android-frame.patch` contains the API 30/tool-path fixes, English settings,
@@ -21,6 +27,12 @@ IDs are listed in the research document. `--extracted` names the directory with
 ExeFS, icon.jpg, control.nacp, and either RomFS or NxNative's DMROMFS1 RomFS.img.
 The shader package/cache are translation inputs; Apple patched binaries and
 Metal libraries cannot be reused as Android outputs.
+
+The builder reads each game's module list and verifies its exact NSO build IDs
+against the profile before rewriting. Bundled metadata under `profiles/` takes
+precedence over the pinned fork's profiles. Other versions need their own verified
+profile; a title ID alone does not establish compatibility. Profiles contain
+identities and layout metadata, not game binaries or translated shader bytecode.
 
 ```sh
 export ANDROID_SDK="$HOME/Library/Android/sdk"
@@ -45,6 +57,17 @@ Do not point `--source` at PA's existing Apple checkout.
 
 The current exporter runs the fork's Metal build chain to recover SPIR-V. It
 therefore still needs the Mac tools, although the finished app uses Vulkan.
+
+For a different verified profile, set `--title`, `--label`, and the inputs for
+that exact game version. Celeste uses title `01002B30028F6000`, version `1.4.1.1`,
+and modules `main`/`sdk` without `subsdk0`. Its MGFX shader extraction also needs
+the newer upstream shader reader described in the profile README; the pinned
+Android fork cannot extract those shader packages by itself. The generic build
+command does not automate that extra preparation.
+
+Games whose extracted files contain LÖVE Lua sources have a separate
+[native Android packaging route](../love/README.md). That route requires
+`main.lua` and a compatible LÖVE runtime; it does not use NxNative bundles.
 
 ## Install through the app
 

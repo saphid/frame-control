@@ -1,0 +1,78 @@
+{
+  "date": "2026-11-06",
+  "device": "physical Steam Frame",
+  "route": "NxNative Android/Vulkan in a persistent Lepton instance",
+  "game": {
+    "name": "Celeste",
+    "version": "1.4.1.1",
+    "title_id": "01002B30028F6000",
+    "package": "com.nxnative.t01002b30028f6000"
+  },
+  "test_scope": {
+    "input": "remote input; not physical Frame-controller validation",
+    "shared_shader_image_view_patch_present": false,
+    "final_shared_renderer_regression": "pending",
+    "exact_release_candidate_verified": false
+  },
+  "cold_save_reload": {
+    "result": "passed",
+    "save_action": "Save and Quit",
+    "files_created": [
+      "0.celeste",
+      "settings.celeste"
+    ],
+    "save_file": {
+      "name": "0.celeste",
+      "bytes": 14534,
+      "sha256": "c7c765990c1043dda20e03d44940c6c38d98f106ac018837762bf0505e276a93"
+    },
+    "save_files_edited": false,
+    "restart": "Full server.frame_android.stop/launch, without diagnostic environment overrides",
+    "retained_slot": {
+      "chapter": "Prologue",
+      "deaths": 3,
+      "time": "09:55.238"
+    },
+    "continue_restored_visible_gameplay": true,
+    "remote_movement_after_reload_visible": true
+  },
+  "audio": {
+    "earlier_frame_run": "nonzero Lepton output audio observed",
+    "fresh_followup_check": {
+      "result": "passed",
+      "after": "Cold Continue restored gameplay, before stopping the pre-image-view runtime",
+      "source": "Lepton output monitor",
+      "duration_seconds": 1,
+      "sample_rate_hz": 48000,
+      "channels": 2,
+      "peak": 3107,
+      "rms": 778.24
+    }
+  },
+  "remaining": [
+    "Runtime regression after the final shared shader image-view changes",
+    "Physical Frame-controller axes, buttons and feel",
+    "Worn-headset comfort"
+  ],
+  "screenshots": [
+    {
+      "path": "nxnative-frame/celeste-cold-slot-2026-11-06.png",
+      "sha256": "78d1b4706dd6bc48cd9225b08a7f76f98b14a959b20331cd624c0ab023ec2466",
+      "bytes": 1843836,
+      "observed": "Cold slot retains Prologue, 3 deaths and 09:55.238"
+    },
+    {
+      "path": "nxnative-frame/celeste-reloaded-gameplay-2026-11-06.png",
+      "sha256": "5abe137f7b702e654dd082e02f5b48ce4ec4d1e88e457a815d1efc0e1c60a23e",
+      "bytes": 271831,
+      "observed": "Continue restored visible gameplay"
+    },
+    {
+      "path": "nxnative-frame/celeste-reloaded-input-2026-11-06.png",
+      "sha256": "52f9a2a7157e899650e5423d77fafd3b2bae840704525d79f5a73026bab1f777",
+      "bytes": 272635,
+      "observed": "Remote movement after reload changed the player position"
+    }
+  ],
+  "publication_boundary": "Only screenshots and this text receipt are included. No save files, APKs, ROMs, extracted game assets, shader bytecode, keys or private catalogs are copied."
+}

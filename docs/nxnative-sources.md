@@ -19,6 +19,24 @@ NSP/XCI library is useful for browsing, but raw ROM files are not Android apps.
 The preparation action explains the exact Mac tools and matching game inputs
 needed. It does not pretend arbitrary games or versions can be converted.
 
+The builder verifies modules against each game's exact profile, including games
+with `main`/`sdk` and no `subsdk0`. The bundled Celeste 1.4.1.1 metadata is for
+experimental bring-up: visible gameplay, remote movement/jump input, audio and
+cold save reload were observed on Frame. Final shared renderer regression,
+physical controller feel and worn-headset comfort remain unverified. Its MGFX
+shader packages also need the newer upstream extraction tool described in the
+[profile notes](../frame/nxnative/profiles/01002B30028F6000/README.md).
+
+For extracted games with a compatible LÖVE `main.lua`, the separate
+[LÖVE packager](../frame/love/README.md) produces a private APK installed through
+the normal Android installer. The preparation guide includes this separate route
+and an **Install a prepared APK** button. Choose **Choose a file** to select an
+APK, including one on a share mounted on your computer. The installer's link
+option accepts public HTTPS APK downloads, not private LAN URLs. These APKs
+contain the user's game assets and must stay out of Frame Control release
+assets. NxNative catalogs do not prepare or
+install them as `.nxnative.zip` bundles.
+
 ## Existing formats and the chosen boundary
 
 | Format / service | What it provides | This version |
@@ -83,7 +101,9 @@ Install buttons, while other sources remain available.
 
 The working Frame route uses the pinned NxNative Android/Vulkan fork. See
 [the build instructions](../frame/nxnative/README.md) for its exact tools and
-supported Dread module IDs. Only Dread 2.1.0 has been physically tested here.
+supported Dread module IDs. Dread 2.1.0 and the experimental Celeste 1.4.1.1
+profile have physical Frame gameplay evidence; see the per-game limits in the
+[device results](nxnative-on-frame.md#follow-up-validation-2026-11-06).
 
 If your original copy needs extraction, the pinned fork's
 [`nx_extract`](https://github.com/joaquinsandoval2307/nxnative/blob/32b0ef2c5408e1e32cb5c0bc49f84d1e63653dc3/dm/tools/nx_extract/Program.cs)

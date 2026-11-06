@@ -1,6 +1,53 @@
 # NxNative on Steam Frame
 
-Implemented and tested on the physical Steam Frame on 2026-11-05. Metroid Dread 2.1.0 reaches controllable gameplay in a persistent Lepton flat panel, with video and audio. Build, staging, input and host patches are saved in this repository. This remains an experimental one-game port; see the verified results and remaining checks below.
+Implemented and tested on the physical Steam Frame starting on 2026-11-05.
+Metroid Dread 2.1.0 and Celeste 1.4.1.1 reach visible gameplay in persistent
+Lepton flat panels. Build, staging, input and host patches are saved in this
+repository. Compatibility remains experimental and specific to each game build.
+
+## Follow-up validation: 2026-11-06
+
+These observations come from remote tests on the physical Frame. Injected
+keyboard and touch input do not establish Frame controller button/axis feel or
+worn-headset comfort; those remain untested for these follow-ups.
+
+| Game / route | Observed on Frame | Still to verify or resolve |
+|---|---|---|
+| Metroid Dread 2.1.0 / NxNative | Controllable gameplay, video/audio and the existing saved checkpoint; detailed evidence below | Later save-station write/reload and physical controller/comfort checks |
+| Celeste 1.4.1.1 / NxNative | Visible gameplay, remote movement/jumping, audio and cold save reload; Continue restores gameplay and movement | Regression on the final shared renderer changes remains pending |
+| Balatro / separate LÖVE runtime | Actual gameplay through remote touch input and nonzero output audio | Continue after a cold restart and restoration of an in-progress run |
+| Super Mario Bros. Wonder / NxNative | Backgrounds, interface and coins render; the foreground and player remain black | Foreground rendering; no complete gameplay compatibility claim |
+| Pokopia / NxNative | Experimental bring-up only | Gameplay compatibility remains unverified |
+| Super Mario Odyssey / NxNative | Available game inputs are encrypted; no matching keys were found in the inspected private inputs | Preparation is blocked on the user's own usable inputs and keys; not tested as working |
+
+Prepared game APKs, ROMs, extracted assets, shader bytecode, keys and private
+source catalogs remain outside the repository and release bundles. Frame Control
+ships the tools and profile metadata; users add their own sources and assets.
+
+### Celeste cold save reload
+
+**Save and Quit** created `0.celeste` (14,534 bytes) and `settings.celeste`.
+After stopping and launching the persistent instance through the app's Android
+backend, without diagnostic environment overrides, the slot retained **Prologue,
+3 deaths and 09:55.238**. Continue loaded visible gameplay, and remote movement
+worked after reload. No save files were edited. The
+[follow-up receipt](evidence/nxnative-frame-followup-2026-11-06.json) records the
+save digest and screenshot digests.
+
+![Celeste slot retained after cold restart](evidence/nxnative-frame/celeste-cold-slot-2026-11-06.png)
+
+![Visible Celeste gameplay restored through Continue](evidence/nxnative-frame/celeste-reloaded-gameplay-2026-11-06.png)
+
+[Movement after reload](evidence/nxnative-frame/celeste-reloaded-input-2026-11-06.png)
+changed the player's visible position. This test used the runtime before the
+shared shader image-view patch. It does not establish regression results for the
+final shared renderer or an exact release candidate. After the cold Continue, a
+one-second capture of the Lepton output monitor contained nonzero 48 kHz stereo
+audio (signed 16-bit peak 3,107; RMS 778.24). No microphone was recorded.
+
+The earlier PA-Agent and initial Frame results below describe their original
+test sessions. They are retained as provenance rather than substituted for these
+follow-up observations.
 
 ## Recommendation
 

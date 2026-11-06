@@ -113,7 +113,12 @@
       {
         "from": "../frame/nxnative",
         "to": "frame/nxnative",
-        "filter": ["*.py", "*.patch", "README.md", "LICENSE.nxnative"]
+        "filter": ["*.py", "*.patch", "README.md", "LICENSE.nxnative", "profiles/**/*.tsv", "profiles/**/*.h", "profiles/**/*.md"]
+      },
+      {
+        "from": "../frame/love",
+        "to": "frame/love",
+        "filter": ["*.py", "*.java", "README.md", "LICENSE.SDL.txt"]
       },
       {
         "from": "../frame/openxr-compat",

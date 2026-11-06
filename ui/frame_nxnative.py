@@ -279,7 +279,7 @@ def status():
 
 def preparation():
     return {
-        'title': 'Prepare your game on a Mac',
+        'title': 'Prepare an NxNative game on a Mac',
         'requirements': ['A supported game version and matching NxNative profile',
                          'Your extracted ExeFS/RomFS, icon.jpg and control.nacp',
                          'Matching NxNative shader package and shader cache',
@@ -292,7 +292,20 @@ def preparation():
                     '--build /path/to/frame-build --extracted /path/to/extracted-game '
                     '--shader-package /path/to/shader/pkg --shader-cache /path/to/shader/cache '
                     '--ndk /path/to/android-ndk --bundle /path/to/game.nxnative.zip'),
-        'currently_tested': 'Metroid Dread 2.1.0 (010093801237C000). Other games and versions are not promised.'}
+        'currently_tested': 'Metroid Dread 2.1.0 (010093801237C000). Other games and versions are not promised.',
+        'love': {
+            'title': 'Prepare a compatible LÖVE game',
+            'steps': ['Use your own extracted game folder containing main.lua and its assets. This separate runtime route requires a game compatible with LÖVE 11.5; it does not convert arbitrary ROMs.',
+                      'Supply the pinned official LÖVE 11.5a Android embed runtime, JDK and Android SDK tools. Run the command below from a Frame Control source checkout on your build computer, replacing each /path/to value.',
+                      'Keep the same Frame Control app-data directory and signing key for updates. The private APK contains your game assets; keep it in your own library.',
+                      'Choose Install a prepared APK below, then Choose a file. On a computer you can select an APK from a mounted network share. The link option accepts public HTTPS downloads; private LAN APK URLs are not supported there.'],
+            'command': ('python3 frame/love/package.py --runtime /path/to/love-11.5-android-embed-norecording.apk '
+                        '--game /path/to/extracted/RomFS --output /path/to/MyGame.apk '
+                        '--package com.example.mygame --label "My Game" '
+                        '--android-jar /path/to/Android/sdk/platforms/android-36/android.jar '
+                        '--d8 /path/to/Android/sdk/build-tools/36.0.0/d8'),
+            'requirements': ['Your compatible game source (main.lua) and assets',
+                             'Pinned official LÖVE 11.5a embed APK', 'Python 3, JDK and Android SDK']}}
 
 
 def refresh(source_id=None):
@@ -372,13 +385,10 @@ def _portable(name):
 
 
 def _data_names(names):
-    required = {'dm/main.patched.bin', 'dm/subsdk0.patched.bin', 'dm/sdk.patched.bin',
-                'font/standard.ttf', 'font/nintendo_ext.ttf'}
-    required.update('dm/' + m + '.fixups.tsv' for m in ('main', 'subsdk0', 'sdk'))
-    shaders = [n for n in names if n.startswith('vk/') and n.endswith('.spv')]
-    if (not required <= set(names) or not shaders or not any(n.startswith('romfs/') for n in names) or
-            any(n[:-4] + '.vk.txt' not in names for n in shaders)):
-        raise NxNativeError('The bundle is missing rewritten modules, fonts, shader reflection or RomFS')
+    try:
+        _helper().validate_data_names(names)
+    except ValueError as error:
+        raise NxNativeError('The bundle is missing rewritten modules, fonts, shader reflection or RomFS') from error
 
 
 def _fetch(entry, report):
