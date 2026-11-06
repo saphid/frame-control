@@ -76,6 +76,7 @@ def main():
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
     parser.add_argument('--reproduce-music-control-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-animation-unload-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
@@ -128,6 +129,16 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_animation_unload_regression:
+        assert record['id'] == 23
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '1f09235c0acac021186e8b95e88cbca2fe6c4c6d0a3c94d06c9af8a33837a44c'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_music_control_unload_regression:
         assert record['id'] in (12, 111)
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
@@ -521,11 +532,22 @@ def main():
             elif case['probe'] == 'animation-private-overrides':
                 report['privateAnimationOverrides'] = animation_private.exercise(
                     animation_fixture, legacy, rpc, record['name'], until_ready)
+                animation_private.lifecycle(animation_fixture, backend, loader, env, log, processes,
+                    legacy, rpc, until_ready, report, regression=args.reproduce_animation_unload_regression)
                 report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
                 report['preservationHelperSha256'] = hashlib.sha256(
                     (plugin/'py_modules/framey_animation_overrides.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_animation_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_animation_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
                 report['result'] = ('published Decky legacy discovery and private default/apply/repeat/switch/reset '
                     'RPCs preserve three original override files including bytes and inodes; '
+                    + ('previous managed EOF forced-kill reproduced; expected negative only; '
+                       if args.reproduce_animation_unload_regression else
+                       'RPC after peer EOF, restart and two clean parent-only stops; ')+
                     'actual Steam playback, repository downloads, browser and VR unverified')
             elif case['probe'] == 'ludusavi-dependency-discovery':
                 import ludusavi_private
