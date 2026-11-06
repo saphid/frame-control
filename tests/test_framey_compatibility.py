@@ -14,6 +14,15 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_desktop_apps_old_receipt_requires_current_child_ipc_fix(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 143)
+        old = dict(storeId=143, version=plugin['version'], sha256=plugin['sha256'])
+        fixed = dict(old, compatShims=['desktop-apps-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_previous_deckyparty_receipt_requires_ipc_repair(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 117)
         old = dict(storeId=117, version=plugin['version'], sha256=plugin['sha256'],
