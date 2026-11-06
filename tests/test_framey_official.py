@@ -22,6 +22,21 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_waits_for_published_option_loader(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        callback = re.search(r'const openToolMenu = SP_REACT\.useCallback\([\s\S]+?\}, \[toolOptions\]\);', frontend)
+        self.assertIsNotNone(callback)
+        self.assertIn('void openToolMenu(application, showMenu);', frontend)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_load.mjs')],
+                                input=json.dumps({'callback': callback.group()}),
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_game_sync_text_dialog_commits_the_edited_value_on_blur(self):
         plugin = next(p for p in PLUGINS if p['id'] == 104)
         data = archive(plugin)
