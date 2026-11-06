@@ -322,12 +322,14 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      else frame_decky_store.LOCALSEND_ORIGINAL)
                 if plugin['id'] == 28:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+                    self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/hash').split()[0],
                                      frame_decky_store.EMU_BINARIES[arch])
                     self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
-                                     frame_decky_store.EMU_MANAGED_MAIN)
+                                     'c3314c4202a2523fe0d68b50683c3640ab7cd0da074364eb65a28b34c9af1d3c')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 53:
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/click.py && echo yes').strip(), 'yes')
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
@@ -436,6 +438,15 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], ['debug'])
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/psutil/_psutil_linux.abi3.so && echo yes').strip(), 'yes')
+                if plugin['id'] == 23:
+                    receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
+                    self.assertEqual(receipt['compatShims'], ['animation-preserve-overrides', 'animation-ipc-eof'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '41e8b19b457fa19f7eb080736a84dac5ce05a787ff4a0279b15df0666502d068')
+                    for helper in ('framey_decky_ipc.py', 'framey_animation_overrides.py'):
+                        self.assertEqual(ssh(f'sha256sum {installed}/py_modules/{helper}').split()[0],
+                                         hashlib.sha256((ROOT/'ui'/helper).read_bytes()).hexdigest())
+                    self.assertEqual(found[0]['compatibility']['status'], 'partial')
                 if plugin['id'] in (12, 111):
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env', 'music-control-ipc-eof'])

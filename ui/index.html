@@ -2260,7 +2260,7 @@
   <div id="nxnativeSources"></div>
   <label>Find a game<input type="search" id="nxnativeSearch" placeholder="Filter your games"></label>
   <div id="nxnativeGames" aria-live="polite"></div>
-  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing games for NxNative</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
+  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing NxNative and LÖVE games</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
 </dialog>
 <dialog id="wiDlg" aria-labelledby="wiTitle">
   <h2 id="wiTitle">Install from a website</h2>
@@ -8351,7 +8351,7 @@ api("/api/host").then(h => {
 }).catch(() => watchConnection());
 </script>
 <script src="/nxnative.js"></script>
-<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
+<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstallApk: openInstallChooser, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
 <script src="/artwork-settings.js"></script>
 <script src="/control-center.js"></script>
 <script>

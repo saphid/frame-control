@@ -113,6 +113,7 @@ def main():
               'tests/decky-runtime/battery_private.py',
               'tests/decky-runtime/deckyspy_private.py',
               'tests/decky-runtime/theme_music_private.py',
+              'tests/decky-runtime/emuchievements_private.py',
               'tests/decky-runtime/steamback_private.py',
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
@@ -145,6 +146,7 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (23, '--reproduce-animation-unload-regression'),
                     (143, '--reproduce-desktop-apps-unload-regression'),
                     (38, '--reproduce-volume-mixer-user-regression'),
                     (131, '--reproduce-download-all-unload-regression'),
@@ -169,6 +171,7 @@ def main():
                     (67, '--reproduce-battery-tracker-unload-regression'),
                     (89, '--reproduce-deckyspy-unload-regression'),
                     (52, '--reproduce-theme-music-unload-regression'),
+                    (28, '--reproduce-emuchievements-unload-regression'),
                     (36, '--reproduce-steamgriddb-unload-regression'),
                     (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]
