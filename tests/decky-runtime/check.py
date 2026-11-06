@@ -89,6 +89,7 @@ def main():
     parser.add_argument('--reproduce-wine-cellar-unload-regression', action='store_true')
     parser.add_argument('--reproduce-shotty-unload-regression', action='store_true')
     parser.add_argument('--reproduce-battery-tracker-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-deckyspy-unload-regression', action='store_true')
     parser.add_argument('--reproduce-theme-music-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
@@ -133,6 +134,16 @@ def main():
         assert record['id'] == 135
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_deckyspy_unload_regression:
+        assert record['id'] == 89
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '0c40ea57255833829d84d84dd1fa0fc0bd4d529761950dd407347b0c61c7529a'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_theme_music_unload_regression:
         assert record['id'] == 52
@@ -2104,7 +2115,20 @@ def main():
                 assert isinstance(metric('get_battery')['battery'], bool)
                 assert isinstance(metric('get_net_interface'), list)
                 assert isinstance(legacy('get_settings', key='framey.runtime-test', default=True)['data'], bool)
-                report['result'] = 'discovery, native psutil import and read-only system metrics passed'
+                import deckyspy_private
+                deckyspy_private.probe(backend, loader, env, log, processes, legacy, rpc,
+                    until_ready, report, base/'settings'/record['folder'],
+                    regression=args.reproduce_deckyspy_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_deckyspy_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_deckyspy_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed DeckySpy child IPC forced-kill reproduced'
+                    if args.reproduce_deckyspy_unload_regression else
+                    'native psutil metrics, original unload hook, two clean parent-only stops, private settings and restart passed; real Frame unverified')
             else:
                 assert case['probe'] == 'screenshots'
                 assert legacy('was_rescued') is False

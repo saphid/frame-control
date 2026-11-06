@@ -1198,8 +1198,17 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / plugin['folder']
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])
+        self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])
         modules = folder / 'py_modules'
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as original:
+            previous = original.read(plugin['folder']+'/main.py').replace(
+                b'        battery = psutil.sensors_battery()\n',
+                b'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
+        self.assertEqual((folder/'main.py').read_bytes(), prefix+previous)
+        self.assertEqual((modules/'framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         native = (modules / 'psutil/_psutil_linux.abi3.so').read_bytes()
         self.assertEqual(native[:4], b'\x7fELF')
         self.assertEqual(int.from_bytes(native[18:20], 'little'),
@@ -1222,6 +1231,25 @@ class StoreTransaction(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(error, result.stderr)
             self.assertFalse((self.folder.parent / plugin['folder']).exists())
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_deckyspy_missing_ipc_helper_preserves_existing_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 89)
+        data = official_archive(plugin)
+        args = dict(plugin_id=89, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(self.apply('install', data, **args).returncode, 0)
+        folder = self.folder.parent/plugin['folder']
+        marker = folder/'owned-user-marker'
+        marker.write_bytes(b'preserve this installed copy')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        script = frame_decky_store.apply_script(89, plugin['sha256'])
+        script = script.replace('FRAMEY_DECKYSPY_IPC_SOURCE =', 'OMITTED_DECKYSPY_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', return_value=script):
+            result = self.apply('update', data, expected=plugin['sha256'], **args)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing DeckySpy child IPC EOF repair', result.stderr)
+        self.assertEqual(before, {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()})
+
     def test_theme_music_ipc_repair_preserves_every_other_archive_file(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 52)
