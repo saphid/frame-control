@@ -22,6 +22,20 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_search_preserves_its_accessible_name(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.TextField, '
+                            r'\{ "aria-label": "Search installed Steam games[^\n]+? \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield_label.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_game_sync_text_dialog_commits_the_edited_value_on_blur(self):
         plugin = next(p for p in PLUGINS if p['id'] == 104)
         data = archive(plugin)

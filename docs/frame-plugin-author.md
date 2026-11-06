@@ -43,6 +43,11 @@ file, and give the panel a safe default if settings are missing or damaged.
 Removing a managed plugin leaves its Decky settings behind; document how users
 can reset data your plugin owns.
 
+Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
+the latter on the native input. This includes Wine Cellar 0.2.1's published
+installed-game search, tested with synthetic search text in the local host.
+Accessible-name preservation does not prove VR keyboard or controller usability.
+
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
