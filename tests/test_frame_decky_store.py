@@ -672,6 +672,51 @@ class StoreTransaction(unittest.TestCase):
         self.assertFalse((self.folder.parent/plugin['folder']).exists())
         self.assertEqual(frame_decky_store.apply_script(93, 'a'*64), frame_decky_store.APPLY)
 
+    def test_desktop_apps_exact_archive_repairs_child_eof_without_other_changes(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 143)
+        data = official_archive(plugin)
+        result = self.apply('install', data, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['desktop-apps-ipc-eof'])
+        prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for entry in original.infolist():
+                if not entry.is_dir():
+                    relative = entry.filename.removeprefix(plugin['folder']+'/')
+                    expected = original.read(entry)
+                    if relative == 'main.py':
+                        expected = prefix+expected
+                    self.assertEqual((folder/relative).read_bytes(), expected, relative)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        self.assertEqual(self.apply('remove', plugin_id=143, folder=plugin['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+
+    def test_desktop_apps_missing_ipc_refuses_install_and_changed_digest_is_not_adapted(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 143)
+        data = official_archive(plugin)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', data, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Desktop Apps child IPC EOF repair', result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertFalse(folder.exists())
+        changed = io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(data)) as original, zipfile.ZipFile(changed, 'w') as target:
+            for entry in original.infolist():
+                target.writestr(entry, original.read(entry))
+            target.writestr(plugin['folder']+'/changed.txt', b'other archive')
+        changed = changed.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(143, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+
     def test_exact_steam_status_managed_copy_verifies_public_diagnostics_tls(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 123)
