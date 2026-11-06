@@ -115,7 +115,7 @@
   },
   {
     "id": 52,
-    "shim": null,
+    "shim": "game-theme-music-ipc-eof",
     "probe": "theme-music-settings"
   },
   {

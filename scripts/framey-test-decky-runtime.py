@@ -108,6 +108,7 @@ def main():
               'tests/decky-runtime/free_loader_private.py',
               'tests/decky-runtime/deck_shelves_private.py',
               'tests/decky-runtime/battery_private.py',
+              'tests/decky-runtime/theme_music_private.py',
               'tests/decky-runtime/steamback_private.py',
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
@@ -159,6 +160,7 @@ def main():
                     (68, '--reproduce-wine-cellar-unload-regression'),
                     (53, '--reproduce-shotty-unload-regression'),
                     (67, '--reproduce-battery-tracker-unload-regression'),
+                    (52, '--reproduce-theme-music-unload-regression'),
                     (36, '--reproduce-steamgriddb-unload-regression'),
                     (24, '--reproduce-radiyo-unload-regression'),
                     (117, '--reproduce-deckyparty-unload-regression')]

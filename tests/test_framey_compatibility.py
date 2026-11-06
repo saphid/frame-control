@@ -69,6 +69,16 @@ class Compatibility(unittest.TestCase):
                 frame_decky_store.change(no_ssh, 'install', 42)
             download.assert_not_called()
 
+    def test_old_theme_music_copy_requires_ipc_repair_without_upgrading_partial_status(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 52)
+        old = dict(storeId=52, version=plugin['version'], sha256=plugin['sha256'])
+        repaired = dict(old, compatShims=['game-theme-music-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, repaired]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertEqual(result[0]['compatibility']['status'], 'partial')
+        self.assertEqual(result[1]['compatibility']['status'], 'partial')
+
     def test_old_deckyspy_copy_does_not_inherit_fixed_install_status(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 89)
         installed = {'plugins': [dict(storeId=89, version=plugin['version'], sha256=plugin['sha256']),
