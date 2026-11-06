@@ -160,5 +160,22 @@ class OfficialBundles(unittest.TestCase):
                                              (folder/'dist/chunks/pluginApi-B8sV7970.js').read_bytes())
 
 
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_tabmaster_published_list_reorders_only_on_save(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.ReorderableList, '
+                            r'\{ entries: entries, interactables: TabEntryInteractables, '
+                            r'onSave: \(entries\) => \{[\s\S]*?\} \}\)', frontend)
+        self.assertIsNotNone(control)
+        self.assertIn('tabMasterManager.reorderTabs(entries.map(entry => entry.data.id))', control.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_reorderable.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
 if __name__ == '__main__':
     unittest.main()

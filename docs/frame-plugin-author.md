@@ -90,6 +90,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
+| `ReorderableList` | Lists plugin entries by `position`; native Move up/down buttons edit a draft. Save order calls `onSave` with normalized positions; Cancel discards the draft. Labels, data and optional `interactables` are retained. `disableReordering` hides ordering controls. | Exact published TabMaster 2.15.1 list/save callback with synthetic entries; cancel, disabled/late handlers, failed-save retry and refreshed-list tests. No real library edit or physical controller check. |
 | `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` omits its value so it animates as unfinished, and `sOperationText` appears with the bar. Estimated completion time is not shown. | Host contract tests; official plugin progress behavior in worn VR remains unverified. |
 | `SteamUIStore` / `DFL.Router.RunningApps`, `MainRunningApp` | Bounded detached Steam CEF reads while the panel is open; refresh about every two seconds; no MobX observation. Failed reads clear stale context. | Locked real Frame empty-list reads; nonempty local Chromium fixtures. Real running-game selection unverified. |
 | `GameSessions.RegisterForAppLifetimeNotifications` | Actual Steam callbacks, bounded queue and disposable `.unregister()` handle; no events inferred from snapshot changes; lease cleanup after lost panels | Real Frame registration/poll/close; launch/exit, retry, expiry and duplicate tests use explicit fixtures. Real game transitions unverified. |
@@ -135,6 +136,19 @@ the choices. Return the promise if you want Framey to display its rejection,
 or show the error in your plugin. Cancel loading ends Framey's wait, leaving
 your own request lifecycle under your plugin's control; the user can then retry.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
+For a `ReorderableList`, give each entry a `label`, a numeric `position` and
+any plugin-owned `data`. Framey sorts a copy of the entries and offers native
+Move up/down, Save order and Cancel reordering actions. Saving passes a new
+array with positions starting at zero to `onSave`; it does not mutate the
+objects you supplied. Optional `interactables` receive `{entry}` and remain
+available outside an order edit. Return an asynchronous save promise so Framey
+can keep the list busy and show a rejection for retry. A handler that returns
+before its backend write finishes cannot report that write's later failure.
+A refreshed `entries` array replaces the old draft; late completion from the
+old save cannot overwrite it. `disableReordering` hides the ordering controls
+and discards an unsaved draft without calling `onSave`.
+Steam animation, drag gestures and physical controller navigation are not
+implemented by this control.
 Treat module lookup results as Framey-local exports. Do not depend on Steam
 webpack IDs, function-source signatures, or Steam-only CSS class names; a
 lookup that works in the Steam Deck QAM can still return `undefined` here.
