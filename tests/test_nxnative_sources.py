@@ -36,7 +36,7 @@ class SourcesTests(unittest.TestCase):
         patch.object(nx, '_cache', return_value=self.cache).start()
         patch.object(nx, 'RESERVE', 0).start()
 
-    def build(self):
+    def build(self, modules=('main', 'subsdk0', 'sdk')):
         root = self.root / 'build'
         root.mkdir()
         (root / 'game.apk').write_bytes(apk({'AndroidManifest.xml': manifest(PACKAGE, 0, 0, 30),
@@ -44,7 +44,7 @@ class SourcesTests(unittest.TestCase):
         files = {'font/standard.ttf': b'font', 'font/nintendo_ext.ttf': b'extra',
                  'shader/vk/a.spv': b'shader', 'shader/vk/a.vk.txt': b'reflection',
                  'extract/v1/RomFS/textures/some long name.bin': b'rom data'}
-        for module in ('main', 'subsdk0', 'sdk'):
+        for module in modules:
             files['patched_android/' + module + '.patched.bin'] = b'code'
             files['patched_android/' + module + '.fixups.tsv'] = b'fixups'
         for path, data in files.items():
@@ -144,6 +144,28 @@ class SourcesTests(unittest.TestCase):
         self.assertTrue(source['games'][0]['installable'])
         with self.assertRaisesRegex(nx.NxNativeError, 'already exists'):
             nx.export_bundle(self.root / 'build', output, TITLE, 'My game')
+
+    def test_two_module_game_exports_and_imports_without_dread_subsdk(self):
+        build = self.build(modules=('main', 'sdk'))
+        output = self.root / 'two-modules.nxnative.zip'
+        nx.export_bundle(build, output, TITLE, 'Two module game')
+        unpack = self.root / 'unpack'
+        unpack.mkdir()
+        _, _, files = nx._unpack(output, unpack)
+        modules = {name for name, *_ in files if name.startswith('dm/')}
+        self.assertEqual(modules, {'dm/main.patched.bin', 'dm/main.fixups.tsv',
+                                   'dm/sdk.patched.bin', 'dm/sdk.fixups.tsv'})
+
+    def test_each_present_module_requires_both_code_and_fixups(self):
+        build = self.build()
+        original = {p.name: p.read_bytes() for p in (build / 'patched_android').iterdir()}
+        for missing in ('main.patched.bin', 'sdk.fixups.tsv', 'subsdk0.patched.bin', 'subsdk0.fixups.tsv'):
+            with self.subTest(missing=missing):
+                path = build / 'patched_android' / missing
+                path.unlink()
+                with self.assertRaisesRegex(ValueError, 'incomplete modules'):
+                    nx._helper().source_files(build)
+                path.write_bytes(original[missing])
 
     def rewrite(self, original, transform=None, extra=None):
         output = self.root / 'tampered.nxnative.zip'
