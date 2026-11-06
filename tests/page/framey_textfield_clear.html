@@ -1,15 +1,19 @@
 <!doctype html><meta charset="utf-8">
 <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
 <div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div>
 <div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
 <script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
 <script>
 (() => {
   const result=document.getElementById('result');
   const assert=(value,message)=>{if(!value)throw Error(message);};
-  const failures=[];
-  addEventListener('error',event=>failures.push(event.message));
-  addEventListener('unhandledrejection',event=>failures.push(String(event.reason)));
+  const failures=window.fixtureFailures;
   const DFL=window.DFL, container=document.getElementById('fixture');
   let root,changes=[];
   const mount=element=>{
@@ -32,6 +36,8 @@
       React.createElement('output',null,search));
   }
   try {
+    assert(failures.length===0,failures.join('; '));
+    assert(DFL,'Framey API did not initialize');
     mount(React.createElement(PublishedSearch));
     assert(clear(),'published Wine Cellar search has no Clear action');
     assert(input().getAttribute('aria-label')==='Search installed Steam games and non-Steam shortcuts','accessible name lost');
