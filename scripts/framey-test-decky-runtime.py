@@ -145,6 +145,7 @@ def main():
             loader.chmod(0o644)  # Private container user copies/chmods its own executable.
             probes = [(case['id'], case.get('version'), None) for case in cases] + [
                 (plugin_id, None, negative) for plugin_id, negative in [
+                    (23, '--reproduce-animation-unload-regression'),
                     (143, '--reproduce-desktop-apps-unload-regression'),
                     (38, '--reproduce-volume-mixer-user-regression'),
                     (131, '--reproduce-download-all-unload-regression'),

@@ -1392,7 +1392,8 @@
         "https://github.com/suchmememanyskill/SDH-CssLoader"
       ],
       "status": "partial",
-      "reason": "Exact managed 1.3.2 preserves existing override movies when no animation is selected, validates selections before replacement, retains the original file or symlink, and restores it when the managed selection is cleared. Existing copies need Update. Published Decky 3.3.0 x86_64 passed private default/apply/repeat/switch/reset RPCs for all three movie names, with original bytes and inodes preserved. Manual changes or missing backups are refused. The earlier browser sweep denied backend calls; actual Steam video playback, downloads, legacy migrations, native ARM64, real Frame and worn/controller use remain unverified.",
+      "reason": "Exact managed 1.3.2 preserves original override movies and adds a child-local IPC EOF repair after hosted AMD64 qualification required SIGKILL. Existing copies require Update/reinstall for both repairs. Private default/apply/repeat/switch/reset RPCs preserve all three movie names, original bytes and inodes. Local published Decky 3.3.0 AMD64 passes RPC after peer EOF, restart and two clean parent-only stops; restoring the previous managed body reproduces the forced kill. Fresh hosted AMD64/ARM64 qualification is pending. Manual changes or missing backups are refused. Actual Steam video playback, downloads, legacy migrations, real Frame and worn/controller use remain unverified.",
+      "evidence": "docs/evidence/framey-animation-ipc-2026-11-06.md",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -1439,7 +1440,8 @@
         "result": "installed-removed"
       },
       "requiredShims": [
-        "animation-preserve-overrides"
+        "animation-preserve-overrides",
+        "animation-ipc-eof"
       ]
     },
     {
