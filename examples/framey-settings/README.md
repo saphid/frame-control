@@ -29,6 +29,15 @@ write path as the toggle. This is a safe example of putting a settings change
 behind an explicit confirmation in Framey. It has not been tried with a
 physical controller in a worn headset.
 
+The Reset callback returns the save promise to `ConfirmModal`. The dialog
+stays busy until that save finishes, rejects repeat Reset/Cancel/Close actions
+while pending, and stays open with an error if the save fails. Retry runs one
+new save; only a successful save closes the dialog and shows a success toast.
+The ordinary toggle catches the same rejected promise after `change` records
+the error in the panel's status, so it does not create an unhandled rejection.
+Do not discard an asynchronous confirmation with `void`: that makes the modal
+close before it knows the result.
+
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,
 `Navigation.Navigate`, `useParams`, `NavigateBack`, and removal of the route in

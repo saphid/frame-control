@@ -114,7 +114,13 @@ webpack IDs, function-source signatures, or Steam-only CSS class names; a
 lookup that works in the Steam Deck QAM can still return `undefined` here.
 Use a local control or a visible unsupported message when it does. For a
 confirmation, call `showModal` with a `ConfirmModal` and keep any irreversible
-operation behind its OK action. `Focusable.onActivate` accepts pointer and
+operation behind its OK action. Return an asynchronous save from `onOK`, such
+as `onOK={() => saveSetting()}`, and let failures reject that promise. Framey
+keeps the dialog busy until the save settles, displays an error and permits
+retry after failure, and closes after success. The
+[settings sample](../examples/framey-settings/README.md) tests delayed replies,
+failed saves and retry through the built bundle and local modal host.
+`Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
 physical controller reaches it. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
