@@ -344,9 +344,12 @@ function bindFrameyScroll(id,direction){
 bindFrameyScroll('frameyScrollUp','up');
 bindFrameyScroll('frameyScrollDown','down');
 window.addEventListener('blur',stopFrameyScrollHold);
+// Keep failed writes for this parent page. Browser storage may remain readable
+// when full or blocked, so rereading it alone would restore an older setting.
+const frameyCacheFallback=new Map();
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
 function frameyCacheRead(id){
-  try{const data=JSON.parse(localStorage.getItem(frameyCacheKey(id))||'{}');
+  try{const data=JSON.parse(frameyCacheFallback.get(id)??localStorage.getItem(frameyCacheKey(id))??'{}');
     if(!data||typeof data!=='object'||Array.isArray(data))return {};
     const pairs=Object.entries(data);
     return pairs.length<=64&&pairs.every(([key,value])=>key.length<=256&&typeof value==='string'&&value.length<=65536)&&
@@ -359,7 +362,8 @@ function frameyCacheSave(id,entries){
   if(pairs.length>64||pairs.some(([key,value])=>key.length>256||typeof value!=='string'||value.length>65536))return;
   const encoded=JSON.stringify(entries);
   if(encoded.length>128*1024)return;
-  try{localStorage.setItem(frameyCacheKey(id),encoded);}catch(_){} // Private browsing can deny storage.
+  try{localStorage.setItem(frameyCacheKey(id),encoded);frameyCacheFallback.delete(id);}
+  catch(_){frameyCacheFallback.set(id,encoded);} // Same bounds as persisted data.
 }
 window.addEventListener('message',async event=>{
   if(activeFrameyId===null||event.source!==byId('frameyFrame').contentWindow)return;

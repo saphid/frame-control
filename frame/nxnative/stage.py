@@ -17,6 +17,19 @@ import tarfile
 import uuid
 
 
+def validate_data_names(names):
+    names = set(names)
+    required = {'dm/main.patched.bin', 'dm/sdk.patched.bin',
+                'font/standard.ttf', 'font/nintendo_ext.ttf'}
+    binaries = {n[:-12] for n in names if n.startswith('dm/') and n.endswith('.patched.bin')}
+    fixups = {n[:-11] for n in names if n.startswith('dm/') and n.endswith('.fixups.tsv')}
+    shaders = [n for n in names if n.startswith('vk/') and n.endswith('.spv')]
+    if (not required <= names or binaries != fixups or not shaders
+            or not any(n.startswith('romfs/') for n in names)
+            or any(n[:-4] + '.vk.txt' not in names for n in shaders)):
+        raise ValueError('incomplete modules, fonts, shader reflection or RomFS')
+
+
 def source_files(build):
     roots = [('dm', build / 'patched_android'), ('vk', build / 'shader/vk'),
              ('font', build / 'font')]
@@ -43,14 +56,7 @@ def source_files(build):
                 while block := src.read(4 << 20):
                     digest.update(block)
             result.append((relative, path, path.stat().st_size, digest.hexdigest()))
-    names = {x[0] for x in result}
-    required = {'dm/main.patched.bin', 'dm/subsdk0.patched.bin', 'dm/sdk.patched.bin',
-                'font/standard.ttf', 'font/nintendo_ext.ttf'}
-    required.update('dm/' + m + '.fixups.tsv' for m in ('main', 'subsdk0', 'sdk'))
-    shaders = [n for n in names if n.endswith('.spv')]
-    if (not required <= names or not shaders or not any(n.startswith('romfs/') for n in names)
-            or any(n[:-4] + '.vk.txt' not in names for n in shaders)):
-        raise ValueError('incomplete modules, fonts or shaders')
+    validate_data_names(x[0] for x in result)
     return result
 
 

@@ -1,0 +1,83 @@
+{
+  "date": "2026-11-06",
+  "device": "physical Steam Frame",
+  "route": "Separate Android L\u00d6VE runtime in a persistent Lepton instance",
+  "game": {
+    "name": "Balatro"
+  },
+  "test_scope": {
+    "input": "remote touch input; not physical Frame-controller validation",
+    "exact_release_candidate_verified": false,
+    "shared_nxnative_renderer_regression": "not applicable to the separate L\u00d6VE route"
+  },
+  "gameplay": {
+    "tutorial_small_blind_defeated": true,
+    "round_score": 452,
+    "flush_hand_score": 252,
+    "cash_out": 3,
+    "money_after_cash_out": 7,
+    "reached_next_big_blind_selector": true,
+    "tutorial_complete_set_by_normal_gameplay": true
+  },
+  "cold_save_reload": {
+    "result": "passed",
+    "save_file": {
+      "name": "save.jkr",
+      "bytes": 6751,
+      "sha256": "4e751a20ff729a5e31f58138fc64827c8df213761e6173bae60cec52f21e9f1c"
+    },
+    "save_files_edited": false,
+    "restart": "Full server.frame_android.stop/launch",
+    "continue_summary": {
+      "round": 1,
+      "ante": 1,
+      "money": 7,
+      "best_hand": 252
+    },
+    "continue_opened_saved_game_state": true,
+    "legitimate_unlock_popup": "Continue a saved run from the main menu",
+    "popup_dismissed_underlying_stage_screenshot": "passed: unlock popups dismissed; restored Big Blind selector and $7 visible",
+    "restored_input": "Remote Select opened Big Blind Round2 and dealt a visible eight-card hand"
+  },
+  "audio": {
+    "result": "nonzero output audio observed in the earlier gameplay follow-up"
+  },
+  "remaining": [
+    "Physical Frame-controller axes, buttons and feel",
+    "Worn-headset comfort",
+    "Exact final app/release-candidate smoke"
+  ],
+  "screenshots": [
+    {
+      "path": "nxnative-frame/balatro-small-blind-win-2026-11-06.png",
+      "sha256": "1dc9061860595a92d1d173b1b84dc8d183c83dba236d68feb48082b82e244e78",
+      "bytes": 1775215,
+      "observed": "Tutorial Small Blind round score 452 exceeds the 300-chip requirement"
+    },
+    {
+      "path": "nxnative-frame/balatro-cold-continue-2026-11-06.png",
+      "sha256": "7c85fb364f17c0e94b8727c8499940149d356e1c35a094184ec1629220d0d543",
+      "bytes": 1856781,
+      "observed": "After a full persistent-instance restart, Continue shows Round 1, Ante 1, Money $7 and Best Hand 252"
+    },
+    {
+      "path": "nxnative-frame/balatro-cold-restored-2026-11-06.png",
+      "sha256": "5593d6f335db104ef83e15830531c9e0c1b7f980a217d6de088ace61ca20c656",
+      "bytes": 1525314,
+      "observed": "Continuing the saved run opens game state and shows a legitimate Joker Unlocked popup: Continue a saved run from the main menu"
+    },
+    {
+      "path": "nxnative-frame/balatro-cold-stage-2026-11-06.png",
+      "sha256": "e63a505fa085ee48060125b90c0f7a24e972ff2ee20d5a669243a7e0e50f4d50",
+      "bytes": 1725884,
+      "observed": "After cold Continue and popup dismissal, the Big Blind selector and $7 are visible"
+    },
+    {
+      "path": "nxnative-frame/balatro-cold-hand-2026-11-06.png",
+      "sha256": "6b8e87b2a59a1e49c1007cbee5a1df1f8c589e35ee96738af37d2cc07e70207d",
+      "bytes": 1831041,
+      "observed": "Selecting the restored Big Blind opens Round2 and deals a visible eight-card hand"
+    }
+  ],
+  "publication_boundary": "Only screenshots and this text receipt are included. No save files, APKs, ROMs, extracted game assets, shader bytecode, keys or private catalogs are copied."
+}

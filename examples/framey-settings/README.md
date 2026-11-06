@@ -23,11 +23,27 @@ for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
 event is ignored; after the request settles, a new change can be saved.
+If the initial read or a later reload fails, the toggle and Reset stay disabled
+until **Reload saved setting** successfully reads the backend value. The last
+displayed value is not permission to save after a failed read. This prevents
+an unread setting from being overwritten using the initial display default;
+callbacks retained before a redraw follow the same guard. Reload remains
+available for recovery. This path is tested with synthetic backend replies,
+not a live headset connection.
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
 write path as the toggle. This is a safe example of putting a settings change
 behind an explicit confirmation in Framey. It has not been tried with a
 physical controller in a worn headset.
+
+The Reset callback returns the save promise to `ConfirmModal`. The dialog
+stays busy until that save finishes, rejects repeat Reset/Cancel/Close actions
+while pending, and stays open with an error if the save fails. Retry runs one
+new save; only a successful save closes the dialog and shows a success toast.
+The ordinary toggle catches the same rejected promise after `change` records
+the error in the panel's status, so it does not create an unhandled rejection.
+Do not discard an asynchronous confirmation with `void`: that makes the modal
+close before it knows the result.
 
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,
