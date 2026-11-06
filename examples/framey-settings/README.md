@@ -23,6 +23,13 @@ for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
 event is ignored; after the request settles, a new change can be saved.
+If the initial read or a later reload fails, the toggle and Reset stay disabled
+until **Reload saved setting** successfully reads the backend value. The last
+displayed value is not permission to save after a failed read. This prevents
+an unread setting from being overwritten using the initial display default;
+callbacks retained before a redraw follow the same guard. Reload remains
+available for recovery. This path is tested with synthetic backend replies,
+not a live headset connection.
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
 write path as the toggle. This is a safe example of putting a settings change

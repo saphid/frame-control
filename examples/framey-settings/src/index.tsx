@@ -11,17 +11,20 @@ function Content() {
   const [message, setMessage] = useState('Loading setting…');
   const pending = useRef(false);
   const resetModalOpen = useRef(false);
+  const readReady = useRef(false);
 
   async function refresh() {
     if (pending.current) return;
     pending.current = true;
+    readReady.current = false;
     setBusy(true);
     try {
       const value = await getSetting('enabled', false);
+      readReady.current = true;
       setEnabled(value);
       setMessage(`Saved setting: ${value ? 'on' : 'off'}`);
     } catch (error) {
-      setMessage(`Could not read setting: ${String(error)}`);
+      setMessage(`Could not read setting: ${String(error)}. Reload saved setting before changing it.`);
     } finally {
       pending.current = false;
       setBusy(false);
@@ -33,7 +36,7 @@ function Content() {
   async function change(value: boolean) {
     // Two controller events can arrive before React redraws the disabled toggle.
     // Keep writes ordered so a late first reply cannot replace the final choice.
-    if (pending.current) return;
+    if (pending.current || !readReady.current) return;
     pending.current = true;
     setBusy(true);
     try {
@@ -52,7 +55,7 @@ function Content() {
   }
 
   function confirmReset() {
-    if (pending.current || resetModalOpen.current) return;
+    if (pending.current || !readReady.current || resetModalOpen.current) return;
     const dialog = showModal(<ConfirmModal strTitle="Reset example setting?"
       strDescription="This changes only the sample plugin's saved setting."
       strOKButtonText="Reset" strCancelButtonText="Keep setting"
@@ -64,10 +67,10 @@ function Content() {
   return <PanelSection title="Framey settings sample">
     <PanelSectionRow>
       <ToggleField label="Example setting" description="Stored by the Decky Python backend"
-        checked={enabled} disabled={busy} onChange={(value: boolean) => {void change(value).catch(() => {});}} />
+        checked={enabled} disabled={busy || !readReady.current} onChange={(value: boolean) => {void change(value).catch(() => {});}} />
     </PanelSectionRow>
     <PanelSectionRow><ButtonItem disabled={busy} onClick={() => {void refresh();}}>Reload saved setting</ButtonItem></PanelSectionRow>
-    <PanelSectionRow><ButtonItem disabled={busy} onClick={confirmReset}>Reset example setting</ButtonItem></PanelSectionRow>
+    <PanelSectionRow><ButtonItem disabled={busy || !readReady.current} onClick={confirmReset}>Reset example setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><ButtonItem onClick={() => Navigation.Navigate('/framey-sample/details/saved-setting')}>About this setting</ButtonItem></PanelSectionRow>
     <PanelSectionRow><p role="status">{message}</p></PanelSectionRow>
   </PanelSection>;
