@@ -63,6 +63,11 @@ assert.equal(plugin.frameyQuickActions[0].label,'Read saved setting');
 assert.equal(await plugin.frameyQuickActions[0].onClick(),'Saved setting is on');
 assert.equal(calls[0].method,'get_setting');
 assert.deepEqual(Array.from(calls[0].args),['enabled',false]);
+// This lightweight host fixture does not run effects. Complete the sample's
+// explicit Reload before exercising writes, just as its mount read would.
+content.children[0][1].children[0].props.onClick();
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(calls.at(-1).method,'get_setting');
 // Exercise the built sample's save path through the real Framey toast host.
 // Its JSX body must reach a React root, rather than stringify to an object.
 const toggle=content.children[0][0].children[0];
