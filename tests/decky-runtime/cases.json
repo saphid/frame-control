@@ -224,6 +224,7 @@
   {
     "id": 89,
     "shim": "deckyspy-psutil-and-battery",
+    "additionalShims": ["deckyspy-ipc-eof"],
     "probe": "system-monitor"
   },
   {

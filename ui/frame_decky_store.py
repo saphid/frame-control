@@ -400,6 +400,8 @@ def apply_script(plugin_id, digest):
     if plugin_id == 89:
         battery = (Path(__file__).parent/'framey_battery.py').read_text(encoding='utf-8')
         source += 'FRAMEY_BACKEND_BATTERY_SOURCE = '+repr(battery)+'\n'
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        source += 'FRAMEY_DECKYSPY_IPC_SOURCE = '+repr(ipc)+'\n'
     return source+APPLY
 
 
@@ -1808,11 +1810,23 @@ def split_by_app(data):
                 compat.write_text(battery_source,encoding='utf-8')
                 main=unpacked/'main.py'
                 source=main.read_text(encoding='utf-8')
+                if hashlib.sha256(source.encode()).hexdigest()!='a435e594b7c2190adc0cfb910a878d52369ac06f95089b9559e0bc4b90e90601':
+                    raise RuntimeError('DeckySpy backend differs from pinned archive')
                 old='        battery = psutil.sensors_battery()\n'
                 if source.count(old)!=1: raise RuntimeError('DeckySpy battery source changed')
                 source=source.replace(old,'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
+                ipc=globals().get('FRAMEY_DECKYSPY_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc: raise RuntimeError('Missing DeckySpy child IPC EOF repair')
+                helper=modules/'framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('DeckySpy child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.write_text(ipc,encoding='utf-8')
+                source=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+source
+                compile(source,str(main),'exec')
                 main.write_text(source,encoding='utf-8')
                 compat_shims.append('deckyspy-psutil-and-battery')
+                compat_shims.append('deckyspy-ipc-eof')
             # These legacy backends launch system dbus-send (1.1.6 via /bin/sh).
             # Decky's PyInstaller LD_LIBRARY_PATH selects bundled libtinfo built
             # against newer glibc than Frame OS. Restore its saved system path

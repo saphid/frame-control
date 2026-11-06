@@ -73,11 +73,15 @@ class Compatibility(unittest.TestCase):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 89)
         installed = {'plugins': [dict(storeId=89, version=plugin['version'], sha256=plugin['sha256']),
                                   dict(storeId=89, version=plugin['version'], sha256=plugin['sha256'],
-                                       compatShims=['deckyspy-psutil-and-battery'])]}
+                                       compatShims=['deckyspy-psutil-and-battery']),
+                                  dict(storeId=89, version=plugin['version'], sha256=plugin['sha256'],
+                                       compatShims=['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])]}
         result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
         self.assertEqual(result[0]['compatibility']['status'], 'partial')
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
-        self.assertEqual(result[1]['compatibility']['status'], 'works')
+        self.assertEqual(result[1]['compatibility']['status'], 'partial')
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertEqual(result[2]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
     def test_old_deck_shelves_copy_requires_ipc_fix(self):

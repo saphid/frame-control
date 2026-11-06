@@ -398,7 +398,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                                      '43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8')
                 if plugin['id'] == 89:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])
+                    self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '6a6294821cf306d19191ac81edea0b5a95e87ce2065290bb851ee9e086060ac8')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/psutil/_psutil_linux.abi3.so && test -f {installed}/py_modules/framey_battery.py && echo yes').strip(), 'yes')
                 if plugin['id'] == 67:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))

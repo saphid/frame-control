@@ -7156,7 +7156,7 @@
         "https://github.com/Seraphli/decky-spy.git"
       ],
       "status": "works",
-      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
+      "reason": "Works for read-only system monitoring: live CPU, memory, uptime, processes, interfaces and Frame battery render in local Chromium with actual Decky 3.3.0 ARM64 on the Frame; silent warning and private settings save/reopen pass. Exact managed install adds pinned BSD psutil wheels and a battery-name fallback. New managed installs also repair child IPC EOF, with clean unload/restart verified in isolated native amd64 Decky. This new repair has not been verified on ARM64 or the real Frame. Existing copies need update/reinstall. Automatic alerts, resume/game-time warnings, sound and worn VR remain unverified; monitoring requires an open panel.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -7207,7 +7207,8 @@
         "existingInstallRequires": "explicit managed update or reinstall"
       },
       "requiredShims": [
-        "deckyspy-psutil-and-battery"
+        "deckyspy-psutil-and-battery",
+        "deckyspy-ipc-eof"
       ]
     },
     {
