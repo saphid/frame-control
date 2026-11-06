@@ -164,7 +164,8 @@ async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequ
       open.disabled=deckyBusy||deckyJobPending()||!deckyState.running;
       open.onclick=()=>openFrameyPanel(plugin.storeId,plugin.name);row.append(open);
       const button=document.createElement('button');button.className='danger';button.textContent='Remove';
-      button.disabled=deckyBusy||deckyJobPending();button.onclick=()=>deckyChange('remove',{id:plugin.storeId,name:plugin.name});row.append(button);}
+      button.disabled=deckyBusy||deckyJobPending();button.onclick=()=>deckyChange('remove',
+        {id:plugin.storeId,name:plugin.name,installedSha256:plugin.sha256});row.append(button);}
     list.append(row);}if(!deckyState.plugins?.length)list.textContent='No managed plugins installed.';
   showDeckyStore();}catch(error){if(request!==deckyStatusRequest)return;
     const panelClosed=activeFrameyId!==null;
@@ -204,7 +205,8 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
     button.disabled=deckyBusy||deckyJobPending()||!deckyState?.running||plugin.root||!!plugin.compatibility?.blockInstall;
     const note=document.createElement('p');note.textContent=compatibilityText(plugin);label.append(note);
     if(plugin.root && !plugin.compatibility?.blockInstall)label.append(' · Needs root; not supported on Frame');
-    button.onclick=()=>deckyChange(installed?'update':'install',plugin);row.append(label,button);list.append(row);}}
+    button.onclick=()=>deckyChange(installed?'update':'install',
+      {...plugin,installedSha256:installed?.sha256});row.append(label,button);list.append(row);}}
 function deckyJobView(title,message,percent,failed=false){
   byId('deckyJobPanel').hidden=false;byId('deckyJobTitle').textContent=title;
   byId('deckyJobStatus').textContent=message;
@@ -249,7 +251,8 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
   const requestId=newDeckyRequestId();
   rememberDeckyJob({job:requestId,action,name:plugin.name});
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
-    sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true,requestId});
+    sha256:action==='remove'?undefined:plugin.sha256,installedSha256:plugin.installedSha256,
+    acknowledged:true,requestId});
     if(!started.job)throw Error('The server did not return a job ID');
     rememberDeckyJob({job:started.job,action,name:plugin.name});
     await followDeckyJob(started.job,action,plugin.name);
