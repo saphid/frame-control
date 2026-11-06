@@ -74,7 +74,7 @@
   },
   {
     "id": 143,
-    "shim": null,
+    "shim": "desktop-apps-ipc-eof",
     "probe": "desktop-apps-private-entries"
   },
   {

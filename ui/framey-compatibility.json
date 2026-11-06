@@ -13750,7 +13750,11 @@
         "mode": "synthetic nonempty running/library replay; backend and network denied",
         "frontendReady": true
       },
-      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md"
+      "runtimeEvidence": "docs/evidence/framey-desktop-download-native-followup-2026-10-30.md",
+      "requiredShims": [
+        "desktop-apps-ipc-eof"
+      ],
+      "missingShimStatus": "partial"
     },
     {
       "id": 144,
