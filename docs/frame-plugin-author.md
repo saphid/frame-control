@@ -162,6 +162,13 @@ the cache read attempted by Steam Status 1.2.3. It does not expose another
 plugin's cache or the Frame Control UI key. A real Steam Status panel reopen
 and a worn-headset settings check are still needed.
 
+Register backend event listeners when a view mounts and remove the same callback
+when it unmounts, using `removeEventListener(eventName, callback)`. Framey checks
+the registration again before delivering each queued callback, so a callback
+removed during the current event batch cannot update a retired view. Late event
+replies after panel close are ignored. Local host tests cover these races with
+synthetic timer events; they do not establish real-device or worn VR behavior.
+
 HLTB for Deck 2.0.12 demonstrates the limit of the panel shim: its official
 bundle can start and produce a settings view with Framey's Steam module lookup
 stub, but its game page and context menu patches have no Steam target in the
