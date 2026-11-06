@@ -1791,10 +1791,11 @@
         "https://github.com/EmuDeck/Emuchievements.git"
       ],
       "status": "partial",
-      "reason": "The exact managed 2.0.5 archive installs a source-matched, safety-patched ARM64 hash helper. Published Decky 3.3.0 discovery and private synthetic direct/ZIP ROM hashing passed on amd64 and ARM64; the native helper separately hashed both fixtures on the real Frame. Update or reinstall for this helper. Real ROM formats, RetroAchievements login, Steam page integration, managed backend execution on Frame and worn VR remain unverified.",
+      "reason": "The exact managed 2.0.5 archive installs a source-matched, safety-patched ARM64 hash helper. Published Decky 3.3.0 discovery and private synthetic direct/ZIP ROM hashing passed on amd64 and ARM64; the native helper separately hashed both fixtures on the real Frame. Update or reinstall for this helper and the plugin-local child IPC EOF repair. Real ROM formats, RetroAchievements login, Steam page integration, managed backend execution on Frame and worn VR remain unverified.",
       "blockInstall": false,
       "requiredShims": [
-        "emuchievements-safe-arm64"
+        "emuchievements-safe-arm64",
+        "emuchievements-ipc-eof"
       ],
       "missingShimStatus": "broken",
       "verification": [

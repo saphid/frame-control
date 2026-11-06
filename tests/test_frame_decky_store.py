@@ -996,13 +996,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
         helper = folder/'bin/hash'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
                          frame_decky_store.EMU_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         source = folder/'main.py'
-        self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.read_bytes().startswith(prefix))
+        self.assertEqual(hashlib.sha256(source.read_bytes()[len(prefix):]).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+            Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         self.assertIn('asyncio.create_subprocess_exec', source.read_text())
         self.assertNotIn('os.popen', source.read_text())
         self.assertEqual(self.apply('remove', plugin_id=28, folder=record['folder']).returncode, 0)

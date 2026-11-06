@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Let the exact managed Emuchievements plugin unload cleanly after its child IPC peer closes.
+
 - Add experimental NxNative games for Steam Frame: private user-added web
   catalogs, URL lists, EmulationStation lists and mounted network folders;
   verified prepared APK/data installation with progress and Steam shortcuts.
