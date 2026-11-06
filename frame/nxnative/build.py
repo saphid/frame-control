@@ -25,6 +25,32 @@ def run(*args, cwd=None, env=None):
     subprocess.run([str(x) for x in args], cwd=cwd, env=env, check=True)
 
 
+def profile_inputs(source, title, extracted, env):
+    """Use the profile's module list and accept only its verified NSO builds."""
+    query = ("import json,runpy,sys; "
+             "g=runpy.run_path(sys.argv[1])['load'](sys.argv[2]); "
+             "print(json.dumps({'modules':g.words('modules'),'builds':g.builds()}))")
+    profile = json.loads(subprocess.check_output([
+        sys.executable, '-c', query, str(source / 'dm/games/game.py'), title,
+    ], env=env, text=True))
+    modules = profile['modules']
+    if (not modules or len(set(modules)) != len(modules) or
+            any(not re.fullmatch(r'main|sdk|subsdk\d+', m) for m in modules)):
+        raise ValueError('invalid module list in game profile')
+    actual = {}
+    for name in modules:
+        path = extracted / 'ExeFS' / name
+        with path.open('rb') as src:
+            header = src.read(0x60)
+        if len(header) != 0x60 or header[:4] != b'NSO0':
+            raise ValueError('invalid NSO module: ' + str(path))
+        actual[name] = header[0x40:0x50].hex()
+    if not any(all(build.get(name, '').lower() == actual[name] for name in modules)
+               for build in profile['builds'].values()):
+        raise ValueError('No verified profile build matches these modules: ' + json.dumps(actual))
+    return modules
+
+
 def build(a):
     if a.jobs < 1:
         raise ValueError('jobs must be positive')
@@ -44,8 +70,12 @@ def build(a):
         run('git', 'apply', '--check', patch, cwd=source)
         run('git', 'apply', patch, cwd=source)
     env = dict(os.environ, DM_GAME=a.title.upper(), DM_PATCH_TP='android', DM_REWRITE_J=str(a.jobs))
-    out.mkdir(parents=True, exist_ok=True)
+    profiles = HERE / 'profiles'
+    if profiles.is_dir():
+        env['DM_GAMES_DIR'] = os.pathsep.join(filter(None, [str(profiles), env.get('DM_GAMES_DIR')]))
     extracted = a.extracted.resolve()
+    modules = profile_inputs(source, a.title.upper(), extracted, env)
+    out.mkdir(parents=True, exist_ok=True)
     identity = {'extracted': str(extracted)}
     image = extracted / 'RomFS.img'
     if not (extracted / 'RomFS').is_dir() and image.is_file():
@@ -74,7 +104,7 @@ def build(a):
     run(sys.executable, source / 'dm/tools/make_ext_font.py', font / 'nintendo_ext.ttf', env=env)
     patched = out / 'patched_android'
     patched.mkdir(exist_ok=True)
-    for name in ('main', 'subsdk0', 'sdk'):
+    for name in modules:
         run(sys.executable, source / 'dm/tools/patch_nso.py', extracted / 'ExeFS' / name,
             patched, name, cwd=source, env=env)
     # Record this machine's tool fingerprints through the fork's supported path.

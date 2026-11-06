@@ -4,6 +4,13 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import signal
+import socket
+import subprocess
+import sys
+import time
+
+from deck_settings_private import identity, descendants
 
 VIDEOS = ('deck_startup.webm', 'steam_os_suspend.webm',
           'steam_os_suspend_from_throbber.webm')
@@ -74,3 +81,112 @@ def exercise(fixture, legacy, rpc, name, until_ready):
             v['id']:snapshot(Path(v['path'])) for v in fixture['selections']},
         privateFixtureOnly=True, actualSteamPlaybackVerified=False, externalRepositoryVerified=False,
         realFrameContacted=False, browserVerified=False, physicalControllerVerified=False)
+
+
+def stop(backend, log, *, disconnect, after_eof):
+    children = descendants(backend.pid)
+    assert children, 'the private loader must own its plugin child'
+    before = Path(log.name).read_text()
+    peers = []
+    if disconnect:
+        paths = list(Path('/tmp').glob('plugin_socket_*'))
+        assert len(paths) == 1 and paths[0].stat().st_uid == os.getuid()
+        with socket.socket(socket.AF_UNIX) as peer:
+            peer.settimeout(.2)
+            peer.connect(str(paths[0]))
+            peer.shutdown(socket.SHUT_WR)
+        peers.append(str(paths[0]))
+        time.sleep(.05)
+        if after_eof:
+            after_eof()
+    started = time.monotonic()
+    backend.send_signal(signal.SIGTERM)
+    backend.wait(timeout=8)
+    adopted = []
+    deadline = time.monotonic()+2
+    while True:
+        for pid, old in children.items():
+            current = identity(pid)
+            if current and current['start'] == old['start']:
+                try:
+                    child, status = os.waitpid(pid, os.WNOHANG)
+                    if child:
+                        adopted.append(dict(pid=child, returncode=os.waitstatus_to_exitcode(status)))
+                except ChildProcessError:
+                    pass
+        remaining = {pid: state for pid, old in children.items()
+                     if (state := identity(pid)) and state['start'] == old['start']}
+        if not remaining or time.monotonic() >= deadline:
+            break
+        time.sleep(.01)
+    console = Path(log.name).read_text()[len(before):]
+    forced = console.count('still alive 5 seconds after stop request! Sending SIGKILL!')
+    errors = [marker for marker in ('Error during shutdown:', 'asyncio.exceptions.CancelledError',
+              'Task was destroyed but it is pending', 'Bad file descriptor') if marker in console]
+    seconds = time.monotonic()-started
+    clean = (backend.returncode == 0 and not remaining and not forced and not errors
+             and all(child['returncode'] == 0 for child in adopted)
+             and console.count('[main][INFO]: Shutdown finished.') == 1
+             and 'Plugin Animation Changer (v1.3.2) has been stopped in ' in console
+             and console.count('Unloaded Animation Changer (v1.3.2)') == 1
+             and console.count('Unloaded\n') == 1 and seconds < 5)
+    return dict(parentOnlySignal=True, loaderReturncode=backend.returncode,
+        descendantsBefore=children, exactDescendantsRemaining=remaining, adoptedChildExits=adopted,
+        fixtureClosedUnixPeers=peers, seconds=round(seconds, 3), forcedPluginKills=forced,
+        errors=errors, console=console, consoleSha256=hashlib.sha256(console.encode()).hexdigest(),
+        originalUnloadHookCompleted='Unloaded\n' in console, cleanShutdownVerified=clean)
+
+
+def lifecycle(fixture, backend, loader, env, log, processes, legacy, rpc, until_ready,
+              report, *, regression):
+    originals = fixture['originals']
+    selections = {v['path']: snapshot(Path(v['path'])) for v in fixture['selections']}
+    settings = Path.home()/'.local/share/frame-control/decky/settings/SDH-AnimationChanger/config.json'
+    settings_before = settings.read_bytes()
+    sibling = subprocess.Popen([sys.executable, '-c', 'import time; time.sleep(60)'],
+                               start_new_session=True)
+    processes.append(sibling)
+    evidence = report['animationLifecycle'] = dict(stops=[], rpcAfterEof=False,
+        restartedDiscovery=False, unrelatedSiblingPreserved=False, privateBytesPreserved=False,
+        expectedRegression=regression, realFrameContacted=False, actualSteamPlaybackVerified=False,
+        physicalControllerVerified=False)
+
+    def preserved():
+        assert {v: snapshot(fixture['movies']/v) for v in VIDEOS} == originals
+        assert {p: snapshot(Path(p)) for p in selections} == selections
+        assert settings.read_bytes() == settings_before
+
+    def after_eof():
+        state = legacy('getState')
+        assert all(state['settings'][kind] == '' for kind in KINDS)
+        preserved()
+        evidence['rpcAfterEof'] = True
+
+    try:
+        for cycle in range(1 if regression else 2):
+            if cycle:
+                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
+                                           start_new_session=True)
+                processes.append(backend)
+                found = until_ready(lambda: rpc('loader/get_plugins'), 'Animation Changer restart discovery')
+                assert found == report['discovered'], found
+                evidence['restartedDiscovery'] = found
+                until_ready(lambda: legacy('getState').get('settings'), 'Animation Changer restart settings')
+                preserved()
+            observation = stop(backend, log, disconnect=cycle == 0,
+                               after_eof=after_eof if not regression and cycle == 0 else None)
+            evidence['stops'].append(observation)
+            assert sibling.poll() is None
+            preserved()
+            if regression:
+                assert observation['loaderReturncode'] == 0 and observation['forcedPluginKills'] == 1, observation
+                assert not observation['cleanShutdownVerified'] and 5 <= observation['seconds'] < 8, observation
+                assert not observation['exactDescendantsRemaining'], observation
+            else:
+                assert observation['cleanShutdownVerified'], observation
+        evidence.update(unrelatedSiblingPreserved=True, privateBytesPreserved=True,
+                        settingsSha256=hashlib.sha256(settings_before).hexdigest())
+    finally:
+        if sibling.poll() is None:
+            sibling.terminate()
+        sibling.wait(timeout=3)

@@ -96,7 +96,10 @@ record the resulting TabMaster documentation support and remaining blockers.
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
-and backend calls for the plugin that owns the panel. The headset's scroll
+and backend calls for the plugin that owns the panel. Text fields support
+controlled values, uncontrolled defaults, and change, blur, focus, click and key
+callbacks. These are ordinary input events; they do not open or verify SteamVR's
+keyboard. The headset's scroll
 buttons send only a direction to the isolated iframe. They target the last
 scrollable region reached by a trusted pointer move and fall back to the iframe
 document when that region disappears. A result message reports whether content
