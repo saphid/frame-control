@@ -206,11 +206,13 @@
   {
     "id": 12,
     "shim": "music-control-system-dbus-env",
+    "additionalShims": ["music-control-ipc-eof"],
     "probe": "mpris"
   },
   {
     "id": 111,
     "shim": "music-control-system-dbus-env",
+    "additionalShims": ["music-control-ipc-eof"],
     "probe": "mpris"
   },
   {

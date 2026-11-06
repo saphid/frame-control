@@ -75,6 +75,7 @@ def main():
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
     parser.add_argument('--reproduce-volume-mixer-user-regression', action='store_true')
     parser.add_argument('--reproduce-bound-method-regression', action='store_true')
+    parser.add_argument('--reproduce-music-control-unload-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
@@ -127,6 +128,19 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_music_control_unload_regression:
+        assert record['id'] in (12, 111)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == {
+            12: '9205b7e359b936b23d3f918c0bf25278f80f16f9a1cfee5dec4b7386f03f7f09',
+            111: '87ee6de2f8db3ff449f62c2636c9eaca458e8116c9aa022589aa208929411dec',
+        }[record['id']]
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_desktop_apps_unload_regression:
         assert record['id'] == 143
         with zipfile.ZipFile(io.BytesIO(data)) as original:
@@ -2143,7 +2157,21 @@ def main():
                 assert state['PlaybackStatus'] == 'Paused' and state['Volume'] == .25, state
                 assert state['next'] == state['previous'] == 1 and state['Position'] == 45000000, state
                 report['independentState'] = state
-                report['result'] = 'discovery, metadata, transport, seek and volume passed'
+                import music_control_private
+                music_control_private.probe(backend, loader, env, log, processes, record, legacy, rpc,
+                    until_ready, report, regression=args.reproduce_music_control_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                helper = plugin/'py_modules/framey_decky_ipc.py'
+                report['ipcAdapterSha256'] = (hashlib.sha256(helper.read_bytes()).hexdigest()
+                    if helper.exists() else None)
+                if args.reproduce_music_control_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('prior MusicControl child IPC forced-kill reproduced; expected negative only'
+                    if args.reproduce_music_control_unload_regression else
+                    'silent MPRIS discovery, transport, seek, volume, RPC after EOF, restart and two clean '
+                    'parent-only stops passed; actual Frame playback, browser and VR unverified')
             elif case['probe'] == 'system-monitor':
                 def metric(method):
                     response = legacy(method)
