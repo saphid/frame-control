@@ -47,6 +47,11 @@ reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
 
+Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
+the latter on the native input. This includes Wine Cellar 0.2.1's published
+installed-game search, tested with synthetic search text in the local host.
+Accessible-name preservation does not prove VR keyboard or controller usability.
+
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
