@@ -479,7 +479,7 @@
         "https://github.com/mirobouma/MusicControl.git"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. The current managed copy also repairs child IPC EOF during shutdown; update or reinstall existing copies. Local AMD64 verifies RPC after explicit peer EOF, restart and two clean parent-only stops. Fresh hosted architecture qualification is pending; no new Frame or VR proof is claimed.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -524,7 +524,11 @@
         "result": "installed-removed"
       },
       "compatShim": "music-control-system-dbus-env",
-      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
+      "evidence": "docs/evidence/framey-music-control-ipc-2026-11-06.md",
+      "requiredShims": [
+        "music-control-system-dbus-env",
+        "music-control-ipc-eof"
+      ]
     },
     {
       "id": 13,
@@ -944,7 +948,7 @@
         "logs": [
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_bluetooth_status \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_bluetooth_status → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -952,7 +956,7 @@
           },
           {
             "kind": "error",
-            "message": "[Bluetooth] !! get_paired_devices_with_info \u2192 Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
+            "message": "[Bluetooth] !! get_paired_devices_with_info → Error: All retries failed. Last error: Error: Read-only compatibility audit: backend method blocked"
           },
           {
             "kind": "error",
@@ -9825,7 +9829,7 @@
         "https://github.com/martinpl/music-control"
       ],
       "status": "partial",
-      "reason": "Managed reinstall preserves Decky\u2019s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. Reinstall existing copies to apply.",
+      "reason": "Managed reinstall preserves Decky’s legacy calling convention and repairs the Frame OS shell library-path failure. Chromium transport/seek/volume against a silent MPRIS fixture and real ARM64 empty-player discovery pass; actual Frame media playback, album art and worn VR remain unverified. The current managed copy also repairs child IPC EOF during shutdown; update or reinstall existing copies. Local AMD64 verifies RPC after explicit peer EOF, restart and two clean parent-only stops. Fresh hosted architecture qualification is pending; no new Frame or VR proof is claimed.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -9871,7 +9875,11 @@
         "result": "installed-removed"
       },
       "compatShim": "music-control-system-dbus-env",
-      "evidence": "docs/evidence/framey-mpris-runtime-2026-10-26.md"
+      "evidence": "docs/evidence/framey-music-control-ipc-2026-11-06.md",
+      "requiredShims": [
+        "music-control-system-dbus-env",
+        "music-control-ipc-eof"
+      ]
     },
     {
       "id": 112,
