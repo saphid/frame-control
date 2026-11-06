@@ -480,7 +480,7 @@
       onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
       onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', onChange}) => R.createElement(Field, {label, description},
+    valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
@@ -491,7 +491,11 @@
           const raw=e.target.value, next=Number(raw);
           if(!disabled && raw.trim()!=='' && e.target.validity?.valid!==false &&
               Number.isFinite(next) && next>=Number(min) && next<=Number(max)) onChange?.(next);
-        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix));
+        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix),
+    Number.isFinite(resetValue) && resetValue>=Number(min) && resetValue<=Number(max) &&
+      R.createElement('button', {type:'button', disabled:!!disabled,
+        'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
+        onClick:()=>{if(!disabled)onChange?.(resetValue);}}, 'Reset'));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
