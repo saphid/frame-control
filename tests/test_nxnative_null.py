@@ -84,8 +84,8 @@ static treg_t g_treg[4]; static int g_ntreg=4,g_plog;
 static pthread_mutex_t g_rmu=PTHREAD_MUTEX_INITIALIZER;
 static VkImageView g_dummy_view=7,g_dummy_cube_view=10; static VkSampler g_dummy_samp=8;
 static uint64_t g_tex_miss[4]; static vtex image={.serial=22,.samples=1};
-static int create_fail,view_fail,gets,views,last_wanted;
-static vtex *tex_get(const tex_t *t,int rt) {(void)t;(void)rt;gets++;return create_fail?NULL:&image;}
+static int create_fail,view_fail,texture_get_calls,views,last_wanted;
+static vtex *tex_get(const tex_t *t,int rt) {(void)t;(void)rt;texture_get_calls++;return create_fail?NULL:&image;}
 static vtex *fb_sample_image(vtex *v,int stage) {(void)stage;return v;}
 static VkImageView tex_view(vtex *v,const tex_t *t,const view_t *vw,int has,int wanted,int rt) {
     (void)v;(void)t;(void)vw;(void)has;(void)rt;views++;last_wanted=wanted;return view_fail?VK_NULL_HANDLE:9;
@@ -122,7 +122,7 @@ int main(void) {
         assert(frame_vk_image_null_black(out)==eligible);
         VkSampler sampler=0;int ok=99;vtex *v=&image;
         VkImageView selected=tex_slot(1,0,&sampler,&ok,&v,out[0].view,out[0].ms,frame_vk_image_null_black(out));
-        assert(ok==eligible&&!v&&!gets&&!views);
+        assert(ok==eligible&&!v&&!texture_get_calls&&!views);
         assert(selected==(eligible?(dim==1?g_dummy_view:g_dummy_cube_view):VK_NULL_HANDLE));
         assert(sampler==(eligible?g_dummy_samp:VK_NULL_HANDLE));
     }
@@ -130,11 +130,11 @@ int main(void) {
     module(6,1,0,0,0,0,1);assert(!frame_vk_image_reflect(words,n,out,1,&count)&&!count);
     /* Literal full zero alone is eligible; sampler bits cannot disguise invalid handles. */
     VkSampler sampler=0;int ok;vtex *v=&image;VkImageView selected;
-    selected=tex_slot(1,UINT64_C(1)<<20,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&!v&&!gets);
-    selected=tex_slot(1,UINT64_C(1)<<63,&sampler,&ok,&v,FVI_CUBE,0,1);assert(!selected&&!ok&&!v&&!gets);
+    selected=tex_slot(1,UINT64_C(1)<<20,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&!v&&!texture_get_calls);
+    selected=tex_slot(1,UINT64_C(1)<<63,&sampler,&ok,&v,FVI_CUBE,0,1);assert(!selected&&!ok&&!v&&!texture_get_calls);
     uint64_t before=g_tex_miss[1];
-    selected=tex_slot(1,1,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&g_tex_miss[1]==before+1&&!gets);
-    selected=tex_slot(1,4,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&!gets);
+    selected=tex_slot(1,1,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&g_tex_miss[1]==before+1&&!texture_get_calls);
+    selected=tex_slot(1,4,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&!texture_get_calls);
     g_treg[1].ok=1;create_fail=1;
     selected=tex_slot(1,1,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&g_tex_miss[2]==1);create_fail=0;
     image.samples=4;selected=tex_slot(1,1,&sampler,&ok,&v,FVI_2D,0,1);assert(!selected&&!ok&&!views);image.samples=1;
