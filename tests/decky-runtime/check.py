@@ -93,6 +93,7 @@ def main():
     parser.add_argument('--reproduce-battery-tracker-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyspy-unload-regression', action='store_true')
     parser.add_argument('--reproduce-theme-music-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-emuchievements-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
@@ -170,6 +171,16 @@ def main():
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             previous = original.read(record['folder']+'/main.py')
         assert hashlib.sha256(previous).hexdigest() == '99ace543c6b3b639ab66fa523aa455f1ab4644f536bad7e1dad644f467db52f8'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_emuchievements_unload_regression:
+        assert record['id'] == 28
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == frame_decky_store.EMU_MANAGED_MAIN
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_battery_tracker_unload_regression:
@@ -1492,9 +1503,20 @@ def main():
                 assert not (home/'escape.rom').exists()
                 assert not Path('/tmp/escape.rom').exists()
                 assert (plugin/'bin/hash').read_bytes()[:4] == b'\x7fELF'
-                report['result'] = ('published Decky discovery, direct and archived synthetic ROM hashes, '
-                                    'literal path and hostile archive rejection passed; real ROMs, login, '
-                                    'Steam UI, Frame and VR unverified')
+                import emuchievements_private
+                emuchievements_private.probe(backend, loader, env, log, processes, legacy,
+                    rpc, until_ready, report, fixture, expected,
+                    regression=args.reproduce_emuchievements_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_emuchievements_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_emuchievements_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed Emuchievements child IPC forced-kill reproduced'
+                    if args.reproduce_emuchievements_unload_regression else
+                    'published Decky discovery, direct/archived synthetic ROM hashes, literal-path/hostile-archive refusals, hash RPC after peer EOF and two clean parent-only stops/restart passed; real ROMs, login, Steam UI, Frame and VR unverified')
             elif case['probe'] == 'battery-tracker':
                 empty_or_first = legacy('get_recent_data', lookback=2)
                 assert isinstance(empty_or_first['x'], list) and isinstance(empty_or_first['cap'], list)
