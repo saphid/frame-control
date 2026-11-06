@@ -175,15 +175,26 @@ def main():
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     receipt = json.loads((plugin/'.frame-control-store.json').read_text())
-    if not (args.reproduce_timer_regression or args.reproduce_tabmaster_restore_regression):
+    if not args.reproduce_timer_regression:
         expected_shims = ([case['shim']] if case['shim'] else []) + case.get('additionalShims', [])
         assert receipt.get('compatShims', []) == expected_shims, receipt
     else:
-        assert record['id'] == (61 if args.reproduce_tabmaster_restore_regression else 96)
+        assert record['id'] == 96
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
     if args.reproduce_tabmaster_restore_regression:
-        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+        # Reproduce only the restore defect. Removing the independent IPC
+        # repair can hang an ordinary RPC's peer EOF and makes the required
+        # clean stops depend on socket timing rather than restore behavior.
+        assert record['id'] == 61 and not args.reproduce_tabmaster_unload_regression
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            published = original.read(record['folder']+'/main.py')
+        assert hashlib.sha256(published).hexdigest() == 'cd34adcd3ea0cef90ca96d8ceff15cbd86a5f3b6116da35eeb892e2fc4870347'
+        tabmaster_restore_prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                    b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        assert (plugin/'main.py').read_bytes().startswith(tabmaster_restore_prefix)
+        assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+        (plugin/'main.py').write_bytes(tabmaster_restore_prefix+published)
     if args.reproduce_tabmaster_unload_regression:
         assert record['id'] == 61 and not args.reproduce_tabmaster_restore_regression
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
@@ -1095,7 +1106,9 @@ def main():
                 with zipfile.ZipFile(io.BytesIO(data)) as original:
                     original_backend = original.read(record['folder']+'/main.py')
                 installed_backend = (plugin/'main.py').read_bytes()
-                assert (installed_backend == original_backend) is args.reproduce_tabmaster_restore_regression
+                assert installed_backend != original_backend
+                if args.reproduce_tabmaster_restore_regression:
+                    assert installed_backend == tabmaster_restore_prefix+original_backend
                 # Exercise the actual published backup/restore RPCs against
                 # owned private files, then require restored bytes on restart.
                 backup = home/'private-tabmaster-backup.json'
@@ -1134,7 +1147,7 @@ def main():
                 def stop_tabmaster_loader():
                     import tabmaster_private
                     observation = tabmaster_private.stop(backend, log,
-                        disconnect=not stops and not args.reproduce_tabmaster_restore_regression)
+                        disconnect=not stops)
                     stops.append(observation)
                     report['tabmasterLifecycle'] = dict(stops=stops,
                         unrelatedSiblingPreserved=unrelated.poll() is None,
@@ -1192,8 +1205,10 @@ def main():
                     loaderConsoleSha256=hashlib.sha256(loader_console.encode()).hexdigest(),
                     jsonDecodeDiagnosticCount=loader_console.count('Expecting value: line 1 column 1 (char 0)'),
                     loaderConsoleErrorFree=False,
-                    publishedBackendUnmodified=args.reproduce_tabmaster_restore_regression,
-                    ipcAdapterSha256=(None if args.reproduce_tabmaster_restore_regression or args.reproduce_tabmaster_unload_regression
+                    publishedBackendUnmodified=False,
+                    originalRestoreBodyPreserved=args.reproduce_tabmaster_restore_regression,
+                    restoreRegressionIsolatedWithIpcRepair=args.reproduce_tabmaster_restore_regression,
+                    ipcAdapterSha256=(None if args.reproduce_tabmaster_unload_regression
                         else hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest()),
                     backendSha256=hashlib.sha256(installed_backend).hexdigest(),
                     originalBackendSha256=hashlib.sha256(original_backend).hexdigest(),
@@ -1212,12 +1227,16 @@ def main():
                     physicalControllerVerified=False)
                 report['result'] = ('published Decky API1 discovery, private per-user settings, '
                     'shared-tab filtering, false values and disk/loader-restart persistence passed; '+
-                    ('original valid backup restore failure reproduced; ' if args.reproduce_tabmaster_restore_regression
+                    ('original valid backup restore failure reproduced with independent child IPC repair retained; ' if args.reproduce_tabmaster_restore_regression
                      else 'private backup/restore and malformed/non-object refusals passed; ')+
                     ('previous managed child IPC forced-kill reproduced, exact managed adapter restored before clean restart; expected negative, not a compatibility pass; '
                      if args.reproduce_tabmaster_unload_regression else
                      'two clean parent-only stops, original unload hooks and restart passed; ')+
                     'Steam library editing, browser, Frame and VR unverified')
+                if args.reproduce_tabmaster_restore_regression:
+                    report['expectedRegression'] = dict(success=False, phase='backup restore',
+                        originalRestoreBodyPreserved=True, independentIpcRepairRetained=True,
+                        qualifiedCompatibilityPass=False)
                 if args.reproduce_tabmaster_unload_regression:
                     report['expectedRegression'] = dict(success=False, phase='plugin unload',
                         previousManagedSourceRestored=True, forcedPluginKills=1,
