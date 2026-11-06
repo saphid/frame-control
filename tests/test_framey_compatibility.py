@@ -14,6 +14,17 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_music_controls_require_current_ipc_repair_receipt(self):
+        records = json.loads(compatibility.DATA.read_text())['plugins']
+        for record in (r for r in records if r['id'] in (12, 111)):
+            old = dict(storeId=record['id'], version=record['version'], sha256=record['sha256'],
+                       compatShims=['music-control-system-dbus-env'])
+            fixed = dict(old, compatShims=['music-control-system-dbus-env', 'music-control-ipc-eof'])
+            result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+            self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+            self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+            self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_desktop_apps_old_receipt_requires_current_child_ipc_fix(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 143)
         old = dict(storeId=143, version=plugin['version'], sha256=plugin['sha256'])
