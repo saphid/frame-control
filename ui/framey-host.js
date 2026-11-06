@@ -281,7 +281,12 @@
         for (const event of data.events) {
           if (!Array.isArray(event.args)) continue;
           for (const listener of eventListeners.get(event.event) || [])
-            Promise.resolve().then(() => listener(...event.args)).catch(failure =>
+            // A previous queued callback can unmount a view and remove this
+            // listener. Recheck at delivery, including late replies on close.
+            Promise.resolve().then(() => {
+              if (!eventClosed && eventListeners.get(event.event)?.has(listener))
+                return listener(...event.args);
+            }).catch(failure =>
               console.warn('Decky event listener failed', failure));
         }
       }).finally(() => {eventRequest = null;});
@@ -394,7 +399,7 @@
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
-  const DropdownItem = ({label, description, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
+  const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
     const choices=[];
     const option = entry => {
       const index=choices.push(entry)-1;
@@ -404,12 +409,61 @@
       Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
         entry.options.map(option)) : option(entry));
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
-    return R.createElement(Field, {label, description}, R.createElement('select', {
+    return R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
+      'aria-label':typeof menuLabel==='string' ? menuLabel : typeof label==='string' ? label : undefined,
       onChange:e=>{const entry=choices[Number(e.target.value)];if(!disabled && entry)onChange?.(entry);}},
       selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
-      entries));
+      entries);
   };
+  // Some plugins populate rgOptions only after their onMenuWillOpen read.
+  // A native select cannot wait for that async gate, so prepare choices first.
+  const PreparedDropdown = props => {
+    const current = R.useRef(props); current.current = props;
+    const gate = R.useRef({generation:0, phase:'idle', mounted:true});
+    const [phase, setPhase] = R.useState('idle');
+    const [error, setError] = R.useState('');
+    R.useEffect(() => {
+      gate.current.mounted = true;
+      return () => {gate.current.mounted = false; gate.current.generation++;};
+    }, []);
+    const cancel = () => {
+      if (!gate.current.mounted || current.current.disabled) return;
+      gate.current.generation++;
+      gate.current.phase = 'idle'; setPhase('idle'); setError('');
+    };
+    const load = () => {
+      if (!gate.current.mounted || current.current.disabled || gate.current.phase === 'loading') return;
+      const generation = ++gate.current.generation;
+      gate.current.phase = 'loading'; setPhase('loading'); setError('');
+      const valid = () => gate.current.mounted && gate.current.generation === generation;
+      const showMenu = () => {
+        if (!valid() || gate.current.phase!=='loading' || current.current.disabled) return;
+        gate.current.phase = 'ready'; setPhase('ready');
+      };
+      const failed = failure => {
+        if (!valid()) return;
+        gate.current.phase = 'idle'; setPhase('idle');
+        setError(String(failure?.message || failure));
+      };
+      try {
+        const result = current.current.onMenuWillOpen(showMenu);
+        if (result && typeof result.then === 'function') Promise.resolve(result).catch(failed);
+      } catch (failure) {failed(failure);}
+    };
+    return R.createElement('div', null,
+      R.createElement('button', {type:'button', disabled:!!props.disabled || phase==='loading', onClick:load},
+        phase==='ready' ? 'Reload options' : 'Load options'),
+      phase==='loading' && R.createElement('p', {role:'status'}, 'Waiting for plugin options…'),
+      phase==='loading' && R.createElement('button', {type:'button', disabled:!!props.disabled, onClick:cancel}, 'Cancel loading'),
+      error && R.createElement('p', {role:'alert'}, error),
+      phase==='ready' && DropdownInput({...props, onChange:entry=>{
+        if (!current.current.disabled && gate.current.phase==='ready' && gate.current.mounted)
+          current.current.onChange?.(entry);
+      }}));
+  };
+  const DropdownItem = props => R.createElement(Field, {label:props.label, description:props.description},
+    typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
   const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
@@ -417,12 +471,16 @@
     R.createElement('label', null,
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
-    mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
+  const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+    mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, placeholder, disabled:!!disabled, onChange:e=>{if(!disabled)onChange?.(e);}}));
+      value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
+      onChange:e=>{if(!disabled)onChange?.(e);}, onBlur:e=>{if(!disabled)onBlur?.(e);},
+      onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+      onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', onChange}) => R.createElement(Field, {label, description},
+    valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
@@ -433,7 +491,11 @@
           const raw=e.target.value, next=Number(raw);
           if(!disabled && raw.trim()!=='' && e.target.validity?.valid!==false &&
               Number.isFinite(next) && next>=Number(min) && next<=Number(max)) onChange?.(next);
-        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix));
+        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix),
+    Number.isFinite(resetValue) && resetValue>=Number(min) && resetValue<=Number(max) &&
+      R.createElement('button', {type:'button', disabled:!!disabled,
+        'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
+        onClick:()=>{if(!disabled)onChange?.(resetValue);}}, 'Reset'));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');

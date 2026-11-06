@@ -25,6 +25,11 @@ def backend(settings_dir):
 
 
 class SamplePlugin(unittest.TestCase):
+    def test_failed_read_cannot_overwrite_a_setting_with_the_display_default(self):
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_read_guard.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_frontend_bundle_loads_in_framey_host(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample.mjs')],
                                 capture_output=True, text=True, timeout=10)
