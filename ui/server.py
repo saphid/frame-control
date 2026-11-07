@@ -275,7 +275,8 @@ UNREACHABLE = [
      "The Frame's SSH identity has changed: after SteamOS was reinstalled or reset, or a different device "
      "answering at its address. Check the new key on the Devices tab before trusting it."),
     (re.compile(r"kex_exchange_identification|Connection closed by .* port \d+|Connection reset by .* port \d+|"
-                r"Connection to \S+ closed by remote host|close - IO is still pending on closed socket"),
+                r"Connection to \S+ closed by remote host|client_loop: send disconnect:|"
+                r"close - IO is still pending on closed socket"),
      "The connection to the Frame dropped. Try again."),
 ]
 
@@ -513,7 +514,41 @@ def openssh_failure(tool, result, text=True):
     return failure
 
 
-def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
+_WINDOWS_SSH_DROPPED = re.compile(r"^(?:client_loop: send disconnect:|"
+                                  r"close - IO is still pending on closed socket\.)", re.M)
+
+
+def _retryable_windows_ssh(result):
+    """Whether Windows OpenSSH lost the connection, rather than the remote command failing."""
+    if not frame_host.WINDOWS or result.returncode == 0:
+        return False
+    text = result.stderr or result.stdout or ""
+    if isinstance(text, bytes):
+        text = text.decode(errors="replace")
+    return bool(_WINDOWS_SSH_DROPPED.search(strip_ansi(text)))
+
+
+def _run_retryable_ssh(command, **kwargs):
+    """Retry one Windows connection drop. Only use for operations safe to restart.
+    command() builds the argv from the current route, so the retry follows a new address
+    the connector picked; it is never retried on a different headset."""
+    route_gen = LINK.gen if LINK else None
+    alias = FRAME
+    result = frame_host.run_ssh(command(), **kwargs)
+    if not _retryable_windows_ssh(result):
+        return result
+    if LINK:
+        error = result.stderr or result.stdout or "The connection dropped"
+        if isinstance(error, bytes):
+            error = error.decode(errors="replace")
+        LINK.lost(strip_ansi(error), route_gen)
+        ensure_master()
+    if FRAME != alias:
+        return result  # switched headsets meanwhile: the first failure stands
+    return frame_host.run_ssh(command(), **kwargs)
+
+
+def ssh(remote, *, stdin=None, timeout=30, text=True, route=None, retry=False):
     # Long-lived helper delivery/cleanup owns an immutable command prefix. It
     # must not reconnect through the currently selected headset after a switch.
     route_gen = LINK.gen if LINK and route is None else None
@@ -524,14 +559,17 @@ def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
         # Never let ssh inherit our stdin: under the app it's the pipe held open for
         # --exit-on-eof, and Windows' ssh.exe waits on it forever.
         feed = {"input": stdin} if stdin is not None else {"stdin": subprocess.DEVNULL}
-        r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], capture_output=True, **feed,
-                               text=text, errors="replace" if text else None, timeout=timeout)
+        run = dict(capture_output=True, **feed, text=text, errors="replace" if text else None, timeout=timeout)
+        if retry and route is None:
+            r = _run_retryable_ssh(lambda: [*SSH, FRAME, remote], **run)
+        else:
+            r = frame_host.run_ssh([*(route if route is not None else [*SSH, FRAME]), remote], **run)
     except subprocess.TimeoutExpired:
         raise frame_host.link_failure(Failure(f"Timed out talking to {alias}"))
     if r.returncode != 0:
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
-            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route)
+            return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route, retry=retry)
         stderr = (r.stderr if text else (r.stderr or b"").decode(errors="replace")) or ""
         stdout = (r.stdout if text else (r.stdout or b"").decode(errors="replace")) or ""
         if r.returncode == 255 and LINK and route is None and (
@@ -738,10 +776,12 @@ def comfort(body):
     # send the sources only when that version isn't there yet.
     files = {name: (HERE / name).read_text() for name in COMFORT_FILES}
     version = hashlib.sha256(json.dumps(files, sort_keys=True).encode()).hexdigest()[:16]
-    out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % ({}, version, COMFORT_FILES, json.dumps(body)), timeout=65))
+    safe_retry = body.get("action") == "status"
+    out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % ({}, version, COMFORT_FILES, json.dumps(body)),
+                         timeout=65, retry=safe_retry))
     if out == COMFORT_MISSING:
         out = json.loads(ssh("python3 -", stdin=COMFORT_RUN % (files, version, COMFORT_FILES, json.dumps(body)),
-                             timeout=65))
+                             timeout=65, retry=safe_retry))
     if out.get("error") and "active" not in out:
         raise Failure(out["error"], 409)
     return out
@@ -876,8 +916,8 @@ def save_shots(body):
             incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=SHOTS_DIR))
             try:
                 try:
-                    r = frame_host.run_ssh(["scp", "-p", *SSH[1:],
-                                            *(f"{FRAME}:{remote}" for remote, _ in group), str(incoming)],
+                    r = _run_retryable_ssh(lambda: ["scp", "-p", *SSH[1:],
+                                                    *(f"{FRAME}:{remote}" for remote, _ in group), str(incoming)],
                                            capture_output=True, stdin=subprocess.DEVNULL, text=True, timeout=300)
                 except subprocess.TimeoutExpired:
                     raise Failure("Copying screenshots timed out")
@@ -3222,7 +3262,7 @@ def panels_action(body):
         remote = "python3 - --focus " + shlex.quote(key)
     else:
         raise Failure("Unknown panel action", 400)
-    result = json.loads(ssh(remote, stdin=script, timeout=45))
+    result = json.loads(ssh(remote, stdin=script, timeout=45, retry=action == "list"))
     if "error" in result:
         raise Failure(result["error"], 502)
     return result
@@ -3750,15 +3790,16 @@ def push_file(path, dest="Downloads/"):
     try:
         # Not on Windows: a Windows rsync (cwRsync, MSYS2) wouldn't take our POSIX -e quoting.
         if not frame_host.WINDOWS and shutil.which("rsync") and ssh("command -v rsync >/dev/null && echo yes || true").strip() == "yes":
-            cmd = ["rsync", "-a", "-e", shlex.join(SSH), str(path), f"{FRAME}:{shlex.quote(dest)}"]
+            tool, cmd = "rsync", lambda: ["rsync", "-a", "-e", shlex.join(SSH), str(path), f"{FRAME}:{shlex.quote(dest)}"]
         else:
             # Modern scp uses SFTP, so the remote path isn't parsed by a shell.
-            cmd = ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
-        r = frame_host.run_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True, errors="replace", timeout=timeout)
+            tool, cmd = "scp", lambda: ["scp", *SSH[1:], "-r", str(path), f"{FRAME}:{dest}"]
+        r = _run_retryable_ssh(cmd, capture_output=True, stdin=subprocess.DEVNULL, text=True,
+                               errors="replace", timeout=timeout)
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
-        raise openssh_failure(Path(cmd[0]).stem, r)
+        raise openssh_failure(tool, r)
     return f"Sent {name} to ~/{dest}"
 
 
