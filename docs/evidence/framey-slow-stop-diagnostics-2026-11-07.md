@@ -64,3 +64,22 @@ slow-stop regression tests without skips. Its synthetic checkout
 PR head (`b258c251c4cae5d9a7931695c08051b9f90d292d`). The three slow snapshots
 preceding a forced failure were verified in controlled tests; a real slow
 stop was not observed in these package runs. No real Frame was contacted.
+
+## Controlled local parent EOF probe
+
+A separate local Linux probe executed the unmodified `UnixSocket` class and
+`PluginWrapper._response_listener` method from Decky 3.3.0 commit
+`67196adfa9b299f20dfb0cc932e88a169417b7d5`. Their source-file SHA-256 values
+were `cbc62b1f142df0678de0996c00214c0e0fd9cce35cc032daaa40717e49710138`
+and `a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214`,
+respectively. An owned Unix socket peer closed immediately after connecting.
+The reader returned an empty string at EOF; the parent listener caught the
+JSON error and retried without yielding. A scheduled heartbeat never ran,
+and the three-second outer deadline killed and reaped only the owned probe.
+
+In the connected-peer control, the heartbeat ran, listener cancellation
+propagated and socket cleanup completed. The probe used a private temporary
+socket directory and did not modify Decky, contact the Frame, or run an ARM64
+VM. It establishes a parent event-loop starvation mechanism under controlled
+EOF. It does not establish that EOF occurred in the historical migration
+failure, identify which process first failed there, or clear the release hold.
