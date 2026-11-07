@@ -36,6 +36,21 @@ class OfficialBundles(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
 
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_game_sync_sidebar_separators_do_not_open_blank_pages(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 104)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        navigation = re.search(r'class SyncTargetConfigPage extends RoutePage \{[\s\S]*?'
+                               r'(?=\nconst syncTargetConfigPage)', frontend)
+        self.assertIsNotNone(navigation)
+        self.assertIn('"separator"', navigation.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sidebar.mjs')],
+                                input=navigation.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_emuchievements_old_settings_keep_values_through_tree_lookup(self):
         plugin = next(p for p in PLUGINS if p['id'] == 28)
         data = archive(plugin)
