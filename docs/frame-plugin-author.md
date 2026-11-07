@@ -94,6 +94,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
+| `TextField.focusOnMount` | Focuses an enabled native input when it mounts. A modal preserves focus already inside it, falling back to its shell when nothing inside has focus. Updating an existing field does not refocus it. | Exact RadiYo! 1.3 text dialog in real React/DOM with synthetic query input; opt-out, disabled, update, shell fallback and focus restoration checks. No radio backend, physical controller or VR keyboard proof. |
 | `TextField.bShowClearAction`, `bAlwaysShowClearAction` | An opt-in Clear button empties the input through its native React change event. It hides when empty unless always-visible is requested; disabled fields stay inert. | Pinned Wine Cellar 0.2.1 search-control fixture; automated React/DOM check requires Linux Chrome. Worn VR remains unverified. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
@@ -135,6 +136,13 @@ read the empty string from `event.currentTarget.value` or `event.target.value`.
 Uncontrolled `defaultValue` fields also support clearing. Combine
 `bShowClearAction` with `bAlwaysShowClearAction` to keep the button visible when
 empty. Clearing an already empty input emits no extra change.
+
+Set `focusOnMount` when a new `TextField` should receive native document focus.
+Leave it false or omit it when opening a view should keep focus elsewhere.
+Disabled fields do not receive initial focus. This flag does not open a Steam
+or VR keyboard, provide Steam component ref handles, or implement a controller
+focus tree. Worn visibility, physical controller input and the VR keyboard still
+require checks on the headset.
 
 For `SliderField`, supply a finite `resetValue` within `min` and `max` to show
 a Reset button. It sends the numeric default through the same `onChange(value)`
