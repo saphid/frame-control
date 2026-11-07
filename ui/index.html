@@ -5453,9 +5453,11 @@ function renderMetaApps() {
   $("metaApps").innerHTML = metaLib.apps.length ? metaLib.apps.map(a => {
     // Sizes first: the line is cut short with "…" in a narrow panel, and the package is the least needed.
     const bits = [a.size ? questSize(a.size) : "", a.data_files ? `OBB ${questSize(a.data_size)}` : "",
-                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "", a.package || "package unknown"];
+                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "",
+                  a.min_sdk != null ? `minimum API ${a.min_sdk}` : "", a.package || "package unknown"];
     const line = bits.filter(Boolean).join(" · ");
     const problem = a.problem ? `<div class="s v-no" title="${esc(a.problem)}">${esc(a.problem)}</div>` : "";
+    const incompatible = a.incompatible ? `<div class="s v-no" title="${esc(a.incompatible)}">Not compatible with the Frame: ${esc(a.incompatible)}</div>` : "";
     // Required game data Frame Control can't place as an OBB (data_plan in frame_meta.py): the game may not run without it.
     const skipped = (a.skipped_files || []).length
       ? `<div class="s v-maybe" title="${esc(a.skipped_files.join("\n"))}">Not installed: ${a.skipped_files.length} required data file${a.skipped_files.length === 1 ? "" : "s"} (${esc(a.skipped_files.join(", "))}); the game may not run without ${a.skipped_files.length === 1 ? "it" : "them"}.</div>` : "";
@@ -5465,8 +5467,8 @@ function renderMetaApps() {
     const result = r ? `<div class="s">${esc(r)}</div>` : "";
     const busy = installing.has("meta:" + a.id) ? " disabled" : "", waits = queued.has("meta:" + a.id);
     const on = installed.has(a.package);
-    const can = a.package && !a.problem;
-    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${skipped}${verdict}${result}</div>
+    const can = a.package && !a.problem && !a.incompatible;
+    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${incompatible}${skipped}${verdict}${result}</div>
       ${on ? `<span class="tag">On the Frame</span>` : ""}
       ${waits ? `<span class="tag">Queued</span>` : ""}
       ${can ? `<button class="small" data-meta-install="${esc(a.id)}"${busy}>${on ? "Install again" : "Install"}</button>
@@ -5569,6 +5571,11 @@ $("metaApps").addEventListener("click", async e => {
   if (bar.dataset.owner === "meta:" + app.id) bar.hidden = true;  // not while another install still shows its progress
   if (r && r.message) { $("metaState").textContent = r.message; metaLib.results.set(app.package, r.test ? r.test.message : r.message); }
   else if (r !== null) $("metaState").textContent = `${app.title} wasn't installed; the reason is in the message log below.`;
+  // A failed install may have learned the minimum API from the downloaded manifest. Read the
+  // cached library again so the row becomes visibly blocked before another click can retry it.
+  if (r == null) {
+    try { metaLib.apps = (await api("/api/meta?library=1")).apps || []; } catch {}
+  }
   loadAndroid(); renderMetaApps(); if (test) loadReports();
 });
 loadMeta();
