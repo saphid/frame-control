@@ -613,6 +613,8 @@
   const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
+  const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
+    label && R.createElement('legend', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -970,7 +972,7 @@
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
+    Menu:passthrough('div'), MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
