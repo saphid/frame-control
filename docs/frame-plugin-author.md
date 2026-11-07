@@ -120,6 +120,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | `ColorPickerModal` | Local hue, saturation, lightness and alpha sliders with a preview. Defaults initialise the draft; OK passes an `hsla(...)` string to `onConfirm`. Cancel/Close discards it. A returned promise disables editing until success or a visible retryable failure. | Exact published CSS Loader 2.1.3 picker/callback replay with a synthetic setter, including draft/cancel, stale callbacks and async retry. No theme, Steam, backend or worn VR proof. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
+| Custom `ModalRoot.onCancel`, `onEscKeypress` | A custom dialog that passes its injected `closeModal` to `ModalRoot` binds those handlers to its own shell. Close calls `onCancel`; Escape uses `onEscKeypress` when present, otherwise cancels. Updated or unmounted roots retire their old handlers. | Exact Decky Localsend 0.4.5 receive dialog in real React/DOM, recording synthetic decisions only. No real offer, backend, file transfer or worn VR proof. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
 
@@ -129,6 +130,16 @@ Pinned Game Sync 1.0.4 uses this to mark a game as out of sync. Its published
 cache callbacks now retain that marker across panel reopen in an offline
 host/parent replay; this does not prove actual synchronization, live headset
 persistence or worn visibility.
+
+For a custom dialog, pass the `closeModal` injected by `showModal` into your
+inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
+dialog, including when another dialog opens above it. A registered root handler
+takes precedence over the outer component's handler for the same action. Close
+calls cancellation and dismisses the dialog; a custom Escape handler owns its
+own dismissal. Calling the returned handle's `Close()` programmatically only
+closes it and does not invent a cancellation result. Resolve any plugin-owned
+pending decision explicitly on that path. Returned `onOK` promises continue to
+block Close and Escape while submission is pending.
 
 For `TextField`, set `bShowClearAction` to offer Clear. A controlled field must
 update `value` in `onChange`, just as it does for typed edits; the callback can
