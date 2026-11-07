@@ -1,0 +1,51 @@
+{
+  "at": "2026-10-31T09:32:36.016495+00:00",
+  "sourceRevision": "faddd91bb067c0bfa95b45b1f04e248132732db4",
+  "baseMain": "d3ae60ebed19829e3a3ae43ed1ea3766e0cee45f",
+  "normalMainMerge": true,
+  "priorHead": "da9b30af1e709bb4f110de2a84b50ff9c57a8d68",
+  "priorHeadHadNotContainedCurrentMain": true,
+  "currentMainInputFilesAddedByRefresh": 19,
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "runtime": "v2.1.7",
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-runtime.py": "343622c00a68c2adc94ff92749909c3aa723a59159c36025cb684b14c87e4a08",
+    "tests/decky-runtime/syncthing_runtime.py": "5e339016029da74e80548e56ef6bbe35b8825fbd9191365e06db9cfd49d34747",
+    "ui/vendor/syncthing-0.2.7/main.py": "4067b99292f27ce916de7898a2feceba80bb37cb871152d574aabbf094beefb1",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "047cdbd616b4c46a1f35ff07e43cbae9e96f234470bcfe02126636801274ea70",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a"
+  },
+  "helperSha256": "318c0c58bce164d5e23528ae0da40f7d142005984ff64801b74a36b790e456b0",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "runtimeArchiveSha256": "2edc416e7ed136b7c858ed5f3f02a3b8316589605e54c380228ceea7acbf0142",
+  "binarySha256": "f5c12679f2bad1b5eff619ba7b04ead1a457e439a1e55dc640d4d8995d7f4dbd",
+  "reportSha256": "2a23c3eb1647e4f76bbe834278ab75b7cb5ca886b7e8dadc94dbed240cc9a60d",
+  "probeConsoleSha256": "24dee84c12e36f99a598e21a81907367bd16ac31c3ee4c6bf75b18494be9bdb0",
+  "loaderConsoleSha256": "67b6b3f4e952e431f83228c915fd9fae47144b3ee1fe1d842882e4aca1492d42",
+  "unitTests": 38,
+  "unitLogSha256": "3bf13320eab774e2903ce6d1c0947c4e4a528eefe2c335f2e275d02b166e205e",
+  "actualTwoWaySyncAndRestartVerified": true,
+  "nineLiteralProxyStatusesVerified": true,
+  "privateWrongKey403Verified": true,
+  "strictZeroExitShutdownAndFullConsoleVerified": true,
+  "ownedHelperAndPeersReaped": true,
+  "ownedContainerAndImageTagRemoved": true,
+  "productionAndCatalogEqualToMain": true,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "limits": [
+    "Local AMD64 only; final-head hosted AMD64/ARM64 and all other checks must pass",
+    "Raw peer probe has no service bus; no new systemd, browser, managed-install or real Frame proof",
+    "Prior-head hosted results remain historical after current-main refresh"
+  ],
+  "additionalExecutionSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "10d96b1955c4e4727865ddabd724555346608c39fc59a504a73da044d720d6e5",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f"
+  },
+  "rawLoaderExitCodeSeparatelyRetained": false,
+  "strictZeroExitShutdownAssertionSourceBound": true,
+  "globalCleanShutdownVerified": false,
+  "rawJsonSha256": "83c2a6fc3df33df535ccaff0f57e13c233fa0d7ad2926ec22e49325306f0f79d",
+  "rawGzipSha256": "9fea0135b8c3179540bcb57a6aeeb193632dde335e7d96c17a14c675b75e6672"
+}
