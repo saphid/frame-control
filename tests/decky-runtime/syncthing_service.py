@@ -108,8 +108,12 @@ def decky_stop_snapshot(unit, logs, *, proc=Path('/proc'), cgroups=Path('/sys/fs
         entry = {'name': Path(log.name).name}
         snapshot['logs'].append(entry)
         try:
-            size = os.fstat(log.fileno()).st_size
-            entry.update(bytes=size, tail=os.pread(log.fileno(), 8192, max(0, size - 8192)).decode(errors='replace'))
+            # A separate reader preserves the caller's stream position and
+            # also lets the observer's fixture tests run on desktop Windows.
+            with open(log.name, 'rb') as stream:
+                size = os.fstat(stream.fileno()).st_size
+                stream.seek(max(0, size - 8192))
+                entry.update(bytes=size, tail=stream.read(8192).decode(errors='replace'))
         except (OSError, ValueError) as error:
             entry['error'] = type(error).__name__
     return snapshot
