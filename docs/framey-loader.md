@@ -57,12 +57,18 @@ cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
 available. If browser storage rejects a write, the parent keeps the latest
 bounded snapshot in memory across plugin close/reopen and switches back to disk
-on the next successful write. Reloading the Frame Control page loses that memory
+on the next successful write. The plugin panel shows a notice while its snapshot
+is only in memory. **Retry saving** attempts to save that latest snapshot without
+changing a setting; a failed retry keeps the notice and values. A successful
+retry clears only that plugin's notice. Reloading the Frame Control page loses that memory
 fallback; an older disk snapshot may then return. Cleared browser storage also
 loses saved caches. The host waits for the parent's cache reply before loading plugin code;
 if the reply is missing or invalid after five seconds, the panel shows an error
 instead of opening with empty settings that could overwrite saved values. Use
 the plugin backend for settings that must survive cache loss.
+The recovery notice, retry and readback after a full page reload are covered in
+a local browser with synthetic snapshots and native browser storage. Live
+headset persistence and worn-headset use remain unverified.
 
 Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
 events while the panel is open. The parent resolves the plugin name from its

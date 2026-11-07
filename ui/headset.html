@@ -58,6 +58,9 @@ iframe{display:block;width:100%;height:560px;background:#0d1925;border:1px solid
   <p><small>Hold a scroll button to keep moving through plugin content.</small></p>
   <p id="frameyCompatibility"></p>
   <p id="frameyPanelStatus" role="status">Loading plugin panel…</p>
+  <div id="frameyCacheWarning" class="block" hidden>
+    <p role="status">Panel settings could not be saved. They are kept for this Frame Control page only; closing or reloading it may restore older settings.</p>
+    <button id="frameyCacheRetry" class="secondary">Retry saving</button></div>
   <iframe id="frameyFrame" title="Framey Decky plugin panel" sandbox="allow-scripts allow-popups" referrerpolicy="no-referrer"></iframe></div>
 <h2>Extensions</h2><p>Local additions run only when opened in the isolated panel below. They can read status but cannot change headset settings through the extension API.</p>
 <div class="row"><button id="extensionsRefresh" class="secondary">Refresh extensions</button><span id="extensionsFolder"><small></small></span></div>
@@ -279,6 +282,7 @@ function openFrameyPanel(id,name){
   byId('frameyCompatibility').textContent=compatibilityText(installed);
   closeFrameyEvents();
   activeFrameyId=id;activeFrameyReceipt={sha256:installed.sha256,version:installed.version};
+  showFrameyCacheStatus();
   frameySession=`${Date.now()}-${Math.random()}`;byId('frameyTitle').textContent=name;
   byId('frameyPanelStatus').textContent='Loading plugin panel…';
   byId('frameyFrame').src=`/framey/panel/${id}?session=${encodeURIComponent(frameySession)}#${frameySession}`;
@@ -351,6 +355,9 @@ window.addEventListener('blur',stopFrameyScrollHold);
 // when full or blocked, so rereading it alone would restore an older setting.
 const frameyCacheFallback=new Map();
 function frameyCacheKey(id){return `framey-plugin-cache-v1:${id}`;}
+function showFrameyCacheStatus(){
+  byId('frameyCacheWarning').hidden=activeFrameyId===null||!frameyCacheFallback.has(activeFrameyId);
+}
 function frameyCacheRead(id){
   try{const data=JSON.parse(frameyCacheFallback.get(id)??localStorage.getItem(frameyCacheKey(id))??'{}');
     if(!data||typeof data!=='object'||Array.isArray(data))return {};
@@ -367,7 +374,12 @@ function frameyCacheSave(id,entries){
   if(encoded.length>128*1024)return;
   try{localStorage.setItem(frameyCacheKey(id),encoded);frameyCacheFallback.delete(id);}
   catch(_){frameyCacheFallback.set(id,encoded);} // Same bounds as persisted data.
+  showFrameyCacheStatus();
 }
+byId('frameyCacheRetry').onclick=()=>{
+  const saved=frameyCacheFallback.get(activeFrameyId);
+  if(saved!==undefined)frameyCacheSave(activeFrameyId,JSON.parse(saved));
+};
 window.addEventListener('message',async event=>{
   if(activeFrameyId===null||event.source!==byId('frameyFrame').contentWindow)return;
   const req=event.data;if(!req||typeof req!=='object')return;
