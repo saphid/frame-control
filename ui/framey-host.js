@@ -473,12 +473,30 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
-      onChange:e=>{if(!disabled)onChange?.(e);}, onBlur:e=>{if(!disabled)onBlur?.(e);},
-      onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
-      onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
+    bShowClearAction, bAlwaysShowClearAction,
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
+    const input = R.useRef(null);
+    const [draft, setDraft] = R.useState(defaultValue ?? '');
+    const clear = () => {
+      const node = input.current;
+      if (disabled || !node || node.disabled || node.value==='') return;
+      // Bypass React's value tracker, then let its normal input listener emit
+      // onChange with the real input as both target and currentTarget.
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
+      node.dispatchEvent(new Event('input', {bubbles:true}));
+    };
+    return R.createElement(Field, {label, description},
+      R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
+        ref:input,
+        value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
+        onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
+        onBlur:e=>{if(!disabled)onBlur?.(e);},
+        onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+        onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}),
+      bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
+        R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
+          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'));
+  };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
@@ -512,6 +530,77 @@
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
       tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
         id:page.route || String(index), title:page.title, content:page.content}))}));
+  const emptyReorderEntries = Object.freeze([]);
+  const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
+    fieldProps, disableReordering=false}) => {
+    const initial = () => {
+      const rows = entries.map(entry=>({...entry})).sort((a,b)=>a.position-b.position);
+      return {source:entries, rows, saved:rows, dirty:false, busy:false, error:''};
+    };
+    const [view, setView] = R.useState(initial);
+    const current = R.useRef(null), pending = R.useRef(false), mounted = R.useRef(true);
+    current.current = {entries, onSave, disableReordering, view};
+    const publish = next => {current.current.view=next; setView(next);};
+    R.useEffect(()=>{
+      mounted.current=true;
+      return ()=>{mounted.current=false;};
+    },[]);
+    R.useEffect(()=>{
+      if (current.current.view.source!==entries) publish(initial());
+      else if (disableReordering && current.current.view.dirty && !pending.current)
+        publish({...current.current.view,rows:current.current.view.saved,dirty:false,error:''});
+    },[entries,disableReordering]);
+    const valid = snapshot => mounted.current && !pending.current &&
+      !current.current.disableReordering && current.current.entries===snapshot.source &&
+      current.current.view===snapshot && typeof current.current.onSave==='function';
+    const move = (snapshot,index,delta) => {
+      const target=index+delta;
+      if (!valid(snapshot) || target<0 || target>=snapshot.rows.length) return;
+      const rows=[...snapshot.rows];
+      [rows[index],rows[target]]=[rows[target],rows[index]];
+      publish({...snapshot,rows:rows.map((entry,position)=>({...entry,position})),dirty:true,error:''});
+    };
+    const save = snapshot => {
+      if (!valid(snapshot) || !snapshot.dirty) return;
+      const rows=snapshot.rows.map((entry,position)=>({...entry,position}));
+      const working={...snapshot,busy:true,error:''};
+      pending.current=true; publish(working);
+      const finish = (failed,failure) => {
+        pending.current=false;
+        if (!mounted.current) return;
+        // A refreshed list retires this draft. A late save may only unlock it.
+        if (current.current.entries!==snapshot.source || current.current.view!==working) {
+          publish({...current.current.view}); return;
+        }
+        publish(failed ? {...snapshot,busy:false,
+          ...(current.current.disableReordering ? {rows:snapshot.saved,dirty:false} : {}),
+          error:String(failure?.message || failure) || 'Could not save order'} :
+          {...snapshot,rows,saved:rows,dirty:false,busy:false,error:''});
+      };
+      let result;
+      try {result=current.current.onSave(rows);}
+      catch (failure) {finish(true,failure); return;}
+      Promise.resolve(result).then(()=>finish(false),failure=>finish(true,failure));
+    };
+    const shown=view.source===entries ? view : initial();
+    const locked=disableReordering || pending.current || shown.busy || shown!==view;
+    const reorder=!disableReordering && typeof onSave==='function';
+    return R.createElement('div', null,
+      R.createElement('ol', null, ...shown.rows.map((entry,index)=>R.createElement('li', {
+        key:index, 'aria-label':typeof entry.label==='string' ? entry.label : undefined},
+        R.createElement('div', null, R.createElement('strong', null, entry.label),
+          fieldProps?.description && R.createElement('small', null, fieldProps.description),
+          !shown.dirty && !pending.current && Interactables && R.createElement(Interactables,{entry}),
+          reorder && R.createElement('button', {type:'button',disabled:locked || index===0,
+            'aria-label':`Move entry ${index+1} up`,onClick:()=>move(shown,index,-1)}, 'Move up'),
+          reorder && R.createElement('button', {type:'button',disabled:locked || index===shown.rows.length-1,
+            'aria-label':`Move entry ${index+1} down`,onClick:()=>move(shown,index,1)}, 'Move down'))))),
+      reorder && shown.dirty && R.createElement('button', {type:'button',disabled:locked,
+        onClick:()=>save(shown)}, 'Save order'),
+      reorder && shown.dirty && R.createElement('button', {type:'button',disabled:locked,
+        onClick:()=>{if(valid(shown))publish({...shown,rows:shown.saved,dirty:false,error:''});}}, 'Cancel reordering'),
+      shown.error && R.createElement('p', {role:'alert'}, shown.error));
+  };
   const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
     value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
   const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
@@ -781,9 +870,25 @@
       for (const value of moduleVariants(module)) if (filter(value)) mapping.set(id, value);
     return mapping;
   }
+  // Search only the value the plugin supplies. React ownership links can be
+  // cyclic, so visit each object once without recursing through the JS stack.
+  function findInTree(parent, filter, opts) {
+    if (!parent || typeof parent !== 'object') return null;
+    const {walkable=null, ignore=[]} = opts || {};
+    const pending = [parent], visited = new WeakSet();
+    while (pending.length) {
+      const node = pending.pop();
+      if (!node || typeof node !== 'object' || visited.has(node)) continue;
+      visited.add(node);
+      if (filter(node)) return node;
+      const children = Array.isArray(node) ? node : (walkable || Object.keys(node))
+        .filter(key=>!ignore.includes(key)).map(key=>node[key]);
+      for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
+    }
+  }
   const DFL = window.DFL = {
     definePlugin: init => init,
-    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
+    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
@@ -810,7 +915,9 @@
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     // The isolated panel has no Steam React root. Legacy plugins can inspect
     // this null result and keep their own controls without patching Steam UI.
-    getReactRoot: () => null, findInReactTree: () => null,
+    getReactRoot: () => null,
+    findInTree, findInReactTree:(node,filter)=>findInTree(node,filter,
+      {walkable:['props','children','child','sibling']}),
     findModule, findModuleChild, findModuleDetailsByExport,
     findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
     findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],
