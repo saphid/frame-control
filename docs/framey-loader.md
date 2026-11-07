@@ -27,7 +27,10 @@ Frame Control's existing official-store manager downloads a published ZIP from
 Decky's content-addressed CDN, verifies its store SHA-256 hash and manifest,
 rejects unsafe ZIP members, path collisions, special files and root plugins,
 and swaps one managed plugin
-folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
+folder with rollback on failure. If moving the installed folder to a backup
+fails, the update or removal leaves the original folder in place. Rollback
+deletes only a replacement that the transaction successfully moved into place.
+It rejects non-ARM64 ELF and Windows binaries.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
