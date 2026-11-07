@@ -1884,6 +1884,34 @@ pathlib.Path.rename = fail_staged_move
         self.assertTrue(self.folder.exists())
         self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
 
+    def test_stale_install_cannot_duplicate_store_id_after_name_and_folder_change(self):
+        old, _ = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        installed = self.apply('install', old)
+        self.assertEqual(installed.returncode, 0, installed.stderr)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as bundle:
+            bundle.writestr('Renamed/plugin.json', '{"name":"Renamed Plugin","flags":[]}')
+            bundle.writestr('Renamed/dist/index.js', 'export default {};' + ' ' * 1200)
+        renamed = stream.getvalue()
+        # Both clients can finish the host status check before either archive
+        # reaches the remote lock. The later apply must recheck the store ID,
+        # even when neither the folder nor the published name still matches.
+        result = self.apply('install', renamed, folder='Renamed', version='2.0')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('store plugin is already installed', result.stderr)
+        self.assertEqual(calls.read_text(), '', 'reject before stopping the loader')
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # The rejected transaction releases its lock. An unrelated ID and name
+        # can install normally; no migration or deletion of the original occurs.
+        retry = self.apply('install', renamed, plugin_id=43, folder='Renamed', version='2.0')
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(json.loads((self.folder.parent/'Renamed/.frame-control-store.json').read_text())['storeId'], 43)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
+
     def test_update_and_remove_reject_stale_installed_receipt(self):
         first, first_hash = archive()
         second, _ = archive(extra=('Example/data.txt', 'new'))
