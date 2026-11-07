@@ -1,0 +1,78 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Open fixture</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-modal');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const click=text=>ReactDOM.flushSync(()=>{
+    const button=[...container.querySelectorAll('button')].find(node=>node.textContent===text);
+    assert(button,'Missing button: '+text);button.click();
+  });
+  const opener=document.getElementById('opener'), choices=[];
+  // Only the pinned warning runs. Choices are synthetic; no plugin initializer,
+  // external navigation, backend, Steam tab or controller action runs here.
+  window.SP_REACT=React;
+  const deckyFrontendLib=DFL;
+  __OFFICIAL_COMPONENT__
+  const warning=()=>React.createElement(UsageWarningModal,{
+    onOk:()=>choices.push('accept'),onCancel:()=>choices.push('cancel')});
+  try {
+    opener.focus();
+    let handle=show(warning());await settle();
+    assert(container.querySelector('h3').textContent==='WARNING','warning heading missing');
+    const body=container.querySelector('p');
+    assert(body.textContent.includes('known security vulnerabilities'),'published warning text lost');
+    assert(body.style.textAlign==='justify','published child style lost');
+    assert(container.querySelectorAll('[role=dialog]').length===1,'duplicate shell');
+    click('I Understand');await handle.ClosedPromise;await settle();
+    assert(choices.join(',')==='accept' && !container.children.length,'accept callback/dismiss failed');
+    assert(document.activeElement===opener,'opener focus not restored');
+    handle=show(warning());click('Close');await handle.ClosedPromise;
+    handle=show(warning());await settle();
+    ReactDOM.flushSync(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{
+      key:'Escape',bubbles:true,cancelable:true})));
+    await handle.ClosedPromise;
+    assert(choices.join(',')==='accept,cancel,cancel','shell dismissal accepted or duplicated a choice');
+    handle=show(warning());close(handle);await handle.ClosedPromise;
+    assert(choices.join(',')==='accept,cancel,cancel','programmatic Close emitted a choice');
+
+    // Active changes mount/unmount children without creating another portal.
+    // An inactive child cannot autofocus, run effects or retain a stale draft.
+    let mounted=0,unmounted=0;
+    const Child=()=>{
+      React.useEffect(()=>{mounted++;return ()=>{unmounted++;};},[]);
+      return React.createElement('input',{autoFocus:true,defaultValue:'Fresh draft'});
+    };
+    const content=active=>React.createElement(DFL.SimpleModal,{active},React.createElement(Child));
+    handle=show(content(false));await settle();
+    assert(!container.querySelector('input') && mounted===0,'inactive children mounted');
+    assert(container.querySelector('[role=dialog]'),'inactive content unexpectedly closed its owner');
+    ReactDOM.flushSync(()=>handle.Update(content(true)));await settle();
+    let input=container.querySelector('input');
+    assert(input && mounted===1 && document.activeElement===input,'activated child did not mount/focus');
+    input.value='Retired draft';
+    ReactDOM.flushSync(()=>handle.Update(content(false)));await settle();
+    assert(!container.querySelector('input') && unmounted===1,'deactivated child not cleaned up');
+    ReactDOM.flushSync(()=>handle.Update(content(true)));await settle();
+    assert(container.querySelector('input').value==='Fresh draft' && mounted===2,'inactive draft survived remount');
+    close(handle);await settle();assert(unmounted===2,'closing did not clean up active child');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedWarning:true,
+      acceptAndShellDismiss:true,programmaticCloseSilent:true,childStylesPreserved:true,
+      inactiveChildrenUnmounted:true,activeRemountFresh:true,focusRestored:true,
+      realFrameContacted:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
