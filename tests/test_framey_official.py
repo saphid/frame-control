@@ -22,6 +22,20 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_css_loader_colour_picker_confirms_only_the_selected_hsla(self):
+        plugin = next(p for p in LEGACY_PLUGINS if p['id'] == 7)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(deckyFrontendLib\.ColorPickerModal, '
+                            r'\{ onConfirm: \(HSLString\) => \{[\s\S]*?title: data\.name \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_colour_picker.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_game_sync_sidebar_separators_do_not_open_blank_pages(self):
         plugin = next(p for p in PLUGINS if p['id'] == 104)
         data = archive(plugin)
