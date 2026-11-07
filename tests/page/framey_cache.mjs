@@ -167,10 +167,18 @@ localStorage.setItem=()=>{throw new DOMException('Full', 'QuotaExceededError');}
 const beforeDenial=iframe();
 beforeDenial.storage.setItem('saved','latest');
 assert.equal(values.get('framey-plugin-cache-v1:14'),'{"saved":"true"}');
+assert.equal(el('frameyCacheWarning').hidden,false,'failed storage writes must be visible');
+el('frameyCacheRetry').onclick();
+assert.equal(el('frameyCacheWarning').hidden,false,'a failed retry must retain the notice and latest values');
+assert.equal(values.get('framey-plugin-cache-v1:14'),'{"saved":"true"}');
 vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 const deniedReopen=iframe();
 assert.equal(deniedReopen.storage.getItem('saved'),'latest');
+assert.equal(el('frameyCacheWarning').hidden,false,'reopen must keep the unsaved-settings notice');
+deniedReopen.send({type:'framey:scroll:result',session,direction:'down',moved:true});
+deniedReopen.send({type:'framey:error',session,message:'Synthetic unrelated panel error'});
+assert.equal(el('frameyCacheWarning').hidden,false,'other panel status messages must not hide failed saves');
 await deniedReopen.steamStorage.SetObject('settings',{enabled:true});
 deniedReopen.send({type:'framey:cache:save',session,entries:{huge:'x'.repeat(65537)}});
 
@@ -179,7 +187,11 @@ vm.runInContext('deckyState.plugins.push({storeId:15,sha256:"b",version:"1"});op
 session=vm.runInContext('frameySession',parent);
 const other=iframe();
 assert.equal(other.storage.getItem('saved'),null);
+assert.equal(el('frameyCacheWarning').hidden,true,'another plugin must not inherit the notice');
+el('frameyCacheRetry').onclick();
+assert.equal(values.has('framey-plugin-cache-v1:15'),false,'retry without a failed snapshot must do nothing');
 other.storage.clear();
+assert.equal(el('frameyCacheWarning').hidden,false,'a failed clear must also warn');
 vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 const stillDenied=iframe();
@@ -193,6 +205,19 @@ assert.equal(iframe().storage.getItem('saved'),null,'removal must also survive a
 // Storage recovery flushes the latest complete snapshot; a fresh parent page
 // can then read it from disk without any in-memory fallback.
 localStorage.setItem=diskWrite;
+el('frameyCacheRetry').onclick();
+assert.equal(el('frameyCacheWarning').hidden,true,'retry must clear the notice only after durable storage succeeds');
+assert.deepEqual(JSON.parse(values.get('framey-plugin-cache-v1:14')),
+  {'steam-client:settings':'{"enabled":true}'},'retry must save the latest complete snapshot without an extra edit');
+vm.runInContext('openFrameyPanel(15,"Other")',parent);
+session=vm.runInContext('frameySession',parent);
+assert.equal(el('frameyCacheWarning').hidden,false,'saving one plugin must not clear another failed snapshot');
+el('frameyCacheRetry').onclick();
+assert.equal(values.get('framey-plugin-cache-v1:15'),'{}','retry must persist a failed clear');
+assert.equal(el('frameyCacheWarning').hidden,true);
+vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
+session=vm.runInContext('frameySession',parent);
+assert.equal(el('frameyCacheWarning').hidden,true);
 const recovered=iframe();
 recovered.storage.setItem('saved','durable');
 assert.deepEqual(JSON.parse(values.get('framey-plugin-cache-v1:14')),
@@ -210,3 +235,6 @@ session=vm.runInContext('frameySession',parent);
 assert.equal(iframe().storage.getItem('memory-only'),'kept');
 localStorage.getItem=diskRead;
 localStorage.setItem=diskWrite;
+assert.equal(el('frameyCacheWarning').hidden,false);
+iframe().storage.setItem('memory-only','now durable');
+assert.equal(el('frameyCacheWarning').hidden,true,'a normal successful write also resolves the notice');

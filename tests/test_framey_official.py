@@ -17,7 +17,7 @@ import io
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
 import frame_decky_store
 import framey_panel
-from framey_official import LEGACY_PLUGINS, PLUGINS, archive
+from framey_official import LEGACY_PLUGINS, PLUGINS, WEB_BROWSER_143, archive
 
 
 class OfficialBundles(unittest.TestCase):
@@ -34,6 +34,20 @@ class OfficialBundles(unittest.TestCase):
         self.assertIsNotNone(control)
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_value.mjs')],
                                 input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_web_browser_warning_uses_local_simple_modal(self):
+        plugin = WEB_BROWSER_143
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        component = re.search(r'const UsageWarningModal = .*?\n    \};', frontend, re.S)
+        self.assertIsNotNone(component)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_simple_modal.mjs')],
+                                input=component.group(), capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
