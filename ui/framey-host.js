@@ -892,6 +892,9 @@
       typeof onOK==='function' && R.createElement('button', {
         type:'button', disabled:!!bOKDisabled || busy, onClick:submit}, 'OK'));
   };
+  // showModal owns the local shell, focus and dismissal. This content wrapper
+  // never opens a Steam portal or mounts an inactive dialog's children.
+  const SimpleModal = ({active=true, children}) => active ? R.createElement(R.Fragment, null, children) : null;
   // These are Framey's own styles and components, never Steam's webpack cache.
   // Keep the registry finite: an unknown Steam implementation stays unavailable.
   const classModules = new Map(Object.entries({
@@ -965,7 +968,7 @@
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
-    DialogControlsSectionHeader:passthrough('h3'), ModalRoot,
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
     ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,

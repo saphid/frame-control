@@ -1,5 +1,14 @@
 # Pinned Decky store test archives
 
+`59.zip` is Web Browser 1.4.3, downloaded from the official CDN on 2026-11-07
+and matched to the existing catalog SHA-256
+`1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d`.
+Its upstream LICENSE is retained. The SimpleModal regression evaluates only
+the exact published `UsageWarningModal`, with synthetic accept/cancel
+callbacks. It does not initialize the plugin, invoke its backend, navigate
+externally, open Steam tabs, or change its catalog compatibility status.
+This is local React/DOM evidence, not worn-headset or controller proof.
+
 `37.zip` was downloaded from the official CDN on 2026-11-01 and matched the existing catalog digest. This is not a fresh full-store metadata claim. Its private IPC tests use a disposable local wire peer; no real Discord account or Frame is contacted.
 
 These are unmodified ZIPs downloaded from the official Decky store CDN on
