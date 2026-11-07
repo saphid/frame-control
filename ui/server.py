@@ -274,7 +274,8 @@ UNREACHABLE = [
     (re.compile(r"REMOTE HOST IDENTIFICATION HAS CHANGED|Host key verification failed"),
      "The Frame's SSH identity has changed: after SteamOS was reinstalled or reset, or a different device "
      "answering at its address. Check the new key on the Devices tab before trusting it."),
-    (re.compile(r"kex_exchange_identification|Connection closed by .* port \d+|Connection reset by .* port \d+"),
+    (re.compile(r"kex_exchange_identification|Connection closed by .* port \d+|Connection reset by .* port \d+|"
+                r"Connection to \S+ closed by remote host|close - IO is still pending on closed socket"),
      "The connection to the Frame dropped. Try again."),
 ]
 
@@ -395,7 +396,15 @@ def start_job(label, work, progress=False, *, request_id=None, request=None):
                 return {"message": f"{label}…", "job": request_id}
         job = _new_job_locked(label, job_id=request_id,
                               **({'_request': request} if request_id is not None else {}))
-    busy_thread(_run_job, job, label, work, progress).start()
+    try:
+        busy_thread(_run_job, job, label, work, progress).start()
+    except Exception as error:
+        # The panel reserves its request ID before POSTing. Retain a terminal
+        # result for Check result instead of an unstarted job that runs forever.
+        with _jobs_lock:
+            _jobs[job].update(error=f'Could not start background job: {error}',
+                              done=True, time=time.time())
+        raise
     return {"message": f"{label}…", "job": job}
 
 
@@ -489,6 +498,21 @@ def ensure_master():
         LINK.ensure()
 
 
+def openssh_failure(tool, result, text=True):
+    """A failed ssh/scp result, preserving whether OpenSSH itself lost the link."""
+    def output(value):
+        return (value or "") if text else (value or b"").decode(errors="replace")
+
+    stderr, stdout = output(result.stderr), output(result.stdout)
+    fallback = (frame_host.ssh_exit_message(result.returncode) if tool == "ssh"
+                else f"{tool} exited {result.returncode}")
+    failure = Failure(strip_ansi(stderr or stdout).strip() or fallback)
+    failure.stdout = stdout
+    if frame_host.ssh_link_failed(result.returncode, strip_ansi(stderr), stdout):
+        frame_host.link_failure(failure)
+    return failure
+
+
 def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
     # Long-lived helper delivery/cleanup owns an immutable command prefix. It
     # must not reconnect through the currently selected headset after a switch.
@@ -508,16 +532,12 @@ def ssh(remote, *, stdin=None, timeout=30, text=True, route=None):
         err = (r.stderr or r.stdout) if text else (r.stderr or r.stdout).decode(errors="replace")
         if r.returncode == 255 and repair_ssh_config(err):
             return ssh(remote, stdin=stdin, timeout=timeout, text=text, route=route)
-        if r.returncode == 255 and LINK and route is None and unreachable(err):
-            LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
-        failure = Failure(strip_ansi(err).strip() or f"ssh exited {r.returncode}")
-        failure.stdout = r.stdout if text else r.stdout.decode(errors="replace")
-        # ssh never reached the Frame (see frame_telemetry.diagnostic): judged on ssh's stderr only,
-        # never on the command's output.
         stderr = (r.stderr if text else (r.stderr or b"").decode(errors="replace")) or ""
-        if frame_host.ssh_link_failed(r.returncode, strip_ansi(stderr)):
-            frame_host.link_failure(failure)
-        raise failure
+        stdout = (r.stdout if text else (r.stdout or b"").decode(errors="replace")) or ""
+        if r.returncode == 255 and LINK and route is None and (
+                unreachable(err) or frame_host.ssh_link_failed(r.returncode, strip_ansi(stderr), stdout)):
+            LINK.lost(err, route_gen)  # ssh itself failed: the connector reconnects
+        raise openssh_failure("ssh", r, text)
     return r.stdout
 
 
@@ -587,6 +607,10 @@ def decky_plugin(body):
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
+    installed_hash = body.get('installedSha256')
+    if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
+                                       or not frame_decky_store.SHA.fullmatch(installed_hash)):
+        raise Failure('Invalid reviewed installed version', 400)
     request_id = body.get('requestId')
     if request_id is not None and (not isinstance(request_id, str) or
                                    not re.fullmatch(r'[0-9a-f]{32}', request_id)):
@@ -594,8 +618,9 @@ def decky_plugin(body):
     device = LINK.active_device()['id'] if LINK else FRAME
     return start_job('Decky plugin ' + action,
                      lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
-                                                            reviewed_hash=reviewed_hash), progress=True,
-                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash))
+                                                            reviewed_hash=reviewed_hash,
+                                                            installed_hash=installed_hash), progress=True,
+                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash, installed_hash))
 
 
 def framey_method_action(body):
@@ -862,7 +887,7 @@ def save_shots(body):
                 except subprocess.TimeoutExpired:
                     raise Failure("Copying screenshots timed out")
                 if r.returncode != 0:
-                    raise Failure(strip_ansi(r.stderr).strip() or f"scp exited {r.returncode}")
+                    raise openssh_failure("scp", r)
                 if any(not (incoming / local.name).is_file() for _, local in group):
                     raise Failure("Screenshot copy did not contain every requested file")
                 for _, local in group:
@@ -936,7 +961,7 @@ def fetch_file(remote, local):
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {Path(remote).name} timed out")
     if r.returncode != 0:
-        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"scp exited {r.returncode}")
+        raise openssh_failure("scp", r)
 
 
 def _record_channel(command, stderr):
@@ -2750,7 +2775,11 @@ class AdbTunnel:
         while pending:
             if self.proc.poll() is not None:
                 err = self.proc.stderr.read().decode(errors="replace").strip()
-                raise Failure(f"ADB tunnel failed: {err or 'ssh exited ' + str(self.proc.returncode)}")
+                message = err or frame_host.ssh_exit_message(self.proc.returncode)
+                failure = Failure(f"ADB tunnel failed: {message}")
+                if frame_host.ssh_link_failed(self.proc.returncode, err):
+                    frame_host.link_failure(failure)
+                raise failure
             if time.time() > deadline:
                 raise Failure("ADB tunnel didn't come up within 12s")
             for lp in list(pending):
@@ -3734,7 +3763,7 @@ def push_file(path, dest="Downloads/"):
     except subprocess.TimeoutExpired:
         raise Failure(f"Copying {name} timed out")
     if r.returncode != 0:
-        raise Failure(strip_ansi(r.stderr or r.stdout).strip() or f"copy exited {r.returncode}")
+        raise openssh_failure(Path(cmd[0]).stem, r)
     return f"Sent {name} to ~/{dest}"
 
 
