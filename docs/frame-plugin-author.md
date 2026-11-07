@@ -119,10 +119,18 @@ none of these frontend controls has passed a worn-headset check yet.
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | `ColorPickerModal` | Local hue, saturation, lightness and alpha sliders with a preview. Defaults initialise the draft; OK passes an `hsla(...)` string to `onConfirm`. Cancel/Close discards it. A returned promise disables editing until success or a visible retryable failure. | Exact published CSS Loader 2.1.3 picker/callback replay with a synthetic setter, including draft/cancel, stale callbacks and async retry. No theme, Steam, backend or worn VR proof. |
+| `SimpleModal` | Local content wrapper within `showModal`. `active={false}` unmounts its children; true or omitted renders them. The existing shell owns focus and dismissal. | Exact Web Browser 1.4.3 warning replay, including accept and shell cancellation; real React/DOM checks child styles, focus restoration and inactive-child cleanup/remount. No full Web Browser/DeckSP, Steam portal, backend, controller or worn VR proof. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
 | Custom `ModalRoot.onCancel`, `onEscKeypress` | A custom dialog that passes its injected `closeModal` to `ModalRoot` binds those handlers to its own shell. Close calls `onCancel`; Escape uses `onEscKeypress` when present, otherwise cancels. Updated or unmounted roots retire their old handlers. | Exact Decky Localsend 0.4.5 receive dialog in real React/DOM, recording synthetic decisions only. No real offer, backend, file transfer or worn VR proof. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
+
+For plugin-cache values, use `getItem`, `setItem` and `removeItem`.
+`key in localStorage` also recognizes saved keys, including empty strings.
+Pinned Game Sync 1.0.4 uses this to mark a game as out of sync. Its published
+cache callbacks now retain that marker across panel reopen in an offline
+host/parent replay; this does not prove actual synchronization, live headset
+persistence or worn visibility.
 
 For a custom dialog, pass the `closeModal` injected by `showModal` into your
 inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
@@ -164,6 +172,15 @@ failure and permit retry. A callback that starts a save without returning its
 promise cannot report that save's outcome to the picker. Closing the dialog
 does not cancel a backend request already sent. This control cannot apply
 CSS Loader themes or change Steam's UI by itself.
+
+Wrap custom dialog content in `SimpleModal` and open it through `showModal`.
+In Framey, `active` defaults to true. Setting it false unmounts children,
+including their effects and local state; reactivation creates a fresh view.
+It hides only content: call the injected `closeModal()` or the returned
+handle's `Close()` to dismiss the owning shell and resolve `ClosedPromise`.
+The wrapper adds no OK/Cancel actions or Steam portal. Existing shell Close
+and Escape behavior still applies. A plugin's `onCancelButton` controller
+binding is not established by this wrapper or the browser fixture.
 
 Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the

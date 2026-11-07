@@ -86,7 +86,7 @@
       })]);
     } finally {clearTimeout(timer);}
   }
-  const storage = {
+  const storage = new Proxy({
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
     getItem(key) {return cache.get(String(key)) ?? null;},
@@ -100,7 +100,10 @@
     },
     removeItem(key) {cache.delete(String(key)); persistCache();},
     clear() {cache.clear(); persistCache();},
-  };
+  }, {
+    // Game Sync uses key presence, including empty values, to track sync state.
+    has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+  });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
       entries:Object.fromEntries(cache)}, '*');
@@ -889,6 +892,9 @@
       typeof onOK==='function' && R.createElement('button', {
         type:'button', disabled:!!bOKDisabled || busy, onClick:submit}, 'OK'));
   };
+  // showModal owns the local shell, focus and dismissal. This content wrapper
+  // never opens a Steam portal or mounts an inactive dialog's children.
+  const SimpleModal = ({active=true, children}) => active ? R.createElement(R.Fragment, null, children) : null;
   // These are Framey's own styles and components, never Steam's webpack cache.
   // Keep the registry finite: an unknown Steam implementation stays unavailable.
   const classModules = new Map(Object.entries({
@@ -962,7 +968,7 @@
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
-    DialogControlsSectionHeader:passthrough('h3'), ModalRoot,
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
     Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
     ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
