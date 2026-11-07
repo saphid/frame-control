@@ -6,7 +6,8 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
 const React={Fragment:'fragment',Component:class {},
-  createElement:(type,props,...children)=>({type,props:props||{},children})};
+  createElement:(type,props,...children)=>({type,props:props||{},children}),
+  useRef:value=>({current:value}),useState:value=>[value,()=>{}]};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})}};
 const context=vm.createContext({window,document:{getElementById:()=>({})},
   navigator:{language:'en'},parent:{postMessage:message=>assert.equal(message.type,'framey:cache:init')},
@@ -21,13 +22,20 @@ const control=readFileSync(0,'utf8');
 const nodes=(tree,type)=>Array.isArray(tree)?tree.flatMap(child=>nodes(child,type)):
   [...(tree?.type===type?[tree]:[]),...(tree?.children||[]).flatMap(child=>nodes(child,type))];
 const element=vm.runInContext(control,context);
-let input=nodes(element.type(element.props),'input')[0];
+let rendered=element.type(element.props);
+let input=nodes(rendered,'input')[0];
+const clear=nodes(rendered,'button').find(button=>button.children.includes('Clear'));
+assert.ok(clear,'the published bShowClearAction flag must expose a clear action');
+assert.equal(clear.props.type,'button');
+assert.equal(clear.props.disabled,false);
 assert.equal(input.props['aria-label'],'Search installed Steam games and non-Steam shortcuts');
 assert.equal(input.props.placeholder,'Search games, shortcuts, or tools');
 assert.equal(input.props.value,'Private fixture game');
 input.props.onChange({currentTarget:{value:'Edited fixture search'}});
 assert.equal(context.search,'Edited fixture search');
-input=nodes(element.type({...element.props,disabled:true}),'input')[0];
+rendered=element.type({...element.props,disabled:true});
+input=nodes(rendered,'input')[0];
+assert.equal(nodes(rendered,'button')[0].props.disabled,true);
 assert.equal(input.props['aria-label'],element.props['aria-label']);
 assert.equal(input.props.disabled,true);
 input.props.onChange({currentTarget:{value:'Must not change'}});
