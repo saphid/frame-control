@@ -22,6 +22,20 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_emuchievements_old_settings_keep_values_through_tree_lookup(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 28)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        settings = re.search(r'  const CONFIG_VERSION = "1\.1\.0";[\s\S]*?(?=\n  class EmuchievementsState)', frontend)
+        self.assertIsNotNone(settings)
+        self.assertIn('deckyFrontendLib.findInTree(config', settings.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_settings_tree.mjs')],
+                                input=settings.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_radiyo_text_dialog_can_submit_through_modal_root(self):
         plugin = next(p for p in PLUGINS if p['id'] == 24)
         data = archive(plugin)

@@ -106,6 +106,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
+| `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
@@ -166,6 +167,13 @@ destructive actions work in VR. The
 [Storage Cleaner browser check](evidence/framey-api-v1-browser-2026-10-25.md)
 used empty stub data and did not invoke its cleanup actions.
 Use the Decky Python backend for settings that must survive browser cache loss.
+When adapting older nested settings, `findInTree(data, filter, {walkable, ignore})`
+can locate a value in the data your plugin already holds. It visits the root
+first, then arrays and object keys in order, and returns the matching object.
+Check for a missing match before reading a property. `findInReactTree` uses
+the same search with React child keys; neither helper obtains a Steam root or
+enables library-page patches. Migrate only data your plugin owns and keep
+unrecognized schemas intact until you can handle them explicitly.
 The Framey `localStorage` bridge is for disposable frontend caches, including
 the cache read attempted by Steam Status 1.2.3. It does not expose another
 plugin's cache or the Frame Control UI key. A real Steam Status panel reopen

@@ -799,6 +799,22 @@
       for (const value of moduleVariants(module)) if (filter(value)) mapping.set(id, value);
     return mapping;
   }
+  // Search only the value the plugin supplies. React ownership links can be
+  // cyclic, so visit each object once without recursing through the JS stack.
+  function findInTree(parent, filter, opts) {
+    if (!parent || typeof parent !== 'object') return null;
+    const {walkable=null, ignore=[]} = opts || {};
+    const pending = [parent], visited = new WeakSet();
+    while (pending.length) {
+      const node = pending.pop();
+      if (!node || typeof node !== 'object' || visited.has(node)) continue;
+      visited.add(node);
+      if (filter(node)) return node;
+      const children = Array.isArray(node) ? node : (walkable || Object.keys(node))
+        .filter(key=>!ignore.includes(key)).map(key=>node[key]);
+      for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
+    }
+  }
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
@@ -828,7 +844,9 @@
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     // The isolated panel has no Steam React root. Legacy plugins can inspect
     // this null result and keep their own controls without patching Steam UI.
-    getReactRoot: () => null, findInReactTree: () => null,
+    getReactRoot: () => null,
+    findInTree, findInReactTree:(node,filter)=>findInTree(node,filter,
+      {walkable:['props','children','child','sibling']}),
     findModule, findModuleChild, findModuleDetailsByExport,
     findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
     findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],
