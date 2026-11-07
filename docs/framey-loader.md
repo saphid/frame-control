@@ -232,8 +232,13 @@ Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh
-the store and review the new version before retrying. Job results live in server
-memory for one hour after completion. If Frame Control restarts, or the request
+the store and review the new version before retrying.
+The desktop and headset also include the installed receipt shown by the Update
+or Remove row. If another client changes that installed copy before the job
+starts, the operation stops before downloading or changing plugin files. Refresh
+installed plugins and review the current copy before trying again. The existing
+transaction lock checks the receipt again before applying the operation.
+Job results live in server memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
 keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.

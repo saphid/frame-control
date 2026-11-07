@@ -188,6 +188,30 @@ assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textCon
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,false);
 
+// Actions carry the installed receipt displayed in that row, even when a
+// background status change replaces the in-memory list before the tap.
+const selectedReceipts=[];
+ctx.mockApi=async (path,body)=>{
+  if(path==='/api/decky/plugin'){
+    selectedReceipts.push(body);const error=Error('stale installed copy');error.status=400;throw error;
+  }
+  if(path==='/api/decky')return {managed:true,running:true,plugins:[
+    {storeId:2,name:'Plugin 2',version:'1.0',sha256:'a'.repeat(64)}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx);
+const oldRemove=el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').onclick;
+vm.runInContext('deckyState.plugins[0]={...deckyState.plugins[0],sha256:"b".repeat(64)}',ctx);
+await oldRemove();
+assert.equal(selectedReceipts.at(-1).action,'remove');
+assert.equal(selectedReceipts.at(-1).installedSha256,'a'.repeat(64));
+const oldUpdate=el('deckyStoreList').children[1].children[1].onclick;
+vm.runInContext('deckyState.plugins[0]={...deckyState.plugins[0],sha256:"c".repeat(64)}',ctx);
+await oldUpdate();
+assert.equal(selectedReceipts.at(-1).action,'update');
+assert.equal(selectedReceipts.at(-1).installedSha256,'a'.repeat(64));
+
 // A 4xx from job polling is not a rejected submission. The server already
 // accepted the change; retain its ID and block a duplicate until it resolves.
 for(const status of [403,429]){

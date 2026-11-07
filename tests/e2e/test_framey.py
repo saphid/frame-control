@@ -154,9 +154,18 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
 
         StoreFixture.release = 1
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'update','id':999,'acknowledged':True}))
+                          {'action':'update','id':999,'installedSha256':HASHES[0],
+                           'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'][0]['version'], '1.1.0')
+        for action in ('update', 'remove'):
+            stale_job = finished(ok('POST', '/api/decky/plugin',
+                {'action':action,'id':999,'installedSha256':HASHES[0],
+                 'acknowledged':True}))
+            self.assertIn('Installed plugin changed', stale_job.get('error', ''))
+            current = ok('GET', '/api/decky')['plugins'][0]
+            self.assertEqual((current['version'], current['sha256']), ('1.1.0', HASHES[1]))
+            self.assertIn('Sample 1.1.0', ssh('cat ~/.local/share/frame-control/decky/plugins/sample-panel/dist/index.js'))
         status, stale_reply, _ = api('POST', '/api/framey/method',
             {'id':999,'receipt':receipt,'method':'get_setting','args':['theme','dark']})
         self.assertEqual(status, 400)
@@ -165,7 +174,8 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
         self.assertEqual(framey_call(
                             {'id':999,'method':'get_setting','args':['theme','dark']})['result'], 'light')
         job = finished(ok('POST', '/api/decky/plugin',
-                          {'action':'remove','id':999,'acknowledged':True}))
+                          {'action':'remove','id':999,'installedSha256':HASHES[1],
+                           'acknowledged':True}))
         self.assertFalse(job.get('error'), job)
         self.assertEqual(ok('GET', '/api/decky')['plugins'], [])
         self.assertEqual(ssh('test -e ~/.local/share/frame-control/decky/plugins/sample-panel && echo yes || echo no').strip(), 'no')
