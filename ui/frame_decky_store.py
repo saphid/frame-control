@@ -2122,16 +2122,24 @@ def split_by_app(data):
             (unpacked/marker).write_text(json.dumps(record)+'\n')
     # Stop even a failed unit before removal to cancel any pending auto-restart.
     if running or action=='remove': service('stop','frame-control-decky.service')
+    old_moved=False
+    new_moved=False
     try:
-        if action!='install': target.rename(backup)
-        if action!='remove': (stage/folder).rename(target)
+        if action!='install':
+            target.rename(backup)
+            old_moved=True
+        if action!='remove':
+            (stage/folder).rename(target)
+            new_moved=True
         if running: service('start','frame-control-decky.service')
     except Exception:
-        if target.exists(): shutil.rmtree(target)
-        if backup.exists(): backup.rename(target)
+        # A failed backup move leaves the original at target. Delete only a
+        # replacement this transaction successfully moved there.
+        if new_moved and target.exists(): shutil.rmtree(target)
+        if old_moved: backup.rename(target)
         if running: subprocess.run(['systemctl','--user','start','frame-control-decky.service'],timeout=25)
         raise
-    if backup.exists(): shutil.rmtree(backup)
+    if old_moved: shutil.rmtree(backup)
     past={'install':'Installed','update':'Updated','remove':'Removed'}[action]
     print(json.dumps({'message':f'{past} {folder}. Plugin UI in VR is not yet verified.'}))
 finally:
