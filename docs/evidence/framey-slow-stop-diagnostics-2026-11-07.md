@@ -34,3 +34,33 @@ Fresh hosted AMD64/ARM64 package runs are still required. Kernel stacks are
 not Python coroutine stacks; a recurrence may require further investigation.
 
 No reproduction of the historical hang or root-cause fix is claimed here.
+
+## Hosted evidence on the original PR head
+
+Exact head `b877196de24c3b9cd892550f978cea55eb8d11db` passed all 19
+checks. Nine uploaded artifacts were independently checked against their ZIP
+digests, producer jobs, exact checkouts and source fingerprints. These include
+both native Decky architectures, both ownership jobs, fake-Frame e2e and all
+four signed-package modes. This qualifies that recorded head's evidence;
+integration with later main still requires fresh qualification before merge.
+
+The package artifacts contain eight clean owned Decky stops: service and
+migration for AMD64 standard (`13567293520`), AMD64 browser HTTP
+(`13567294657`), AMD64 production-parent HTTP (`13568126446`) and ARM64
+(`13567358475`). All eight retained a baseline with six owned cgroup processes,
+CPU/start ticks, thread wait channels and loader-log tails. Stops took between
+1.118 and 10.478 seconds, including baseline collection. None retained a slow
+snapshot or reproduced the historical timeout. Every stop passed the existing
+strict result, exit-status, reaping and loader-log checks.
+
+All 94 observed thread kernel-stack reads returned `PermissionError`. Those
+limits are retained explicitly; wait channels, CPU baselines and loader tails
+were readable. No security setting was changed to obtain a stack. These are
+kernel observations, not Python coroutine stacks or proof of the old cause.
+
+Hosted Ubuntu server job `128349772981` executed all five new observer and
+slow-stop regression tests without skips. Its synthetic checkout
+`19a7465e08c73a8cea5f51546b1e0722b12cab3d` has the same tree as the recorded
+PR head (`b258c251c4cae5d9a7931695c08051b9f90d292d`). The three slow snapshots
+preceding a forced failure were verified in controlled tests; a real slow
+stop was not observed in these package runs. No real Frame was contacted.
