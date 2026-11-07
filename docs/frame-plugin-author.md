@@ -245,7 +245,15 @@ unrecognized schemas intact until you can handle them explicitly.
 The Framey `localStorage` bridge is for disposable frontend caches, including
 the cache read attempted by Steam Status 1.2.3. It does not expose another
 plugin's cache or the Frame Control UI key. A real Steam Status panel reopen
-and a worn-headset settings check are still needed.
+and a worn-headset settings check are still needed. When browser storage
+rejects a write, the parent panel shows a notice that its latest settings are
+kept for this page only. **Retry saving** persists the current complete fallback
+snapshot if storage has recovered; authors do not need to issue another edit.
+The notice survives plugin close/reopen and unrelated panel status updates,
+and disappears after a successful write or retry. It is scoped to the selected
+plugin. Reloading or closing Frame Control before success loses that fallback.
+Native browser storage retry and full-page reload readback are tested locally
+with synthetic snapshots; this is not live headset persistence proof.
 
 Register backend event listeners when a view mounts and remove the same callback
 when it unmounts, using `removeEventListener(eventName, callback)`. Framey checks
