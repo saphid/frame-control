@@ -46,6 +46,12 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Retire a settings view's callbacks on unmount and ignore replies from its old
+read/write requests. Close dialogs owned by that view, and read saved settings
+again when it mounts. Cleanup does not cancel a backend request already sent;
+it prevents that old view from issuing new requests or announcing stale UI
+results. The sample uses a request generation as well as an active-view guard
+so React's development effect replay cannot let an old read unlock a newer one.
 
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
