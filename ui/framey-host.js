@@ -664,9 +664,14 @@
         type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
         onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
   };
+  function modalCallback(modal, name) {
+    const registered = modal.rootCallbacks;
+    return registered && typeof registered[name]==='function'
+      ? registered[name] : modal.element?.props?.[name];
+  }
   function dismissModal(modal) {
-    if (modal.running || modal.element?.props?.bCancelDisabled) return;
-    modal.element?.props?.onCancel?.();
+    if (!modals.includes(modal) || modal.running || modal.element?.props?.bCancelDisabled) return;
+    modalCallback(modal, 'onCancel')?.();
     modal.dismiss();
   }
   addEventListener('keydown', event => {
@@ -685,7 +690,8 @@
     if (event.key !== 'Escape') return;
     event.preventDefault();
     if (modal.running) return;
-    if (modal.element?.props?.onEscKeypress) modal.element.props.onEscKeypress();
+    const onEscape = modalCallback(modal, 'onEscKeypress');
+    if (onEscape) onEscape();
     else dismissModal(modal);
   });
   const localPath = path => typeof path === 'string' && path.length <= 120 &&
@@ -806,6 +812,17 @@
     // Custom plugin dialogs pass their injected closeModal into ModalRoot.
     // Bind busy state to that dialog, even if a nested dialog is opened later.
     const modal = modals.find(item=>item.dismiss===closeModal);
+    // A custom component's cancel handlers live on its inner ModalRoot, not
+    // on the element passed to showModal. Register only this committed root;
+    // replacement dialogs and effect cleanup retire the old callbacks.
+    R.useEffect(() => {
+      if (!modal || !modals.includes(modal)) return;
+      const registered = {onCancel, onEscKeypress};
+      modal.rootCallbacks = registered;
+      return () => {
+        if (modal.rootCallbacks===registered) delete modal.rootCallbacks;
+      };
+    }, [modal, onCancel, onEscKeypress]);
     const markBusy = value => {
       pending.current = value; setBusy(value);
       if (modal && modals.includes(modal)) {modal.running=value; renderModals();}

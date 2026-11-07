@@ -118,8 +118,19 @@ none of these frontend controls has passed a worn-headset check yet.
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
+| Custom `ModalRoot.onCancel`, `onEscKeypress` | A custom dialog that passes its injected `closeModal` to `ModalRoot` binds those handlers to its own shell. Close calls `onCancel`; Escape uses `onEscKeypress` when present, otherwise cancels. Updated or unmounted roots retire their old handlers. | Exact Decky Localsend 0.4.5 receive dialog in real React/DOM, recording synthetic decisions only. No real offer, backend, file transfer or worn VR proof. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
+
+For a custom dialog, pass the `closeModal` injected by `showModal` into your
+inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
+dialog, including when another dialog opens above it. A registered root handler
+takes precedence over the outer component's handler for the same action. Close
+calls cancellation and dismisses the dialog; a custom Escape handler owns its
+own dismissal. Calling the returned handle's `Close()` programmatically only
+closes it and does not invent a cancellation result. Resolve any plugin-owned
+pending decision explicitly on that path. Returned `onOK` promises continue to
+block Close and Escape while submission is pending.
 
 For `TextField`, set `bShowClearAction` to offer Clear. A controlled field must
 update `value` in `onChange`, just as it does for typed edits; the callback can
