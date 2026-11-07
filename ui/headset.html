@@ -248,14 +248,16 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
     panelClosed?'Starting… Old plugin panel closed until the change finishes.':'Starting…',0);
   const requestId=newDeckyRequestId();
   rememberDeckyJob({job:requestId,action,name:plugin.name});
+  let accepted=false;
   try{const started=await api('/api/decky/plugin',{action,id:plugin.id,
     sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true,requestId});
     if(!started.job)throw Error('The server did not return a job ID');
+    accepted=true;
     rememberDeckyJob({job:started.job,action,name:plugin.name});
     await followDeckyJob(started.job,action,plugin.name);
     clearDeckyJob();
     if(panelNote)byId('deckyJobStatus').textContent+=panelNote;
-  }catch(error){if(error.status>=400&&error.status<500)clearDeckyJob();
+  }catch(error){if(!accepted&&error.status>=400&&error.status<500)clearDeckyJob();
     deckyJobView(`${action} ${plugin.name}`,`Error: ${error.message}${panelNote}`,null,true);}
   finally{deckyBusy=false;await refreshDecky();}
 }

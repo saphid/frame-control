@@ -219,7 +219,9 @@ rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
 reusing the ID for a different change is rejected. **Check result** can resume
-polling even if the POST response is lost. After a connection error, Install, Update, and Remove
+polling even if the POST response is lost. A rejected polling request also keeps
+an accepted job's ID; it cannot establish that the install or update stopped.
+After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
 If Chromium denies session storage, the open panel keeps the request ID in
