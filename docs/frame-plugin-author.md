@@ -116,6 +116,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
+| `ColorPickerModal` | Local hue, saturation, lightness and alpha sliders with a preview. Defaults initialise the draft; OK passes an `hsla(...)` string to `onConfirm`. Cancel/Close discards it. A returned promise disables editing until success or a visible retryable failure. | Exact published CSS Loader 2.1.3 picker/callback replay with a synthetic setter, including draft/cancel, stale callbacks and async retry. No theme, Steam, backend or worn VR proof. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
@@ -133,6 +134,16 @@ callback as a slider adjustment, so save it through the normal setting path.
 `disabled` also disables Reset. The exact published Battery Tracker 0.2.0
 lookback control is replayed in local host tests with synthetic history replies;
 real history, controller activation and worn VR remain unverified.
+
+Open `ColorPickerModal` with `showModal` and supply numeric `defaultH` (0–360),
+`defaultS` and `defaultL` (0–100), and `defaultA` (0–1). These initialise one
+local draft, rather than changing whenever props redraw. OK calls
+`onConfirm('hsla(H, S%, L%, A)')`; slider edits and cancellation do not call it.
+Return a backend save promise from `onConfirm` to keep the dialog open on
+failure and permit retry. A callback that starts a save without returning its
+promise cannot report that save's outcome to the picker. Closing the dialog
+does not cancel a backend request already sent. This control cannot apply
+CSS Loader themes or change Steam's UI by itself.
 
 Keep routes local to the panel and give every operation a visible result. A
 plugin that calls `Navigation.Navigate('/decky/store')` will not open the
