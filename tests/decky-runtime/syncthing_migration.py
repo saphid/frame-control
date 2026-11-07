@@ -306,7 +306,7 @@ def main():
                 cleanup.callback(wait, lambda: not Path(f'/proc/{helper_pid}').exists(),
                                  'migration helper reaped')
             if decky_unit is not None:
-                stop_decky_service(decky_unit.name, report)
+                stop_decky_service(decky_unit.name, report, logs)
                 decky_unit.unlink()
                 ctl('daemon-reload')
                 report['ownedMigrationDeckyServiceRemoved'] = True
