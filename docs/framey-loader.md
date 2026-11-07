@@ -219,7 +219,9 @@ rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
 reusing the ID for a different change is rejected. **Check result** can resume
-polling even if the POST response is lost. After a connection error, Install, Update, and Remove
+polling even if the POST response is lost. A rejected polling request also keeps
+an accepted job's ID; it cannot establish that the install or update stopped.
+After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
 If Chromium denies session storage, the open panel keeps the request ID in
@@ -230,8 +232,13 @@ Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh
-the store and review the new version before retrying. Job results live in server
-memory for one hour after completion. If Frame Control restarts, or the request
+the store and review the new version before retrying.
+The desktop and headset also include the installed receipt shown by the Update
+or Remove row. If another client changes that installed copy before the job
+starts, the operation stops before downloading or changing plugin files. Refresh
+installed plugins and review the current copy before trying again. The existing
+transaction lock checks the receipt again before applying the operation.
+Job results live in server memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
 keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.

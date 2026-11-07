@@ -1961,6 +1961,33 @@ pathlib.Path.rename = fail_staged_move
 
 
 class StoreHost(unittest.TestCase):
+    def test_reviewed_installed_copy_changed_before_submission_is_preserved(self):
+        state = {'managed': True, 'running': True, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '2.0',
+             'sha256': 'b' * 64}]}
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog') as catalog, \
+             patch.object(frame_decky_store.urllib.request, 'urlopen') as download:
+            for action in ('update', 'remove'):
+                with self.subTest(action=action), self.assertRaisesRegex(ValueError, 'Installed plugin changed'):
+                    frame_decky_store.change(lambda *a, **k: self.fail('No headset write expected'),
+                                             action, 42, installed_hash='a' * 64)
+            catalog.assert_not_called()
+            download.assert_not_called()
+
+    def test_reviewed_installed_receipt_survives_to_the_transaction_lock(self):
+        state = {'managed': True, 'running': False, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0',
+             'sha256': 'a' * 64}]}
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog') as catalog:
+            commands = []
+            frame_decky_store.change(lambda command, **kwargs: commands.append(command) or '{}',
+                                     'remove', 42, installed_hash='a' * 64)
+            self.assertEqual(len(commands), 1)
+            self.assertTrue(commands[0].endswith(' ' + 'a' * 64))
+            catalog.assert_not_called()
+
     def test_reviewed_archive_changed_before_install_does_not_download(self):
         state = {'managed': True, 'running': True, 'plugins': []}
         catalog = [{'id': 42, 'name': 'Example', 'root': False,
@@ -2025,7 +2052,7 @@ class StoreHost(unittest.TestCase):
              patch.object(frame_decky_store, 'catalog', return_value=catalog), \
              patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
             result = frame_decky_store.change(lambda command, **kwargs: calls.append(command) or '{}',
-                                               'update', 42)
+                                               'update', 42, installed_hash='a' * 64)
         self.assertEqual(result, {})
         self.assertEqual(len(calls), 3)  # Upload, apply, and temporary archive cleanup.
         self.assertIn('update', calls[1])

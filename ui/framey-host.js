@@ -473,7 +473,7 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    bShowClearAction, bAlwaysShowClearAction,
+    bShowClearAction, bAlwaysShowClearAction, focusOnMount,
     onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
     const input = R.useRef(null);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -487,7 +487,7 @@
     };
     return R.createElement(Field, {label, description},
       R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-        ref:input,
+        ref:input, autoFocus:!!focusOnMount && !disabled,
         value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
         onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
         onBlur:e=>{if(!disabled)onBlur?.(e);},
@@ -835,7 +835,11 @@
     modal.element = decorate(element);
     modals.push(modal);
     renderModals();
-    setTimeout(()=>{if(modals.at(-1)===modal) modal.node?.focus();},0);
+    // React or a plugin may already have focused an input during mount. Keep
+    // it ready for typing; the shell is only the fallback focus target.
+    setTimeout(()=>{
+      if (modals.at(-1)===modal && !modal.node?.contains(document.activeElement)) modal.node?.focus();
+    },0);
     return {Close, ClosedPromise, Update:next=>{
       if (!modals.includes(modal)) return;
       // Keep replacement dialogs dismissible inside this isolated host too.
