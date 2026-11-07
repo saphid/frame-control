@@ -25,6 +25,11 @@ def backend(settings_dir):
 
 
 class SamplePlugin(unittest.TestCase):
+    def test_retired_settings_views_cannot_update_ui_or_issue_requests(self):
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_lifecycle.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_failed_read_cannot_overwrite_a_setting_with_the_display_default(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_read_guard.mjs')],
                                 capture_output=True, text=True, timeout=10)
