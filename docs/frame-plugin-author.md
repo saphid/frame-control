@@ -88,6 +88,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
+| `TextField.bShowClearAction`, `bAlwaysShowClearAction` | An opt-in Clear button empties the input through its native React change event. It hides when empty unless always-visible is requested; disabled fields stay inert. | Pinned Wine Cellar 0.2.1 search-control fixture; automated React/DOM check requires Linux Chrome. Worn VR remains unverified. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
 | `ReorderableList` | Lists plugin entries by `position`; native Move up/down buttons edit a draft. Save order calls `onSave` with normalized positions; Cancel discards the draft. Labels, data and optional `interactables` are retained. `disableReordering` hides ordering controls. | Exact published TabMaster 2.15.1 list/save callback with synthetic entries; cancel, disabled/late handlers, failed-save retry and refreshed-list tests. No real library edit or physical controller check. |
@@ -100,17 +101,25 @@ none of these frontend controls has passed a worn-headset check yet.
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e; real ARM64 Notebook save/reopen across backend restart and Simple Timer settings/recents persistence via local Chromium. No worn-VR claim. |
 | API v1/v2 `addEventListener` / `removeEventListener` | Plugin-scoped real backend events while panel is open; bounded queue, about one-second polling, subscription expiry | Real ARM64 Simple Timer countdown, start/cancel and completion toast via local Chromium; scope/bounds/reconnect tests. No closed-panel notifications. |
 | `toaster.toast` | Visible toast inside the plugin panel; plain text or React nodes for title, body, icon, logo and subtext; `dismiss` and optional `onClick` | Host unit test; no Steam system notification or worn VR check |
-| `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Falls back to memory if panel storage is denied. Plugin code waits for the cache reply; a missing or invalid reply displays an error after five seconds instead of opening with empty saved settings. | Parent/iframe round-trip, delayed reply, timeout and reopen in the local host test; real headset persistence remains unverified. |
+| `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Failed writes stay in parent-page memory across plugin reopen until a write succeeds. Reloading that page loses the fallback and may restore older disk values. Plugin code waits for the cache reply; a missing or invalid reply displays an error after five seconds instead of opening with empty saved settings. | Parent/iframe round-trip, delayed reply, timeout, denied/quota-exceeded writes, plugin isolation, storage recovery and reopen in the local host test; real headset persistence remains unverified. |
 | `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |
 | IndexedDB / localForage | IndexedDB is deliberately absent inside the opaque iframe so feature detection chooses the bounded localStorage driver. Plugins requiring IndexedDB directly remain unsupported. | HLTB official frontend in local Chromium: its previous `IDBFactory.open` SecurityError disappeared. No live HLTB data request was run. |
 | `routerHook.addRoute` / `removeRoute`, `Navigation.Navigate` / `NavigateBack`, `useParams` | Local routes inside this plugin panel, with named segments such as `/plugin/game/:appid/:view?`; `useParams()` reads the current segment values. Back walks up to 32 local page transitions and skips routes removed since navigation. | Host unit test; VR navigation unverified |
 | `routerHook.addPatch`, global components | No-op; cannot patch Steam routes | Not applicable |
 | `findModule`, `findModuleChild`, `findModuleExport`, class lookup and module mapping | Searches a finite registry of Framey controls and CSS maps. Unknown Steam modules return `undefined` or an empty mapping. The optional UI-audio export cannot play sound. | Host contract tests; pinned TabMaster 2.15.1 QAM and documentation render in local Chromium. Steam library editing and worn VR remain unverified. |
+| `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
+
+For `TextField`, set `bShowClearAction` to offer Clear. A controlled field must
+update `value` in `onChange`, just as it does for typed edits; the callback can
+read the empty string from `event.currentTarget.value` or `event.target.value`.
+Uncontrolled `defaultValue` fields also support clearing. Combine
+`bShowClearAction` with `bAlwaysShowClearAction` to keep the button visible when
+empty. Clearing an already empty input emits no extra change.
 
 For `SliderField`, supply a finite `resetValue` within `min` and `max` to show
 a Reset button. It sends the numeric default through the same `onChange(value)`
@@ -172,6 +181,13 @@ destructive actions work in VR. The
 [Storage Cleaner browser check](evidence/framey-api-v1-browser-2026-10-25.md)
 used empty stub data and did not invoke its cleanup actions.
 Use the Decky Python backend for settings that must survive browser cache loss.
+When adapting older nested settings, `findInTree(data, filter, {walkable, ignore})`
+can locate a value in the data your plugin already holds. It visits the root
+first, then arrays and object keys in order, and returns the matching object.
+Check for a missing match before reading a property. `findInReactTree` uses
+the same search with React child keys; neither helper obtains a Steam root or
+enables library-page patches. Migrate only data your plugin owns and keep
+unrecognized schemas intact until you can handle them explicitly.
 The Framey `localStorage` bridge is for disposable frontend caches, including
 the cache read attempted by Steam Status 1.2.3. It does not expose another
 plugin's cache or the Frame Control UI key. A real Steam Status panel reopen

@@ -473,12 +473,30 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
-      onChange:e=>{if(!disabled)onChange?.(e);}, onBlur:e=>{if(!disabled)onBlur?.(e);},
-      onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
-      onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}));
+    bShowClearAction, bAlwaysShowClearAction,
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
+    const input = R.useRef(null);
+    const [draft, setDraft] = R.useState(defaultValue ?? '');
+    const clear = () => {
+      const node = input.current;
+      if (disabled || !node || node.disabled || node.value==='') return;
+      // Bypass React's value tracker, then let its normal input listener emit
+      // onChange with the real input as both target and currentTarget.
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
+      node.dispatchEvent(new Event('input', {bubbles:true}));
+    };
+    return R.createElement(Field, {label, description},
+      R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
+        ref:input,
+        value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
+        onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
+        onBlur:e=>{if(!disabled)onBlur?.(e);},
+        onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+        onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}),
+      bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
+        R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
+          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'));
+  };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
@@ -852,6 +870,22 @@
       for (const value of moduleVariants(module)) if (filter(value)) mapping.set(id, value);
     return mapping;
   }
+  // Search only the value the plugin supplies. React ownership links can be
+  // cyclic, so visit each object once without recursing through the JS stack.
+  function findInTree(parent, filter, opts) {
+    if (!parent || typeof parent !== 'object') return null;
+    const {walkable=null, ignore=[]} = opts || {};
+    const pending = [parent], visited = new WeakSet();
+    while (pending.length) {
+      const node = pending.pop();
+      if (!node || typeof node !== 'object' || visited.has(node)) continue;
+      visited.add(node);
+      if (filter(node)) return node;
+      const children = Array.isArray(node) ? node : (walkable || Object.keys(node))
+        .filter(key=>!ignore.includes(key)).map(key=>node[key]);
+      for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
+    }
+  }
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
@@ -881,7 +915,9 @@
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     // The isolated panel has no Steam React root. Legacy plugins can inspect
     // this null result and keep their own controls without patching Steam UI.
-    getReactRoot: () => null, findInReactTree: () => null,
+    getReactRoot: () => null,
+    findInTree, findInReactTree:(node,filter)=>findInTree(node,filter,
+      {walkable:['props','children','child','sibling']}),
     findModule, findModuleChild, findModuleDetailsByExport,
     findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
     findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],
