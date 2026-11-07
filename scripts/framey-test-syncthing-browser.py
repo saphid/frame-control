@@ -8,7 +8,9 @@ import argparse
 import base64
 import hashlib
 import json
+import os
 from pathlib import Path
+import signal
 import subprocess
 import sys
 import tempfile
@@ -31,6 +33,65 @@ SOURCES = (
 
 def fingerprints():
     return {name: hashlib.sha256((ROOT/name).read_bytes()).hexdigest() for name in SOURCES}
+
+
+def stop_browser(browser):
+    """Stop only the private session we launched, including Chrome children."""
+    try:
+        os.killpg(browser.pid, signal.SIGTERM)
+        try:
+            browser.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            pass
+    except ProcessLookupError:
+        pass
+    finally:
+        # The launcher can exit before children finish writing the profile.
+        try:
+            os.killpg(browser.pid, signal.SIGKILL)
+        except ProcessLookupError:
+            pass
+        browser.wait(timeout=5)
+
+
+def wait_for_result(browser, folder, log, startup_seconds=45, execution_seconds=20):
+    """Give Chrome startup its own budget; never accept an incomplete probe."""
+    page = None
+    deadline = time.monotonic() + startup_seconds
+    report = {'passed':False,'error':'Browser fixture did not attach'}
+    try:
+        while time.monotonic() < deadline:
+            if browser.poll() is not None:
+                log.seek(0)
+                raise RuntimeError(log.read()[-1500:])
+            port = folder/'profile/DevToolsActivePort'
+            if page is None and port.is_file():
+                try:
+                    frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
+                    page = frame_steam.Page('Private Syncthing setup fixture')
+                except (OSError, IndexError, frame_steam.Fail):
+                    pass
+                else:
+                    deadline = time.monotonic() + execution_seconds
+                    report = {'passed':False,'error':'Browser fixture did not finish'}
+            if page:
+                value = page.eval('document.getElementById("result")?.textContent')
+                if value and value != 'Pending':
+                    report = json.loads(value)
+                    break
+            time.sleep(.1)
+        if page:
+            page.next_id += 1
+            page._send(json.dumps({'id':page.next_id,'method':'Page.captureScreenshot','params':{'format':'png'}}))
+            while True:
+                shot = json.loads(page._recv())
+                if shot.get('id') == page.next_id:
+                    break
+            return report, base64.b64decode(shot['result']['data'])
+        return report, None
+    finally:
+        if page:
+            page.sock.close()
 
 
 PROBE = r'''
@@ -197,40 +258,14 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                    '--no-default-browser-check','--disable-background-networking','--user-data-dir='+str(folder/'profile'),
                    '--window-size=1240,1200','--remote-debugging-address=127.0.0.1',
                    '--remote-debugging-port=0',source.as_uri()]
-        page = None
         with (args.output/'browser.log').open('w+') as log:
-            browser = subprocess.Popen(command, stdout=log, stderr=log)
+            browser = subprocess.Popen(command, stdout=log, stderr=log, start_new_session=True)
             try:
-                deadline = time.monotonic()+20
-                report = {'passed':False,'error':'Browser fixture did not finish'}
-                while time.monotonic() < deadline:
-                    if browser.poll() is not None:
-                        log.seek(0)
-                        raise RuntimeError(log.read()[-1500:])
-                    port = folder/'profile/DevToolsActivePort'
-                    if page is None and port.is_file():
-                        frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
-                        try: page = frame_steam.Page('Private Syncthing setup fixture')
-                        except (OSError,frame_steam.Fail): pass
-                    if page:
-                        value = page.eval('document.getElementById("result")?.textContent')
-                        if value and value != 'Pending':
-                            report = json.loads(value)
-                            break
-                    time.sleep(.1)
-                if page:
-                    page.next_id += 1
-                    page._send(json.dumps({'id':page.next_id,'method':'Page.captureScreenshot','params':{'format':'png'}}))
-                    while True:
-                        shot = json.loads(page._recv())
-                        if shot.get('id') == page.next_id: break
-                    (args.output/'panel.png').write_bytes(base64.b64decode(shot['result']['data']))
+                report, screenshot = wait_for_result(browser, folder, log)
+                if screenshot is not None:
+                    (args.output/'panel.png').write_bytes(screenshot)
             finally:
-                if page: page.sock.close()
-                browser.terminate()
-                try: browser.wait(timeout=5)
-                except subprocess.TimeoutExpired:
-                    browser.kill(); browser.wait(timeout=5)
+                stop_browser(browser)
         report.update(archiveSha256=DIGEST, frontendSha256=hashlib.sha256(bundle).hexdigest(),
                       candidate=args.candidate, migrating=args.migrating, configured=args.configured,
                       wizard=args.wizard,finishNavigationRequested=args.finish_navigation,manualPortRequested=args.manual_port,realFrameContacted=False,
