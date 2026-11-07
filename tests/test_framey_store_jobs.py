@@ -1,6 +1,7 @@
 """Store requests can reconnect when the headset panel loses the POST response."""
 import sandbox  # noqa: F401
 import sys
+import subprocess
 import threading
 import time
 import unittest
@@ -12,6 +13,11 @@ import server
 
 
 class StoreJobs(unittest.TestCase):
+    def test_desktop_store_actions_keep_the_displayed_installed_receipt(self):
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_desktop_store.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_worker_start_failure_is_terminal_and_request_can_be_checked(self):
         for stage in ('construct', 'start'):
             request_id = ('c' if stage == 'construct' else 'd') * 32
@@ -47,8 +53,8 @@ class StoreJobs(unittest.TestCase):
         finish = threading.Event()
         calls = []
 
-        def change(_ssh, action, plugin_id, report, reviewed_hash=None):
-            calls.append((action, plugin_id, reviewed_hash))
+        def change(_ssh, action, plugin_id, report, reviewed_hash=None, installed_hash=None):
+            calls.append((action, plugin_id, reviewed_hash, installed_hash))
             started.set()
             self.assertTrue(finish.wait(5))
             report('Installed', 100)
@@ -65,7 +71,7 @@ class StoreJobs(unittest.TestCase):
                     with self.subTest(changed=changed), self.assertRaises(server.Failure) as error:
                         server.decky_plugin({**body, **changed})
                     self.assertEqual(error.exception.status, 409)
-                self.assertEqual(calls, [('install', 2, 'b' * 64)])
+                self.assertEqual(calls, [('install', 2, 'b' * 64, None)])
                 self.assertNotIn('_request', server.job_status('id=' + request_id))
                 finish.set()
                 for _ in range(100):
@@ -88,6 +94,40 @@ class StoreJobs(unittest.TestCase):
                                          'acknowledged': True, 'requestId': request_id})
                 self.assertEqual(error.exception.status, 400)
             change.assert_not_called()
+
+    def test_reviewed_installed_receipt_is_forwarded_and_part_of_job_identity(self):
+        request_id = 'd' * 32
+        body = {'action': 'remove', 'id': 2, 'installedSha256': 'a' * 64,
+                'acknowledged': True, 'requestId': request_id}
+        try:
+            with patch.object(server.frame_decky_store, 'change', return_value={}) as change:
+                first = server.decky_plugin(body)
+                for _ in range(100):
+                    if server.job_status('id=' + request_id)['done']:
+                        break
+                    time.sleep(0.01)
+                self.assertTrue(server.job_status('id=' + request_id)['done'])
+                self.assertEqual(change.call_args.kwargs['installed_hash'], 'a' * 64)
+                self.assertEqual(server.decky_plugin(body), first)
+                self.assertEqual(change.call_count, 1)
+                with self.assertRaises(server.Failure) as error:
+                    server.decky_plugin({**body, 'installedSha256': 'b' * 64})
+                self.assertEqual(error.exception.status, 409)
+        finally:
+            with server._jobs_lock:
+                server._jobs.pop(request_id, None)
+
+    def test_invalid_installed_receipt_does_not_reserve_a_job(self):
+        with patch.object(server, 'start_job') as start:
+            for receipt in (False, 1, '', 'A' * 64, 'a' * 63, 'a' * 65, []):
+                with self.subTest(receipt=receipt), self.assertRaises(server.Failure) as error:
+                    server.decky_plugin({'action': 'remove', 'id': 2,
+                                         'acknowledged': True, 'installedSha256': receipt})
+                self.assertEqual(error.exception.status, 400)
+            with self.assertRaises(server.Failure):
+                server.decky_plugin({'action': 'install', 'id': 2,
+                                     'acknowledged': True, 'installedSha256': 'a' * 64})
+            start.assert_not_called()
 
 
 if __name__ == '__main__':
