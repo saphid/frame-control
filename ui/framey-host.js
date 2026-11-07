@@ -650,6 +650,46 @@
       !bAlertDialog && R.createElement('button', {type:'button', disabled:!!bCancelDisabled || busy,
         onClick:action(onCancel, bCancelDisabled)}, strCancelButtonText || 'Cancel'));
   };
+  const ColorPickerModal = ({closeModal, onConfirm, title='Color Picker',
+    defaultH=0, defaultS=100, defaultL=50, defaultA=1, frameySetModalBusy}) => {
+    const limits = [360,100,100,1];
+    const [values, setValues] = R.useState(() =>
+      [defaultH,defaultS,defaultL,defaultA].map((value,index) => Number.isFinite(value)
+        ? Math.max(0,Math.min(limits[index],value)) : [0,100,50,1][index]));
+    const draft = R.useRef(values); draft.current = values;
+    const callback = R.useRef(onConfirm); callback.current = onConfirm;
+    const gate = R.useRef({mounted:true, busy:false});
+    const [saving, setSaving] = R.useState(false);
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    const active = () => gate.current.mounted && (!modal || modals.includes(modal));
+    R.useEffect(() => {
+      gate.current.mounted = true;
+      return () => {gate.current.mounted = false;};
+    }, []);
+    const colour = values => `hsla(${values[0]}, ${values[1]}%, ${values[2]}%, ${values[3]})`;
+    const change = (index,value) => {
+      if (!active() || gate.current.busy || !Number.isFinite(value) ||
+          value<0 || value>limits[index]) return;
+      const next = [...draft.current]; next[index] = value;
+      draft.current = next; setValues(next);
+    };
+    const confirm = async () => {
+      if (!active() || gate.current.busy) return;
+      gate.current.busy = true; setSaving(true);
+      try {await callback.current?.(colour(draft.current));}
+      finally {
+        gate.current.busy = false;
+        if (gate.current.mounted) setSaving(false);
+      }
+    };
+    return R.createElement(ConfirmModal, {strTitle:title, onOK:confirm,
+      onCancel:()=>{gate.current.mounted=false;}, closeModal, frameySetModalBusy},
+      R.createElement('div', {role:'img', 'aria-label':'Colour preview',
+        style:{backgroundColor:colour(values),height:'64px',border:'1px solid currentColor'}}),
+      ['Hue','Saturation','Lightness','Alpha'].map((label,index) => R.createElement(SliderField, {
+        key:label, label, value:values[index], min:0, max:limits[index], step:index===3?0.01:1,
+        showValue:true, editableValue:true, disabled:saving, onChange:value=>change(index,value)})));
+  };
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
   const modals = [];
   let modalId = 0;
@@ -895,6 +935,7 @@
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
