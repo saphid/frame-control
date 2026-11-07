@@ -531,8 +531,10 @@
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
-      tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
-        id:page.route || String(index), title:page.title, content:page.content}))}));
+      // Decky separators are layout markers, never selectable pages. Keep the
+      // original index so hiding an earlier page does not retarget selection.
+      tabs:pages.flatMap((page,index)=>page==='separator' || page.visible===false ? [] : [{
+        id:page.route || String(index), title:page.title, content:page.content}])}));
   const emptyReorderEntries = Object.freeze([]);
   const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
     fieldProps, disableReordering=false}) => {
