@@ -124,6 +124,13 @@ none of these frontend controls has passed a worn-headset check yet.
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
 | `fetchNoCors`, file picker, root calls | Unavailable | Not supported by Framey |
 
+For plugin-cache values, use `getItem`, `setItem` and `removeItem`.
+`key in localStorage` also recognizes saved keys, including empty strings.
+Pinned Game Sync 1.0.4 uses this to mark a game as out of sync. Its published
+cache callbacks now retain that marker across panel reopen in an offline
+host/parent replay; this does not prove actual synchronization, live headset
+persistence or worn visibility.
+
 For a custom dialog, pass the `closeModal` injected by `showModal` into your
 inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
 dialog, including when another dialog opens above it. A registered root handler

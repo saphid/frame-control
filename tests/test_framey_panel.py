@@ -299,9 +299,18 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0, RECEIPT)
 
     def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
-        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
-                                capture_output=True, text=True, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        import hashlib
+        import zipfile
+        from framey_official import PLUGINS, archive
+        record = next(plugin for plugin in PLUGINS if plugin['id'] == 104)
+        data = archive(record)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), record['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as official, tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder)/'game-sync.js'
+            bundle.write_bytes(official.read(record['folder']+'/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs'), str(bundle)],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_vr_store_browsing_and_search(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
