@@ -607,6 +607,10 @@ def decky_plugin(body):
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
+    installed_hash = body.get('installedSha256')
+    if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
+                                       or not frame_decky_store.SHA.fullmatch(installed_hash)):
+        raise Failure('Invalid reviewed installed version', 400)
     request_id = body.get('requestId')
     if request_id is not None and (not isinstance(request_id, str) or
                                    not re.fullmatch(r'[0-9a-f]{32}', request_id)):
@@ -614,8 +618,9 @@ def decky_plugin(body):
     device = LINK.active_device()['id'] if LINK else FRAME
     return start_job('Decky plugin ' + action,
                      lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
-                                                            reviewed_hash=reviewed_hash), progress=True,
-                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash))
+                                                            reviewed_hash=reviewed_hash,
+                                                            installed_hash=installed_hash), progress=True,
+                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash, installed_hash))
 
 
 def framey_method_action(body):

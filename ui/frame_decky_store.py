@@ -2149,12 +2149,16 @@ finally:
 '''
 
 
-def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, reviewed_hash=None):
+def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, reviewed_hash=None,
+           installed_hash=None):
     if action not in ('install', 'update', 'remove') or type(plugin_id) is not int or plugin_id <= 0:
         raise ValueError('Choose a valid store plugin action')
     if reviewed_hash is not None and (action == 'remove' or not isinstance(reviewed_hash, str)
                                       or not SHA.fullmatch(reviewed_hash)):
         raise ValueError('Invalid reviewed store version')
+    if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
+                                       or not SHA.fullmatch(installed_hash)):
+        raise ValueError('Invalid reviewed installed version')
     report('Checking installed plugins', 5)
     state = frame_decky.status(ssh)
     if not state['managed']:
@@ -2162,6 +2166,8 @@ def change(ssh, action, plugin_id, report=lambda stage, percent=None: None, revi
     if action != 'remove' and not state['running']:
         raise ValueError('Start Frame Control managed Decky before installing or updating plugins')
     installed = [p for p in state['plugins'] if p.get('storeId') == plugin_id]
+    if installed_hash is not None and (len(installed) != 1 or installed[0].get('sha256') != installed_hash):
+        raise ValueError('Installed plugin changed; refresh installed plugins and review it again')
     if action == 'install' and installed:
         raise ValueError('This store plugin is already installed; use Update or Remove')
     if action == 'remove':
