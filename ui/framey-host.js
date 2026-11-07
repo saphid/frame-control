@@ -465,8 +465,17 @@
           current.current.onChange?.(entry);
       }}));
   };
-  const DropdownItem = props => R.createElement(Field, {label:props.label, description:props.description},
-    typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
+  const DropdownItem = props => {
+    const choices=(Array.isArray(props.rgOptions) ? props.rgOptions : [])
+      .flatMap(entry=>Array.isArray(entry.options) ? entry.options : [entry]);
+    const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
+    return R.createElement(Field, {label:props.label, description:props.description},
+      // Keep the plugin's current-value view visible before a deferred read.
+      // Native selection and the existing showMenu gate still own choices.
+      typeof props.renderButtonValue==='function' && R.createElement('div', null,
+        props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
+      typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
+  };
   const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
