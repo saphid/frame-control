@@ -1734,6 +1734,104 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
         self.assertEqual((Path(self.tmp.name) / 'service-calls').read_text().splitlines(),
                          ['--user stop frame-control-decky.service'])
 
+    def test_failed_backup_move_preserves_installed_plugin_and_saved_data(self):
+        data, digest = archive()
+        fault = '''
+import pathlib
+original_rename = pathlib.Path.rename
+def fail_backup_move(path, destination):
+    if path.name == 'Example' and destination.name.startswith('.frame-control-old-'):
+        raise PermissionError('injected backup move failure')
+    return original_rename(path, destination)
+pathlib.Path.rename = fail_backup_move
+'''
+        for action, running in (('update', True), ('remove', True), ('remove', False)):
+            with self.subTest(action=action, running=running):
+                installed = self.apply('install', data)
+                self.assertEqual(installed.returncode, 0, installed.stderr)
+                (self.folder / 'saved-data.json').write_bytes(b'{"saved":"keep me"}\n')
+                before = self.plugin_snapshot()
+                calls = self.record_service_calls(running)
+                with patch.object(frame_decky_store, 'APPLY', fault + frame_decky_store.APPLY):
+                    result = self.apply(action, data if action == 'update' else None, expected=digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('injected backup move failure', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'] if running else ['stop'])
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+                # The failed transaction releases its lock and leaves the plugin manageable.
+                retry = self.apply(action, data if action == 'update' else None, expected=digest)
+                self.assertEqual(retry.returncode, 0, retry.stderr)
+                if action == 'update':
+                    self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_failed_staged_move_restores_old_plugin_or_leaves_install_absent(self):
+        old, old_digest = archive(extra=('Example/generation.txt', 'old'))
+        new, _ = archive(extra=('Example/generation.txt', 'new'))
+        fault = '''
+import pathlib
+original_rename = pathlib.Path.rename
+def fail_staged_move(path, destination):
+    if path.parent.name.startswith('.frame-control-stage-'):
+        raise OSError('injected staged move failure')
+    return original_rename(path, destination)
+pathlib.Path.rename = fail_staged_move
+'''
+        for action in ('install', 'update'):
+            with self.subTest(action=action):
+                if action == 'update':
+                    installed = self.apply('install', old)
+                    self.assertEqual(installed.returncode, 0, installed.stderr)
+                    (self.folder / 'saved-data.json').write_text('{"keep":true}')
+                before = self.plugin_snapshot()
+                calls = self.record_service_calls()
+                with patch.object(frame_decky_store, 'APPLY', fault + frame_decky_store.APPLY):
+                    result = self.apply(action, new, expected=old_digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('injected staged move failure', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder] if before else [])
+                retry = self.apply(action, new, expected=old_digest)
+                self.assertEqual(retry.returncode, 0, retry.stderr)
+                self.assertEqual((self.folder / 'generation.txt').read_text(), 'new')
+                self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_failed_restart_restores_previous_plugin_and_restarts_service(self):
+        old, digest = archive(extra=('Example/generation.txt', 'old'))
+        new, _ = archive(extra=('Example/generation.txt', 'new'))
+        installed = self.apply('install', old)
+        self.assertEqual(installed.returncode, 0, installed.stderr)
+        (self.folder / 'saved-data.json').write_text('{"keep":true}')
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        fake = Path(self.tmp.name) / 'systemctl'
+        fake.write_text(fake.read_text().replace('exit 0\n',
+                        'if [ "$2" = start ] && [ ! -f "$HOME/start-failed" ]; then\n'
+                        '  touch "$HOME/start-failed"\n'
+                        '  echo "injected restart failure" >&2\n  exit 1\nfi\nexit 0\n'))
+        result = self.apply('update', new, expected=digest)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('injected restart failure', result.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start', 'start'])
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        retry = self.apply('update', new, expected=digest)
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual((self.folder / 'generation.txt').read_text(), 'new')
+
+    def plugin_snapshot(self):
+        return {str(path.relative_to(self.folder)): (path.read_bytes(), path.stat().st_mode & 0o777)
+                for path in self.folder.rglob('*') if path.is_file()}
+
+    def record_service_calls(self, running=True):
+        calls = Path(self.tmp.name) / 'service-calls'
+        calls.write_text('')
+        (Path(self.tmp.name) / 'systemctl').write_text(
+            '#!/bin/sh\nif [ "$2" = is-active ]; then exit ' + ('0' if running else '1') + '; fi\n'
+            'echo "$2" >> "$HOME/service-calls"\nexit 0\n')
+        return calls
+
     def test_shared_lock_rejects_plugin_and_loader_changes(self):
         import fcntl
 
