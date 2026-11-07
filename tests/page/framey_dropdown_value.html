@@ -1,0 +1,65 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('fixture');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const root=ReactDOM.createRoot(container);
+  const application={appId:424242,name:'Private fixture'};
+  let availableTools=[],assignedToolName='private-proton',assignedToolDisplayName='Synthetic assigned Proton';
+  let compatibilityMappingsStale=false,loads=0,release;
+  const selections=[];
+  // Only the exact pinned dropdown element/renderer runs. Tool choices and
+  // selection results are synthetic; no plugin initializer, helper or Steam
+  // compatibility-tool discovery/assignment runs.
+  const dropdownOptions=()=>availableTools;
+  const openToolMenu=(app,showMenu)=>{assert(app===application,'application changed');loads++;release=showMenu;};
+  const selectCompatTool=(app,option)=>{assert(app===application,'application changed');selections.push(option);};
+  const published=()=>__OFFICIAL_CONTROL__;
+  const render=()=>ReactDOM.flushSync(()=>root.render(published()));
+  const value=()=>container.querySelector('span[title]');
+  const button=()=>container.querySelector('button');
+  const select=()=>container.querySelector('select');
+  const checkValue=text=>{
+    assert(value()?.textContent===text,'current assigned tool missing or stale');
+    assert(value().getAttribute('aria-label')==='Compatibility tool for Private fixture: '+text,'published accessible label lost');
+    assert(value().style.textOverflow==='ellipsis','published renderer styles lost');
+  };
+  try {
+    render();checkValue('Synthetic assigned Proton');
+    assert(!select()&&loads===0&&selections.length===0,'rendering current value performed a tool read/write');
+    ReactDOM.flushSync(()=>button().click());
+    assert(loads===1&&!select(),'loading gate was bypassed');
+    checkValue('Synthetic assigned Proton');
+    assignedToolDisplayName='Synthetic newer assignment';render();
+    checkValue('Synthetic newer assignment');
+    availableTools=[{data:'private-proton',label:'Private choice'},{data:'',label:'Steam default'}];
+    ReactDOM.flushSync(()=>{root.render(published());release();});
+    assert(select()&&select().value==='0','ready choices missing or wrong selection');
+    checkValue('Synthetic newer assignment');
+    ReactDOM.flushSync(()=>{
+      select().value='1';select().dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    assert(selections.length===1&&selections[0]===availableTools[1],'published selection lost original option identity');
+    assignedToolName='';assignedToolDisplayName='Steam default';render();checkValue('Steam default');
+    assert(select().value==='1','empty-string option failed to remain selected');
+    compatibilityMappingsStale=true;render();
+    assert(button().disabled&&select().disabled,'disabled control became actionable');
+    checkValue('Steam default');
+    button().click();assert(loads===1,'disabled loader ran');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedControl:true,
+      currentValueBeforeAndDuringLoad:true,currentValueUpdates:true,rendererStyleAndLabel:true,
+      loadingGatePreserved:true,originalOptionSelected:true,emptyStringSelection:true,
+      disabledValueRetained:true,syntheticTools:true,realFrameContacted:false,realToolAssignment:false});
+  }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
