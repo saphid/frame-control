@@ -1,0 +1,116 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-modal');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const buttons=()=>[...container.querySelectorAll('[role=dialog]:not([hidden]) button')];
+  const button=text=>buttons().find(node=>node.textContent===text);
+  const tap=node=>ReactDOM.flushSync(()=>node.click());
+  const escape=()=>ReactDOM.flushSync(()=>document.dispatchEvent(new KeyboardEvent('keydown',{
+    key:'Escape',bubbles:true,cancelable:true})));
+  const t=key=>key, SP_JSX=window.SP_JSX;
+  // Exact published receive prompt only: record its decisions in memory. No
+  // plugin initializer, network, file transfer, acceptance RPC or backend runs.
+  __OFFICIAL_COMPONENT__
+  try {
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    const decisions=[];
+    const published=()=>React.createElement(ConfirmReceiveModal,{
+      title:'Synthetic offer',from:'Fixture sender',fileCount:0,files:[],onConfirm:value=>decisions.push(value)});
+    let handle=show(published());
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(JSON.stringify(decisions)==='[false]','shell Close did not report the published rejection');
+    handle=show(published());escape();await handle.ClosedPromise;
+    assert(JSON.stringify(decisions)==='[false,false]','Escape did not report the published rejection');
+    handle=show(published());tap(button('confirmReceive.reject'));await handle.ClosedPromise;
+    handle=show(published());tap(button('confirmReceive.accept'));await handle.ClosedPromise;
+    assert(JSON.stringify(decisions)==='[false,false,false,true]','explicit decisions changed or cancellation ran twice');
+    handle=show(published());close(handle);await handle.ClosedPromise;
+    assert(decisions.length===4,'programmatic Close must not invent a receive decision');
+
+    // Updating the custom component uses its latest callback; replacing or
+    // removing ModalRoot retires its old cancellation registration.
+    const updated=[];
+    handle=show(published());
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(ConfirmReceiveModal,{
+      fileCount:0,files:[],onConfirm:value=>updated.push(value)})));
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(JSON.stringify(updated)==='[false]'&&decisions.length===4,'updated callback was stale');
+    let fallback=0,inner=0;
+    function Custom({closeModal,root=true,onEsc}) {
+      return root ? React.createElement(DFL.ModalRoot,{closeModal,
+        onCancel:()=>{inner++;closeModal();},onEscKeypress:onEsc},'Inner fixture') :
+        React.createElement('p',null,'No inner root');
+    }
+    handle=show(React.createElement(Custom,{onCancel:()=>fallback++}));
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Custom,{root:false,onCancel:()=>fallback++})));
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(fallback===1&&inner===0,'unmounted root intercepted fallback cancellation');
+    handle=show(React.createElement(Custom));
+    ReactDOM.flushSync(()=>handle.Update(React.createElement('p',{onCancel:()=>fallback++},'Replacement')));
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(fallback===2&&inner===0,'replaced dialog retained a root callback');
+    let removeRoot;
+    function Removable({closeModal}) {
+      const [visible,setVisible]=React.useState(true);removeRoot=()=>setVisible(false);
+      return visible ? React.createElement(DFL.ModalRoot,{closeModal,onCancel:()=>inner++}) : null;
+    }
+    handle=show(React.createElement(Removable,{onCancel:()=>fallback++}));
+    ReactDOM.flushSync(()=>removeRoot());tap(button('Close'));await handle.ClosedPromise;
+    assert(fallback===3&&inner===0,'root effect cleanup left a stale handler');
+    // A memoized component may skip rendering when Update supplies the same
+    // props. Its still-mounted root must keep its cancellation registration.
+    const Memo=React.memo(Custom);
+    handle=show(React.createElement(Memo));
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Memo)));
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(inner===1,'memoized update lost the mounted root handler');
+
+    // The root owns Escape when supplied. It can keep a dialog open; shell
+    // Close still cancels. Direct roots must not double-call the same handler.
+    let escapes=0;
+    handle=show(React.createElement(Custom,{onEsc:()=>escapes++}));
+    escape();assert(escapes===1&&inner===1&&button('Close'),'custom Escape did not retain the dialog');
+    tap(button('Close'));await handle.ClosedPromise;assert(inner===2,'custom Close did not cancel');
+    let direct=0;
+    handle=show(React.createElement(DFL.ModalRoot,{onCancel:()=>direct++}));
+    tap(button('Close'));await handle.ClosedPromise;assert(direct===1,'direct root cancellation duplicated');
+
+    // A child root binds to its own dialog, leaving its parent pending.
+    const parent=show(published());
+    const child=show(published());tap(button('Close'));await child.ClosedPromise;
+    assert(decisions.length===5&&container.querySelectorAll('[role=dialog]').length===1,'child cancelled its parent');
+    escape();await parent.ClosedPromise;assert(decisions.length===6,'parent lost its cancellation binding');
+
+    // Existing async submission guards still suppress shell cancellation.
+    let finish,cancels=0;
+    function Busy({closeModal}) {
+      return React.createElement(DFL.ModalRoot,{closeModal,
+        onCancel:()=>cancels++,onOK:()=>new Promise(resolve=>{finish=resolve;})},'Busy fixture');
+    }
+    handle=show(React.createElement(Busy));tap(button('OK'));
+    assert(button('Close').disabled,'busy Close was enabled');tap(button('Close'));escape();
+    assert(cancels===0&&button('Close'),'busy dialog was cancelled');
+    finish();await settle();ReactDOM.flushSync(()=>{});
+    tap(button('Close'));await handle.ClosedPromise;
+    assert(cancels===1,'settled dialog did not unlock cancellation');
+    await settle();assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedDialog:true,
+      shellCloseRejects:true,escapeRejects:true,explicitDecisions:true,programmaticCloseSilent:true,
+      updatedCallback:true,retiredRegistration:true,escapeOverride:true,nestedDialogs:true,busyGuard:true,
+      syntheticInput:true,realFrameContacted:false,realFileTransfer:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
