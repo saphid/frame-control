@@ -22,6 +22,21 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_preserves_published_current_value_renderer(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.Dropdown, \{ rgOptions: '
+                            r'dropdownOptions\(availableTools, assignedToolName, assignedToolDisplayName\),'
+                            r'[\s\S]*?onChange: \(option\) => selectCompatTool\(application, option\) \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_value.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_css_loader_colour_picker_confirms_only_the_selected_hsla(self):
         plugin = next(p for p in LEGACY_PLUGINS if p['id'] == 7)
         data = archive(plugin)

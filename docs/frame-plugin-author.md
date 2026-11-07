@@ -93,6 +93,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
+| `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
 | `TextField.focusOnMount` | Focuses an enabled native input when it mounts. A modal preserves focus already inside it, falling back to its shell when nothing inside has focus. Updating an existing field does not refocus it. | Exact RadiYo! 1.3 text dialog in real React/DOM with synthetic query input; opt-out, disabled, update, shell fallback and focus restoration checks. No radio backend, physical controller or VR keyboard proof. |
 | `TextField.bShowClearAction`, `bAlwaysShowClearAction` | An opt-in Clear button empties the input through its native React change event. It hides when empty unless always-visible is requested; disabled fields stay inert. | Pinned Wine Cellar 0.2.1 search-control fixture; automated React/DOM check requires Linux Chrome. Worn VR remains unverified. |
@@ -188,6 +189,14 @@ it does not open a Steam context menu. A resolved promise alone does not expose
 the choices. Return the promise if you want Framey to display its rejection,
 or show the error in your plugin. Cancel loading ends Framey's wait, leaving
 your own request lifecycle under your plugin's control; the user can then retry.
+Supply `renderButtonValue(label)` when the currently assigned value needs a
+custom view, especially before deferred choices are loaded. Framey renders its
+React result above the loader/select, including while disabled or waiting.
+The argument is the original matching option's label (including a React node),
+or `strDefaultLabel` / "Choose an option" if no option matches. Selection uses
+`option.data`, so zero and empty strings remain valid choices. This renderer
+does not load choices or submit a selection; retain `onMenuWillOpen` and
+`onChange` for those operations. The native select keeps its own option text.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 For a `ReorderableList`, give each entry a `label`, a numeric `position` and
 any plugin-owned `data`. Framey sorts a copy of the entries and offers native
