@@ -30,6 +30,16 @@ an unread setting from being overwritten using the initial display default;
 callbacks retained before a redraw follow the same guard. Reload remains
 available for recovery. This path is tested with synthetic backend replies,
 not a live headset connection.
+
+Leaving the settings view retires its callbacks, closes its Reset dialog and
+ignores late read/write replies for that view's state and success toasts. A
+request already sent to the backend is **not cancelled** and can still write
+the setting. Returning to the view starts a new read before editing is enabled.
+The sample also handles React's development effect setup/cleanup replay: a
+late reply from the first setup cannot unlock or replace the newer read.
+Lifecycle tests use delayed synthetic replies through the real host and built
+bundle; they do not prove live-headset persistence.
+
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
 write path as the toggle. This is a safe example of putting a settings change
