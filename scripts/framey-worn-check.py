@@ -14,6 +14,7 @@ import secrets
 import shlex
 import subprocess
 import sys
+import tempfile
 import time
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -108,6 +109,18 @@ def color_count(text):
     return len(set(re.findall(r'#[0-9A-Fa-f]{6,8}', text)))
 
 
+def fresh_interaction(state, token, started, installed_ids, now):
+    if (not isinstance(state, dict) or state.get('nonce') != token or
+            state.get('started') != started):
+        return False
+    panel, pointer = state.get('panel'), state.get('input')
+    if not isinstance(panel, dict) or not isinstance(pointer, dict):
+        return False
+    return (type(panel.get('pluginId')) is int and panel['pluginId'] in installed_ids and
+            all(type(item.get('at')) in (int, float) and started < item['at'] <= now
+                for item in (panel, pointer)))
+
+
 def main(worn_confirmed=False):
     # The operator confirms wear before this check. Pointer events and pixels
     # cannot establish what the wearer saw or which controller produced input.
@@ -141,7 +154,9 @@ def main(worn_confirmed=False):
                 not after_lock.get('proximity') or not after_lock.get('battery') or
                 min(x['percent'] for x in after_lock['battery']) < 20):
             raise RuntimeError('Activity, proximity or battery changed after acquiring the lock')
-        state = json.dumps({'nonce':token,'started':time.time()})
+        started = time.time()
+        installed_ids = {p['id'] for p in before['plugins']}
+        state = json.dumps({'nonce':token,'started':started})
         code = "import pathlib; p=pathlib.Path.home()/'.local/share/frame-control/headset/worn-check.json'; p.write_text(" + repr(state) + ")"
         remote('python3 -c ' + shlex.quote(code))
         challenge = True
@@ -149,31 +164,35 @@ def main(worn_confirmed=False):
         deadline = time.monotonic() + 35
         while time.monotonic() < deadline:
             state = check_file()
-            if state.get('nonce') == token and state.get('panel') and state.get('input'):
+            if fresh_interaction(state, token, started, installed_ids, time.time()):
                 break
             time.sleep(1)
         result['interaction'] = state
+        if not fresh_interaction(state, token, started, installed_ids, time.time()):
+            raise RuntimeError('No fresh panel and input evidence for this worn-check challenge')
         result['after'] = probe()
         result['activeHeadset'] = isinstance(result['after']['activity'], int) and result['after']['activity'] < 3
+        if (not result['activeHeadset'] or not result['after'].get('proximity') or
+                not result['after'].get('battery') or min(x['percent'] for x in result['after']['battery']) < 20):
+            raise RuntimeError('Activity, proximity or battery changed during the check')
         result['overlay'] = json.loads(remote('python3 -', stdin=OVERLAY_PROBE, timeout=15))
         result['panelVisible'] = result['overlay']['visible'] is True
-        installed_ids = {p['id'] for p in before['plugins']}
         result['trustedPointerInput'] = bool(state.get('input', {}).get('at', 0) > state.get('started', 0))
         result['pluginPanelReady'] = bool(state.get('panel', {}).get('at', 0) > state.get('started', 0)
                                           and state['panel'].get('pluginId') in installed_ids)
         if result['panelVisible'] and result['pluginPanelReady']:
             shot = json.loads(remote('python3 -', stdin=(ROOT/'ui/frame_vrshot.py').read_text(), timeout=20))['path']
-            local = Path('/tmp')/('framey-worn-' + token + '.png')
             try:
-                with local.open('wb') as out:
-                    copy = subprocess.run(ssh_argv('cat ' + shlex.quote(shot)), stdout=out, stderr=subprocess.PIPE, timeout=20)
-                if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
-                result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
-                pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
-                                        capture_output=True, text=True, timeout=15)
-                result['screenshotColors'] = color_count(pixels.stdout) if pixels.returncode == 0 else None
+                with tempfile.TemporaryDirectory(prefix='framey-worn-') as folder:
+                    local = Path(folder)/'screenshot.png'
+                    with local.open('wb') as out:
+                        copy = subprocess.run(ssh_argv('cat ' + shlex.quote(shot)), stdout=out, stderr=subprocess.PIPE, timeout=20)
+                    if copy.returncode: raise RuntimeError('Could not copy the SteamVR screenshot')
+                    result['screenshotSha256'] = hashlib.sha256(local.read_bytes()).hexdigest()
+                    pixels = subprocess.run(['convert', str(local), '-resize', '64x64!', 'txt:-'],
+                                            capture_output=True, text=True, timeout=15)
+                    result['screenshotColors'] = color_count(pixels.stdout) if pixels.returncode == 0 else None
             finally:
-                local.unlink(missing_ok=True)
                 remote('rm -f ' + shlex.quote(shot))
         result['passed'] = (result['activeHeadset'] and result['panelVisible'] and result['trustedPointerInput'] and
                             result['pluginPanelReady'] and (result.get('screenshotColors') or 0) > 8)
@@ -183,13 +202,17 @@ def main(worn_confirmed=False):
         if challenge:
             code = "import json,pathlib; p=pathlib.Path.home()/'.local/share/frame-control/headset/worn-check.json'; d=json.loads(p.read_text()); p.unlink() if d.get('nonce')==" + repr(token) + " else None"
             try: remote('python3 -c ' + shlex.quote(code))
-            except Exception as exc: result['challengeCleanupError'] = str(exc)
+            except Exception as exc:
+                result['challengeCleanupError'] = str(exc)
+                result['passed'] = False
         if locked:
             try:
                 remote('test "$(cat ' + LOCK + '/owner)" = ' + shlex.quote(token) +
                        ' && rm ' + LOCK + '/owner && rmdir ' + LOCK)
                 result['lockReleased'] = True
-            except Exception as exc: result['lockCleanupError'] = str(exc)
+            except Exception as exc:
+                result['lockCleanupError'] = str(exc)
+                result['passed'] = False
     print(json.dumps(result, indent=2))
     return 0 if result.get('passed') else 1
 

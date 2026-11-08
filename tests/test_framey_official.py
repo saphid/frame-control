@@ -17,10 +17,156 @@ import io
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'ui'))
 import frame_decky_store
 import framey_panel
-from framey_official import LEGACY_PLUGINS, PLUGINS, archive
+from framey_official import LEGACY_PLUGINS, PLUGINS, WEB_BROWSER_143, archive
 
 
 class OfficialBundles(unittest.TestCase):
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_tabmaster_disabled_menu_group_blocks_nested_presets(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder']+'/dist/index.js').decode()
+        group = re.search(r"window\.SP_REACT\.createElement\(DFL\.MenuGroup, \{ label: 'Micro SD Card'"
+                          r'[\s\S]*?(?=\n\s+default:)', frontend)
+        self.assertIsNotNone(group)
+        expression = group.group().rstrip()
+        self.assertTrue(expression.endswith(');'))
+        # Remove only the enclosing return (...) close and statement semicolon.
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_menu_group.mjs')],
+                                input=expression[:-2], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_preserves_published_current_value_renderer(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.Dropdown, \{ rgOptions: '
+                            r'dropdownOptions\(availableTools, assignedToolName, assignedToolDisplayName\),'
+                            r'[\s\S]*?onChange: \(option\) => selectCompatTool\(application, option\) \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_value.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_web_browser_warning_uses_local_simple_modal(self):
+        plugin = WEB_BROWSER_143
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        component = re.search(r'const UsageWarningModal = .*?\n    \};', frontend, re.S)
+        self.assertIsNotNone(component)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_simple_modal.mjs')],
+                                input=component.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_css_loader_colour_picker_confirms_only_the_selected_hsla(self):
+        plugin = next(p for p in LEGACY_PLUGINS if p['id'] == 7)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(deckyFrontendLib\.ColorPickerModal, '
+                            r'\{ onConfirm: \(HSLString\) => \{[\s\S]*?title: data\.name \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_colour_picker.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_game_sync_sidebar_separators_do_not_open_blank_pages(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 104)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        navigation = re.search(r'class SyncTargetConfigPage extends RoutePage \{[\s\S]*?'
+                               r'(?=\nconst syncTargetConfigPage)', frontend)
+        self.assertIsNotNone(navigation)
+        self.assertIn('"separator"', navigation.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sidebar.mjs')],
+                                input=navigation.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_emuchievements_old_settings_keep_values_through_tree_lookup(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 28)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        settings = re.search(r'  const CONFIG_VERSION = "1\.1\.0";[\s\S]*?(?=\n  class EmuchievementsState)', frontend)
+        self.assertIsNotNone(settings)
+        self.assertIn('deckyFrontendLib.findInTree(config', settings.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_settings_tree.mjs')],
+                                input=settings.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_radiyo_text_dialog_can_submit_through_modal_root(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 24)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        component = re.search(r'const TextFieldModal = \(\{ closeModal, onClosed, label, placeholder \}\) => \{'
+                              r'[\s\S]*?\n  \};', frontend)
+        self.assertIsNotNone(component)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_modal_root.mjs')],
+                                input=component.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_search_preserves_its_accessible_name(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.TextField, '
+                            r'\{ "aria-label": "Search installed Steam games[^\n]+? \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield_label.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_waits_for_published_option_loader(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        callback = re.search(r'const openToolMenu = SP_REACT\.useCallback\([\s\S]+?\}, \[toolOptions\]\);', frontend)
+        self.assertIsNotNone(callback)
+        self.assertIn('void openToolMenu(application, showMenu);', frontend)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_load.mjs')],
+                                input=json.dumps({'callback': callback.group()}),
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_game_sync_text_dialog_commits_the_edited_value_on_blur(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 104)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle, tempfile.TemporaryDirectory() as root:
+            frontend = Path(root) / 'index.js'
+            frontend.write_bytes(bundle.read(plugin['folder'] + '/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_textfield.mjs'), str(frontend)],
+                                    capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_pause_games_toggle_renders_saved_value_and_dispatches_settings_only(self):
         plugin = next(p for p in PLUGINS if p['id'] == 13)
@@ -102,6 +248,23 @@ class OfficialBundles(unittest.TestCase):
                         with patch.object(framey_panel, 'PLUGINS', plugins):
                             self.assertEqual(framey_panel.local_module(135, plugin['sha256'], 'chunks/pluginApi-B8sV7970.js'),
                                              (folder/'dist/chunks/pluginApi-B8sV7970.js').read_bytes())
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_tabmaster_published_list_reorders_only_on_save(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.ReorderableList, '
+                            r'\{ entries: entries, interactables: TabEntryInteractables, '
+                            r'onSave: \(entries\) => \{[\s\S]*?\} \}\)', frontend)
+        self.assertIsNotNone(control)
+        self.assertIn('tabMasterManager.reorderTabs(entries.map(entry => entry.data.id))', control.group())
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_reorderable.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
 
 
 if __name__ == '__main__':

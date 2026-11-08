@@ -1,6 +1,7 @@
 """Actual legacy service/profile migration, only inside the owned package VM."""
 
 import configparser
+from contextlib import ExitStack
 import hashlib
 import json
 import os
@@ -178,7 +179,8 @@ def main():
         distractor = home / 'migration-unrelated/decky-syncthing-watchdog'
         distractor.parent.mkdir()
         shutil.copy('/usr/bin/sleep', distractor)
-        unrelated = subprocess.Popen([str(distractor), '900'], start_new_session=True)
+        unrelated = subprocess.Popen([str(distractor), '900'], start_new_session=True,
+                                     stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         loader = base / 'PluginLoader'
         shutil.copy('/input/PluginLoader', loader)
         loader.chmod(0o700)
@@ -271,30 +273,43 @@ def main():
                       legacyDataRetainedAfterRestart=True, legacyIdentityAfterRestart=restarted,
                       legacyMainPidAfterRestart=restarted_pid)
     finally:
-        if decky_unit is not None:
-            stop_decky_service(decky_unit.name, report)
-            decky_unit.unlink()
-            ctl('daemon-reload')
-            report['ownedMigrationDeckyServiceRemoved'] = True
-        if helper_pid is not None:
-            wait(lambda: not Path(f'/proc/{helper_pid}').exists(), 'migration helper reaped')
-        if unrelated is not None:
-            if unrelated.poll() is None:
-                unrelated.terminate()
-            unrelated.wait(timeout=5)
-        if unit.exists():
-            assert unit.read_bytes() == unit_bytes
-            ctl('disable', unit.name, check=False)
-            ctl('stop', unit.name)
-            assert prop(unit.name, 'MainPID') == '0'
-            unit.unlink()
-            ctl('daemon-reload')
-        for log in logs:
-            try:
-                verify_decky_log(log)
-                report['deckyShutdownLogChecked'] = True
-            finally:
-                log.close()
+        # Stop failures must not bypass the remaining owned cleanup or lose the
+        # loader log. ExitStack runs every callback and preserves exceptions;
+        # a forced/timed-out Decky stop still fails the package probe.
+        with ExitStack() as cleanup:
+            def check_logs():
+                for log in logs:
+                    try:
+                        verify_decky_log(log)
+                        report['deckyShutdownLogChecked'] = True
+                    finally:
+                        log.close()
+            cleanup.callback(check_logs)
+
+            def remove_legacy_fixture():
+                if unit.exists():
+                    assert unit.read_bytes() == unit_bytes
+                    ctl('disable', unit.name, check=False)
+                    ctl('stop', unit.name)
+                    assert prop(unit.name, 'MainPID') == '0'
+                    unit.unlink()
+                    ctl('daemon-reload')
+            cleanup.callback(remove_legacy_fixture)
+
+            def reap_unrelated_fixture():
+                if unrelated is not None:
+                    if unrelated.poll() is None:
+                        unrelated.terminate()
+                    unrelated.wait(timeout=5)
+            cleanup.callback(reap_unrelated_fixture)
+            if helper_pid is not None:
+                cleanup.callback(wait, lambda: not Path(f'/proc/{helper_pid}').exists(),
+                                 'migration helper reaped')
+            if decky_unit is not None:
+                stop_decky_service(decky_unit.name, report, logs)
+                decky_unit.unlink()
+                ctl('daemon-reload')
+                report['ownedMigrationDeckyServiceRemoved'] = True
     assert {name: sha(runtime / name) for name in retained} == retained
     assert not managed.exists() and not receipt.exists()
     wait_for_instances(app, report)

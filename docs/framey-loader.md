@@ -27,7 +27,10 @@ Frame Control's existing official-store manager downloads a published ZIP from
 Decky's content-addressed CDN, verifies its store SHA-256 hash and manifest,
 rejects unsafe ZIP members, path collisions, special files and root plugins,
 and swaps one managed plugin
-folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
+folder with rollback on failure. If moving the installed folder to a backup
+fails, the update or removal leaves the original folder in place. Rollback
+deletes only a replacement that the transaction successfully moved into place.
+It rejects non-ARM64 ELF and Windows binaries.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
@@ -52,11 +55,20 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If storage is denied or cleared, the cache lasts only for the current
-panel. The host waits for the parent's cache reply before loading plugin code;
+available. If browser storage rejects a write, the parent keeps the latest
+bounded snapshot in memory across plugin close/reopen and switches back to disk
+on the next successful write. The plugin panel shows a notice while its snapshot
+is only in memory. **Retry saving** attempts to save that latest snapshot without
+changing a setting; a failed retry keeps the notice and values. A successful
+retry clears only that plugin's notice. Reloading the Frame Control page loses that memory
+fallback; an older disk snapshot may then return. Cleared browser storage also
+loses saved caches. The host waits for the parent's cache reply before loading plugin code;
 if the reply is missing or invalid after five seconds, the panel shows an error
 instead of opening with empty settings that could overwrite saved values. Use
 the plugin backend for settings that must survive cache loss.
+The recovery notice, retry and readback after a full page reload are covered in
+a local browser with synthetic snapshots and native browser storage. Live
+headset persistence and worn-headset use remain unverified.
 
 Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
 events while the panel is open. The parent resolves the plugin name from its
@@ -93,7 +105,10 @@ record the resulting TabMaster documentation support and remaining blockers.
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
-and backend calls for the plugin that owns the panel. The headset's scroll
+and backend calls for the plugin that owns the panel. Text fields support
+controlled values, uncontrolled defaults, and change, blur, focus, click and key
+callbacks. These are ordinary input events; they do not open or verify SteamVR's
+keyboard. The headset's scroll
 buttons send only a direction to the isolated iframe. They target the last
 scrollable region reached by a trusted pointer move and fall back to the iframe
 document when that region disappears. A result message reports whether content
@@ -210,7 +225,9 @@ rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
 reusing the ID for a different change is rejected. **Check result** can resume
-polling even if the POST response is lost. After a connection error, Install, Update, and Remove
+polling even if the POST response is lost. A rejected polling request also keeps
+an accepted job's ID; it cannot establish that the install or update stopped.
+After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
 If Chromium denies session storage, the open panel keeps the request ID in
@@ -221,13 +238,27 @@ Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh
-the store and review the new version before retrying. Job results live in server
-memory for one hour after completion. If Frame Control restarts, or the request
+the store and review the new version before retrying.
+The desktop and headset also include the installed receipt shown by the Update
+or Remove row. If another client changes that installed copy before the job
+starts, the operation stops before downloading or changing plugin files. Refresh
+installed plugins and review the current copy before trying again. The existing
+transaction lock checks the receipt again before applying the operation.
+An install also rechecks the store ID under that lock. If another client has
+installed that ID since the first status read, the later install stops before
+changing files or stopping Decky, even if the store changed its name and folder.
+Refresh installed plugins and use Update or Remove; a changed folder still
+requires removing the old version before installing the new one.
+Job results live in server memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
 keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.
 If browser session storage is denied, the unknown-result gate lasts for the
 current open panel only; refresh installed status after reopening it.
+
+If the server cannot create or start the background worker, **Check result**
+reports a completed startup error. Checking does not retry the plugin change.
+Refresh installed status before starting a fresh action after the error.
 
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
