@@ -93,11 +93,13 @@ none of these frontend controls has passed a worn-headset check yet.
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
+| `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
 | `TextField.focusOnMount` | Focuses an enabled native input when it mounts. A modal preserves focus already inside it, falling back to its shell when nothing inside has focus. Updating an existing field does not refocus it. | Exact RadiYo! 1.3 text dialog in real React/DOM with synthetic query input; opt-out, disabled, update, shell fallback and focus restoration checks. No radio backend, physical controller or VR keyboard proof. |
 | `TextField.bShowClearAction`, `bAlwaysShowClearAction` | An opt-in Clear button empties the input through its native React change event. It hides when empty unless always-visible is requested; disabled fields stay inert. | Pinned Wine Cellar 0.2.1 search-control fixture; automated React/DOM check requires Linux Chrome. Worn VR remains unverified. |
 | Scrollable panel content | Visible Scroll plugin up/down buttons move the last region reached by a trusted pointer, or the document if that region disappears. Hold either button to repeat; keyboard activation still moves one step. Plugins may use ordinary CSS overflow containers. | Parent/iframe message tests and a real Frame synthetic OpenVR pointer hold; physical controller scroll and hold remain unverified |
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
+| `MenuGroup.label`, `disabled` | A labeled native fieldset; disabling it blocks native activation and focus of descendant controls, including nested groups. Individual `MenuItem` disabled states still apply. | Exact TabMaster 2.15.1 Micro SD Card menu with synthetic cards/preset callbacks in real React/DOM. No card discovery, real library edit, Steam submenu or worn/controller proof. |
 | `SidebarNavigation.pages` with `"separator"` entries | Omits layout separators from the local tab strip so they cannot open blank pages. Hidden pages stay absent; changing visibility of an earlier page preserves a later page's selection at the same source index. | Exact published Game Sync 1.0.4 navigation replay with inert child views and synthetic tab selection. No sync, backend, physical-input or worn VR proof. |
 | `ReorderableList` | Lists plugin entries by `position`; native Move up/down buttons edit a draft. Save order calls `onSave` with normalized positions; Cancel discards the draft. Labels, data and optional `interactables` are retained. `disableReordering` hides ordering controls. | Exact published TabMaster 2.15.1 list/save callback with synthetic entries; cancel, disabled/late handlers, failed-save retry and refreshed-list tests. No real library edit or physical controller check. |
 | `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` omits its value so it animates as unfinished, and `sOperationText` appears with the bar. Estimated completion time is not shown. | Host contract tests; official plugin progress behavior in worn VR remains unverified. |
@@ -131,6 +133,12 @@ Pinned Game Sync 1.0.4 uses this to mark a game as out of sync. Its published
 cache callbacks now retain that marker across panel reopen in an offline
 host/parent replay; this does not prove actual synchronization, live headset
 persistence or worn visibility.
+
+Use `MenuGroup` to label related actions and set `disabled` when their prerequisite
+is unavailable. Framey uses native fieldset inheritance, so an enabled nested
+group cannot enable its controls inside a disabled parent. This governs native
+controls; it does not guard a plugin directly calling its own callbacks or
+implement Steam submenus or a controller focus tree.
 
 For a custom dialog, pass the `closeModal` injected by `showModal` into your
 inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
@@ -198,6 +206,14 @@ it does not open a Steam context menu. A resolved promise alone does not expose
 the choices. Return the promise if you want Framey to display its rejection,
 or show the error in your plugin. Cancel loading ends Framey's wait, leaving
 your own request lifecycle under your plugin's control; the user can then retry.
+Supply `renderButtonValue(label)` when the currently assigned value needs a
+custom view, especially before deferred choices are loaded. Framey renders its
+React result above the loader/select, including while disabled or waiting.
+The argument is the original matching option's label (including a React node),
+or `strDefaultLabel` / "Choose an option" if no option matches. Selection uses
+`option.data`, so zero and empty strings remain valid choices. This renderer
+does not load choices or submit a selection; retain `onMenuWillOpen` and
+`onChange` for those operations. The native select keeps its own option text.
 Toasts stay inside the panel, so keep essential errors in the plugin UI too.
 For a `ReorderableList`, give each entry a `label`, a numeric `position` and
 any plugin-owned `data`. Framey sorts a copy of the entries and offers native

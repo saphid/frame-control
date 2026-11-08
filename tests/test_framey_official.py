@@ -22,6 +22,40 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, WEB_BROWSER_143, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_tabmaster_disabled_menu_group_blocks_nested_presets(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder']+'/dist/index.js').decode()
+        group = re.search(r"window\.SP_REACT\.createElement\(DFL\.MenuGroup, \{ label: 'Micro SD Card'"
+                          r'[\s\S]*?(?=\n\s+default:)', frontend)
+        self.assertIsNotNone(group)
+        expression = group.group().rstrip()
+        self.assertTrue(expression.endswith(');'))
+        # Remove only the enclosing return (...) close and statement semicolon.
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_menu_group.mjs')],
+                                input=expression[:-2], capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_wine_cellar_dropdown_preserves_published_current_value_renderer(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 68)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
+        control = re.search(r'window\.SP_REACT\.createElement\(DFL\.Dropdown, \{ rgOptions: '
+                            r'dropdownOptions\(availableTools, assignedToolName, assignedToolDisplayName\),'
+                            r'[\s\S]*?onChange: \(option\) => selectCompatTool\(application, option\) \}\)', frontend)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_dropdown_value.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_web_browser_warning_uses_local_simple_modal(self):
         plugin = WEB_BROWSER_143
         data = archive(plugin)
