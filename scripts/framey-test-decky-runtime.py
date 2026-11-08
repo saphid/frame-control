@@ -115,6 +115,7 @@ def main():
               'tests/decky-runtime/theme_music_private.py',
               'tests/decky-runtime/emuchievements_private.py',
               'tests/decky-runtime/steamback_private.py',
+              'tests/decky-runtime/storage_cleaner_private.py',
               'tests/decky-runtime/tabmaster_private.py',
               'tests/decky-runtime/prefix_manager_private.py',
               'tests/decky-runtime/radiyo_private.py',
@@ -160,6 +161,7 @@ def main():
                     (63, '--reproduce-free-loader-unload-regression'),
                     (135, '--reproduce-deck-shelves-unload-regression'),
                     (46, '--reproduce-steamback-unload-regression'),
+                    (50, '--reproduce-storage-cleaner-unload-regression'),
                     (60, '--reproduce-fileserver-empty-flag-regression'),
                     (93, '--reproduce-deck-settings-unload-regression'),
                     (65, '--reproduce-terminal-import-regression'),
@@ -187,7 +189,7 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
-                if plugin_id == 143 and negative:
+                if plugin_id in (50, 143) and negative:
                     # The original EOF spin allocates tasks without yielding.
                     # Keep this negative below OOM pressure until Decky's own
                     # five-second forced-stop deadline proves the regression.

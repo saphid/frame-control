@@ -887,9 +887,11 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete'])
+        self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete', 'storage-cleaner-ipc-eof'])
         source = (folder/'main.py').read_text(encoding='utf-8')
         self.assertNotIn('await shutil.rmtree', source)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py')).read_bytes())
         frontend = subprocess.run(['node', str(Path(__file__).parent/'page/framey_storage_cleaner.mjs'),
                                    str(folder/'dist/index.js')], capture_output=True, text=True, timeout=10)
         self.assertEqual(frontend.returncode, 0, frontend.stderr)
@@ -903,8 +905,9 @@ class StoreTransaction(unittest.TestCase):
         namespace = {'__name__': 'storage_cleaner_fixture'}
         fake_decky = types.SimpleNamespace(DECKY_USER_HOME=self.tmp.name,
                                            DECKY_PLUGIN_DIR=str(folder))
-        with patch.dict(sys.modules, {'decky': fake_decky}):
+        with patch.dict(sys.modules, {'decky': fake_decky}), patch('framey_decky_ipc.install') as install:
             exec(compile(source, str(folder/'main.py'), 'exec'), namespace)
+        install.assert_called_once_with()
         plugin_class = namespace['Plugin']
         for name in ('../outside', 'shadercache/../outside', 'compatdata/../../outside',
                      'shadercache/not-an-app', '/tmp/outside'):
@@ -919,6 +922,17 @@ class StoreTransaction(unittest.TestCase):
         self.assertTrue((outside/'marker').is_file())
         result = self.apply('remove', plugin_id=50, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_storage_cleaner_requires_its_offline_ipc_source(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 50)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=50,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Storage Cleaner child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+        self.assertEqual(frame_decky_store.apply_script(50, '0'*64), frame_decky_store.APPLY)
 
     def test_modified_fileserver_archive_does_not_inherit_exception(self):
         from framey_official import PLUGINS, archive as official_archive

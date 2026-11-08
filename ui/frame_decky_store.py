@@ -257,6 +257,9 @@ DECK_PROGRESS_DIGEST = '784c59e7e2a344eb6803d00e341c7d5f10d42cea7b60cc4332f4c368
 
 def apply_script(plugin_id, digest):
     """Deliver verified offline dependencies only to exact managed archives."""
+    if plugin_id == 50 and digest == STORAGE_CLEANER_DIGEST:
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_STORAGE_CLEANER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if (plugin_id, digest) in (
             (12, '246b89fd653c60a735b1cc401d1b0937d5cb969eea9024561661ff741f081d62'),
             (111, '3f56a3f56034b277ea74a2c37cc84133b69e382aa6bcb0b43876776aac737ed9')):
@@ -2115,6 +2118,19 @@ def split_by_app(data):
                 if bundle.count(old_frontend)!=1: raise RuntimeError('Storage Cleaner selected delete source changed')
                 frontend.write_bytes(bundle.replace(old_frontend,new_frontend))
                 compat_shims.append('storage-cleaner-bounded-delete')
+                # A closed IPC peer otherwise spins the original child loop
+                # until Decky's five-second shutdown budget forcibly kills it.
+                ipc=globals().get('FRAMEY_STORAGE_CLEANER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Storage Cleaner child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Storage Cleaner child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(parents=True,exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                main.write_bytes((b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+main.read_bytes())
+                compat_shims.append('storage-cleaner-ipc-eof')
             # Recheck under the transaction lock. Another store operation may
             # have installed a colliding name while this archive downloaded.
             proposed_name=json.loads((unpacked/'plugin.json').read_text()).get('name')

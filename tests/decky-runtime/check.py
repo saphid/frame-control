@@ -84,6 +84,7 @@ def main():
     parser.add_argument('--reproduce-free-loader-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-shelves-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamback-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-storage-cleaner-unload-regression', action='store_true')
     parser.add_argument('--reproduce-terminal-import-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-restore-regression', action='store_true')
     parser.add_argument('--reproduce-tabmaster-unload-regression', action='store_true')
@@ -99,6 +100,8 @@ def main():
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
     args = parser.parse_args()
+    if args.reproduce_storage_cleaner_unload_regression:
+        assert args.id == 50
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
     assert os.getuid() == 1100 and ROOT.is_dir(), 'Run through framey-test-decky-runtime.py'
@@ -166,6 +169,15 @@ def main():
         assert record['id'] == 135
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             (plugin/'main.py').write_bytes(original.read(record['folder']+'/main.py'))
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_storage_cleaner_unload_regression:
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '8e01ebd0f5304d3e27c10352a31510e168cdac377e0aabd3cc485c2328c1f14d'
+        (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_deckyspy_unload_regression:
         assert record['id'] == 89
@@ -2063,8 +2075,32 @@ def main():
                 assert current('get_size', 'compatdata') == len(marker)
                 assert current('delete_cache', 'compatdata') is None
                 assert not whole.exists()
-                report['result'] = ('published Decky discovery, private size/list and selected/whole fixture deletion passed; '
-                    'real Steam caches, Frame and VR unverified')
+                kept = apps/'shadercache/515151'
+                kept.mkdir()
+                (kept/'marker').write_bytes(marker)
+                unrelated = home/'unrelated-cache-fixture'
+                unrelated.mkdir()
+                (unrelated/'marker').write_bytes(b'unrelated private marker')
+
+                def verify_restarted_storage_cleaner():
+                    assert current('get_size', 'shadercache/515151') == len(marker)
+
+                from storage_cleaner_private import probe
+                regression = args.reproduce_storage_cleaner_unload_regression
+                report['storageCleanerLifecycle'] = probe(
+                    backend, loader, env, log, processes, rpc, until_ready, report['discovered'],
+                    dict(cache=apps, unrelated=unrelated), verify_restarted_storage_cleaner,
+                    regression=regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                adapter = plugin/'py_modules/framey_decky_ipc.py'
+                report['ipcAdapterSha256'] = hashlib.sha256(adapter.read_bytes()).hexdigest() if adapter.exists() else None
+                if regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1, qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed Storage Cleaner forced stop after IPC EOF reproduced; negative only'
+                    if regression else
+                    'published discovery, bounded private cache deletion, preserved markers, '
+                    'two clean parent-only stops and restart passed; real Steam caches, Frame and VR unverified')
             elif case['probe'] == 'steamback-private-save':
                 # The loader and plugin only see this disposable container home.
                 steam = home/'.local/share/Steam'
