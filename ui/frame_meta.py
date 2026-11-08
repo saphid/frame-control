@@ -260,7 +260,7 @@ def check_token(token):
 
 _lock = threading.Lock()  # the account file, the generation and the library cache
 _state = {'generation': 0}
-_library = {'generation': None, 'at': 0, 'apps': None}
+_library = {'generation': None, 'at': 0, 'apps': None, 'learned': {}}
 
 
 def account_path():
@@ -382,7 +382,7 @@ def connect(token, attempt=None):
             _write_account({'token': token, 'user': user, 'connected': time.strftime('%Y-%m-%dT%H:%M:%S')})
             _saved_by[0] = attempt
             _state['generation'] += 1
-            _library.update(generation=None, at=0, apps=None)
+            _library.update(generation=None, at=0, apps=None, learned={})
     finally:
         if attempt is not None:
             with _lock:
@@ -396,7 +396,7 @@ def connect(token, attempt=None):
 def _forget_locked():
     _state['generation'] += 1
     _saved_by[0] = None
-    _library.update(generation=None, at=0, apps=None)
+    _library.update(generation=None, at=0, apps=None, learned={})
     try:
         os.remove(str(account_path()))
     except FileNotFoundError:
@@ -690,6 +690,12 @@ def parse_binary(binary):
         out['version_code'] = _int(binary['version_code'])
     if _int(binary.get('size')) is not None:
         out['size'] = _int(binary['size'])
+    # The opaque stored query has not returned this in observed answers, but accept it if
+    # Meta adds either common spelling: then the library can refuse before downloading.
+    for key in ('min_sdk', 'min_sdk_version'):
+        if _int(binary.get(key)) is not None:
+            out['min_sdk'] = _int(binary[key])
+            break
     digest = str(binary.get('sha256') or '').lower()
     if re.fullmatch(r'[0-9a-f]{64}', digest):
         out['sha256'] = digest
@@ -743,6 +749,38 @@ def _complete(app):
     return bool(app.get('package') and app.get('version_code') is not None and app.get('detailed'))
 
 
+def _apply_learned(app, learned):
+    """Apply manifest facts learned from an earlier download of this exact Meta binary."""
+    facts = learned.get(app.get('binary_id'))
+    if facts:
+        app.update(facts)
+    return app
+
+
+def _remember_min_sdk(app, min_sdk, generation):
+    """Keep a downloaded binary's minimum API for this connected session and library row."""
+    min_sdk = _int(min_sdk)
+    if min_sdk is None:
+        return
+    app['min_sdk'] = min_sdk
+    binary_id = app.get('binary_id')
+    if not binary_id:
+        return
+    with _lock:
+        if _state['generation'] != generation:
+            return
+        _library['learned'][binary_id] = {'min_sdk': min_sdk}
+        for cached in _library.get('apps') or ():
+            if cached.get('binary_id') == binary_id:
+                cached['min_sdk'] = min_sdk
+
+
+def _check_compatible(app):
+    min_sdk = _int(app.get('min_sdk'))
+    if min_sdk is not None and min_sdk > android.LEPTON_API:
+        raise MetaError(android.newer_android_message(app['title'], min_sdk))
+
+
 def _fill(token, app):
     """Add one binary query's facts to app (in place)."""
     try:
@@ -776,6 +814,8 @@ def library(refresh=False):
                 future.result()
     with _lock:
         if _state['generation'] == generation:
+            for app in apps:
+                _apply_learned(app, _library['learned'])
             _library.update(generation=generation, at=time.time(), apps=[dict(a) for a in apps])
     return apps
 
@@ -1003,8 +1043,10 @@ def download(app_id, progress=None):
 
 def _public(app):
     """An app as the page and the CLI see it (download ids are fine: they need the token)."""
-    keys = ('id', 'title', 'package', 'version', 'version_code', 'size', 'problem', 'verdict')
+    keys = ('id', 'title', 'package', 'version', 'version_code', 'size', 'min_sdk', 'problem', 'verdict')
     out = {k: app.get(k) for k in keys if k in app}
+    if _int(app.get('min_sdk')) is not None and app['min_sdk'] > android.LEPTON_API:
+        out['incompatible'] = android.newer_android_message(app['title'], app['min_sdk'])
     plan, skipped = data_plan(app) if app.get('package') else ([], [])
     out['data_size'] = sum(f.get('size') or 0 for f, _ in plan) or None
     out['data_files'] = len(plan)
@@ -1035,6 +1077,7 @@ def install(app_id, test=False, progress=None, allow_downgrade=False, wait=TEST_
         token, generation = _session()
         report('Reading your Meta library', 1)
         app = owned(app_id)
+        _check_compatible(app)  # metadata, or this exact binary's manifest from an earlier attempt
         pkg = app['package']
         sweep_cache()
         work = cache_root() / f'{pkg}-{secrets.token_hex(4)}'
@@ -1064,10 +1107,17 @@ def _install(app, work, token, generation, report, test, allow_downgrade):
     budget = Budget()
     apk = download_apk(app, work, token, generation, report, budget)
     report('Checking it can run on the Frame', 46)
-    checked = quest.inspect(pkg, str(apk))
-    if app.get('version_code') is not None and checked['version_code'] not in (None, app['version_code']):
+    info = android.apk_info(str(apk))
+    if info['package'] != pkg:
+        raise MetaError(f"The APK Meta sent for {pkg} says it is {info['package']}; not installing it")
+    if app.get('version_code') is not None and info['version_code'] not in (None, app['version_code']):
         raise MetaError(f"Meta said {app['title']} is version code {app['version_code']}, but the APK it sent "
-                        f"is {checked['version_code']}; not installing it")
+                        f"is {info['version_code']}; not installing it")
+    # Meta's library query does not normally include the manifest's minimum API. Remember it
+    # as soon as the downloaded manifest is readable, before OBB downloads, copying or repacking.
+    _remember_min_sdk(app, info.get('min_sdk'), generation)
+    _check_compatible(app)
+    checked = quest.inspect(pkg, str(apk), info=info)
     warnings = list(checked['warnings'])
     if skipped:
         warnings.append('Not copied (Frame Control only copies standard OBB files; other files are fetched '
