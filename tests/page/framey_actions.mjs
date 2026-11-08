@@ -268,6 +268,26 @@ nodes(tabs,'button')[0].props.onClick();
 nodes(tabs,'button')[2].props.onClick();
 assert.deepEqual(tabChanges,['one']);
 assert.equal(window.DFL.Spinner({}).props.role,'status');
+// Decky's custom validValues predicate applies to every way of changing a
+// slider setting, including editable values and reset defaults.
+const allowed=[],validValues=value=>[1,2,4,8].includes(value);
+const constrained=window.DFL.SliderField({label:'Workers',value:2,min:1,max:8,step:1,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+const constrainedInputs=nodes(constrained,'input');
+constrainedInputs[0].props.onChange({target:{value:'3'}});
+constrainedInputs[1].props.onChange({target:{value:'3',validity:{valid:true}}});
+assert.deepEqual(allowed,[],'range and typed input cannot save a value rejected by the plugin');
+constrainedInputs[0].props.onChange({target:{value:'4'}});
+constrainedInputs[1].props.onChange({target:{value:'8',validity:{valid:true}}});
+nodes(constrained,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4]);
+const rejectedReset=window.DFL.SliderField({value:2,min:1,max:8,resetValue:3,validValues});
+assert.equal(nodes(rejectedReset,'button').length,0,'invalid reset values must not be offered');
+const disabledSlider=window.DFL.SliderField({value:2,min:1,max:8,disabled:true,
+  editableValue:true,resetValue:4,validValues,onChange:value=>allowed.push(value)});
+for(const input of nodes(disabledSlider,'input'))input.props.onChange({target:{value:'4'}});
+nodes(disabledSlider,'button')[0].props.onClick();
+assert.deepEqual(allowed,[4,8,4],'disabled handlers stay inert');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
 assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
   'an indeterminate progress element must omit its value');
