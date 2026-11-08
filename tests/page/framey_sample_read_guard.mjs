@@ -79,3 +79,28 @@ button(tree,'Reload saved setting').props.onClick();
 reply(calls.at(-1),undefined,false);await settle();tree=render();
 assert.equal(toggle(tree).props.disabled,false);
 assert.equal(toggle(tree).props.checked,false);
+
+// A rejected reply may arrive after the backend committed the write. Keep
+// the displayed value untrusted until a successful read reconciles it.
+const beforeRejectedSave=writes().length;
+oldToggle(true);
+assert.equal(writes().length,beforeRejectedSave+1);
+reply(writes().at(-1),'Reply lost after commit');await settle();tree=render();
+assert.equal(toggle(tree).props.checked,false,'a failed reply cannot announce the requested value as saved');
+assert.equal(toggle(tree).props.disabled,true,'an ambiguous save must require a read before further edits');
+assert.equal(button(tree,'Reset example setting').props.disabled,true);
+assert.match(nodes(tree,'p')[0].children[0],/Reload saved setting/);
+oldToggle(false);button(tree,'Reset example setting').props.onClick();await settle();
+assert.equal(writes().length,beforeRejectedSave+1,'retained callbacks cannot issue a second write');
+button(tree,'Reload saved setting').props.onClick();
+reply(calls.at(-1),'Read still unavailable');await settle();tree=render();
+assert.equal(toggle(tree).props.disabled,true,'failed reconciliation must not permit writes');
+oldToggle(false);await settle();assert.equal(writes().length,beforeRejectedSave+1);
+button(tree,'Reload saved setting').props.onClick();
+reply(calls.at(-1),undefined,true);await settle();tree=render();
+assert.equal(toggle(tree).props.checked,true,'reconciliation displays the committed value from the backend');
+assert.equal(toggle(tree).props.disabled,false);
+toggle(tree).props.onChange(false);
+assert.equal(writes().length,beforeRejectedSave+2,'editing resumes only after successful reconciliation');
+reply(writes().at(-1),undefined,true);await settle();tree=render();
+assert.equal(toggle(tree).props.checked,false);

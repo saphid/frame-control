@@ -22,7 +22,7 @@ cannot erase settings written by a newer version. Add a deliberate migration
 for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
-event is ignored; after the request settles, a new change can be saved.
+event is ignored; after a successful request settles, a new change can be saved.
 If the initial read or a later reload fails, the toggle and Reset stay disabled
 until **Reload saved setting** successfully reads the backend value. The last
 displayed value is not permission to save after a failed read. This prevents
@@ -30,6 +30,14 @@ an unread setting from being overwritten using the initial display default;
 callbacks retained before a redraw follow the same guard. Reload remains
 available for recovery. This path is tested with synthetic backend replies,
 not a live headset connection.
+
+A rejected save reply can mean the backend committed the value but its reply
+was lost. After any save error, the sample disables both mutations until
+**Reload saved setting** succeeds. The displayed value is now unconfirmed;
+it is not rolled forward or announced as saved. A failed reload keeps editing
+disabled. A successful reload shows the backend value and enables editing
+again. Tests use synthetic lost-reply and recovery cases through the built
+bundle and real host; they do not prove live-headset persistence.
 
 Leaving the settings view retires its callbacks, closes its Reset dialog and
 ignores late read/write replies for that view's state and success toasts. A
@@ -48,8 +56,11 @@ physical controller in a worn headset.
 
 The Reset callback returns the save promise to `ConfirmModal`. The dialog
 stays busy until that save finishes, rejects repeat Reset/Cancel/Close actions
-while pending, and stays open with an error if the save fails. Retry runs one
-new save; only a successful save closes the dialog and shows a success toast.
+while pending, and stays open with an error if the save fails. Close it with
+**Keep setting** or its Close button, then use **Reload saved setting** before
+opening a new Reset dialog. Retrying the failed dialog before reloading sends
+no write and cannot close it as a success. Only a successful save closes the
+dialog automatically and shows a success toast.
 The ordinary toggle catches the same rejected promise after `change` records
 the error in the panel's status, so it does not create an unhandled rejection.
 Do not discard an asynchronous confirmation with `void`: that makes the modal
