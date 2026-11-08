@@ -124,6 +124,19 @@ Decky shutdown passed. The report keeps `historicalCauseEstablished` and
 `releaseHoldCleared` false. This is an optional investigation tool, not a
 replacement for strict native/package gates or locked real-Frame smoke.
 
+The `Decky parent EOF diagnostic` workflow runs the same bounded probe on native
+AMD64 and ARM64 runners. It downloads only the two exact upstream source files;
+the diagnostic checks their digests before executing the selected definitions.
+The artifact binds the report to the checked-out commit, diagnostic and workflow
+hashes, and runner architecture. Its assertions require a successful connected
+cancellation, the expected owned EOF-child timeout, and both children reaped.
+The workflow has a three-minute outer job limit and bounded source downloads.
+
+An ARM64 pass would establish this controlled source-level mechanism on an
+ARM64 runner. It would still leave the historical migration VM, actual Decky
+shutdown cause and release hold unresolved. The native CI results for this new
+workflow are pending; the earlier local reports above contain AMD64 evidence.
+
 ## Newer upstream release comparison
 
 Decky v3.3.1 resolves to upstream commit
