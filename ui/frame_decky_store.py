@@ -451,6 +451,17 @@ try:
     if not unit.is_file(): raise RuntimeError('Install Frame Control managed Decky first')
     if action not in ('install','update','remove'): raise RuntimeError('Invalid plugin action')
     if action=='install' and (target.exists() or target.is_symlink()): raise RuntimeError('Plugin folder already exists')
+    if action=='install' and base.is_dir():
+        # A host status snapshot can predate another client's completed install.
+        # Names and folders may change between store versions; identity cannot.
+        for peer in base.iterdir():
+            if peer.is_symlink() or not peer.is_dir(): continue
+            receipt=peer/marker
+            if receipt.is_symlink() or not receipt.is_file(): continue
+            try: record=json.loads(receipt.read_text())
+            except (OSError,ValueError,UnicodeError): continue
+            if isinstance(record,dict) and record.get('storeId')==int(plugin_id):
+                raise RuntimeError('This store plugin is already installed; refresh installed plugins and use Update or Remove')
     if action in ('update','remove') and not owned(): raise RuntimeError('Only a Frame Control store plugin can be changed')
     if action in ('update','remove') and expected_installed!='-':
         current=json.loads((target/marker).read_text()).get('sha256')
