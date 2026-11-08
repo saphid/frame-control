@@ -140,9 +140,15 @@ function newDeckyRequestId(){return Array.from(crypto.getRandomValues(new Uint8A
 let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
-async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;try{const state=await api('/api/decky');
+async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;
+  deckyState=null;
+  byId('deckyState').textContent='Checking installed plugins…';
+  byId('deckyInstalled').replaceChildren();
+  byId('deckyInstalled').textContent='Checking installed plugins…';
+  showDeckyStore();
+  try{const state=await api('/api/decky');
   if(request!==deckyStatusRequest)return;
-  if(reviewUnknown&&(!Array.isArray(state.plugins)||typeof state.running!=='boolean'))
+  if(!Array.isArray(state.plugins)||typeof state.running!=='boolean')
     throw Error('Installed plugin status is incomplete');
   const reviewedUnknown=reviewUnknown&&deckyUnknownResult;
   if(reviewUnknown)clearDeckyUnknown();
@@ -243,6 +249,7 @@ async function deckyChange(action,plugin){if(deckyBusy)return;
     deckyJobView('Previous plugin change','Check result before starting another plugin change.',null,true);
     return;
   }
+  if(!deckyState||(action!=='remove'&&!deckyState.running))return;
   if(!confirm(`${action} ${plugin.name}? Store plugins run code as your Frame user.`))return;
   deckyBusy=true;showDeckyStore();
   const panelClosed=(action==='update'||action==='remove')&&activeFrameyId===plugin.id;
