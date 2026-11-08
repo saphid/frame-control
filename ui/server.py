@@ -397,7 +397,15 @@ def start_job(label, work, progress=False, *, request_id=None, request=None):
                 return {"message": f"{label}…", "job": request_id}
         job = _new_job_locked(label, job_id=request_id,
                               **({'_request': request} if request_id is not None else {}))
-    busy_thread(_run_job, job, label, work, progress).start()
+    try:
+        busy_thread(_run_job, job, label, work, progress).start()
+    except Exception as error:
+        # The panel reserves its request ID before POSTing. Retain a terminal
+        # result for Check result instead of an unstarted job that runs forever.
+        with _jobs_lock:
+            _jobs[job].update(error=f'Could not start background job: {error}',
+                              done=True, time=time.time())
+        raise
     return {"message": f"{label}…", "job": job}
 
 
@@ -637,6 +645,10 @@ def decky_plugin(body):
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
+    installed_hash = body.get('installedSha256')
+    if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
+                                       or not frame_decky_store.SHA.fullmatch(installed_hash)):
+        raise Failure('Invalid reviewed installed version', 400)
     request_id = body.get('requestId')
     if request_id is not None and (not isinstance(request_id, str) or
                                    not re.fullmatch(r'[0-9a-f]{32}', request_id)):
@@ -644,8 +656,9 @@ def decky_plugin(body):
     device = LINK.active_device()['id'] if LINK else FRAME
     return start_job('Decky plugin ' + action,
                      lambda report: frame_decky_store.change(ssh, action, plugin_id, report,
-                                                            reviewed_hash=reviewed_hash), progress=True,
-                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash))
+                                                            reviewed_hash=reviewed_hash,
+                                                            installed_hash=installed_hash), progress=True,
+                     request_id=request_id, request=(device, action, plugin_id, reviewed_hash, installed_hash))
 
 
 def framey_method_action(body):

@@ -1,0 +1,63 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div>
+<div id="framey-toasts"></div><div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-root');
+  const root=ReactDOM.createRoot(container);
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  // Replay only the two pinned published progress expressions. There is no
+  // plugin initializer, achievements service, Steam library or backend call.
+  const deckyFrontendLib=DFL, React__default={default:React}, t=key=>({loading:'Loading',error:'Error'}[key]);
+  const css={marginLeft:'20px',color:'red'};
+  let loadingData={game:'Synthetic game',errored:true,description:'Synthetic achievement read failed',
+    percentage:37,processed:3,total:8,fetching:false};
+  let achievements={percentage:37.5,achieved:3,total:8};
+  const info=()=>__OFFICIAL_INFO__;
+  const item=()=>__OFFICIAL_ITEM__;
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  try {
+    render(info());
+    const detail=container.querySelector('.ProgressBarDescription_debug');
+    assert(detail && detail.textContent==='ErrorSynthetic achievement read failed','published error description missing');
+    assert(detail.querySelector('br') && detail.style.color==='red' && detail.style.marginLeft==='20px',
+      'React description markup or styles lost');
+    let bar=container.querySelector('progress');
+    assert(bar.value===37 && bar.max===100,'determinate progress changed');
+    assert([...bar.labels].some(label=>label.textContent.includes('Loading')),'published progress label missing');
+    assert(container.querySelector('[role=status]').textContent==='Synthetic game','operation text missing');
+
+    loadingData={...loadingData,errored:false,description:'Synthetic retry underway',percentage:0,fetching:true};
+    render(info());bar=container.querySelector('progress');
+    assert(!bar.hasAttribute('value'),'indeterminate progress acquired a value');
+    assert(!container.textContent.includes('read failed') && !container.textContent.includes('Error'),
+      'old error remained after published props changed');
+    assert(container.textContent.includes('Synthetic retry underway'),'updated description missing');
+
+    render(item());bar=container.querySelector('progress');
+    assert(bar.value===37.5 && container.textContent==='3/8','published achievement count missing');
+    achievements={percentage:100,achieved:8,total:8};
+    render(item());assert(container.textContent==='8/8' && container.querySelector('progress').value===100,
+      'published achievement count did not refresh');
+    render(React.createElement(DFL.ProgressBarItem,{nProgress:0,label:React.createElement('em',null,'Zero'),description:0}));
+    assert(container.querySelector('em').textContent==='Zero' && container.textContent==='Zero0',
+      'React label or zero description lost');
+    render(React.createElement(DFL.ProgressBarItem,{nProgress:35}));
+    assert(container.querySelector('progress').value===35 && container.textContent==='',
+      'plain progress acquired extra content');
+    render(null);
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedErrorDescription:true,
+      publishedAchievementCounts:true,descriptionMarkupAndStyles:true,labelPreserved:true,
+      updatedDescription:true,indeterminatePreserved:true,syntheticData:true,
+      realFrameContacted:false,realAchievementsVerified:false,controllerInputVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

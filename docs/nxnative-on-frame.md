@@ -1,6 +1,110 @@
 # NxNative on Steam Frame
 
-Implemented and tested on the physical Steam Frame on 2026-11-05. Metroid Dread 2.1.0 reaches controllable gameplay in a persistent Lepton flat panel, with video and audio. Build, staging, input and host patches are saved in this repository. This remains an experimental one-game port; see the verified results and remaining checks below.
+Implemented and tested on the physical Steam Frame starting on 2026-11-05.
+Metroid Dread 2.1.0 and Celeste 1.4.1.1 reach visible gameplay in persistent
+Lepton flat panels. Build, staging, input and host patches are saved in this
+repository. Compatibility remains experimental and specific to each game build.
+
+## Follow-up validation: 2026-11-06
+
+These observations come from remote tests on the physical Frame. Injected
+keyboard and touch input do not establish Frame controller button/axis feel or
+worn-headset comfort; those remain untested for these follow-ups.
+
+| Game / route | Observed on Frame | Still to verify or resolve |
+|---|---|---|
+| Metroid Dread 2.1.0 / NxNative | Controllable gameplay, video/audio and the existing saved checkpoint; detailed evidence below | Later save-station write/reload, intermittent title-movie startup stall, and physical controller/comfort checks |
+| Celeste 1.4.1.1 / NxNative | Visible gameplay, remote movement/jumping, audio and cold save reload; Continue restores gameplay and movement | Final shared renderer passed APK-update, cold Continue, visible movement and output audio; exact release checks remain pending |
+| Balatro / separate LÖVE runtime | Remote touch gameplay/audio, tutorial Small Blind defeated and cold Continue of the saved run ($7, Best Hand 252) | Cold restored Big Blind stage and subsequent dealt hand inspected; physical controller/comfort and final candidate checks remain pending |
+| Super Mario Bros. Wonder / NxNative | Backgrounds, interface and coins render; the foreground and player remain black | Foreground rendering; no complete gameplay compatibility claim |
+| Pokopia / NxNative | Experimental bring-up only | Gameplay compatibility remains unverified |
+| Super Mario Odyssey / NxNative | Available game inputs are encrypted; no matching keys were found in the inspected private inputs | Preparation is blocked on the user's own usable inputs and keys; not tested as working |
+
+Prepared game APKs, ROMs, extracted assets, shader bytecode, keys and private
+source catalogs remain outside the repository and release bundles. Frame Control
+ships the tools and profile metadata; users add their own sources and assets.
+
+### Dread renderer follow-up
+
+The shared image-view checks initially dropped draws that sampled empty texture
+handles, which made pedestal undersides and hanging geometry black. Bounded
+shader-interface checks now allow a literal-zero handle only for a proven
+float32, nondepth, single-sample sampled 2D or nonarray cube interface. Each
+uses a correctly shaped black image; the cube has six initialized faces.
+Integer, comparison/depth, array, volume, multisample and invalid nonzero
+handles retain the existing rejection behavior.
+
+The physical Frame candidate retained **Normal slot 1 / 00:03:33 / 99 energy /
+15 missiles**, restored visible gameplay and pedestal shading, and accepted
+remote movement, jumping and shooting. At 28,800 presented frames and 5,406,578
+draws, its renderer reported **zero dropped draws**, with 69,742 empty-handle
+resolutions. A one-second Lepton output-monitor sample had peak 11,084 and RMS
+1,600.74 at 48 kHz stereo. No microphone was recorded.
+
+One title-movie transition stalled. Stopping the full instance and relaunching
+reached the title and restored gameplay through Continue. That intermittent
+startup issue and a later save-station write/reload remain unresolved; these
+observations do not establish a flawless launch or complete compatibility.
+The [experimental receipt](evidence/nxnative-frame-experimental-2026-11-06.json)
+records the APK and renderer hashes and the expanded Mac key search, which
+found no usable existing Switch key file for Odyssey.
+
+![Dread pedestal shading and gameplay with typed null images](evidence/nxnative-frame/dread-nullcube-input-2026-11-06.png)
+
+### Celeste cold save reload
+
+**Save and Quit** created `0.celeste` (14,534 bytes) and `settings.celeste`.
+After stopping and launching the persistent instance through the app's Android
+backend, without diagnostic environment overrides, the slot retained **Prologue,
+3 deaths and 09:55.238**. Continue loaded visible gameplay, and remote movement
+worked after reload. No save files were edited. The
+[follow-up receipt](evidence/nxnative-frame-followup-2026-11-06.json) records the
+save digest and screenshot digests.
+
+![Celeste slot retained after cold restart](evidence/nxnative-frame/celeste-cold-slot-2026-11-06.png)
+
+![Visible Celeste gameplay restored through Continue](evidence/nxnative-frame/celeste-reloaded-gameplay-2026-11-06.png)
+
+[Movement after reload](evidence/nxnative-frame/celeste-reloaded-input-2026-11-06.png)
+changed the player's visible position. This test used the runtime before the
+shared shader image-view patch. A later physical regression installed the final
+shared renderer, retained the same slot, restored visible gameplay and accepted
+remote movement. Its one-second output capture had peak 8,926 and RMS 1,271.25.
+This is still not an exact release-candidate check. After the earlier cold Continue, a
+one-second capture of the Lepton output monitor contained nonzero 48 kHz stereo
+audio (signed 16-bit peak 3,107; RMS 778.24). No microphone was recorded.
+
+### Balatro cold run resume
+
+The separate LÖVE build accepted remote touch gameplay. The tutorial Small Blind
+finished with a round score of **452**, including a **252-point Flush**. Cashing
+out $3 left **$7**, and the run reached the next Big Blind selector before
+returning to the main menu. Normal gameplay completed the tutorial; no save
+files were edited.
+
+After a full persistent-instance stop and launch, **Play → Continue** retained
+**Round 1, Ante 1, Money $7 and Best Hand 252**. Starting that entry opened the
+saved game state and displayed the game's **Joker Unlocked** popup with the
+condition **“Continue a saved run from the main menu.”** After dismissing the unlock popups, the restored **Big Blind** selector and **$7**
+were visible. Selecting that blind opened **Round 2** and dealt an eight-card hand. The
+[LÖVE follow-up receipt](evidence/love-frame-followup-2026-11-06.json) records the
+6,751-byte `save.jkr` digest and inspected screenshots. This proves cold resume
+on the tested private runtime, with final app/release-candidate smoke and
+physical controller/comfort checks still pending.
+
+![Balatro Continue retains the saved run after cold restart](evidence/nxnative-frame/balatro-cold-continue-2026-11-06.png)
+
+[Small Blind result](evidence/nxnative-frame/balatro-small-blind-win-2026-11-06.png)
+and [saved-run unlock popup](evidence/nxnative-frame/balatro-cold-restored-2026-11-06.png)
+show the exercised gameplay and resume route.
+
+[Restored Big Blind stage](evidence/nxnative-frame/balatro-cold-stage-2026-11-06.png)
+and [hand dealt after restore](evidence/nxnative-frame/balatro-cold-hand-2026-11-06.png)
+complete the underlying-stage inspection after popup dismissal.
+
+The earlier PA-Agent and initial Frame results below describe their original
+test sessions. They are retained as provenance rather than substituted for these
+follow-up observations.
 
 ## Recommendation
 

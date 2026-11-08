@@ -1,16 +1,19 @@
 """Framey hosts store-owned modern Decky frontends and scopes backend calls."""
 import sandbox  # noqa: F401
 import gzip
+import hashlib
 import http.client
 import io
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 import tempfile
 import tarfile
 import threading
 import unittest
+import zipfile
 from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]/'ui'))
@@ -296,18 +299,48 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             poll.assert_called_once_with(server.ssh, 96, 'test', ['tick'], 0, RECEIPT)
 
     def test_opaque_origin_plugin_cache_is_scoped_and_bounded(self):
-        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs')],
-                                capture_output=True, text=True, timeout=10)
-        self.assertEqual(result.returncode, 0, result.stderr)
+        import hashlib
+        import zipfile
+        from framey_official import PLUGINS, archive
+        record = next(plugin for plugin in PLUGINS if plugin['id'] == 104)
+        data = archive(record)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), record['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as official, tempfile.TemporaryDirectory() as folder:
+            bundle = Path(folder)/'game-sync.js'
+            bundle.write_bytes(official.read(record['folder']+'/dist/index.js'))
+            result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs'), str(bundle)],
+                                    capture_output=True, text=True, timeout=10)
+            self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_vr_store_browsing_and_search(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
+    def test_desktop_store_discards_stale_status_and_catalog_replies(self):
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_desktop_store.mjs')],
+                                capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_plugin_quick_actions_and_settings(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_actions.mjs')],
                                 capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    def test_published_battery_lookback_slider_reset(self):
+        from framey_official import PLUGINS, archive
+        plugin = next(p for p in PLUGINS if p['id'] == 67)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            source = original.read(plugin['folder']+'/dist/index.js').decode()
+        # Evaluate only the published control and its callback. Do not run the
+        # plugin initializer, backend, real history request or monitoring loop.
+        control = re.search(r'window\.SP_REACT\.createElement\(deckyFrontendLib\.SliderField, '
+                            r'\{ label: "Lookback in days",[\s\S]*?\n\s+\} \}\)', source)
+        self.assertIsNotNone(control)
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_slider_reset.mjs')],
+                                input=control.group(), capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
 
     def test_wine_cellar_socket_facade_uses_only_receipt_bound_calls(self):

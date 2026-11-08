@@ -2260,7 +2260,7 @@
   <div id="nxnativeSources"></div>
   <label>Find a game<input type="search" id="nxnativeSearch" placeholder="Filter your games"></label>
   <div id="nxnativeGames" aria-live="polite"></div>
-  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing games for NxNative</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
+  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing NxNative and LÖVE games</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
 </dialog>
 <dialog id="wiDlg" aria-labelledby="wiTitle">
   <h2 id="wiTitle">Install from a website</h2>
@@ -2374,30 +2374,55 @@ $('extensionClose').onclick = () => {
 function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyInfo = null;
 let deckyCatalog = [];
+let deckyStatusRequest = 0, deckyStoreRequest = 0;
 async function loadDecky() {
+  const request = ++deckyStatusRequest;
+  deckyInfo = null;
+  const managedList=$('deckyManagedList');managedList.replaceChildren();
+  $('deckyPlugins').textContent = 'Checking installed plugins…';
+  $('deckyState').textContent = 'Checking Decky status…';
+  deckyButtons();showDeckyStore();
   try {
-    const d = deckyInfo = await api('/api/decky');
+    const d = await api('/api/decky');
+    if (request !== deckyStatusRequest) return;
+    deckyInfo = d;
     $('deckyState').textContent = `${d.frameOS || 'Unknown'} ${d.variant || ''} · ${d.arch} · CEF ${d.cef ? 'ready' : 'unavailable'} · ${d.managed ? `managed Decky ${d.version || ''} ${d.running ? 'running' : 'stopped'}` : d.upstreamInstall ? 'upstream Decky installation found' : 'Decky not installed'}`;
     const plugins = [...d.plugins.map(x => `${x.name} (managed)`), ...d.upstreamPlugins.map(x => `${x.name} (upstream)`)];
     $('deckyPlugins').textContent = plugins.length ? `Installed plugins: ${plugins.join(', ')}` : 'No Decky plugins found.';
-    const managedList=$('deckyManagedList');managedList.replaceChildren();
+    managedList.replaceChildren();
     for(const plugin of d.plugins||[]){if(!plugin.storeId)continue;
       const row=document.createElement('div');row.className='hint';
       const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''} · ${deckyCompatibilityText(plugin)}`;
       const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove plugin';
       remove.disabled=!d.managed||!$('deckyAck').checked;
-      remove.onclick=()=>changeDeckyPlugin('remove',{id:plugin.storeId,name:plugin.name});
+      remove.onclick=()=>changeDeckyPlugin('remove',
+        {id:plugin.storeId,name:plugin.name,installedSha256:plugin.sha256});
       row.append(label,remove);managedList.append(row);}
     deckyButtons();
     showDeckyStore();
-  } catch (error) { deckyInfo = null; $('deckyState').textContent = error.message; deckyButtons(); showDeckyStore(); }
+  } catch (error) {
+    if (request !== deckyStatusRequest) return;
+    deckyInfo = null;
+    $('deckyState').textContent = error.message;
+    $('deckyPlugins').textContent = 'Installed plugins unavailable.';
+    managedList.replaceChildren();managedList.textContent = 'Refresh plugins to check installed status.';
+    deckyButtons();showDeckyStore();
+  }
 }
 async function loadDeckyStore() {
+  const request = ++deckyStoreRequest;
+  deckyCatalog = [];showDeckyStore();
   $('deckyStoreState').textContent = 'Loading the official store…';
-  try { deckyCatalog = (await api('/api/decky/store')).plugins;
+  try { const catalog = await api('/api/decky/store');
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = catalog.plugins;
     $('deckyStoreState').textContent = `${deckyCatalog.length} plugins in the official store. Select a plugin to install it.`;
     showDeckyStore();
-  } catch(error) { $('deckyStoreState').textContent = error.message; }
+  } catch(error) {
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = [];showDeckyStore();
+    $('deckyStoreState').textContent = error.message;
+  }
 }
 function showDeckyStore() {
   const list = $('deckyStoreList'); list.replaceChildren();
@@ -2417,19 +2442,25 @@ function showDeckyStore() {
       const button=document.createElement('button'); button.className='small';
       button.textContent=entry ? (entry.version===plugin.version?'Reinstall':'Update') : 'Install';
       button.disabled=!deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
-      button.onclick=()=>changeDeckyPlugin(entry?'update':'install',plugin);
+      button.onclick=()=>changeDeckyPlugin(entry?'update':'install',{...plugin,installedSha256:entry?.sha256});
       row.append(button);
       if(entry){const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove';
         remove.disabled=!deckyInfo?.managed || !$('deckyAck').checked;
-        remove.onclick=()=>changeDeckyPlugin('remove',plugin);row.append(remove);}
+        remove.onclick=()=>changeDeckyPlugin('remove',{...plugin,installedSha256:entry.sha256});row.append(remove);}
     }
     list.append(row);
   }
 }
 async function changeDeckyPlugin(action, plugin) {
-  if (!$('deckyAck').checked || !confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
+  if (!$('deckyAck').checked) return;
+  if (!deckyInfo?.managed || (action !== 'remove' && !deckyInfo.running)) {
+    $('deckyStoreState').textContent = 'Refresh plugins to check Decky status before changing plugins.';
+    return;
+  }
+  if (!confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
   try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
-    {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true}));
+    {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,
+      installedSha256:plugin.installedSha256,acknowledged:true}));
     await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
 }
 function deckyButtons() {
@@ -5424,9 +5455,11 @@ function renderMetaApps() {
   $("metaApps").innerHTML = metaLib.apps.length ? metaLib.apps.map(a => {
     // Sizes first: the line is cut short with "…" in a narrow panel, and the package is the least needed.
     const bits = [a.size ? questSize(a.size) : "", a.data_files ? `OBB ${questSize(a.data_size)}` : "",
-                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "", a.package || "package unknown"];
+                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "",
+                  a.min_sdk != null ? `minimum API ${a.min_sdk}` : "", a.package || "package unknown"];
     const line = bits.filter(Boolean).join(" · ");
     const problem = a.problem ? `<div class="s v-no" title="${esc(a.problem)}">${esc(a.problem)}</div>` : "";
+    const incompatible = a.incompatible ? `<div class="s v-no" title="${esc(a.incompatible)}">Not compatible with the Frame: ${esc(a.incompatible)}</div>` : "";
     // Required game data Frame Control can't place as an OBB (data_plan in frame_meta.py): the game may not run without it.
     const skipped = (a.skipped_files || []).length
       ? `<div class="s v-maybe" title="${esc(a.skipped_files.join("\n"))}">Not installed: ${a.skipped_files.length} required data file${a.skipped_files.length === 1 ? "" : "s"} (${esc(a.skipped_files.join(", "))}); the game may not run without ${a.skipped_files.length === 1 ? "it" : "them"}.</div>` : "";
@@ -5436,8 +5469,8 @@ function renderMetaApps() {
     const result = r ? `<div class="s">${esc(r)}</div>` : "";
     const busy = installing.has("meta:" + a.id) ? " disabled" : "", waits = queued.has("meta:" + a.id);
     const on = installed.has(a.package);
-    const can = a.package && !a.problem;
-    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${skipped}${verdict}${result}</div>
+    const can = a.package && !a.problem && !a.incompatible;
+    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${incompatible}${skipped}${verdict}${result}</div>
       ${on ? `<span class="tag">On the Frame</span>` : ""}
       ${waits ? `<span class="tag">Queued</span>` : ""}
       ${can ? `<button class="small" data-meta-install="${esc(a.id)}"${busy}>${on ? "Install again" : "Install"}</button>
@@ -5540,6 +5573,11 @@ $("metaApps").addEventListener("click", async e => {
   if (bar.dataset.owner === "meta:" + app.id) bar.hidden = true;  // not while another install still shows its progress
   if (r && r.message) { $("metaState").textContent = r.message; metaLib.results.set(app.package, r.test ? r.test.message : r.message); }
   else if (r !== null) $("metaState").textContent = `${app.title} wasn't installed; the reason is in the message log below.`;
+  // A failed install may have learned the minimum API from the downloaded manifest. Read the
+  // cached library again so the row becomes visibly blocked before another click can retry it.
+  if (r == null) {
+    try { metaLib.apps = (await api("/api/meta?library=1")).apps || []; } catch {}
+  }
   loadAndroid(); renderMetaApps(); if (test) loadReports();
 });
 loadMeta();
@@ -8351,7 +8389,7 @@ api("/api/host").then(h => {
 }).catch(() => watchConnection());
 </script>
 <script src="/nxnative.js"></script>
-<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
+<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstallApk: openInstallChooser, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
 <script src="/artwork-settings.js"></script>
 <script src="/control-center.js"></script>
 <script>

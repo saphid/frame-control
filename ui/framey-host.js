@@ -86,7 +86,7 @@
       })]);
     } finally {clearTimeout(timer);}
   }
-  const storage = {
+  const storage = new Proxy({
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
     getItem(key) {return cache.get(String(key)) ?? null;},
@@ -100,7 +100,10 @@
     },
     removeItem(key) {cache.delete(String(key)); persistCache();},
     clear() {cache.clear(); persistCache();},
-  };
+  }, {
+    // Game Sync uses key presence, including empty values, to track sync state.
+    has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+  });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
       entries:Object.fromEntries(cache)}, '*');
@@ -281,7 +284,12 @@
         for (const event of data.events) {
           if (!Array.isArray(event.args)) continue;
           for (const listener of eventListeners.get(event.event) || [])
-            Promise.resolve().then(() => listener(...event.args)).catch(failure =>
+            // A previous queued callback can unmount a view and remove this
+            // listener. Recheck at delivery, including late replies on close.
+            Promise.resolve().then(() => {
+              if (!eventClosed && eventListeners.get(event.event)?.has(listener))
+                return listener(...event.args);
+            }).catch(failure =>
               console.warn('Decky event listener failed', failure));
         }
       }).finally(() => {eventRequest = null;});
@@ -394,7 +402,7 @@
   const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
-  const DropdownItem = ({label, description, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
+  const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
     const choices=[];
     const option = entry => {
       const index=choices.push(entry)-1;
@@ -404,11 +412,69 @@
       Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
         entry.options.map(option)) : option(entry));
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
-    return R.createElement(Field, {label, description}, R.createElement('select', {
+    return R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
+      'aria-label':typeof menuLabel==='string' ? menuLabel : typeof label==='string' ? label : undefined,
       onChange:e=>{const entry=choices[Number(e.target.value)];if(!disabled && entry)onChange?.(entry);}},
       selected < 0 && R.createElement('option', {value:'', disabled:true}, strDefaultLabel || 'Choose an option'),
-      entries));
+      entries);
+  };
+  // Some plugins populate rgOptions only after their onMenuWillOpen read.
+  // A native select cannot wait for that async gate, so prepare choices first.
+  const PreparedDropdown = props => {
+    const current = R.useRef(props); current.current = props;
+    const gate = R.useRef({generation:0, phase:'idle', mounted:true});
+    const [phase, setPhase] = R.useState('idle');
+    const [error, setError] = R.useState('');
+    R.useEffect(() => {
+      gate.current.mounted = true;
+      return () => {gate.current.mounted = false; gate.current.generation++;};
+    }, []);
+    const cancel = () => {
+      if (!gate.current.mounted || current.current.disabled) return;
+      gate.current.generation++;
+      gate.current.phase = 'idle'; setPhase('idle'); setError('');
+    };
+    const load = () => {
+      if (!gate.current.mounted || current.current.disabled || gate.current.phase === 'loading') return;
+      const generation = ++gate.current.generation;
+      gate.current.phase = 'loading'; setPhase('loading'); setError('');
+      const valid = () => gate.current.mounted && gate.current.generation === generation;
+      const showMenu = () => {
+        if (!valid() || gate.current.phase!=='loading' || current.current.disabled) return;
+        gate.current.phase = 'ready'; setPhase('ready');
+      };
+      const failed = failure => {
+        if (!valid()) return;
+        gate.current.phase = 'idle'; setPhase('idle');
+        setError(String(failure?.message || failure));
+      };
+      try {
+        const result = current.current.onMenuWillOpen(showMenu);
+        if (result && typeof result.then === 'function') Promise.resolve(result).catch(failed);
+      } catch (failure) {failed(failure);}
+    };
+    return R.createElement('div', null,
+      R.createElement('button', {type:'button', disabled:!!props.disabled || phase==='loading', onClick:load},
+        phase==='ready' ? 'Reload options' : 'Load options'),
+      phase==='loading' && R.createElement('p', {role:'status'}, 'Waiting for plugin options…'),
+      phase==='loading' && R.createElement('button', {type:'button', disabled:!!props.disabled, onClick:cancel}, 'Cancel loading'),
+      error && R.createElement('p', {role:'alert'}, error),
+      phase==='ready' && DropdownInput({...props, onChange:entry=>{
+        if (!current.current.disabled && gate.current.phase==='ready' && gate.current.mounted)
+          current.current.onChange?.(entry);
+      }}));
+  };
+  const DropdownItem = props => {
+    const choices=(Array.isArray(props.rgOptions) ? props.rgOptions : [])
+      .flatMap(entry=>Array.isArray(entry.options) ? entry.options : [entry]);
+    const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
+    return R.createElement(Field, {label:props.label, description:props.description},
+      // Keep the plugin's current-value view visible before a deferred read.
+      // Native selection and the existing showMenu gate still own choices.
+      typeof props.renderButtonValue==='function' && R.createElement('div', null,
+        props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
+      typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
   };
   const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
     R.createElement('button', {type:'button', disabled:!!disabled,
@@ -417,12 +483,34 @@
     R.createElement('label', null,
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = ({label, description, value, placeholder, disabled, bIsPassword,
-    mustBeNumeric, mustBeURL, mustBeEmail, onChange}) => R.createElement(Field, {label, description},
-    R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
-      value, placeholder, disabled:!!disabled, onChange:e=>{if(!disabled)onChange?.(e);}}));
+  const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+    mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
+    bShowClearAction, bAlwaysShowClearAction, focusOnMount,
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
+    const input = R.useRef(null);
+    const [draft, setDraft] = R.useState(defaultValue ?? '');
+    const clear = () => {
+      const node = input.current;
+      if (disabled || !node || node.disabled || node.value==='') return;
+      // Bypass React's value tracker, then let its normal input listener emit
+      // onChange with the real input as both target and currentTarget.
+      Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
+      node.dispatchEvent(new Event('input', {bubbles:true}));
+    };
+    return R.createElement(Field, {label, description},
+      R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
+        ref:input, autoFocus:!!focusOnMount && !disabled,
+        value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
+        onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
+        onBlur:e=>{if(!disabled)onBlur?.(e);},
+        onFocus:e=>{if(!disabled)onFocus?.(e);}, onClick:e=>{if(!disabled)onClick?.(e);},
+        onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}),
+      bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
+        R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
+          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'));
+  };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', onChange}) => R.createElement(Field, {label, description},
+    valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
@@ -433,7 +521,11 @@
           const raw=e.target.value, next=Number(raw);
           if(!disabled && raw.trim()!=='' && e.target.validity?.valid!==false &&
               Number.isFinite(next) && next>=Number(min) && next<=Number(max)) onChange?.(next);
-        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix));
+        }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix),
+    Number.isFinite(resetValue) && resetValue>=Number(min) && resetValue<=Number(max) &&
+      R.createElement('button', {type:'button', disabled:!!disabled,
+        'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
+        onClick:()=>{if(!disabled)onChange?.(resetValue);}}, 'Reset'));
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
@@ -448,15 +540,94 @@
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
-      tabs:pages.filter(page=>page.visible!==false).map((page,index)=>({
-        id:page.route || String(index), title:page.title, content:page.content}))}));
+      // Decky separators are layout markers, never selectable pages. Keep the
+      // original index so hiding an earlier page does not retarget selection.
+      tabs:pages.flatMap((page,index)=>page==='separator' || page.visible===false ? [] : [{
+        id:page.route || String(index), title:page.title, content:page.content}])}));
+  const emptyReorderEntries = Object.freeze([]);
+  const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
+    fieldProps, disableReordering=false}) => {
+    const initial = () => {
+      const rows = entries.map(entry=>({...entry})).sort((a,b)=>a.position-b.position);
+      return {source:entries, rows, saved:rows, dirty:false, busy:false, error:''};
+    };
+    const [view, setView] = R.useState(initial);
+    const current = R.useRef(null), pending = R.useRef(false), mounted = R.useRef(true);
+    current.current = {entries, onSave, disableReordering, view};
+    const publish = next => {current.current.view=next; setView(next);};
+    R.useEffect(()=>{
+      mounted.current=true;
+      return ()=>{mounted.current=false;};
+    },[]);
+    R.useEffect(()=>{
+      if (current.current.view.source!==entries) publish(initial());
+      else if (disableReordering && current.current.view.dirty && !pending.current)
+        publish({...current.current.view,rows:current.current.view.saved,dirty:false,error:''});
+    },[entries,disableReordering]);
+    const valid = snapshot => mounted.current && !pending.current &&
+      !current.current.disableReordering && current.current.entries===snapshot.source &&
+      current.current.view===snapshot && typeof current.current.onSave==='function';
+    const move = (snapshot,index,delta) => {
+      const target=index+delta;
+      if (!valid(snapshot) || target<0 || target>=snapshot.rows.length) return;
+      const rows=[...snapshot.rows];
+      [rows[index],rows[target]]=[rows[target],rows[index]];
+      publish({...snapshot,rows:rows.map((entry,position)=>({...entry,position})),dirty:true,error:''});
+    };
+    const save = snapshot => {
+      if (!valid(snapshot) || !snapshot.dirty) return;
+      const rows=snapshot.rows.map((entry,position)=>({...entry,position}));
+      const working={...snapshot,busy:true,error:''};
+      pending.current=true; publish(working);
+      const finish = (failed,failure) => {
+        pending.current=false;
+        if (!mounted.current) return;
+        // A refreshed list retires this draft. A late save may only unlock it.
+        if (current.current.entries!==snapshot.source || current.current.view!==working) {
+          publish({...current.current.view}); return;
+        }
+        publish(failed ? {...snapshot,busy:false,
+          ...(current.current.disableReordering ? {rows:snapshot.saved,dirty:false} : {}),
+          error:String(failure?.message || failure) || 'Could not save order'} :
+          {...snapshot,rows,saved:rows,dirty:false,busy:false,error:''});
+      };
+      let result;
+      try {result=current.current.onSave(rows);}
+      catch (failure) {finish(true,failure); return;}
+      Promise.resolve(result).then(()=>finish(false),failure=>finish(true,failure));
+    };
+    const shown=view.source===entries ? view : initial();
+    const locked=disableReordering || pending.current || shown.busy || shown!==view;
+    const reorder=!disableReordering && typeof onSave==='function';
+    return R.createElement('div', null,
+      R.createElement('ol', null, ...shown.rows.map((entry,index)=>R.createElement('li', {
+        key:index, 'aria-label':typeof entry.label==='string' ? entry.label : undefined},
+        R.createElement('div', null, R.createElement('strong', null, entry.label),
+          fieldProps?.description && R.createElement('small', null, fieldProps.description),
+          !shown.dirty && !pending.current && Interactables && R.createElement(Interactables,{entry}),
+          reorder && R.createElement('button', {type:'button',disabled:locked || index===0,
+            'aria-label':`Move entry ${index+1} up`,onClick:()=>move(shown,index,-1)}, 'Move up'),
+          reorder && R.createElement('button', {type:'button',disabled:locked || index===shown.rows.length-1,
+            'aria-label':`Move entry ${index+1} down`,onClick:()=>move(shown,index,1)}, 'Move down'))))),
+      reorder && shown.dirty && R.createElement('button', {type:'button',disabled:locked,
+        onClick:()=>save(shown)}, 'Save order'),
+      reorder && shown.dirty && R.createElement('button', {type:'button',disabled:locked,
+        onClick:()=>{if(valid(shown))publish({...shown,rows:shown.saved,dirty:false,error:''});}}, 'Cancel reordering'),
+      shown.error && R.createElement('p', {role:'alert'}, shown.error));
+  };
   const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
     value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBarItem = ({label, description, ...props}) => R.createElement('div', null,
+    R.createElement('label', null,
+      label != null && R.createElement('strong', null, label), ProgressBar(props)),
+    description != null && R.createElement('div', null, description));
   const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
-    ProgressBar(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
+    ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
   const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
       onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
+  const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
+    label && R.createElement('legend', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -497,6 +668,46 @@
       !bAlertDialog && R.createElement('button', {type:'button', disabled:!!bCancelDisabled || busy,
         onClick:action(onCancel, bCancelDisabled)}, strCancelButtonText || 'Cancel'));
   };
+  const ColorPickerModal = ({closeModal, onConfirm, title='Color Picker',
+    defaultH=0, defaultS=100, defaultL=50, defaultA=1, frameySetModalBusy}) => {
+    const limits = [360,100,100,1];
+    const [values, setValues] = R.useState(() =>
+      [defaultH,defaultS,defaultL,defaultA].map((value,index) => Number.isFinite(value)
+        ? Math.max(0,Math.min(limits[index],value)) : [0,100,50,1][index]));
+    const draft = R.useRef(values); draft.current = values;
+    const callback = R.useRef(onConfirm); callback.current = onConfirm;
+    const gate = R.useRef({mounted:true, busy:false});
+    const [saving, setSaving] = R.useState(false);
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    const active = () => gate.current.mounted && (!modal || modals.includes(modal));
+    R.useEffect(() => {
+      gate.current.mounted = true;
+      return () => {gate.current.mounted = false;};
+    }, []);
+    const colour = values => `hsla(${values[0]}, ${values[1]}%, ${values[2]}%, ${values[3]})`;
+    const change = (index,value) => {
+      if (!active() || gate.current.busy || !Number.isFinite(value) ||
+          value<0 || value>limits[index]) return;
+      const next = [...draft.current]; next[index] = value;
+      draft.current = next; setValues(next);
+    };
+    const confirm = async () => {
+      if (!active() || gate.current.busy) return;
+      gate.current.busy = true; setSaving(true);
+      try {await callback.current?.(colour(draft.current));}
+      finally {
+        gate.current.busy = false;
+        if (gate.current.mounted) setSaving(false);
+      }
+    };
+    return R.createElement(ConfirmModal, {strTitle:title, onOK:confirm,
+      onCancel:()=>{gate.current.mounted=false;}, closeModal, frameySetModalBusy},
+      R.createElement('div', {role:'img', 'aria-label':'Colour preview',
+        style:{backgroundColor:colour(values),height:'64px',border:'1px solid currentColor'}}),
+      ['Hue','Saturation','Lightness','Alpha'].map((label,index) => R.createElement(SliderField, {
+        key:label, label, value:values[index], min:0, max:limits[index], step:index===3?0.01:1,
+        showValue:true, editableValue:true, disabled:saving, onChange:value=>change(index,value)})));
+  };
   const modalRoot = window.ReactDOM.createRoot(document.getElementById('framey-modal'));
   const modals = [];
   let modalId = 0;
@@ -511,9 +722,14 @@
         type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
         onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
   };
+  function modalCallback(modal, name) {
+    const registered = modal.rootCallbacks;
+    return registered && typeof registered[name]==='function'
+      ? registered[name] : modal.element?.props?.[name];
+  }
   function dismissModal(modal) {
-    if (modal.running || modal.element?.props?.bCancelDisabled) return;
-    modal.element?.props?.onCancel?.();
+    if (!modals.includes(modal) || modal.running || modal.element?.props?.bCancelDisabled) return;
+    modalCallback(modal, 'onCancel')?.();
     modal.dismiss();
   }
   addEventListener('keydown', event => {
@@ -532,7 +748,8 @@
     if (event.key !== 'Escape') return;
     event.preventDefault();
     if (modal.running) return;
-    if (modal.element?.props?.onEscKeypress) modal.element.props.onEscKeypress();
+    const onEscape = modalCallback(modal, 'onEscKeypress');
+    if (onEscape) onEscape();
     else dismissModal(modal);
   });
   const localPath = path => typeof path === 'string' && path.length <= 120 &&
@@ -604,10 +821,10 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const showModal = element => {
+  const openModal = (element, previousFocus=document.activeElement) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
-    const modal = {id:++modalId, previousFocus:document.activeElement, source:element};
+    const modal = {id:++modalId, previousFocus, source:element};
     const Close = () => {
       const index=modals.indexOf(modal);
       if (index < 0) return;
@@ -636,15 +853,75 @@
     modal.element = decorate(element);
     modals.push(modal);
     renderModals();
-    setTimeout(()=>{if(modals.at(-1)===modal) modal.node?.focus();},0);
-    return {Close, ClosedPromise, Update:next=>{
+    // React or a plugin may already have focused an input during mount. Keep
+    // it ready for typing; the shell is only the fallback focus target.
+    setTimeout(()=>{
+      if (modals.at(-1)===modal && !modal.node?.contains(document.activeElement)) modal.node?.focus();
+    },0);
+    return {isOpen:()=>modals.includes(modal), handle:{Close, ClosedPromise, Update:next=>{
       if (!modals.includes(modal)) return;
       // Keep replacement dialogs dismissible inside this isolated host too.
       modal.source=next;
       modal.element=decorate(next);
       renderModals();
-    }};
+    }}};
   };
+  const showModal = element => openModal(element).handle;
+  // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
+  // Reuse the local shell, retaining only the element after dismissal. A fresh
+  // Show remounts it; an already visible menu never gains a duplicate shell.
+  const showContextMenu = element => {
+    const opener = document.activeElement;
+    let menu = openModal(element, opener);
+    return {
+      Hide:()=>menu.handle.Close(),
+      Show:()=>{if(!menu.isOpen())menu=openModal(element, opener);},
+    };
+  };
+  const ModalRoot = ({children, onOK, bOKDisabled, closeModal, onCancel, onEscKeypress,
+    frameySetModalBusy, ...props}) => {
+    const pending = R.useRef(false);
+    const [busy, setBusy] = R.useState(false);
+    const [failure, setFailure] = R.useState('');
+    // Custom plugin dialogs pass their injected closeModal into ModalRoot.
+    // Bind busy state to that dialog, even if a nested dialog is opened later.
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    // A custom component's cancel handlers live on its inner ModalRoot, not
+    // on the element passed to showModal. Register only this committed root;
+    // replacement dialogs and effect cleanup retire the old callbacks.
+    R.useEffect(() => {
+      if (!modal || !modals.includes(modal)) return;
+      const registered = {onCancel, onEscKeypress};
+      modal.rootCallbacks = registered;
+      return () => {
+        if (modal.rootCallbacks===registered) delete modal.rootCallbacks;
+      };
+    }, [modal, onCancel, onEscKeypress]);
+    const markBusy = value => {
+      pending.current = value; setBusy(value);
+      if (modal && modals.includes(modal)) {modal.running=value; renderModals();}
+    };
+    const submit = event => {
+      if (bOKDisabled || pending.current || event?.defaultPrevented) return;
+      setFailure('');
+      let result;
+      try {result = onOK(event);}
+      catch (error) {setFailure(String(error?.message || error)); return;}
+      if (result && typeof result.then === 'function') {
+        markBusy(true);
+        return Promise.resolve(result).then(()=>markBusy(false), error=>{
+          markBusy(false); setFailure(String(error?.message || error));
+        });
+      }
+    };
+    return R.createElement('section', props, children,
+      failure && R.createElement('p', {role:'alert'}, failure),
+      typeof onOK==='function' && R.createElement('button', {
+        type:'button', disabled:!!bOKDisabled || busy, onClick:submit}, 'OK'));
+  };
+  // showModal owns the local shell, focus and dismissal. This content wrapper
+  // never opens a Steam portal or mounts an inactive dialog's children.
+  const SimpleModal = ({active=true, children}) => active ? R.createElement(R.Fragment, null, children) : null;
   // These are Framey's own styles and components, never Steam's webpack cache.
   // Keep the registry finite: an unknown Steam implementation stays unavailable.
   const classModules = new Map(Object.entries({
@@ -689,22 +966,39 @@
       for (const value of moduleVariants(module)) if (filter(value)) mapping.set(id, value);
     return mapping;
   }
+  // Search only the value the plugin supplies. React ownership links can be
+  // cyclic, so visit each object once without recursing through the JS stack.
+  function findInTree(parent, filter, opts) {
+    if (!parent || typeof parent !== 'object') return null;
+    const {walkable=null, ignore=[]} = opts || {};
+    const pending = [parent], visited = new WeakSet();
+    while (pending.length) {
+      const node = pending.pop();
+      if (!node || typeof node !== 'object' || visited.has(node)) continue;
+      visited.add(node);
+      if (filter(node)) return node;
+      const children = Array.isArray(node) ? node : (walkable || Object.keys(node))
+        .filter(key=>!ignore.includes(key)).map(key=>node[key]);
+      for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
+    }
+  }
   const DFL = window.DFL = {
     definePlugin: init => init,
-    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem,
+    PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
     DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
-    DialogControlsSectionHeader:passthrough('h3'), ModalRoot:passthrough('section'),
+    DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup:passthrough('section'), MenuItem,
-    ProgressBar, ProgressBarItem:ProgressBar, ProgressBarWithInfo,
+    Menu:passthrough('div'), MenuGroup, MenuItem,
+    ProgressBar, ProgressBarItem, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
     quickAccessControlsClasses:{}, mainMenuAppRunningClasses:{}, libraryAssetImageClasses:{},
@@ -713,12 +1007,14 @@
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
-    showModal, showContextMenu:showModal,
+    showModal, showContextMenu,
     // Steam app, library, and store patches have no target inside this panel.
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     // The isolated panel has no Steam React root. Legacy plugins can inspect
     // this null result and keep their own controls without patching Steam UI.
-    getReactRoot: () => null, findInReactTree: () => null,
+    getReactRoot: () => null,
+    findInTree, findInReactTree:(node,filter)=>findInTree(node,filter,
+      {walkable:['props','children','child','sibling']}),
     findModule, findModuleChild, findModuleDetailsByExport,
     findModuleByExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[0],
     findModuleExport:(filter, minExports)=>findModuleDetailsByExport(filter,minExports)[1],

@@ -22,12 +22,49 @@ cannot erase settings written by a newer version. Add a deliberate migration
 for each future schema instead of changing this guard silently.
 The panel also guards its own read and write calls synchronously. If two
 controller events arrive before React redraws a disabled control, the second
-event is ignored; after the request settles, a new change can be saved.
+event is ignored; after a successful request settles, a new change can be saved.
+If the initial read or a later reload fails, the toggle and Reset stay disabled
+until **Reload saved setting** successfully reads the backend value. The last
+displayed value is not permission to save after a failed read. This prevents
+an unread setting from being overwritten using the initial display default;
+callbacks retained before a redraw follow the same guard. Reload remains
+available for recovery. This path is tested with synthetic backend replies,
+not a live headset connection.
+
+A rejected save reply can mean the backend committed the value but its reply
+was lost. After any save error, the sample disables both mutations until
+**Reload saved setting** succeeds. The displayed value is now unconfirmed;
+it is not rolled forward or announced as saved. A failed reload keeps editing
+disabled. A successful reload shows the backend value and enables editing
+again. Tests use synthetic lost-reply and recovery cases through the built
+bundle and real host; they do not prove live-headset persistence.
+
+Leaving the settings view retires its callbacks, closes its Reset dialog and
+ignores late read/write replies for that view's state and success toasts. A
+request already sent to the backend is **not cancelled** and can still write
+the setting. Returning to the view starts a new read before editing is enabled.
+The sample also handles React's development effect setup/cleanup replay: a
+late reply from the first setup cannot unlock or replace the newer read.
+Lifecycle tests use delayed synthetic replies through the real host and built
+bundle; they do not prove live-headset persistence.
+
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded
 write path as the toggle. This is a safe example of putting a settings change
 behind an explicit confirmation in Framey. It has not been tried with a
 physical controller in a worn headset.
+
+The Reset callback returns the save promise to `ConfirmModal`. The dialog
+stays busy until that save finishes, rejects repeat Reset/Cancel/Close actions
+while pending, and stays open with an error if the save fails. Close it with
+**Keep setting** or its Close button, then use **Reload saved setting** before
+opening a new Reset dialog. Retrying the failed dialog before reloading sends
+no write and cannot close it as a success. Only a successful save closes the
+dialog automatically and shows a success toast.
+The ordinary toggle catches the same rejected promise after `change` records
+the error in the panel's status, so it does not create an unhandled rejection.
+Do not discard an asynchronous confirmation with `void`: that makes the modal
+close before it knows the result.
 
 The **About this setting** button opens a local detail page at
 `/framey-sample/details/saved-setting`. It demonstrates `routerHook.addRoute`,

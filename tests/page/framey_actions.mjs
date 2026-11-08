@@ -271,7 +271,7 @@ assert.equal(window.DFL.Spinner({}).props.role,'status');
 assert.equal(window.DFL.ProgressBar({nProgress:120}).props.value,100);
 assert.equal(window.DFL.ProgressBar({nProgress:40,indeterminate:true}).props.value,undefined,
   'an indeterminate progress element must omit its value');
-assert.equal(window.DFL.ProgressBarItem({nProgress:35}).props.value,35);
+assert.equal(nodes(window.DFL.ProgressBarItem({nProgress:35}),'progress')[0].props.value,35);
 const progressInfo=window.DFL.ProgressBarWithInfo({indeterminate:true,
   sOperationText:'Downloading plugin'});
 assert.equal(nodes(progressInfo,'progress')[0].props.value,undefined);
@@ -618,10 +618,40 @@ assert.equal(unsubscribeRequest.args[0].length,0);
 onMessage({source:parent,data:{type:'framey:reply',id:unsubscribeRequest.id,
   result:{events:[{event:'timer:tick',args:[99]}],cursor:2}}});
 for(let i=0;i<12;i++)await Promise.resolve();assert.equal(eventValues.length,1);
+// A cleanup callback can dispose another listener while a received batch is
+// queued. That retired listener must not overwrite a newer view's state.
+const deliveries=[];
+const retired=value=>deliveries.push(`retired:${value}`);
+const live=value=>deliveries.push(`live:${value}`);
+const cleanup=()=>{
+  deliveries.push('cleanup');
+  api.removeEventListener('simple_timer_seconds_updated',retired);
+};
+api.addEventListener('timer:cleanup',cleanup);
+const firstRegistration=messages.at(-1);
+api.addEventListener('simple_timer_seconds_updated',retired);
+api.addEventListener('simple_timer_seconds_updated',live);
+onMessage({source:parent,data:{type:'framey:reply',id:firstRegistration.id,
+  result:{events:[],cursor:2}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+const batchRequest=messages.at(-1);
+assert.equal(batchRequest.type,'framey:events');
+assert.deepEqual(Array.from(batchRequest.args[0]),['timer:cleanup','simple_timer_seconds_updated']);
+onMessage({source:parent,data:{type:'framey:reply',id:batchRequest.id,
+  result:{events:[{event:'timer:cleanup',args:[]},
+    {event:'simple_timer_seconds_updated',args:[7]}],cursor:4}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'removed listeners cannot receive queued events');
 assert.throws(()=>api.addEventListener('bad event',callback),/Invalid Decky event/);
 assert.throws(()=>api.addEventListener('tick',null),/Invalid Decky event/);
+const lateEvents=messages.at(-1);
+assert.equal(lateEvents.type,'framey:events');
 listeners.find(x=>x.type==='unload').handler();
 assert.equal(messages.at(-1).type,'framey:events:close');
+onMessage({source:parent,data:{type:'framey:reply',id:lateEvents.id,
+  result:{events:[{event:'simple_timer_seconds_updated',args:[99]}],cursor:5}}});
+for(let i=0;i<12;i++)await Promise.resolve();
+assert.deepEqual(deliveries,['cleanup','live:7'],'closed panels ignore late event replies');
 const finalRefresh=window.__refreshRunning();
 assert.equal(window.__refreshRunning(),finalRefresh,'Running reads must not overlap');
 const finalRequest=messages.at(-1);
