@@ -98,6 +98,7 @@ def main():
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyparty-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-storage-cleaner-unload-regression', action='store_true')
     args = parser.parse_args()
     if args.reproduce_terminal_import_regression:
         assert args.id == 65 and args.version == '-'
@@ -129,6 +130,16 @@ def main():
         capture_output=True, text=True, env=env, timeout=30)
     assert install.returncode == 0, install.stderr
     plugin = base/'plugins'/record['folder']
+    if args.reproduce_storage_cleaner_unload_regression:
+        assert record['id'] == 50
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '8e01ebd0f5304d3e27c10352a31510e168cdac377e0aabd3cc485c2328c1f14d'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_animation_unload_regression:
         assert record['id'] == 23
         prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
@@ -2063,8 +2074,16 @@ def main():
                 assert current('get_size', 'compatdata') == len(marker)
                 assert current('delete_cache', 'compatdata') is None
                 assert not whole.exists()
-                report['result'] = ('published Decky discovery, private size/list and selected/whole fixture deletion passed; '
-                    'real Steam caches, Frame and VR unverified')
+                import storage_cleaner_private
+                storage_cleaner_private.probe(backend, loader, env, log, processes, current,
+                    rpc, until_ready, report, regression=args.reproduce_storage_cleaner_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_storage_cleaner_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                report['result'] = ('prior managed Storage Cleaner peer EOF and forced kill reproduced; negative control only'
+                    if args.reproduce_storage_cleaner_unload_regression else
+                    'published Decky discovery, private size/list and selected/whole fixture deletion, '
+                    'peer EOF readback, restart and two clean parent-only stops passed; real Steam caches, Frame and VR unverified')
             elif case['probe'] == 'steamback-private-save':
                 # The loader and plugin only see this disposable container home.
                 steam = home/'.local/share/Steam'
