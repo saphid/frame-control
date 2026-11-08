@@ -79,8 +79,10 @@ function Content() {
     async function change(value) {
         // Two controller events can arrive before React redraws the disabled toggle.
         // Keep writes ordered so a late first reply cannot replace the final choice.
-        if (!active.current || pending.current || !readReady.current)
+        if (!active.current || pending.current)
             return;
+        if (!readReady.current)
+            throw new Error('Reload saved setting before changing it.');
         const request = ++requestSequence.current;
         const isCurrent = () => active.current && request === requestSequence.current;
         pending.current = true;
@@ -95,8 +97,14 @@ function Content() {
                 body: SP_JSX.jsxs("span", { children: ["Setting saved: ", SP_JSX.jsx("strong", { children: value ? 'on' : 'off' })] }) });
         }
         catch (error) {
-            if (isCurrent())
-                setMessage(`Could not save setting: ${String(error)}`);
+            if (isCurrent()) {
+                // A lost reply does not prove the backend failed to commit. Require a
+                // fresh read rather than let another edit use the stale display value.
+                readReady.current = false;
+                const failure = new Error(`Could not confirm saved setting: ${String(error)}. Close any Reset dialog, then Reload saved setting before changing it.`);
+                setMessage(failure.message);
+                throw failure;
+            }
             throw error;
         }
         finally {
