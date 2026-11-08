@@ -188,6 +188,15 @@ callback as a slider adjustment, so save it through the normal setting path.
 lookback control is replayed in local host tests with synthetic history replies;
 real history, controller activation and worn VR remain unverified.
 
+Supply `validValues: value => boolean` to reject values outside a plugin's
+allowed set. Framey applies this predicate to slider adjustments, editable
+numeric input and Reset; a rejected reset default is not offered. For example,
+`validValues: value => [1, 2, 4, 8].includes(value)` allows only those worker
+counts. This callback contract is tested with synthetic settings in real
+React/DOM, not a published plugin or live backend. The `validValues: 'steps'`
+and `'range'` modes have no additional behavior in Framey; native `min`, `max`
+and `step` constraints still apply. Worn/controller use remains unverified.
+
 Open `ColorPickerModal` with `showModal` and supply numeric `defaultH` (0–360),
 `defaultS` and `defaultL` (0–100), and `defaultA` (0–1). These initialise one
 local draft, rather than changing whenever props redraw. OK calls
