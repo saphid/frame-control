@@ -46,6 +46,12 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Validate backend replies at runtime as well as stored data. TypeScript
+`callable` annotations do not validate RPC results: a resolved string or object
+is not a boolean setting, and a fulfilled promise is not necessarily a save
+acknowledgement. The sample accepts only boolean reads and its backend's
+literal `true` save acknowledgement; invalid results leave editing locked
+until a valid reload and do not announce success.
 Treat a rejected save reply as an uncertain outcome: the backend may have
 committed before the connection failed. Disable further edits until a new read
 succeeds, display that returned value, and do not announce the failed request
@@ -97,6 +103,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `Field.icon`, `ToggleField.icon`, `ButtonItem.icon` | Keeps the plugin's React icon beside the field label, including its supplied SVG geometry, title, class and style. | Exact Simple Timer 1.0.0 Subtle Mode toggle and speaker icon in real React/DOM with a synthetic save callback; enabled/disabled transitions, plus local Field/ButtonItem icon fixtures. No timer backend, audio playback, controller or worn VR proof. |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
@@ -186,6 +193,15 @@ callback as a slider adjustment, so save it through the normal setting path.
 `disabled` also disables Reset. The exact published Battery Tracker 0.2.0
 lookback control is replayed in local host tests with synthetic history replies;
 real history, controller activation and worn VR remain unverified.
+
+Supply `validValues: value => boolean` to reject values outside a plugin's
+allowed set. Framey applies this predicate to slider adjustments, editable
+numeric input and Reset; a rejected reset default is not offered. For example,
+`validValues: value => [1, 2, 4, 8].includes(value)` allows only those worker
+counts. This callback contract is tested with synthetic settings in real
+React/DOM, not a published plugin or live backend. The `validValues: 'steps'`
+and `'range'` modes have no additional behavior in Framey; native `min`, `max`
+and `step` constraints still apply. Worn/controller use remains unverified.
 
 Open `ColorPickerModal` with `showModal` and supply numeric `defaultH` (0–360),
 `defaultS` and `defaultL` (0–100), and `defaultA` (0–1). These initialise one

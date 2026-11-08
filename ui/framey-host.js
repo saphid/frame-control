@@ -392,14 +392,15 @@
         }
       }}, children);
   };
-  const Field = ({label, description, children}) => R.createElement('label', null,
+  const Field = ({label, description, icon, children}) => R.createElement('label', null,
+    icon != null && R.createElement('span', null, icon),
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
     type:'checkbox', checked:!!value, disabled:!!disabled,
     onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
-  const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
+  const ToggleField = ({label, description, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
@@ -476,7 +477,7 @@
         props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
       typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
   };
-  const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
+  const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
   const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
@@ -511,22 +512,26 @@
       inlineControls);
   };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', resetValue, onChange}) => R.createElement(Field, {label, description},
+    valueSuffix='', resetValue, validValues, onChange}) => {
+    const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
+      (typeof validValues!=='function' || validValues(next));
+    return R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
-      onChange:e=>{if(!disabled)onChange?.(Number(e.target.value));}}),
+      onChange:e=>{const next=Number(e.target.value);if(!disabled && permitted(next))onChange?.(next);}}),
     editableValue ? R.createElement('span', null,
       R.createElement('input', {type:'number', value, min, max, step, disabled:!!disabled,
         'aria-label':typeof label==='string'?`${label} value`:'Slider value',
         style:{width:'7ch'}, onChange:e=>{
           const raw=e.target.value, next=Number(raw);
           if(!disabled && raw.trim()!=='' && e.target.validity?.valid!==false &&
-              Number.isFinite(next) && next>=Number(min) && next<=Number(max)) onChange?.(next);
+              permitted(next)) onChange?.(next);
         }}), valueSuffix) : showValue && R.createElement('span', null, String(value) + valueSuffix),
-    Number.isFinite(resetValue) && resetValue>=Number(min) && resetValue<=Number(max) &&
+    permitted(resetValue) &&
       R.createElement('button', {type:'button', disabled:!!disabled,
         'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
-        onClick:()=>{if(!disabled)onChange?.(resetValue);}}, 'Reset'));
+        onClick:()=>{if(!disabled && permitted(resetValue))onChange?.(resetValue);}}, 'Reset'));
+  };
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
