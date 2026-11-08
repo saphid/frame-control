@@ -46,6 +46,11 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Treat a rejected save reply as an uncertain outcome: the backend may have
+committed before the connection failed. Disable further edits until a new read
+succeeds, display that returned value, and do not announce the failed request
+as saved. The sample applies this rule to both the toggle and Reset dialog;
+after a Reset error, close the dialog and reload before trying again.
 Retire a settings view's callbacks on unmount and ignore replies from its old
 read/write requests. Close dialogs owned by that view, and read saved settings
 again when it mounts. Cleanup does not cancel a backend request already sent;
