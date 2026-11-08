@@ -485,7 +485,7 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    bShowClearAction, bAlwaysShowClearAction, focusOnMount,
+    bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls,
     onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
     const input = R.useRef(null);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -507,7 +507,8 @@
         onKeyDown:e=>{if(!disabled)onKeyDown?.(e);}, onKeyUp:e=>{if(!disabled)onKeyUp?.(e);}}),
       bShowClearAction && (bAlwaysShowClearAction || String(value ?? draft).length>0) &&
         R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
-          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'));
+          'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
+      inlineControls);
   };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, onChange}) => {
