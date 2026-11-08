@@ -83,3 +83,57 @@ socket directory and did not modify Decky, contact the Frame, or run an ARM64
 VM. It establishes a parent event-loop starvation mechanism under controlled
 EOF. It does not establish that EOF occurred in the historical migration
 failure, identify which process first failed there, or clear the release hold.
+
+## Repeating the controlled parent EOF probe
+
+[`scripts/framey-probe-decky-parent-eof.py`](../../scripts/framey-probe-decky-parent-eof.py)
+makes that source-level experiment repeatable on a desktop with Python 3.10 or
+later and Unix sockets. Download these two public files from the exact upstream
+commit above; the script refuses any other content before executing it:
+
+```sh
+probe_dir=$(mktemp -d)
+curl --fail --location --output "$probe_dir/plugin.py" \
+  https://raw.githubusercontent.com/SteamDeckHomebrew/decky-loader/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/plugin/plugin.py
+curl --fail --location --output "$probe_dir/localsocket.py" \
+  https://raw.githubusercontent.com/SteamDeckHomebrew/decky-loader/67196adfa9b299f20dfb0cc932e88a169417b7d5/backend/decky_loader/localplatform/localsocket.py
+python3 scripts/framey-probe-decky-parent-eof.py \
+  --parent-source "$probe_dir/plugin.py" \
+  --socket-source "$probe_dir/localsocket.py"
+```
+
+The script extracts the unmodified `UnixSocket` class and parent response
+listener without initializing the rest of Decky. It creates two private Unix
+socket fixtures in separate owned Python children. The connected-peer control
+must run a heartbeat, propagate listener cancellation and close its socket.
+The closed-peer case must publish peer closure and then miss its heartbeat
+until the outer deadline. The parent kills and reaps only its own timed-out
+child before removing the temporary socket directory. The default budget is
+three seconds per concurrent child, configurable between two and ten seconds.
+
+No userspace stack capture is attempted. An initial timer-sampling version
+crashed its disposable EOF child while dumping a trace; that failed run was
+retained separately and the instrumentation was removed. The probe does not
+inspect asyncio task stacks, install signal handlers, attach a debugger or
+change security. It uses no headset, SteamVR, plugin settings or live Decky
+endpoints.
+
+Exit status zero means the cancellation control passed, the controlled EOF
+starvation reproduced and both children were reaped. It does **not** mean
+Decky shutdown passed. The report keeps `historicalCauseEstablished` and
+`releaseHoldCleared` false. This is an optional investigation tool, not a
+replacement for strict native/package gates or locked real-Frame smoke.
+
+## Newer upstream release comparison
+
+Decky v3.3.1 resolves to upstream commit
+`ffd103b9c1a4ce5bf305e7c0998eda6e05457dad`. On 2026-11-08, a read-only
+AST comparison found these five methods identical to the pinned v3.3.0 source:
+`PluginWrapper._response_listener`, `PluginWrapper.stop`,
+`PluginWrapper.kill_if_still_running`, `UnixSocket._read_single_line` and
+`UnixSocket._listen_for_method_call`.
+
+That comparison does not execute v3.3.1 or rule out other changes in it. It
+provides no evidence that upgrading alone repairs this controlled mechanism,
+and it does not identify the historical migration timeout's cause. The tested
+runtime pin and release hold remain unchanged.
