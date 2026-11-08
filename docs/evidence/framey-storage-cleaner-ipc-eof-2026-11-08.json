@@ -111,5 +111,12 @@
   "arm64Qualified": false,
   "historicalMigrationCauseEstablished": false,
   "releaseQualified": false,
-  "realFrameContacted": false
+  "realFrameContacted": false,
+  "canonicalCompatibilityFollowup": {
+    "tests": 131,
+    "skipped": 0,
+    "generatedDocumentationChecked": true,
+    "oldReceiptRequiresUpdate": true,
+    "partialRatingPreserved": true
+  }
 }

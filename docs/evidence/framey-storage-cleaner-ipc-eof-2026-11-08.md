@@ -32,7 +32,11 @@ container has a CPU/memory cap to contain the original EOF spin; the repaired
 positive uses the normal strict runtime policy. All execution is in disposable
 network-isolated Docker containers with private cache data and the digest-pinned
 published Decky 3.3.0 loader. The 101 focused store/runtime/IPC tests passed
-without skips, including refusal to install without the offline adapter.
+without skips, including refusal to install without the offline adapter. A
+follow-up checks the canonical compatibility record and regenerated document:
+131 store/runtime/IPC/compatibility tests passed without skips. Old receipts
+require the new adapter before their update notice clears; both old and current
+copies retain the partial rating.
 
 The [local receipt](framey-storage-cleaner-ipc-eof-2026-11-08.json) binds the
 tested sources, raw report digest, backend and adapter digests, positive stops,

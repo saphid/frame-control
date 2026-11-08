@@ -14,6 +14,16 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_storage_cleaner_previous_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 50)
+        old = dict(storeId=50, version=record['version'], sha256=record['sha256'],
+                   compatShims=['storage-cleaner-bounded-delete'])
+        fixed = dict(old, compatShims=['storage-cleaner-bounded-delete', 'storage-cleaner-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+
     def test_animation_old_receipt_requires_child_ipc_without_upgrading_partial_status(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 23)
         old = dict(storeId=23, version=record['version'], sha256=record['sha256'],

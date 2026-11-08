@@ -3772,7 +3772,7 @@
         "https://github.com/mcarlucci/decky-storage-cleaner.git"
       ],
       "status": "partial",
-      "reason": "The empty-data panel renders locally. Exact managed 1.4.0 installs repair the backend delete-then-TypeError bug, bound paths to shadercache/compatdata or numeric app-ID children, and await selected-delete RPCs. Published Decky 3.3.0 x86_64 and ARM64 RPCs pass private size/list and selected/whole fixture deletion in network-isolated containers; Node verifies selected RPC completion and failure; the local host modal waits and shows rejected actions. Real Steam cache deletion, the managed backend on Frame, visual confirmation flow and worn VR remain unverified; older copies need Update.",
+      "reason": "The empty-data panel renders locally. Exact managed 1.4.0 installs repair the backend delete-then-TypeError bug, bound paths to shadercache/compatdata or numeric app-ID children, and await selected-delete RPCs. The child IPC EOF repair prevents a reproduced forced shutdown; local native AMD64 verifies preserved private caches, two clean stops and restart, with fresh hosted ARM64 qualification pending. Published Decky 3.3.0 x86_64 and ARM64 RPCs pass private size/list and selected/whole fixture deletion in network-isolated containers; Node verifies selected RPC completion and failure; the local host modal waits and shows rejected actions. Real Steam cache deletion, the managed backend on Frame, visual confirmation flow and worn VR remain unverified; older copies need Update.",
       "blockInstall": false,
       "verification": [
         "static archive",
@@ -3805,7 +3805,11 @@
         "sha256": "1afa1a6f129c5d419de0e0bf0f6db8d8e50385a5659179346e996031ea372591",
         "archiveValidation": "accepted",
         "result": "installed-removed"
-      }
+      },
+      "requiredShims": [
+        "storage-cleaner-bounded-delete",
+        "storage-cleaner-ipc-eof"
+      ]
     },
     {
       "id": 52,
