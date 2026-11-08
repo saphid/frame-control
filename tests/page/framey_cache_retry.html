@@ -1,0 +1,50 @@
+<pre id="result">Pending</pre>
+<script>
+(() => {
+  const result=document.getElementById('result');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const warning=document.getElementById('frameyCacheWarning');
+  const retry=document.getElementById('frameyCacheRetry');
+  const key='framey-plugin-cache-v1:14', phaseKey='framey-cache-fixture-proof';
+  const saved={enabled:'false',empty:'',latest:'Synthetic newest draft'};
+  try {
+    // Synthetic cache snapshots only. The real parent controls and native
+    // browser Storage run; no plugin, iframe navigation, backend or Frame does.
+    activeFrameyId=14;
+    document.getElementById('frameyPanel').hidden=false;
+    const previous=sessionStorage.getItem(phaseKey);
+    if(previous){
+      assert(JSON.stringify(frameyCacheRead(14))===JSON.stringify(saved),'latest settings did not survive full page reload');
+      showFrameyCacheStatus();
+      assert(warning.hidden,'fresh page incorrectly reports a retained failed write');
+      const proof=JSON.parse(previous);
+      proof.realPageReloadReadback=true;
+      result.textContent=JSON.stringify(proof);
+      return;
+    }
+    assert(warning.hidden,'notice must start hidden');
+    frameyCacheSave(14,{latest:'Synthetic old disk value'});
+    const nativeSet=Storage.prototype.setItem;
+    let denied=true;
+    Storage.prototype.setItem=function(name,value){
+      if(name===key&&denied)throw new DOMException('Fixture quota exhausted','QuotaExceededError');
+      return nativeSet.call(this,name,value);
+    };
+    frameyCacheSave(14,saved);
+    assert(!warning.hidden && warning.getClientRects().length,'failed write did not show the real notice');
+    assert(warning.querySelector('[role=status]').textContent.includes('closing or reloading'),'notice omits reload risk');
+    assert(localStorage.getItem(key).includes('old disk value'),'denied write unexpectedly replaced native disk storage');
+    retry.click();
+    assert(!warning.hidden,'failed retry hid the notice');
+    denied=false;
+    retry.click();
+    assert(warning.hidden,'successful retry left the notice visible');
+    assert(localStorage.getItem(key)===JSON.stringify(saved),'retry did not store the latest complete snapshot');
+    Storage.prototype.setItem=nativeSet;
+    sessionStorage.setItem(phaseKey,JSON.stringify({passed:true,realDOM:true,nativeBrowserStorage:true,
+      failedWriteVisible:true,failedRetryRetained:true,retrySavedWithoutEdit:true,
+      falseAndEmptyPreserved:true,syntheticSnapshots:true,realFrameContacted:false,wornVRVerified:false}));
+    location.reload();
+  } catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

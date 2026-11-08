@@ -32,9 +32,12 @@ class PrimaryShutdownGate(unittest.TestCase):
 
         def docker(command, **kwargs):
             if command[:2] == ['docker', 'run']:
-                control = any(arg.startswith('--reproduce-') for arg in command)
+                controls = [arg for arg in command if arg.startswith('--reproduce-')]
+                control = bool(controls)
                 value = copy.deepcopy(negative if control else primary)
                 value['id'] = ident
+                if control:
+                    value['fixtureControl'] = controls
                 return subprocess.CompletedProcess(command, 0, json.dumps(value), '')
             return subprocess.CompletedProcess(command, 0, '', '')
 
@@ -90,6 +93,11 @@ class PrimaryShutdownGate(unittest.TestCase):
             output = Path(temp)/'result.json'
             self.invoke(output, clean, negative=RECORDED['observation'])
             cases = json.loads(output.read_text())['cases']
-            self.assertEqual(len(cases), 2)
+            self.assertEqual([case.get('fixtureControl', []) for case in cases], [
+                [],
+                ['--reproduce-music-control-unload-regression'],
+                ['--reproduce-bound-method-regression'],
+            ])
             self.assertNotIn('Sending SIGKILL!', cases[0]['runtimeConsole']['text'])
-            self.assertIn('Sending SIGKILL!', cases[1]['runtimeConsole']['text'])
+            for control in cases[1:]:
+                self.assertIn('Sending SIGKILL!', control['runtimeConsole']['text'])

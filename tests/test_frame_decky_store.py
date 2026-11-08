@@ -672,6 +672,51 @@ class StoreTransaction(unittest.TestCase):
         self.assertFalse((self.folder.parent/plugin['folder']).exists())
         self.assertEqual(frame_decky_store.apply_script(93, 'a'*64), frame_decky_store.APPLY)
 
+    def test_desktop_apps_exact_archive_repairs_child_eof_without_other_changes(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 143)
+        data = official_archive(plugin)
+        result = self.apply('install', data, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text())['compatShims'],
+                         ['desktop-apps-ipc-eof'])
+        prefix = b'from framey_decky_ipc import install as _framey_install_ipc_eof\n_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n'
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for entry in original.infolist():
+                if not entry.is_dir():
+                    relative = entry.filename.removeprefix(plugin['folder']+'/')
+                    expected = original.read(entry)
+                    if relative == 'main.py':
+                        expected = prefix+expected
+                    self.assertEqual((folder/relative).read_bytes(), expected, relative)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        self.assertEqual(self.apply('remove', plugin_id=143, folder=plugin['folder']).returncode, 0)
+        self.assertFalse(folder.exists())
+
+    def test_desktop_apps_missing_ipc_refuses_install_and_changed_digest_is_not_adapted(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 143)
+        data = official_archive(plugin)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', data, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Desktop Apps child IPC EOF repair', result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertFalse(folder.exists())
+        changed = io.BytesIO()
+        with zipfile.ZipFile(io.BytesIO(data)) as original, zipfile.ZipFile(changed, 'w') as target:
+            for entry in original.infolist():
+                target.writestr(entry, original.read(entry))
+            target.writestr(plugin['folder']+'/changed.txt', b'other archive')
+        changed = changed.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(143, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=143, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertNotIn('compatShims', json.loads((folder/'.frame-control-store.json').read_text()))
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+
     def test_exact_steam_status_managed_copy_verifies_public_diagnostics_tls(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 123)
@@ -683,7 +728,15 @@ class StoreTransaction(unittest.TestCase):
         folder = self.folder.parent/plugin['folder']
         source = (folder/'main.py').read_text(encoding='utf-8')
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['steam-status-verified-tls'])
+        self.assertEqual(receipt['compatShims'], ['steam-status-verified-tls', 'steam-status-ipc-eof'])
+        self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(), 'a16ab5869a93d64fb87f0cf836d98148ef83fb3000daafd32d37ee64dc1aba13')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for entry in original.infolist():
+                relative = entry.filename.removeprefix(plugin['folder']+'/')
+                if not entry.is_dir() and relative != 'main.py':
+                    self.assertEqual((folder/relative).read_bytes(), original.read(entry))
         self.assertEqual(source.count('ssl.create_default_context()'), 2)
         self.assertNotIn('ssl.CERT_NONE', source)
         self.assertNotIn('ssl_context.check_hostname = False', source)
@@ -714,6 +767,33 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
 
+    def test_steam_status_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 123)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=123,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Steam Status child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
+    def test_steam_status_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 123)
+        stream = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(stream, 'a') as bundle:
+            original = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', b'Different archive; no adaptation')
+        changed = stream.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(123, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=123,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
+
     def test_exact_suggestme_fallback_keeps_certificate_verification(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 132)
@@ -725,7 +805,15 @@ class StoreTransaction(unittest.TestCase):
         folder = self.folder.parent/plugin['folder']
         source = (folder/'main.py').read_text(encoding='utf-8')
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls'])
+        self.assertEqual(receipt['compatShims'], ['suggestme-verified-tls', 'suggestme-ipc-eof'])
+        self.assertEqual(hashlib.sha256((folder/'main.py').read_bytes()).hexdigest(), 'e3cc595e706d79907d3c8f6203ee0b1762a015230b17b4c444974e479d5d2b95')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for entry in original.infolist():
+                relative = entry.filename.removeprefix(plugin['folder']+'/')
+                if not entry.is_dir() and relative != 'main.py':
+                    self.assertEqual((folder/relative).read_bytes(), original.read(entry))
         self.assertNotIn('ssl.CERT_NONE', source)
         self.assertNotIn('ctx.check_hostname = False', source)
         method = next(node for node in ast.parse(source).body
@@ -741,6 +829,33 @@ class StoreTransaction(unittest.TestCase):
         result = self.apply('remove', plugin_id=132, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_suggestme_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 132)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=132,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing SuggestMe child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
+    def test_suggestme_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 132)
+        stream = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(stream, 'a') as bundle:
+            original = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', b'Different archive; no adaptation')
+        changed = stream.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(132, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=132,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
 
     def test_exact_notifications_uses_private_decky_logging(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -926,13 +1041,18 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/record['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64'])
+        self.assertEqual(receipt['compatShims'], ['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
         helper = folder/'bin/hash'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(),
                          frame_decky_store.EMU_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
         source = folder/'main.py'
-        self.assertEqual(hashlib.sha256(source.read_bytes()).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.read_bytes().startswith(prefix))
+        self.assertEqual(hashlib.sha256(source.read_bytes()[len(prefix):]).hexdigest(), frame_decky_store.EMU_MANAGED_MAIN)
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+            Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         self.assertIn('asyncio.create_subprocess_exec', source.read_text())
         self.assertNotIn('os.popen', source.read_text())
         self.assertEqual(self.apply('remove', plugin_id=28, folder=record['folder']).returncode, 0)
@@ -1128,8 +1248,17 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / plugin['folder']
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery'])
+        self.assertEqual(receipt['compatShims'], ['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])
         modules = folder / 'py_modules'
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        with zipfile.ZipFile(io.BytesIO(official_archive(plugin))) as original:
+            previous = original.read(plugin['folder']+'/main.py').replace(
+                b'        battery = psutil.sensors_battery()\n',
+                b'        from framey_battery import sensors_battery\n        battery = sensors_battery()\n')
+        self.assertEqual((folder/'main.py').read_bytes(), prefix+previous)
+        self.assertEqual((modules/'framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
         native = (modules / 'psutil/_psutil_linux.abi3.so').read_bytes()
         self.assertEqual(native[:4], b'\x7fELF')
         self.assertEqual(int.from_bytes(native[18:20], 'little'),
@@ -1152,6 +1281,68 @@ class StoreTransaction(unittest.TestCase):
             self.assertNotEqual(result.returncode, 0)
             self.assertIn(error, result.stderr)
             self.assertFalse((self.folder.parent / plugin['folder']).exists())
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_deckyspy_missing_ipc_helper_preserves_existing_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 89)
+        data = official_archive(plugin)
+        args = dict(plugin_id=89, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(self.apply('install', data, **args).returncode, 0)
+        folder = self.folder.parent/plugin['folder']
+        marker = folder/'owned-user-marker'
+        marker.write_bytes(b'preserve this installed copy')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        script = frame_decky_store.apply_script(89, plugin['sha256'])
+        script = script.replace('FRAMEY_DECKYSPY_IPC_SOURCE =', 'OMITTED_DECKYSPY_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', return_value=script):
+            result = self.apply('update', data, expected=plugin['sha256'], **args)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing DeckySpy child IPC EOF repair', result.stderr)
+        self.assertEqual(before, {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()})
+
+    def test_theme_music_ipc_repair_preserves_every_other_archive_file(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 52)
+        data = official_archive(plugin)
+        result = self.apply('install', data, plugin_id=52, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        receipt = json.loads((folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['game-theme-music-ipc-eof'])
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        with zipfile.ZipFile(io.BytesIO(data)) as original:
+            for member in original.infolist():
+                if member.is_dir():
+                    continue
+                relative = Path(member.filename).relative_to(plugin['folder'])
+                expected = original.read(member)
+                if str(relative) == 'main.py':
+                    expected = prefix+expected
+                self.assertEqual((folder/relative).read_bytes(), expected, str(relative))
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).parent/'framey_decky_ipc.py').read_bytes())
+        result = self.apply('remove', plugin_id=52, folder=plugin['folder'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertFalse(folder.exists())
+
+    def test_theme_music_missing_ipc_helper_preserves_existing_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 52)
+        data = official_archive(plugin)
+        args = dict(plugin_id=52, folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(self.apply('install', data, **args).returncode, 0)
+        folder = self.folder.parent/plugin['folder']
+        (folder/'private-marker').write_bytes(b'keep existing copy')
+        before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+        script = frame_decky_store.apply_script(52, plugin['sha256']).replace(
+            'FRAMEY_THEME_MUSIC_IPC_SOURCE =', 'OMITTED_THEME_MUSIC_IPC_SOURCE =', 1)
+        with patch.object(frame_decky_store, 'apply_script', return_value=script):
+            result = self.apply('update', data, expected=plugin['sha256'], **args)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Game Theme Music child IPC EOF repair', result.stderr)
+        self.assertEqual(before, {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()})
+
     def test_tabmaster_restore_repair_preserves_other_bytes_and_rejects_changed_archive(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 61)
@@ -1357,6 +1548,27 @@ assert copied.read_bytes() == b'local screenshot fixture'
         self.assertFalse((shotty / 'py_modules/click.py').exists())
         self.assertNotIn('compatShims', json.loads((shotty / '.frame-control-store.json').read_text()))
 
+    def test_music_control_missing_ipc_helper_preserves_existing_copy(self):
+        from framey_official import PLUGINS, archive as official_archive
+        for plugin_id in (12, 111):
+            plugin = next(p for p in PLUGINS if p['id'] == plugin_id)
+            data = official_archive(plugin)
+            args = dict(plugin_id=plugin_id, folder=plugin['folder'], version=plugin['version'])
+            self.assertEqual(self.apply('install', data, **args).returncode, 0)
+            folder = self.folder.parent / plugin['folder']
+            marker = folder / 'private-marker'
+            marker.write_bytes(b'private settings must survive a rejected update')
+            before = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+            broken = frame_decky_store.apply_script(plugin_id, plugin['sha256']).replace(
+                'FRAMEY_MUSIC_CONTROL_IPC_SOURCE =', 'OMITTED_MUSIC_CONTROL_IPC_SOURCE =', 1)
+            with patch.object(frame_decky_store, 'apply_script', return_value=broken):
+                result = self.apply('update', data, expected=plugin['sha256'], **args)
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn('Missing Music Control child IPC EOF repair', result.stderr)
+            after = {str(p.relative_to(folder)): p.read_bytes() for p in folder.rglob('*') if p.is_file()}
+            self.assertEqual(before, after)
+            self.assertEqual(self.apply('remove', expected=plugin['sha256'], **args).returncode, 0)
+
     def test_legacy_music_control_keeps_decky_class_calling_convention(self):
         from framey_official import PLUGINS, archive as official_archive
         plugin = next(p for p in PLUGINS if p['id'] == 111)
@@ -1368,7 +1580,10 @@ assert copied.read_bytes() == b'local screenshot fixture'
         self.assertEqual(result.returncode, 0, result.stderr)
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
         self.assertEqual(receipt['sha256'], plugin['sha256'])
-        self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env'])
+        self.assertEqual(receipt['compatShims'], ['music-control-system-dbus-env', 'music-control-ipc-eof'])
+        helper = folder / 'py_modules/framey_decky_ipc.py'
+        ipc_source = Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes()
+        self.assertEqual(helper.read_bytes(), ipc_source)
         self.assertNotIn('api_version', json.loads((folder / 'plugin.json').read_text()))
         self.assertIn('self._get_dbus_env(self)', (folder / 'main.py').read_text())
 
@@ -1392,6 +1607,11 @@ else:
 from pathlib import Path
 decky = types.ModuleType('decky_plugin')
 sys.modules['decky_plugin'] = decky
+# The native Decky probe exercises the actual transport. This unit test
+# independently checks that the remaining legacy methods keep their contract.
+ipc = types.ModuleType('framey_decky_ipc')
+ipc.install = lambda: None
+sys.modules['framey_decky_ipc'] = ipc
 spec = importlib.util.spec_from_file_location('music_control', Path(sys.argv[1])/'main.py')
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
@@ -1443,7 +1663,8 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
         result = self.apply('install', old_data, **old_args)
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads((folder / '.frame-control-store.json').read_text())['compatShims'],
-                         ['music-control-system-dbus-env'])
+                         ['music-control-system-dbus-env', 'music-control-ipc-eof'])
+        self.assertEqual((folder / 'py_modules/framey_decky_ipc.py').read_bytes(), ipc_source)
         self.assertNotIn('api_version', json.loads((folder / 'plugin.json').read_text()))
         self.assertIn('self._get_dbus_env(self)', (folder / 'main.py').read_text())
         old_env = {**self.env, 'MPRIS_CALLS': str(calls), 'LD_LIBRARY_PATH': 'FrameyBundledLibraries'}
@@ -1513,6 +1734,104 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
         self.assertEqual((Path(self.tmp.name) / 'service-calls').read_text().splitlines(),
                          ['--user stop frame-control-decky.service'])
 
+    def test_failed_backup_move_preserves_installed_plugin_and_saved_data(self):
+        data, digest = archive()
+        fault = '''
+import pathlib
+original_rename = pathlib.Path.rename
+def fail_backup_move(path, destination):
+    if path.name == 'Example' and destination.name.startswith('.frame-control-old-'):
+        raise PermissionError('injected backup move failure')
+    return original_rename(path, destination)
+pathlib.Path.rename = fail_backup_move
+'''
+        for action, running in (('update', True), ('remove', True), ('remove', False)):
+            with self.subTest(action=action, running=running):
+                installed = self.apply('install', data)
+                self.assertEqual(installed.returncode, 0, installed.stderr)
+                (self.folder / 'saved-data.json').write_bytes(b'{"saved":"keep me"}\n')
+                before = self.plugin_snapshot()
+                calls = self.record_service_calls(running)
+                with patch.object(frame_decky_store, 'APPLY', fault + frame_decky_store.APPLY):
+                    result = self.apply(action, data if action == 'update' else None, expected=digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('injected backup move failure', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'] if running else ['stop'])
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+                # The failed transaction releases its lock and leaves the plugin manageable.
+                retry = self.apply(action, data if action == 'update' else None, expected=digest)
+                self.assertEqual(retry.returncode, 0, retry.stderr)
+                if action == 'update':
+                    self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_failed_staged_move_restores_old_plugin_or_leaves_install_absent(self):
+        old, old_digest = archive(extra=('Example/generation.txt', 'old'))
+        new, _ = archive(extra=('Example/generation.txt', 'new'))
+        fault = '''
+import pathlib
+original_rename = pathlib.Path.rename
+def fail_staged_move(path, destination):
+    if path.parent.name.startswith('.frame-control-stage-'):
+        raise OSError('injected staged move failure')
+    return original_rename(path, destination)
+pathlib.Path.rename = fail_staged_move
+'''
+        for action in ('install', 'update'):
+            with self.subTest(action=action):
+                if action == 'update':
+                    installed = self.apply('install', old)
+                    self.assertEqual(installed.returncode, 0, installed.stderr)
+                    (self.folder / 'saved-data.json').write_text('{"keep":true}')
+                before = self.plugin_snapshot()
+                calls = self.record_service_calls()
+                with patch.object(frame_decky_store, 'APPLY', fault + frame_decky_store.APPLY):
+                    result = self.apply(action, new, expected=old_digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('injected staged move failure', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder] if before else [])
+                retry = self.apply(action, new, expected=old_digest)
+                self.assertEqual(retry.returncode, 0, retry.stderr)
+                self.assertEqual((self.folder / 'generation.txt').read_text(), 'new')
+                self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_failed_restart_restores_previous_plugin_and_restarts_service(self):
+        old, digest = archive(extra=('Example/generation.txt', 'old'))
+        new, _ = archive(extra=('Example/generation.txt', 'new'))
+        installed = self.apply('install', old)
+        self.assertEqual(installed.returncode, 0, installed.stderr)
+        (self.folder / 'saved-data.json').write_text('{"keep":true}')
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        fake = Path(self.tmp.name) / 'systemctl'
+        fake.write_text(fake.read_text().replace('exit 0\n',
+                        'if [ "$2" = start ] && [ ! -f "$HOME/start-failed" ]; then\n'
+                        '  touch "$HOME/start-failed"\n'
+                        '  echo "injected restart failure" >&2\n  exit 1\nfi\nexit 0\n'))
+        result = self.apply('update', new, expected=digest)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('injected restart failure', result.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start', 'start'])
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        retry = self.apply('update', new, expected=digest)
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual((self.folder / 'generation.txt').read_text(), 'new')
+
+    def plugin_snapshot(self):
+        return {str(path.relative_to(self.folder)): (path.read_bytes(), path.stat().st_mode & 0o777)
+                for path in self.folder.rglob('*') if path.is_file()}
+
+    def record_service_calls(self, running=True):
+        calls = Path(self.tmp.name) / 'service-calls'
+        calls.write_text('')
+        (Path(self.tmp.name) / 'systemctl').write_text(
+            '#!/bin/sh\nif [ "$2" = is-active ]; then exit ' + ('0' if running else '1') + '; fi\n'
+            'echo "$2" >> "$HOME/service-calls"\nexit 0\n')
+        return calls
+
     def test_shared_lock_rejects_plugin_and_loader_changes(self):
         import fcntl
 
@@ -1564,6 +1883,34 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
         self.assertIn('different plugin with this name', result.stderr)
         self.assertTrue(self.folder.exists())
         self.assertEqual(list(self.folder.parent.glob('.frame-control-stage-*')), [])
+
+    def test_stale_install_cannot_duplicate_store_id_after_name_and_folder_change(self):
+        old, _ = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        installed = self.apply('install', old)
+        self.assertEqual(installed.returncode, 0, installed.stderr)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        stream = io.BytesIO()
+        with zipfile.ZipFile(stream, 'w') as bundle:
+            bundle.writestr('Renamed/plugin.json', '{"name":"Renamed Plugin","flags":[]}')
+            bundle.writestr('Renamed/dist/index.js', 'export default {};' + ' ' * 1200)
+        renamed = stream.getvalue()
+        # Both clients can finish the host status check before either archive
+        # reaches the remote lock. The later apply must recheck the store ID,
+        # even when neither the folder nor the published name still matches.
+        result = self.apply('install', renamed, folder='Renamed', version='2.0')
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn('store plugin is already installed', result.stderr)
+        self.assertEqual(calls.read_text(), '', 'reject before stopping the loader')
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # The rejected transaction releases its lock. An unrelated ID and name
+        # can install normally; no migration or deletion of the original occurs.
+        retry = self.apply('install', renamed, plugin_id=43, folder='Renamed', version='2.0')
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(json.loads((self.folder.parent/'Renamed/.frame-control-store.json').read_text())['storeId'], 43)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
 
     def test_update_and_remove_reject_stale_installed_receipt(self):
         first, first_hash = archive()
@@ -1642,6 +1989,33 @@ assert os.environ['LD_LIBRARY_PATH'] == 'FrameyBundledLibraries'
 
 
 class StoreHost(unittest.TestCase):
+    def test_reviewed_installed_copy_changed_before_submission_is_preserved(self):
+        state = {'managed': True, 'running': True, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '2.0',
+             'sha256': 'b' * 64}]}
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog') as catalog, \
+             patch.object(frame_decky_store.urllib.request, 'urlopen') as download:
+            for action in ('update', 'remove'):
+                with self.subTest(action=action), self.assertRaisesRegex(ValueError, 'Installed plugin changed'):
+                    frame_decky_store.change(lambda *a, **k: self.fail('No headset write expected'),
+                                             action, 42, installed_hash='a' * 64)
+            catalog.assert_not_called()
+            download.assert_not_called()
+
+    def test_reviewed_installed_receipt_survives_to_the_transaction_lock(self):
+        state = {'managed': True, 'running': False, 'plugins': [
+            {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '1.0',
+             'sha256': 'a' * 64}]}
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog') as catalog:
+            commands = []
+            frame_decky_store.change(lambda command, **kwargs: commands.append(command) or '{}',
+                                     'remove', 42, installed_hash='a' * 64)
+            self.assertEqual(len(commands), 1)
+            self.assertTrue(commands[0].endswith(' ' + 'a' * 64))
+            catalog.assert_not_called()
+
     def test_reviewed_archive_changed_before_install_does_not_download(self):
         state = {'managed': True, 'running': True, 'plugins': []}
         catalog = [{'id': 42, 'name': 'Example', 'root': False,
@@ -1706,7 +2080,7 @@ class StoreHost(unittest.TestCase):
              patch.object(frame_decky_store, 'catalog', return_value=catalog), \
              patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
             result = frame_decky_store.change(lambda command, **kwargs: calls.append(command) or '{}',
-                                               'update', 42)
+                                               'update', 42, installed_hash='a' * 64)
         self.assertEqual(result, {})
         self.assertEqual(len(calls), 3)  # Upload, apply, and temporary archive cleanup.
         self.assertIn('update', calls[1])
