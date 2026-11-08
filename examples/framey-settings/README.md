@@ -31,6 +31,14 @@ callbacks retained before a redraw follow the same guard. Reload remains
 available for recovery. This path is tested with synthetic backend replies,
 not a live headset connection.
 
+The frontend also validates runtime replies; `callable` type parameters do not
+check values received from the backend. Only a boolean setting read enables
+editing. A string such as `"false"`, a missing value or another JSON type shows
+a read error and keeps editing disabled. Only the backend's literal `true`
+save acknowledgement confirms success. A resolved `false` or malformed save
+reply requires the same reload as a rejected request and never emits a success
+toast. These cases are tested with synthetic replies through the built sample.
+
 A rejected save reply can mean the backend committed the value but its reply
 was lost. After any save error, the sample disables both mutations until
 **Reload saved setting** succeeds. The displayed value is now unconfirmed;
