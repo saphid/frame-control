@@ -184,14 +184,14 @@ content="default-src 'none'; script-src 'unsafe-inline' data: blob:; frame-src d
                     raise RuntimeError('Sandboxed browser exited: '+str(browser.returncode))
                 port = profile/'DevToolsActivePort'
                 if port.is_file():
-                    frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
                     try:
+                        frame_steam.CDP = 'http://127.0.0.1:'+port.read_text().splitlines()[0]+'/json'
                         page = frame_steam.Page('Owned Syncthing actual backend')
                         if page.eval("typeof ready !== 'undefined' && ready"): break
                         report['startupErrors'] = page.eval('window.startupErrors')
                         page.sock.close()
                         page = None
-                    except (OSError, frame_steam.Fail) as error:
+                    except (OSError, IndexError, frame_steam.Fail) as error:
                         report['lastReadinessError'] = str(error)[:1500]
                 time.sleep(.2)
             assert page is not None, 'Browser CDP/panel readiness unavailable'
