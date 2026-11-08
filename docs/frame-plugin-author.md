@@ -46,6 +46,11 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Treat a rejected save reply as an uncertain outcome: the backend may have
+committed before the connection failed. Disable further edits until a new read
+succeeds, display that returned value, and do not announce the failed request
+as saved. The sample applies this rule to both the toggle and Reset dialog;
+after a Reset error, close the dialog and reload before trying again.
 Retire a settings view's callbacks on unmount and ignore replies from its old
 read/write requests. Close dialogs owned by that view, and read saved settings
 again when it mounts. Cleanup does not cancel a backend request already sent;
@@ -103,7 +108,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `MenuGroup.label`, `disabled` | A labeled native fieldset; disabling it blocks native activation and focus of descendant controls, including nested groups. Individual `MenuItem` disabled states still apply. | Exact TabMaster 2.15.1 Micro SD Card menu with synthetic cards/preset callbacks in real React/DOM. No card discovery, real library edit, Steam submenu or worn/controller proof. |
 | `SidebarNavigation.pages` with `"separator"` entries | Omits layout separators from the local tab strip so they cannot open blank pages. Hidden pages stay absent; changing visibility of an earlier page preserves a later page's selection at the same source index. | Exact published Game Sync 1.0.4 navigation replay with inert child views and synthetic tab selection. No sync, backend, physical-input or worn VR proof. |
 | `ReorderableList` | Lists plugin entries by `position`; native Move up/down buttons edit a draft. Save order calls `onSave` with normalized positions; Cancel discards the draft. Labels, data and optional `interactables` are retained. `disableReordering` hides ordering controls. | Exact published TabMaster 2.15.1 list/save callback with synthetic entries; cancel, disabled/late handlers, failed-save retry and refreshed-list tests. No real library edit or physical controller check. |
-| `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` omits its value so it animates as unfinished, and `sOperationText` appears with the bar. Estimated completion time is not shown. | Host contract tests; official plugin progress behavior in worn VR remains unverified. |
+| `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` omits its value so it animates as unfinished. Item and WithInfo preserve React `label` and `description` content, and WithInfo shows `sOperationText`. Estimated completion time is not shown. | Exact Emuchievements 2.0.5 progress expressions in real React/DOM with synthetic loading errors and achievement counts; label, markup/styles, updates and indeterminate progress verified. No achievement service, live backend, controller or worn VR proof. |
 | `SteamUIStore` / `DFL.Router.RunningApps`, `MainRunningApp` | Bounded detached Steam CEF reads while the panel is open; refresh about every two seconds; no MobX observation. Failed reads clear stale context. | Locked real Frame empty-list reads; nonempty local Chromium fixtures. Real running-game selection unverified. |
 | `GameSessions.RegisterForAppLifetimeNotifications` | Actual Steam callbacks, bounded queue and disposable `.unregister()` handle; no events inferred from snapshot changes; lease cleanup after lost panels | Real Frame registration/poll/close; launch/exit, retry, expiry and duplicate tests use explicit fixtures. Real game transitions unverified. |
 | Other `SteamClient` subscriptions | Explicit inert registration methods return disposable handles; no fabricated power/input/game-action events. Mutating Steam/power methods are unavailable. | Host contract tests; safe fallbacks only |
