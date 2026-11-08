@@ -887,7 +887,7 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete'])
+        self.assertEqual(receipt['compatShims'], ['storage-cleaner-bounded-delete', 'storage-cleaner-ipc-eof'])
         source = (folder/'main.py').read_text(encoding='utf-8')
         self.assertNotIn('await shutil.rmtree', source)
         frontend = subprocess.run(['node', str(Path(__file__).parent/'page/framey_storage_cleaner.mjs'),
@@ -903,7 +903,8 @@ class StoreTransaction(unittest.TestCase):
         namespace = {'__name__': 'storage_cleaner_fixture'}
         fake_decky = types.SimpleNamespace(DECKY_USER_HOME=self.tmp.name,
                                            DECKY_PLUGIN_DIR=str(folder))
-        with patch.dict(sys.modules, {'decky': fake_decky}):
+        with patch.dict(sys.modules, {'decky': fake_decky,
+                'framey_decky_ipc': types.SimpleNamespace(install=lambda: None)}):
             exec(compile(source, str(folder/'main.py'), 'exec'), namespace)
         plugin_class = namespace['Plugin']
         for name in ('../outside', 'shadercache/../outside', 'compatdata/../../outside',
