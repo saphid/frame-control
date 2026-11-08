@@ -3,7 +3,7 @@ import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
-const html = readFileSync(new URL('../../ui/headset.html', import.meta.url), 'utf8');
+const html = readFileSync(process.argv[2] || new URL('../../ui/headset.html', import.meta.url), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1].split('refresh();refreshGames();')[0];
 class Element {
   constructor(id='') {this.id=id; this.value=''; this.textContent=''; this.children=[]; this.disabled=false; this.hidden=false;}
@@ -150,6 +150,7 @@ ctx.mockApi=async (path,body) => {
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx); // Resume Decky before testing an update failure.
 await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"b".repeat(64)})',ctx);
 assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
 assert.equal(session.has('frameyPluginJob'),false);
@@ -440,3 +441,66 @@ const deniedBoot=vm.createContext({document:deniedDocument,
   fetch(){throw Error('No network expected');}});
 vm.runInContext(script,deniedBoot);
 assert.equal(vm.runInContext('key',deniedBoot),'private-key');
+
+// Refresh invalidates status immediately, including callbacks retained from
+// old rows. Exercise the actual headset script with delayed synthetic reads.
+{
+  const entries=new Map();
+  const get=id=>{if(!entries.has(id))entries.set(id,new Element(id));return entries.get(id);};
+  const queued=[],posts=[];let confirms=0,deferStatus=false;
+  let state={managed:true,running:true,plugins:[
+    {storeId:2,name:'Installed fixture',version:'1',sha256:'a'.repeat(64)}]};
+  const context=vm.createContext({document:{getElementById:get,createElement:()=>new Element()},
+    location:{hash:'',pathname:'/'},history:{replaceState(){}},crypto:webcrypto,
+    sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+    window:{addEventListener(){}},setInterval(){},setTimeout(){},console,
+    confirm:()=>{confirms++;return true;}});
+  vm.runInContext(script,context);
+  context.mockApi=async(path,body)=>{
+    if(path==='/api/decky')return deferStatus ? new Promise((resolve,reject)=>queued.push({resolve,reject})) : state;
+    if(path==='/api/decky/plugin'){posts.push(body);return {job:body.requestId};}
+    if(path.startsWith('/api/job'))return {done:true,message:'Synthetic removal complete'};
+    throw Error(`unexpected ${path}`);
+  };
+  const run=expression=>vm.runInContext(expression,context);
+  get('deckyStoreFilter').value='all';
+  run('api=mockApi');await run('refreshDecky()');
+  run('deckyStore=[{id:2,name:"Installed fixture",version:"2",sha256:"b".repeat(64)},'+
+    '{id:3,name:"New fixture",version:"1",sha256:"c".repeat(64)}];showDeckyStore()');
+  const remove=get('deckyInstalled').children[0].children.find(node=>node.textContent==='Remove').onclick;
+  const open=get('deckyInstalled').children[0].children.find(node=>node.textContent==='Open panel').onclick;
+  const update=get('deckyStoreList').children[0].children[1].onclick;
+  const install=get('deckyStoreList').children[1].children[1].onclick;
+  const retained=[remove,update,install];
+  get('frameyPanel').hidden=true;
+  deferStatus=true;
+  const pending=run('refreshDecky()');
+  assert.equal(get('deckyInstalled').children.length,0,'refresh must retire old installed rows before awaiting status');
+  assert.ok(get('deckyStoreList').children.every(row=>row.children[1].disabled),
+    'refresh must disable mutations before awaiting status');
+  for(const tap of retained)await tap();open();
+  assert.equal(confirms,0,'retained callbacks must stop before confirmation while status is pending');
+  assert.equal(posts.length,0);assert.equal(get('frameyPanel').hidden,true);
+  queued.shift().reject(Error('Synthetic status outage'));await pending;
+  for(const tap of retained)await tap();open();
+  assert.equal(confirms,0,'failed status cannot revive retained mutations');
+  assert.equal(posts.length,0);assert.equal(get('frameyPanel').hidden,true);
+
+  // An incomplete normal refresh is a failed read, just like unknown-job
+  // recovery. It must not unlock installation based only on running=true.
+  deferStatus=false;const complete=state;state={running:true};
+  await run('refreshDecky()');
+  assert.match(get('deckyState').textContent,/status is incomplete/);
+  for(const tap of retained)await tap();
+  assert.equal(confirms,0);assert.equal(posts.length,0);
+
+  state={...complete,running:false};await run('refreshDecky()');
+  assert.equal(get('deckyInstalled').children[0].children.find(node=>node.textContent==='Remove').disabled,false,
+    'successful stopped status keeps recovery removal available');
+  await update();await install();
+  assert.equal(posts.length,0,'stopped Decky cannot install or update via retained callbacks');
+  assert.equal(confirms,0);
+  await remove();
+  assert.equal(posts.length,1);assert.equal(posts[0].action,'remove');
+  assert.equal(posts[0].installedSha256,'a'.repeat(64));assert.equal(confirms,1);
+}
