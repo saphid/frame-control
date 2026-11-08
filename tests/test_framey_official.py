@@ -22,6 +22,19 @@ from framey_official import LEGACY_PLUGINS, PLUGINS, WEB_BROWSER_143, archive
 
 class OfficialBundles(unittest.TestCase):
     @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
+    def test_tabmaster_published_menu_callback_hides_its_context_menu(self):
+        plugin = next(p for p in PLUGINS if p['id'] == 61)
+        data = archive(plugin)
+        self.assertEqual(hashlib.sha256(data).hexdigest(), plugin['sha256'])
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            frontend = bundle.read(plugin['folder']+'/dist/index.js').decode()
+        factory = re.search(r'function getShowMenu\(id, tabMasterManager\) \{[\s\S]*?\n\}', frontend)
+        self.assertIsNotNone(factory)
+        result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_context_menu.mjs')],
+                                input=factory.group(), capture_output=True, text=True, timeout=10)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
+    @unittest.skipUnless(shutil.which('node'), 'Node is needed for the official frontend check')
     def test_tabmaster_disabled_menu_group_blocks_nested_presets(self):
         plugin = next(p for p in PLUGINS if p['id'] == 61)
         data = archive(plugin)

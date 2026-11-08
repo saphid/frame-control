@@ -817,10 +817,10 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const showModal = element => {
+  const openModal = (element, previousFocus=document.activeElement) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
-    const modal = {id:++modalId, previousFocus:document.activeElement, source:element};
+    const modal = {id:++modalId, previousFocus, source:element};
     const Close = () => {
       const index=modals.indexOf(modal);
       if (index < 0) return;
@@ -854,13 +854,25 @@
     setTimeout(()=>{
       if (modals.at(-1)===modal && !modal.node?.contains(document.activeElement)) modal.node?.focus();
     },0);
-    return {Close, ClosedPromise, Update:next=>{
+    return {isOpen:()=>modals.includes(modal), handle:{Close, ClosedPromise, Update:next=>{
       if (!modals.includes(modal)) return;
       // Keep replacement dialogs dismissible inside this isolated host too.
       modal.source=next;
       modal.element=decorate(next);
       renderModals();
-    }};
+    }}};
+  };
+  const showModal = element => openModal(element).handle;
+  // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
+  // Reuse the local shell, retaining only the element after dismissal. A fresh
+  // Show remounts it; an already visible menu never gains a duplicate shell.
+  const showContextMenu = element => {
+    const opener = document.activeElement;
+    let menu = openModal(element, opener);
+    return {
+      Hide:()=>menu.handle.Close(),
+      Show:()=>{if(!menu.isOpen())menu=openModal(element, opener);},
+    };
   };
   const ModalRoot = ({children, onOK, bOKDisabled, closeModal, onCancel, onEscKeypress,
     frameySetModalBusy, ...props}) => {
@@ -991,7 +1003,7 @@
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
-    showModal, showContextMenu:showModal,
+    showModal, showContextMenu,
     // Steam app, library, and store patches have no target inside this panel.
     afterPatch:noPatch, beforePatch:noPatch, replacePatch:noPatch, createReactTreePatcher:noPatch,
     // The isolated panel has no Steam React root. Legacy plugins can inspect

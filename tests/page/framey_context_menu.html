@@ -1,0 +1,69 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="opener">Fixture focus target</button><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const flush=callback=>ReactDOM.flushSync(callback), tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+  const opener=document.getElementById('opener');
+  const dialogs=()=>[...document.querySelectorAll('[role="dialog"]')];
+  const click=id=>flush(()=>document.getElementById(id).click());
+  const manager={privateFixture:true};
+  // Run the exact pinned factory and its Hide closure, with an inert local
+  // library-menu replacement. No real TabMaster library/backend executes.
+  const LibraryMenu=({closeMenu,selectedTabId,tabMasterManager})=>{
+    assert(selectedTabId==='private-tab'&&tabMasterManager===manager,'published factory arguments changed');
+    return React.createElement(DFL.MenuItem,{onClick:closeMenu},'Close published menu');
+  };
+  __OFFICIAL_FACTORY__
+  try {
+    opener.focus();flush(()=>getShowMenu('private-tab',manager)());await tick();
+    assert(dialogs().length===1,'published menu did not open');
+    const publishedButton=[...dialogs()[0].querySelectorAll('button')].find(b=>b.textContent==='Close published menu');
+    flush(()=>publishedButton.click());await tick();
+    assert(dialogs().length===0,'published Hide callback left its menu open: '+fixtureFailures.join('; '));
+    assert(document.activeElement===opener,'published Hide did not restore focus');
+    let mounts=0,unmounts=0;
+    function DraftMenu(){
+      const [draft,setDraft]=React.useState('fresh');
+      React.useEffect(()=>{mounts++;return()=>{unmounts++;};},[]);
+      return React.createElement('div',null,React.createElement('p',{id:'draft'},draft),
+        React.createElement('button',{id:'edit',onClick:()=>setDraft('edited')},'Edit draft'));
+    }
+    let handle;flush(()=>{handle=DFL.showContextMenu(React.createElement(DraftMenu));});await tick();
+    flush(()=>{handle.Show();handle.Show();});await tick();
+    assert(dialogs().length===1&&mounts===1,'repeated Show duplicated/remounted visible menu');
+    click('edit');assert(document.getElementById('draft').textContent==='edited','local edit failed');
+    assert(dialogs().length===1,'an ordinary action unexpectedly dismissed its menu');
+    let nested;flush(()=>{nested=DFL.showModal(React.createElement('button',{id:'nested'},'Nested dialog'));});await tick();
+    document.getElementById('nested').focus();flush(()=>{handle.Hide();handle.Hide();});await tick();
+    assert(dialogs().length===1&&document.getElementById('nested'),'Hide closed a different dialog');
+    assert(document.activeElement.id==='nested'&&unmounts===1,'Hide stole nested focus or retained old content');
+    flush(()=>nested.Close());await tick();opener.focus();
+    flush(()=>handle.Show());await tick();
+    assert(dialogs().length===1&&mounts===2&&document.getElementById('draft').textContent==='fresh',
+      'Show after Hide did not remount fresh content');
+    // Reopen synchronously after shell Close, before promise callbacks run.
+    flush(()=>dialogs()[0].querySelector('button').click());
+    flush(()=>handle.Show());await tick();
+    assert(dialogs().length===1&&mounts===3&&unmounts===2,'Show after shell Close lost visibility state');
+    flush(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));await tick();
+    assert(dialogs().length===0,'Escape did not dismiss context menu');
+    flush(()=>handle.Show());await tick();assert(dialogs().length===1&&mounts===4,'Show after Escape failed');
+    flush(()=>handle.Hide());await tick();
+    assert(dialogs().length===0&&unmounts===4&&document.activeElement===opener,'final Hide/focus cleanup failed');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedHideCallback:true,showIdempotent:true,hideIdempotent:true,nestedDialogPreserved:true,
+      focusRestored:true,contentRemounted:true,shellCloseReopen:true,escapeReopen:true,
+      noAutomaticSelectionDismissal:true,syntheticInput:true,realFrameContacted:false,realLibraryEdit:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
