@@ -2375,6 +2375,7 @@ function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ?
 let deckyInfo = null;
 let deckyCatalog = [];
 let deckyStatusRequest = 0, deckyStoreRequest = 0;
+let deckyPluginBusy = false;
 async function loadDecky() {
   const request = ++deckyStatusRequest;
   deckyInfo = null;
@@ -2394,7 +2395,7 @@ async function loadDecky() {
       const row=document.createElement('div');row.className='hint';
       const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''} · ${deckyCompatibilityText(plugin)}`;
       const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove plugin';
-      remove.disabled=!d.managed||!$('deckyAck').checked;
+      remove.disabled=deckyPluginBusy||!d.managed||!$('deckyAck').checked;
       remove.onclick=()=>changeDeckyPlugin('remove',
         {id:plugin.storeId,name:plugin.name,installedSha256:plugin.sha256});
       row.append(label,remove);managedList.append(row);}
@@ -2441,27 +2442,32 @@ function showDeckyStore() {
     else {
       const button=document.createElement('button'); button.className='small';
       button.textContent=entry ? (entry.version===plugin.version?'Reinstall':'Update') : 'Install';
-      button.disabled=!deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
+      button.disabled=deckyPluginBusy || !deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
       button.onclick=()=>changeDeckyPlugin(entry?'update':'install',{...plugin,installedSha256:entry?.sha256});
       row.append(button);
       if(entry){const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove';
-        remove.disabled=!deckyInfo?.managed || !$('deckyAck').checked;
+        remove.disabled=deckyPluginBusy || !deckyInfo?.managed || !$('deckyAck').checked;
         remove.onclick=()=>changeDeckyPlugin('remove',{...plugin,installedSha256:entry.sha256});row.append(remove);}
     }
     list.append(row);
   }
 }
 async function changeDeckyPlugin(action, plugin) {
-  if (!$('deckyAck').checked) return;
+  if (deckyPluginBusy || !$('deckyAck').checked) return;
   if (!deckyInfo?.managed || (action !== 'remove' && !deckyInfo.running)) {
     $('deckyStoreState').textContent = 'Refresh plugins to check Decky status before changing plugins.';
     return;
   }
   if (!confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
+  // Lock before the first await: another click or retained row callback can
+  // arrive before disabled buttons redraw. Keep the lock through status refresh.
+  deckyPluginBusy = true;
+  deckyButtons(); showDeckyStore();
   try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
     {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,
       installedSha256:plugin.installedSha256,acknowledged:true}));
-    await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
+    await loadDecky(); } catch(error) { $('deckyStoreState').textContent=error.message; }
+  finally { deckyPluginBusy = false; deckyButtons(); showDeckyStore(); }
 }
 function deckyButtons() {
   const ready = !!deckyInfo && deckyInfo.arch === 'aarch64' && deckyInfo.variant === 'vr' && deckyInfo.cef && !deckyInfo.upstreamInstall;
@@ -2469,9 +2475,10 @@ function deckyButtons() {
   $('deckyInstall').disabled = !ack || !ready || deckyInfo.managed;
   $('deckyUpdate').disabled = !ack || !ready || !deckyInfo.managed;
   $('deckyRemove').disabled = !ack || !deckyInfo?.managed;
+  for(const button of $('deckyManagedList').querySelectorAll('button'))
+    button.disabled=deckyPluginBusy || !ack || !deckyInfo?.managed;
 }
-$('deckyAck').onchange = () => { deckyButtons(); showDeckyStore();
-  for(const button of $('deckyManagedList').querySelectorAll('button'))button.disabled=!$('deckyAck').checked||!deckyInfo?.managed; };
+$('deckyAck').onchange = () => { deckyButtons(); showDeckyStore(); };
 $('deckyRefresh').onclick = loadDecky;
 $('deckyStoreRefresh').onclick = loadDeckyStore;
 $('deckyStoreSearch').oninput = showDeckyStore;

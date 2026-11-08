@@ -5,17 +5,19 @@ import vm from 'node:vm';
 
 const html=readFileSync(new URL('../../ui/index.html',import.meta.url),'utf8');
 const start=html.indexOf('function deckyCompatibilityText(');
-const end=html.indexOf("$('deckyAck').onchange",start);
+const end=html.indexOf("$('deckyRefresh').onclick",start);
 assert.ok(start>0&&end>start);
 class Element {
-  constructor(){this.children=[];this.textContent='';this.checked=true;this.value='';this.disabled=false;}
+  constructor(tag='div'){this.tag=tag;this.children=[];this.textContent='';this.checked=true;this.value='';this.disabled=false;}
   append(...nodes){this.children.push(...nodes);}
   replaceChildren(...nodes){this.children=nodes;this.textContent='';}
+  querySelectorAll(tag){return this.children.flatMap(node=>[
+    ...(node.tag===tag?[node]:[]),...node.querySelectorAll(tag)]);}
 }
 const elements=new Map();
 const $=id=>{if(!elements.has(id))elements.set(id,new Element());return elements.get(id);};
 const requests=[];let posts=0,confirms=0;
-const ctx=vm.createContext({$,document:{createElement:()=>new Element()},
+const ctx=vm.createContext({$,document:{createElement:tag=>new Element(tag)},
   api:path=>{assert.ok(['/api/decky','/api/decky/store'].includes(path));
     return new Promise((resolve,reject)=>requests.push({path,resolve,reject}));},
   confirm:()=>{confirms++;return true;},runJob:()=>{posts++;throw Error('No mutation expected');}});
@@ -101,6 +103,54 @@ await new Promise(resolve=>setImmediate(resolve));
 requests.shift().resolve(stopped);await removing;
 assert.equal(mutation.action,'remove');assert.equal(mutation.id,2);
 assert.equal(posts,1);assert.equal(confirms,beforeBlocked+1);
+
+// A second store action must not create another job before the first settles,
+// even when React/DOM redraw, acknowledgement changes or refreshes intervene.
+await installStatus();
+call('deckyCatalog=[plugin];showDeckyStore()');
+const buttons=()=>$('deckyStoreList').querySelectorAll('button');
+const retainedUpdate=buttons().find(node=>node.textContent==='Reinstall').onclick;
+const retainedRemove=$('deckyManagedList').querySelectorAll('button')[0].onclick;
+const jobs=[];
+ctx.runJob=(_title,_kind,send)=>{posts++;return new Promise((resolve,reject)=>jobs.push({resolve,reject,send}));};
+const beforeJobPosts=posts,beforeJobConfirms=confirms;
+const firstChange=retainedUpdate();
+const duplicateUpdate=retainedUpdate(),duplicateRemove=retainedRemove();
+assert.equal(posts,beforeJobPosts+1,'retained callbacks must not start overlapping plugin jobs');
+await duplicateUpdate;await duplicateRemove;
+assert.equal(confirms,beforeJobConfirms+1,'busy callbacks must stop before confirmation');
+assert.ok(buttons().every(node=>node.disabled),'store plugin buttons stay disabled during a job');
+assert.ok($('deckyManagedList').querySelectorAll('button').every(node=>node.disabled),'installed Remove stays disabled');
+$('deckyAck').checked=false;$('deckyAck').onchange();
+$('deckyAck').checked=true;$('deckyAck').onchange();
+assert.ok(buttons().every(node=>node.disabled),'acknowledgement cannot unlock a running job');
+assert.ok($('deckyManagedList').querySelectorAll('button').every(node=>node.disabled));
+await installStatus();
+assert.ok(buttons().every(node=>node.disabled),'manual refresh cannot unlock a running job');
+assert.ok($('deckyManagedList').querySelectorAll('button').every(node=>node.disabled));
+await retainedRemove();assert.equal(posts,beforeJobPosts+1);
+jobs.shift().resolve({});
+await new Promise(resolve=>setImmediate(resolve));
+assert.equal(requests.length,1,'job completion must refresh installed status');
+await retainedUpdate();await retainedRemove();
+assert.equal(posts,beforeJobPosts+1,'job lock must extend through the final status read');
+requests.shift().resolve(state('After job'));await firstChange;
+assert.ok(buttons().every(node=>!node.disabled),'successful job and refresh restore store actions');
+assert.ok($('deckyManagedList').querySelectorAll('button').every(node=>!node.disabled));
+
+// Failures release the local busy guard so an explicit retry is possible.
+const failedChange=retainedUpdate();jobs.shift().reject(Error('job fixture failed'));await failedChange;
+assert.match($('deckyStoreState').textContent,/job fixture failed/);
+const afterFailure=retainedRemove();assert.equal(jobs.length,1,'failed job must release the guard');
+jobs.shift().resolve({});await new Promise(resolve=>setImmediate(resolve));
+requests.shift().reject(Error('status fixture failed'));await afterFailure;
+assert.ok(buttons().every(node=>node.disabled),'failed final status must keep changes unavailable');
+const afterFailedRead=posts;await retainedUpdate();await retainedRemove();
+assert.equal(posts,afterFailedRead,'a released job lock cannot bypass unavailable installed status');
+await installStatus();
+const retry=retainedUpdate();assert.equal(jobs.length,1,'fresh status must permit a new explicit job');
+jobs.shift().resolve({});await new Promise(resolve=>setImmediate(resolve));
+requests.shift().resolve(state('Retried'));await retry;
 
 // Stale row callbacks retain the receipt that was displayed.
 {
