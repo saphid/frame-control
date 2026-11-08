@@ -244,6 +244,11 @@ or Remove row. If another client changes that installed copy before the job
 starts, the operation stops before downloading or changing plugin files. Refresh
 installed plugins and review the current copy before trying again. The existing
 transaction lock checks the receipt again before applying the operation.
+An install also rechecks the store ID under that lock. If another client has
+installed that ID since the first status read, the later install stops before
+changing files or stopping Decky, even if the store changed its name and folder.
+Refresh installed plugins and use Update or Remove; a changed folder still
+requires removing the old version before installing the new one.
 Job results live in server memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
 keeps plugin changes disabled until **Refresh plugins** successfully reads the
