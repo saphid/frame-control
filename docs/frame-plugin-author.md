@@ -125,6 +125,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `findInTree`, `findInReactTree` | Searches objects and arrays supplied by the plugin, returning the first matching object. `walkable` restricts object keys and `ignore` skips them; React search follows only `props`, `children`, `child` and `sibling`. Cycles terminate. `getReactRoot()` still returns `null`. | Exact published Emuchievements 2.0.5 settings migration and reopen with synthetic legacy RPC replies; nested values, including empty strings, survive. No real account, backend, Steam-tree access or worn VR proof. |
 | `Navigation.CloseSideMenus` | Returns to this plugin's main panel | Pinned HLTB for Deck 2.0.12 shallow settings view in local host test. Live HLTB search remains unverified. |
 | `Focusable.onActivate`, `showModal`, `ConfirmModal` | Pointer and Enter/Space activation, disabled state, and local confirmation dialogs with cancel/close and nested-dialog focus | Host tests and official AlarMe 1.6.3 timer/preset controls with a real ARM64 backend in local Chromium. Sound, suspend and worn VR remain unverified. |
+| `showContextMenu(...).Hide()` / `.Show()` | Opens a local dialog shell. Hide dismisses only that menu; Show remounts dismissed content and does nothing while visible. The instance retains its original focus target. | Exact TabMaster 2.15.1 menu factory/Hide callback with an inert library view; real React/DOM reopen, focus and nested-dialog checks. No real library edit, Steam popup or worn/controller proof. |
 | `ColorPickerModal` | Local hue, saturation, lightness and alpha sliders with a preview. Defaults initialise the draft; OK passes an `hsla(...)` string to `onConfirm`. Cancel/Close discards it. A returned promise disables editing until success or a visible retryable failure. | Exact published CSS Loader 2.1.3 picker/callback replay with a synthetic setter, including draft/cancel, stale callbacks and async retry. No theme, Steam, backend or worn VR proof. |
 | `SimpleModal` | Local content wrapper within `showModal`. `active={false}` unmounts its children; true or omitted renders them. The existing shell owns focus and dismissal. | Exact Web Browser 1.4.3 warning replay, including accept and shell cancellation; real React/DOM checks child styles, focus restoration and inactive-child cleanup/remount. No full Web Browser/DeckSP, Steam portal, backend, controller or worn VR proof. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
@@ -144,6 +145,15 @@ is unavailable. Framey uses native fieldset inheritance, so an enabled nested
 group cannot enable its controls inside a disabled parent. This governs native
 controls; it does not guard a plugin directly calling its own callbacks or
 implement Steam submenus or a controller focus tree.
+
+Keep the instance returned by `showContextMenu` when a menu action needs to call
+`Hide()`. Hiding is programmatic dismissal and does not invent a cancellation
+result. `Show()` reopens the same element with fresh component state after Hide,
+shell Close or Escape; it cannot duplicate a menu already open. Focus returns
+to the original opener when it still exists and no other dialog remains open.
+Menu actions do not automatically dismiss the menu, so plugins can keep
+interactive choices open. Steam popup positioning, `bRetainOnHide`, submenus and
+controller navigation are not implemented by this local handle.
 
 For a custom dialog, pass the `closeModal` injected by `showModal` into your
 inner `ModalRoot`. That binds its `onCancel` and `onEscKeypress` to the correct
