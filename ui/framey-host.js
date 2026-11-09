@@ -480,9 +480,10 @@
   const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
-    R.createElement('label', null,
+  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
+    R.createElement('label', {className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
+        onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
@@ -546,6 +547,10 @@
   };
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
+  const ControlsList = ({children, alignItems='left', spacing='standard'}) =>
+    R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
+      justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
+      gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
@@ -1012,6 +1017,7 @@
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    ControlsList,
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
