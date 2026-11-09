@@ -61,6 +61,18 @@ tree=render();assert.equal(toggle(tree).props.disabled,true);
 reply(calls.at(-1),undefined,true);await settle();tree=render();
 assert.equal(toggle(tree).props.checked,true,'recovery displays the backend value, not the initial false default');
 assert.equal(toggle(tree).props.disabled,false);
+
+// Read-only quick actions use the same runtime contract, including real false.
+const quickRead=plugin.frameyQuickActions[0].onClick;
+for(const invalid of ['false',null,{}]) {
+  const pending=quickRead();
+  const failed=assert.rejects(pending,/invalid setting value/);
+  reply(calls.at(-1),undefined,invalid);await failed;
+}
+const quickOff=quickRead();reply(calls.at(-1),undefined,false);
+assert.equal(await quickOff,'Saved setting is off');
+const quickOn=quickRead();reply(calls.at(-1),undefined,true);
+assert.equal(await quickOn,'Saved setting is on');
 assert.equal(button(tree,'Reset example setting').props.disabled,false);
 const oldToggle=toggle(tree).props.onChange;
 oldToggle(false);assert.equal(writes().length,1);
@@ -104,3 +116,38 @@ toggle(tree).props.onChange(false);
 assert.equal(writes().length,beforeRejectedSave+2,'editing resumes only after successful reconciliation');
 reply(writes().at(-1),undefined,true);await settle();tree=render();
 assert.equal(toggle(tree).props.checked,false);
+
+// TypeScript callable types do not validate runtime replies. A malformed read
+// must not turn a truthy string/object into permission to overwrite settings.
+for(const invalid of ['false',0,1,null,undefined,{},[]]) {
+  button(tree,'Reload saved setting').props.onClick();
+  reply(calls.at(-1),undefined,invalid);await settle();tree=render();
+  assert.equal(toggle(tree).props.disabled,true,'malformed read must keep editing locked');
+  assert.equal(toggle(tree).props.checked,false,'malformed read must retain the last known display');
+  assert.match(nodes(tree,'p')[0].children[0],/Could not read setting/);
+  const before=writes().length;
+  oldToggle(true);button(tree,'Reset example setting').props.onClick();await settle();
+  assert.equal(writes().length,before,'malformed read cannot authorize writes');
+}
+button(tree,'Reload saved setting').props.onClick();
+reply(calls.at(-1),undefined,false);await settle();tree=render();
+assert.equal(toggle(tree).props.disabled,false,'a real false read must enable editing');
+
+// The sample backend promises true as its save acknowledgement. False or
+// malformed resolved replies cannot be presented as a confirmed saved value.
+for(const invalid of [false,null,undefined,0,1,'true',{},[]]) {
+  const toasts=elements.get('framey-toasts')?.children.length||0;
+  toggle(tree).props.onChange(true);
+  reply(writes().at(-1),undefined,invalid);await settle();tree=render();
+  assert.equal(toggle(tree).props.checked,false,'invalid save acknowledgement cannot claim requested value');
+  assert.equal(toggle(tree).props.disabled,true,'invalid save acknowledgement must require reconciliation');
+  assert.match(nodes(tree,'p')[0].children[0],/Could not confirm saved setting/);
+  assert.equal(elements.get('framey-toasts')?.children.length||0,toasts,'unconfirmed save must not toast success');
+  const before=writes().length;oldToggle(false);await settle();assert.equal(writes().length,before);
+  button(tree,'Reload saved setting').props.onClick();
+  reply(calls.at(-1),undefined,false);await settle();tree=render();
+  assert.equal(toggle(tree).props.disabled,false);
+}
+toggle(tree).props.onChange(true);reply(writes().at(-1),undefined,true);await settle();tree=render();
+assert.equal(toggle(tree).props.checked,true,'true save acknowledgement restores the normal success path');
+assert.equal(toggle(tree).props.disabled,false);

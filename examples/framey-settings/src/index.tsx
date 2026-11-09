@@ -5,6 +5,12 @@ import {useEffect, useRef, useState} from 'react';
 const getSetting = callable<[key: string, fallback: boolean], boolean>('get_setting');
 const setSetting = callable<[key: string, value: boolean], boolean>('set_setting');
 
+async function readEnabled() {
+  const value = await getSetting('enabled', false);
+  if (typeof value !== 'boolean') throw new Error('Backend returned an invalid setting value.');
+  return value;
+}
+
 function Content() {
   const [enabled, setEnabled] = useState(false);
   const [busy, setBusy] = useState(true);
@@ -23,7 +29,7 @@ function Content() {
     readReady.current = false;
     setBusy(true);
     try {
-      const value = await getSetting('enabled', false);
+      const value = await readEnabled();
       if (!isCurrent()) return;
       readReady.current = true;
       setEnabled(value);
@@ -63,8 +69,9 @@ function Content() {
     pending.current = true;
     setBusy(true);
     try {
-      await setSetting('enabled', value);
+      const saved = await setSetting('enabled', value);
       if (!isCurrent()) return;
+      if (saved !== true) throw new Error('Backend did not acknowledge the saved setting.');
       setEnabled(value);
       setMessage(`Saved setting: ${value ? 'on' : 'off'}`);
       toaster.toast({title: 'Framey sample',
@@ -134,7 +141,7 @@ export default definePlugin(() => {
   frameyQuickActions: [{
     label: 'Read saved setting',
     onClick: async () => {
-      const enabled = await getSetting('enabled', false);
+      const enabled = await readEnabled();
       return `Saved setting is ${enabled ? 'on' : 'off'}`;
     },
   }],
