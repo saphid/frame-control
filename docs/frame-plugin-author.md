@@ -46,6 +46,12 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Validate backend replies at runtime as well as stored data. TypeScript
+`callable` annotations do not validate RPC results: a resolved string or object
+is not a boolean setting, and a fulfilled promise is not necessarily a save
+acknowledgement. The sample accepts only boolean reads and its backend's
+literal `true` save acknowledgement; invalid results leave editing locked
+until a valid reload and do not announce success.
 Treat a rejected save reply as an uncertain outcome: the backend may have
 committed before the connection failed. Disable further edits until a new read
 succeeds, display that returned value, and do not announce the failed request
@@ -97,6 +103,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `SliderField.notchLabels`, `notchCount` | Shows the supplied captions in a local grid and exposes the caption matching the current value as `aria-valuetext`. Numeric callbacks still return the slider value. | Exact Steam Status 1.2.3 refresh-interval control in real React/DOM with synthetic settings: minute captions, numeric seconds and disabled state. No backend, live refresh, controller or worn VR proof. |
 | `Field.icon`, `ToggleField.icon`, `ButtonItem.icon` | Keeps the plugin's React icon beside the field label, including its supplied SVG geometry, title, class and style. | Exact Simple Timer 1.0.0 Subtle Mode toggle and speaker icon in real React/DOM with a synthetic save callback; enabled/disabled transitions, plus local Field/ButtonItem icon fixtures. No timer backend, audio playback, controller or worn VR proof. |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
@@ -113,7 +120,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `SteamUIStore` / `DFL.Router.RunningApps`, `MainRunningApp` | Bounded detached Steam CEF reads while the panel is open; refresh about every two seconds; no MobX observation. Failed reads clear stale context. | Locked real Frame empty-list reads; nonempty local Chromium fixtures. Real running-game selection unverified. |
 | `GameSessions.RegisterForAppLifetimeNotifications` | Actual Steam callbacks, bounded queue and disposable `.unregister()` handle; no events inferred from snapshot changes; lease cleanup after lost panels | Real Frame registration/poll/close; launch/exit, retry, expiry and duplicate tests use explicit fixtures. Real game transitions unverified. |
 | Other `SteamClient` subscriptions | Explicit inert registration methods return disposable handles; no fabricated power/input/game-action events. Mutating Steam/power methods are unavailable. | Host contract tests; safe fallbacks only |
-| `DialogCheckbox`, `DialogButtonPrimary` | Native checkbox and button controls in the panel | Host unit test; Storage Cleaner empty-data browser check |
+| `DialogCheckbox`, `DialogButtonPrimary` | Native checkbox and button controls in the panel. Checkbox wrapper classes/styles are preserved; `onClick` receives the native input's React event, while `onChange` receives its checked boolean. Disabled inputs suppress both. | Host unit test; exact SteamGridDB 1.8.1 multiselect item and published pointer-routing CSS in real React/DOM with synthetic filter selection. No artwork, backend, controller or worn VR proof. |
 | Optional `settings`, `frameyQuickActions` | Separate settings tab when content also exists; settings-only plugins have no empty Panel tab; up to eight actions with result text | Host unit test; these fields are Framey additions |
 | `serverAPI.call` / `callable` | Calls only that plugin's Decky Python backend via the headset service | Fake Frame e2e; real ARM64 Notebook save/reopen across backend restart and Simple Timer settings/recents persistence via local Chromium. No worn-VR claim. |
 | API v1/v2 `addEventListener` / `removeEventListener` | Plugin-scoped real backend events while panel is open; bounded queue, about one-second polling, subscription expiry | Real ARM64 Simple Timer countdown, start/cancel and completion toast via local Chromium; scope/bounds/reconnect tests. No closed-panel notifications. |
@@ -130,6 +137,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `showContextMenu(...).Hide()` / `.Show()` | Opens a local dialog shell. Hide dismisses only that menu; Show remounts dismissed content and does nothing while visible. The instance retains its original focus target. | Exact TabMaster 2.15.1 menu factory/Hide callback with an inert library view; real React/DOM reopen, focus and nested-dialog checks. No real library edit, Steam popup or worn/controller proof. |
 | `ColorPickerModal` | Local hue, saturation, lightness and alpha sliders with a preview. Defaults initialise the draft; OK passes an `hsla(...)` string to `onConfirm`. Cancel/Close discards it. A returned promise disables editing until success or a visible retryable failure. | Exact published CSS Loader 2.1.3 picker/callback replay with a synthetic setter, including draft/cancel, stale callbacks and async retry. No theme, Steam, backend or worn VR proof. |
 | `SimpleModal` | Local content wrapper within `showModal`. `active={false}` unmounts its children; true or omitted renders them. The existing shell owns focus and dismissal. | Exact Web Browser 1.4.3 warning replay, including accept and shell cancellation; real React/DOM checks child styles, focus restoration and inactive-child cleanup/remount. No full Web Browser/DeckSP, Steam portal, backend, controller or worn VR proof. |
+| `ControlsList` | A wrapping row of plugin-supplied controls. `alignItems` places them left (default), center or right; `spacing` uses 8px (standard) or 16px (extra) gaps. Children keep their callbacks, styles and disabled state. | Exact SteamGridDB 1.8.1 informational modal/footer in real React/DOM: renders and closes with focus restored. Separate layout checks cover alignment, spacing and child actions. External links are never invoked; no backend, saved settings, artwork, controller or worn VR proof. |
 | `ModalRoot.onOK` | An explicit local OK button calls the handler; `bOKDisabled` disables it. The handler owns dismissal through `closeModal`. Returned promises block repeat submissions and that dialog's Close/Escape; failures remain visible for retry. Roots without `onOK` add no button. | Exact RadiYo! 1.3 text-dialog replay with synthetic text; radio search, playback, VR keyboard and physical controllers unverified. |
 | Custom `ModalRoot.onCancel`, `onEscKeypress` | A custom dialog that passes its injected `closeModal` to `ModalRoot` binds those handlers to its own shell. Close calls `onCancel`; Escape uses `onEscKeypress` when present, otherwise cancels. Updated or unmounted roots retire their old handlers. | Exact Decky Localsend 0.4.5 receive dialog in real React/DOM, recording synthetic decisions only. No real offer, backend, file transfer or worn VR proof. |
 | Steam library/store patches, CEF tab injection | Unavailable; no matching target in the isolated panel | Frame CEF inspection |
@@ -196,6 +204,15 @@ counts. This callback contract is tested with synthetic settings in real
 React/DOM, not a published plugin or live backend. The `validValues: 'steps'`
 and `'range'` modes have no additional behavior in Framey; native `min`, `max`
 and `step` constraints still apply. Worn/controller use remains unverified.
+
+For labeled sliders, supply `notchCount` (2–100) and `notchLabels` entries with
+zero-based `notchIndex` and string `label`. Captions occupy their declared
+positions even when some notches have no label. Each caption matches the value
+evenly spaced between `min` and `max`, unless its optional numeric `value`
+overrides that match. An unmatched current value keeps its ordinary numeric
+accessibility value. Labels remain visible when `notchTicksVisible` is false;
+Framey does not draw Steam's tick marks or add snapping beyond the native
+slider's `step`.
 
 Open `ColorPickerModal` with `showModal` and supply numeric `defaultH` (0–360),
 `defaultS` and `defaultL` (0–100), and `defaultA` (0–1). These initialise one

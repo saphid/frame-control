@@ -1,0 +1,91 @@
+{
+  "at": "2026-11-08T08:07:43.307538+00:00",
+  "diagnosticSha256": "4eab360d1c1fd057f817d92415faa3fad3ee875b02dc6199a35f1562f1db48c8",
+  "sourceCommit": "67196adfa9b299f20dfb0cc932e88a169417b7d5",
+  "sourceSha256": {
+    "parent": "a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214",
+    "socket": "cbc62b1f142df0678de0996c00214c0e0fd9cce35cc032daaa40717e49710138"
+  },
+  "architecture": "x86_64",
+  "runs": [
+    {
+      "rawReportSha256": "34b14da8fbc39bb34d803e3bb41fe9835d7566f5f599d0e2ede0fa6ade986865",
+      "controls": [
+        {
+          "mode": "cancel",
+          "returncode": 0,
+          "timedOut": false,
+          "stdout": "connected-heartbeat\ncancel-propagated\nowned-socket-cleaned\n",
+          "ownedProcessReaped": true
+        },
+        {
+          "mode": "eof",
+          "returncode": -9,
+          "timedOut": true,
+          "stdout": "unix-peer-closed\n",
+          "ownedProcessReaped": true
+        }
+      ]
+    },
+    {
+      "rawReportSha256": "34b14da8fbc39bb34d803e3bb41fe9835d7566f5f599d0e2ede0fa6ade986865",
+      "controls": [
+        {
+          "mode": "cancel",
+          "returncode": 0,
+          "timedOut": false,
+          "stdout": "connected-heartbeat\ncancel-propagated\nowned-socket-cleaned\n",
+          "ownedProcessReaped": true
+        },
+        {
+          "mode": "eof",
+          "returncode": -9,
+          "timedOut": true,
+          "stdout": "unix-peer-closed\n",
+          "ownedProcessReaped": true
+        }
+      ]
+    }
+  ],
+  "foreignSourceRejectedBeforeExecution": true,
+  "stackSamplingEnabled": false,
+  "userSpaceStackCaptured": false,
+  "discardedTimerSampling": {
+    "ownedChildReturncode": -11,
+    "allOwnedProcessesReaped": true,
+    "excludedFromPositiveEvidence": true,
+    "instrumentationRemoved": true
+  },
+  "newerRelease": {
+    "tag": "v3.3.1",
+    "commit": "ffd103b9c1a4ce5bf305e7c0998eda6e05457dad",
+    "executed": false,
+    "sources": [
+      {
+        "path": "backend/decky_loader/plugin/plugin.py",
+        "sha256": "a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214",
+        "previousSha256": "a15487dabf4ac402c13b01c5673dc41ff7bef119103c2f7b21957eb1ab1e2214",
+        "astIdenticalMethods": [
+          "_response_listener",
+          "stop",
+          "kill_if_still_running"
+        ]
+      },
+      {
+        "path": "backend/decky_loader/localplatform/localsocket.py",
+        "sha256": "cbc62b1f142df0678de0996c00214c0e0fd9cce35cc032daaa40717e49710138",
+        "previousSha256": "cbc62b1f142df0678de0996c00214c0e0fd9cce35cc032daaa40717e49710138",
+        "astIdenticalMethods": [
+          "_read_single_line",
+          "_listen_for_method_call"
+        ]
+      }
+    ]
+  },
+  "realFrameContacted": false,
+  "arm64Executed": false,
+  "historicalArm64VmExecuted": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "limit": "Controlled local source-level experiment. No historical failure or userspace stack capture. Newer-release methods were compared without execution."
+}
