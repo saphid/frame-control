@@ -541,7 +541,8 @@
     return R.createElement('div', null,
       R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
         type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
-        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}}, tab.title))),
+        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}},
+        tab.title, tab.renderTabAddon?.()))),
       R.createElement('div', {role:'tabpanel'}, current?.content));
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
