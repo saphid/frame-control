@@ -250,6 +250,18 @@ vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('loadDeckyStore()',ctx);
 assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
 assert.equal(el('deckyStoreList').children.length,0);
+// Search/filter/installed-status rendering must not turn a failed catalog
+// request into a successful empty search, or hide an in-flight catalog load.
+el('deckySearch').value='synthetic search';el('deckySearch').oninput();
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+assert.equal(el('deckyStoreList').textContent,'','an outage is not an empty search');
+el('deckyStoreFilter').value='installed';el('deckyStoreFilter').onchange();
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true,plugins:[]};};
+vm.runInContext('api=mockApi',ctx);await vm.runInContext('refreshDecky()',ctx);
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+assert.equal(el('deckyStoreList').children.length,0);
+el('deckySearch').value='';el('deckyStoreFilter').value='all';el('deckySearch').oninput();
 let finishOld, finishNew;
 ctx.mockApi=path => {assert.equal(path,'/api/decky/store');
   return new Promise(resolve=>{if(!finishOld)finishOld=resolve;else finishNew=resolve;});};
@@ -258,12 +270,18 @@ const old=vm.runInContext('loadDeckyStore()',ctx);
 const current=vm.runInContext('loadDeckyStore()',ctx);
 assert.equal(el('deckyStoreList').children.length,0);
 assert.equal(el('deckyStoreSummary').textContent,'Loading official Decky store…');
+el('deckySearch').oninput();el('deckyStoreFilter').onchange();
+assert.equal(el('deckyStoreSummary').textContent,'Loading official Decky store…');
+assert.equal(el('deckyStoreList').textContent,'','an unfinished load is not an empty search');
+assert.equal(el('deckyStorePrevious').disabled,true);
+assert.equal(el('deckyStoreNext').disabled,true);
 finishNew({plugins:[{id:98,name:'Current',version:'2.0',description:'Latest'}]});
 await current;
 finishOld({plugins:[{id:97,name:'Stale',version:'1.0',description:'Older'}]});
 await old;
 assert.match(el('deckyStoreList').children[0].children[0].textContent,/Current/);
 assert.doesNotMatch(el('deckyStoreList').children[0].children[0].textContent,/Stale/);
+assert.equal(el('deckyStoreSummary').textContent,'1 plugin found');
 
 // A saved job does not survive a server restart. Keep changes disabled after
 // the missing result until a manual installed-status refresh succeeds.

@@ -137,7 +137,7 @@ function clearDeckyJob(){
 function deckyJobPending(){return !!savedDeckyJob()||deckyUnknownResult;}
 function newDeckyRequestId(){return Array.from(crypto.getRandomValues(new Uint8Array(16)),
   byte=>byte.toString(16).padStart(2,'0')).join('');}
-let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0,
+let deckyState=null, deckyStore=[], deckyStoreIndex=0, deckyStoreRequest=0, deckyStoreMessage='',
   deckyStatusRequest=0,
   activeFrameyId=null, activeFrameyReceipt=null, frameySession=null, deckyBusy=false;
 async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequest;
@@ -186,13 +186,14 @@ async function refreshDecky(reviewUnknown=false){const request=++deckyStatusRequ
     byId('deckyInstalled').textContent='Refresh to check installed plugins.';
     showDeckyStore();}}
 async function loadDeckyStore(){const request=++deckyStoreRequest;byId('deckyStorePanel').hidden=false;
+  deckyStoreMessage='Loading official Decky store…';
   deckyStore=[];deckyStoreIndex=0;showDeckyStore();
-  byId('deckyStoreSummary').textContent='Loading official Decky store…';
   try{const data=await api('/api/decky/store');if(request!==deckyStoreRequest)return;
+    deckyStoreMessage='';
     deckyStore=data.plugins;deckyStoreIndex=0;showDeckyStore();}
   catch(error){if(request!==deckyStoreRequest)return;
-    deckyStore=[];deckyStoreIndex=0;showDeckyStore();
-    byId('deckyStoreSummary').textContent=`Store unavailable: ${error.message}`;}}
+    deckyStoreMessage=`Store unavailable: ${error.message}`;
+    deckyStore=[];deckyStoreIndex=0;showDeckyStore();}}
 function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren();
   const q=byId('deckySearch').value.trim().toLowerCase();
   const filter=byId('deckyStoreFilter').value;
@@ -200,11 +201,11 @@ function showDeckyStore(){const list=byId('deckyStoreList');list.replaceChildren
     (filter==='all'||(filter==='compatible'&&!p.root&&!p.compatibility?.blockInstall)||(filter==='installed'&&(deckyState?.plugins||[]).some(x=>x.storeId===p.id))));
   const size=20, pages=Math.max(1,Math.ceil(found.length/size));
   deckyStoreIndex=Math.min(deckyStoreIndex,pages-1);
-  byId('deckyStoreSummary').textContent=`${found.length} plugin${found.length===1?'':'s'} found`;
+  byId('deckyStoreSummary').textContent=deckyStoreMessage||`${found.length} plugin${found.length===1?'':'s'} found`;
   byId('deckyStorePage').textContent=`Page ${deckyStoreIndex+1} of ${pages}`;
   byId('deckyStorePrevious').disabled=deckyStoreIndex===0;
   byId('deckyStoreNext').disabled=deckyStoreIndex>=pages-1;
-  if(!found.length)list.textContent='No plugins match this search.';
+  if(!found.length&&!deckyStoreMessage)list.textContent='No plugins match this search.';
   for(const plugin of found.slice(deckyStoreIndex*size,(deckyStoreIndex+1)*size)){
     const row=document.createElement('div');row.className='block game';
     const label=document.createElement('div');label.textContent=`${plugin.name} ${plugin.version}${plugin.author?' · '+plugin.author:''} · ${plugin.description}`;
