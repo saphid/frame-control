@@ -534,6 +534,10 @@
   };
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
+  const ControlsList = ({children, alignItems='left', spacing='standard'}) =>
+    R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
+      justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
+      gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
@@ -1000,6 +1004,7 @@
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    ControlsList,
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
