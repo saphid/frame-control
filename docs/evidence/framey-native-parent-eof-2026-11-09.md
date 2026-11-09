@@ -7,7 +7,7 @@ published executable. It does **not** establish the cause of the historical
 ARM64 migration timeout, reproduce that VM, or clear a release gate.
 
 The [local receipt](framey-native-parent-eof-2026-11-09.json) records source
-digests for the tested worktree. Native ARM64 execution is pending hosted CI.
+digests for the initial tested worktree. The [hosted receipt](framey-native-parent-eof-hosted-2026-11-09.json) records the same experiment on both native architectures at exact head `46d7c97cba305911bb4475e3aaf508164fb03afc`.
 
 | Observation | Normal control | Abrupt child exit |
 | --- | --- | --- |
@@ -48,9 +48,21 @@ digests. The diagnostic passes only when the normal control succeeds, the
 published parent hang is observed, and owned processes are reaped. A passing
 diagnostic reports a reproduced bug; it does not report repaired shutdown.
 
-The next investigation is native ARM64 confirmation followed by retained
-loader logs and user-space stacks from an actual migration-timeout
-reproduction. No production shutdown timeout or transport was changed. No
+Hosted native execution reproduced the published parent hang on both architectures:
+
+| Architecture | Normal SIGTERM exit | SIGTERM after abrupt child exit | HTTP after exit | Cleanup |
+| --- | --- | --- | --- | --- |
+| AMD64 | Exit 0 in 0.326 s | Still running after 8.000 s | Timed out | All owned processes reaped |
+| ARM64 | Exit 0 in 0.214 s | Still running after 8.001 s | Timed out | All owned processes reaped |
+
+The native diagnostic artifacts are `13646318727` (AMD64) and `13647022740`
+(ARM64). The committed hosted receipt retains their verified archive digests,
+producer job IDs, exact-head receipts, complete reports and loader consoles.
+Both native runtime suites also passed 40 primary cases and 32 negative
+controls; 53 hosted e2e tests passed without skips at that head.
+
+The next investigation is retained loader logs and user-space stacks from an
+actual migration-timeout reproduction. No production shutdown timeout or transport was changed. No
 headset was contacted by this experiment. Exact-release locked Frame smoke,
 worn visibility, controller input, scrolling and the VR keyboard remain
 unverified.
