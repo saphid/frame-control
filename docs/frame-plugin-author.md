@@ -46,6 +46,12 @@ Keep setting mutations disabled after a failed backend read until an explicit
 reload succeeds. An initial display default or a stale value is not a recovered
 saved setting. The settings sample demonstrates this guard for its toggle and
 Reset action, including callbacks retained before React redraws.
+Validate backend replies at runtime as well as stored data. TypeScript
+`callable` annotations do not validate RPC results: a resolved string or object
+is not a boolean setting, and a fulfilled promise is not necessarily a save
+acknowledgement. The sample accepts only boolean reads and its backend's
+literal `true` save acknowledgement; invalid results leave editing locked
+until a valid reload and do not announce success.
 Treat a rejected save reply as an uncertain outcome: the backend may have
 committed before the connection failed. Disable further edits until a new read
 succeeds, display that returned value, and do not announce the failed request
