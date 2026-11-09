@@ -103,6 +103,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | Official `@decky/rollup` JSX (`SP_JSX.jsx`, `jsxs`, `Fragment`) | Creates React elements in the isolated panel | Sample bundle smoke test; host unit test |
 | `PanelSection`, rows, buttons, toggles, dropdowns | Local touch-sized controls; disabled controls stay inert during a backend call | Local browser and host unit test |
 | `TextField`, `SliderField`, grouped `Dropdown` options | Native text, range and select controls in the panel; disabled state, numeric slider callback and basic input types | Host unit test; worn VR use unverified |
+| `SliderField.notchLabels`, `notchCount` | Shows the supplied captions in a local grid and exposes the caption matching the current value as `aria-valuetext`. Numeric callbacks still return the slider value. | Exact Steam Status 1.2.3 refresh-interval control in real React/DOM with synthetic settings: minute captions, numeric seconds and disabled state. No backend, live refresh, controller or worn VR proof. |
 | `Field.icon`, `ToggleField.icon`, `ButtonItem.icon` | Keeps the plugin's React icon beside the field label, including its supplied SVG geometry, title, class and style. | Exact Simple Timer 1.0.0 Subtle Mode toggle and speaker icon in real React/DOM with a synthetic save callback; enabled/disabled transitions, plus local Field/ButtonItem icon fixtures. No timer backend, audio playback, controller or worn VR proof. |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
@@ -202,6 +203,15 @@ counts. This callback contract is tested with synthetic settings in real
 React/DOM, not a published plugin or live backend. The `validValues: 'steps'`
 and `'range'` modes have no additional behavior in Framey; native `min`, `max`
 and `step` constraints still apply. Worn/controller use remains unverified.
+
+For labeled sliders, supply `notchCount` (2–100) and `notchLabels` entries with
+zero-based `notchIndex` and string `label`. Captions occupy their declared
+positions even when some notches have no label. Each caption matches the value
+evenly spaced between `min` and `max`, unless its optional numeric `value`
+overrides that match. An unmatched current value keeps its ordinary numeric
+accessibility value. Labels remain visible when `notchTicksVisible` is false;
+Framey does not draw Steam's tick marks or add snapping beyond the native
+slider's `step`.
 
 Open `ColorPickerModal` with `showModal` and supply numeric `defaultH` (0–360),
 `defaultS` and `defaultL` (0–100), and `defaultA` (0–1). These initialise one
