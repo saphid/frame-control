@@ -62,9 +62,14 @@ is only in memory. **Retry saving** attempts to save that latest snapshot withou
 changing a setting; a failed retry keeps the notice and values. A successful
 retry clears only that plugin's notice. Reloading the Frame Control page loses that memory
 fallback; an older disk snapshot may then return. Cleared browser storage also
-loses saved caches. The host waits for the parent's cache reply before loading plugin code;
-if the reply is missing or invalid after five seconds, the panel shows an error
-instead of opening with empty settings that could overwrite saved values. Use
+loses saved caches. The host waits for the parent's cache reply before loading plugin code.
+A failed browser-storage read or an invalid saved snapshot stops startup with an
+error and leaves the saved bytes untouched; neither is treated as an empty cache.
+Reopen the plugin after storage access recovers. Invalid saved data must be
+recovered separately before the panel can open; Framey does not erase it automatically.
+A valid in-memory snapshot from a failed write still works while disk reads are
+blocked. Only a missing cache starts empty. A missing reply fails after five
+seconds; explicit read errors and invalid replies fail immediately. Use
 the plugin backend for settings that must survive cache loss.
 The recovery notice, retry and readback after a full page reload are covered in
 a local browser with synthetic snapshots and native browser storage. Live
@@ -207,9 +212,23 @@ then checks it again. It also confirms removal blocks method calls and a
 reinstall can read the retained setting. This tests the bridge and fixture;
 real Decky settings persistence on a worn Frame is still unverified.
 
+The desktop official store has Previous/Next buttons for all search results,
+40 per page. Search matches names, authors and descriptions. A new search or
+catalogue request returns to the first page; refreshing installed status keeps
+the current page. Page information stays separate from catalogue and job errors.
+Loading and failed catalogue requests clear old rows and disable navigation.
+The page-script regression and private Chromium check use synthetic requests;
+they do not prove live downloads, installs or headset behavior.
+
 The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
+The catalogue's loading or error message stays visible when searching, changing
+filters or refreshing installed plugins. A failed catalogue request does not
+become an empty search result. Open the official store again to retry; a
+successful catalogue response restores result counts and pagination. These
+states are checked with synthetic requests through the headset page script;
+they do not establish worn-headset visibility or controller behavior.
 The root label is a compatibility warning; other APIs are checked only when a
 plugin is opened. Both `root` and `_root`
 store tags mark a plugin as needing root, and duplicate store IDs are omitted

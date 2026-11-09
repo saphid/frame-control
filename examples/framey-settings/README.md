@@ -11,9 +11,16 @@ Framey settings tab exposes the same toggle, and a read-only quick action
 fetches the saved value without changing it. These two fields are Framey
 additions; Decky's own menu still uses the main panel content. The quick
 action calls the backend, so it reads the persisted setting rather than a
-browser cache. A missing, damaged, or old non-boolean value reads as the
-caller's default;
-the next save atomically replaces the sample's settings file.
+browser cache. A missing file or a valid object without `enabled` reads as the
+caller's default without writing anything. Damaged JSON, invalid UTF-8,
+non-object JSON and a saved non-boolean `enabled` value return an error on both
+read and save. The original bytes stay untouched; the sample never treats an
+unreadable saved value as a successful default read. Storage permission errors
+also propagate instead of enabling editing.
+To recover, preserve a copy of the damaged file in the plugin's settings
+directory, then repair it or restore a known-good `settings.json` there.
+Choose **Reload saved setting** to read the repaired value before editing.
+The next successful save atomically replaces the sample's settings file.
 The current file is `{"schema": 1, "enabled": true|false}`. An unversioned
 `{"enabled": true|false}` file from the first sample release still reads, and
 the next save writes schema 1. A file with another explicit schema returns a

@@ -1,0 +1,54 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  __OFFICIAL_COMPONENT__
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  try {
+    const calls=[],oks=[];let submits=0;
+    const published=props=>React.createElement('form',{onSubmit:e=>{e.preventDefault();submits++;}},
+      React.createElement(MinutesButton,{type:'positive',className:'minutes',...props},
+        React.createElement('span',null,'+5')));
+    render(published({onClick:event=>calls.push({node:event.currentTarget,type:event.type}),onOKButton:()=>oks.push('duplicate')}));
+    let button=container.querySelector('button');
+    assert(button.style.display==='flex'&&button.style.gap==='4px'&&button.style.fontSize==='18px',
+      'published minute-button layout styles were lost');
+    assert(button.style.backgroundColor==='rgb(68, 170, 68)'&&button.style.color==='rgb(255, 255, 255)',
+      'published enabled colors were lost');
+    assert(button.className==='minutes'&&button.querySelector('span').textContent==='+5','native props or React children lost');
+    assert(button.parentElement.tagName==='FORM','Button acquired an unexpected field wrapper');
+    click(button);
+    assert(calls.length===1&&calls[0].node===button&&calls[0].type==='click'&&oks.length===0,'click priority/event changed');
+    assert(button.type==='button'&&submits===0,'minute button submitted its enclosing form');
+    render(published({disabled:true,onClick:()=>calls.push('disabled'),onOKButton:()=>oks.push('disabled')}));
+    button=container.querySelector('button');click(button);
+    assert(button.disabled&&calls.length===1&&oks.length===0,'disabled published action ran');
+    assert(button.style.color==='rgb(170, 170, 170)','published disabled colors were lost');
+    render(published({type:'negative',onOKButton:()=>oks.push('fallback')}));
+    button=container.querySelector('button');click(button);
+    assert(oks.length===1&&oks[0]==='fallback'&&button.style.backgroundColor==='rgb(170, 68, 68)',
+      'published negative styling or OK-only activation lost');
+    render(React.createElement(DFL.Button,null,'Plain'));
+    button=container.querySelector('button');
+    assert(button.style.display===''&&button.className===''&&button.textContent==='Plain','obsolete styles or props retained');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedMinuteStyles:true,publishedEnabledDisabledColors:true,nativePropsAndChildren:true,
+      noFieldWrapper:true,clickPriorityOnce:true,nativeClickEvent:true,disabledSuppressed:true,
+      okFallback:true,formNotSubmitted:true,obsoleteStylesRemoved:true,syntheticCallbacks:true,
+      realTimerStarted:false,realSettingsSaved:false,realFrameContacted:false,controllerInputVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
