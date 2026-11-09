@@ -372,6 +372,12 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  // Some published buttons expose only Decky's OK action. Native activation
+  // uses it as a fallback; keep an explicit click handler authoritative and
+  // pass the original click event rather than fabricating gamepad input.
+  const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
+    R.createElement('button', {...props, type:'button', disabled:!!disabled,
+      onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
   const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
@@ -1010,8 +1016,8 @@
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
-    DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
-    DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
+    DialogButtonSecondary: DialogButton, Button: ButtonItem, GamepadButton: passthrough('button'),
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
