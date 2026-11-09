@@ -73,8 +73,8 @@
   let acceptSeed, rejectSeed;
   const seeded = new Promise((resolve, reject) => {acceptSeed = resolve; rejectSeed = reject;});
   // Starting with an empty cache before the parent replies can overwrite a
-  // plugin's saved settings. The parent answers even when its storage is
-  // unavailable, in which case an empty seed is intentional.
+  // plugin's saved settings. The parent reports unreadable/invalid saved data
+  // explicitly; only an absent cache is a valid empty seed.
   async function waitForSeed() {
     let timer;
     try {
@@ -340,7 +340,9 @@
       const entries = event.data.entries;
       const pairs = entries && typeof entries === 'object' && !Array.isArray(entries)
         ? Object.entries(entries) : null;
-      if (!pairs || pairs.length > 64 ||
+      if (typeof event.data.error === 'string' && event.data.error)
+        rejectSeed(Error(event.data.error.slice(0,200)));
+      else if (!pairs || pairs.length > 64 ||
           pairs.some(([key, value]) => key.length > 256 || typeof value !== 'string' || value.length > 65536) ||
           JSON.stringify(entries).length > cacheLimit)
         rejectSeed(Error('Framey plugin storage returned invalid data'));
@@ -372,6 +374,12 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  // Some published buttons expose only Decky's OK action. Native activation
+  // uses it as a fallback; keep an explicit click handler authoritative and
+  // pass the original click event rather than fabricating gamepad input.
+  const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
+    R.createElement('button', {...props, type:'button', disabled:!!disabled,
+      onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
   const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
@@ -392,7 +400,7 @@
         }
       }}, children);
   };
-  const Field = ({label, description, icon, children}) => R.createElement('label', null,
+  const Field = ({label, description, icon, style, children}) => R.createElement('label', {style},
     icon != null && R.createElement('span', null, icon),
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
@@ -487,7 +495,7 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls,
+    bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
     onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
     const input = R.useRef(null);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -499,7 +507,7 @@
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
       node.dispatchEvent(new Event('input', {bubbles:true}));
     };
-    return R.createElement(Field, {label, description},
+    return R.createElement(Field, {label, description, style},
       R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
         ref:input, autoFocus:!!focusOnMount && !disabled,
         value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
@@ -558,7 +566,8 @@
     return R.createElement('div', null,
       R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
         type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
-        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}}, tab.title))),
+        disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}},
+        tab.title, tab.renderTabAddon?.()))),
       R.createElement('div', {role:'tabpanel'}, current?.content));
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
@@ -1010,8 +1019,8 @@
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
-    DialogButton: passthrough('button'), DialogButtonPrimary: passthrough('button'), ConfirmModal,
-    DialogButtonSecondary: passthrough('button'), Button: ButtonItem, GamepadButton: passthrough('button'),
+    DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
+    DialogButtonSecondary: DialogButton, Button: ButtonItem, GamepadButton: passthrough('button'),
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
