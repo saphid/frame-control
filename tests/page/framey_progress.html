@@ -13,8 +13,8 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
   const result=document.getElementById('result'), container=document.getElementById('framey-root');
   const root=ReactDOM.createRoot(container);
   const assert=(value,message)=>{if(!value)throw Error(message);};
-  // Replay only the two pinned published progress expressions. There is no
-  // plugin initializer, achievements service, Steam library or backend call.
+  // Replay only the pinned published progress expressions. There is no
+  // initializer, achievement/refresh service, Steam library or backend call.
   const deckyFrontendLib=DFL, React__default={default:React}, t=key=>({loading:'Loading',error:'Error'}[key]);
   const css={marginLeft:'20px',color:'red'};
   let loadingData={game:'Synthetic game',errored:true,description:'Synthetic achievement read failed',
@@ -22,6 +22,8 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
   let achievements={percentage:37.5,achieved:3,total:8};
   const info=()=>__OFFICIAL_INFO__;
   const item=()=>__OFFICIAL_ITEM__;
+  let progress={current:0,total:0};
+  const refresh=()=>__OFFICIAL_REFRESH__;
   const render=element=>ReactDOM.flushSync(()=>root.render(element));
   try {
     render(info());
@@ -52,12 +54,31 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     render(React.createElement(DFL.ProgressBarItem,{nProgress:35}));
     assert(container.querySelector('progress').value===35 && container.textContent==='',
       'plain progress acquired extra content');
+    render(refresh());
+    assert(!container.querySelector('progress').hasAttribute('value'),
+      'published unknown-total refresh was shown as zero percent');
+    progress={current:0,total:8};render(refresh());
+    assert(container.querySelector('progress').hasAttribute('value') && container.querySelector('progress').value===0,
+      'known zero-percent progress became indeterminate');
+    progress={current:3,total:8};render(refresh());
+    assert(container.querySelector('progress').value===37.5,'known refresh progress changed');
+    progress={current:8,total:8};render(refresh());
+    assert(container.querySelector('progress').value===100,'completed refresh progress changed');
+    progress={current:0,total:0};render(refresh());
+    assert(!container.querySelector('progress').hasAttribute('value'),'unknown total retained stale progress');
+    render(React.createElement(DFL.ProgressBar,{}));
+    assert(!container.querySelector('progress').hasAttribute('value'),'omitted progress acquired a fabricated value');
+    render(React.createElement(DFL.ProgressBar,{value:0}));
+    assert(container.querySelector('progress').hasAttribute('value') && container.querySelector('progress').value===0,
+      'explicit value alias zero became indeterminate');
     render(null);
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedErrorDescription:true,
       publishedAchievementCounts:true,descriptionMarkupAndStyles:true,labelPreserved:true,
-      updatedDescription:true,indeterminatePreserved:true,syntheticData:true,
-      realFrameContacted:false,realAchievementsVerified:false,controllerInputVerified:false});
+      updatedDescription:true,indeterminatePreserved:true,publishedUnknownTotalIndeterminate:true,
+      knownZeroAndCompletionPreserved:true,unknownTotalClearsStaleValue:true,omittedProgressIndeterminate:true,
+      syntheticData:true,realRefreshRun:false,realFrameContacted:false,
+      realAchievementsVerified:false,controllerInputVerified:false});
   } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
 </script>

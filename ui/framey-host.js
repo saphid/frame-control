@@ -408,9 +408,10 @@
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
     type:'checkbox', checked:!!value, disabled:!!disabled,
     onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
-  const ToggleField = ({label, description, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
+  const ToggleField = ({label, description, tooltip, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
-      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
+      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}),
+    tooltip != null && R.createElement('small', null, tooltip));
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
     const choices=[];
     const option = entry => {
@@ -647,8 +648,8 @@
         onClick:()=>{if(valid(shown))publish({...shown,rows:shown.saved,dirty:false,error:''});}}, 'Cancel reordering'),
       shown.error && R.createElement('p', {role:'alert'}, shown.error));
   };
-  const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
-    value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBar = ({nProgress, value, max=100, indeterminate=false}) => R.createElement('progress', {
+    value:indeterminate || (value ?? nProgress)==null ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
   const ProgressBarItem = ({label, description, ...props}) => R.createElement('div', null,
     R.createElement('label', null,
       label != null && R.createElement('strong', null, label), ProgressBar(props)),
@@ -1014,13 +1015,23 @@
       for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
     }
   }
+  // @decky/ui 4.16.0 exports a numeric TypeScript enum, not a control.
+  // These identifiers do not create or bridge physical gamepad events.
+  const GamepadButton = Object.freeze(Object.fromEntries([
+    'INVALID', 'OK', 'CANCEL', 'SECONDARY', 'OPTIONS',
+    'BUMPER_LEFT', 'BUMPER_RIGHT', 'TRIGGER_LEFT', 'TRIGGER_RIGHT', 'DIR_UP',
+    'DIR_DOWN', 'DIR_LEFT', 'DIR_RIGHT', 'SELECT', 'START',
+    'LSTICK_CLICK', 'RSTICK_CLICK', 'LSTICK_TOUCH', 'RSTICK_TOUCH', 'LPAD_TOUCH',
+    'LPAD_CLICK', 'RPAD_TOUCH', 'RPAD_CLICK', 'REAR_LEFT_UPPER', 'REAR_LEFT_LOWER',
+    'REAR_RIGHT_UPPER', 'REAR_RIGHT_LOWER', 'STEAM_GUIDE', 'STEAM_QUICK_MENU',
+  ].flatMap((name,value)=>[[name,value],[value,name]])));
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
-    DialogButtonSecondary: DialogButton, Button: ButtonItem, GamepadButton: passthrough('button'),
+    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton,
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
