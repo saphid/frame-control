@@ -392,14 +392,15 @@
         }
       }}, children);
   };
-  const Field = ({label, description, children}) => R.createElement('label', null,
+  const Field = ({label, description, icon, children}) => R.createElement('label', null,
+    icon != null && R.createElement('span', null, icon),
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
     type:'checkbox', checked:!!value, disabled:!!disabled,
     onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
-  const ToggleField = ({label, description, checked, disabled, onChange}) => R.createElement(Field, {label, description},
+  const ToggleField = ({label, description, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
@@ -476,7 +477,7 @@
         props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
       typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
   };
-  const ButtonItem = ({label, description, children, disabled, onClick}) => R.createElement(Field, {label, description},
+  const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
   const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
