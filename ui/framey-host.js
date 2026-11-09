@@ -73,8 +73,8 @@
   let acceptSeed, rejectSeed;
   const seeded = new Promise((resolve, reject) => {acceptSeed = resolve; rejectSeed = reject;});
   // Starting with an empty cache before the parent replies can overwrite a
-  // plugin's saved settings. The parent answers even when its storage is
-  // unavailable, in which case an empty seed is intentional.
+  // plugin's saved settings. The parent reports unreadable/invalid saved data
+  // explicitly; only an absent cache is a valid empty seed.
   async function waitForSeed() {
     let timer;
     try {
@@ -340,7 +340,9 @@
       const entries = event.data.entries;
       const pairs = entries && typeof entries === 'object' && !Array.isArray(entries)
         ? Object.entries(entries) : null;
-      if (!pairs || pairs.length > 64 ||
+      if (typeof event.data.error === 'string' && event.data.error)
+        rejectSeed(Error(event.data.error.slice(0,200)));
+      else if (!pairs || pairs.length > 64 ||
           pairs.some(([key, value]) => key.length > 256 || typeof value !== 'string' || value.length > 65536) ||
           JSON.stringify(entries).length > cacheLimit)
         rejectSeed(Error('Framey plugin storage returned invalid data'));

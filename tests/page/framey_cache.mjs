@@ -5,7 +5,7 @@ import vm from 'node:vm';
 const html=readFileSync(new URL('../../ui/headset.html',import.meta.url),'utf8');
 const parentSource=html.match(/<script>([\s\S]*?)<\/script>/)[1].split('refresh();refreshGames();')[0];
 const hostSource=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8')
-  .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__waitForSeed = waitForSeed;\n})();');
+  .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__waitForSeed = waitForSeed; window.__start = start;\n})();');
 assert.match(hostSource,/framey:cache:init/);
 const values=new Map();
 const localStorage={getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};
@@ -25,13 +25,13 @@ const firstURL=new URL(el('frameyFrame').src,'http://127.0.0.1');
 const onParent=parentListeners.find(x=>x.type==='message').fn;
 
 function iframe({delaySeed=false}={}){
-  const listeners=[];const queued=[];const timers=[];let live=false;
+  const listeners=[];const queued=[];const timers=[];let live=false,bundleReads=0;
   const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},createElement:()=>({}),isValidElement:()=>true},
     ReactDOM:{createRoot:()=>({render(){}})}};
   const proxy={postMessage:message=>listeners.find(x=>x.type==='message')?.fn({source:hostParent,data:message})};
   el('frameyFrame').contentWindow=proxy;
   const hostParent={postMessage:message=>live?onParent({source:proxy,data:message}):queued.push(message)};
-  const context=vm.createContext({window:frameWindow,document:{getElementById:()=>({})},
+  const context=vm.createContext({window:frameWindow,document:{getElementById:id=>{if(id==='framey-bundle')bundleReads++;return {};}},
     navigator:{language:'en'},parent:hostParent,DOMException,
     addEventListener:(type,fn)=>listeners.push({type,fn}),
     setTimeout:(callback,ms)=>{timers.push({callback,ms,active:true});return timers.length;},
@@ -44,7 +44,7 @@ function iframe({delaySeed=false}={}){
   const send=message=>onParent({source:proxy,data:message});
   return {storage:frameWindow.localStorage,steamStorage:frameWindow.SteamClient.Storage,
     evaluate:source=>vm.runInContext(source,context),
-    waitForSeed:frameWindow.__waitForSeed,timers,flushSeed,send,receive:message=>
+    waitForSeed:frameWindow.__waitForSeed,start:frameWindow.__start,get bundleReads(){return bundleReads;},timers,flushSeed,send,receive:message=>
       listeners.find(x=>x.type==='message').fn({source:hostParent,data:message})};
 }
 // Replay only the pinned Game Sync 1.0.4 cache functions, never its initializer,
@@ -160,6 +160,39 @@ invalid.receive({type:'framey:cache:seed',session,entries:{huge:'x'.repeat(65537
 await invalidFailure;
 assert.equal(invalid.storage.length,0);
 
+// A saved cache that cannot be read must never masquerade as first use.
+// No plugin initializer may run until a successful seed proves the snapshot.
+const readableGet=localStorage.getItem;
+const retainedDisk=values.get('framey-plugin-cache-v1:14');
+localStorage.getItem=()=>{throw new DOMException('Blocked','SecurityError');};
+const unreadable=iframe();
+await assert.rejects(unreadable.waitForSeed(),/Could not read saved plugin settings/);
+const readsBeforeStart=unreadable.bundleReads;
+await unreadable.start();
+assert.equal(unreadable.bundleReads,readsBeforeStart,'failed cache must stop startup before reading/importing the plugin bundle');
+assert.match(el('frameyPanelStatus').textContent,/Plugin panel unavailable: Could not read saved plugin settings/);
+assert.equal(unreadable.storage.length,0);
+assert.equal(values.get('framey-plugin-cache-v1:14'),retainedDisk);
+unreadable.receive({type:'framey:cache:seed',session,entries:{late:'stale'}});
+assert.equal(unreadable.storage.getItem('late'),null,'late reply cannot revive failed initialization');
+localStorage.getItem=readableGet;
+for(const raw of ['not JSON','null','[]','{"saved":true}',
+    JSON.stringify({saved:'x'.repeat(65537)}),JSON.stringify({['x'.repeat(257)]:'value'}),
+    JSON.stringify(Object.fromEntries(Array.from({length:65},(_,index)=>[String(index),'value']))),
+    JSON.stringify({a:'x'.repeat(50000),b:'x'.repeat(50000),c:'x'.repeat(50000)})]) {
+  values.set('framey-plugin-cache-v1:14',raw);
+  const damaged=iframe();
+  await assert.rejects(damaged.waitForSeed(),/Could not read saved plugin settings/);
+  assert.equal(damaged.storage.length,0);
+  assert.equal(values.get('framey-plugin-cache-v1:14'),raw,'invalid saved bytes must remain untouched');
+}
+values.delete('framey-plugin-cache-v1:14');
+const firstUse=iframe();await firstUse.waitForSeed();
+assert.equal(firstUse.storage.length,0,'genuinely absent cache remains valid first use');
+values.set('framey-plugin-cache-v1:14',retainedDisk);
+const readableAgain=iframe();await readableAgain.waitForSeed();
+assert.equal(readableAgain.storage.getItem('saved'),'true','reopen after recovery restores saved value');
+
 // A full/denied browser store can still return an older saved value. Keep the
 // newest valid snapshot across iframe replacement instead of restoring it.
 const diskWrite=localStorage.setItem;
@@ -225,11 +258,13 @@ assert.deepEqual(JSON.parse(values.get('framey-plugin-cache-v1:14')),
 recovered.storage.clear();
 assert.equal(values.get('framey-plugin-cache-v1:14'),'{}');
 
-// Entirely denied storage still retains settings for this parent page.
+// A valid seeded view may retain a later failed write even when both read
+// and write access become unavailable. Its known snapshot takes precedence.
+const beforeFullDenial=iframe();await beforeFullDenial.waitForSeed();
 localStorage.setItem=()=>{throw Error('storage denied');};
 const diskRead=localStorage.getItem;
 localStorage.getItem=()=>{throw Error('storage denied');};
-iframe().storage.setItem('memory-only','kept');
+beforeFullDenial.storage.setItem('memory-only','kept');
 vm.runInContext('openFrameyPanel(14,"Steam Status")',parent);
 session=vm.runInContext('frameySession',parent);
 assert.equal(iframe().storage.getItem('memory-only'),'kept');
