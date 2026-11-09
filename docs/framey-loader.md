@@ -62,9 +62,14 @@ is only in memory. **Retry saving** attempts to save that latest snapshot withou
 changing a setting; a failed retry keeps the notice and values. A successful
 retry clears only that plugin's notice. Reloading the Frame Control page loses that memory
 fallback; an older disk snapshot may then return. Cleared browser storage also
-loses saved caches. The host waits for the parent's cache reply before loading plugin code;
-if the reply is missing or invalid after five seconds, the panel shows an error
-instead of opening with empty settings that could overwrite saved values. Use
+loses saved caches. The host waits for the parent's cache reply before loading plugin code.
+A failed browser-storage read or an invalid saved snapshot stops startup with an
+error and leaves the saved bytes untouched; neither is treated as an empty cache.
+Reopen the plugin after storage access recovers. Invalid saved data must be
+recovered separately before the panel can open; Framey does not erase it automatically.
+A valid in-memory snapshot from a failed write still works while disk reads are
+blocked. Only a missing cache starts empty. A missing reply fails after five
+seconds; explicit read errors and invalid replies fail immediately. Use
 the plugin backend for settings that must survive cache loss.
 The recovery notice, retry and readback after a full page reload are covered in
 a local browser with synthetic snapshots and native browser storage. Live
