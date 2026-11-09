@@ -1030,7 +1030,7 @@
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
-    DialogButtonSecondary: DialogButton, Button: ButtonItem, GamepadButton,
+    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton,
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
