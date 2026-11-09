@@ -402,9 +402,10 @@
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
     type:'checkbox', checked:!!value, disabled:!!disabled,
     onChange:e=>{if(!disabled)onChange?.(e.target.checked);}});
-  const ToggleField = ({label, description, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
+  const ToggleField = ({label, description, tooltip, icon, checked, disabled, onChange}) => R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
-      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}));
+      onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}),
+    tooltip != null && R.createElement('small', null, tooltip));
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
     const choices=[];
     const option = entry => {
