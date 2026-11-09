@@ -366,12 +366,15 @@ function showFrameyCacheStatus(){
   byId('frameyCacheWarning').hidden=activeFrameyId===null||!frameyCacheFallback.has(activeFrameyId);
 }
 function frameyCacheRead(id){
-  try{const data=JSON.parse(frameyCacheFallback.get(id)??localStorage.getItem(frameyCacheKey(id))??'{}');
-    if(!data||typeof data!=='object'||Array.isArray(data))return {};
+  try{const saved=frameyCacheFallback.get(id)??localStorage.getItem(frameyCacheKey(id));
+    if(saved===null)return {};
+    const data=JSON.parse(saved);
+    if(!data||typeof data!=='object'||Array.isArray(data))throw Error('Invalid cache');
     const pairs=Object.entries(data);
-    return pairs.length<=64&&pairs.every(([key,value])=>key.length<=256&&typeof value==='string'&&value.length<=65536)&&
-      JSON.stringify(data).length<=128*1024?data:{};
-  }catch(_){return {};}
+    if(pairs.length<=64&&pairs.every(([key,value])=>key.length<=256&&typeof value==='string'&&value.length<=65536)&&
+      JSON.stringify(data).length<=128*1024)return data;
+  }catch(_){}
+  throw Error('Could not read saved plugin settings. Reopen the panel after browser storage is available; invalid saved data must be recovered before editing.');
 }
 function frameyCacheSave(id,entries){
   if(!entries||typeof entries!=='object'||Array.isArray(entries))return;
@@ -398,8 +401,10 @@ window.addEventListener('message',async event=>{
     return;
   }
   if(req.type==='framey:cache:init'&&req.session===frameySession){
-    event.source.postMessage({type:'framey:cache:seed',session:frameySession,
-      entries:frameyCacheRead(activeFrameyId)},'*');return;
+    const reply={type:'framey:cache:seed',session:frameySession};
+    try{reply.entries=frameyCacheRead(activeFrameyId);}
+    catch(failure){reply.error=failure.message;}
+    event.source.postMessage(reply,'*');return;
   }
   if(req.type==='framey:cache:save'){
     if(req.session===frameySession)frameyCacheSave(activeFrameyId,req.entries);
