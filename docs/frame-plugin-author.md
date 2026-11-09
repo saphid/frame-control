@@ -39,7 +39,12 @@ only official-store-owned plugins in its VR panel.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
-file, and give the panel a safe default if settings are missing or damaged.
+file, and use a default when no saved setting exists. Treat a damaged or
+unreadable saved file as an error and preserve it; returning a default as a
+successful read can let the next edit erase recoverable data. The sample
+rejects malformed JSON, invalid UTF-8, non-object JSON and saved non-boolean
+values on both read and save. Repair or restore its `settings.json`, then
+reload the saved setting before editing again.
 Removing a managed plugin leaves its Decky settings behind; document how users
 can reset data your plugin owns.
 Keep setting mutations disabled after a failed backend read until an explicit

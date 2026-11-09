@@ -57,17 +57,56 @@ class SamplePlugin(unittest.TestCase):
             with self.assertRaises(ValueError): asyncio.run(plugin.set_setting('enabled', 'yes'))
             self.assertFalse((Path(folder) / 'settings.json').exists())
 
-    def test_corrupt_or_old_setting_uses_default_and_can_be_replaced(self):
+    def test_unreadable_or_invalid_saved_settings_are_preserved_on_read_and_save(self):
         with tempfile.TemporaryDirectory() as folder:
             plugin = backend(folder)
             path = Path(folder) / 'settings.json'
-            for data in ('broken JSON', '[]', '{"enabled": "yes"}'):
+            for data in (b'broken JSON', b'\xff', b'[]', b'null', b'"text"',
+                         b'{"enabled": "yes"}', b'{"schema": 1, "enabled": null}',
+                         b'{"schema": 1, "enabled": 1}'):
                 with self.subTest(data=data):
-                    path.write_text(data)
-                    self.assertFalse(asyncio.run(plugin.get_setting('enabled', False)))
-                    self.assertTrue(asyncio.run(plugin.get_setting('enabled', True)))
+                    path.write_bytes(data)
+                    for fallback in (False, True):
+                        with self.assertRaisesRegex(ValueError, 'repair or restore settings.json'):
+                            asyncio.run(plugin.get_setting('enabled', fallback))
+                    with self.assertRaisesRegex(ValueError, 'repair or restore settings.json'):
+                        asyncio.run(plugin.set_setting('enabled', False))
+                    self.assertEqual(path.read_bytes(), data)
+                    self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+            # A deliberate repair can be re-read by a fresh backend instance.
+            path.write_text('{"schema": 1, "enabled": true}\n')
+            self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+            self.assertTrue(asyncio.run(plugin.set_setting('enabled', False)))
+            self.assertFalse(asyncio.run(backend(folder).get_setting('enabled', True)))
+
+    def test_absent_or_valid_empty_settings_use_defaults_without_writing(self):
+        with tempfile.TemporaryDirectory() as folder:
+            plugin = backend(folder)
+            path = Path(folder) / 'settings.json'
+            self.assertFalse(asyncio.run(plugin.get_setting('enabled', False)))
+            self.assertTrue(asyncio.run(plugin.get_setting('enabled', True)))
+            self.assertFalse(path.exists())
+            for data in ('{}\n', '{"schema": 1}\n'):
+                path.write_text(data)
+                self.assertFalse(asyncio.run(plugin.get_setting('enabled', False)))
+                self.assertTrue(asyncio.run(plugin.get_setting('enabled', True)))
+                self.assertEqual(path.read_text(), data)
             self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
             self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+
+    def test_storage_read_error_never_overwrites_saved_settings(self):
+        with tempfile.TemporaryDirectory() as folder:
+            plugin = backend(folder)
+            path = Path(folder) / 'settings.json'
+            saved = b'{"schema": 1, "enabled": true}\n'
+            path.write_bytes(saved)
+            with patch.object(Path, 'read_text', side_effect=PermissionError('storage denied')):
+                with self.assertRaisesRegex(PermissionError, 'storage denied'):
+                    asyncio.run(plugin.get_setting('enabled', False))
+                with self.assertRaisesRegex(PermissionError, 'storage denied'):
+                    asyncio.run(plugin.set_setting('enabled', False))
+            self.assertEqual(path.read_bytes(), saved)
+            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
 
     def test_legacy_boolean_survives_restart_and_migrates_on_save(self):
         with tempfile.TemporaryDirectory() as folder:
