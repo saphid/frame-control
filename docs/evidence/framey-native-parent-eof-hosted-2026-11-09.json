@@ -1,0 +1,446 @@
+{
+  "head": "46d7c97cba305911bb4475e3aaf508164fb03afc",
+  "proof": {
+    "at": "2026-11-09T03:34:18.976107+00:00",
+    "head": "46d7c97cba305911bb4475e3aaf508164fb03afc",
+    "records": [
+      {
+        "artifact": 13647022740,
+        "job": 128958201291,
+        "architecture": "aarch64",
+        "archiveSha256": "59b200040bfb18dcbe29310bf3c144415a101dcfd15c54f37f68b12521beb5a9",
+        "reportSha256": "c2d4539bceff1aa0503e1b624737b8321852757ec5793bd64d4f9e60d0d2da3e",
+        "normalShutdownSeconds": 0.214,
+        "abruptParentTermSeconds": 8.001,
+        "requestTimedOut": true,
+        "allOwnedProcessesReaped": true
+      },
+      {
+        "artifact": 13646318727,
+        "job": 128958201491,
+        "architecture": "x86_64",
+        "archiveSha256": "582261f2831afd32ea445e650095ee689c9a3ff171f2669e49a560b354f05394",
+        "reportSha256": "7857ea9a0015ee00c9f840457c878984197326332524a49bb49dc12123ba2b02",
+        "normalShutdownSeconds": 0.326,
+        "abruptParentTermSeconds": 8.0,
+        "requestTimedOut": true,
+        "allOwnedProcessesReaped": true
+      }
+    ],
+    "publishedBinaryHangBothArchitectures": true,
+    "exactSourcesAndProducersVerified": true,
+    "historicalCauseEstablished": false,
+    "releaseHoldCleared": false,
+    "realFrameContacted": false
+  },
+  "reports": {
+    "aarch64": {
+      "architecture": "aarch64",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "sourceSha256": {
+        "scripts/framey-probe-decky-native-parent-eof.py": "14d69d496c8f2891d5e7b4ad49c8b85d125824fd80a346df6d59ef84b01e6c56",
+        "scripts/framey-test-decky-runtime.py": "b21ce07bd3d56c46faacdd3fe86e0a2ae8ec256f8d295cd7055ce38e270f556f",
+        "tests/decky-runtime/parent_eof_native.py": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+        "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+        "tests/decky-runtime/check.py": "71d134dedc9bd5a402acae167b572c4cec16e68fe295c1873eb4f9a71d982552",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        ".github/workflows/decky-native-parent-eof.yml": "ed760a05c0983b330f6d4e0ac89670327b40f776754d76a943ebcbefaac69cc3"
+      },
+      "realFrameContacted": false,
+      "historicalCauseEstablished": false,
+      "releaseHoldCleared": false,
+      "native": {
+        "architecture": "aarch64",
+        "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+        "syntheticPlugin": true,
+        "childEofRepairPresent": true,
+        "parentUnmodified": true,
+        "realFrameContacted": false,
+        "nativeArm64Executed": true,
+        "historicalArm64VmExecuted": false,
+        "historicalCauseEstablished": false,
+        "releaseHoldCleared": false,
+        "results": [
+          {
+            "mode": "normal",
+            "plugins": [
+              {
+                "name": "Owned EOF Probe",
+                "version": "0.0.0",
+                "load_type": 0,
+                "disabled": false
+              }
+            ],
+            "loaderPid": 7,
+            "pluginPid": 20,
+            "descendantsBefore": {
+              "8": {
+                "state": "S",
+                "parent": 7,
+                "start": "6564"
+              },
+              "18": {
+                "state": "S",
+                "parent": 8,
+                "start": "6623"
+              },
+              "19": {
+                "state": "S",
+                "parent": 8,
+                "start": "6623"
+              },
+              "20": {
+                "state": "S",
+                "parent": 19,
+                "start": "6663"
+              }
+            },
+            "cpuTickDeltas": {
+              "8": [
+                0,
+                0
+              ],
+              "18": [
+                0,
+                0
+              ],
+              "19": [
+                0,
+                0
+              ],
+              "20": [
+                0,
+                0
+              ]
+            },
+            "parentTermTimedOut": false,
+            "parentTermSeconds": 0.214,
+            "loaderReturncode": 0,
+            "remainingBeforeCleanup": {},
+            "forcedCleanupPids": [],
+            "remainingAfterCleanup": {},
+            "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: owned-parent-eof-probe\n[loader][INFO]: Loaded Owned EOF Probe (v0.0.0)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Owned EOF Probe (v0.0.0)\n[plugin][INFO]: Stopping response listener for Owned EOF Probe (v0.0.0)\nCalling Loader unload function for Owned EOF Probe (v0.0.0).\nAttempting to unload with plugin Owned EOF Probe (v0.0.0)'s \"_unload\" function.\n\nUnloaded Owned EOF Probe (v0.0.0)\n\n[plugin][INFO]: Plugin Owned EOF Probe (v0.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "9efa5c03eeef3b377929992e2c818a4a321cfbe420fda342e4c532e0ea9ea737"
+          },
+          {
+            "mode": "abrupt-child-exit",
+            "plugins": [
+              {
+                "name": "Owned EOF Probe",
+                "version": "0.0.0",
+                "load_type": 0,
+                "disabled": false
+              }
+            ],
+            "loaderPid": 21,
+            "pluginPid": 34,
+            "descendantsBefore": {
+              "32": {
+                "state": "S",
+                "parent": 22,
+                "start": "7013"
+              },
+              "33": {
+                "state": "S",
+                "parent": 22,
+                "start": "7013"
+              },
+              "34": {
+                "state": "S",
+                "parent": 33,
+                "start": "7053"
+              },
+              "22": {
+                "state": "R",
+                "parent": 21,
+                "start": "6953"
+              }
+            },
+            "responseAfterEof": {
+              "wallDeadlineExceeded": false,
+              "requestTimedOut": true,
+              "returncode": 1,
+              "stdout": "",
+              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import sys;sys.path.insert(0,'/repo/tests/decky-runtime');from check import rpc;print(rpc('loader/get_plugins'))\n                                                                                          ~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"/repo/tests/decky-runtime/check.py\", line 50, in rpc\n    return asyncio.run(request(route, list(args)))\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/asyncio/runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/usr/lib/python3.13/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/usr/lib/python3.13/asyncio/base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"/repo/tests/decky-runtime/check.py\", line 36, in request\n    token = urllib.request.urlopen('http://127.0.0.1:1337/auth/token', timeout=2).read().decode()\n            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 189, in urlopen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 489, in open\n    response = self._open(req, data)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 506, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n                              '_open', req)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 466, in _call_chain\n    result = func(*args)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1348, in http_open\n    return self.do_open(http.client.HTTPConnection, req)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1323, in do_open\n    r = h.getresponse()\n  File \"/usr/lib/python3.13/http/client.py\", line 1459, in getresponse\n    response.begin()\n    ~~~~~~~~~~~~~~^^\n  File \"/usr/lib/python3.13/http/client.py\", line 336, in begin\n    version, status, reason = self._read_status()\n                              ~~~~~~~~~~~~~~~~~^^\n  File \"/usr/lib/python3.13/http/client.py\", line 297, in _read_status\n    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")\n               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\nTimeoutError: timed out\n"
+            },
+            "responseSeconds": 2.511,
+            "cpuTickDeltas": {
+              "32": [
+                0,
+                0
+              ],
+              "33": [
+                0,
+                0
+              ],
+              "22": [
+                115,
+                0
+              ]
+            },
+            "parentTermTimedOut": true,
+            "parentTermSeconds": 8.001,
+            "loaderReturncode": null,
+            "remainingBeforeCleanup": {
+              "32": {
+                "state": "S",
+                "parent": 22,
+                "start": "7013"
+              },
+              "33": {
+                "state": "S",
+                "parent": 22,
+                "start": "7013"
+              },
+              "22": {
+                "state": "R",
+                "parent": 21,
+                "start": "6953"
+              }
+            },
+            "forcedCleanupPids": [
+              32,
+              33,
+              22
+            ],
+            "remainingAfterCleanup": {},
+            "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: owned-parent-eof-probe\n[loader][INFO]: Loaded Owned EOF Probe (v0.0.0)\n",
+            "consoleSha256": "2b9d897f269d83ac8b0f40b88c8ea70abe237359da2b06846ce82077004b31fa"
+          }
+        ],
+        "normalControlPassed": true,
+        "publishedBinaryParentHangReproduced": true,
+        "allOwnedProcessesReaped": true
+      },
+      "diagnosticPassed": true,
+      "ownedContainerRemoved": true,
+      "containerCleanupReturncode": 0,
+      "ownedImageRemoved": true
+    },
+    "x86_64": {
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "sourceSha256": {
+        "scripts/framey-probe-decky-native-parent-eof.py": "14d69d496c8f2891d5e7b4ad49c8b85d125824fd80a346df6d59ef84b01e6c56",
+        "scripts/framey-test-decky-runtime.py": "b21ce07bd3d56c46faacdd3fe86e0a2ae8ec256f8d295cd7055ce38e270f556f",
+        "tests/decky-runtime/parent_eof_native.py": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+        "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+        "tests/decky-runtime/check.py": "71d134dedc9bd5a402acae167b572c4cec16e68fe295c1873eb4f9a71d982552",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        ".github/workflows/decky-native-parent-eof.yml": "ed760a05c0983b330f6d4e0ac89670327b40f776754d76a943ebcbefaac69cc3"
+      },
+      "realFrameContacted": false,
+      "historicalCauseEstablished": false,
+      "releaseHoldCleared": false,
+      "native": {
+        "architecture": "x86_64",
+        "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+        "syntheticPlugin": true,
+        "childEofRepairPresent": true,
+        "parentUnmodified": true,
+        "realFrameContacted": false,
+        "nativeArm64Executed": false,
+        "historicalArm64VmExecuted": false,
+        "historicalCauseEstablished": false,
+        "releaseHoldCleared": false,
+        "results": [
+          {
+            "mode": "normal",
+            "plugins": [
+              {
+                "name": "Owned EOF Probe",
+                "version": "0.0.0",
+                "load_type": 0,
+                "disabled": false
+              }
+            ],
+            "loaderPid": 7,
+            "pluginPid": 20,
+            "descendantsBefore": {
+              "8": {
+                "state": "S",
+                "parent": 7,
+                "start": "8418"
+              },
+              "18": {
+                "state": "S",
+                "parent": 8,
+                "start": "8490"
+              },
+              "19": {
+                "state": "S",
+                "parent": 8,
+                "start": "8490"
+              },
+              "20": {
+                "state": "S",
+                "parent": 19,
+                "start": "8539"
+              }
+            },
+            "cpuTickDeltas": {
+              "8": [
+                0,
+                0
+              ],
+              "18": [
+                0,
+                0
+              ],
+              "19": [
+                0,
+                0
+              ],
+              "20": [
+                0,
+                0
+              ]
+            },
+            "parentTermTimedOut": false,
+            "parentTermSeconds": 0.326,
+            "loaderReturncode": 0,
+            "remainingBeforeCleanup": {},
+            "forcedCleanupPids": [],
+            "remainingAfterCleanup": {},
+            "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: owned-parent-eof-probe\n[loader][INFO]: Loaded Owned EOF Probe (v0.0.0)\n[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Owned EOF Probe (v0.0.0)\n[plugin][INFO]: Stopping response listener for Owned EOF Probe (v0.0.0)\nCalling Loader unload function for Owned EOF Probe (v0.0.0).\nAttempting to unload with plugin Owned EOF Probe (v0.0.0)'s \"_unload\" function.\n\nUnloaded Owned EOF Probe (v0.0.0)\n\n[plugin][INFO]: Plugin Owned EOF Probe (v0.0.0) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+            "consoleSha256": "9efa5c03eeef3b377929992e2c818a4a321cfbe420fda342e4c532e0ea9ea737"
+          },
+          {
+            "mode": "abrupt-child-exit",
+            "plugins": [
+              {
+                "name": "Owned EOF Probe",
+                "version": "0.0.0",
+                "load_type": 0,
+                "disabled": false
+              }
+            ],
+            "loaderPid": 21,
+            "pluginPid": 34,
+            "descendantsBefore": {
+              "32": {
+                "state": "S",
+                "parent": 22,
+                "start": "8919"
+              },
+              "33": {
+                "state": "S",
+                "parent": 22,
+                "start": "8919"
+              },
+              "34": {
+                "state": "S",
+                "parent": 33,
+                "start": "8968"
+              },
+              "22": {
+                "state": "R",
+                "parent": 21,
+                "start": "8850"
+              }
+            },
+            "responseAfterEof": {
+              "wallDeadlineExceeded": false,
+              "requestTimedOut": true,
+              "returncode": 1,
+              "stdout": "",
+              "stderr": "Traceback (most recent call last):\n  File \"<string>\", line 1, in <module>\n    import sys;sys.path.insert(0,'/repo/tests/decky-runtime');from check import rpc;print(rpc('loader/get_plugins'))\n                                                                                          ~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"/repo/tests/decky-runtime/check.py\", line 50, in rpc\n    return asyncio.run(request(route, list(args)))\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/asyncio/runners.py\", line 195, in run\n    return runner.run(main)\n           ~~~~~~~~~~^^^^^^\n  File \"/usr/lib/python3.13/asyncio/runners.py\", line 118, in run\n    return self._loop.run_until_complete(task)\n           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^\n  File \"/usr/lib/python3.13/asyncio/base_events.py\", line 725, in run_until_complete\n    return future.result()\n           ~~~~~~~~~~~~~^^\n  File \"/repo/tests/decky-runtime/check.py\", line 36, in request\n    token = urllib.request.urlopen('http://127.0.0.1:1337/auth/token', timeout=2).read().decode()\n            ~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 189, in urlopen\n    return opener.open(url, data, timeout)\n           ~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 489, in open\n    response = self._open(req, data)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 506, in _open\n    result = self._call_chain(self.handle_open, protocol, protocol +\n                              '_open', req)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 466, in _call_chain\n    result = func(*args)\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1348, in http_open\n    return self.do_open(http.client.HTTPConnection, req)\n           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/urllib/request.py\", line 1323, in do_open\n    r = h.getresponse()\n  File \"/usr/lib/python3.13/http/client.py\", line 1459, in getresponse\n    response.begin()\n    ~~~~~~~~~~~~~~^^\n  File \"/usr/lib/python3.13/http/client.py\", line 336, in begin\n    version, status, reason = self._read_status()\n                              ~~~~~~~~~~~~~~~~~^^\n  File \"/usr/lib/python3.13/http/client.py\", line 297, in _read_status\n    line = str(self.fp.readline(_MAXLINE + 1), \"iso-8859-1\")\n               ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/socket.py\", line 719, in readinto\n    return self._sock.recv_into(b)\n           ~~~~~~~~~~~~~~~~~~~~^^^\nTimeoutError: timed out\n"
+            },
+            "responseSeconds": 2.592,
+            "cpuTickDeltas": {
+              "32": [
+                0,
+                0
+              ],
+              "33": [
+                0,
+                0
+              ],
+              "22": [
+                115,
+                0
+              ]
+            },
+            "parentTermTimedOut": true,
+            "parentTermSeconds": 8.0,
+            "loaderReturncode": null,
+            "remainingBeforeCleanup": {
+              "32": {
+                "state": "S",
+                "parent": 22,
+                "start": "8919"
+              },
+              "33": {
+                "state": "S",
+                "parent": 22,
+                "start": "8919"
+              },
+              "22": {
+                "state": "R",
+                "parent": 21,
+                "start": "8850"
+              }
+            },
+            "forcedCleanupPids": [
+              32,
+              33,
+              22
+            ],
+            "remainingAfterCleanup": {},
+            "console": "[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: owned-parent-eof-probe\n[loader][INFO]: Loaded Owned EOF Probe (v0.0.0)\n",
+            "consoleSha256": "2b9d897f269d83ac8b0f40b88c8ea70abe237359da2b06846ce82077004b31fa"
+          }
+        ],
+        "normalControlPassed": true,
+        "publishedBinaryParentHangReproduced": true,
+        "allOwnedProcessesReaped": true
+      },
+      "diagnosticPassed": true,
+      "ownedContainerRemoved": true,
+      "containerCleanupReturncode": 0,
+      "ownedImageRemoved": true
+    }
+  },
+  "receipts": {
+    "aarch64": {
+      "headSha": "46d7c97cba305911bb4475e3aaf508164fb03afc",
+      "architecture": "aarch64",
+      "sourceSha256": {
+        "scripts/framey-probe-decky-native-parent-eof.py": "14d69d496c8f2891d5e7b4ad49c8b85d125824fd80a346df6d59ef84b01e6c56",
+        "scripts/framey-test-decky-runtime.py": "b21ce07bd3d56c46faacdd3fe86e0a2ae8ec256f8d295cd7055ce38e270f556f",
+        "tests/decky-runtime/parent_eof_native.py": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+        "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+        "tests/decky-runtime/check.py": "71d134dedc9bd5a402acae167b572c4cec16e68fe295c1873eb4f9a71d982552",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        ".github/workflows/decky-native-parent-eof.yml": "ed760a05c0983b330f6d4e0ac89670327b40f776754d76a943ebcbefaac69cc3"
+      },
+      "reportSha256": "c2d4539bceff1aa0503e1b624737b8321852757ec5793bd64d4f9e60d0d2da3e",
+      "diagnosticPassed": true,
+      "historicalCauseEstablished": false,
+      "releaseHoldCleared": false,
+      "realFrameContacted": false
+    },
+    "x86_64": {
+      "headSha": "46d7c97cba305911bb4475e3aaf508164fb03afc",
+      "architecture": "x86_64",
+      "sourceSha256": {
+        "scripts/framey-probe-decky-native-parent-eof.py": "14d69d496c8f2891d5e7b4ad49c8b85d125824fd80a346df6d59ef84b01e6c56",
+        "scripts/framey-test-decky-runtime.py": "b21ce07bd3d56c46faacdd3fe86e0a2ae8ec256f8d295cd7055ce38e270f556f",
+        "tests/decky-runtime/parent_eof_native.py": "2ea967e31b22931797a08cea8dc02680972443c5f3c0e348d068ce3c090a753a",
+        "tests/decky-runtime/Containerfile": "f547357ca4832b87d5b72a7df8a235102e140d081963f7f292e9d8a84c712257",
+        "tests/decky-runtime/check.py": "71d134dedc9bd5a402acae167b572c4cec16e68fe295c1873eb4f9a71d982552",
+        "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+        "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        ".github/workflows/decky-native-parent-eof.yml": "ed760a05c0983b330f6d4e0ac89670327b40f776754d76a943ebcbefaac69cc3"
+      },
+      "reportSha256": "7857ea9a0015ee00c9f840457c878984197326332524a49bb49dc12123ba2b02",
+      "diagnosticPassed": true,
+      "historicalCauseEstablished": false,
+      "releaseHoldCleared": false,
+      "realFrameContacted": false
+    }
+  }
+}

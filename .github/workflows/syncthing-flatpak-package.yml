@@ -22,6 +22,8 @@ on:
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
   pull_request:
     paths:
       - 'scripts/framey-*syncthing*.py'
@@ -42,6 +44,8 @@ on:
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
   workflow_dispatch:
 
 permissions:
@@ -73,6 +77,7 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/framey-runtime-inputs
       - name: Install preparation tools and matching QEMU emulator
         run: |
           case "$(uname -m)" in
@@ -132,6 +137,7 @@ jobs:
           python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
             --architectures "$(uname -m)" --output "$RUNNER_TEMP/signed-package-candidate"
           python3 scripts/framey-test-syncthing-flatpak-package.py "${browser_flags[@]}" \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
             --rootfs-tar "$RUNNER_TEMP/flatpak-rootfs.tar" \
             --bundles "$RUNNER_TEMP/flatpak-generated/bundles" \
             --key "$RUNNER_TEMP/flatpak-generated/bundles/flathub-key.gpg" \

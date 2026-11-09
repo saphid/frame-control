@@ -1,0 +1,42 @@
+name: Verified published runtime inputs
+description: Restore pinned test inputs and reject missing or corrupt bytes before use
+inputs:
+  syncthing:
+    description: Also prepare the pinned native Syncthing archive
+    default: 'false'
+runs:
+  using: composite
+  steps:
+    - id: pins
+      shell: bash
+      run: python3 scripts/framey-cache-runtime-inputs.py --keys >> "$GITHUB_OUTPUT"
+    - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      id: loader
+      with:
+        path: ${{ runner.temp }}/framey-runtime-inputs/loader
+        key: ${{ steps.pins.outputs.loader-key }}
+    - name: Verify or fetch the exact published loader
+      shell: bash
+      run: python3 scripts/framey-cache-runtime-inputs.py --kind loader --directory "$RUNNER_TEMP/framey-runtime-inputs"
+    # Save verified downloads before long probes so a later fixture failure
+    # does not throw away the input needed to reproduce that failure.
+    - uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+      if: steps.loader.outputs.cache-hit != 'true'
+      with:
+        path: ${{ runner.temp }}/framey-runtime-inputs/loader
+        key: ${{ steps.pins.outputs.loader-key }}
+    - uses: actions/cache/restore@caa296126883cff596d87d8935842f9db880ef25 # v5
+      if: inputs.syncthing == 'true'
+      id: syncthing
+      with:
+        path: ${{ runner.temp }}/framey-runtime-inputs/syncthing.tar.gz
+        key: ${{ steps.pins.outputs.syncthing-key }}
+    - name: Verify or fetch the exact native Syncthing archive
+      if: inputs.syncthing == 'true'
+      shell: bash
+      run: python3 scripts/framey-cache-runtime-inputs.py --kind syncthing --directory "$RUNNER_TEMP/framey-runtime-inputs"
+    - uses: actions/cache/save@caa296126883cff596d87d8935842f9db880ef25 # v5
+      if: inputs.syncthing == 'true' && steps.syncthing.outputs.cache-hit != 'true'
+      with:
+        path: ${{ runner.temp }}/framey-runtime-inputs/syncthing.tar.gz
+        key: ${{ steps.pins.outputs.syncthing-key }}
