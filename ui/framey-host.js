@@ -546,7 +546,7 @@
   };
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
-  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
