@@ -152,6 +152,53 @@ const retry=retainedUpdate();assert.equal(jobs.length,1,'fresh status must permi
 jobs.shift().resolve({});await new Promise(resolve=>setImmediate(resolve));
 requests.shift().resolve(state('Retried'));await retry;
 
+// Every catalogue entry must be reachable, including rows beyond the first 40.
+// Browsing and search must never submit a job or erase a catalogue/job error.
+const beforeBrowsingPosts=posts;
+const catalog=Array.from({length:93},(_,index)=>({...plugin,id:index+1,
+  name:`Fixture ${index+1}`,author:index===84?'Distinct author':'Maker'}));
+const catalogRead=call('loadDeckyStore()');requests.shift().resolve({plugins:catalog});await catalogRead;
+assert.equal($('deckyStoreList').children.length,40);
+assert.match($('deckyStorePage').textContent,/Page 1 of 3/);
+assert.equal($('deckyStorePrevious').disabled,true);
+$('deckyStoreNext').onclick();
+assert.match($('deckyStoreList').children[0].children[0].textContent,/Fixture 41 ·/);
+assert.match($('deckyStorePage').textContent,/Page 2 of 3/);
+await installStatus();
+assert.match($('deckyStorePage').textContent,/Page 2 of 3/,'status refresh must retain the page');
+$('deckyStoreNext').onclick();
+assert.equal($('deckyStoreList').children.length,13);
+assert.match($('deckyStoreList').children[12].children[0].textContent,/Fixture 93 ·/);
+assert.equal($('deckyStoreNext').disabled,true);
+$('deckyStoreNext').onclick();
+assert.match($('deckyStorePage').textContent,/Page 3 of 3/,'retained callback cannot pass the last page');
+$('deckyStorePrevious').onclick();assert.match($('deckyStorePage').textContent,/Page 2 of 3/);
+$('deckyStoreSearch').value='distinct AUTHOR';$('deckyStoreSearch').oninput();
+assert.equal($('deckyStoreList').children.length,1);
+assert.match($('deckyStoreList').children[0].children[0].textContent,/Fixture 85 ·/);
+assert.match($('deckyStorePage').textContent,/Page 1 of 1/);
+assert.equal($('deckyStorePrevious').disabled,true);assert.equal($('deckyStoreNext').disabled,true);
+$('deckyStoreSearch').value='no matching fixture';$('deckyStoreSearch').oninput();
+assert.equal($('deckyStoreList').children.length,0);
+assert.match($('deckyStorePage').textContent,/0 plugins found/);
+$('deckyStoreSearch').value='';$('deckyStoreSearch').oninput();
+assert.match($('deckyStorePage').textContent,/Page 1 of 3/);
+$('deckyStorePrevious').onclick();assert.match($('deckyStorePage').textContent,/Page 1 of 3/);
+$('deckyStoreNext').onclick();$('deckyStoreNext').onclick();
+const smallerRead=call('loadDeckyStore()');
+assert.equal($('deckyStoreList').children.length,0);
+assert.equal($('deckyStorePage').textContent,'','loading must not describe an empty catalogue as results');
+assert.equal($('deckyStorePrevious').disabled,true);assert.equal($('deckyStoreNext').disabled,true);
+requests.shift().resolve({plugins:catalog.slice(0,3)});await smallerRead;
+assert.equal($('deckyStoreList').children.length,3);assert.match($('deckyStorePage').textContent,/Page 1 of 1/);
+const unavailable=call('loadDeckyStore()');requests.shift().reject(Error('catalogue unavailable'));await unavailable;
+$('deckyStoreSearch').value='Fixture';$('deckyStoreSearch').oninput();
+$('deckyStoreNext').onclick();$('deckyStorePrevious').onclick();await installStatus();
+assert.equal($('deckyStoreState').textContent,'catalogue unavailable');
+assert.equal($('deckyStorePage').textContent,'');assert.equal($('deckyStoreList').children.length,0);
+assert.equal($('deckyStorePrevious').disabled,true);assert.equal($('deckyStoreNext').disabled,true);
+assert.equal(posts,beforeBrowsingPosts,'navigation/search/status reads must not submit plugin jobs');
+
 // Stale row callbacks retain the receipt that was displayed.
 {
 const source=html.slice(html.indexOf('function deckyCompatibilityText('),html.indexOf('function deckyButtons()'));
