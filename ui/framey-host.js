@@ -400,7 +400,7 @@
         }
       }}, children);
   };
-  const Field = ({label, description, icon, children}) => R.createElement('label', null,
+  const Field = ({label, description, icon, style, children}) => R.createElement('label', {style},
     icon != null && R.createElement('span', null, icon),
     R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
@@ -495,7 +495,7 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
-    bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls,
+    bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
     onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
     const input = R.useRef(null);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
@@ -507,7 +507,7 @@
       Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set.call(node, '');
       node.dispatchEvent(new Event('input', {bubbles:true}));
     };
-    return R.createElement(Field, {label, description},
+    return R.createElement(Field, {label, description, style},
       R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
         ref:input, autoFocus:!!focusOnMount && !disabled,
         value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
