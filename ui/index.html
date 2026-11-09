@@ -1611,9 +1611,11 @@
     <div class="hint">Install and update download Decky's official ARM64 release and verify its published SHA-256. Frame Control uses a removable user service and does not change the root filesystem. Remove keeps plugin files.</div>
     <h3>Official plugin store</h3>
     <p class="sub">Plugins run code as your Frame user. Store installs are opt-in and only work with the managed loader. Root plugins and x86-only archives are blocked. A loaded backend does not prove its VR page works.</p>
-    <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search store"></label>
+    <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search names, authors or descriptions"></label>
     <div class="row"><button class="small" id="deckyStoreRefresh">Load store</button></div>
-    <div id="deckyStoreState" class="hint"></div><div id="deckyStoreList" class="stack"></div>
+    <div id="deckyStoreState" class="hint"></div>
+    <div class="row"><button class="small" id="deckyStorePrevious" disabled>Previous</button><span id="deckyStorePage" class="hint" role="status" aria-live="polite"></span><button class="small" id="deckyStoreNext" disabled>Next</button></div>
+    <div id="deckyStoreList" class="stack"></div>
   </section>
   <section class="panel" id="headsetPanel">
     <div class="shelf-head"><h2>Frame Control in VR</h2><span class="spacer"></span><button class="small" id="headsetRefresh">Refresh</button></div>
@@ -2374,6 +2376,7 @@ $('extensionClose').onclick = () => {
 function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyInfo = null;
 let deckyCatalog = [];
+let deckyStorePage = 0;
 let deckyStatusRequest = 0, deckyStoreRequest = 0;
 let deckyPluginBusy = false;
 async function loadDecky() {
@@ -2412,7 +2415,7 @@ async function loadDecky() {
 }
 async function loadDeckyStore() {
   const request = ++deckyStoreRequest;
-  deckyCatalog = [];showDeckyStore();
+  deckyCatalog = [];deckyStorePage = 0;showDeckyStore();
   $('deckyStoreState').textContent = 'Loading the official store…';
   try { const catalog = await api('/api/decky/store');
     if (request !== deckyStoreRequest) return;
@@ -2429,7 +2432,15 @@ function showDeckyStore() {
   const list = $('deckyStoreList'); list.replaceChildren();
   const query = $('deckyStoreSearch').value.trim().toLowerCase();
   const installed = [...(deckyInfo?.plugins||[]), ...(deckyInfo?.upstreamPlugins||[])];
-  for (const plugin of deckyCatalog.filter(p => !query || `${p.name} ${p.description}`.toLowerCase().includes(query)).slice(0, 40)) {
+  const found = deckyCatalog.filter(p => !query || `${p.name} ${p.author||''} ${p.description}`.toLowerCase().includes(query));
+  const size = 40, pages = Math.max(1, Math.ceil(found.length / size));
+  deckyStorePage = Math.max(0, Math.min(deckyStorePage, pages - 1));
+  // Keep page information separate from catalogue and job errors. Loading or
+  // failed requests clear the catalogue, so they never appear as empty searches.
+  $('deckyStorePage').textContent = deckyCatalog.length ? `Page ${deckyStorePage + 1} of ${pages} · ${found.length} plugin${found.length===1?'':'s'} found` : '';
+  $('deckyStorePrevious').disabled = deckyStorePage === 0;
+  $('deckyStoreNext').disabled = deckyStorePage >= pages - 1;
+  for (const plugin of found.slice(deckyStorePage * size, (deckyStorePage + 1) * size)) {
     const row = document.createElement('div'); row.className = 'hint';
     const title = document.createElement('strong'); title.textContent = `${plugin.name} · ${plugin.version}`;
     const description = document.createElement('span'); description.textContent = ` ${plugin.description}`;
@@ -2479,9 +2490,11 @@ function deckyButtons() {
     button.disabled=deckyPluginBusy || !ack || !deckyInfo?.managed;
 }
 $('deckyAck').onchange = () => { deckyButtons(); showDeckyStore(); };
+$('deckyStorePrevious').onclick = () => { deckyStorePage--; showDeckyStore(); };
+$('deckyStoreNext').onclick = () => { deckyStorePage++; showDeckyStore(); };
+$('deckyStoreSearch').oninput = () => { deckyStorePage = 0; showDeckyStore(); };
 $('deckyRefresh').onclick = loadDecky;
 $('deckyStoreRefresh').onclick = loadDeckyStore;
-$('deckyStoreSearch').oninput = showDeckyStore;
 for (const action of ['Install', 'Update', 'Remove']) {
   $(`decky${action}`).onclick = async () => {
     if (!$('deckyAck').checked || !deckyInfo) return;

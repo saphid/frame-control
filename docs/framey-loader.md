@@ -207,6 +207,14 @@ then checks it again. It also confirms removal blocks method calls and a
 reinstall can read the retained setting. This tests the bridge and fixture;
 real Decky settings persistence on a worn Frame is still unverified.
 
+The desktop official store has Previous/Next buttons for all search results,
+40 per page. Search matches names, authors and descriptions. A new search or
+catalogue request returns to the first page; refreshing installed status keeps
+the current page. Page information stays separate from catalogue and job errors.
+Loading and failed catalogue requests clear old rows and disable navigation.
+The page-script regression and private Chromium check use synthetic requests;
+they do not prove live downloads, installs or headset behavior.
+
 The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
