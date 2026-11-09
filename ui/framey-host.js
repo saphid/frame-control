@@ -480,9 +480,10 @@
   const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
-    R.createElement('label', null,
+  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
+    R.createElement('label', {className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
+        onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
@@ -512,13 +513,25 @@
       inlineControls);
   };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', resetValue, validValues, onChange}) => {
+    valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
+    const captions = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
+        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min) &&
+        Array.isArray(notchLabels) ? notchLabels.filter(entry=>
+          entry && typeof entry.label==='string' && Number.isInteger(entry.notchIndex) &&
+          entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
+            value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
+    const caption = captions.find(entry=>entry.value===value)?.label;
     return R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
+      'aria-valuetext':caption,
       onChange:e=>{const next=Number(e.target.value);if(!disabled && permitted(next))onChange?.(next);}}),
+    captions.length>0 && R.createElement('span', {style:{display:'grid',
+      gridTemplateColumns:`repeat(${notchCount}, minmax(0, 1fr))`, gap:'0.25rem'}},
+      captions.map((entry,index)=>R.createElement('span', {key:index,
+        'data-framey-notch':entry.notchIndex, style:{gridColumn:entry.notchIndex+1}}, entry.label))),
     editableValue ? R.createElement('span', null,
       R.createElement('input', {type:'number', value, min, max, step, disabled:!!disabled,
         'aria-label':typeof label==='string'?`${label} value`:'Slider value',
