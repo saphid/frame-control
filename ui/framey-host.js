@@ -73,8 +73,8 @@
   let acceptSeed, rejectSeed;
   const seeded = new Promise((resolve, reject) => {acceptSeed = resolve; rejectSeed = reject;});
   // Starting with an empty cache before the parent replies can overwrite a
-  // plugin's saved settings. The parent answers even when its storage is
-  // unavailable, in which case an empty seed is intentional.
+  // plugin's saved settings. The parent reports unreadable/invalid saved data
+  // explicitly; only an absent cache is a valid empty seed.
   async function waitForSeed() {
     let timer;
     try {
@@ -340,7 +340,9 @@
       const entries = event.data.entries;
       const pairs = entries && typeof entries === 'object' && !Array.isArray(entries)
         ? Object.entries(entries) : null;
-      if (!pairs || pairs.length > 64 ||
+      if (typeof event.data.error === 'string' && event.data.error)
+        rejectSeed(Error(event.data.error.slice(0,200)));
+      else if (!pairs || pairs.length > 64 ||
           pairs.some(([key, value]) => key.length > 256 || typeof value !== 'string' || value.length > 65536) ||
           JSON.stringify(entries).length > cacheLimit)
         rejectSeed(Error('Framey plugin storage returned invalid data'));
@@ -480,9 +482,10 @@
   const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
-  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange}) =>
-    R.createElement('label', null,
+  const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
+    R.createElement('label', {className, style},
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
+        onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
@@ -512,13 +515,25 @@
       inlineControls);
   };
   const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', resetValue, validValues, onChange}) => {
+    valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
+    const captions = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
+        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min) &&
+        Array.isArray(notchLabels) ? notchLabels.filter(entry=>
+          entry && typeof entry.label==='string' && Number.isInteger(entry.notchIndex) &&
+          entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
+            value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
+    const caption = captions.find(entry=>entry.value===value)?.label;
     return R.createElement(Field, {label, description},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
+      'aria-valuetext':caption,
       onChange:e=>{const next=Number(e.target.value);if(!disabled && permitted(next))onChange?.(next);}}),
+    captions.length>0 && R.createElement('span', {style:{display:'grid',
+      gridTemplateColumns:`repeat(${notchCount}, minmax(0, 1fr))`, gap:'0.25rem'}},
+      captions.map((entry,index)=>R.createElement('span', {key:index,
+        'data-framey-notch':entry.notchIndex, style:{gridColumn:entry.notchIndex+1}}, entry.label))),
     editableValue ? R.createElement('span', null,
       R.createElement('input', {type:'number', value, min, max, step, disabled:!!disabled,
         'aria-label':typeof label==='string'?`${label} value`:'Slider value',
@@ -534,6 +549,10 @@
   };
   const PanelSection = ({title, children}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), children);
+  const ControlsList = ({children, alignItems='left', spacing='standard'}) =>
+    R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
+      justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
+      gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
@@ -1001,6 +1020,7 @@
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
     Marquee:passthrough('span'), DialogBody:passthrough('div'), DialogBodyText:passthrough('p'),
     DialogHeader:passthrough('h2'), DialogSubHeader:passthrough('h3'), DialogFooter:passthrough('footer'),
+    ControlsList,
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
