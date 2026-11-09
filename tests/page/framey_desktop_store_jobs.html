@@ -1,0 +1,78 @@
+<!doctype html>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'">
+<div id="deckyManagedList"></div>
+<div id="deckyPlugins"></div>
+<div id="deckyState"></div>
+<div id="deckyStoreList"></div>
+<div id="deckyStoreState"></div>
+<input id="deckyAck" type="checkbox" checked><input id="deckyStoreSearch">
+<button id="deckyInstall"></button><button id="deckyUpdate"></button><button id="deckyRemove"></button>
+<pre id="result">Pending</pre>
+<script type="module">
+// Actual DOM and production functions; all API replies and timers are synthetic.
+
+const assert=(condition,message)=>{if(!condition)throw Error(message);};
+const tick=()=>new Promise(resolve=>originalTimer(resolve,0));
+const requests=[], posts=[], confirmations=[];
+const $=id=>document.getElementById(id);
+const originalTimer=window.setTimeout.bind(window);
+const setTimeout=(callback,delay)=>originalTimer(callback,0);
+const installing=new Set(),queued=new Set();let jobsRunning=0;
+const showJobs=()=>{},log=()=>{},toast=()=>{},loadQueue=()=>{};
+const confirm=message=>{confirmations.push(message);return true;};
+const api=(path,body)=>{
+  assert(['/api/decky','/api/decky/plugin','/api/job?id=private-fixture'].includes(path),'unexpected API path');
+  if(body)posts.push({path,body});
+  return new Promise((resolve,reject)=>requests.push({path,resolve,reject}));
+};
+__STORE__
+__RUN_JOB__
+const plugin={id:2,name:'Private synthetic plugin',description:'Fixture',version:'1',sha256:'a'.repeat(64),root:false};
+const status={managed:true,running:true,arch:'aarch64',variant:'vr',cef:true,
+  plugins:[{storeId:2,name:plugin.name,version:'1',sha256:'a'.repeat(64)}],upstreamPlugins:[]};
+const buttons=()=>[...$('deckyStoreList').querySelectorAll('button'),...$('deckyManagedList').querySelectorAll('button')];
+const next=path=>{const index=requests.findIndex(request=>request.path===path);assert(index>=0,'missing '+path);return requests.splice(index,1)[0];};
+const refresh=async()=>{const read=loadDecky();next('/api/decky').resolve(status);await read;};
+try {
+  await refresh();deckyCatalog=[plugin];showDeckyStore();
+  const update=[...$('deckyStoreList').querySelectorAll('button')].find(button=>button.textContent==='Reinstall');
+  const retained=update.onclick, remove=$('deckyManagedList').querySelector('button').onclick;
+  const first=retained();const duplicate=retained(),duplicateRemove=remove();
+  assert(posts.length===1 && confirmations.length===1,'retained callbacks started overlapping jobs');
+  await duplicate;await duplicateRemove;
+  assert(buttons().length===3 && buttons().every(button=>button.disabled),'real DOM buttons not disabled');
+  for(const button of buttons())button.click();
+  assert(posts.length===1,'disabled DOM button started job');
+  $('deckyAck').checked=false;$('deckyAck').dispatchEvent(new Event('change'));
+  $('deckyAck').checked=true;$('deckyAck').dispatchEvent(new Event('change'));
+  assert(buttons().every(button=>button.disabled),'acknowledgement unlocked job');
+  await refresh();assert(buttons().every(button=>button.disabled),'manual refresh unlocked job');
+  next('/api/decky/plugin').resolve({job:'private-fixture'});
+  await tick();await tick();
+  next('/api/job?id=private-fixture').resolve({done:false,queued:false});
+  await tick();await tick();
+  await retained();assert(posts.length===1,'pending poll unlocked job');
+  next('/api/job?id=private-fixture').resolve({done:true,result:{},message:'Synthetic complete',queued:false});
+  await tick();await tick();
+  await retained();await remove();assert(posts.length===1,'final status refresh unlocked job');
+  next('/api/decky').resolve(status);await first;
+  assert(buttons().every(button=>!button.disabled),'successful status refresh did not unlock buttons');
+  assert(jobsRunning===0 && installing.size===0 && queued.size===0,'actual runJob did not finish cleanup');
+  const second=retained();next('/api/decky/plugin').reject(Error('synthetic startup error'));
+  await tick();await tick();next('/api/decky').reject(Error('synthetic status error'));await second;
+  assert(buttons().every(button=>button.disabled),'failed status left buttons usable');
+  await retained();assert(posts.length===2,'retained callback bypassed failed status');
+  await refresh();const retry=retained();next('/api/decky/plugin').resolve({job:'private-fixture'});
+  await tick();await tick();next('/api/job?id=private-fixture').resolve({done:true,error:'synthetic job failure',queued:false});
+  await tick();await tick();next('/api/decky').resolve(status);await retry;
+  assert(posts.length===3 && buttons().every(button=>!button.disabled),'explicit recovery did not restore actions');
+  assert(jobsRunning===0 && installing.size===0 && queued.size===0,'failed job leaked shared state');
+  document.getElementById('result').textContent=JSON.stringify({passed:true,realDOM:true,
+    actualRunJobExecuted:true,retainedCallbacksBlocked:true,disabledClicksBlocked:true,
+    acknowledgementAndManualRefreshLocked:true,pollingAndFinalStatusLocked:true,
+    failedStatusBlocked:true,explicitRecoveryPassed:true,syntheticApiReplies:true,
+    realFrameContacted:false,realMutationVerified:false});
+} catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+
+</script>
