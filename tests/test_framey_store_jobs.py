@@ -13,6 +13,11 @@ import server
 
 
 class StoreJobs(unittest.TestCase):
+    def test_desktop_lost_post_and_poll_replies_recover_without_resubmitting(self):
+        result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_desktop_store_recovery.mjs')],
+                                capture_output=True, text=True, timeout=15)
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_desktop_store_actions_keep_the_displayed_installed_receipt(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_desktop_store.mjs')],
                                 capture_output=True, text=True, timeout=10)
