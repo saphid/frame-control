@@ -1027,13 +1027,23 @@
       for (let index=children.length-1; index>=0; index--) pending.push(children[index]);
     }
   }
+  // @decky/ui 4.16.0 exports a numeric TypeScript enum, not a control.
+  // These identifiers do not create or bridge physical gamepad events.
+  const GamepadButton = Object.freeze(Object.fromEntries([
+    'INVALID', 'OK', 'CANCEL', 'SECONDARY', 'OPTIONS',
+    'BUMPER_LEFT', 'BUMPER_RIGHT', 'TRIGGER_LEFT', 'TRIGGER_RIGHT', 'DIR_UP',
+    'DIR_DOWN', 'DIR_LEFT', 'DIR_RIGHT', 'SELECT', 'START',
+    'LSTICK_CLICK', 'RSTICK_CLICK', 'LSTICK_TOUCH', 'RSTICK_TOUCH', 'LPAD_TOUCH',
+    'LPAD_CLICK', 'RPAD_TOUCH', 'RPAD_CLICK', 'REAR_LEFT_UPPER', 'REAR_LEFT_LOWER',
+    'REAR_RIGHT_UPPER', 'REAR_RIGHT_LOWER', 'STEAM_GUIDE', 'STEAM_QUICK_MENU',
+  ].flatMap((name,value)=>[[name,value],[value,name]])));
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
-    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton: passthrough('button'),
+    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton,
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
