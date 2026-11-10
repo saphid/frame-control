@@ -82,3 +82,23 @@ Only the unique owned container and image are eligible for removal.
 No headset was contacted. The historical ARM64 cause and locked exact-release
 Frame smoke remain release holds. Worn visibility, physical controller input,
 scrolling and the VR keyboard remain unverified.
+
+## Repeatable native sampling
+
+`python3 scripts/framey-probe-decky-parent-stacks.py --output /tmp/parent-stacks-new`
+runs the same controlled experiment with digest-pinned py-spy 0.4.3 wheels
+for native Linux AMD64 or ARM64. The output directory must not exist. Optional
+`--loader`, `--sampler-wheel` and `--image` arguments reuse verified local
+inputs; a reused image is never removed. Both upstream wheel digests come from
+the v0.4.3 release assets. The extracted sampler must also be native ELF.
+
+The `Decky parent EOF stack samples` workflow runs it on both native runner
+architectures. Raw stacks, sampler console (including sampling errors), normal
+and abrupt fixture reports, source fingerprints and an exact-head receipt
+are retained. Only listener samples from the abrupt fixture's recorded loader
+process tree are credited. A passing diagnostic requires those samples, the
+normal control, the reproduced abrupt hang and complete owned cleanup.
+Nonblocking samples may be inaccurate and are not a CPU percentage or a
+complete stack inventory. The ARM64 sampling result is pending until its
+artifact is independently audited. Even a pass cannot reconstruct the missing
+historical migration log or clear the release holds.
