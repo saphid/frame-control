@@ -560,7 +560,7 @@
     R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
-  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
