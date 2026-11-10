@@ -39,9 +39,17 @@ only official-store-owned plugins in its VR panel.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
-file, and use a default when no saved setting exists. Treat a damaged or
-unreadable saved file as an error and preserve it; returning a default as a
-successful read can let the next edit erase recoverable data. The sample
+file, and use a default when no saved setting exists.
+
+Flush the temporary file's buffered writes and call `fsync` before replacing
+the old file. On Linux, flush the settings directory entry after replacement
+before acknowledging a save. The sample propagates either flush error; a
+failure after replacement is uncertain and requires a fresh read, since the
+new value can already be readable. Local process-exit and injected-error tests
+do not prove headset power-loss durability.
+
+Treat a damaged or unreadable saved file as an error and preserve it; returning
+a default as a successful read can let the next edit erase recoverable data. The sample
 rejects malformed JSON, invalid UTF-8, non-object JSON and saved non-boolean
 values on both read and save. Repair or restore its `settings.json`, then
 reload the saved setting before editing again.
