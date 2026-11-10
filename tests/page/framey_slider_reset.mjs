@@ -6,7 +6,7 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/,
   '\n  window.__legacy=legacyServerAPI;\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children})};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})},location:{hash:'#slider-reset'}};
 const messages=[], listeners=[];
