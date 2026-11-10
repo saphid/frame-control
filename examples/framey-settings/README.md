@@ -21,6 +21,18 @@ To recover, preserve a copy of the damaged file in the plugin's settings
 directory, then repair it or restore a known-good `settings.json` there.
 Choose **Reload saved setting** to read the repaired value before editing.
 The next successful save atomically replaces the sample's settings file.
+Before replacement, the backend flushes Python's output buffer and calls
+`fsync` on the temporary file. On platforms with directory descriptors,
+including Decky's Linux backend, it also calls `fsync` on the settings directory
+after replacement before returning a successful save acknowledgement. A file
+flush failure preserves the previous file (or leaves a first save absent).
+A directory flush failure happens after replacement: the new value can already
+be readable even though the save returns an error. Use **Reload saved setting**
+to reconcile it, just as for a lost reply; a rejected save does not mean a
+rollback. All temporary files and opened directory descriptors are cleaned up.
+Local tests inject both flush failures and read a successful save after its
+backend process exits. They do not establish live-headset persistence or
+survival of a physical power loss.
 The current file is `{"schema": 1, "enabled": true|false}`. An unversioned
 `{"enabled": true|false}` file from the first sample release still reads, and
 the next save writes schema 1. A file with another explicit schema returns a
