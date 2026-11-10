@@ -14,6 +14,16 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_network_sentinel_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 114)
+        old = dict(storeId=114, version=record['version'], sha256=record['sha256'],
+                   compatShims=['network-sentinel-user-psutil'])
+        fixed = dict(old, compatShims=['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
     def test_animation_old_receipt_requires_child_ipc_without_upgrading_partial_status(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 23)
         old = dict(storeId=23, version=record['version'], sha256=record['sha256'],

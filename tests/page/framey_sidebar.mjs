@@ -12,7 +12,7 @@ const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
     const index=cursor++;
     if (!(index in slots)) slots[index]=initial;
     return [slots[index],value=>{slots[index]=value;}];
-  },useEffect(){},isValidElement:value=>!!value?.type};
+  },useRef:value=>({current:value}),useEffect(){},useLayoutEffect(){},isValidElement:value=>!!value?.type};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})}};
 const context=vm.createContext({window,document:{getElementById:()=>({})},
   navigator:{language:'en'},parent:{postMessage(){}},addEventListener(){},setTimeout(){},clearTimeout(){}});

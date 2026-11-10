@@ -1213,9 +1213,16 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent / record['folder']
         receipt = json.loads((folder / '.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil'])
+        self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
         self.assertEqual(json.loads((folder / 'plugin.json').read_text())['flags'], ['debug'])
         source = (folder / 'main.py').read_text()
+        prefix = ('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(hashlib.sha256(source[len(prefix):].encode()).hexdigest(),
+                         'd9a7e7d476ce6ab9554eb5e7035f7e07ddddf47de3a8964daa7b6f89089e38c5')
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
         self.assertNotIn('decky.DECKY_SETTINGS_DIR', source)
         self.assertIn('decky.DECKY_PLUGIN_SETTINGS_DIR', source)
         self.assertIn("            jitter = 0\n            cmd = ['ping'", source)
@@ -1224,6 +1231,32 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(int.from_bytes(native[18:20], 'little'),
                          {'x86_64': 62, 'aarch64': 183}[platform.machine()])
         self.assertIn('BSD 3-Clause', (folder / 'py_modules/psutil-7.2.2.dist-info/LICENSE').read_text())
+        # The published setting update is memory-only. Exercise the unchanged
+        # lifecycle body locally without monitoring, network or Decky services.
+        with tempfile.TemporaryDirectory(prefix='framey-network-settings-') as private:
+            settings = Path(private)/'network-sentinel.json'
+            decky = types.SimpleNamespace(DECKY_PLUGIN_SETTINGS_DIR=private,
+                                          logger=logging.getLogger('framey-network-settings'))
+            module = types.ModuleType('framey_network_settings_fixture')
+            with patch.dict(sys.modules, {'decky': decky, 'psutil': types.SimpleNamespace()}):
+                exec(compile(source[len(prefix):], str(folder/'main.py'), 'exec'), module.__dict__)
+
+                async def exercise():
+                    first = module.Plugin()
+                    await first._main()
+                    self.assertTrue(await first.update_settings({'show_bandwidth': False}))
+                    self.assertFalse(settings.exists())
+                    await first._unload()
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], False)
+                    second = module.Plugin()
+                    await second._main()
+                    self.assertIs((await second.get_settings())['show_bandwidth'], False)
+                    self.assertTrue(await second.update_settings({'show_bandwidth': True}))
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], False)
+                    await second._unload()
+                    self.assertIs(json.loads(settings.read_text())['show_bandwidth'], True)
+
+                asyncio.run(exercise())
         with zipfile.ZipFile(io.BytesIO(data)) as original:
             self.assertEqual((folder / 'LICENSE').read_bytes(), original.read(record['folder']+'/LICENSE'))
         self.assertEqual(self.apply('remove', plugin_id=114, folder=record['folder']).returncode, 0)
@@ -1238,6 +1271,19 @@ class StoreTransaction(unittest.TestCase):
                             folder=record['folder'], version=record['version'])
         self.assertNotEqual(result.returncode, 0)
         self.assertFalse(folder.exists())
+
+    @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
+    def test_network_sentinel_missing_ipc_payload_rolls_back_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 114)
+        source = frame_decky_store.apply_script(record['id'], record['sha256'])
+        missing = source[:source.index('FRAMEY_NETWORK_SENTINEL_IPC_SOURCE =')]+frame_decky_store.APPLY
+        with patch.object(frame_decky_store, 'apply_script', return_value=missing):
+            result = self.apply('install', official_archive(record), plugin_id=114,
+                                folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Network Sentinel child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/record['folder']).exists())
 
     @unittest.skipUnless(__import__('platform').machine() in ('x86_64', 'aarch64'), 'native Linux wheel architecture')
     def test_exact_deckyspy_gets_native_dependency_and_license_only_in_its_folder(self):

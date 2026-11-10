@@ -55,11 +55,63 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     assert(button().disabled&&select().disabled,'disabled control became actionable');
     checkValue('Steam default');
     button().click();assert(loads===1,'disabled loader ran');
+
+    // Decky's DropdownOption type permits groups within groups. Replay the
+    // published control with synthetic nested choices, not live tool data.
+    compatibilityMappingsStale=false;
+    const first={data:0,label:'First'},deep={data:'deep',label:'Deep choice'},
+      fallback={data:'',label:'Steam default'},last={data:'last',label:'Last'};
+    availableTools=[{label:'Outer',options:[first,
+      {label:'Inner',options:[deep,{label:'Deepest',options:[fallback]}]},last]},
+      {label:'Empty',options:[]},{data:'plain',label:'Ungrouped'}];
+    assignedToolName='deep';assignedToolDisplayName='Nested assignment';render();
+    assert(select().selectedOptions[0]?.textContent==='Deep choice','nested selected option is missing');
+    checkValue('Nested assignment');
+    assert([...select().options].map(option=>option.textContent).join('|')===
+      'First|Deep choice|Steam default|Last|Ungrouped','nested leaves lost or group became selectable');
+    assert([...select().querySelectorAll('optgroup')].map(group=>group.label).join('|')===
+      'Outer|Outer › Inner|Outer › Inner › Deepest|Outer','nested group paths or source order lost');
+    const choose=text=>ReactDOM.flushSync(()=>{
+      select().value=[...select().options].find(option=>option.textContent===text).value;
+      select().dispatchEvent(new Event('change',{bubbles:true}));
+    });
+    choose('Steam default');assert(selections.at(-1)===fallback,'nested empty-string leaf lost identity');
+    choose('First');assert(selections.at(-1)===first,'nested zero-valued leaf lost identity');
+    choose('Last');assert(selections.at(-1)===last,'resumed outer group lost identity');
+    assignedToolName='';assignedToolDisplayName='Steam default';render();
+    assert(select().selectedOptions[0]?.textContent==='Steam default','nested empty-string value lost selection');
+    // Reopening still gates the select until showMenu; nested data must not
+    // bypass deferred loading or leave the old selection map behind.
+    ReactDOM.flushSync(()=>button().click());assert(!select()&&loads===2,'nested reload bypassed gate');
+    availableTools=[{label:'Replacement',options:[{label:'Inner',options:[deep,first]}]}];
+    assignedToolName=0;assignedToolDisplayName='First';
+    ReactDOM.flushSync(()=>{root.render(published());release();});
+    assert(select().selectedOptions[0]?.textContent==='First','updated nested option ordering was stale');
+    choose('Deep choice');assert(selections.at(-1)===deep,'updated nested callback lost identity');
+    compatibilityMappingsStale=true;render();
+    assert(select().disabled&&button().disabled,'nested choices ignored disabled state');
+    const selectionCount=selections.length;
+    choose('Deep choice');button().click();
+    assert(selections.length===selectionCount&&loads===2,'disabled nested control called the plugin');
+
+    // The selected-value renderer receives the original leaf label, never a
+    // group header, including an undefined-valued leaf and unknown selection.
+    let renderedLabel;
+    const leafLabel=React.createElement('strong',null,'Original leaf label');
+    const undefinedLeaf={label:leafLabel,data:undefined};
+    const localOptions=[{label:'Group',options:[{label:'Subgroup',options:[undefinedLeaf]}]}];
+    const local=selectedOption=>ReactDOM.flushSync(()=>root.render(React.createElement(DFL.Dropdown,{
+      label:'Nested local choices',rgOptions:localOptions,selectedOption,
+      strDefaultLabel:'No selection',renderButtonValue:label=>{renderedLabel=label;return label;}})));
+    local(undefined);assert(renderedLabel===leafLabel,'nested renderer did not receive original leaf label');
+    local('unknown');assert(renderedLabel==='No selection','group header was mistaken for selected leaf');
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedControl:true,
       currentValueBeforeAndDuringLoad:true,currentValueUpdates:true,rendererStyleAndLabel:true,
       loadingGatePreserved:true,originalOptionSelected:true,emptyStringSelection:true,
-      disabledValueRetained:true,syntheticTools:true,realFrameContacted:false,realToolAssignment:false});
+      disabledValueRetained:true,nestedLeavesReachable:true,nestedGroupPaths:true,
+      nestedCallbacksKeepIdentity:true,nestedSelectionAndReload:true,groupHeadersNeverSelected:true,
+      originalNestedLabelPreserved:true,syntheticTools:true,realFrameContacted:false,realToolAssignment:false});
   }catch(error){result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
 </script>

@@ -94,6 +94,7 @@ def main():
     parser.add_argument('--reproduce-battery-tracker-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deckyspy-unload-regression', action='store_true')
     parser.add_argument('--reproduce-theme-music-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-network-sentinel-unload-regression', action='store_true')
     parser.add_argument('--reproduce-emuchievements-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steamgriddb-unload-regression', action='store_true')
     parser.add_argument('--reproduce-radiyo-unload-regression', action='store_true')
@@ -186,6 +187,16 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == '0c40ea57255833829d84d84dd1fa0fc0bd4d529761950dd407347b0c61c7529a'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_network_sentinel_unload_regression:
+        assert record['id'] == 114
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'd9a7e7d476ce6ab9554eb5e7035f7e07ddddf47de3a8964daa7b6f89089e38c5'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_theme_music_unload_regression:
@@ -1612,7 +1623,20 @@ def main():
                 history = until_ready(lambda: current('get_network_history'), 'isolated network sample')
                 assert 'bandwidth' in history[0] and 'quality' in history[0], history
                 assert current('stop_monitoring') is True
-                report['result'] = 'discovery, native psutil, private settings and isolated monitoring loop passed; external latency/DNS and live Frame unverified'
+                import network_sentinel_private
+                network_sentinel_private.probe(backend, loader, env, log, processes, current,
+                    rpc, until_ready, report, base/'settings'/record['folder'],
+                    regression=args.reproduce_network_sentinel_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_network_sentinel_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                if args.reproduce_network_sentinel_unload_regression:
+                    report['expectedRegression'] = dict(success=False, phase='plugin unload',
+                        previousManagedSourceRestored=True, forcedPluginKills=1,
+                        pendingSettingsLost=True, qualifiedCompatibilityPass=False)
+                report['result'] = ('previous managed child IPC forced-kill and skipped unload reproduced'
+                    if args.reproduce_network_sentinel_unload_regression else
+                    'discovery, native psutil, private monitoring/settings, RPC after peer EOF, two clean parent-only stops and restart persistence passed; external latency/DNS, Frame and VR unverified')
             elif case['probe'] == 'localsend':
                 helper = plugin/'bin/localsend-core'
                 expected = ('e20363237e606ee65eae857792176d21a0bb8ba863489952728eaf2b13277dae'

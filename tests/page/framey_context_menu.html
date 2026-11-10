@@ -23,6 +23,13 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     return React.createElement(DFL.MenuItem,{onClick:closeMenu},'Close published menu');
   };
   __OFFICIAL_FACTORY__
+  // Exact published custom-dropdown menu factory, with synthetic choices and a
+  // recording selection handler. No TabMaster settings/library methods run.
+  const rgOptions=[{data:'first',label:'First local choice'},{data:'second',label:'Second local choice'}];
+  let selected=rgOptions[0],opened=0;
+  const selections=[],menuLabel='Local choices',onMenuOpened=()=>opened++;
+  const onSelect=option=>{selected=option;selections.push(option);};
+  __OFFICIAL_SELECTION_FACTORY__
   try {
     opener.focus();flush(()=>getShowMenu('private-tab',manager)());await tick();
     assert(dialogs().length===1,'published menu did not open');
@@ -59,11 +66,52 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     flush(()=>handle.Show());await tick();assert(dialogs().length===1&&mounts===4,'Show after Escape failed');
     flush(()=>handle.Hide());await tick();
     assert(dialogs().length===0&&unmounts===4&&document.activeElement===opener,'final Hide/focus cleanup failed');
+
+    const optionButtons=()=>[...dialogs()[0].querySelectorAll('button[aria-pressed]')];
+    const closeShell=()=>flush(()=>dialogs()[0].querySelector('button').click());
+    flush(()=>showDefaultMenu());await tick();
+    let options=optionButtons();
+    assert(options.length===2,'published selected state missing from native menu buttons');
+    assert(options[0].getAttribute('aria-pressed')==='true' && options[1].getAttribute('aria-pressed')==='false',
+      'published selected option not distinguished');
+    assert(options[0].querySelector('[aria-hidden=true]')?.textContent.includes('✓') &&
+      !options[1].querySelector('[aria-hidden=true]'),'visible selection marker missing or misleading');
+    assert(options[0].textContent.includes(rgOptions[0].label),'published choice label lost');
+    flush(()=>options[1].click());await tick();
+    assert(selections.length===1 && selections[0]===rgOptions[1],'published option identity/callback changed');
+    closeShell();await tick();flush(()=>showDefaultMenu());await tick();options=optionButtons();
+    assert(options[0].getAttribute('aria-pressed')==='false' && options[1].getAttribute('aria-pressed')==='true',
+      'reopened menu retained stale selection');
+    closeShell();await tick();selected=undefined;flush(()=>showDefaultMenu());await tick();
+    assert(optionButtons().every(button=>button.getAttribute('aria-pressed')==='false' &&
+      !button.querySelector('[aria-hidden=true]')),'missing selection fabricated a current choice');
+    closeShell();await tick();assert(opened===3,'published menu-open callback changed');
+
+    // Selected state does not enable a disabled action. Prop updates remove
+    // the visual/state marker, and ordinary actions remain ordinary buttons.
+    let actionCalls=0,actionEvent,actionTarget;
+    const item=props=>React.createElement(DFL.MenuItem,{
+      onSelected:event=>{actionCalls++;actionEvent=event;actionTarget=event.currentTarget;},...props},React.createElement('em',null,'Local action'));
+    let selectionHandle;flush(()=>{selectionHandle=DFL.showModal(item({selected:true,disabled:true}));});await tick();
+    let action=optionButtons()[0];flush(()=>action.click());
+    assert(action.disabled && actionCalls===0 && action.getAttribute('aria-pressed')==='true','selected disabled item activated');
+    flush(()=>selectionHandle.Update(item({selected:false})));await tick();action=optionButtons()[0];
+    assert(action.getAttribute('aria-pressed')==='false' && !action.querySelector('[aria-hidden=true]'),
+      'updated unselected marker stale');
+    flush(()=>action.click());assert(actionCalls===1 && actionTarget===action &&
+      actionEvent.nativeEvent instanceof MouseEvent,'native selection event/callback lost');
+    flush(()=>selectionHandle.Update(item({})));await tick();
+    assert(!optionButtons().length && dialogs()[0].querySelector('em').textContent==='Local action',
+      'ordinary menu item gained selection semantics or lost React children');
+    flush(()=>selectionHandle.Close());await tick();
     assert(fixtureFailures.length===0,fixtureFailures.join('; '));
     document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
       publishedHideCallback:true,showIdempotent:true,hideIdempotent:true,nestedDialogPreserved:true,
       focusRestored:true,contentRemounted:true,shellCloseReopen:true,escapeReopen:true,
-      noAutomaticSelectionDismissal:true,syntheticInput:true,realFrameContacted:false,realLibraryEdit:false});
+      noAutomaticSelectionDismissal:true,publishedMenuSelection:true,visibleSelectionMarker:true,
+      accessiblePressedState:true,selectedOptionIdentityPreserved:true,reopenedSelectionUpdated:true,
+      disabledSelectionInert:true,ordinaryActionSemanticsPreserved:true,
+      syntheticInput:true,realFrameContacted:false,realLibraryEdit:false});
   }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
 </script>

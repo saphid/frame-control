@@ -393,7 +393,7 @@
     R.createElement('button', {...props, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
   const Focusable = R.forwardRef(function Focusable(
-    {children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
+    {children, onActivate, onCancel, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
       if (disabled || event.defaultPrevented) return;
@@ -405,6 +405,16 @@
       'aria-disabled':actionable && disabled ? true : undefined,
       onClick:actionable ? activate : undefined, onKeyDown:event=>{
         onKeyDown?.(event);
+        if (event.key==='Escape' && typeof onCancel==='function' && !disabled && !event.defaultPrevented) {
+          const modal=modals.at(-1);
+          if (modal && (modal.running || modal.element?.props?.bCancelDisabled ||
+              !modal.node?.contains(event.currentTarget))) return;
+          // Native Escape is a local cancel action, including from descendants.
+          // The nearest handler owns dismissal; do not also cancel the shell.
+          event.preventDefault();
+          event.stopPropagation();
+          onCancel(event);
+        }
         if (actionable && !disabled && !event.defaultPrevented && event.target===event.currentTarget &&
             (event.key==='Enter' || event.key===' ')) {
           event.preventDefault();
@@ -434,15 +444,20 @@
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}),
     tooltip != null && R.createElement('small', null, tooltip));
+  const dropdownOptionRows = (options, path=[]) => (Array.isArray(options) ? options : [])
+    .flatMap(entry=>Array.isArray(entry.options)
+      ? dropdownOptionRows(entry.options,[...path,entry]) : [{entry,path}]);
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
-    const choices=[];
-    const option = entry => {
-      const index=choices.push(entry)-1;
-      return R.createElement('option', {key:index, value:String(index)}, entry.label);
-    };
-    const entries=(Array.isArray(rgOptions) ? rgOptions : []).map(entry =>
-      Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
-        entry.options.map(option)) : option(entry));
+    const rows=dropdownOptionRows(rgOptions), choices=rows.map(row=>row.entry), sections=[];
+    rows.forEach(({entry,path},index)=>{
+      if (sections.at(-1)?.path!==path) sections.push({path,options:[]});
+      sections.at(-1).options.push(R.createElement('option', {key:index, value:String(index)}, entry.label));
+    });
+    // Native selects cannot nest optgroups. Keep each contiguous run of
+    // leaves in source order, with its full group path as a visible label.
+    const entries=sections.map(({path,options},index)=>path.length
+      ? R.createElement('optgroup', {key:index, label:path.map(group=>group.label).join(' › ')}, options)
+      : options);
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
@@ -498,8 +513,7 @@
       }}));
   };
   const DropdownItem = props => {
-    const choices=(Array.isArray(props.rgOptions) ? props.rgOptions : [])
-      .flatMap(entry=>Array.isArray(entry.options) ? entry.options : [entry]);
+    const choices=dropdownOptionRows(props.rgOptions).map(row=>row.entry);
     const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
     return R.createElement(Field, {label:props.label, description:props.description},
       // Keep the plugin's current-value view visible before a deferred read.
@@ -583,15 +597,32 @@
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
-  const Tabs = ({tabs=[], activeTab, onShowTab}) => {
+  const Tabs = ({tabs=[], activeTab, onShowTab, autoFocusContents=false}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
+    const panel = R.useRef(null);
+    R.useLayoutEffect(()=>{
+      const node=panel.current;
+      if (!autoFocusContents || !node || !current ||
+          (document.activeElement!==node && node.contains(document.activeElement))) return;
+      // Honour native disabled/hidden state and explicit tab-stop opt-outs.
+      // A child's own mount focus wins; ordinary redraws must not steal it.
+      for (const target of node.querySelectorAll('button,input,select,textarea,a[href],[tabindex],[contenteditable="true"]')) {
+        if ((target.tabIndex<0 && !(target.isContentEditable && !target.hasAttribute('tabindex'))) ||
+            target.matches(':disabled') ||
+            target.closest('[hidden],[inert],[aria-hidden="true"],[aria-disabled="true"]') ||
+            !target.getClientRects().length) continue;
+        target.focus();
+        if (document.activeElement===target) return;
+      }
+      node.focus();
+    },[autoFocusContents,current?.id]);
     return R.createElement('div', null,
       R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
         type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
         disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}},
         tab.title, tab.renderTabAddon?.()))),
-      R.createElement('div', {role:'tabpanel'}, current?.content));
+      R.createElement('div', {role:'tabpanel',ref:panel,tabIndex:autoFocusContents ? -1 : undefined}, current?.content));
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
@@ -678,9 +709,11 @@
     description != null && R.createElement('div', null, description));
   const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
     ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
-  const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
+  const MenuItem = ({children, selected, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
-      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
+      'aria-pressed':selected == null ? undefined : !!selected,
+      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children,
+      selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
@@ -816,7 +849,7 @@
       }
       return;
     }
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
     event.preventDefault();
     if (modal.running) return;
     const onEscape = modalCallback(modal, 'onEscKeypress');
