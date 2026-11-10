@@ -239,6 +239,21 @@ from starting, Remove remains available for Frame Control-owned plugins while
 the managed service is stopped; it does not restart the service.
 
 Install, Update, and Remove show the current job stage in the headset panel.
+The desktop store also reserves a request ID before sending a plugin change.
+Its separate result message and **Check result** action recover that same job
+without submitting the change again. Install, Update, Remove and loader changes
+stay disabled through the job and final installed-status refresh, including
+after a lost POST reply or exhausted polling retries. The saved request is
+bound to the original headset; return to it to check the result. Session storage
+retains the request through a page reload. If storage is denied, recovery is
+limited to the current open page; a reload loses the memory fallback.
+If the server no longer has the job, the desktop keeps changes disabled until
+its **Refresh** button successfully reads a complete installed list. Automatic
+reads, failed reads and acknowledgement changes do not clear that uncertainty.
+An explicit HTTP rejection before the request was accepted releases the request;
+a terminal job error also releases it after status refresh. These desktop paths
+are tested with synthetic API replies and real DOM controls, not live installs.
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
