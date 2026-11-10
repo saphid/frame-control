@@ -424,15 +424,20 @@
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}),
     tooltip != null && R.createElement('small', null, tooltip));
+  const dropdownOptionRows = (options, path=[]) => (Array.isArray(options) ? options : [])
+    .flatMap(entry=>Array.isArray(entry.options)
+      ? dropdownOptionRows(entry.options,[...path,entry]) : [{entry,path}]);
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
-    const choices=[];
-    const option = entry => {
-      const index=choices.push(entry)-1;
-      return R.createElement('option', {key:index, value:String(index)}, entry.label);
-    };
-    const entries=(Array.isArray(rgOptions) ? rgOptions : []).map(entry =>
-      Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
-        entry.options.map(option)) : option(entry));
+    const rows=dropdownOptionRows(rgOptions), choices=rows.map(row=>row.entry), sections=[];
+    rows.forEach(({entry,path},index)=>{
+      if (sections.at(-1)?.path!==path) sections.push({path,options:[]});
+      sections.at(-1).options.push(R.createElement('option', {key:index, value:String(index)}, entry.label));
+    });
+    // Native selects cannot nest optgroups. Keep each contiguous run of
+    // leaves in source order, with its full group path as a visible label.
+    const entries=sections.map(({path,options},index)=>path.length
+      ? R.createElement('optgroup', {key:index, label:path.map(group=>group.label).join(' › ')}, options)
+      : options);
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
@@ -488,8 +493,7 @@
       }}));
   };
   const DropdownItem = props => {
-    const choices=(Array.isArray(props.rgOptions) ? props.rgOptions : [])
-      .flatMap(entry=>Array.isArray(entry.options) ? entry.options : [entry]);
+    const choices=dropdownOptionRows(props.rgOptions).map(row=>row.entry);
     const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
     return R.createElement(Field, {label:props.label, description:props.description},
       // Keep the plugin's current-value view visible before a deferred read.
