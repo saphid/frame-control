@@ -583,15 +583,32 @@
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
-  const Tabs = ({tabs=[], activeTab, onShowTab}) => {
+  const Tabs = ({tabs=[], activeTab, onShowTab, autoFocusContents=false}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
+    const panel = R.useRef(null);
+    R.useLayoutEffect(()=>{
+      const node=panel.current;
+      if (!autoFocusContents || !node || !current ||
+          (document.activeElement!==node && node.contains(document.activeElement))) return;
+      // Honour native disabled/hidden state and explicit tab-stop opt-outs.
+      // A child's own mount focus wins; ordinary redraws must not steal it.
+      for (const target of node.querySelectorAll('button,input,select,textarea,a[href],[tabindex],[contenteditable="true"]')) {
+        if ((target.tabIndex<0 && !(target.isContentEditable && !target.hasAttribute('tabindex'))) ||
+            target.matches(':disabled') ||
+            target.closest('[hidden],[inert],[aria-hidden="true"],[aria-disabled="true"]') ||
+            !target.getClientRects().length) continue;
+        target.focus();
+        if (document.activeElement===target) return;
+      }
+      node.focus();
+    },[autoFocusContents,current?.id]);
     return R.createElement('div', null,
       R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
         type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
         disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}},
         tab.title, tab.renderTabAddon?.()))),
-      R.createElement('div', {role:'tabpanel'}, current?.content));
+      R.createElement('div', {role:'tabpanel',ref:panel,tabIndex:autoFocusContents ? -1 : undefined}, current?.content));
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
