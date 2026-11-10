@@ -27,13 +27,16 @@ class SimpleModalBrowser(unittest.TestCase):
             frontend = bundle.read(plugin['folder'] + '/dist/index.js').decode()
         component = re.search(r'const UsageWarningModal = .*?\n    \};', frontend, re.S)
         self.assertIsNotNone(component)
+        qr_component = re.search(r'const QRModal = .*?\n    \};', frontend, re.S)
+        self.assertIsNotNone(qr_component)
         host = (ROOT/'ui/framey-host.js').read_text()
         without_start = re.sub(r'\n  start\(\);\n\}\)\(\);\s*$', '\n})();', host)
         self.assertNotEqual(without_start, host)
         page = (ROOT/'tests/page/framey_simple_modal.html').read_text()
         for token, source in [('__REACT__', (ROOT/'ui/vendor/react-18.3.1.min.js').read_text()),
                               ('__REACT_DOM__', (ROOT/'ui/vendor/react-dom-18.3.1.min.js').read_text()),
-                              ('__HOST__', without_start), ('__OFFICIAL_COMPONENT__', component.group())]:
+                              ('__HOST__', without_start), ('__OFFICIAL_COMPONENT__', component.group()),
+                              ('__OFFICIAL_QR_COMPONENT__', qr_component.group())]:
             page = page.replace(token, source.replace('</script', r'<\/script'))
         with tempfile.TemporaryDirectory(prefix='framey-simple-modal-') as folder:
             document = Path(folder)/'fixture.html'

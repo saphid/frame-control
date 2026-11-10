@@ -300,7 +300,14 @@ retry after failure, and closes after success. The
 failed saves and retry through the built bundle and local modal host.
 `Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
-physical controller reaches it. See the
+physical controller reaches it. `Focusable.onCancel` receives the original React
+keyboard event for Escape from the control or its descendants. The nearest
+handler consumes it and owns dismissal; call the dialog's injected `closeModal`
+when it should close. Disabled controls and busy or cancel-disabled dialog shells
+do not invoke it, and an `onKeyDown` handler can consume Escape first. This is a
+native keyboard mapping, not proof of physical controller cancellation. The
+published Web Browser 1.4.3 QR wrapper is replayed in local React/DOM with an inert
+QR renderer; no external navigation or plugin service runs. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
 [dialog control evidence](evidence/framey-dialog-controls-2026-10-26.md) for
 the exact tested official versions.

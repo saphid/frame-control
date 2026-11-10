@@ -392,7 +392,7 @@
   const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
     R.createElement('button', {...props, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
-  const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
+  const Focusable = ({children, onActivate, onCancel, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
       if (disabled || event.defaultPrevented) return;
@@ -404,6 +404,16 @@
       'aria-disabled':actionable && disabled ? true : undefined,
       onClick:actionable ? activate : undefined, onKeyDown:event=>{
         onKeyDown?.(event);
+        if (event.key==='Escape' && typeof onCancel==='function' && !disabled && !event.defaultPrevented) {
+          const modal=modals.at(-1);
+          if (modal && (modal.running || modal.element?.props?.bCancelDisabled ||
+              !modal.node?.contains(event.currentTarget))) return;
+          // Native Escape is a local cancel action, including from descendants.
+          // The nearest handler owns dismissal; do not also cancel the shell.
+          event.preventDefault();
+          event.stopPropagation();
+          onCancel(event);
+        }
         if (actionable && !disabled && !event.defaultPrevented && event.target===event.currentTarget &&
             (event.key==='Enter' || event.key===' ')) {
           event.preventDefault();
@@ -790,7 +800,7 @@
       }
       return;
     }
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
     event.preventDefault();
     if (modal.running) return;
     const onEscape = modalCallback(modal, 'onEscKeypress');
