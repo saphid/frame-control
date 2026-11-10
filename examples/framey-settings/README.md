@@ -88,6 +88,10 @@ while pending, and stays open with an error if the save fails. Close it with
 opening a new Reset dialog. Retrying the failed dialog before reloading sends
 no write and cannot close it as a success. Only a successful save closes the
 dialog automatically and shows a success toast.
+Framey retires a confirmation's button handlers after it closes, unmounts
+or completes successfully, so a retained Reset handler cannot issue another
+save. A save already sent may still finish after programmatic dismissal;
+reopen the settings view or reload to read its result.
 The ordinary toggle catches the same rejected promise after `change` records
 the error in the panel's status, so it does not create an unhandled rejection.
 Do not discard an asynchronous confirmation with `void`: that makes the modal

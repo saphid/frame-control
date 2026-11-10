@@ -687,30 +687,46 @@
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
     const inFlight = R.useRef(false);
+    const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
     const [error, setError] = R.useState('');
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    const active = () => mounted.current && (!modal || modals.includes(modal));
+    R.useEffect(()=>{
+      mounted.current = true;
+      return ()=>{
+        mounted.current = false;
+        // Update may keep the shell while replacing this confirmation.
+        frameySetModalBusy?.(false);
+      };
+    },[frameySetModalBusy]);
     const action = (callback, disabled) => () => {
-      if (disabled || inFlight.current) return;
+      if (disabled || inFlight.current || !active()) return;
+      // Lock before calling plugin code, including synchronous/reentrant code.
+      // Success retires these actions; a failure unlocks the same view for retry.
+      inFlight.current = true;
+      setError('');
       let result;
       try {result = callback?.();}
-      catch (failure) {setError(String(failure?.message || failure)); return;}
+      catch (failure) {
+        if (active()) {inFlight.current=false; setError(String(failure?.message || failure));}
+        return;
+      }
       if (result && typeof result.then === 'function') {
-        inFlight.current = true;
-        setBusy(true);
-        frameySetModalBusy?.(true);
-        setError('');
+        if (active()) {setBusy(true); frameySetModalBusy?.(true);}
         return Promise.resolve(result).then(() => {
-          inFlight.current = false;
+          if (!active()) return;
           frameySetModalBusy?.(false);
           closeModal?.();
         }, failure => {
+          if (!active()) return;
           inFlight.current = false;
           setBusy(false);
           frameySetModalBusy?.(false);
           setError(String(failure?.message || failure));
         });
       }
-      closeModal?.();
+      if (active()) closeModal?.();
     };
     return R.createElement('section', null,
       R.createElement('h2', null, strTitle),
