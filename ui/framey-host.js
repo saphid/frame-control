@@ -554,8 +554,8 @@
         'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
         onClick:()=>{if(!disabled && permitted(resetValue))onChange?.(resetValue);}}, 'Reset'));
   };
-  const PanelSection = ({title, children}) => R.createElement('section', null,
-    title && R.createElement('h2', null, title), children);
+  const PanelSection = ({title, spinner, children}) => R.createElement('section', {'aria-busy':spinner ? true : undefined},
+    title && R.createElement('h2', null, title), spinner && R.createElement(Spinner), children);
   const ControlsList = ({children, alignItems='left', spacing='standard'}) =>
     R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
