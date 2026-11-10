@@ -1,0 +1,156 @@
+{
+  "at": "2026-11-10T01:47:47.616686+00:00",
+  "sourceHead": "2695b3a2c8a70b36695752276256a33a9e6c1442",
+  "records": [
+    {
+      "artifact": 13725790195,
+      "job": 129551978927,
+      "architecture": "aarch64",
+      "listener": {
+        "groups": 77,
+        "samples": 246,
+        "pids": [
+          37
+        ]
+      },
+      "stackSha256": "8cf379926d4fa1580bb71b82f45d10fbe2a39ca388e3b28ebd23ee6c899cca17",
+      "samplerWheelSha256": "bbcec46930d464b3bfc142d6d02ade4dd8ad5627823263b3eff0280e80c7c132",
+      "samplerConsoleSummary": [
+        "py-spy> Sampling process 50 times a second. Press Control-C to exit.",
+        "py-spy> Stopped sampling because process exited",
+        "py-spy> Wrote raw flamegraph data to '/tmp/parent-stacks.raw'. Samples: 686 Errors: 73",
+        "py-spy> You can use the flamegraph.pl script from https://github.com/brendangregg/flamegraph to generate a SVG"
+      ],
+      "normalShutdownSeconds": 0.29,
+      "ownedCleanupVerified": true,
+      "archiveSha256": "242bc4d04fe52eab567dafabe64a13be23c9d7109055cca5f50c7a6fd527521e",
+      "artifactUrl": "https://github.com/saphid/frame-control/actions/runs/42731978931/artifacts/13725790195",
+      "jobUrl": "https://github.com/saphid/frame-control/actions/runs/42731978931/job/129551978927",
+      "ownedParentIdentity": {
+        "state": "R",
+        "parent": 35,
+        "start": "24813"
+      },
+      "overlappingFrameFamilies": {
+        "socketReader": {
+          "stackGroups": 49,
+          "weightedSamples": 96
+        },
+        "jsonDecoder": {
+          "stackGroups": 14,
+          "weightedSamples": 59
+        },
+        "streamReader": {
+          "stackGroups": 19,
+          "weightedSamples": 32
+        }
+      },
+      "files": {
+        "arm64-report.json.gz": {
+          "compressedBytes": 3120,
+          "compressedSha256": "274697d740ee2d3be085ce0c9175a271bf7a1cf2d9203684edafa5d0fac17b0e",
+          "rawBytes": 10554,
+          "rawSha256": "f36429ba49f6ebd323f1c59ac7db8ac021a5b2b3db94d24110b521db51595138"
+        },
+        "arm64-stacks.raw.gz": {
+          "compressedBytes": 11523,
+          "compressedSha256": "8a1df792efaece62c6cfdafcf94e2bb1670fc309b2801a6f372e571e4fbd40bc",
+          "rawBytes": 354061,
+          "rawSha256": "8cf379926d4fa1580bb71b82f45d10fbe2a39ca388e3b28ebd23ee6c899cca17"
+        },
+        "arm64-exact-head.json.gz": {
+          "compressedBytes": 789,
+          "compressedSha256": "d183af772259644b182acff3c891c1c4f4db432b6ff2863d1f994a9a64b32f7c",
+          "rawBytes": 1424,
+          "rawSha256": "f2a67c81d7c89fa645d6fce761ad9ea0f7c7ebf121985e1a7004ad258237d2ca"
+        },
+        "arm64-container.log.gz": {
+          "compressedBytes": 14011,
+          "compressedSha256": "138d329143a5eeb6d0c775fc8b463a7ea8b7aa7dadc4d37691eb2145478a4773",
+          "rawBytes": 369355,
+          "rawSha256": "bc7bd7e54b4526183c8f06c12e2efebaa4123d83ccb1b2ff31677b9014afd75f"
+        }
+      }
+    },
+    {
+      "artifact": 13725491387,
+      "job": 129551979333,
+      "architecture": "x86_64",
+      "listener": {
+        "groups": 74,
+        "samples": 243,
+        "pids": [
+          35
+        ]
+      },
+      "stackSha256": "2b3633d943cdb59ffc53c4de845be171408630ff81d2c996b8e2f3b4f0c1e1dc",
+      "samplerWheelSha256": "8a4277225f470d394a85cca0cdd944bef87f0097b6f20150a6dd3ac2e92806b8",
+      "samplerConsoleSummary": [
+        "py-spy> Sampling process 50 times a second. Press Control-C to exit.",
+        "py-spy> Stopped sampling because process exited",
+        "py-spy> Wrote raw flamegraph data to '/tmp/parent-stacks.raw'. Samples: 724 Errors: 95",
+        "py-spy> You can use the flamegraph.pl script from https://github.com/brendangregg/flamegraph to generate a SVG"
+      ],
+      "normalShutdownSeconds": 0.214,
+      "ownedCleanupVerified": true,
+      "archiveSha256": "8a75bd9000a6a69f5e01ef43e5ce5c70447fbc0710038a63c7dfb694175d64dc",
+      "artifactUrl": "https://github.com/saphid/frame-control/actions/runs/42731978931/artifacts/13725491387",
+      "jobUrl": "https://github.com/saphid/frame-control/actions/runs/42731978931/job/129551979333",
+      "ownedParentIdentity": {
+        "state": "R",
+        "parent": 33,
+        "start": "7683"
+      },
+      "overlappingFrameFamilies": {
+        "socketReader": {
+          "stackGroups": 51,
+          "weightedSamples": 104
+        },
+        "jsonDecoder": {
+          "stackGroups": 25,
+          "weightedSamples": 68
+        },
+        "streamReader": {
+          "stackGroups": 12,
+          "weightedSamples": 23
+        }
+      },
+      "files": {
+        "amd64-report.json.gz": {
+          "compressedBytes": 3123,
+          "compressedSha256": "29e400af38b139e5f4948376fa0337398d6bafd0e0585c0477c9d87e6e4e6f7f",
+          "rawBytes": 10537,
+          "rawSha256": "0b7c6c0f2f16c5153c2c47c721af5b4f8a642ca135c67d36ab4cdf933d5cf04b"
+        },
+        "amd64-stacks.raw.gz": {
+          "compressedBytes": 14503,
+          "compressedSha256": "961761195fe6ab1461ab4d04bfa85c2926eb31d16df05ff5bcff53ef705f380c",
+          "rawBytes": 433328,
+          "rawSha256": "2b3633d943cdb59ffc53c4de845be171408630ff81d2c996b8e2f3b4f0c1e1dc"
+        },
+        "amd64-exact-head.json.gz": {
+          "compressedBytes": 789,
+          "compressedSha256": "e4ec93147cd0483cd8a8951fa79cfa9d46dbcffc057468edfe1be11bdafb35f5",
+          "rawBytes": 1423,
+          "rawSha256": "9fbb954b1cda306622a7b329b7e454d260b56f8c27bc6e19ee6929346b56e991"
+        },
+        "amd64-container.log.gz": {
+          "compressedBytes": 17016,
+          "compressedSha256": "19a173aa3b38b0f5e7ca0ef5aae75a6d0487d6a015205bfd3c4fd0279a1346dd",
+          "rawBytes": 449145,
+          "rawSha256": "ef202a72f6848558667042d5abe8680c8561da084f4bd3d21ac99edaa6e0c0ad"
+        }
+      }
+    }
+  ],
+  "nativeArm64UserSpaceStacksCaptured": true,
+  "normalControlsPassedBothArchitectures": true,
+  "allOwnedCleanupVerified": true,
+  "nonblockingSamplingMayBeInaccurate": true,
+  "frameFamilyCountsOverlap": true,
+  "historicalArm64VmExecuted": false,
+  "historicalCauseEstablished": false,
+  "releaseHoldCleared": false,
+  "realFrameContacted": false,
+  "wornVRVerified": false
+}
