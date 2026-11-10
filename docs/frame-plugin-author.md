@@ -39,9 +39,17 @@ only official-store-owned plugins in its VR panel.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
-file, and use a default when no saved setting exists. Treat a damaged or
-unreadable saved file as an error and preserve it; returning a default as a
-successful read can let the next edit erase recoverable data. The sample
+file, and use a default when no saved setting exists.
+
+Flush the temporary file's buffered writes and call `fsync` before replacing
+the old file. On Linux, flush the settings directory entry after replacement
+before acknowledging a save. The sample propagates either flush error; a
+failure after replacement is uncertain and requires a fresh read, since the
+new value can already be readable. Local process-exit and injected-error tests
+do not prove headset power-loss durability.
+
+Treat a damaged or unreadable saved file as an error and preserve it; returning
+a default as a successful read can let the next edit erase recoverable data. The sample
 rejects malformed JSON, invalid UTF-8, non-object JSON and saved non-boolean
 values on both read and save. Repair or restore its `settings.json`, then
 reload the saved setting before editing again.
@@ -147,6 +155,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `Tabs` entries with `renderTabAddon` | Calls each tab's renderer beside its title on every render, retaining returned React markup and zero counts. Controlled/uncontrolled selection and disabled tabs keep their existing behavior. | Exact Animation Changer 1.3.2 tab expression in real React/DOM with synthetic browse/installed arrays; counts update without changing selection. Child views are inert; no animation discovery/download, full plugin, backend, controller or worn VR proof. |
 | `Spinner.style`, `SteamSpinner.style` | Preserves the supplied React style object on the loading status, including visibility and positioning; removing the style restores the ordinary status. Custom React children and the default loading message remain available. | Exact RadiYo! 1.3 overlay style and spinner expression in real React/DOM with synthetic playing/buffering/paused states, plus style removal and SteamSpinner alias checks. No player, station, audio, backend, physical input or worn VR proof. |
 | `MenuGroup.label`, `disabled` | A labeled native fieldset; disabling it blocks native activation and focus of descendant controls, including nested groups. Individual `MenuItem` disabled states still apply. | Exact TabMaster 2.15.1 Micro SD Card menu with synthetic cards/preset callbacks in real React/DOM. No card discovery, real library edit, Steam submenu or worn/controller proof. |
+| `MenuItem.selected` | When supplied, exposes selection through `aria-pressed` on the native button and a visible checkmark. An absent selection prop leaves ordinary action semantics. The plugin owns selection updates; disabled selected items remain inert. | Exact TabMaster 2.15.1 custom-dropdown menu factory in real React/DOM with synthetic choices: original option identity, updated selection on reopen, missing selection, disabled actions and prop removal. No real settings/library mutation, backend, physical input or worn VR proof. |
 | `SidebarNavigation.pages` with `"separator"` entries | Omits layout separators from the local tab strip so they cannot open blank pages. Hidden pages stay absent; changing visibility of an earlier page preserves a later page's selection at the same source index. | Exact published Game Sync 1.0.4 navigation replay with inert child views and synthetic tab selection. No sync, backend, physical-input or worn VR proof. |
 | `ReorderableList` | Lists plugin entries by `position`; native Move up/down buttons edit a draft. Save order calls `onSave` with normalized positions; Cancel discards the draft. Labels, data and optional `interactables` are retained. `disableReordering` hides ordering controls. | Exact published TabMaster 2.15.1 list/save callback with synthetic entries; cancel, disabled/late handlers, failed-save retry and refreshed-list tests. No real library edit or physical controller check. |
 | `ProgressBar`, `ProgressBarItem`, `ProgressBarWithInfo` | Native progress control; `indeterminate` or an absent progress value omits the native value so it animates as unfinished. Numeric zero remains determinate. Item and WithInfo preserve React `label` and `description` content, and WithInfo shows `sOperationText`. Estimated completion time is not shown. | Exact Emuchievements 2.0.5 progress expressions and SuggestMe 1.5.3 refresh-progress expression in real React/DOM with synthetic errors, counts and totals. Description/markup updates, unknown-to-known totals, numeric zero, completion and return to unknown verified. No achievement/refresh service, live backend, controller or worn VR proof. |
@@ -324,7 +333,14 @@ retry after failure, and closes after success. The
 failed saves and retry through the built bundle and local modal host.
 `Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
-physical controller reaches it. See the
+physical controller reaches it. `Focusable.onCancel` receives the original React
+keyboard event for Escape from the control or its descendants. The nearest
+handler consumes it and owns dismissal; call the dialog's injected `closeModal`
+when it should close. Disabled controls and busy or cancel-disabled dialog shells
+do not invoke it, and an `onKeyDown` handler can consume Escape first. This is a
+native keyboard mapping, not proof of physical controller cancellation. The
+published Web Browser 1.4.3 QR wrapper is replayed in local React/DOM with an inert
+QR renderer; no external navigation or plugin service runs. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
 [dialog control evidence](evidence/framey-dialog-controls-2026-10-26.md) for
 the exact tested official versions.

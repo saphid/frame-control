@@ -254,6 +254,13 @@ An explicit HTTP rejection before the request was accepted releases the request;
 a terminal job error also releases it after status refresh. These desktop paths
 are tested with synthetic API replies and real DOM controls, not live installs.
 
+Network Sentinel 1.0.4 installs a child IPC EOF repair while preserving its
+original monitoring and unload code. Existing managed copies need Update or
+reinstall to receive it. The isolated runtime gate requires a settings RPC after
+peer disconnect, the original unload save, restart persistence and two clean
+parent-only stops; a negative control restores the previous managed backend.
+External network quality, the real headset and worn VR remain unverified.
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the

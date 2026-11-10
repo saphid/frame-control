@@ -27,13 +27,17 @@ class MenuBrowser(unittest.TestCase):
             frontend = bundle.read(plugin['folder']+'/dist/index.js').decode()
         factory = re.search(r'function getShowMenu\(id, tabMasterManager\) \{[\s\S]*?\n\}', frontend)
         self.assertIsNotNone(factory)
+        selection_factory = re.search(r'const showDefaultMenu = \(\) => \{[\s\S]*?\n    \};', frontend)
+        self.assertIsNotNone(selection_factory)
+        self.assertIn('selected: option === selected', selection_factory.group())
         host = (ROOT/'ui/framey-host.js').read_text()
         without_start = re.sub(r'\n  start\(\);\n\}\)\(\);\s*$', '\n})();', host)
         self.assertNotEqual(without_start, host)
         page = (ROOT/'tests/page/framey_context_menu.html').read_text()
         for token, source in [('__REACT__', (ROOT/'ui/vendor/react-18.3.1.min.js').read_text()),
                               ('__REACT_DOM__', (ROOT/'ui/vendor/react-dom-18.3.1.min.js').read_text()),
-                              ('__HOST__', without_start), ('__OFFICIAL_FACTORY__', factory.group())]:
+                              ('__HOST__', without_start), ('__OFFICIAL_FACTORY__', factory.group()),
+                              ('__OFFICIAL_SELECTION_FACTORY__', selection_factory.group())]:
             page = page.replace(token, source.replace('</script', r'<\/script'))
         with tempfile.TemporaryDirectory(prefix='framey-context-menu-') as folder:
             document = Path(folder)/'fixture.html'

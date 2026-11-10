@@ -444,7 +444,11 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], [])
                 if plugin['id'] == 114:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil'])
+                    self.assertEqual(receipt['compatShims'], ['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     'd4394570b110759247c731fdd55221db67875346e0e3fb23831948cad9a96891')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
                     self.assertEqual(json.loads(ssh(f'cat {installed}/plugin.json'))['flags'], ['debug'])
                     self.assertEqual(ssh(f'test -f {installed}/py_modules/psutil/_psutil_linux.abi3.so && echo yes').strip(), 'yes')
