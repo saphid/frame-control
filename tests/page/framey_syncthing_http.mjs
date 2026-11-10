@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props,children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props,children}),
   createContext:()=>({}),useState:value=>[value,()=>{}],useEffect(){},useRef:value=>({current:value}),
   useMemo:fn=>fn(),useCallback:fn=>fn};
 function fixture(enabled, {defer=false, clock=null}={}) {

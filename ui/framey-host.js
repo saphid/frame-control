@@ -392,14 +392,15 @@
   const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
     R.createElement('button', {...props, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
-  const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
+  const Focusable = R.forwardRef(function Focusable(
+    {children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
       if (disabled || event.defaultPrevented) return;
       event.stopPropagation();
       (onClick || onActivate)?.(event);
     };
-    return R.createElement('div', {...props, role:role || (actionable ? 'button' : undefined),
+    return R.createElement('div', {...props, ref, role:role || (actionable ? 'button' : undefined),
       tabIndex:tabIndex ?? (actionable ? (disabled ? -1 : 0) : undefined),
       'aria-disabled':actionable && disabled ? true : undefined,
       onClick:actionable ? activate : undefined, onKeyDown:event=>{
@@ -411,7 +412,7 @@
           (onActivate || onClick)?.(event);
         }
       }}, children);
-  };
+  });
   const Field = ({label, description, icon, style, className, children, disabled,
     focusable=false, onActivate, onClick}) => {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
@@ -1100,7 +1101,8 @@
     useParams: () => currentParams,
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
-    Object.entries(DFL).filter(([name,value])=>typeof value==='function' && /^[A-Z]/.test(name)))));
+    Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
+      (typeof value==='function' || value===Focusable)))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
