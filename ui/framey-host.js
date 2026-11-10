@@ -533,7 +533,7 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   };
-  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -544,7 +544,7 @@
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description},
+    return R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
@@ -572,7 +572,7 @@
     R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
-  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
@@ -660,8 +660,8 @@
         onClick:()=>{if(valid(shown))publish({...shown,rows:shown.saved,dirty:false,error:''});}}, 'Cancel reordering'),
       shown.error && R.createElement('p', {role:'alert'}, shown.error));
   };
-  const ProgressBar = ({nProgress=0, value, max=100, indeterminate=false}) => R.createElement('progress', {
-    value:indeterminate ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
+  const ProgressBar = ({nProgress, value, max=100, indeterminate=false}) => R.createElement('progress', {
+    value:indeterminate || (value ?? nProgress)==null ? undefined : Math.max(0,Math.min(max,Number(value ?? nProgress)||0)), max});
   const ProgressBarItem = ({label, description, ...props}) => R.createElement('div', null,
     R.createElement('label', null,
       label != null && R.createElement('strong', null, label), ProgressBar(props)),
