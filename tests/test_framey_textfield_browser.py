@@ -12,6 +12,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 import zipfile
 
@@ -19,6 +20,29 @@ from framey_official import PLUGINS, WEB_BROWSER_143, archive
 
 ROOT = Path(__file__).resolve().parents[1]
 BROWSER = next(filter(None, map(shutil.which, ('google-chrome', 'google-chrome-stable', 'chromium', 'chromium-browser'))), None)
+
+
+def wait_browser_group(group, timeout=5):
+    # Waiting for the direct child does not wait for SIGKILL delivery to every
+    # grandchild. Ignore zombies (which hold no files), but do not return while
+    # a live member of this invocation's private session can hold the profile.
+    deadline = time.monotonic()+timeout
+    while True:
+        live = []
+        for entry in Path('/proc').iterdir():
+            if not entry.name.isdecimal():
+                continue
+            try:
+                fields = (entry/'stat').read_text().rsplit(')', 1)[1].split()
+            except (FileNotFoundError, ProcessLookupError, PermissionError):
+                continue
+            if fields[2:4] == [str(group), str(group)] and fields[0] not in ('Z', 'X'):
+                live.append(entry.name)
+        if not live:
+            return
+        if time.monotonic() >= deadline:
+            raise RuntimeError('Owned browser group did not stop: '+', '.join(live))
+        time.sleep(.01)
 
 
 def run_browser(command, timeout=30):
@@ -37,6 +61,7 @@ def run_browser(command, timeout=30):
             pass
         try:
             process.wait(timeout=5)
+            wait_browser_group(process.pid)
         finally:
             process.stdout.close()
             process.stderr.close()

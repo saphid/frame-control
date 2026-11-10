@@ -103,6 +103,18 @@
   }, {
     // Game Sync uses key presence, including empty values, to track sync state.
     has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+    // Named string properties share the same bounded snapshot as method calls.
+    // Keep API/prototype members available even when their names are saved keys.
+    get:(target, key, receiver)=>typeof key==='string' && !Reflect.has(target, key)
+      ? cache.get(key) : Reflect.get(target, key, receiver),
+    set:(target, key, value)=>{
+      if (typeof key!=='string') return Reflect.set(target, key, value);
+      target.setItem(key, value); return true;
+    },
+    deleteProperty:(target, key)=>{
+      if (typeof key!=='string') return Reflect.deleteProperty(target, key);
+      target.removeItem(key); return true;
+    },
   });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
@@ -521,7 +533,7 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   };
-  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -532,7 +544,7 @@
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description},
+    return R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
@@ -1025,13 +1037,19 @@
     'LPAD_CLICK', 'RPAD_TOUCH', 'RPAD_CLICK', 'REAR_LEFT_UPPER', 'REAR_LEFT_LOWER',
     'REAR_RIGHT_UPPER', 'REAR_RIGHT_LOWER', 'STEAM_GUIDE', 'STEAM_QUICK_MENU',
   ].flatMap((name,value)=>[[name,value],[value,name]])));
+  // Legacy decky-frontend-lib 3.25.0 identifiers. Only the Decky tab has a
+  // local equivalent here; exporting constants does not expose Steam menus.
+  const QuickAccessTab = Object.freeze(Object.fromEntries([
+    ...['Notifications','RemotePlayTogetherControls','VoiceChat','Friends',
+      'Settings','Perf','Help','Music'].map((name,value)=>[name,value]), ['Decky',999],
+  ].flatMap(([name,value])=>[[name,value],[value,name]])));
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
-    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton,
+    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton, QuickAccessTab,
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
@@ -1050,6 +1068,10 @@
     sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
+      OpenQuickAccessMenu:tab=>{
+        if (tab!==QuickAccessTab.Decky) throw Error('Steam Quick Access tabs are unavailable in Framey');
+        navigate(null);
+      },
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal, showContextMenu,
     // Steam app, library, and store patches have no target inside this panel.
