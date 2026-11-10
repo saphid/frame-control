@@ -7,7 +7,7 @@ const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8
   .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js',import.meta.url),'utf8');
 let current,cursor=0;
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   isValidElement:element=>!!element?.type,

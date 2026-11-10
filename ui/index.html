@@ -1614,6 +1614,8 @@
     <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search names, authors or descriptions"></label>
     <div class="row"><button class="small" id="deckyStoreRefresh">Load store</button></div>
     <div id="deckyStoreState" class="hint"></div>
+    <div id="deckyPluginJobState" class="hint" role="status"></div>
+    <button class="small" id="deckyPluginJobCheck" hidden>Check result</button>
     <div class="row"><button class="small" id="deckyStorePrevious" disabled>Previous</button><span id="deckyStorePage" class="hint" role="status" aria-live="polite"></span><button class="small" id="deckyStoreNext" disabled>Next</button></div>
     <div id="deckyStoreList" class="stack"></div>
   </section>
@@ -2379,7 +2381,46 @@ let deckyCatalog = [];
 let deckyStorePage = 0;
 let deckyStatusRequest = 0, deckyStoreRequest = 0;
 let deckyPluginBusy = false;
-async function loadDecky() {
+let deckyPluginRequest = null;
+const deckyPluginJobKey = 'frameControlDesktopDeckyPluginJob';
+function desktopDeckyDevice() { return globalThis.window?.connDevice || null; }
+try {
+  const raw = sessionStorage.getItem(deckyPluginJobKey);
+  if (raw) {
+    const saved = JSON.parse(raw);
+    const valid = saved && typeof saved === 'object' && typeof saved.name === 'string' &&
+      ['install','update','remove'].includes(saved.action) && /^[0-9a-f]{32}$/.test(saved.job) &&
+      (saved.device === null || typeof saved.device === 'string');
+    deckyPluginRequest = valid ? saved : {unknown:true};
+  }
+} catch (_) {
+  // If storage itself is denied, this page still retains new requests in memory.
+  // A malformed stored snapshot must be reviewed rather than silently discarded.
+  try { if (sessionStorage.getItem(deckyPluginJobKey)) deckyPluginRequest = {unknown:true}; } catch (_) {}
+}
+function rememberDesktopDeckyJob(request) {
+  deckyPluginRequest = request;
+  try {
+    if (request) sessionStorage.setItem(deckyPluginJobKey, JSON.stringify(request));
+    else sessionStorage.removeItem(deckyPluginJobKey);
+  } catch (_) {}
+}
+function desktopDeckyJobMatchesDevice() {
+  return !deckyPluginRequest || deckyPluginRequest.device === undefined ||
+    deckyPluginRequest.device === desktopDeckyDevice();
+}
+function desktopDeckyJobControls() {
+  const saved = deckyPluginRequest, check = $('deckyPluginJobCheck');
+  check.hidden = !saved || !!saved.unknown;
+  check.disabled = deckyPluginBusy || !desktopDeckyJobMatchesDevice();
+  if (saved && !desktopDeckyJobMatchesDevice())
+    $('deckyPluginJobState').textContent = 'Return to the original headset to check the previous plugin change.';
+  else if (saved && !$('deckyPluginJobState').textContent)
+    $('deckyPluginJobState').textContent = saved.unknown
+      ? 'Previous plugin result unavailable. Use Refresh to review installed plugins before another change.'
+      : 'A previous plugin change has an unconfirmed result. Use Check result before another change.';
+}
+async function loadDecky(reviewUnknown = false) {
   const request = ++deckyStatusRequest;
   deckyInfo = null;
   const managedList=$('deckyManagedList');managedList.replaceChildren();
@@ -2389,6 +2430,9 @@ async function loadDecky() {
   try {
     const d = await api('/api/decky');
     if (request !== deckyStatusRequest) return;
+    if (!Array.isArray(d.plugins) || !Array.isArray(d.upstreamPlugins) ||
+        typeof d.managed !== 'boolean' || typeof d.running !== 'boolean')
+      throw Error('Installed plugin status is incomplete');
     deckyInfo = d;
     $('deckyState').textContent = `${d.frameOS || 'Unknown'} ${d.variant || ''} · ${d.arch} · CEF ${d.cef ? 'ready' : 'unavailable'} · ${d.managed ? `managed Decky ${d.version || ''} ${d.running ? 'running' : 'stopped'}` : d.upstreamInstall ? 'upstream Decky installation found' : 'Decky not installed'}`;
     const plugins = [...d.plugins.map(x => `${x.name} (managed)`), ...d.upstreamPlugins.map(x => `${x.name} (upstream)`)];
@@ -2402,6 +2446,10 @@ async function loadDecky() {
       remove.onclick=()=>changeDeckyPlugin('remove',
         {id:plugin.storeId,name:plugin.name,installedSha256:plugin.sha256});
       row.append(label,remove);managedList.append(row);}
+    if (reviewUnknown === true && deckyPluginRequest?.unknown && desktopDeckyJobMatchesDevice()) {
+      rememberDesktopDeckyJob(null);
+      $('deckyPluginJobState').textContent = 'Installed plugins refreshed. Review the list before another change.';
+    }
     deckyButtons();
     showDeckyStore();
   } catch (error) {
@@ -2429,6 +2477,7 @@ async function loadDeckyStore() {
   }
 }
 function showDeckyStore() {
+  desktopDeckyJobControls();
   const list = $('deckyStoreList'); list.replaceChildren();
   const query = $('deckyStoreSearch').value.trim().toLowerCase();
   const installed = [...(deckyInfo?.plugins||[]), ...(deckyInfo?.upstreamPlugins||[])];
@@ -2453,18 +2502,18 @@ function showDeckyStore() {
     else {
       const button=document.createElement('button'); button.className='small';
       button.textContent=entry ? (entry.version===plugin.version?'Reinstall':'Update') : 'Install';
-      button.disabled=deckyPluginBusy || !deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
+      button.disabled=deckyPluginBusy || !!deckyPluginRequest || !deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
       button.onclick=()=>changeDeckyPlugin(entry?'update':'install',{...plugin,installedSha256:entry?.sha256});
       row.append(button);
       if(entry){const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove';
-        remove.disabled=deckyPluginBusy || !deckyInfo?.managed || !$('deckyAck').checked;
+        remove.disabled=deckyPluginBusy || !!deckyPluginRequest || !deckyInfo?.managed || !$('deckyAck').checked;
         remove.onclick=()=>changeDeckyPlugin('remove',{...plugin,installedSha256:entry.sha256});row.append(remove);}
     }
     list.append(row);
   }
 }
 async function changeDeckyPlugin(action, plugin) {
-  if (deckyPluginBusy || !$('deckyAck').checked) return;
+  if (deckyPluginBusy || deckyPluginRequest || !$('deckyAck').checked) return;
   if (!deckyInfo?.managed || (action !== 'remove' && !deckyInfo.running)) {
     $('deckyStoreState').textContent = 'Refresh plugins to check Decky status before changing plugins.';
     return;
@@ -2472,32 +2521,80 @@ async function changeDeckyPlugin(action, plugin) {
   if (!confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
   // Lock before the first await: another click or retained row callback can
   // arrive before disabled buttons redraw. Keep the lock through status refresh.
-  deckyPluginBusy = true;
-  deckyButtons(); showDeckyStore();
-  try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
+  const requestId = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+    byte=>byte.toString(16).padStart(2,'0')).join('');
+  const saved = {job:requestId, action, name:plugin.name, device:desktopDeckyDevice()};
+  rememberDesktopDeckyJob(saved);
+  await runDesktopDeckyJob(saved, () => api('/api/decky/plugin',
     {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,
-      installedSha256:plugin.installedSha256,acknowledged:true}));
-    await loadDecky(); } catch(error) { $('deckyStoreState').textContent=error.message; }
-  finally { deckyPluginBusy = false; deckyButtons(); showDeckyStore(); }
+      installedSha256:plugin.installedSha256,acknowledged:true,requestId}, saved.device));
+}
+async function runDesktopDeckyJob(saved, start) {
+  deckyPluginBusy = true;
+  $('deckyPluginJobState').textContent = `${saved.action} ${saved.name}…`;
+  deckyButtons(); showDeckyStore();
+  let failure = null, accepted = false;
+  const failed = error => {
+    failure = error;
+    if (accepted && /no such job/i.test(error.message) && deckyPluginRequest === saved)
+      rememberDesktopDeckyJob({...saved, unknown:true});
+  };
+  try {
+    await runJob(`${saved.action} ${saved.name}`, 'decky-plugin', async () => {
+      try {
+        const started = await start();
+        if (started?.job !== saved.job) throw Error('The server did not confirm the reserved plugin request ID');
+        accepted = true;
+        return started;
+      } catch (error) {
+        if (error.status >= 400 && error.status < 500 && deckyPluginRequest === saved)
+          rememberDesktopDeckyJob(null);
+        throw error;
+      }
+    }, progress => {
+      if (desktopDeckyDevice() !== saved.device)
+        throw Error('Return to the original headset to check the previous plugin change.');
+      if (typeof progress.done !== 'boolean') throw Error('Plugin job status is incomplete');
+      if (progress.done && deckyPluginRequest === saved) rememberDesktopDeckyJob(null);
+    }, failed);
+  } catch (error) { failed(error); }
+  finally {
+    $('deckyPluginJobState').textContent = failure ? failure.message : `${saved.action} ${saved.name} complete.`;
+    if (deckyPluginRequest)
+      $('deckyPluginJobState').textContent += deckyPluginRequest.unknown
+        ? ' The server has no recoverable result. Use Refresh to review installed plugins before another change.'
+        : ' Result unconfirmed. Use Check result before another change.';
+    await loadDecky();
+    deckyPluginBusy = false; deckyButtons(); showDeckyStore();
+  }
+}
+async function checkDesktopDeckyJob() {
+  if (deckyPluginBusy || !deckyPluginRequest || deckyPluginRequest.unknown) return;
+  if (!desktopDeckyJobMatchesDevice()) { desktopDeckyJobControls(); return; }
+  const saved = deckyPluginRequest;
+  await runDesktopDeckyJob(saved, () => Promise.resolve({job:saved.job}));
 }
 function deckyButtons() {
+  desktopDeckyJobControls();
+  const locked = deckyPluginBusy || !!deckyPluginRequest;
   const ready = !!deckyInfo && deckyInfo.arch === 'aarch64' && deckyInfo.variant === 'vr' && deckyInfo.cef && !deckyInfo.upstreamInstall;
   const ack = $('deckyAck').checked;
-  $('deckyInstall').disabled = !ack || !ready || deckyInfo.managed;
-  $('deckyUpdate').disabled = !ack || !ready || !deckyInfo.managed;
-  $('deckyRemove').disabled = !ack || !deckyInfo?.managed;
+  $('deckyInstall').disabled = locked || !ack || !ready || deckyInfo.managed;
+  $('deckyUpdate').disabled = locked || !ack || !ready || !deckyInfo.managed;
+  $('deckyRemove').disabled = locked || !ack || !deckyInfo?.managed;
   for(const button of $('deckyManagedList').querySelectorAll('button'))
-    button.disabled=deckyPluginBusy || !ack || !deckyInfo?.managed;
+    button.disabled=locked || !ack || !deckyInfo?.managed;
 }
+$('deckyPluginJobCheck').onclick = checkDesktopDeckyJob;
 $('deckyAck').onchange = () => { deckyButtons(); showDeckyStore(); };
 $('deckyStorePrevious').onclick = () => { deckyStorePage--; showDeckyStore(); };
 $('deckyStoreNext').onclick = () => { deckyStorePage++; showDeckyStore(); };
 $('deckyStoreSearch').oninput = () => { deckyStorePage = 0; showDeckyStore(); };
-$('deckyRefresh').onclick = loadDecky;
+$('deckyRefresh').onclick = () => loadDecky(true);
 $('deckyStoreRefresh').onclick = loadDeckyStore;
 for (const action of ['Install', 'Update', 'Remove']) {
   $(`decky${action}`).onclick = async () => {
-    if (!$('deckyAck').checked || !deckyInfo) return;
+    if (deckyPluginBusy || deckyPluginRequest || !$('deckyAck').checked || !deckyInfo) return;
     const verb = action.toLowerCase();
     if (verb === 'remove' && !confirm('Remove the Frame Control managed Decky service and binary? Plugin files will stay.')) return;
     await runJob(`${action} Decky Loader`, 'decky', () => api('/api/decky', {action:verb, acknowledged:true}));
@@ -2683,6 +2780,7 @@ async function api(path, body, device = window.connDevice) {
   checkGeneration();
   if (!r.ok) {
     const err = new Error(data.error || `HTTP ${r.status}`);
+    err.status = r.status;
     err.apk = data.apk;
     err.offline = !!data.offline;
     if (err.offline) setOnline(false, err.message);
@@ -3915,7 +4013,7 @@ function showJobs() {
                                waiting ? `${waiting} queued` : ""].filter(Boolean).join(", ");
   renderHome();
 }
-async function runJob(label, key, start, onProgress = () => {}) {
+async function runJob(label, key, start, onProgress = () => {}, onError = () => {}) {
   installing.add(key); jobsRunning++; showJobs();
   try {
     const started = await start();
@@ -3937,6 +4035,7 @@ async function runJob(label, key, start, onProgress = () => {}) {
       return j.result || {};
     }
   } catch (e) {
+    onError(e);
     log(`${label} failed: ${e.message}`, "e"); toast(`${label} failed: ${e.message}`, true);
   } finally { installing.delete(key); queued.delete(key); jobsRunning--; showJobs(); }
 }
