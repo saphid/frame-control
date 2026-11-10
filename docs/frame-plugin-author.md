@@ -39,9 +39,17 @@ only official-store-owned plugins in its VR panel.
 For persistent backend settings, use Decky's `decky.DECKY_PLUGIN_SETTINGS_DIR` rather
 than assuming an environment variable or Steam Deck home path. Validate stored
 types when reading, write through a temporary file before replacing the old
-file, and use a default when no saved setting exists. Treat a damaged or
-unreadable saved file as an error and preserve it; returning a default as a
-successful read can let the next edit erase recoverable data. The sample
+file, and use a default when no saved setting exists.
+
+Flush the temporary file's buffered writes and call `fsync` before replacing
+the old file. On Linux, flush the settings directory entry after replacement
+before acknowledging a save. The sample propagates either flush error; a
+failure after replacement is uncertain and requires a fresh read, since the
+new value can already be readable. Local process-exit and injected-error tests
+do not prove headset power-loss durability.
+
+Treat a damaged or unreadable saved file as an error and preserve it; returning
+a default as a successful read can let the next edit erase recoverable data. The sample
 rejects malformed JSON, invalid UTF-8, non-object JSON and saved non-boolean
 values on both read and save. Repair or restore its `settings.json`, then
 reload the saved setting before editing again.
@@ -73,6 +81,13 @@ Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
 installed-game search, tested with synthetic search text in the local host.
 Accessible-name preservation does not prove VR keyboard or controller usability.
+
+Use `Field.onActivate` or `Field.onClick` for a locally actionable row. Framey
+gives it a native tab stop with pointer and Enter/Space activation; `disabled`
+suppresses the row's actions. `focusable={true}` also gives a row without an
+action a tab stop. Ordinary fields keep their native label/input association.
+These callbacks receive native React events, not Steam gamepad events; Steam
+library-page navigation is still unavailable inside the isolated panel.
 
 `Focusable` forwards React object and callback refs to its local native `div`.
 Use the ref's `.focus()` for local focus management and check for `null` before
@@ -118,6 +133,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `SliderField.notchLabels`, `notchCount` | Shows the supplied captions in a local grid and exposes the caption matching the current value as `aria-valuetext`. Numeric callbacks still return the slider value. | Exact Steam Status 1.2.3 refresh-interval control in real React/DOM with synthetic settings: minute captions, numeric seconds and disabled state. No backend, live refresh, controller or worn VR proof. |
 | `ToggleField.tooltip` | Shows the plugin's help as visible text below its toggle, including when disabled, without requiring hover. Existing descriptions and React help content remain available; omitted help adds nothing. | Exact Pause Games 1.0.3 suspend/overlay controls in real React/DOM with synthetic settings writes: help visibility, true/false callbacks and disabled suppression, plus React content, text escaping and removal checks. No app pause, suspend, backend, saved settings, physical input or worn VR proof. |
 | `Field.icon`, `ToggleField.icon`, `ButtonItem.icon` | Keeps the plugin's React icon beside the field label, including its supplied SVG geometry, title, class and style. | Exact Simple Timer 1.0.0 Subtle Mode toggle and speaker icon in real React/DOM with a synthetic save callback; enabled/disabled transitions, plus local Field/ButtonItem icon fixtures. No timer backend, audio playback, controller or worn VR proof. |
+| `Field.onActivate`, `onClick`, `focusable`, `className` | Action rows use a local focus target with native click/Enter/Space activation and disabled suppression. `focusable` adds a tab stop without requiring an action. Classes, styles, label, description, icon and children are retained. Ordinary setting rows keep their native labels. | Exact Emuchievements 2.0.5 achievement row in real React/DOM with synthetic progress and navigation callbacks; updated/disabled actions, original events, local focus and ordinary toggle-label behavior. No achievement service, real Steam navigation, backend, physical input or worn VR proof. |
 | `PanelSection.spinner` | Shows a local loading status and marks the section busy while true, retaining its title and children. It does not disable child controls; the plugin still owns their disabled state. | Exact Virtual Surround Sound 0.0.5 loading section and Storage Cleaner 1.4.0 section header/condition in real React/DOM with synthetic state: loading, known empty data, populated data, updates and child callbacks. No real settings read, cache read/removal, audio, controller or worn VR proof. |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
@@ -307,7 +323,14 @@ retry after failure, and closes after success. The
 failed saves and retry through the built bundle and local modal host.
 `Focusable.onActivate` accepts pointer and
 Enter/Space input in Framey, but only a worn-headset test can establish how a
-physical controller reaches it. See the
+physical controller reaches it. `Focusable.onCancel` receives the original React
+keyboard event for Escape from the control or its descendants. The nearest
+handler consumes it and owns dismissal; call the dialog's injected `closeModal`
+when it should close. Disabled controls and busy or cancel-disabled dialog shells
+do not invoke it, and an `onKeyDown` handler can consume Escape first. This is a
+native keyboard mapping, not proof of physical controller cancellation. The
+published Web Browser 1.4.3 QR wrapper is replayed in local React/DOM with an inert
+QR renderer; no external navigation or plugin service runs. See the
 [module lookup evidence](evidence/framey-module-lookup-2026-10-26.md) and
 [dialog control evidence](evidence/framey-dialog-controls-2026-10-26.md) for
 the exact tested official versions.
