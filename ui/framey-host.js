@@ -668,9 +668,11 @@
     description != null && R.createElement('div', null, description));
   const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
     ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
-  const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
+  const MenuItem = ({children, selected, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
-      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
+      'aria-pressed':selected == null ? undefined : !!selected,
+      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children,
+      selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
