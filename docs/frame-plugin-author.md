@@ -113,6 +113,12 @@ can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
 VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
 complete pack-and-check command.
+The checker rejects a file used as a directory or parent path: do not include
+both `your-plugin/dist` as a file and `your-plugin/dist/index.js`. It also rejects
+a file and directory with the same path even when the directory entry ends in
+`/`. Ordinary explicit directory entries can appear before or after their files,
+and ZIPs that omit directory entries are accepted. This validation runs before
+the store sends an archive to the headset and again before remote extraction.
 
 ## Framey Decky API compatibility
 

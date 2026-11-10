@@ -161,6 +161,7 @@ def archive_info(data, expected_hash, expected_name):
         wine_cellar = (expected_hash == WINE_CELLAR_DIGEST and expected_name == 'Wine Cellar'
                        and folder == 'decky-wine-cellar')
         seen = {}
+        tree = {}
         for entry in files:
             name = entry.filename
             mode = entry.external_attr >> 16
@@ -173,6 +174,15 @@ def archive_info(data, expected_hash, expected_name):
                 parts[0] != folder or entry.file_size > 30 * 1024 * 1024 or
                 kind not in (0, 0o040000, 0o100000)):
                 raise ValueError('Unsafe plugin archive member')
+            # Implicit parents are directories too. Track path components so
+            # file/dir conflicts fail in either ZIP order, before extraction.
+            node = tree
+            for index, part in enumerate(parts):
+                node = node.setdefault(part, {})
+                directory = index < len(parts) - 1 or entry.is_dir()
+                if None in node and node[None] != directory:
+                    raise ValueError('Plugin archive has a file/directory collision')
+                node[None] = directory
             prior = seen.get(name)
             if prior is not None:
                 # Some official ZIPs repeat unchanged files with execute-bit
@@ -496,6 +506,7 @@ try:
             if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker or prefix_manager):
                 raise RuntimeError('Root plugins are not supported by the Frame user service')
             seen={}
+            tree={}
             for f in files:
                 parts=f.filename.split('/')
                 if f.is_dir() and parts[-1]=='': parts=parts[:-1]
@@ -505,6 +516,14 @@ try:
                     f.file_size>30*1024*1024 or
                     kind not in (0,0o040000,0o100000)):
                     raise RuntimeError('Unsafe plugin archive')
+                # Match desktop validation, including implicit directories.
+                node=tree
+                for index,part in enumerate(parts):
+                    node=node.setdefault(part,{})
+                    directory=index<len(parts)-1 or f.is_dir()
+                    if None in node and node[None]!=directory:
+                        raise RuntimeError('Plugin archive has a file/directory collision')
+                    node[None]=directory
                 prior=seen.get(f.filename)
                 if prior is not None:
                     # Match desktop validation before zipfile overwrites a

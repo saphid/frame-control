@@ -47,6 +47,12 @@ class ArchiveChecker(unittest.TestCase):
         self.assertTrue(result['installerAccepted'])
         self.assertFalse(result['panelCandidate'])
 
+    def test_file_used_as_a_directory_is_rejected_without_installation(self):
+        code, result = self.run_check(extra=('framey-settings/dist', 'not a directory'))
+        self.assertEqual(code, 1, result)
+        self.assertFalse(result['ok'])
+        self.assertIn('file/directory collision', result['error'])
+
     def test_large_manifest_passes_installer_but_not_panel_admission(self):
         manifest = json.loads((SAMPLE / 'plugin.json').read_text())
         manifest['description'] = 'x' * 17_000
