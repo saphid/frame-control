@@ -103,6 +103,18 @@
   }, {
     // Game Sync uses key presence, including empty values, to track sync state.
     has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+    // Named string properties share the same bounded snapshot as method calls.
+    // Keep API/prototype members available even when their names are saved keys.
+    get:(target, key, receiver)=>typeof key==='string' && !Reflect.has(target, key)
+      ? cache.get(key) : Reflect.get(target, key, receiver),
+    set:(target, key, value)=>{
+      if (typeof key!=='string') return Reflect.set(target, key, value);
+      target.setItem(key, value); return true;
+    },
+    deleteProperty:(target, key)=>{
+      if (typeof key!=='string') return Reflect.deleteProperty(target, key);
+      target.removeItem(key); return true;
+    },
   });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
