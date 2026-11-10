@@ -7,7 +7,7 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
 let slots=[],cursor=0,updates=0;const effects=[],cleanups=[];
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   useState:initial=>{const index=cursor++;if(!(index in slots))slots[index]=typeof initial==='function'?initial():initial;
     return [slots[index],value=>{updates++;slots[index]=typeof value==='function'?value(slots[index]):value;}];},
   useRef:initial=>{const index=cursor++;return slots[index]??={current:initial};},

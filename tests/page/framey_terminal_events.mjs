@@ -6,7 +6,7 @@ import vm from 'node:vm';
 const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8');
 const host=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 assert.notEqual(host,source);
-const React={Fragment:'fragment',Component:class {},createElement(){},createContext:()=>({})};
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement(){},createContext:()=>({})};
 const messages=[],listeners=[],timers=new Map();let timerId=0;
 const parent={postMessage:message=>messages.push(message)};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})},location:{hash:'#private'}};
