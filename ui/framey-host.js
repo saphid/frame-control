@@ -412,9 +412,18 @@
         }
       }}, children);
   };
-  const Field = ({label, description, icon, style, children}) => R.createElement('label', {style},
-    icon != null && R.createElement('span', null, icon),
-    R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
+  const Field = ({label, description, icon, style, className, children, disabled,
+    focusable=false, onActivate, onClick}) => {
+    const actionable=typeof onActivate==='function' || typeof onClick==='function';
+    // Action rows need a local focus target. Ordinary setting labels retain
+    // their native input association instead of gaining another tab stop.
+    const props={style,className};
+    if (actionable || focusable) Object.assign(props,{disabled,onActivate,onClick,
+      tabIndex:focusable ? (disabled ? -1 : 0) : undefined});
+    return R.createElement(actionable || focusable ? Focusable : 'label', props,
+      icon != null && R.createElement('span', null, icon),
+      R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
+  };
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {

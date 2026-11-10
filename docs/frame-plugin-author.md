@@ -74,6 +74,13 @@ the latter on the native input. This includes Wine Cellar 0.2.1's published
 installed-game search, tested with synthetic search text in the local host.
 Accessible-name preservation does not prove VR keyboard or controller usability.
 
+Use `Field.onActivate` or `Field.onClick` for a locally actionable row. Framey
+gives it a native tab stop with pointer and Enter/Space activation; `disabled`
+suppresses the row's actions. `focusable={true}` also gives a row without an
+action a tab stop. Ordinary fields keep their native label/input association.
+These callbacks receive native React events, not Steam gamepad events; Steam
+library-page navigation is still unavailable inside the isolated panel.
+
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
@@ -112,6 +119,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `SliderField.notchLabels`, `notchCount` | Shows the supplied captions in a local grid and exposes the caption matching the current value as `aria-valuetext`. Numeric callbacks still return the slider value. | Exact Steam Status 1.2.3 refresh-interval control in real React/DOM with synthetic settings: minute captions, numeric seconds and disabled state. No backend, live refresh, controller or worn VR proof. |
 | `ToggleField.tooltip` | Shows the plugin's help as visible text below its toggle, including when disabled, without requiring hover. Existing descriptions and React help content remain available; omitted help adds nothing. | Exact Pause Games 1.0.3 suspend/overlay controls in real React/DOM with synthetic settings writes: help visibility, true/false callbacks and disabled suppression, plus React content, text escaping and removal checks. No app pause, suspend, backend, saved settings, physical input or worn VR proof. |
 | `Field.icon`, `ToggleField.icon`, `ButtonItem.icon` | Keeps the plugin's React icon beside the field label, including its supplied SVG geometry, title, class and style. | Exact Simple Timer 1.0.0 Subtle Mode toggle and speaker icon in real React/DOM with a synthetic save callback; enabled/disabled transitions, plus local Field/ButtonItem icon fixtures. No timer backend, audio playback, controller or worn VR proof. |
+| `Field.onActivate`, `onClick`, `focusable`, `className` | Action rows use a local focus target with native click/Enter/Space activation and disabled suppression. `focusable` adds a tab stop without requiring an action. Classes, styles, label, description, icon and children are retained. Ordinary setting rows keep their native labels. | Exact Emuchievements 2.0.5 achievement row in real React/DOM with synthetic progress and navigation callbacks; updated/disabled actions, original events, local focus and ordinary toggle-label behavior. No achievement service, real Steam navigation, backend, physical input or worn VR proof. |
 | `Dropdown.onMenuWillOpen(showMenu)` | A Load options action invokes the plugin's loader. Choices become selectable only after `showMenu()`; Reload options invokes it again. Cancel loading hides the wait and rejects late callbacks. | Exact published Wine Cellar 0.2.1 option-loader callback with synthetic tool replies; host contract tests. No live helper or worn VR check. |
 | `Dropdown.renderButtonValue` | Renders a plugin-supplied current-value view above the native select or deferred loader. Receives the matching option's label, or the default label when no choice matches; the original option object still reaches `onChange`. | Exact published Wine Cellar 0.2.1 renderer/control in real React/DOM with synthetic tool choices: initial/loading/updated/disabled values, styles, accessible label and empty-string selection. No real tool discovery/assignment, backend or worn VR proof. |
 | `TextField.defaultValue`, `onBlur`, `onFocus`, `onClick`, `onKeyDown`, `onKeyUp` | Uncontrolled input drafts and original React events reach the plugin callbacks; disabled fields suppress callbacks. A controlled `value` takes precedence over `defaultValue`. | Local host contracts and the exact Game Sync 1.0.4 text-dialog function: edited draft/OK and Cancel. No sync, backend, real input device or VR keyboard check. |
