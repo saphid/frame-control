@@ -5,14 +5,14 @@ import vm from 'node:vm';
 const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8')
   .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
 let slots=[],cursor=0;
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:{...props,
     ...(children.length?{children:children.length===1?children[0]:children}:{})},children}),
   useState:initial=>{
     const index=cursor++;
     if (!(index in slots)) slots[index]=initial;
     return [slots[index],value=>{slots[index]=value;}];
-  },useEffect(){},isValidElement:value=>!!value?.type};
+  },useRef:value=>({current:value}),useEffect(){},useLayoutEffect(){},isValidElement:value=>!!value?.type};
 const window={React,ReactDOM:{createRoot:()=>({render(){}})}};
 const context=vm.createContext({window,document:{getElementById:()=>({})},
   navigator:{language:'en'},parent:{postMessage(){}},addEventListener(){},setTimeout(){},clearTimeout(){}});

@@ -1,0 +1,111 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="outside">Outside tabs</button>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container);
+  const outside=document.getElementById('outside');
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const tabButtons=()=>[...container.querySelectorAll('[role="tab"]')];
+  const panel=()=>container.querySelector('[role="tabpanel"]');
+  const click=index=>ReactDOM.flushSync(()=>{tabButtons()[index].focus();tabButtons()[index].click();});
+  // Only this published Tabs expression is replayed. Its content components,
+  // lists and callbacks are inert substitutes; no player or backend is loaded.
+  const t=key=>key;
+  const ChangePage=()=>React.createElement('button',{id:'change-action'},'Synthetic change action');
+  const GameSettings=()=>React.createElement('input',{id:'settings-input',defaultValue:'Synthetic setting'});
+  const AboutPage=()=>React.createElement('p',null,'Synthetic about content');
+  const videos=[],loadingNum=0,searchTerm='';
+  const handlePlay=()=>{},setSearchTerm=()=>{},setInitialSearch=()=>{};
+  function PublishedTabs() {
+    const [currentTab,setCurrentTab]=React.useState('change-music-tab');
+    return __OFFICIAL_TABS__;
+  }
+  try {
+    outside.focus();render(React.createElement(PublishedTabs));
+    assert(document.activeElement===document.getElementById('change-action'),'published initial tab content not focused');
+    click(1);
+    assert(document.activeElement===document.getElementById('settings-input'),'published tab switch left focus on header');
+    click(2);
+    assert(document.activeElement===panel(),'text-only tab lacks a programmatic focus target');
+    assert(panel().tabIndex===-1,'fallback panel became an extra sequential tab stop');
+    click(0);
+    assert(document.activeElement===document.getElementById('change-action'),'published return tab not focused');
+    render(null);
+
+    const choices=[
+      React.createElement('button',{key:'disabled',disabled:true},'Disabled'),
+      React.createElement('fieldset',{key:'fieldset',disabled:true},React.createElement('input')),
+      React.createElement('button',{key:'hidden',hidden:true},'Hidden'),
+      React.createElement('button',{key:'css',style:{display:'none'}},'Hidden by style'),
+      React.createElement('button',{key:'invisible',style:{visibility:'hidden'}},'Invisible'),
+      React.createElement('div',{key:'aria', 'aria-hidden':true},React.createElement('button',null,'Hidden group')),
+      React.createElement('div',{key:'inert',inert:''},React.createElement('button',null,'Inert group')),
+      React.createElement('button',{key:'optout',tabIndex:-1},'Opted out'),
+      React.createElement('button',{key:'locked','aria-disabled':true},'Unavailable'),
+      React.createElement(DFL.Focusable,{key:'enabled',onActivate:()=>{},id:'first-enabled'},'Enabled'),
+      React.createElement('input',{key:'last',id:'later-input',defaultValue:'Draft'})];
+    const changes=[];
+    const localTabs=[{id:'one',title:'One',content:choices},
+      {id:'two',title:'Two',content:React.createElement('textarea',{id:'second-input'})},
+      {id:'locked',title:'Locked',disabled:true,content:'Never'},
+      {id:'text',title:'Text',content:'Read-only information'}];
+    const local=(autoFocusContents,activeTab)=>render(React.createElement(DFL.Tabs,{
+      tabs:localTabs,autoFocusContents,activeTab,onShowTab:id=>changes.push(id)}));
+    outside.focus();local(true,'one');
+    assert(document.activeElement===document.getElementById('first-enabled'),'skipped disabled/hidden/opt-out targets incorrectly');
+    const later=document.getElementById('later-input');later.focus();local(true,'one');
+    assert(document.activeElement===later,'same-tab redraw stole editing focus');
+    click(1);
+    assert(document.activeElement===tabButtons()[1]&&panel().contains(later),'controlled request changed content focus before selection');
+    assert(JSON.stringify(changes)==='["two"]','controlled callback count changed');
+    local(true,'two');
+    assert(document.activeElement===document.getElementById('second-input'),'controlled prop change not focused');
+    click(2);assert(JSON.stringify(changes)==='["two"]','disabled tab changed selection');
+    local(true,'text');assert(document.activeElement===panel(),'controlled text-only tab not focused');
+    local(true,'one');
+    assert(document.activeElement===document.getElementById('first-enabled'),'old panel focus blocked new content focus');
+    render(null);outside.focus();local(false,'one');
+    assert(document.activeElement===outside,'opt-out moved initial focus');
+    local(false,'two');assert(document.activeElement===outside,'opt-out moved focus on selection');
+    render(null);outside.focus();local(undefined,'one');
+    assert(document.activeElement===outside,'omitted option moved focus');
+    render(null);
+
+    // A field's own mount focus takes priority over the first eligible control.
+    const ownFocus=[{id:'own',title:'Own focus',content:React.createElement('div',null,
+      React.createElement('button',{id:'before-own'},'Before input'),
+      React.createElement(DFL.TextField,{'aria-label':'Initial query',focusOnMount:true}))}];
+    render(React.createElement(DFL.Tabs,{tabs:ownFocus,autoFocusContents:true}));
+    assert(document.activeElement===panel().querySelector('input'),'tab focus overrode field mount focus');
+    render(null);outside.focus();
+    render(React.createElement(DFL.Tabs,{autoFocusContents:true,tabs:[{id:'edit',title:'Edit',
+      content:React.createElement('div',{id:'editable',contentEditable:true},'Editable content')}]}));
+    assert(document.activeElement===document.getElementById('editable'),'native editable content was skipped');
+    render(null);outside.focus();
+    render(React.createElement(DFL.Tabs,{tabs:[],autoFocusContents:true}));
+    assert(document.activeElement===outside,'empty tabs moved focus');
+    render(null);
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedThemeMusicTabs:true,initialContentFocused:true,selectedContentFocused:true,
+      textOnlyPanelFocused:true,ineligibleTargetsSkipped:true,sameTabFocusPreserved:true,
+      controlledSelectionRespected:true,disabledTabInert:true,optOutRespected:true,
+      fieldMountFocusPreserved:true,editableContentFocused:true,emptyTabsInert:true,syntheticContents:true,
+      fullPluginInitialized:false,realBackendContacted:false,realFrameContacted:false,
+      wornVisibilityVerified:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

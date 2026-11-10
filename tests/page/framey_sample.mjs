@@ -7,7 +7,7 @@ const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8
 const bundle=readFileSync(new URL('../../examples/framey-settings/dist/index.js',import.meta.url),'utf8');
 assert.match(bundle,/SP_JSX\.jsx/);
 const states=[];
-const React={Fragment:Symbol('fragment'),Component:class {},
+const React={Fragment:Symbol('fragment'),Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)],useRef:value=>({current:value}),

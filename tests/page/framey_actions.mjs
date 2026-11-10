@@ -6,10 +6,10 @@ const source=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'ut
 const testSource=source.replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n  window.__surface=PluginSurface; window.__legacy=legacyServerAPI; window.__library=setLibrarySnapshot; window.__running=setRunningSnapshot; window.__refreshRunning=refreshRunning;\n})();');
 assert.notEqual(testSource,source);
 const states=[];
-const React={Fragment:'fragment',Component:class {},createElement:(type,props,...children)=>({type,props:props||{},children}),
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useLayoutEffect(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}

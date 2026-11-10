@@ -2,7 +2,9 @@
 import asyncio
 import importlib.util
 import json
+import os
 from pathlib import Path
+import stat
 import subprocess
 import sys
 import tempfile
@@ -25,6 +27,59 @@ def backend(settings_dir):
 
 
 class SamplePlugin(unittest.TestCase):
+    def test_failed_file_flush_keeps_previous_or_absent_setting(self):
+        for previous in (None, b'{"schema": 1, "enabled": true}\n'):
+            with self.subTest(previous=previous), tempfile.TemporaryDirectory() as folder:
+                path = Path(folder) / 'settings.json'
+                if previous is not None:
+                    path.write_bytes(previous)
+                with patch('os.fsync', side_effect=OSError('file flush unavailable')):
+                    with self.assertRaisesRegex(OSError, 'file flush unavailable'):
+                        asyncio.run(backend(folder).set_setting('enabled', False))
+                self.assertEqual(path.read_bytes() if path.exists() else None, previous)
+                self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+
+    @unittest.skipUnless(hasattr(os, 'O_DIRECTORY'), 'Directory flush requires POSIX directory descriptors')
+    def test_failed_directory_flush_reports_uncertain_save_and_fresh_read_reconciles(self):
+        real_fsync = os.fsync
+
+        def failed_directory_flush(descriptor):
+            if stat.S_ISDIR(os.fstat(descriptor).st_mode):
+                raise OSError('directory flush unavailable')
+            return real_fsync(descriptor)
+
+        with tempfile.TemporaryDirectory() as folder:
+            plugin = backend(folder)
+            self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
+            with patch('os.fsync', side_effect=failed_directory_flush):
+                with self.assertRaisesRegex(OSError, 'directory flush unavailable'):
+                    asyncio.run(plugin.set_setting('enabled', False))
+            # Replacement already happened. A rejection must not be described
+            # as a rollback; the frontend's existing reload guard reconciles it.
+            self.assertFalse(asyncio.run(backend(folder).get_setting('enabled', True)))
+            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+            self.assertTrue(asyncio.run(plugin.set_setting('enabled', True)))
+
+    def test_acknowledged_save_survives_backend_process_exit(self):
+        code = '''
+import asyncio, importlib.util, os, sys, types
+decky = types.ModuleType('decky')
+decky.DECKY_PLUGIN_SETTINGS_DIR = sys.argv[2]
+sys.modules['decky'] = decky
+spec = importlib.util.spec_from_file_location('sample_backend', sys.argv[1])
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+saved = asyncio.run(module.Plugin().set_setting('enabled', True))
+# Do not rely on interpreter shutdown to flush Python buffers.
+os._exit(0 if saved is True else 2)
+'''
+        with tempfile.TemporaryDirectory() as folder:
+            run = subprocess.run([sys.executable, '-c', code, str(EXAMPLE), folder],
+                                 capture_output=True, text=True, timeout=10)
+            self.assertEqual(run.returncode, 0, run.stderr)
+            self.assertTrue(asyncio.run(backend(folder).get_setting('enabled', False)))
+            self.assertEqual(list(Path(folder).glob('.settings-*')), [])
+
     def test_retired_settings_views_cannot_update_ui_or_issue_requests(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_lifecycle.mjs')],
                                 capture_output=True, text=True, timeout=10)

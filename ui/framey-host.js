@@ -392,18 +392,29 @@
   const DialogButton = ({children, disabled, onClick, onOKButton, ...props}) =>
     R.createElement('button', {...props, type:'button', disabled:!!disabled,
       onClick:event=>{if(!disabled)(onClick || onOKButton)?.(event);}}, children);
-  const Focusable = ({children, onActivate, onClick, onKeyDown, disabled, tabIndex, role, ...props}) => {
+  const Focusable = R.forwardRef(function Focusable(
+    {children, onActivate, onCancel, onClick, onKeyDown, disabled, tabIndex, role, ...props}, ref) {
     const actionable=typeof onActivate==='function' || typeof onClick==='function';
     const activate = event => {
       if (disabled || event.defaultPrevented) return;
       event.stopPropagation();
       (onClick || onActivate)?.(event);
     };
-    return R.createElement('div', {...props, role:role || (actionable ? 'button' : undefined),
+    return R.createElement('div', {...props, ref, role:role || (actionable ? 'button' : undefined),
       tabIndex:tabIndex ?? (actionable ? (disabled ? -1 : 0) : undefined),
       'aria-disabled':actionable && disabled ? true : undefined,
       onClick:actionable ? activate : undefined, onKeyDown:event=>{
         onKeyDown?.(event);
+        if (event.key==='Escape' && typeof onCancel==='function' && !disabled && !event.defaultPrevented) {
+          const modal=modals.at(-1);
+          if (modal && (modal.running || modal.element?.props?.bCancelDisabled ||
+              !modal.node?.contains(event.currentTarget))) return;
+          // Native Escape is a local cancel action, including from descendants.
+          // The nearest handler owns dismissal; do not also cancel the shell.
+          event.preventDefault();
+          event.stopPropagation();
+          onCancel(event);
+        }
         if (actionable && !disabled && !event.defaultPrevented && event.target===event.currentTarget &&
             (event.key==='Enter' || event.key===' ')) {
           event.preventDefault();
@@ -411,10 +422,19 @@
           (onActivate || onClick)?.(event);
         }
       }}, children);
+  });
+  const Field = ({label, description, icon, style, className, children, disabled,
+    focusable=false, onActivate, onClick}) => {
+    const actionable=typeof onActivate==='function' || typeof onClick==='function';
+    // Action rows need a local focus target. Ordinary setting labels retain
+    // their native input association instead of gaining another tab stop.
+    const props={style,className};
+    if (actionable || focusable) Object.assign(props,{disabled,onActivate,onClick,
+      tabIndex:focusable ? (disabled ? -1 : 0) : undefined});
+    return R.createElement(actionable || focusable ? Focusable : 'label', props,
+      icon != null && R.createElement('span', null, icon),
+      R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   };
-  const Field = ({label, description, icon, style, children}) => R.createElement('label', {style},
-    icon != null && R.createElement('span', null, icon),
-    R.createElement('strong', null, label), description && R.createElement('small', null, description), children);
   // DFL/@decky/ui Toggle uses value; ToggleField uses checked. Keep the
   // standalone control separate so persisted true settings render correctly.
   const Toggle = ({value, disabled, onChange}) => R.createElement('input', {
@@ -577,15 +597,32 @@
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
   const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
-  const Tabs = ({tabs=[], activeTab, onShowTab}) => {
+  const Tabs = ({tabs=[], activeTab, onShowTab, autoFocusContents=false}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
+    const panel = R.useRef(null);
+    R.useLayoutEffect(()=>{
+      const node=panel.current;
+      if (!autoFocusContents || !node || !current ||
+          (document.activeElement!==node && node.contains(document.activeElement))) return;
+      // Honour native disabled/hidden state and explicit tab-stop opt-outs.
+      // A child's own mount focus wins; ordinary redraws must not steal it.
+      for (const target of node.querySelectorAll('button,input,select,textarea,a[href],[tabindex],[contenteditable="true"]')) {
+        if ((target.tabIndex<0 && !(target.isContentEditable && !target.hasAttribute('tabindex'))) ||
+            target.matches(':disabled') ||
+            target.closest('[hidden],[inert],[aria-hidden="true"],[aria-disabled="true"]') ||
+            !target.getClientRects().length) continue;
+        target.focus();
+        if (document.activeElement===target) return;
+      }
+      node.focus();
+    },[autoFocusContents,current?.id]);
     return R.createElement('div', null,
       R.createElement('div', {role:'tablist'}, ...tabs.map(tab=>R.createElement('button', {
         type:'button', key:tab.id, role:'tab', 'aria-selected':tab===current,
         disabled:!!tab.disabled, onClick:()=>{if(!tab.disabled){setSelected(tab.id);onShowTab?.(tab.id);}}},
         tab.title, tab.renderTabAddon?.()))),
-      R.createElement('div', {role:'tabpanel'}, current?.content));
+      R.createElement('div', {role:'tabpanel',ref:panel,tabIndex:autoFocusContents ? -1 : undefined}, current?.content));
   };
   const SidebarNavigation = ({pages=[], title}) => R.createElement('section', null,
     title && R.createElement('h2', null, title), R.createElement(Tabs, {
@@ -672,9 +709,11 @@
     description != null && R.createElement('div', null, description));
   const ProgressBarWithInfo = ({sOperationText, ...props}) => R.createElement('div', null,
     ProgressBarItem(props), sOperationText == null ? null : R.createElement('small', {role:'status'}, sOperationText));
-  const MenuItem = ({children, disabled, bDisabled, onClick, onSelected}) =>
+  const MenuItem = ({children, selected, disabled, bDisabled, onClick, onSelected}) =>
     R.createElement('button', {type:'button',disabled:!!(disabled || bDisabled),
-      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children);
+      'aria-pressed':selected == null ? undefined : !!selected,
+      onClick:event=>{if(!disabled && !bDisabled)(onClick || onSelected)?.(event);}}, children,
+      selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
@@ -794,7 +833,7 @@
       }
       return;
     }
-    if (event.key !== 'Escape') return;
+    if (event.key !== 'Escape' || event.defaultPrevented) return;
     event.preventDefault();
     if (modal.running) return;
     const onEscape = modalCallback(modal, 'onEscKeypress');
@@ -1105,7 +1144,8 @@
     useParams: () => currentParams,
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
-    Object.entries(DFL).filter(([name,value])=>typeof value==='function' && /^[A-Z]/.test(name)))));
+    Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
+      (typeof value==='function' || value===Focusable)))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
