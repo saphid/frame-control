@@ -9,7 +9,7 @@ assert.notEqual(host,source);
 class Element {append(){} setAttribute(){} remove(){}}
 const listeners=[],calls=[];
 let saved,chunks=[],readBuffer;
-const window={React:{Fragment:'fragment',Component:class {},createElement:()=>({}),isValidElement:()=>false},
+const window={React:{Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:()=>({}),isValidElement:()=>false},
   ReactDOM:{createRoot:()=>({render(){}})}};
 const parent={postMessage:message=>{
   if(message.type==='framey:cache:init')return;

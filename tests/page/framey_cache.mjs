@@ -26,7 +26,7 @@ const onParent=parentListeners.find(x=>x.type==='message').fn;
 
 function iframe({delaySeed=false}={}){
   const listeners=[];const queued=[];const timers=[];let live=false,bundleReads=0;
-  const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},createElement:()=>({}),isValidElement:()=>true},
+  const frameWindow={location:{hash:`#${session}`},React:{Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:()=>({}),isValidElement:()=>true},
     ReactDOM:{createRoot:()=>({render(){}})}};
   const proxy={postMessage:message=>listeners.find(x=>x.type==='message')?.fn({source:hostParent,data:message})};
   el('frameyFrame').contentWindow=proxy;

@@ -4,7 +4,7 @@ import vm from 'node:vm';
 
 const host=readFileSync(new URL('../../ui/framey-host.js',import.meta.url),'utf8')
   .replace(/\n  start\(\);\n\}\)\(\);\s*$/, '\n})();');
-const React={Fragment:'fragment',Component:class {},
+const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   createElement:(type,props,...children)=>({type,props:{...props,
     ...(children.length?{children:children.length===1?children[0]:children}:{})},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
