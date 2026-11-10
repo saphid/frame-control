@@ -566,8 +566,8 @@
         'aria-label':typeof label==='string'?`Reset ${label}`:'Reset slider value',
         onClick:()=>{if(!disabled && permitted(resetValue))onChange?.(resetValue);}}, 'Reset'));
   };
-  const PanelSection = ({title, children}) => R.createElement('section', null,
-    title && R.createElement('h2', null, title), children);
+  const PanelSection = ({title, spinner, children}) => R.createElement('section', {'aria-busy':spinner ? true : undefined},
+    title && R.createElement('h2', null, title), spinner && R.createElement(Spinner), children);
   const ControlsList = ({children, alignItems='left', spacing='standard'}) =>
     R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
@@ -1037,13 +1037,19 @@
     'LPAD_CLICK', 'RPAD_TOUCH', 'RPAD_CLICK', 'REAR_LEFT_UPPER', 'REAR_LEFT_LOWER',
     'REAR_RIGHT_UPPER', 'REAR_RIGHT_LOWER', 'STEAM_GUIDE', 'STEAM_QUICK_MENU',
   ].flatMap((name,value)=>[[name,value],[value,name]])));
+  // Legacy decky-frontend-lib 3.25.0 identifiers. Only the Decky tab has a
+  // local equivalent here; exporting constants does not expose Steam menus.
+  const QuickAccessTab = Object.freeze(Object.fromEntries([
+    ...['Notifications','RemotePlayTogetherControls','VoiceChat','Friends',
+      'Settings','Perf','Help','Music'].map((name,value)=>[name,value]), ['Decky',999],
+  ].flatMap(([name,value])=>[[name,value],[value,name]])));
   const DFL = window.DFL = {
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
     Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
-    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton,
+    DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton, QuickAccessTab,
     ColorPickerModal,
     Toggle, Spinner, SteamSpinner:Spinner, Tabs, SidebarNavigation,
     SuspensefulImage:({alt='', ...props})=>R.createElement('img', {...props, alt}),
@@ -1062,6 +1068,10 @@
     sleep:ms=>new Promise(resolve=>setTimeout(resolve,Math.max(0,Number(ms)||0))),
     staticClasses: {Title:'framey-title'},
     Navigation: {Navigate:navigate, NavigateBack:navigateBack, CloseSideMenus:()=>navigate(null),
+      OpenQuickAccessMenu:tab=>{
+        if (tab!==QuickAccessTab.Decky) throw Error('Steam Quick Access tabs are unavailable in Framey');
+        navigate(null);
+      },
       NavigateToExternalWeb: url => { if (/^https:\/\//.test(url)) window.open(url, '_blank', 'noopener'); }},
     showModal, showContextMenu,
     // Steam app, library, and store patches have no target inside this panel.
