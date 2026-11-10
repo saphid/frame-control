@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const React__default={default:React},deckyFrontendLib=DFL;
+  __OFFICIAL_ICON__
+  const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),changes=[];
+  // Only the published control and SVG runtime run. Volume is local state;
+  // changeVolume never reaches a player, backend, settings file or headset.
+  const VolumeFixture=()=>{
+    const [volume,setVolume]=React.useState(37);
+    const changeVolume=value=>{changes.push(value);setVolume(value);};
+    return __OFFICIAL_CONTROL__;
+  };
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const inputValue=value=>ReactDOM.flushSync(()=>{
+    const input=container.querySelector('input[type=range]');
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,String(value));
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  try {
+    render(React.createElement(VolumeFixture));
+    const svg=container.querySelector('svg');
+    assert(svg&&svg.getAttribute('viewBox')==='0 0 24 24','published volume speaker icon was lost');
+    assert(svg.querySelectorAll('path').length===2&&svg.querySelectorAll('path')[1].getAttribute('d').startsWith('M3 9v6h4'),
+      'published speaker paths changed');
+    assert(svg.getAttribute('height')==='1em'&&svg.getAttribute('fill')==='currentColor',
+      'published SVG styling changed');
+    const input=container.querySelector('input[type=range]');
+    assert(input.value==='37'&&input.min==='0'&&input.max==='100'&&input.step==='1','published volume constraints changed');
+    inputValue(64);
+    assert(changes.length===1&&changes[0]===64&&input.value==='64','published numeric change callback changed');
+    render(React.createElement(DFL.SliderField,{label:'Volume',description:'Muted fixture',value:0,disabled:true,
+      icon:React.createElement(MdVolumeUp,{title:'Speaker',className:'volume-icon',style:{color:'red'}}),
+      onChange:value=>changes.push(value)}));
+    const disabledIcon=container.querySelector('svg.volume-icon');
+    assert(disabledIcon&&disabledIcon.querySelector('title').textContent==='Speaker'&&
+      getComputedStyle(disabledIcon).color==='rgb(255, 0, 0)','disabled slider lost React icon props');
+    assert(container.textContent.includes('Volume')&&container.textContent.includes('Muted fixture'),
+      'icon displaced label or description');
+    assert(container.querySelector('input').disabled,'disabled volume input was enabled');
+    inputValue(12);assert(changes.length===1,'disabled volume callback fired');
+    render(React.createElement(DFL.SliderField,{label:'Ordinary',value:25,onChange:()=>{}}));
+    assert(!container.querySelector('svg')&&container.querySelector('input').value==='25',
+      'removed icon survived or ordinary value changed');
+    render(React.createElement(DFL.SliderField,{label:'Custom',value:40,icon:'<speaker>',onChange:()=>{}}));
+    assert(container.textContent.includes('<speaker>')&&!container.querySelector('speaker'),'icon text was interpreted as markup');
+    render(React.createElement(DFL.SliderField,{label:'Absent',value:40,icon:null,onChange:()=>{}}));
+    assert(!container.textContent.includes('<speaker>'),'null icon retained old content');
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedControl:true,publishedSpeakerSVG:true,publishedNumericCallback:true,
+      disabledIconPreserved:true,disabledCallbackSuppressed:true,reactIconPropsPreserved:true,
+      labelAndDescriptionPreserved:true,removedIconCleared:true,iconTextEscaped:true,
+      syntheticVolumeState:true,realPlaybackVerified:false,realSettingsSaved:false,
+      realFrameContacted:false,controllerInputVerified:false,wornVisibilityVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

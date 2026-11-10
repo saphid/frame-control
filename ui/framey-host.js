@@ -103,6 +103,18 @@
   }, {
     // Game Sync uses key presence, including empty values, to track sync state.
     has:(target, key)=>cache.has(key) || Reflect.has(target, key),
+    // Named string properties share the same bounded snapshot as method calls.
+    // Keep API/prototype members available even when their names are saved keys.
+    get:(target, key, receiver)=>typeof key==='string' && !Reflect.has(target, key)
+      ? cache.get(key) : Reflect.get(target, key, receiver),
+    set:(target, key, value)=>{
+      if (typeof key!=='string') return Reflect.set(target, key, value);
+      target.setItem(key, value); return true;
+    },
+    deleteProperty:(target, key)=>{
+      if (typeof key!=='string') return Reflect.deleteProperty(target, key);
+      target.removeItem(key); return true;
+    },
   });
   function persistCache() {
     parent.postMessage({type:'framey:cache:save', session:cacheSession,
@@ -521,7 +533,7 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   };
-  const SliderField = ({label, description, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -532,7 +544,7 @@
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description},
+    return R.createElement(Field, {label, description, icon},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
@@ -560,7 +572,7 @@
     R.createElement('div', {style:{display:'flex', flexWrap:'wrap',
       justifyContent:alignItems==='right'?'flex-end':alignItems==='center'?'center':'flex-start',
       gap:spacing==='extra'?16:8}}, children);
-  const Spinner = ({children}) => R.createElement('p', {role:'status'}, children || 'Loading…');
+  const Spinner = ({children, style}) => R.createElement('p', {role:'status', style}, children || 'Loading…');
   const Tabs = ({tabs=[], activeTab, onShowTab}) => {
     const [selected, setSelected] = R.useState(tabs[0]?.id);
     const current = tabs.find(tab=>tab.id === (activeTab ?? selected)) || tabs[0];
