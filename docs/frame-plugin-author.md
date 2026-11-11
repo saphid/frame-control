@@ -76,6 +76,12 @@ again when it mounts. Cleanup does not cancel a backend request already sent;
 it prevents that old view from issuing new requests or announcing stale UI
 results. The sample uses a request generation as well as an active-view guard
 so React's development effect replay cannot let an old read unlock a newer one.
+Keep unfinished writes ordered across view remounts as well. The sample retains
+its pending save at module scope: a reopened settings view and its read-only
+quick action wait for the reply, then read the saved value after either success
+or failure. A retired waiting view sends no read. This prevents a pre-save
+snapshot from enabling a second edit; it does not cancel backend work or
+coordinate independent clients.
 
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published

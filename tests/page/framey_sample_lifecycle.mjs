@@ -62,6 +62,53 @@ for(const failure of [undefined,'Synthetic retired save failure']) {
   assert.equal(toastCount(),toasts,'late write must not announce a retired save');
 }
 
+// Reopening while the previous view's write is still pending must not read
+// the pre-save value and authorize another edit. A rejected reply can still
+// mean the backend committed; both outcomes require a fresh read afterward.
+for(const failure of [undefined,'Reply lost after commit']) {
+  view=mount();reply(calls.at(-1),undefined,false);await tick();view.tree=render(view);
+  toggle(view.tree).props.onChange(true);const write=calls.at(-1);
+  assert.equal(write.method,'set_setting');unmount(view);
+  const retired=view;updates=retired.updates;const toasts=toastCount();count=calls.length;
+  const abandoned=mount();
+  assert.equal(calls.length,count,'reopened settings must wait for the old save before reading');
+  assert.equal(toggle(render(abandoned)).props.disabled,true);
+  // Leaving again while waiting must not dispatch a read from this old view.
+  unmount(abandoned);const abandonedUpdates=abandoned.updates;
+  view=mount();view.tree=render(view);
+  toggle(view.tree).props.onChange(false);button(view.tree,'Reset example setting').props.onClick();
+  assert.equal(calls.length,count,'waiting views must not issue competing writes or reads');
+  const quick=plugin.frameyQuickActions[0].onClick();
+  assert.equal(calls.length,count,'read-only quick action must wait for the old save too');
+  reply(write,failure,true);await tick();
+  assert.equal(retired.updates,updates);assert.equal(abandoned.updates,abandonedUpdates);
+  assert.equal(toastCount(),toasts,'the retired writer must remain silent');
+  const reads=calls.slice(count);
+  assert.equal(reads.length,2,'only the active reopened view and quick action may read');
+  assert.ok(reads.every(call=>call.method==='get_setting'));
+  for(const read of reads)reply(read,undefined,true);
+  assert.equal(await quick,'Saved setting is on');await tick();view.tree=render(view);
+  assert.equal(toggle(view.tree).props.checked,true,'show the freshly read committed value');
+  assert.equal(toggle(view.tree).props.disabled,false,'only the new read may authorize editing');
+  toggle(view.tree).props.onChange(false);
+  assert.equal(calls.at(-1).method,'set_setting','a fresh edit may save after reconciliation');
+  reply(calls.at(-1),undefined,true);await tick();unmount(view);
+}
+
+// Two mounted settings surfaces share the same write guard. A view that read
+// before another view's save must reconcile instead of sending a second write.
+view=mount();reply(calls.at(-1),undefined,false);await tick();view.tree=render(view);
+const peer=mount();reply(calls.at(-1),undefined,false);await tick();peer.tree=render(peer);
+toggle(view.tree).props.onChange(true);const sharedWrite=calls.at(-1);count=calls.length;
+toggle(peer.tree).props.onChange(false);await tick();peer.tree=render(peer);
+assert.equal(calls.length,count,'two settings surfaces must not race backend writes');
+assert.equal(toggle(peer.tree).props.disabled,true,'blocked save requires fresh read permission');
+reply(sharedWrite,undefined,true);await tick();
+button(peer.tree,'Reload saved setting').props.onClick();
+assert.equal(calls.at(-1).method,'get_setting');reply(calls.at(-1),undefined,true);await tick();peer.tree=render(peer);
+assert.equal(toggle(peer.tree).props.checked,true);assert.equal(toggle(peer.tree).props.disabled,false);
+unmount(view);unmount(peer);
+
 // A reset dialog belongs to its settings view; retiring it closes without saving.
 view=mount();reply(calls.at(-1),undefined,true);await tick();view.tree=render(view);
 button(view.tree,'Reset example setting').props.onClick();
@@ -82,3 +129,8 @@ assert.equal(toggle(view.tree).props.checked,false);assert.equal(toggle(view.tre
 toggle(view.tree).props.onChange(true);assert.equal(calls.length,count+1);
 assert.equal(calls.at(-1).method,'set_setting');reply(calls.at(-1),undefined,true);await tick();
 unmount(view);
+console.log('Framey sample reopen-save proof: '+JSON.stringify({passed:true,
+  pendingSaveDelaysReopenRead:true, rejectedSaveReconciles:true,
+  quickReadWaits:true, retiredWaiterSendsNoRead:true, freshReadEnablesEditing:true,
+  sharedWriteGuard:true, retiredWriterSilent:true, effectReplayPreserved:true,
+  syntheticBackendReplies:true, realFrameContacted:false}));
