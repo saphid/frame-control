@@ -338,6 +338,12 @@ not change a plugin's backend identity. The existing catalog-response and
 installed-manifest size limits still apply. These paths are tested locally
 with synthetic names and disposable manifests, without a live headset.
 
+An installed plugin with a non-object JSON manifest is skipped during inventory
+instead of hiding every plugin. A readable manifest with a non-object ownership
+receipt stays visible as unowned, without store actions or a managed Framey
+panel. The scan leaves those files untouched; after repair, a fresh inventory
+reads them again. These cases are tested with disposable local plugin folders.
+
 Panel-ready, error, and trusted-pointer reports also carry the current panel
 session. A delayed report from a closed panel cannot change the new panel's
 status or count as input to that panel.
