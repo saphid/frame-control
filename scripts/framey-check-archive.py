@@ -64,7 +64,7 @@ def check(path, name):
     folder = frame_decky_store.archive_info(data, digest, name)
     with zipfile.ZipFile(io.BytesIO(data)) as archive:
         manifest_entry = archive.getinfo(folder + '/plugin.json')
-        manifest = json.loads(archive.read(manifest_entry))
+        manifest = json.loads(archive.read(manifest_entry).decode('utf-8'))
         entry = folder + '/dist/index.js'
         frontend = next((item for item in archive.infolist() if item.filename == entry and not item.is_dir()), None)
         version = manifest.get('api_version')
