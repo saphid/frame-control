@@ -10162,7 +10162,8 @@
       "reason": "Exact managed install removes the unnecessary root flag and adds pinned plugin-local psutil wheels. Actual Decky 3.3.0 in isolated amd64 and ARM64 containers loads the backend and records a private network sample; settings and read-only RPCs pass. External ping/DNS, real Frame ARM64 backend, Wi-Fi scan behavior, panel controls and worn VR remain unverified. Existing copies need update or reinstall.",
       "blockInstall": false,
       "requiredShims": [
-        "network-sentinel-user-psutil"
+        "network-sentinel-user-psutil",
+        "network-sentinel-ipc-eof"
       ],
       "verification": [
         "static archive",

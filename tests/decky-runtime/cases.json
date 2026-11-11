@@ -150,6 +150,7 @@
   {
     "id": 114,
     "shim": "network-sentinel-user-psutil",
+    "additionalShims": ["network-sentinel-ipc-eof"],
     "probe": "network-sentinel"
   },
   {
