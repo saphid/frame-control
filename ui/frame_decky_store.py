@@ -206,7 +206,12 @@ def archive_info(data, expected_hash, expected_name):
                     raise ValueError('Plugin contains a non-ARM64 Linux binary: ' + name)
             if header[:2] == b'MZ':
                 raise ValueError('Plugin contains a Windows binary: ' + name)
-        manifest = json.loads(archive.read(manifests[0]))
+        try:
+            # Match the installed loader's text JSON read instead of allowing
+            # json.loads(bytes) to auto-detect UTF-16/32 or strip a UTF-8 BOM.
+            manifest = json.loads(archive.read(manifests[0]).decode('utf-8'))
+        except (UnicodeError, ValueError) as error:
+            raise ValueError('Plugin manifest must be UTF-8 JSON without a byte-order mark') from error
         if not isinstance(manifest, dict):
             raise ValueError('Invalid plugin manifest')
         if manifest.get('name') != expected_name:
@@ -499,7 +504,9 @@ try:
                 ((digest=='ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473' and folder=='GamesPrefixManager') or
                  (digest=='12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6' and folder=='games-prefix-manager')))
             wine_cellar=(int(plugin_id)==68 and digest=='7e077b933c234414d172b5c6d1c804b026bf39fa4e18e6663495a282637031e8' and folder=='decky-wine-cellar')
-            manifest=json.loads(z.read(folder+'/plugin.json'))
+            try: manifest=json.loads(z.read(folder+'/plugin.json').decode('utf-8'))
+            except (UnicodeError,ValueError) as error:
+                raise RuntimeError('Plugin manifest must be UTF-8 JSON without a byte-order mark') from error
             if not isinstance(manifest,dict): raise RuntimeError('Invalid plugin manifest')
             flags=manifest.get('flags',[])
             if not isinstance(flags,list) or not all(isinstance(flag,str) for flag in flags):

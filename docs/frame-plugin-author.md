@@ -16,6 +16,10 @@ or run privileged code. See [the extension API](extensions.md) and its example.
 Use a Decky plugin only if you need Decky's backend or Gamepad UI integration.
 Build an official-format ZIP with one top-level folder, `plugin.json`, and a
 frontend bundle in `dist/index.js`. A Python `main.py` backend is optional.
+Save `plugin.json` as UTF-8 JSON without a byte-order mark. Unicode names and
+descriptions are supported, but UTF-16/32 and BOM-prefixed manifests are rejected
+before transfer and extraction: the installed loader cannot read them. The
+local archive checker enforces the same encoding rule.
 Test on ARM64. If you ship an ELF helper, build it for AArch64 (ELF machine
 183). Avoid root, `sudo`, Steam Deck TDP controls, fixed x86 binaries, and
 paths under `/etc`. Frame Control's managed loader is a normal user service;
