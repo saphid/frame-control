@@ -35,6 +35,11 @@ Before transfer, it streams every file through its ZIP checksum within the
 existing archive size limits. Corruption after a file's header is rejected on
 the host and by the local author checker. Remote extraction also rejects
 checksum failures before changing the installed plugin or restarting Decky.
+File/directory collisions are rejected before transfer and checked again on the
+headset before extraction. For example, a file named `plugin/cache` cannot
+coexist with `plugin/cache/` or `plugin/cache/data.json`, in either ZIP order.
+Explicit directory entries remain optional; identical repeated file payloads
+with only execute-bit differences are still accepted for official archives.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
