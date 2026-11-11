@@ -101,6 +101,14 @@ using it; React clears the ref when the control unmounts. An actionable control
 has a native tab stop, while a plain container needs an explicit `tabIndex` to
 receive focus. This provides DOM focus, not Steam's controller focus tree.
 
+Set `Tabs.autoFocusContents` to move local DOM focus into the selected tab on
+mount and when its ID changes. Framey chooses the first visible, enabled
+sequential tab stop, or the panel itself for text-only content. A child's own
+mount focus takes priority; redrawing the same tab does not interrupt editing.
+Controlled tabs move focus when `activeTab` changes, rather than when a header
+merely calls `onShowTab`. Omitting the option or setting it false leaves focus
+under your control. This does not establish Steam controller navigation.
+
 To test safely, use a separate Frame Control managed Decky install, verify the
 ZIP digest from the official store, install one plugin at a time, and inspect
 `journalctl --user -u frame-control-decky.service`. Remove only your own
@@ -119,6 +127,10 @@ can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
 VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
 complete pack-and-check command.
+The checker reads every file through its ZIP checksum, including large assets
+and backend files, before accepting the archive. A checksum error means the ZIP
+must be rebuilt or recovered from its source; it is not a frontend compatibility
+verdict. The store runs this same validation before transfer to the headset.
 
 ## Framey Decky API compatibility
 
@@ -168,6 +180,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | API v1/v2 `addEventListener` / `removeEventListener` | Plugin-scoped real backend events while panel is open; bounded queue, about one-second polling, subscription expiry | Real ARM64 Simple Timer countdown, start/cancel and completion toast via local Chromium; scope/bounds/reconnect tests. No closed-panel notifications. |
 | `toaster.toast` | Visible toast inside the plugin panel; plain text or React nodes for title, body, icon, logo and subtext; `dismiss` and optional `onClick` | Host unit test; no Steam system notification or worn VR check |
 | `Focusable` refs | Forwards object and callback refs to the native container; `.focus()` uses local DOM focus. Ref replacement and unmount detach the old ref. Native click/Enter/Space activation and disabled suppression remain available. | Exact SuggestMe 1.5.3 Back control and focus effect in real React/DOM, with a synthetic navigation callback; focus/blur styling, spacer opt-out, callback ref replacement and passive container checks. No recommendation service, backend, physical input or worn VR proof. |
+| `Tabs.autoFocusContents` | Opt-in local focus moves into selected content on mount or a changed tab ID. Disabled, hidden and negative-tabindex controls are skipped; text-only content focuses its panel. A child's mount focus and same-tab editing focus are preserved. | Exact Game Theme Music 1.7.1-1 Tabs expression with synthetic pages in real React/DOM. Initial/switch/return focus, controlled selection, disabled header, fallback panel, opt-out, ineligible targets and field mount focus checked. No music service, backend, controller or worn VR proof. |
 | `localStorage` | Synchronous, per-plugin cache backed by the Frame Control panel origin. Up to 64 keys, 64 KiB per value and 128 KiB total; `clear()` removes only this plugin's cache. Failed writes stay in parent-page memory across plugin reopen until a write succeeds. Reloading that page loses the fallback and may restore older disk values. Plugin code waits for the cache reply. A failed browser-storage read or invalid saved snapshot stops startup immediately and preserves the saved bytes; reopen after access recovers, and recover invalid data separately. A valid in-memory fallback still works when disk reads are blocked. Only an absent cache starts empty; a missing reply fails after five seconds. | Parent/iframe round-trip, delayed reply, timeout, denied/quota-exceeded writes, plugin isolation, storage recovery and reopen in the local host test; native browser read-denial/corruption preservation and recovery fixtures. Real headset persistence remains unverified. |
 | `localStorage.name`, `localStorage['name']`, `delete localStorage.name` | Direct string-property writes, reads and deletion use the same bounded snapshot as `setItem`, `getItem` and `removeItem`. Values become strings, including empty strings and zero; a missing property is `undefined`. API/prototype members remain available; use `getItem` for saved keys with those reserved names. Enumerate stored entries with `length` and `key(index)`. | Real parent/iframe scripts with synthetic storage: reopen, method/property interoperability, deletion, plugin isolation, quota rejection and denied-write fallback/recovery. No live-headset persistence proof. |
 | `SteamClient.Storage.GetJSON` / `SetObject` | Uses the same bounded per-plugin cache; a missing key rejects with `Not found`. It cannot read Steam account or global storage. | Host contract tests and local Chromium settings views; headset persistence after reopen remains unverified. |

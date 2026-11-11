@@ -15,7 +15,7 @@ SAMPLE = ROOT / 'examples/framey-settings'
 
 class ArchiveChecker(unittest.TestCase):
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
-                  name='Framey Settings Sample'):
+                  name='Framey Settings Sample', damage=None):
         with tempfile.TemporaryDirectory() as folder:
             archive = Path(folder) / 'plugin.zip'
             with zipfile.ZipFile(archive, 'w') as output:
@@ -28,6 +28,15 @@ class ArchiveChecker(unittest.TestCase):
                         output.writestr('framey-settings/dist/index.js', bundle)
                 if extra:
                     output.writestr(extra[0], extra[1])
+            if damage is not None:
+                with zipfile.ZipFile(archive) as output:
+                    entry = output.getinfo(damage)
+                data = bytearray(archive.read_bytes())
+                offset = entry.header_offset
+                start = (offset + 30 + int.from_bytes(data[offset+26:offset+28], 'little')
+                         + int.from_bytes(data[offset+28:offset+30], 'little'))
+                data[start + entry.file_size - 1] ^= 1
+                archive.write_bytes(data)
             run = subprocess.run([sys.executable, str(CHECKER), str(archive), '--name', name],
                                  capture_output=True, text=True, timeout=15)
             return run.returncode, json.loads(run.stdout)
@@ -46,6 +55,13 @@ class ArchiveChecker(unittest.TestCase):
         self.assertEqual(code, 0, result)
         self.assertTrue(result['installerAccepted'])
         self.assertFalse(result['panelCandidate'])
+
+    def test_damaged_large_asset_fails_local_author_check(self):
+        name = 'framey-settings/assets/large.bin'
+        code, result = self.run_check(extra=(name, b'x' * 150_000), damage=name)
+        self.assertEqual(code, 1, result)
+        self.assertFalse(result['ok'])
+        self.assertIn('CRC', result['error'])
 
     def test_large_manifest_passes_installer_but_not_panel_admission(self):
         manifest = json.loads((SAMPLE / 'plugin.json').read_text())
