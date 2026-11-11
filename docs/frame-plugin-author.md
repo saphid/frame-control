@@ -76,6 +76,12 @@ again when it mounts. Cleanup does not cancel a backend request already sent;
 it prevents that old view from issuing new requests or announcing stale UI
 results. The sample uses a request generation as well as an active-view guard
 so React's development effect replay cannot let an old read unlock a newer one.
+Keep unfinished writes ordered across view remounts as well. The sample retains
+its pending save at module scope: a reopened settings view and its read-only
+quick action wait for the reply, then read the saved value after either success
+or failure. A retired waiting view sends no read. This prevents a pre-save
+snapshot from enabling a second edit; it does not cancel backend work or
+coordinate independent clients.
 
 Give text fields a visible `label` or an explicit `aria-label`; Framey preserves
 the latter on the native input. This includes Wine Cellar 0.2.1's published
@@ -121,6 +127,11 @@ can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
 VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
 complete pack-and-check command.
+The checker reads every file through its ZIP checksum, including large assets
+and backend files, before accepting the archive. A checksum error means the ZIP
+must be rebuilt or recovered from its source; it is not a frontend compatibility
+verdict. The store runs this same validation before transfer to the headset.
+
 For an API v1 bundle whose Decky initializer is in `dist/chunks`, keep direct
 children with a `.js` suffix as files. A directory named `helpers.js` (including
 one implied by `helpers.js/data.json`) makes the runtime reject the panel.

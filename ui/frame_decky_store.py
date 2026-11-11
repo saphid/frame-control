@@ -188,6 +188,12 @@ def archive_info(data, expected_hash, expected_name):
                 continue
             with archive.open(entry) as source:
                 header = source.read(20)
+                # ZipExtFile checks the member's CRC only at EOF. A good
+                # binary header does not prove that a larger asset is intact.
+                # Stream the rest within the archive's existing size limits
+                # before approving it for transfer or the author checker.
+                while source.read(64 * 1024):
+                    pass
             if header[:4] == b'\x7fELF' and int.from_bytes(header[18:20], 'little') != 183:
                 if not ((fileserver and name == 'DeckyFileServer/bin/backend'
                          and hashlib.sha256(archive.read(entry)).hexdigest() == FILESERVER_ORIGINAL)
