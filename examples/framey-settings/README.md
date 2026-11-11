@@ -128,16 +128,20 @@ From the repository root, pack and validate this sample without contacting a
 store or headset:
 
 ```sh
-python3 - <<'PY'
-from pathlib import Path
-from zipfile import ZipFile
-source = Path('examples/framey-settings')
-with ZipFile('/tmp/framey-settings-sample.zip', 'w') as archive:
-    for name in ('plugin.json', 'main.py', 'dist/index.js'):
-        archive.write(source / name, 'framey-settings/' + name)
-PY
-python3 scripts/framey-check-archive.py /tmp/framey-settings-sample.zip --name 'Framey Settings Sample'
+python3 scripts/framey-pack-sample.py /tmp/framey-settings-sample.zip
 ```
+
+The command packages the existing built frontend; run `pnpm build` first after
+editing its source. It includes only `plugin.json`, `main.py`, and `dist/index.js`
+under `framey-settings/`. Fixed file order, timestamps, permissions and uncompressed
+ZIP entries make unchanged input bytes produce the same ZIP and SHA-256,
+regardless of source modification times. The destination directory must exist.
+The command checks a temporary ZIP with the author archive checker before
+replacing the destination. A failed check leaves an existing ZIP untouched and
+removes the temporary file. Its JSON result includes the output path and SHA-256.
+For a renamed fork with this same three-file layout, use `--source path/to/sample
+--name 'Exact Decky store name'`. Plugins with extra assets or chunks need their
+own packaging step and `scripts/framey-check-archive.py`.
 
 Expect `installerAccepted` and `panelCandidate` to be `true`. This only checks
 local archive admission. Published store identity, Decky backend discovery,
