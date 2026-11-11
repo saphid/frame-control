@@ -18,6 +18,17 @@ SAMPLE = ROOT / 'examples/framey-settings'
 
 
 class ArchiveChecker(unittest.TestCase):
+    def test_file_directory_collision_fails_before_panel_admission(self):
+        for members in (
+            (('framey-settings/assets', b'file'), ('framey-settings/assets/data.json', b'{}')),
+            (('framey-settings/assets/', b''), ('framey-settings/assets', b'file')),
+        ):
+            with self.subTest(members=members):
+                code, result = self.run_check(members=members)
+                self.assertEqual(code, 1, result)
+                self.assertFalse(result['ok'])
+                self.assertIn('file/directory path collision', result['error'])
+
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
                   name='Framey Settings Sample', damage=None, members=(), expected_runtime=None,
                   manifest_bytes=None):

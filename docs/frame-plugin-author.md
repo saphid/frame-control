@@ -135,6 +135,13 @@ The checker reads every file through its ZIP checksum, including large assets
 and backend files, before accepting the archive. A checksum error means the ZIP
 must be rebuilt or recovered from its source; it is not a frontend compatibility
 verdict. The store runs this same validation before transfer to the headset.
+ZIP members must also form an extractable directory tree: a path cannot be
+both a file and a directory, including directories implied by another member.
+For example, `plugin/assets` as a file conflicts with `plugin/assets/icon.png`
+or an explicit `plugin/assets/` directory in either archive order. The desktop
+checker and headset transaction reject that collision before extraction.
+Ordinary explicit or implicit directories remain valid, as do identical
+duplicate files that differ only in execute bits.
 
 For an API v1 bundle whose Decky initializer is in `dist/chunks`, keep direct
 children with a `.js` suffix as files. A directory named `helpers.js` (including

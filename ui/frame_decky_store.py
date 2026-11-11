@@ -162,6 +162,9 @@ def archive_info(data, expected_hash, expected_name):
                            (expected_hash == PREFIX_MANAGER_102_DIGEST and folder == 'games-prefix-manager')))
         wine_cellar = (expected_hash == WINE_CELLAR_DIGEST and expected_name == 'Wine Cellar'
                        and folder == 'decky-wine-cellar')
+        # Include every file before checking parents so archive order cannot
+        # hide an explicit or implicit directory that is also a file.
+        file_paths = {entry.filename for entry in files if not entry.is_dir()}
         seen = {}
         for entry in files:
             name = entry.filename
@@ -175,6 +178,9 @@ def archive_info(data, expected_hash, expected_name):
                 parts[0] != folder or entry.file_size > 30 * 1024 * 1024 or
                 kind not in (0, 0o040000, 0o100000)):
                 raise ValueError('Unsafe plugin archive member')
+            if (any('/'.join(parts[:index]) in file_paths for index in range(1, len(parts))) or
+                    (entry.is_dir() and '/'.join(parts) in file_paths)):
+                raise ValueError('Plugin archive has a file/directory path collision')
             prior = seen.get(name)
             if prior is not None:
                 # Some official ZIPs repeat unchanged files with execute-bit
@@ -515,6 +521,7 @@ try:
                 raise RuntimeError('Invalid plugin flags')
             if ('root' in flags or '_root' in flags) and not (fileserver or network_sentinel or battery_tracker or prefix_manager):
                 raise RuntimeError('Root plugins are not supported by the Frame user service')
+            file_paths={f.filename for f in files if not f.is_dir()}
             seen={}
             for f in files:
                 parts=f.filename.split('/')
@@ -525,6 +532,9 @@ try:
                     f.file_size>30*1024*1024 or
                     kind not in (0,0o040000,0o100000)):
                     raise RuntimeError('Unsafe plugin archive')
+                if (any('/'.join(parts[:index]) in file_paths for index in range(1,len(parts))) or
+                    (f.is_dir() and '/'.join(parts) in file_paths)):
+                    raise RuntimeError('Plugin archive has a file/directory path collision')
                 prior=seen.get(f.filename)
                 if prior is not None:
                     # Match desktop validation before zipfile overwrites a

@@ -27,7 +27,7 @@ import frame_decky_store
 import frame_decky
 
 
-def archive(flags=(), extra=None, manifest=None):
+def archive(flags=(), extra=None, manifest=None, members=()):
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w') as bundle:
         bundle.writestr('Example/plugin.json', manifest if manifest is not None else
@@ -35,6 +35,8 @@ def archive(flags=(), extra=None, manifest=None):
         bundle.writestr('Example/dist/index.js', 'export default {};' + ' ' * 1200)
         if extra:
             bundle.writestr(*extra)
+        for member in members:
+            bundle.writestr(*member)
     data = stream.getvalue()
     return data, hashlib.sha256(data).hexdigest()
 
@@ -69,6 +71,27 @@ def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_rejects_file_directory_collisions_in_either_archive_order(self):
+        pairs = [
+            (('Example/assets', b'file'), ('Example/assets/data.json', b'{}')),
+            (('Example/assets', b'file'), ('Example/assets/', b'')),
+        ]
+        cases = [members for pair in pairs for members in (pair, pair[::-1])]
+        cases += [(('Example/dist', b'file'),), (('Example', b'file'),),
+                  (('Example/plugin.json/child', b'file'),)]
+        for members in cases:
+            with self.subTest(members=members):
+                data, digest = archive(members=members)
+                with self.assertRaisesRegex(ValueError, 'file/directory path collision'):
+                    frame_decky_store.archive_info(data, digest, 'Example')
+
+    def test_explicit_and_implicit_directories_remain_accepted(self):
+        members = (('Example/assets/', b''), ('Example/assets/data.json', b'{}'))
+        for order in (members, members[::-1], members[1:]):
+            with self.subTest(members=order):
+                data, digest = archive(members=order)
+                self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
+
     def test_manifest_requires_utf8_json_without_bom(self):
         text = json.dumps({'name': 'Example', 'flags': []})
         for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32',
@@ -272,6 +295,44 @@ class StoreTransaction(unittest.TestCase):
             retry = self.apply(action, original, expected=digest)
             self.assertEqual(retry.returncode, 0, retry.stderr)
             self.assertEqual((self.folder/'saved-data.json').read_text(), '{"keep":true}')
+            self.assertEqual(self.apply('remove').returncode, 0)
+
+    def test_path_collisions_cannot_stage_or_replace_saved_plugin(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        pairs = [
+            (('Example/assets', b'file'), ('Example/assets/data.json', b'{}')),
+            (('Example/assets', b'file'), ('Example/assets/', b'')),
+        ]
+        for action in ('install', 'update'):
+            if action == 'update':
+                self.assertEqual(self.apply('install', original).returncode, 0)
+            before = self.plugin_snapshot()
+            calls = self.record_service_calls()
+            for pair in pairs:
+                for members in (pair, pair[::-1]):
+                    with self.subTest(action=action, members=members):
+                        data, _ = archive(members=members)
+                        # Fail if extraction is reached, even though its usual
+                        # cleanup could otherwise hide a partially created stage.
+                        script = frame_decky_store.APPLY
+                        guard = "raise RuntimeError('extraction reached before path rejection')"
+                        self.assertIn('stage.mkdir(mode=0o700)', script)
+                        with patch.object(frame_decky_store, 'APPLY', script.replace('stage.mkdir(mode=0o700)', guard)):
+                            result = self.apply(action, data, expected=digest)
+                        self.assertNotEqual(result.returncode, 0, result.stdout)
+                        self.assertIn('file/directory path collision', result.stderr)
+                        self.assertEqual(self.plugin_snapshot(), before)
+                        self.assertEqual(calls.read_text(), '', 'reject before stopping the loader')
+                        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder] if before else [])
+            # A rejection releases the lock; valid directory entries can still
+            # install/update, preserving their contents and the saved plugin data.
+            good, _ = archive(members=(('Example/assets/data.json', b'{}'), ('Example/assets/', b''),
+                                       ('Example/saved-data.json', b'{"keep":true}')))
+            result = self.apply(action, good, expected=digest)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertEqual((self.folder/'assets/data.json').read_bytes(), b'{}')
+            self.assertEqual((self.folder/'saved-data.json').read_text(), '{"keep":true}')
+            self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
             self.assertEqual(self.apply('remove').returncode, 0)
 
     def test_damaged_asset_cannot_replace_installed_plugin_or_restart_service(self):
