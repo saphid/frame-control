@@ -965,11 +965,24 @@
   const ModalRoot = ({children, onOK, bOKDisabled, closeModal, onCancel, onEscKeypress,
     frameySetModalBusy, ...props}) => {
     const pending = R.useRef(false);
+    const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
     const [failure, setFailure] = R.useState('');
     // Custom plugin dialogs pass their injected closeModal into ModalRoot.
     // Bind busy state to that dialog, even if a nested dialog is opened later.
     const modal = modals.find(item=>item.dismiss===closeModal);
+    const active = () => mounted.current && (!modal || modals.includes(modal));
+    R.useEffect(() => {
+      mounted.current = true;
+      return () => {
+        mounted.current = false;
+        // Removing an inner root can leave its shell open with new content.
+        // Release only this root's pending action; late results stay retired.
+        if (pending.current && modal && modals.includes(modal)) {
+          modal.running=false; renderModals();
+        }
+      };
+    }, [modal]);
     // A custom component's cancel handlers live on its inner ModalRoot, not
     // on the element passed to showModal. Register only this committed root;
     // replacement dialogs and effect cleanup retire the old callbacks.
@@ -986,17 +999,24 @@
       if (modal && modals.includes(modal)) {modal.running=value; renderModals();}
     };
     const submit = event => {
-      if (bOKDisabled || pending.current || event?.defaultPrevented) return;
+      if (bOKDisabled || pending.current || event?.defaultPrevented || !active()) return;
+      // Plugin callbacks may reenter synchronously before returning a promise.
+      pending.current = true;
       setFailure('');
-      let result;
-      try {result = onOK(event);}
-      catch (error) {setFailure(String(error?.message || error)); return;}
-      if (result && typeof result.then === 'function') {
-        markBusy(true);
-        return Promise.resolve(result).then(()=>markBusy(false), error=>{
-          markBusy(false); setFailure(String(error?.message || error));
-        });
-      }
+      const failed = error => {
+        if (!active()) return;
+        markBusy(false); setFailure(String(error?.message || error));
+      };
+      try {
+        const result = onOK(event);
+        if (result && typeof result.then === 'function') {
+          if (active()) markBusy(true);
+          return Promise.resolve(result).then(()=>{if(active())markBusy(false);}, failed);
+        }
+      } catch (error) {failed(error); return;}
+      // Unlike ConfirmModal, success leaves dismissal to the plugin. An open
+      // root may submit again once this callback has finished.
+      pending.current = false;
     };
     return R.createElement('section', props, children,
       failure && R.createElement('p', {role:'alert'}, failure),
