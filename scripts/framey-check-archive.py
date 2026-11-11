@@ -7,7 +7,7 @@ import argparse
 import hashlib
 import io
 import json
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 import re
 import sys
 import zipfile
@@ -41,9 +41,13 @@ def api_v1_bridge(archive, folder, bundle):
     if len(children) > 128:
         return False
     supported = False
-    for item in children.values():
-        if item is None or item.is_dir() or not item.filename.endswith('.js'):
+    for child, item in children.items():
+        if PurePosixPath(child).suffix != '.js':
             continue
+        # The runtime rejects direct children with a .js suffix unless they
+        # are files, including directories implied by deeper archive members.
+        if item is None or item.is_dir():
+            return False
         if item.file_size > 8 * 1024 * 1024:
             return False
         if API_V1_MARKER in archive.read(item):
