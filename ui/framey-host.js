@@ -526,11 +526,17 @@
       R.createElement('input', {type:'checkbox', checked, defaultChecked, disabled:!!disabled,
         onClick:event=>{if(!disabled)onClick?.(event);},
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
-  const TextField = ({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
+  const TextField = R.forwardRef(function TextField({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
     bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
-    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}) => {
+    onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}, ref) {
     const input = R.useRef(null);
+    // Published Decky controls expect an input wrapper, not a Steam instance.
+    // The getter also retires retained handles when the native input unmounts.
+    R.useImperativeHandle(ref, () => ({
+      get element() {return input.current;},
+      Focus:() => input.current?.focus(),
+    }), []);
     const [draft, setDraft] = R.useState(defaultValue ?? '');
     const clear = () => {
       const node = input.current;
@@ -552,7 +558,7 @@
         R.createElement('button', {type:'button', disabled:!!disabled, onClick:clear,
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
-  };
+  });
   const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
@@ -1141,7 +1147,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || value===Focusable)))));
+      (typeof value==='function' || value===Focusable || value===TextField)))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({

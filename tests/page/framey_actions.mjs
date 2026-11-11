@@ -9,7 +9,7 @@ const states=[];
 const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,createElement:(type,props,...children)=>({type,props:props||{},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,next=>states.push(next)], useRef:value=>({current:value}),
-  useEffect(){},useLayoutEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useLayoutEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 class Element {constructor(){this.children=[];this.textContent='';this.attributes={};}
   append(...children){this.children.push(...children);}setAttribute(key,value){this.attributes[key]=value;}
   remove(){this.removed=true;}}
