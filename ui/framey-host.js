@@ -528,6 +528,7 @@
         onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}), label);
   const TextField = R.forwardRef(function TextField({label, description, value, defaultValue, placeholder, disabled, bIsPassword,
     mustBeNumeric, mustBeURL, mustBeEmail, 'aria-label':ariaLabel,
+    rangeMin, rangeMax, maxLength, minLength, pattern, required,
     bShowClearAction, bAlwaysShowClearAction, focusOnMount, inlineControls, style,
     onChange, onBlur, onFocus, onClick, onKeyDown, onKeyUp}, ref) {
     const input = R.useRef(null);
@@ -549,6 +550,7 @@
     return R.createElement(Field, {label, description, style},
       R.createElement('input', {type:bIsPassword?'password':mustBeNumeric?'number':mustBeURL?'url':mustBeEmail?'email':'text',
         ref:input, autoFocus:!!focusOnMount && !disabled,
+        min:rangeMin, max:rangeMax, maxLength, minLength, pattern, required,
         value, defaultValue:value==null?defaultValue:undefined, placeholder, disabled:!!disabled, 'aria-label':ariaLabel,
         onChange:e=>{if(!disabled){if(bShowClearAction && value==null)setDraft(e.currentTarget.value);onChange?.(e);}},
         onBlur:e=>{if(!disabled)onBlur?.(e);},
