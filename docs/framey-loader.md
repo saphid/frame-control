@@ -265,6 +265,14 @@ peer disconnect, the original unload save, restart persistence and two clean
 parent-only stops; a negative control restores the previous managed backend.
 External network quality, the real headset and worn VR remain unverified.
 
+DeckyFileServer 1.2.0 also installs the child IPC EOF repair. Its managed
+backend, HTTPS helper and original unload hook are preserved; existing copies
+need Update or reinstall. The native runtime gate closes a private IPC peer,
+requires a subsequent settings RPC, checks two clean parent-only stops and
+restart persistence, and restores the previous backend as a negative control.
+This does not establish the historical ARM64 migration timeout's cause or add
+real Frame or worn/controller proof.
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the

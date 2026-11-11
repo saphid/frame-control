@@ -397,8 +397,10 @@ def apply_script(plugin_id, digest):
                 raise ValueError('Bundled DeckyFileServer SHA-256 mismatch')
             payloads[arch] = base64.b64encode(packed).decode('ascii')
         # Python stdin, never shell arguments. The Frame rechecks hash and ELF machine.
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_FILESERVER_BINARIES = '+repr(payloads)+'\n'
-                +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'+APPLY)
+                +'FRAMEY_FILESERVER_HASHES = '+repr(FILESERVER_BINARIES)+'\n'
+                +'FRAMEY_FILESERVER_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
     if plugin_id == 68 and digest == WINE_CELLAR_DIGEST:
         assets = Path(__file__).parent/'vendor/wine-cellar-0.2.1'
         packed = (assets/'aarch64.gz').read_bytes()
@@ -1195,7 +1197,20 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 old='            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])\n            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])'
                 new='            if "disable_thumbnails" in status:\n                await Plugin.set_disable_thumbnails(self, status["disable_thumbnails"])\n            if "server_running" in status:\n                await Plugin.set_server_running(self, status["server_running"])'
                 if old not in text: raise RuntimeError('DeckyFileServer start configuration changed')
-                source.write_text(text.replace(old,new))
+                text=text.replace(old,new)
+                ipc=globals().get('FRAMEY_FILESERVER_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing DeckyFileServer child IPC EOF repair')
+                modules=unpacked/'py_modules'
+                modules.mkdir(exist_ok=True)
+                adapter=modules/'framey_decky_ipc.py'
+                if adapter.exists(): raise RuntimeError('DeckyFileServer child IPC helper collides with archive')
+                compile(ipc,str(adapter),'exec')
+                adapter.write_text(ipc,encoding='utf-8')
+                prefix=('from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        '_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                compile(prefix+text,str(source),'exec')
+                source.write_text(prefix+text,encoding='utf-8')
                 # The helper always calls ListenAndServeTLS. The published panel
                 # prints HTTP when uploads are disabled and hard-codes a Deck
                 # hostname that the Frame does not provide. Keep only the
@@ -1264,6 +1279,7 @@ Plugin.cleanup_orphans = _framey_cleanup_orphans
                 compat_shims.append('deckyfileserver-user-native')
                 compat_shims.append('deckyfileserver-https-address')
                 compat_shims.append('deckyfileserver-directory-entry')
+                compat_shims.append('deckyfileserver-ipc-eof')
             # Preserve Steamback's save engine; repair only its child IPC EOF.
             if int(plugin_id)==46 and digest=='ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3' and folder=='Steamback':
                 main=unpacked/'main.py'
