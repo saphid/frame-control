@@ -47,6 +47,9 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
       old=submit;const saving=old({});old({});await settle();
       assert(attempts===1&&button('Close').disabled,'pending root did not guard repeat/Close');
       update(handle,React.createElement('p',null,'Replacement content'));
+      // Cleanup schedules another render of the shell from an effect. Let
+      // React commit it without resolving the retired request.
+      await settle();
       assert(!button('Close').disabled,'unmounted root left its replacement shell locked');
       old({});assert(attempts===1,'unmounted root submitted again');
       // A new root may start its own request in the same shell. Neither old
@@ -71,6 +74,7 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     }
     handle=show(React.createElement(Removable));old=submit;old({});await settle();
     ReactDOM.flushSync(()=>hide());
+    await settle();
     assert(!button('Close').disabled,'removed inner root left shell locked');
     close(handle);await handle.ClosedPromise;
 
