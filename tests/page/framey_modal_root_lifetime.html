@@ -1,0 +1,107 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-modal');
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=window.DFL.showModal(element);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const update=(handle,element)=>ReactDOM.flushSync(()=>handle.Update(element));
+  const button=text=>[...container.querySelectorAll('button')].find(node=>node.textContent===text);
+  const tap=node=>ReactDOM.flushSync(()=>node.click());
+  const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b;});return {promise,resolve,reject};};
+  const NativeRoot=window.DFL.ModalRoot;
+  let submit;
+  function Observe(props) {
+    // Retain the real action closure to replay queued plugin callbacks after
+    // dismissal or unmount. No React private fields or backend are involved.
+    const tree=NativeRoot(props);
+    submit=tree.props.children.find(child=>child?.type==='button')?.props.onClick;
+    return tree;
+  }
+  const deckyFrontendLib={...window.DFL,ModalRoot:Observe};
+  __OFFICIAL_COMPONENT__
+  const calls=[];
+  const published=()=>React.createElement(TextFieldModal,{onClosed:text=>calls.push(text),label:'Search'});
+  try {
+    let handle=show(published()),old=submit;
+    close(handle);await handle.ClosedPromise;old({});
+    assert(calls.length===0,'dismissed published text dialog submitted a query');
+    handle=show(published());old=submit;tap(button('OK'));await handle.ClosedPromise;
+    old({});assert(JSON.stringify(calls)==='[""]','completed published query submitted twice');
+
+    // Removing a pending inner root keeps its shell. Cleanup must unlock that
+    // shell immediately, even if the old promise never settles.
+    for(const rejected of [false,true]) {
+      const pending=deferred();let attempts=0;
+      handle=show(React.createElement(Observe,{onOK:()=>{attempts++;return pending.promise;}}));
+      old=submit;const saving=old({});old({});await settle();
+      assert(attempts===1&&button('Close').disabled,'pending root did not guard repeat/Close');
+      update(handle,React.createElement('p',null,'Replacement content'));
+      assert(!button('Close').disabled,'unmounted root left its replacement shell locked');
+      old({});assert(attempts===1,'unmounted root submitted again');
+      // A new root may start its own request in the same shell. Neither old
+      // success nor old failure may unlock it or publish a stale error.
+      const next=deferred();
+      update(handle,React.createElement(Observe,{onOK:()=>next.promise}));
+      const savingNext=submit({});await settle();
+      if(rejected)pending.reject(Error('Retired error'));else pending.resolve();
+      await saving;await settle();
+      assert(button('Close').disabled&&!container.querySelector('[role=alert]'),
+        'late result changed the replacement root');
+      next.resolve();await savingNext;await settle();
+      assert(!button('Close').disabled,'replacement root did not release its own busy state');
+      close(handle);await handle.ClosedPromise;
+    }
+
+    // A component can remove just its inner ModalRoot without handle.Update.
+    let hide;
+    function Removable({closeModal}) {
+      const [visible,setVisible]=React.useState(true);hide=()=>setVisible(false);
+      return visible ? React.createElement(Observe,{closeModal,onOK:()=>new Promise(()=>{})}) : null;
+    }
+    handle=show(React.createElement(Removable));old=submit;old({});await settle();
+    ReactDOM.flushSync(()=>hide());
+    assert(!button('Close').disabled,'removed inner root left shell locked');
+    close(handle);await handle.ClosedPromise;
+
+    // An open root owns successful dismissal and may submit more than once.
+    // Only overlapping calls are suppressed, including synchronous reentry.
+    let attempts=0,repeat;
+    handle=show(React.createElement(Observe,{onOK:()=>{if(++attempts===1)repeat({});}}));
+    repeat=submit;repeat({});assert(attempts===1,'synchronous callback reentered');
+    repeat({});assert(attempts===2,'successful open root became unusable');
+    close(handle);await handle.ClosedPromise;
+    let next=deferred();attempts=0;
+    handle=show(React.createElement(Observe,{onOK:()=>{attempts++;return next.promise;}}));
+    const failed=submit({});next.reject(Error('Retry this save'));await failed;await settle();
+    assert(container.querySelector('[role=alert]')?.textContent==='Retry this save'&&!button('Close').disabled,
+      'failed request did not expose a retryable error');
+    next=deferred();let saving=submit({});next.resolve();await saving;await settle();
+    assert(button('OK')&&!button('OK').disabled&&!container.querySelector('[role=alert]'),
+      'successful retry did not leave dismissal to the plugin');
+    next=deferred();saving=submit({});next.resolve();await saving;await settle();
+    assert(attempts===3,'open root could not submit after async success');
+    close(handle);await handle.ClosedPromise;
+    await settle();assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedRadiyoTextDialog:true,closedSubmitRetired:true,completedQueryOnce:true,
+      replacementShellUnlocked:true,unmountedSubmitRetired:true,lateSuccessIsolated:true,
+      lateFailureIsolated:true,innerRootCleanup:true,synchronousReentrySuppressed:true,
+      successfulOpenRootRetryable:true,rejectedActionRetryable:true,syntheticCallbacks:true,
+      realFrameContacted:false,realRadioSearch:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>
