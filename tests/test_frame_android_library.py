@@ -239,6 +239,34 @@ class ArtworkTests(unittest.TestCase):
         finally:
             server.close()
 
+    def test_tls_socket_timeout_before_deadline_is_a_source_error(self):
+        import socket
+        import ssl
+        from apk_sources import _images
+        public = [(2, 1, 6, '', ('93.184.216.34', 443))]
+        # A socket timeout may arrive before the overall clock reaches its
+        # deadline. Certificate errors must still retain their original type.
+        for error in (TimeoutError('handshake timed out'),
+                      ssl.SSLCertVerificationError('certificate rejected')):
+            with self.subTest(error=type(error).__name__):
+                client, server = socket.socketpair()
+                try:
+                    with patch.object(_images, '_resolve', return_value=public), \
+                            patch.object(_images.socket, 'create_connection', return_value=client), \
+                            patch.object(_images.time, 'monotonic', return_value=100), \
+                            patch.object(ssl.SSLSocket, 'do_handshake', side_effect=error):
+                        if isinstance(error, TimeoutError):
+                            with self.assertRaisesRegex(_images.SourceError, 'too long') as caught:
+                                _images.get('https://example.org/a.png', deadline=160)
+                            self.assertIs(caught.exception.__cause__, error)
+                        else:
+                            with self.assertRaises(ssl.SSLCertVerificationError) as caught:
+                                _images.get('https://example.org/a.png', deadline=160)
+                            self.assertIs(caught.exception, error)
+                finally:
+                    client.close()
+                    server.close()
+
     def test_timed_out_lookups_are_capped(self):
         import threading
         from apk_sources import _images

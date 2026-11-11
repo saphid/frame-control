@@ -193,7 +193,7 @@ def get(url, headers=None, redirects=3, deadline=None, limit=MAX_IMAGE):
         left()
         return data
     except (OSError, http.client.HTTPException) as e:
-        if time.monotonic() >= deadline:
+        if isinstance(e, TimeoutError) or time.monotonic() >= deadline:
             raise SourceError('Artwork download took too long') from e
         raise
     finally:
