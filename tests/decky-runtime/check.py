@@ -78,6 +78,7 @@ def main():
     parser.add_argument('--reproduce-music-control-unload-regression', action='store_true')
     parser.add_argument('--reproduce-animation-unload-regression', action='store_true')
     parser.add_argument('--reproduce-fileserver-empty-flag-regression', action='store_true')
+    parser.add_argument('--reproduce-fileserver-unload-regression', action='store_true')
     parser.add_argument('--reproduce-timer-regression', action='store_true')
     parser.add_argument('--reproduce-timer-unload-regression', action='store_true')
     parser.add_argument('--reproduce-deck-settings-unload-regression', action='store_true')
@@ -365,6 +366,16 @@ def main():
     manifest = json.loads((plugin/'plugin.json').read_text())
     assert manifest.get('api_version', 'legacy') == record['api_version'], manifest
     assert '_root' not in manifest.get('flags', []), manifest
+    if args.reproduce_fileserver_unload_regression:
+        assert record['id'] == 60
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (plugin/'main.py').read_bytes()
+        assert source.startswith(prefix)
+        previous = source[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf'
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_fileserver_empty_flag_regression:
         assert record['id'] == 60
         source = plugin/'main.py'
@@ -1704,12 +1715,28 @@ def main():
                     raise AssertionError('uploads must be disabled')
                 except urllib.error.HTTPError as error:
                     assert error.code == 401, error.code
+                # Identify only this fixture's native helper before the API's
+                # requested SIGTERM; it can remain an adopted zombie at unload.
+                from theme_music_private import descendants
+                owned_helpers = {pid: state for pid, state in descendants(backend.pid).items()
+                    if Path('/proc') .joinpath(str(pid), 'exe').resolve() == plugin/'bin/backend'}
+                assert len(owned_helpers) == 1, owned_helpers
+                report['ownedFileserverHelpers'] = owned_helpers
                 assert current('set_server_running', False) is False
                 assert current('get_server_running') is False
                 assert current('get_history') == [str(fixture)]
+                import fileserver_private
+                fileserver_private.probe(backend, loader, env, log, processes, current, rpc,
+                    until_ready, report, base/'settings'/record['folder'],
+                    regression=args.reproduce_fileserver_unload_regression)
+                report['backendSha256'] = hashlib.sha256((plugin/'main.py').read_bytes()).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_fileserver_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
                 report['result'] = ('original empty argument bug reproduced: thumbnail policy ignored'
                     if args.reproduce_fileserver_empty_flag_regression else
-                    'discovery, API1 settings, native HTTPS listing/download, thumbnail policy and stop passed; uploads disabled')
+                    'prior fileserver forced child kill after peer EOF reproduced; negative only'
+                    if args.reproduce_fileserver_unload_regression else
+                    'discovery, API1 settings, native HTTPS listing/download, thumbnail policy, peer EOF RPC, two clean parent-only stops and restart passed; uploads disabled')
             elif case['probe'] == 'free-loader':
                 settings = current('settings_read')
                 assert settings['notify_on_free_games'] is True, settings

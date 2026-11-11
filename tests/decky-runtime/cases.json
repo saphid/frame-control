@@ -247,7 +247,8 @@
     "probe": "fileserver",
     "additionalShims": [
       "deckyfileserver-https-address",
-      "deckyfileserver-directory-entry"
+      "deckyfileserver-directory-entry",
+      "deckyfileserver-ipc-eof"
     ]
   },
   {
