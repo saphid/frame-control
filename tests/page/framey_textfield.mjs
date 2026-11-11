@@ -9,7 +9,7 @@ const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
     ...(children.length?{children:children.length===1?children[0]:children}:{})},children}),
   cloneElement:(element,props)=>({...element,props:{...element.props,...props}}),
   useState:value=>[value,()=>{}],useRef:value=>({current:value}),
-  useEffect(){},isValidElement:value=>!!value?.type};
+  useEffect(){},useImperativeHandle(){},isValidElement:value=>!!value?.type};
 const elements=new Map(),roots=new Map();
 const window={React,ReactDOM:{createRoot:node=>{
   const root={render(value){this.value=value;}};roots.set(node,root);return root;

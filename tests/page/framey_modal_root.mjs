@@ -12,7 +12,7 @@ const React={Fragment:'fragment',Component:class {},forwardRef:render=>render,
   isValidElement:element=>!!element?.type,
   useState:value=>{const index=cursor++;if(!(index in hooks))hooks[index]=value;
     const state=hooks;return [state[index],value=>{state[index]=value;}];},
-  useRef:value=>{const index=cursor++;return hooks[index]??=( {current:value} );},useEffect(){}};
+  useRef:value=>{const index=cursor++;return hooks[index]??=( {current:value} );},useEffect(){},useImperativeHandle(){}};
 const elements=new Map(),roots=new Map();
 const window={React,ReactDOM:{createRoot:node=>{
   const root={render:tree=>{root.tree=tree;}};roots.set(node,root);return root;
