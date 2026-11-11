@@ -518,7 +518,7 @@
         props.renderButtonValue(selected ? selected.label : props.strDefaultLabel || 'Choose an option')),
       typeof props.onMenuWillOpen==='function' ? R.createElement(PreparedDropdown, props) : DropdownInput(props));
   };
-  const ButtonItem = ({label, description, icon, children, disabled, onClick}) => R.createElement(Field, {label, description, icon},
+  const ButtonItem = ({label, description, icon, style, children, disabled, onClick}) => R.createElement(Field, {label, description, icon, style},
     R.createElement('button', {type:'button', disabled:!!disabled,
       onClick:e=>{if(!disabled)onClick?.(e);}}, children || label));
   const DialogCheckbox = ({label, checked, defaultChecked, disabled, onChange, onClick, className, style}) =>
