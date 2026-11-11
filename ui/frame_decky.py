@@ -27,7 +27,10 @@ def plugins(folder):
                 try:
                     owned = json.loads(marker.read_text()) if marker.is_file() and not marker.is_symlink() else {}
                 except (OSError, ValueError): owned = {}
-                found.append({'folder': child.name, 'name': str(data.get('name', child.name))[:80],
+                # This name is also the backend RPC/event identity and store
+                # collision key. Only presentation metadata may be shortened;
+                # the manifest read above already bounds the complete name.
+                found.append({'folder': child.name, 'name': str(data.get('name', child.name)),
                               'author': str(data.get('author', ''))[:80],
                               'storeId': owned.get('storeId') if isinstance(owned.get('storeId'), int) else None,
                               'version': str(owned.get('version', ''))[:40],

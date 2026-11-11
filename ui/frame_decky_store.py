@@ -105,7 +105,9 @@ def catalog():
             continue
         tags = item.get('tags') if isinstance(item.get('tags'), list) else []
         author = item.get('author') if isinstance(item.get('author'), str) else ''
-        result.append({'id': item['id'], 'name': item['name'][:100],
+        # Preserve identity for archive comparison and installed-name checks.
+        # The response has a total size limit; truncation can merge two names.
+        result.append({'id': item['id'], 'name': item['name'],
                        'description': str(item.get('description') or '')[:300],
                        'author': author[:100],
                        'version': latest['name'][:40], 'sha256': latest['hash'],
