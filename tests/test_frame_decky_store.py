@@ -27,7 +27,7 @@ import frame_decky_store
 import frame_decky
 
 
-def archive(flags=(), extra=None, manifest=None):
+def archive(flags=(), extra=None, manifest=None, members=()):
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w') as bundle:
         bundle.writestr('Example/plugin.json', manifest if manifest is not None else
@@ -35,9 +35,17 @@ def archive(flags=(), extra=None, manifest=None):
         bundle.writestr('Example/dist/index.js', 'export default {};' + ' ' * 1200)
         if extra:
             bundle.writestr(*extra)
+        for member in members:
+            bundle.writestr(*member)
     data = stream.getvalue()
     return data, hashlib.sha256(data).hexdigest()
 
+
+def file_directory_collisions():
+    for child in ('Example/cache/', 'Example/cache/data.json', 'Example/cache/nested/data.json'):
+        for paths in (('Example/cache', child), (child, 'Example/cache')):
+            data, digest = archive(members=[(path, b'' if path.endswith('/') else b'{}') for path in paths])
+            yield paths, data, digest
 
 def damaged_asset_archive():
     name = 'Example/assets/large.bin'
@@ -69,6 +77,18 @@ def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_rejects_file_directory_and_implicit_parent_collisions_in_either_order(self):
+        for paths, data, digest in file_directory_collisions():
+            with self.subTest(paths=paths), self.assertRaisesRegex(ValueError, 'file/directory collision'):
+                frame_decky_store.archive_info(data, digest, 'Example')
+
+    def test_explicit_and_implicit_directories_can_share_the_same_tree(self):
+        for paths in (('Example/cache/', 'Example/cache/data.json'),
+                      ('Example/cache/data.json', 'Example/cache/')):
+            data, digest = archive(members=[(path, b'' if path.endswith('/') else b'{}') for path in paths])
+            with self.subTest(paths=paths):
+                self.assertEqual(frame_decky_store.archive_info(data, digest, 'Example'), 'Example')
+
     def test_manifest_requires_utf8_json_without_bom(self):
         text = json.dumps({'name': 'Example', 'flags': []})
         for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32',
@@ -218,6 +238,33 @@ class ArchiveTests(unittest.TestCase):
 
 @unittest.skipIf(os.name == 'nt', 'remote plugin transaction runs on Linux')
 class StoreTransaction(unittest.TestCase):
+    def test_type_collisions_are_rejected_before_extraction_or_service_changes(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        self.assertEqual(self.apply('install', original).returncode, 0)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        no_extract = '''
+import zipfile
+def forbidden_extract(*args, **kwargs):
+    raise AssertionError('Archive validation must finish before extraction')
+zipfile.ZipFile.extractall = forbidden_extract
+'''
+        for paths, data, _ in file_directory_collisions():
+            with self.subTest(paths=paths), patch.object(frame_decky_store, 'APPLY', no_extract+frame_decky_store.APPLY):
+                result = self.apply('update', data, expected=digest)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('file/directory collision', result.stderr)
+                self.assertNotIn('must finish before extraction', result.stderr)
+                self.assertEqual(self.plugin_snapshot(), before)
+                self.assertEqual(calls.read_text(), '')
+                self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # Rejection must release the lock; a normal update still installs.
+        valid, _ = archive(members=[('Example/cache/data.json', '{}'), ('Example/cache/', '')])
+        result = self.apply('update', valid, expected=digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.folder/'cache/data.json').read_text(), '{}')
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
+
     def setUp(self):
         self.tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self.tmp.cleanup)
@@ -2163,6 +2210,17 @@ pathlib.Path.rename = fail_staged_move
 
 
 class StoreHost(unittest.TestCase):
+    def test_archive_type_collision_is_rejected_before_headset_transfer(self):
+        _, data, digest = next(file_directory_collisions())
+        state = {'managed': True, 'running': True, 'plugins': []}
+        catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            with self.assertRaisesRegex(ValueError, 'file/directory collision'):
+                frame_decky_store.change(lambda *args, **kwargs:self.fail('No headset transfer expected'),
+                                         'install', 42, reviewed_hash=digest)
+
     def test_non_utf8_manifest_is_rejected_before_headset_transfer(self):
         text = json.dumps({'name': 'Example', 'flags': []})
         for encoding in ('utf-16', 'utf-8-sig'):

@@ -143,6 +143,13 @@ A file named only `.js` has no suffix and cannot supply that initializer;
 ordinary chunk files such as `entry.js` or `.bridge.js` can. The local checker
 applies the same admission rules; it does not execute the frontend.
 
+The checker rejects a file used as a directory or parent path: do not include
+both `your-plugin/dist` as a file and `your-plugin/dist/index.js`. It also rejects
+a file and directory with the same path even when the directory entry ends in
+`/`. Ordinary explicit directory entries can appear before or after their files,
+and ZIPs that omit directory entries are accepted. This validation runs before
+the store sends an archive to the headset and again before remote extraction.
+
 ## Framey Decky API compatibility
 
 Framey hosts a plugin's frontend in an isolated iframe in the Frame Control
