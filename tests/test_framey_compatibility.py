@@ -14,6 +14,17 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_fileserver_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
+        shims = ['deckyfileserver-user-native', 'deckyfileserver-https-address',
+                 'deckyfileserver-directory-entry']
+        old = dict(storeId=60, version=record['version'], sha256=record['sha256'], compatShims=shims)
+        fixed = dict(old, compatShims=shims+['deckyfileserver-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
     def test_network_sentinel_old_receipt_requires_child_ipc_repair(self):
         record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 114)
         old = dict(storeId=114, version=record['version'], sha256=record['sha256'],
@@ -224,7 +235,7 @@ class Compatibility(unittest.TestCase):
                    compatShims=['deckyfileserver-user-native'])
         previous = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address'])
         updated = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                                         'deckyfileserver-directory-entry'])
+                                         'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
         result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, previous, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])

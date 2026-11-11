@@ -975,6 +975,38 @@ class StoreTransaction(unittest.TestCase):
                 frame_decky_store.apply_script(68, frame_decky_store.WINE_CELLAR_DIGEST)
         self.assertEqual(frame_decky_store.apply_script(68, '0'*64), frame_decky_store.APPLY)
 
+    def test_fileserver_child_ipc_repair_preserves_managed_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        result = self.apply('install', official_archive(record), plugin_id=60,
+                            folder=record['folder'], version=record['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        plugin = self.folder.parent/record['folder']
+        source = (plugin/'main.py').read_bytes()
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(hashlib.sha256(source[len(prefix):]).hexdigest(),
+                         '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf')
+        self.assertEqual((plugin/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+        self.assertIn('deckyfileserver-ipc-eof',
+                      json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'])
+
+    def test_fileserver_missing_ipc_payload_rolls_back_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        record = next(p for p in PLUGINS if p['id'] == 60)
+        source = frame_decky_store.apply_script(60, record['sha256'])
+        # Delete only the embedded adapter assignment, preserving native assets.
+        source = '\n'.join(line for line in source.split('\n')
+                           if not line.startswith('FRAMEY_FILESERVER_IPC_SOURCE ='))
+        with patch.object(frame_decky_store, 'apply_script', return_value=source):
+            result = self.apply('install', official_archive(record), plugin_id=60,
+                                folder=record['folder'], version=record['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing DeckyFileServer child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/record['folder']).exists())
+
     def test_exact_fileserver_gets_native_user_helper(self):
         from framey_official import PLUGINS, archive as official_archive
         import platform
@@ -989,7 +1021,7 @@ class StoreTransaction(unittest.TestCase):
         self.assertEqual(json.loads((plugin/'plugin.json').read_text())['flags'], [])
         self.assertEqual(json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'],
                          ['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                          'deckyfileserver-directory-entry'])
+                          'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
         helper = plugin/'bin/backend'
         self.assertEqual(hashlib.sha256(helper.read_bytes()).hexdigest(), frame_decky_store.FILESERVER_BINARIES[platform.machine()])
         self.assertEqual(helper.stat().st_mode & 0o777, 0o700)
