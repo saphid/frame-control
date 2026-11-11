@@ -47,6 +47,12 @@ regressions failed before the repair. The original backend negative control
 reproduced the unload failure after the repair was installed and then removed
 inside its disposable fixture.
 
+The first hosted macOS run exposed a fixture architecture error: the two new
+install tests inherited macOS `arm64` instead of a Linux target architecture.
+Both tests now explicitly install and verify `x86_64` and `aarch64` payloads
+without executing the Linux helpers. The production architecture checks are
+unchanged; these fixture checks are separate from native runtime proof.
+
 The [structured receipt](framey-fileserver-ipc-eof-2026-11-11.json) retains
 source bindings and results. The [compressed raw reports](framey-fileserver-ipc-eof-2026-11-11-raw.json.gz)
 retain the failed hosted case, original local run and repaired/negative runs.

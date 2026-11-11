@@ -191,15 +191,20 @@ class StoreTransaction(unittest.TestCase):
         self.folder = home / '.local/share/frame-control/decky/plugins/Example'
         self.folder.parent.mkdir(parents=True)
 
-    def apply(self, action, data=None, expected='-', plugin_id=42, folder='Example', version='1.0'):
+    def apply(self, action, data=None, expected='-', plugin_id=42, folder='Example', version='1.0',
+              target_arch=None):
         token = secrets.token_hex(12)
         source = Path('/tmp/frame-control-decky-plugin-' + token)
         if data is not None:
             source.write_bytes(data)
         digest = hashlib.sha256(data or b'').hexdigest()
         try:
+            script = frame_decky_store.apply_script(plugin_id, digest)
+            if target_arch is not None:
+                # Install fixtures inspect Linux ELF metadata without executing helpers.
+                script = 'import platform\nplatform.machine=lambda:'+repr(target_arch)+'\n'+script
             return subprocess.run([sys.executable, '-', action, token, str(plugin_id), digest, folder, version, expected],
-                                  input=frame_decky_store.apply_script(plugin_id, digest), text=True, capture_output=True,
+                                  input=script, text=True, capture_output=True,
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
@@ -978,20 +983,25 @@ class StoreTransaction(unittest.TestCase):
     def test_fileserver_child_ipc_repair_preserves_managed_backend(self):
         from framey_official import PLUGINS, archive as official_archive
         record = next(p for p in PLUGINS if p['id'] == 60)
-        result = self.apply('install', official_archive(record), plugin_id=60,
-                            folder=record['folder'], version=record['version'])
-        self.assertEqual(result.returncode, 0, result.stderr)
-        plugin = self.folder.parent/record['folder']
-        source = (plugin/'main.py').read_bytes()
-        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
-                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
-        self.assertTrue(source.startswith(prefix))
-        self.assertEqual(hashlib.sha256(source[len(prefix):]).hexdigest(),
-                         '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf')
-        self.assertEqual((plugin/'py_modules/framey_decky_ipc.py').read_bytes(),
-                         Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
-        self.assertIn('deckyfileserver-ipc-eof',
-                      json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'])
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch):
+                result = self.apply('install', official_archive(record), plugin_id=60,
+                                    folder=record['folder'], version=record['version'], target_arch=arch)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                plugin = self.folder.parent/record['folder']
+                source = (plugin/'main.py').read_bytes()
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                self.assertTrue(source.startswith(prefix))
+                self.assertEqual(hashlib.sha256(source[len(prefix):]).hexdigest(),
+                                 '78a972424cc20ce8c25fc00450bed47e00ff067b3c158c8c4dc066f13f5f22bf')
+                self.assertEqual((plugin/'py_modules/framey_decky_ipc.py').read_bytes(),
+                                 Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py').read_bytes())
+                self.assertIn('deckyfileserver-ipc-eof',
+                              json.loads((plugin/'.frame-control-store.json').read_text())['compatShims'])
+                self.assertEqual(hashlib.sha256((plugin/'bin/backend').read_bytes()).hexdigest(),
+                                 frame_decky_store.FILESERVER_BINARIES[arch])
+                shutil.rmtree(plugin)
 
     def test_fileserver_missing_ipc_payload_rolls_back_install(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -1000,12 +1010,13 @@ class StoreTransaction(unittest.TestCase):
         # Delete only the embedded adapter assignment, preserving native assets.
         source = '\n'.join(line for line in source.split('\n')
                            if not line.startswith('FRAMEY_FILESERVER_IPC_SOURCE ='))
-        with patch.object(frame_decky_store, 'apply_script', return_value=source):
-            result = self.apply('install', official_archive(record), plugin_id=60,
-                                folder=record['folder'], version=record['version'])
-        self.assertNotEqual(result.returncode, 0)
-        self.assertIn('Missing DeckyFileServer child IPC EOF repair', result.stderr)
-        self.assertFalse((self.folder.parent/record['folder']).exists())
+        for arch in ('x86_64', 'aarch64'):
+            with self.subTest(target_arch=arch), patch.object(frame_decky_store, 'apply_script', return_value=source):
+                result = self.apply('install', official_archive(record), plugin_id=60,
+                                    folder=record['folder'], version=record['version'], target_arch=arch)
+                self.assertNotEqual(result.returncode, 0)
+                self.assertIn('Missing DeckyFileServer child IPC EOF repair', result.stderr)
+                self.assertFalse((self.folder.parent/record['folder']).exists())
 
     def test_exact_fileserver_gets_native_user_helper(self):
         from framey_official import PLUGINS, archive as official_archive
