@@ -1,11 +1,12 @@
 # Bounded Ubuntu CI package installation
 
 Repeated hosted jobs failed before application tests: Ubuntu mirror DNS errors
-prevented zsh or QEMU installation, and the ARM64 ownership job reached its
+prevented zsh, QEMU or native PC library installation, and the ARM64 ownership job reached its
 25-minute job limit during installation. A later unchanged ARM64 package retry
 passed QEMU installation, demonstrating that this preparation failure can recover
 without a product change.
 
+Checks/e2e, QEMU package/ownership jobs and native PC builds use the helper.
 The CI helper uses private source and index files for two bounded attempts:
 Ubuntu's archive/ports endpoint, then MIT's Ubuntu mirror. Each attempt has a
 90-second update limit and a 180-second install limit, with process-group cleanup.
