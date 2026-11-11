@@ -121,6 +121,12 @@ can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
 VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
 complete pack-and-check command.
+For an API v1 bundle whose Decky initializer is in `dist/chunks`, keep direct
+children with a `.js` suffix as files. A directory named `helpers.js` (including
+one implied by `helpers.js/data.json`) makes the runtime reject the panel.
+A file named only `.js` has no suffix and cannot supply that initializer;
+ordinary chunk files such as `entry.js` or `.bridge.js` can. The local checker
+applies the same admission rules; it does not execute the frontend.
 
 ## Framey Decky API compatibility
 
