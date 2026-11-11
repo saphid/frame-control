@@ -21,6 +21,7 @@ on:
       - 'apk-catalog/pick.py'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
       - '.github/actions/framey-runtime-inputs/**'
       - 'scripts/framey-cache-runtime-inputs.py'
@@ -43,6 +44,7 @@ on:
       - 'apk-catalog/pick.py'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
       - '.github/actions/framey-runtime-inputs/**'
       - 'scripts/framey-cache-runtime-inputs.py'
@@ -79,14 +81,14 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
       - uses: ./.github/actions/framey-runtime-inputs
       - name: Install preparation tools and matching QEMU emulator
+        timeout-minutes: 12
         run: |
           case "$(uname -m)" in
             x86_64) emulator=qemu-system-x86 ;;
             aarch64) emulator=qemu-system-arm ;;
             *) exit 1 ;;
           esac
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3-gi "$emulator"
+          sudo python3 scripts/ci-ubuntu-packages.py python3-gi "$emulator"
       - name: Bounded exact app and runtime objects (download is not proof)
         run: |
           /usr/bin/python3 -m unittest discover -s tests -p 'test_syncthing_flatpak*.py' -q
