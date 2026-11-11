@@ -139,8 +139,11 @@ size, flags and included binaries pass the same archive validator used by the
 managed store. `panelCandidate` means the basic frontend entry and API version
 can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
-VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
-complete pack-and-check command.
+VR. The [sample plugin](../examples/framey-settings/README.md#build) uses
+`scripts/framey-pack-sample.py` to package its three release files reproducibly
+and run this checker before replacing the destination ZIP. It packages an
+existing build; plugins with extra assets or chunks need their own packaging
+step before using the checker above.
 The checker reads every file through its ZIP checksum, including large assets
 and backend files, before accepting the archive. A checksum error means the ZIP
 must be rebuilt or recovered from its source; it is not a frontend compatibility
