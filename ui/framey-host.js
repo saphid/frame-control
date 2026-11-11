@@ -86,7 +86,7 @@
       })]);
     } finally {clearTimeout(timer);}
   }
-  const storage = new Proxy({
+  const storageAPI = {
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
     getItem(key) {return cache.get(String(key)) ?? null;},
@@ -100,13 +100,22 @@
     },
     removeItem(key) {cache.delete(String(key)); persistCache();},
     clear() {cache.clear(); persistCache();},
-  }, {
+  };
+  for (const key of Object.keys(storageAPI)) Object.defineProperty(storageAPI, key, {enumerable:false});
+  const storage = new Proxy(storageAPI, {
     // Game Sync uses key presence, including empty values, to track sync state.
     has:(target, key)=>cache.has(key) || Reflect.has(target, key),
     // Named string properties share the same bounded snapshot as method calls.
     // Keep API/prototype members available even when their names are saved keys.
     get:(target, key, receiver)=>typeof key==='string' && !Reflect.has(target, key)
       ? cache.get(key) : Reflect.get(target, key, receiver),
+    // Named entries must also be own enumerable properties for settings
+    // exports, object spread and for-in. Reserved API names keep their API
+    // descriptors; their stored values remain accessible through getItem.
+    ownKeys:target=>[...Reflect.ownKeys(target), ...[...cache.keys()].filter(key=>!Reflect.has(target,key))],
+    getOwnPropertyDescriptor:(target,key)=>Reflect.getOwnPropertyDescriptor(target,key) ||
+      (typeof key==='string' && !Reflect.has(target,key) && cache.has(key)
+        ? {value:cache.get(key),writable:true,enumerable:true,configurable:true} : undefined),
     set:(target, key, value)=>{
       if (typeof key!=='string') return Reflect.set(target, key, value);
       target.setItem(key, value); return true;
@@ -444,15 +453,20 @@
     R.createElement('input', {type:'checkbox', checked:!!checked, disabled:!!disabled,
       onChange:e=>{if(!disabled)onChange?.(e.target.checked);}}),
     tooltip != null && R.createElement('small', null, tooltip));
+  const dropdownOptionRows = (options, path=[]) => (Array.isArray(options) ? options : [])
+    .flatMap(entry=>Array.isArray(entry.options)
+      ? dropdownOptionRows(entry.options,[...path,entry]) : [{entry,path}]);
   const DropdownInput = ({label, menuLabel, rgOptions=[], selectedOption, disabled, strDefaultLabel, onChange}) => {
-    const choices=[];
-    const option = entry => {
-      const index=choices.push(entry)-1;
-      return R.createElement('option', {key:index, value:String(index)}, entry.label);
-    };
-    const entries=(Array.isArray(rgOptions) ? rgOptions : []).map(entry =>
-      Array.isArray(entry.options) ? R.createElement('optgroup', {key:String(entry.label), label:String(entry.label)},
-        entry.options.map(option)) : option(entry));
+    const rows=dropdownOptionRows(rgOptions), choices=rows.map(row=>row.entry), sections=[];
+    rows.forEach(({entry,path},index)=>{
+      if (sections.at(-1)?.path!==path) sections.push({path,options:[]});
+      sections.at(-1).options.push(R.createElement('option', {key:index, value:String(index)}, entry.label));
+    });
+    // Native selects cannot nest optgroups. Keep each contiguous run of
+    // leaves in source order, with its full group path as a visible label.
+    const entries=sections.map(({path,options},index)=>path.length
+      ? R.createElement('optgroup', {key:index, label:path.map(group=>group.label).join(' › ')}, options)
+      : options);
     const selected=choices.findIndex(entry=>Object.is(entry.data, selectedOption));
     return R.createElement('select', {
       value:selected < 0 ? '' : String(selected), disabled:!!disabled,
@@ -508,8 +522,7 @@
       }}));
   };
   const DropdownItem = props => {
-    const choices=(Array.isArray(props.rgOptions) ? props.rgOptions : [])
-      .flatMap(entry=>Array.isArray(entry.options) ? entry.options : [entry]);
+    const choices=dropdownOptionRows(props.rgOptions).map(row=>row.entry);
     const selected=choices.find(entry=>Object.is(entry.data,props.selectedOption));
     return R.createElement(Field, {label:props.label, description:props.description},
       // Keep the plugin's current-value view visible before a deferred read.
@@ -722,30 +735,46 @@
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
     const inFlight = R.useRef(false);
+    const mounted = R.useRef(true);
     const [busy, setBusy] = R.useState(false);
     const [error, setError] = R.useState('');
+    const modal = modals.find(item=>item.dismiss===closeModal);
+    const active = () => mounted.current && (!modal || modals.includes(modal));
+    R.useEffect(()=>{
+      mounted.current = true;
+      return ()=>{
+        mounted.current = false;
+        // Update may keep the shell while replacing this confirmation.
+        frameySetModalBusy?.(false);
+      };
+    },[frameySetModalBusy]);
     const action = (callback, disabled) => () => {
-      if (disabled || inFlight.current) return;
+      if (disabled || inFlight.current || !active()) return;
+      // Lock before calling plugin code, including synchronous/reentrant code.
+      // Success retires these actions; a failure unlocks the same view for retry.
+      inFlight.current = true;
+      setError('');
       let result;
       try {result = callback?.();}
-      catch (failure) {setError(String(failure?.message || failure)); return;}
+      catch (failure) {
+        if (active()) {inFlight.current=false; setError(String(failure?.message || failure));}
+        return;
+      }
       if (result && typeof result.then === 'function') {
-        inFlight.current = true;
-        setBusy(true);
-        frameySetModalBusy?.(true);
-        setError('');
+        if (active()) {setBusy(true); frameySetModalBusy?.(true);}
         return Promise.resolve(result).then(() => {
-          inFlight.current = false;
+          if (!active()) return;
           frameySetModalBusy?.(false);
           closeModal?.();
         }, failure => {
+          if (!active()) return;
           inFlight.current = false;
           setBusy(false);
           frameySetModalBusy?.(false);
           setError(String(failure?.message || failure));
         });
       }
-      closeModal?.();
+      if (active()) closeModal?.();
     };
     return R.createElement('section', null,
       R.createElement('h2', null, strTitle),

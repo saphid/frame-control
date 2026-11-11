@@ -18,6 +18,12 @@ SAMPLE = ROOT / 'examples/framey-settings'
 
 
 class ArchiveChecker(unittest.TestCase):
+    def test_file_used_as_a_directory_is_rejected_without_installation(self):
+        code, result = self.run_check(extra=('framey-settings/dist', 'not a directory'))
+        self.assertEqual(code, 1, result)
+        self.assertFalse(result['ok'])
+        self.assertIn('file/directory collision', result['error'])
+
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
                   name='Framey Settings Sample', damage=None, members=(), expected_runtime=None,
                   manifest_bytes=None):
