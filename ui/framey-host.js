@@ -86,7 +86,7 @@
       })]);
     } finally {clearTimeout(timer);}
   }
-  const storage = new Proxy({
+  const storageAPI = {
     get length() {return cache.size;},
     key(index) {return [...cache.keys()][index] ?? null;},
     getItem(key) {return cache.get(String(key)) ?? null;},
@@ -100,13 +100,22 @@
     },
     removeItem(key) {cache.delete(String(key)); persistCache();},
     clear() {cache.clear(); persistCache();},
-  }, {
+  };
+  for (const key of Object.keys(storageAPI)) Object.defineProperty(storageAPI, key, {enumerable:false});
+  const storage = new Proxy(storageAPI, {
     // Game Sync uses key presence, including empty values, to track sync state.
     has:(target, key)=>cache.has(key) || Reflect.has(target, key),
     // Named string properties share the same bounded snapshot as method calls.
     // Keep API/prototype members available even when their names are saved keys.
     get:(target, key, receiver)=>typeof key==='string' && !Reflect.has(target, key)
       ? cache.get(key) : Reflect.get(target, key, receiver),
+    // Named entries must also be own enumerable properties for settings
+    // exports, object spread and for-in. Reserved API names keep their API
+    // descriptors; their stored values remain accessible through getItem.
+    ownKeys:target=>[...Reflect.ownKeys(target), ...[...cache.keys()].filter(key=>!Reflect.has(target,key))],
+    getOwnPropertyDescriptor:(target,key)=>Reflect.getOwnPropertyDescriptor(target,key) ||
+      (typeof key==='string' && !Reflect.has(target,key) && cache.has(key)
+        ? {value:cache.get(key),writable:true,enumerable:true,configurable:true} : undefined),
     set:(target, key, value)=>{
       if (typeof key!=='string') return Reflect.set(target, key, value);
       target.setItem(key, value); return true;

@@ -55,7 +55,11 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If browser storage rejects a write, the parent keeps the latest
+available. Plugins can enumerate non-reserved cache keys with `Object.keys`,
+`Object.entries` or `for...in`, and export their string values with object spread
+or `JSON.stringify(localStorage)`. API members are not enumerable; stored keys
+that collide with API/prototype names still require `getItem` and `key(index)`.
+If browser storage rejects a write, the parent keeps the latest
 bounded snapshot in memory across plugin close/reopen and switches back to disk
 on the next successful write. The plugin panel shows a notice while its snapshot
 is only in memory. **Retry saving** attempts to save that latest snapshot without
