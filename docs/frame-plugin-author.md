@@ -121,6 +121,10 @@ can be admitted to Framey's panel. Neither result proves that the published
 store digest matches this ZIP, Decky discovers its backend, or its UI works in
 VR. The [sample plugin](../examples/framey-settings/README.md#build) includes a
 complete pack-and-check command.
+The checker reads every file through its ZIP checksum, including large assets
+and backend files, before accepting the archive. A checksum error means the ZIP
+must be rebuilt or recovered from its source; it is not a frontend compatibility
+verdict. The store runs this same validation before transfer to the headset.
 
 ## Framey Decky API compatibility
 

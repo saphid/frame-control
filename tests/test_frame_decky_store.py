@@ -38,6 +38,20 @@ def archive(flags=(), extra=None):
     return data, hashlib.sha256(data).hexdigest()
 
 
+def damaged_asset_archive():
+    name = 'Example/assets/large.bin'
+    data, _ = archive(extra=(name, b'x' * 150_000))
+    with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+        entry = bundle.getinfo(name)
+        offset = entry.header_offset
+        start = (offset + 30 + int.from_bytes(data[offset+26:offset+28], 'little')
+                 + int.from_bytes(data[offset+28:offset+30], 'little'))
+        changed = bytearray(data)
+        changed[start + entry.file_size - 1] ^= 1
+    data = bytes(changed)
+    return data, hashlib.sha256(data).hexdigest()
+
+
 def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
     stream = io.BytesIO()
     with warnings.catch_warnings(), zipfile.ZipFile(stream, 'w') as bundle:
@@ -54,6 +68,19 @@ def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_large_asset_checksum_is_verified_beyond_its_header(self):
+        good, digest = archive(extra=('Example/assets/large.bin', b'x' * 150_000))
+        self.assertEqual(frame_decky_store.archive_info(good, digest, 'Example'), 'Example')
+        data, digest = damaged_asset_archive()
+        # The first read still succeeds; only reading through EOF detects it.
+        with zipfile.ZipFile(io.BytesIO(data)) as bundle:
+            with bundle.open('Example/assets/large.bin') as source:
+                self.assertEqual(source.read(20), b'x' * 20)
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+                bundle.read('Example/assets/large.bin')
+        with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+            frame_decky_store.archive_info(data, digest, 'Example')
+
     def test_catalog_selects_valid_visible_latest_versions(self):
         records = [{'id': 42, 'name': 'Example', 'author': 'Panel Author', 'visible': True, 'versions':
                     [{'name': '1.0', 'hash': 'a' * 64}], 'tags': []},
@@ -208,6 +235,25 @@ class StoreTransaction(unittest.TestCase):
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
+
+    def test_damaged_asset_cannot_replace_installed_plugin_or_restart_service(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        self.assertEqual(self.apply('install', original).returncode, 0)
+        before = self.plugin_snapshot()
+        calls = self.record_service_calls()
+        damaged, _ = damaged_asset_archive()
+        result = self.apply('update', damaged, expected=digest)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('CRC', result.stderr)
+        self.assertEqual(self.plugin_snapshot(), before)
+        self.assertEqual(calls.read_text(), '')
+        self.assertEqual(list(self.folder.parent.iterdir()), [self.folder])
+        # Failed extraction must release the transaction lock for recovery.
+        good, _ = archive(extra=('Example/assets/large.bin', b'x' * 150_000))
+        result = self.apply('update', good, expected=digest)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((self.folder/'assets/large.bin').read_bytes(), b'x' * 150_000)
+        self.assertEqual(calls.read_text().splitlines(), ['stop', 'start'])
 
     def test_ludusavi_dependency_discovery_is_exact_archive_scoped(self):
         from framey_official import PLUGINS, archive as official_archive
@@ -2079,6 +2125,17 @@ pathlib.Path.rename = fail_staged_move
 
 
 class StoreHost(unittest.TestCase):
+    def test_damaged_asset_is_rejected_before_headset_transfer(self):
+        data, digest = damaged_asset_archive()
+        state = {'managed': True, 'running': True, 'plugins': []}
+        catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+        with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+             patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+             patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+            with self.assertRaisesRegex(zipfile.BadZipFile, 'CRC'):
+                frame_decky_store.change(lambda *args, **kwargs:self.fail('No headset transfer expected'),
+                                         'install', 42, reviewed_hash=digest)
+
     def test_reviewed_installed_copy_changed_before_submission_is_preserved(self):
         state = {'managed': True, 'running': True, 'plugins': [
             {'storeId': 42, 'folder': 'Example', 'name': 'Example', 'version': '2.0',

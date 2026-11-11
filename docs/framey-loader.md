@@ -31,6 +31,10 @@ folder with rollback on failure. If moving the installed folder to a backup
 fails, the update or removal leaves the original folder in place. Rollback
 deletes only a replacement that the transaction successfully moved into place.
 It rejects non-ARM64 ELF and Windows binaries.
+Before transfer, it streams every file through its ZIP checksum within the
+existing archive size limits. Corruption after a file's header is rejected on
+the host and by the local author checker. Remote extraction also rejects
+checksum failures before changing the installed plugin or restarting Decky.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
