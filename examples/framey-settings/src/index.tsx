@@ -4,11 +4,29 @@ import {useEffect, useRef, useState} from 'react';
 
 const getSetting = callable<[key: string, fallback: boolean], boolean>('get_setting');
 const setSetting = callable<[key: string, value: boolean], boolean>('set_setting');
+// A backend write outlives the view that sent it. Keep its ordering guard at
+// module scope so reopening cannot read and edit a pre-save snapshot.
+let pendingSave: Promise<boolean> | null = null;
 
-async function readEnabled() {
+async function readEnabled(isCurrent: () => boolean = () => true) {
+  while (pendingSave) {
+    // A rejected reply can still follow a committed save. Read afterward in
+    // either case, unless the view waiting for that read has already retired.
+    await pendingSave.catch(() => {});
+    if (!isCurrent()) throw new Error('The settings view is closed.');
+  }
   const value = await getSetting('enabled', false);
   if (typeof value !== 'boolean') throw new Error('Backend returned an invalid setting value.');
   return value;
+}
+
+function writeEnabled(value: boolean) {
+  if (pendingSave) throw new Error('A setting save is still pending. Reload saved setting before changing it.');
+  const request = setSetting('enabled', value);
+  pendingSave = request;
+  const settled = () => {if (pendingSave === request) pendingSave = null;};
+  void request.then(settled, settled);
+  return request;
 }
 
 function Content() {
@@ -29,7 +47,7 @@ function Content() {
     readReady.current = false;
     setBusy(true);
     try {
-      const value = await readEnabled();
+      const value = await readEnabled(isCurrent);
       if (!isCurrent()) return;
       readReady.current = true;
       setEnabled(value);
@@ -69,7 +87,7 @@ function Content() {
     pending.current = true;
     setBusy(true);
     try {
-      const saved = await setSetting('enabled', value);
+      const saved = await writeEnabled(value);
       if (!isCurrent()) return;
       if (saved !== true) throw new Error('Backend did not acknowledge the saved setting.');
       setEnabled(value);
