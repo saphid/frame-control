@@ -27,10 +27,11 @@ import frame_decky_store
 import frame_decky
 
 
-def archive(flags=(), extra=None):
+def archive(flags=(), extra=None, manifest=None):
     stream = io.BytesIO()
     with zipfile.ZipFile(stream, 'w') as bundle:
-        bundle.writestr('Example/plugin.json', json.dumps({'name': 'Example', 'flags': list(flags)}))
+        bundle.writestr('Example/plugin.json', manifest if manifest is not None else
+                        json.dumps({'name': 'Example', 'flags': list(flags)}))
         bundle.writestr('Example/dist/index.js', 'export default {};' + ' ' * 1200)
         if extra:
             bundle.writestr(*extra)
@@ -68,6 +69,20 @@ def duplicate_archive(second=b'#!/bin/sh\nexit 0\n', second_mode=0o100755):
 
 
 class ArchiveTests(unittest.TestCase):
+    def test_manifest_requires_utf8_json_without_bom(self):
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32',
+                         'utf-32-le', 'utf-32-be', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                data, digest = archive(manifest=text.encode(encoding))
+                with self.assertRaisesRegex(ValueError, 'manifest.*UTF-8'):
+                    frame_decky_store.archive_info(data, digest, 'Example')
+        # Unicode content is allowed; only its byte encoding is constrained.
+        name = 'Exämple 日本語'
+        data, digest = archive(manifest=json.dumps({'name': name, 'flags': []},
+                                                  ensure_ascii=False).encode('utf-8'))
+        self.assertEqual(frame_decky_store.archive_info(data, digest, name), 'Example')
+
     def test_large_asset_checksum_is_verified_beyond_its_header(self):
         good, digest = archive(extra=('Example/assets/large.bin', b'x' * 150_000))
         self.assertEqual(frame_decky_store.archive_info(good, digest, 'Example'), 'Example')
@@ -235,6 +250,29 @@ class StoreTransaction(unittest.TestCase):
                                   env=self.env, timeout=15)
         finally:
             source.unlink(missing_ok=True)
+
+    def test_non_utf8_manifest_cannot_install_or_replace_saved_plugin(self):
+        original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for action in ('install', 'update'):
+            if action == 'update':
+                self.assertEqual(self.apply('install', original).returncode, 0)
+            before = self.plugin_snapshot()
+            calls = self.record_service_calls()
+            for encoding in ('utf-16', 'utf-8-sig'):
+                with self.subTest(action=action, encoding=encoding):
+                    data, _ = archive(manifest=text.encode(encoding))
+                    result = self.apply(action, data, expected=digest)
+                    self.assertNotEqual(result.returncode, 0, result.stdout)
+                    self.assertIn('manifest must be UTF-8', result.stderr)
+                    self.assertEqual(self.plugin_snapshot(), before)
+                    self.assertEqual(calls.read_text(), '', 'invalid manifest must not stop the loader')
+                    self.assertEqual(list(self.folder.parent.iterdir()), [self.folder] if before else [])
+            # Rejection must release the transaction lock and leave recovery usable.
+            retry = self.apply(action, original, expected=digest)
+            self.assertEqual(retry.returncode, 0, retry.stderr)
+            self.assertEqual((self.folder/'saved-data.json').read_text(), '{"keep":true}')
+            self.assertEqual(self.apply('remove').returncode, 0)
 
     def test_damaged_asset_cannot_replace_installed_plugin_or_restart_service(self):
         original, digest = archive(extra=('Example/saved-data.json', '{"keep":true}'))
@@ -2125,6 +2163,20 @@ pathlib.Path.rename = fail_staged_move
 
 
 class StoreHost(unittest.TestCase):
+    def test_non_utf8_manifest_is_rejected_before_headset_transfer(self):
+        text = json.dumps({'name': 'Example', 'flags': []})
+        for encoding in ('utf-16', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                data, digest = archive(manifest=text.encode(encoding))
+                state = {'managed': True, 'running': True, 'plugins': []}
+                catalog = [{'id':42, 'name':'Example', 'root':False, 'sha256':digest, 'version':'1.0'}]
+                with patch.object(frame_decky_store.frame_decky, 'status', return_value=state), \
+                     patch.object(frame_decky_store, 'catalog', return_value=catalog), \
+                     patch.object(frame_decky_store.urllib.request, 'urlopen', return_value=io.BytesIO(data)):
+                    with self.assertRaisesRegex(ValueError, 'manifest.*UTF-8'):
+                        frame_decky_store.change(lambda *a, **kw:self.fail('No headset transfer expected'),
+                                                 'install', 42, reviewed_hash=digest)
+
     def test_damaged_asset_is_rejected_before_headset_transfer(self):
         data, digest = damaged_asset_archive()
         state = {'managed': True, 'running': True, 'plugins': []}

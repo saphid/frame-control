@@ -19,11 +19,13 @@ SAMPLE = ROOT / 'examples/framey-settings'
 
 class ArchiveChecker(unittest.TestCase):
     def run_check(self, manifest=None, extra=None, frontend=True, bundle=None,
-                  name='Framey Settings Sample', damage=None, members=(), expected_runtime=None):
+                  name='Framey Settings Sample', damage=None, members=(), expected_runtime=None,
+                  manifest_bytes=None):
         with tempfile.TemporaryDirectory() as folder:
             archive = Path(folder) / 'plugin.zip'
             with zipfile.ZipFile(archive, 'w') as output:
                 output.writestr('framey-settings/plugin.json',
+                                manifest_bytes if manifest_bytes is not None else
                                 json.dumps(manifest or json.loads((SAMPLE / 'plugin.json').read_text())))
                 if frontend:
                     if bundle is None:
@@ -68,6 +70,22 @@ class ArchiveChecker(unittest.TestCase):
         self.assertEqual(result['folder'], 'framey-settings')
         self.assertEqual(len(result['sha256']), 64)
         self.assertIn('runtime tests', result['note'])
+
+    def test_manifest_encoding_matches_installed_panel_admission(self):
+        manifest = {'name': 'Exämple 日本語', 'api_version': 2, 'flags': []}
+        text = json.dumps(manifest, ensure_ascii=False)
+        for encoding in ('utf-16', 'utf-16-le', 'utf-16-be', 'utf-32',
+                         'utf-32-le', 'utf-32-be', 'utf-8-sig'):
+            with self.subTest(encoding=encoding):
+                code, result = self.run_check(manifest_bytes=text.encode(encoding),
+                                              name=manifest['name'], expected_runtime=False)
+                self.assertEqual(code, 1, result)
+                self.assertFalse(result['ok'])
+                self.assertIn('manifest must be UTF-8', result['error'])
+        code, result = self.run_check(manifest_bytes=text.encode('utf-8'),
+                                      name=manifest['name'], expected_runtime=True)
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['panelCandidate'])
 
     def test_backend_only_archive_is_not_a_panel_candidate(self):
         code, result = self.run_check(frontend=False, extra=('framey-settings/README.txt', 'x' * 2048))
