@@ -74,6 +74,12 @@ The sample also handles React's development effect setup/cleanup replay: a
 late reply from the first setup cannot unlock or replace the newer read.
 Lifecycle tests use delayed synthetic replies through the real host and built
 bundle; they do not prove live-headset persistence.
+An unfinished save also keeps a guard at module scope, so a newly mounted view
+and the read-only quick action wait for its reply before reading the backend.
+They read again after either success or failure; the requested value is not a
+replacement for that read. A view closed while waiting sends no read, and two
+settings surfaces cannot send competing saves from this loaded frontend.
+The guard does not cancel a backend request or coordinate independent clients.
 
 **Reset example setting** opens a local `ConfirmModal`. **Keep setting** closes
 it without a backend call; **Reset** saves `false` through the same guarded

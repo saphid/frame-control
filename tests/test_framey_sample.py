@@ -1,5 +1,6 @@
 """The author example stores settings as a normal Decky user plugin."""
 import asyncio
+import hashlib
 import importlib.util
 import json
 import os
@@ -84,6 +85,12 @@ os._exit(0 if saved is True else 2)
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_lifecycle.mjs')],
                                 capture_output=True, text=True, timeout=10)
         self.assertEqual(result.returncode, 0, result.stderr)
+        marker = 'Framey sample reopen-save proof: '
+        self.assertTrue(result.stdout.startswith(marker), result.stdout)
+        report = json.loads(result.stdout[len(marker):])
+        self.assertIs(report['passed'], True, report)
+        report['bundleSha256'] = hashlib.sha256((EXAMPLE.parent/'dist/index.js').read_bytes()).hexdigest()
+        print(marker+json.dumps(report, sort_keys=True))
 
     def test_failed_read_or_save_requires_reconciliation_before_another_write(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_sample_read_guard.mjs')],
