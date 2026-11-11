@@ -132,6 +132,13 @@ and backend files, before accepting the archive. A checksum error means the ZIP
 must be rebuilt or recovered from its source; it is not a frontend compatibility
 verdict. The store runs this same validation before transfer to the headset.
 
+For an API v1 bundle whose Decky initializer is in `dist/chunks`, keep direct
+children with a `.js` suffix as files. A directory named `helpers.js` (including
+one implied by `helpers.js/data.json`) makes the runtime reject the panel.
+A file named only `.js` has no suffix and cannot supply that initializer;
+ordinary chunk files such as `entry.js` or `.bridge.js` can. The local checker
+applies the same admission rules; it does not execute the frontend.
+
 ## Framey Decky API compatibility
 
 Framey hosts a plugin's frontend in an isolated iframe in the Frame Control
