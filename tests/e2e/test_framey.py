@@ -309,7 +309,7 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'],
                                      ['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                                      'deckyfileserver-directory-entry'])
+                                      'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
                     arch = ssh('uname -m').strip()
                     self.assertEqual(ssh(f'sha256sum {installed}/bin/backend').split()[0],
                                      frame_decky_store.FILESERVER_BINARIES[arch])
