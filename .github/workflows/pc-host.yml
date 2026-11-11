@@ -7,7 +7,7 @@ name: PC host libraries
 # uploaded or shipped.
 on:
   pull_request:
-    paths: ["desktop/**", "ui/**", "tests/**", "scripts/macview-bench.py", ".github/workflows/pc-host.yml"]
+    paths: ["desktop/**", "ui/**", "tests/**", "scripts/macview-bench.py", "scripts/ci-ubuntu-packages.py", ".github/workflows/pc-host.yml"]
   workflow_dispatch:
 jobs:
   linux:
@@ -19,10 +19,11 @@ jobs:
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - name: Native libraries
+        timeout-minutes: 12
         run: |
-          sudo apt-get update -qq
-          sudo apt-get install -y libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libglib2.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire libpipewire-0.3-modules libspa-0.2-modules
-          python3 desktop/build.py --with-x264
+          sudo python3 scripts/ci-ubuntu-packages.py libgstreamer1.0-dev libgstreamer-plugins-base1.0-dev libglib2.0-dev gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly gstreamer1.0-pipewire libpipewire-0.3-modules libspa-0.2-modules
+      - name: Build native adapter
+        run: python3 desktop/build.py --with-x264
       - name: Tests (real x264, fake capture consent/input)
         env:
           FRAME_PC_REQUIRE_NATIVE: "1"
