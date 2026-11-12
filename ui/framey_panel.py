@@ -26,7 +26,11 @@ def _receipt_digest(path):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     meta = json.loads(path.read_text())
     digest = meta.get('sha256') if isinstance(meta, dict) else None
-    if not isinstance(digest, str) or not RECEIPT.fullmatch(digest):
+    store_id = meta.get('storeId') if isinstance(meta, dict) else None
+    # JSON booleans and floats compare equal to integers in Python. They
+    # cannot claim the panel or module URLs belonging to an integer store ID.
+    if (type(store_id) is not int or store_id <= 0 or
+            not isinstance(digest, str) or not RECEIPT.fullmatch(digest)):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     return meta, digest
 

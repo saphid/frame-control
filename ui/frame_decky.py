@@ -36,7 +36,7 @@ def plugins(folder):
                 # the manifest read above already bounds the complete name.
                 found.append({'folder': child.name, 'name': str(data.get('name', child.name)),
                               'author': str(data.get('author', ''))[:80],
-                              'storeId': owned.get('storeId') if isinstance(owned.get('storeId'), int) else None,
+                              'storeId': owned.get('storeId') if type(owned.get('storeId')) is int and owned['storeId']>0 else None,
                               'version': str(owned.get('version', ''))[:40],
                               'sha256': str(owned.get('sha256', ''))[:64],
                               'compatShims': [s[:100] for s in owned.get('compatShims', []) if isinstance(s, str)][:16]

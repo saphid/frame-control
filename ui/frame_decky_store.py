@@ -304,6 +304,9 @@ def apply_script(plugin_id, digest):
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
                 +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 79 and digest == NOTIFICATIONS_DIGEST:
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NOTIFICATIONS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 132 and digest == '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SUGGESTME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -464,10 +467,16 @@ backup=base/('.frame-control-old-'+token)
 marker='.frame-control-store.json'
 STORAGE_CLEANER_FRONTEND='8252cfcd2182546f715cc0e4116a887fcf40af1b8b9d132bd1761c8b9ff46fdb'
 transaction_lock=None
-def owned():
-    if target.is_symlink() or not target.is_dir(): return False
-    try: return json.loads((target/marker).read_text()).get('storeId') == int(plugin_id)
-    except (OSError,ValueError): return False
+def owned_receipt():
+    if target.is_symlink() or not target.is_dir(): return None
+    receipt=target/marker
+    if receipt.is_symlink() or not receipt.is_file(): return None
+    try: record=json.loads(receipt.read_text())
+    except (OSError,ValueError): return None
+    if (isinstance(record,dict) and type(record.get('storeId')) is int
+            and record['storeId']==int(plugin_id)):
+        return record
+    return None
 def service(*args):
     p=subprocess.run(['systemctl','--user',*args],capture_output=True,text=True,timeout=25)
     if p.returncode: raise RuntimeError((p.stderr or p.stdout).strip()[-400:] or 'Decky service failed')
@@ -491,11 +500,14 @@ try:
             if receipt.is_symlink() or not receipt.is_file(): continue
             try: record=json.loads(receipt.read_text())
             except (OSError,ValueError,UnicodeError): continue
-            if isinstance(record,dict) and record.get('storeId')==int(plugin_id):
+            if isinstance(record,dict) and type(record.get('storeId')) is int and record['storeId']==int(plugin_id):
                 raise RuntimeError('This store plugin is already installed; refresh installed plugins and use Update or Remove')
-    if action in ('update','remove') and not owned(): raise RuntimeError('Only a Frame Control store plugin can be changed')
+    # Match inventory's refusal to follow receipt symlinks. Read the receipt
+    # once under the transaction lock for ownership and version comparison.
+    installed=owned_receipt() if action in ('update','remove') else None
+    if action in ('update','remove') and installed is None: raise RuntimeError('Only a Frame Control store plugin can be changed')
     if action in ('update','remove') and expected_installed!='-':
-        current=json.loads((target/marker).read_text()).get('sha256')
+        current=installed.get('sha256')
         if current!=expected_installed:
             raise RuntimeError('Installed plugin changed; refresh the installed list and try again')
     running=subprocess.run(['systemctl','--user','is-active','--quiet','frame-control-decky.service']).returncode==0
@@ -2138,9 +2150,21 @@ def split_by_app(data):
                           b'            logger.error(f"{k}: {v}")\r\n')
                 if main_data.count(old)!=1 or crypto_data.count(env_dump)!=1:
                     raise RuntimeError('Decky Notifications logging source changed')
-                main.write_bytes(main_data.replace(old,new))
+                ipc=globals().get('FRAMEY_NOTIFICATIONS_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Decky Notifications child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Decky Notifications child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+main_data.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
                 crypto.write_bytes(crypto_data.replace(env_dump,b''))
                 compat_shims.append('notifications-private-logs')
+                compat_shims.append('notifications-ipc-eof')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.

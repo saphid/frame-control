@@ -175,6 +175,7 @@
   {
     "id": 79,
     "shim": "notifications-private-logs",
+    "additionalShims": ["notifications-ipc-eof"],
     "probe": "notifications-private"
   },
   {

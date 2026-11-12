@@ -105,6 +105,7 @@ def main():
               'tests/decky-runtime/steam_status_private.py',
               'tests/decky-runtime/storage_cleaner_private.py',
               'tests/decky-runtime/suggestme_private.py',
+              'tests/decky-runtime/notifications_private.py',
               'tests/decky-runtime/localsend_private.py',
               'tests/decky-runtime/timer_private.py',
               'tests/decky-runtime/deck_settings_private.py',
@@ -157,6 +158,7 @@ def main():
                     (123, '--reproduce-steam-status-unload-regression'),
                     (50, '--reproduce-storage-cleaner-unload-regression'),
                     (132, '--reproduce-suggestme-unload-regression'),
+                    (79, '--reproduce-notifications-unload-regression'),
                     (12, '--reproduce-music-control-unload-regression'),
                     (111, '--reproduce-music-control-unload-regression'),
                     (111, '--reproduce-bound-method-regression'), (96, '--reproduce-timer-regression'),
@@ -193,7 +195,7 @@ def main():
                     '--mount', f'type=bind,source={ROOT},target=/repo,readonly',
                     '--mount', f'type=bind,source={loader},target=/input/PluginLoader,readonly',
                     ]
-                if plugin_id in (50, 143) and negative:
+                if plugin_id in (50, 79, 143) and negative:
                     # The original EOF spin allocates tasks without yielding.
                     # Keep this negative below OOM pressure until Decky's own
                     # five-second forced-stop deadline proves the regression.
