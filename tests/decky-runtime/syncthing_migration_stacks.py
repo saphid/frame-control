@@ -18,28 +18,26 @@ DUMP_SECONDS = 2
 OUTPUT_LIMITS = (16384, 4096)
 
 # This helper has tester credentials and only reads the four properties used
-# by the root observer. Keep one bus connection instead of starting systemctl
-# for every sample, which still exceeded three seconds under ARM64 QEMU.
+# by the root observer. Connect directly to the user manager: routing through
+# the session bus still timed out under ARM64 QEMU. The fixed object path and
+# one GetAll avoid a manager lookup and multiple property round trips.
 UNIT_QUERY = r'''
 import dbus, json, os, sys
 assert os.getuid() == os.geteuid() == os.getgid() == os.getegid() == 1100
 assert not os.getgroups()
-bus = dbus.bus.BusConnection(os.environ['DBUS_SESSION_BUS_ADDRESS'])
-manager = dbus.Interface(bus.get_object('org.freedesktop.systemd1',
-    '/org/freedesktop/systemd1', introspect=False), 'org.freedesktop.systemd1.Manager')
+bus = dbus.connection.Connection('unix:path=/run/user/1100/systemd/private')
+properties = dbus.Interface(bus.get_object(None,
+    '/org/freedesktop/systemd1/unit/frame_2dcontrol_2dmigration_2ddecky_2dfixture_2eservice',
+    introspect=False), 'org.freedesktop.DBus.Properties')
 print(json.dumps({'ready': True}), flush=True)
 for request in sys.stdin:
     if request != 'query\n':
         raise ValueError('Unexpected observer request')
     try:
-        path = manager.GetUnit('frame-control-migration-decky-fixture.service', timeout=2)
-        properties = dbus.Interface(bus.get_object('org.freedesktop.systemd1', path,
-            introspect=False), 'org.freedesktop.DBus.Properties')
-        unit = properties.GetAll('org.freedesktop.systemd1.Unit', timeout=2)
-        service = properties.GetAll('org.freedesktop.systemd1.Service', timeout=2)
-        budget = int(service['TimeoutStopUSec'])
-        reply = dict(MainPID=str(int(service['MainPID'])),
-                     ControlGroup=str(service['ControlGroup']), ActiveState=str(unit['ActiveState']),
+        values = properties.GetAll('', timeout=2)
+        budget = int(values['TimeoutStopUSec'])
+        reply = dict(MainPID=str(int(values['MainPID'])),
+                     ControlGroup=str(values['ControlGroup']), ActiveState=str(values['ActiveState']),
                      TimeoutStopUSec='1min 30s' if budget == 90000000 else str(budget))
     except dbus.DBusException as error:
         reply = ({} if error.get_dbus_name() in ('org.freedesktop.systemd1.NoSuchUnit',
@@ -50,7 +48,7 @@ for request in sys.stdin:
 
 
 class UnitQuery:
-    """Own one bounded, read-only user-bus helper and reap it on every exit."""
+    """Own one bounded, read-only user-manager helper and reap it on exit."""
 
     def __init__(self, user_command, *, executable='python3', helper=UNIT_QUERY):
         self.command = user_command + [executable, '-u', '-c', helper]
@@ -345,7 +343,7 @@ def guest_observer(metadata):
     with sampler.open('xb') as stream:
         stream.write(data)
     sampler.chmod(0o700)
-    # Drop credentials once for the persistent read-only user-bus helper.
+    # Drop credentials once for the persistent read-only user-manager helper.
     query_user = ['setpriv', '--reuid=1100', '--regid=1100', '--clear-groups', '--',
                   'env', 'XDG_RUNTIME_DIR=/run/user/1100',
                   'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus']

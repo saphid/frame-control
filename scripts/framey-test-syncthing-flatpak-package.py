@@ -231,6 +231,8 @@ def verify_migration_stacks(report, metadata):
             or report.get('changesStopBudget') is not False
             or report.get('historicalCauseEstablished') is not False):
         raise ValueError('Missing guest migration observer provenance/cleanup')
+    if report.get('errors') != []:
+        raise ValueError('Migration unit observation failed')
     snapshots = report.get('snapshots', [])
     if not 1 <= len(snapshots) <= 4 or snapshots[0].get('window') != 'baseline':
         raise ValueError('Missing running migration stack baseline')

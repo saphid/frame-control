@@ -69,7 +69,7 @@ class MigrationStacks(unittest.TestCase):
     def report(self):
         metadata = {'executableSha256': 'a' * 64, 'architecture': 'x86_64'}
         return dict(sampler=metadata, unit=self.observer.UNIT, observerJoined=True,
-                    queryHelperJoined=True,
+                    queryHelperJoined=True, errors=[],
                     deactivationTimeBasis='first observed deactivating state',
                     changesStopBudget=False, historicalCauseEstablished=False,
                     snapshots=[dict(window='baseline', activeState='active', pythonServerReady=True,
@@ -305,6 +305,12 @@ class MigrationStacks(unittest.TestCase):
         report = self.report()
         self.package.verify_migration_stacks(report, report['sampler'])
         self.assertFalse(report['historicalCauseEstablished'])
+
+    def test_valid_baseline_does_not_hide_later_observer_failure(self):
+        report = self.report()
+        report['errors'] = ['RuntimeError: Migration unit bus error: org.freedesktop.DBus.Error.NoReply']
+        with self.assertRaisesRegex(ValueError, 'Migration unit observation failed'):
+            self.package.verify_migration_stacks(report, report['sampler'])
 
     def test_proof_rejects_missing_identity_tampered_stacks_and_incomplete_cleanup(self):
         original = self.report()

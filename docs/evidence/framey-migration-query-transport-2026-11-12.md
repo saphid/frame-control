@@ -10,14 +10,25 @@ The first `setpriv` implementation at `bd854a6177` also retained eight query
 timeouts in the actual ARM64 migration. That service stopped normally in
 14.606 seconds; the transport change did not eliminate the diagnostic errors.
 
-Read-only observer queries now use a persistent Python D-Bus client, launched
-once through `setpriv` with UID/GID 1100 and no supplementary groups. It only
-reads the migration unit's state, cgroup, main PID and stop budget. Requests
-retain their three-second deadline and have a 4,096-byte reply limit. Startup
-is bounded at 15 seconds; timeout, malformed replies and probe failure reap the
-helper. Expected unit disappearance is distinct from a bus failure. The actual
-unprivileged migration probe, sampling identity checks and strict 90-second
-service-stop budget are unchanged.
+The persistent session-bus client at `781e12e9` passed the actual AMD64
+migration without observer errors, with a 1.416-second stop. On ARM64 it
+received `org.freedesktop.DBus.Error.NoReply`, reaped its helper, and retained
+no running baseline. The actual migration stopped normally in 10.681 seconds,
+but that does not qualify its diagnostic. The failed artifact is
+`13992801737`, produced by job `131538862306` in run `43320284371`.
+
+Read-only observer queries now connect directly to the disposable user
+manager's private D-Bus socket. A fixed migration-unit object path and one
+`GetAll` request replace the session-bus broker, manager lookup and separate
+interface queries. The helper still launches once through `setpriv` with
+UID/GID 1100 and no supplementary groups. It only returns the migration
+unit's state, cgroup, main PID and stop budget. Requests retain their
+three-second deadline and 4,096-byte reply limit. Startup is bounded at 15
+seconds; timeout, malformed replies and probe failure reap the helper.
+Expected unit disappearance is distinct from a bus failure. A retained
+observer error now fails the package gate even if an earlier baseline was
+valid. The actual unprivileged migration probe, sampling identity checks and
+strict 90-second service-stop budget are unchanged.
 
 A disposable AMD64 systemd VM compared three queries through each transport
 against the same published Decky service. All six succeeded and returned
@@ -32,7 +43,7 @@ The [record](framey-migration-query-transport-2026-11-12.json) binds the changed
 source files, sampler and raw archive. The
 [compressed raw record](framey-migration-query-transport-2026-11-12.raw.json.gz)
 retains the guest result and both fixture programs. The owned QEMU and
-temporary boot files were removed. All 98 focused tests passed without skips.
+temporary boot files were removed. All 99 focused tests passed without skips.
 
 This empty-plugin feasibility test did not execute the Syncthing migration
 or ARM64. Both native actual-migration runs remain required for the changed
