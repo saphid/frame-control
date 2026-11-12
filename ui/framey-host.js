@@ -1381,7 +1381,7 @@
   class PanelBoundary extends R.Component {
     constructor(props) { super(props); this.state = {failure:null}; }
     static getDerivedStateFromError(failure) { return {failure}; }
-    render() { return this.state.failure ? R.createElement('p', null,
+    render() { return this.state.failure ? R.createElement('p', {role:'alert'},
       `This Decky panel is not compatible with Framey: ${this.state.failure.message}`) : this.props.children; }
   }
   function PluginSurface({plugin}) {
@@ -1419,9 +1419,13 @@
         ...actions.map((action, index) => R.createElement('button', {key:index, type:'button',
           disabled:running !== null, onClick:()=>runAction(action,index)}, action.label))),
       message && R.createElement('p', {role:'status'}, message),
-      R.createElement('div', null, route ? (typeof activeRoute(route)?.component === 'function' ?
-        R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
-        (view === 'settings' ? plugin.settings : plugin.content)));
+      // A broken content view must not remove the controls that can leave it.
+      // Reset only when navigation selects another view; ordinary redraws
+      // preserve healthy child state and do not retry a failing render.
+      R.createElement('div', null, R.createElement(PanelBoundary, {key:route ? `route:${route}` : `view:${view}`},
+        route ? (typeof activeRoute(route)?.component === 'function' ?
+          R.createElement(activeRoute(route).component) : activeRoute(route)?.component) :
+          (view === 'settings' ? plugin.settings : plugin.content))));
   }
   window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit = {
     connect: (version, name) => ({
