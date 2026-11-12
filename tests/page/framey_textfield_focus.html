@@ -1,0 +1,81 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Open fixture</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-modal');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{
+    let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;
+  };
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const input=()=>container.querySelector('input');
+  const opener=document.getElementById('opener');
+  // Only the digest-verified published dialog runs. Its optional ref click has
+  // no Steam target here; onClosed below records a synthetic query only.
+  const deckyFrontendLib=DFL;
+  __OFFICIAL_COMPONENT__
+  try {
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    opener.focus();
+    const submitted=[];
+    const handle=show(React.createElement(TextFieldModal,{
+      label:'Search',placeholder:'Station name',onClosed:value=>submitted.push(value)}));
+    assert(document.activeElement===input(),'published focusOnMount did not focus the input');
+    await settle();
+    assert(document.activeElement===input(),'modal shell stole initial input focus');
+    ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input(),'Synthetic station query');
+      input().dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(document.activeElement===input(),'editing lost focus');
+    const ok=[...container.querySelectorAll('button')].find(node=>node.textContent==='OK');
+    ok.focus();
+    ReactDOM.flushSync(()=>ok.click());
+    await handle.ClosedPromise;await settle();
+    assert(JSON.stringify(submitted)==='["Synthetic station query"]','published query callback changed');
+    assert(document.activeElement===opener,'closing dialog did not restore opener focus');
+
+    // The shell still receives focus when a plugin opts out or supplies no
+    // enabled focus target. Enabling an already mounted field does not refocus.
+    for(const props of [{focusOnMount:false},{},{focusOnMount:true,disabled:true}]){
+      const unfocused=show(React.createElement(DFL.TextField,{label:'Optional focus',...props}));
+      assert(document.activeElement!==input(),'opt-out or disabled input received initial focus');
+      await settle();
+      const shell=container.querySelector('[role=dialog]');
+      assert(document.activeElement===shell,'shell fallback focus was lost');
+      ReactDOM.flushSync(()=>unfocused.Update(React.createElement(DFL.TextField,{
+        label:'Optional focus',focusOnMount:true})));
+      assert(document.activeElement===shell,'updated focusOnMount stole focus');
+      close(unfocused);await settle();
+    }
+
+    // Preserve any initial focus inside the modal, including a plugin's own
+    // native autoFocus control, and keep the fallback trap usable.
+    const native=show(React.createElement('input',{autoFocus:true,'aria-label':'Native focus'}));
+    await settle();assert(document.activeElement===input(),'shell stole native autofocus');
+    close(native);await settle();
+    const plain=show(React.createElement('p',null,'Read only fixture'));
+    await settle();
+    assert(document.activeElement===container.querySelector('[role=dialog]'),'display dialog was not focused');
+    const tab=new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true});
+    document.activeElement.dispatchEvent(tab);
+    assert(tab.defaultPrevented&&document.activeElement===container.querySelector('button'),'fallback Tab trap failed');
+    close(plain);await settle();
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedDialog:true,
+      initialInputFocus:true,shellPreservesFocus:true,optOutAndDisabled:true,
+      noRefocusOnUpdate:true,shellFallback:true,focusRestored:true,syntheticInput:true,
+      realFrameContacted:false,vrKeyboardVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

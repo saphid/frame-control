@@ -1,0 +1,80 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), root=ReactDOM.createRoot(container);
+  const routes=[];let closed=0;
+  // Replay only the published achievement row. Navigation and progress are
+  // synthetic; no plugin initializer, achievement service or Steam route runs.
+  const deckyFrontendLib={...DFL,Navigation:{Navigate:path=>routes.push(path),CloseSideMenus:()=>closed++}};
+  const appStore={GetAppOverviewByAppID:()=>({display_name:'Synthetic game'})};
+  function published(appId,achievements) {return __OFFICIAL_CONTROL__;}
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const key=(node,value)=>ReactDOM.flushSync(()=>node.dispatchEvent(
+    new KeyboardEvent('keydown',{key:value,bubbles:true,cancelable:true})));
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  try {
+    render(published(42,{percentage:50,achieved:2,total:4}));
+    const field=container.firstElementChild;
+    assert(field.getAttribute('role')==='button'&&field.tabIndex===0,'published Field action has no native tab stop');
+    field.focus();assert(document.activeElement===field,'actionable Field cannot receive focus');
+    assert(field.querySelector('strong').textContent==='Synthetic game','published game title lost');
+    assert(field.querySelector('progress').value===50&&field.textContent.includes('2/4'),'published progress lost');
+    click(field.querySelector('strong'));key(field,'Enter');key(field,' ');
+    assert(routes.length===3&&closed===3,'published action did not fire once per activation');
+    assert(routes.every(path=>path==='/library/app/42/achievements/my/individual'),'published action arguments changed');
+    render(React.cloneElement(published(43,{percentage:75,achieved:3,total:4}),{disabled:true}));
+    assert(field.tabIndex===-1&&field.getAttribute('aria-disabled')==='true','disabled field not exposed');
+    click(field);key(field,'Enter');key(field,' ');
+    assert(routes.length===3&&closed===3,'disabled field activated');
+    render(published(43,{percentage:75,achieved:3,total:4}));click(field);
+    assert(routes.at(-1)==='/library/app/43/achievements/my/individual'&&routes.length===4,
+      'enabled field retained old action');
+
+    const events=[];
+    const local=props=>React.createElement(DFL.Field,{label:React.createElement('em',null,'Local action'),
+      description:'Help',icon:React.createElement('span',null,'Icon'),style:{color:'red'},
+      className:'local-field',...props},React.createElement('span',null,'Content'));
+    render(local({onClick:e=>events.push(['click',e]),onActivate:e=>events.push(['activate',e])}));
+    const localField=container.firstElementChild;
+    click(localField);key(localField,'Enter');key(localField,' ');
+    assert(events.map(([name])=>name).join(',')==='click,activate,activate','callback priority changed');
+    assert(events[0][1].type==='click'&&events[1][1].key==='Enter','original React events lost');
+    assert(localField.className==='local-field'&&localField.style.color==='red','field class or style lost');
+    assert(localField.textContent.includes('Icon')&&localField.querySelector('small').textContent==='Help'&&
+      localField.textContent.includes('Content'),'field icon/description/children lost');
+    render(local({focusable:true}));
+    const passive=container.firstElementChild;passive.focus();
+    assert(document.activeElement===passive&&passive.tabIndex===0&&!passive.hasAttribute('role'),
+      'focusable-only field did not receive a native tab stop');
+    render(local({focusable:true,disabled:true}));
+    assert(container.firstElementChild.tabIndex===-1,'disabled focusable-only field stayed in tab order');
+    // Ordinary labeled controls keep native label/input behavior.
+    let changes=0;
+    render(React.createElement(DFL.ToggleField,{label:'Ordinary toggle',checked:false,onChange:()=>changes++}));
+    const label=container.querySelector('label');
+    assert(label&&!label.hasAttribute('role'),'ordinary setting wrapper changed');
+    click(label.querySelector('strong'));assert(changes===1,'ordinary label no longer toggles once');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedAchievementField:true,publishedCallbackArgumentsPreserved:true,nativeActivationOnce:true,
+      progressPreserved:true,disabledFieldInert:true,updatedCallbackUsed:true,originalEventsPreserved:true,
+      classStyleAndContentPreserved:true,focusableOnlyTabStop:true,ordinaryLabelTogglePreserved:true,
+      syntheticNavigation:true,fullPluginInitialized:false,realBackendContacted:false,
+      realSteamNavigation:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

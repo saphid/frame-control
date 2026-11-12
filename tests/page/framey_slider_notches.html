@@ -1,0 +1,72 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), writes=[];
+  let root;
+  const range=()=>container.querySelector('input[type="range"]');
+  const edit=value=>ReactDOM.flushSync(()=>{
+    const node=range();
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,String(value));
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  function Published({disabled=false}) {
+    const [seconds,setSeconds]=React.useState(600);
+    const settings={refresh_interval_seconds:seconds};
+    const t=key=>({refreshInterval:'Refresh interval',refreshIntervalDesc:'How often to refresh'}[key]);
+    const updateSetting=(key,value)=>{writes.push({key,value});setSeconds(value);};
+    const control=__OFFICIAL_CONTROL__;
+    return React.cloneElement(control,{disabled});
+  }
+  const captions=()=>[...container.querySelectorAll('[data-framey-notch]')];
+  try {
+    root=ReactDOM.createRoot(container);
+    ReactDOM.flushSync(()=>root.render(React.createElement(Published)));
+    assert(JSON.stringify(captions().map(n=>n.textContent))==='["5m","10m","15m","20m","25m","30m"]',
+      'published minute captions are missing');
+    assert(range().getAttribute('aria-valuetext')==='10m','current minute caption is inaccessible');
+    assert(range().min==='300'&&range().max==='1800'&&range().step==='300','published numeric limits changed');
+    edit(1200);
+    assert(JSON.stringify(writes)==='[{"key":"refresh_interval_seconds","value":1200}]','caption mapping changed saved seconds');
+    assert(range().getAttribute('aria-valuetext')==='20m','current caption did not follow saved value');
+    ReactDOM.flushSync(()=>root.render(React.createElement(Published,{disabled:true})));
+    edit(1800);
+    assert(writes.length===1&&range().disabled,'disabled slider wrote settings');
+    assert(captions().length===6,'disabled slider lost its legend');
+    // A sparse label, an explicit value and hidden ticks remain legible.
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.SliderField,{label:'Sparse',
+      value:25,min:0,max:100,notchCount:5,notchTicksVisible:false,
+      notchLabels:[{notchIndex:0,label:'None'},{notchIndex:1,label:'Low'},
+        {notchIndex:4,label:'Full'}]})));
+    assert(captions().map(n=>n.textContent).join(',')==='None,Low,Full','sparse labels lost');
+    assert(captions()[2].style.gridColumn==='5','sparse label position lost');
+    assert(range().getAttribute('aria-valuetext')==='Low','sparse current label lost');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.SliderField,{label:'Exact',
+      value:30,min:0,max:100,notchCount:3,
+      notchLabels:[{notchIndex:1,label:'Custom',value:30}]})));
+    assert(range().getAttribute('aria-valuetext')==='Custom','explicit caption value lost');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.SliderField,{label:'Unlabelled',value:42,
+      min:0,max:100,notchCount:2,notchLabels:[{notchIndex:0,label:'None'}]})));
+    assert(!range().hasAttribute('aria-valuetext'),'unlabelled value inherited a stale caption');
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.SliderField,{label:'Plain',value:50})));
+    assert(!captions().length&&!range().hasAttribute('aria-valuetext'),'ordinary slider gained captions');
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,
+      publishedMinuteCaptions:true,numericSecondsPreserved:true,currentCaptionAccessible:true,
+      disabled:true,sparseLabels:true,explicitValue:true,ordinarySliderUnchanged:true,
+      syntheticSettings:true,realBackendContacted:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

@@ -42,6 +42,28 @@ class ShotCopyTest(unittest.TestCase):
             (target / Path(remote).name).write_bytes(self.payloads[remote])
         return subprocess.CompletedProcess(argv, 0, "", "")
 
+    def test_windows_copy_retries_one_pending_socket_failure(self):
+        attempts = []
+
+        def flaky(argv, **kwargs):
+            attempts.append(argv)
+            target = Path(argv[-1])
+            if len(attempts) == 1:
+                (target / NAME).write_bytes(b"partial")
+                return subprocess.CompletedProcess(argv, 255, "", "close - IO is still pending on closed socket. "
+                                                                     "read:1, write:0, io:000001\n")
+            return self.scp(argv, **kwargs)
+
+        with mock.patch.object(server, "FRAME", "frame-a"), \
+             mock.patch.object(server, "ensure_master"), \
+             mock.patch.object(server, "LINK", None), \
+             mock.patch.object(server.frame_host, "WINDOWS", True), \
+             mock.patch.object(server.frame_host, "run_ssh", side_effect=flaky):
+            self.assertEqual(server.save_shots({"ids": [FIRST]})["saved"], 1)
+            self.assertEqual(server.shot_local_path(FIRST).read_bytes(), b"first game")
+        self.assertEqual(len(attempts), 2)
+        self.assertFalse(list(self.folder.glob(".incoming-*")))
+
     def test_equal_names_survive_across_games_and_headsets(self):
         # A pre-upgrade flat file has no provable source identity. Leave it alone.
         legacy = self.folder / NAME

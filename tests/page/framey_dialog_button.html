@@ -1,0 +1,76 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture');
+  const SP_REACT=window.SP_REACT,DFL=window.DFL;
+  // Inert icon/translation dependencies; the published action component and
+  // tab constants below are verbatim. No settings provider/backend is loaded.
+  const trans_string=(_key,fallback)=>fallback;
+  const HiHome=()=>React.createElement('span',null,'Default');
+  const HiEye=()=>React.createElement('span',null,'Show');
+  const HiEyeSlash=()=>React.createElement('span',null,'Hide');
+  __OFFICIAL_CONSTANTS__
+  __OFFICIAL_COMPONENT__
+  let root;
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const click=node=>ReactDOM.flushSync(()=>node.click());
+  try {
+    root=ReactDOM.createRoot(container);
+    const entry={label:'Capsule',data:{type:'grid_p'},position:0};
+    const defaults=[],hidden=[];
+    const settings=(defaultTab,hiddenTabs)=>React.createElement(Interactables,{entry,defaultTab,hiddenTabs,
+      onDefaultClick:value=>defaults.push(value),onHideClick:value=>hidden.push(value)});
+    render(settings('hero',[]));
+    let buttons=container.querySelectorAll('button');
+    assert(buttons.length===2,'published setting buttons missing');
+    assert(buttons[0].style.padding==='10px','published button styles lost');
+    click(buttons[0]);
+    assert(defaults.length===1&&defaults[0]===entry,'published OK-only default-tab action did not run once');
+    click(buttons[1]);
+    assert(hidden.length===1&&hidden[0]===entry,'published OK-only hide action did not run once');
+    render(settings('grid_p',['grid_p']));
+    assert(container.querySelectorAll('button').length===1,'default-tab action did not retire');
+    click(container.querySelector('button'));
+    assert(hidden.length===2&&hidden[1]===entry,'published show action did not run once');
+    render(settings('hero',DEFAULT_TABS.filter(type=>type!=='grid_p')));
+    click(container.querySelectorAll('button')[1]);
+    assert(hidden.length===2,'published last-visible-tab guard was bypassed');
+    // Native activation uses onClick first; onOKButton is a fallback. It
+    // forwards the real React click event without inventing GamepadEvent.detail.
+    for(const name of ['DialogButton','DialogButtonPrimary','DialogButtonSecondary']) {
+      const calls=[],ok=[];let submits=0;
+      const button=props=>React.createElement('form',{onSubmit:e=>{e.preventDefault();submits++;}},
+        React.createElement(DFL[name],{className:'private-action',style:{marginTop:7},...props},name));
+      render(button({onClick:event=>calls.push({node:event.currentTarget,type:event.type}),onOKButton:()=>ok.push('ok')}));
+      let node=container.querySelector('button');click(node);
+      assert(calls.length===1&&calls[0].node===node&&calls[0].type==='click'&&ok.length===0,name+' duplicated handlers');
+      assert(node.className==='private-action'&&node.style.marginTop==='7px',name+' lost props');
+      assert(submits===0&&node.type==='button',name+' submitted enclosing form');
+      render(button({onOKButton:event=>ok.push({node:event.currentTarget,type:event.type,detail:event.detail})}));
+      node=container.querySelector('button');click(node);
+      assert(ok.length===1&&ok[0].node===node&&ok[0].type==='click'&&typeof ok[0].detail==='number',name+' fallback event changed');
+      render(button({disabled:true,onClick:()=>calls.push('disabled'),onOKButton:()=>ok.push('disabled')}));
+      click(container.querySelector('button'));
+      assert(calls.length===1&&ok.length===1,name+' disabled action ran');
+    }
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedDefaultTab:true,
+      publishedHideAndShow:true,publishedLastVisibleGuard:true,clickPriorityOnce:true,okFallback:true,
+      nativeClickEvent:true,disabled:true,formNotSubmitted:true,propsPreserved:true,syntheticSettings:true,
+      realArtworkChanged:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

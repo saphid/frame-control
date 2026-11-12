@@ -1,0 +1,76 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>label{display:grid;width:320px;gap:6px;color:#fff;background:#1b3042}input{width:100%;box-sizing:border-box}</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), writes=[];
+  __OFFICIAL_SETTINGS__
+  let root;
+  const ticks=()=>[...container.querySelectorAll('[data-framey-tick]')];
+  const range=()=>container.querySelector('input[type="range"]');
+  const edit=value=>ReactDOM.flushSync(()=>{
+    const node=range();
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,String(value));
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  function Published({assetType,disabled=false}) {
+    const [sliderValue,setSliderValue]=React.useState(3);
+    const handleSliderChange=value=>{writes.push(value);setSliderValue(value);};
+    return React.cloneElement(__OFFICIAL_CONTROL__,{disabled});
+  }
+  const render=(type,props)=>ReactDOM.flushSync(()=>root.render(React.createElement(type,props)));
+  try {
+    root=ReactDOM.createRoot(container);
+    render(Published,{assetType:'hero'});
+    assert(ticks().length===3,'published hero slider lost its requested three ticks');
+    assert(range().min==='2'&&range().max==='4'&&range().step==='1','published numeric limits changed');
+    const row=ticks()[0].parentElement;
+    assert(row.getAttribute('aria-hidden')==='true','decorative ticks became accessible content');
+    const rects=ticks().map(node=>node.getBoundingClientRect());
+    assert(rects.every(rect=>rect.height>=8&&rect.width>0),'ticks have no visible geometry');
+    assert(Math.abs((rects[1].x-rects[0].x)-(rects[2].x-rects[1].x))<1,'ticks are not evenly spaced');
+    assert(getComputedStyle(ticks()[0]).backgroundColor==='rgb(255, 255, 255)','ticks do not inherit the field color');
+    assert(!row.querySelector('button,input,[tabindex]'),'ticks added interactive controls');
+    edit(4);
+    assert(JSON.stringify(writes)==='[4]'&&range().value==='4','tick display changed numeric callback');
+    render(Published,{assetType:'logo',disabled:true});
+    assert(ticks().length===5&&range().disabled,'disabled logo slider lost its five ticks');
+    edit(5);
+    assert(writes.length===1,'disabled slider called its setting callback');
+    render(Published,{assetType:'grid_p'});
+    assert(ticks().length===0,'ordinary published slider gained ticks');
+    // Captions remain independent of whether decorative ticks are requested.
+    const props={label:'Fractional',min:-1,max:1,step:0.5,value:0,notchCount:5,
+      notchLabels:[{notchIndex:2,label:'Center'}],notchTicksVisible:true};
+    render(DFL.SliderField,props);
+    assert(ticks().length===5&&range().getAttribute('aria-valuetext')==='Center','ticks displaced current caption');
+    render(DFL.SliderField,{...props,notchTicksVisible:false});
+    assert(!ticks().length&&container.textContent.includes('Center'),'hidden ticks removed the legend');
+    render(DFL.SliderField,{...props,notchTicksVisible:undefined});
+    assert(!ticks().length,'omitting the prop added ticks');
+    for (const invalid of [{notchCount:1},{notchCount:0},{notchCount:2.5},
+      {notchCount:101},{notchCount:NaN},{min:1,max:1},{min:2,max:1},{min:-Infinity},{max:NaN}]) {
+      render(DFL.SliderField,{...props,...invalid});
+      assert(!ticks().length,'invalid range/count created ticks: '+JSON.stringify(invalid));
+    }
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,
+      publishedHeroTicks:3,publishedLogoTicks:5,visibleGeometry:true,evenlySpaced:true,
+      decorativeOnly:true,numericCallback:true,disabled:true,propRemoval:true,
+      captionsPreserved:true,invalidRangesSuppressed:true,syntheticSizeState:true,
+      realArtworkChanged:false,realBackendContacted:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

@@ -571,6 +571,17 @@ class Library(unittest.TestCase):
         with self.assertRaises(meta.MetaError):
             meta.library()
 
+    def test_library_marks_known_newer_android_binary_incompatible(self):
+        fake = connected(self)
+        binary = fake.entitlements['data']['viewer']['user']['active_entitlements']['nodes'][0]['item'][
+            'latest_supported_binary']
+        binary['min_sdk_version'] = 32
+        app = next(a for a in meta.library(refresh=True) if a['id'] == '111')
+        public = meta._public(app)
+        self.assertEqual(public['min_sdk'], 32)
+        self.assertIn('needs Android API 32', public['incompatible'])
+        self.assertIn("isn't a setting you can change", public['incompatible'])
+
     def test_binary_query_when_the_list_doesnt_say_what_data_there_is(self):
         fake = connected(self)
         binary = fake.entitlements['data']['viewer']['user']['active_entitlements']['nodes'][0]['item'][
@@ -800,13 +811,95 @@ class Install(unittest.TestCase):
         with self.assertRaisesRegex(quest.QuestError, '32-bit'):
             meta.install('111')
         meta.disconnect()
-        connected(self)
+        fake = connected(self)
         real = android.apk_info
         with patch.object(android, 'apk_info', side_effect=lambda p: dict(real(p), min_sdk=31)):
-            with self.assertRaisesRegex(android.FrameError, 'API 31'):
+            with self.assertRaisesRegex(android.FrameError, "API 31.*isn't a setting you can change"):
                 meta.install('111')
+        downloaded = len(fake.downloads())
+        self.assertGreater(downloaded, 0)  # the manifest is only available after this first APK download
+        public = meta._public(next(a for a in meta.library() if a['id'] == '111'))
+        self.assertEqual(public['min_sdk'], 31)
+        self.assertIn('needs Android API 31', public['incompatible'])
+        with self.assertRaisesRegex(meta.MetaError, 'API 31'):
+            meta.install('111')
+        self.assertEqual(len(fake.downloads()), downloaded)  # learned precheck: no second doomed download
         self.assertEqual(self.order, [])
         self.assertEqual(self.cache_left(), [])
+
+    def test_known_minimum_sdk_precheck_skips_download(self):
+        fake = connected(self)
+        fake.entitlements['data']['viewer']['user']['active_entitlements']['nodes'][0]['item'][
+            'latest_supported_binary']['min_sdk'] = 32
+        with self.assertRaisesRegex(meta.MetaError, "API 32.*isn't a setting you can change"):
+            meta.install('111')
+        self.assertEqual(fake.downloads(), [])
+        self.assertEqual(self.order, [])
+
+    def test_learned_minimum_survives_refresh_but_not_a_different_binary(self):
+        fake = connected(self)
+        real = android.apk_info
+        with patch.object(android, 'apk_info', side_effect=lambda p: dict(real(p), min_sdk=32)):
+            with self.assertRaisesRegex(meta.MetaError, 'API 32'):
+                meta.install('111')
+        downloaded = len(fake.downloads())
+        row = next(a for a in meta.library(refresh=True) if a['id'] == '111')
+        self.assertIn('incompatible', meta._public(row))
+        with self.assertRaisesRegex(meta.MetaError, 'API 32'):
+            meta.install('111')
+        self.assertEqual(len(fake.downloads()), downloaded)
+        self.assertTrue(all('9002' not in r['url'] for r in fake.downloads()))  # no OBB
+        binary = fake.entitlements['data']['viewer']['user']['active_entitlements']['nodes'][0]['item'][
+            'latest_supported_binary']
+        binary['id'] = '9200'
+        fake.files['9200'] = APK
+        row = next(a for a in meta.library(refresh=True) if a['id'] == '111')
+        self.assertNotIn('incompatible', meta._public(row))
+        meta.install('111')
+        self.assertEqual(self.order[0][0], 'install')
+
+    def test_reconnect_drops_learned_minimum_for_the_same_binary(self):
+        connected(self)
+        real = android.apk_info
+        with patch.object(android, 'apk_info', side_effect=lambda p: dict(real(p), min_sdk=32)):
+            with self.assertRaisesRegex(meta.MetaError, 'API 32'):
+                meta.install('111')
+        meta.disconnect()
+        meta.connect(TOKEN)
+        row = next(a for a in meta.library() if a['id'] == '111')
+        self.assertNotIn('incompatible', meta._public(row))
+        meta.install('111')
+        self.assertEqual(self.order[0][0], 'install')
+
+    def test_late_manifest_cannot_mark_a_reconnected_library_incompatible(self):
+        connected(self)
+        real = android.apk_info
+
+        def reconnect_while_reading(path):
+            info = real(path)
+            meta.disconnect()
+            meta.connect(TOKEN)
+            return dict(info, min_sdk=32)
+
+        with patch.object(android, 'apk_info', side_effect=reconnect_while_reading):
+            with self.assertRaisesRegex(meta.MetaError, 'API 32'):
+                meta.install('111')
+        row = next(a for a in meta.library() if a['id'] == '111')
+        self.assertNotIn('incompatible', meta._public(row))
+        self.assertEqual(self.order, [])
+        self.assertEqual(self.cache_left(), [])
+
+    def test_wrong_package_cannot_teach_an_incompatible_minimum(self):
+        connected(self)
+        real = android.apk_info
+        with patch.object(android, 'apk_info', side_effect=lambda p: dict(
+                real(p), package='org.example.wrong', min_sdk=32)):
+            with self.assertRaisesRegex(meta.MetaError, 'says it is org.example.wrong'):
+                meta.install('111')
+        row = next(a for a in meta.library() if a['id'] == '111')
+        self.assertNotIn('incompatible', meta._public(row))
+        meta.install('111')
+        self.assertEqual(self.order[0][0], 'install')
 
     def test_version_mismatch_and_one_at_a_time(self):
         connected(self, apk=test_quest.apk_bytes(files=test_quest.OPENXR, version_code=99))

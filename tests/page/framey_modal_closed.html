@@ -1,0 +1,114 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Fixture opener</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-modal'), error=document.getElementById('framey-error');
+  const opener=document.getElementById('opener'), background=document.getElementById('framey-root');
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=(element,options)=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element,undefined,options);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const button=text=>[...container.querySelectorAll('[role=dialog]:not([hidden]) button')].find(node=>node.textContent===text);
+  const tap=node=>{assert(node,'missing dialog button');ReactDOM.flushSync(()=>node.click());};
+  const escape=()=>ReactDOM.flushSync(()=>document.dispatchEvent(new KeyboardEvent('keydown',{
+    key:'Escape',bubbles:true,cancelable:true})));
+  const content=()=>React.createElement('p',null,'Local fixture');
+  __OFFICIAL_HELPER__
+  try {
+    // Replay the exact helper, including its unavailable no-argument Steam QAM
+    // request. No navigation substitute, plugin initializer or backend runs.
+    opener.focus();
+    ReactDOM.flushSync(()=>openModalWithQAMReturn(content()));
+    tap(button('Close'));await settle();
+    assert(error.textContent.includes('Steam Quick Access tabs are unavailable'),
+      'published close callback was ignored instead of reporting unsupported navigation');
+    assert(!container.querySelector('[role=dialog]')&&!background.inert,'failed close callback kept the shell open');
+    assert(document.activeElement===opener,'failed close callback prevented focus restoration');
+    error.textContent='';
+    ReactDOM.flushSync(()=>openModalWithQAMReturn(content(),true));
+    tap(button('Close'));await settle();
+    assert(error.textContent==='','published skip-return branch attempted navigation');
+
+    const dismissals=[];
+    function Custom({closeModal}) {return React.createElement('button',{onClick:closeModal},'Inside close');}
+    for (const mode of ['handle','shell','escape','injected','ok','cancel']) {
+      let count=0,cancelled=0;
+      const element=mode==='injected' ? React.createElement(Custom) :
+        ['ok','cancel'].includes(mode) ? React.createElement(DFL.ConfirmModal,{
+          strTitle:'Fixture confirmation',onCancel:()=>cancelled++}) : content();
+      const handle=show(element,{fnOnClose:()=>{count++;dismissals.push(mode);}});
+      if (mode==='handle') close(handle);
+      else if (mode==='escape') escape();
+      else tap(button({shell:'Close',injected:'Inside close',ok:'OK',cancel:'Cancel'}[mode]));
+      await handle.ClosedPromise;
+      assert(count===1,'close callback did not run exactly once for '+mode);
+      close(handle);close(handle);
+      assert(count===1,'retained Close repeated callback for '+mode);
+      assert(cancelled===(mode==='cancel'?1:0),'close notification invented a cancellation');
+    }
+    assert(dismissals.length===6,'a dismissal path was lost');
+    let updates=0;
+    const updated=show(content(),{fnOnClose:()=>updates++});
+    ReactDOM.flushSync(()=>updated.Update(React.createElement('p',null,'Updated content')));
+    assert(updates===0,'Update emitted a close callback');
+    close(updated);await updated.ClosedPromise;
+    assert(updates===1,'Update lost the original close callback');
+
+    // Pending confirmations still block shell cancellation. Their final close
+    // sends one notification, after the action has settled.
+    let finish,busyClosed=0;
+    const pending=show(React.createElement(DFL.ConfirmModal,{onOK:()=>new Promise(resolve=>{finish=resolve;})}),
+      {fnOnClose:()=>busyClosed++});
+    tap(button('OK'));escape();
+    assert(busyClosed===0&&button('Close').disabled,'busy cancellation emitted a close callback');
+    finish();await pending.ClosedPromise;await settle();
+    assert(busyClosed===1,'completed confirmation lost its close notification');
+
+    const nested=[];
+    const parent=show(content(),{fnOnClose:()=>nested.push('parent')});
+    const child=show(content(),{fnOnClose:()=>nested.push('child')});
+    close(parent);await parent.ClosedPromise;
+    assert(nested.join(',')==='parent'&&container.querySelectorAll('[role=dialog]').length===1,
+      'closing a hidden parent notified or removed the child');
+    close(child);await child.ClosedPromise;
+    assert(nested.join(',')==='parent,child','nested callbacks lost their owners');
+
+    let reentrant=0,another;
+    let first=show(content(),{fnOnClose:()=>{reentrant++;first.Close();another=DFL.showModal(content());}});
+    close(first);await first.ClosedPromise;
+    assert(reentrant===1&&container.querySelectorAll('[role=dialog]').length===1,
+      'reentrant close duplicated callback or dismissed its replacement');
+    close(another);await another.ClosedPromise;
+
+    for (const asynchronous of [false,true]) {
+      opener.focus();error.textContent='';
+      const handle=show(content(),{fnOnClose:()=>{
+        if (asynchronous) return Promise.reject(Error('Async cleanup failed'));
+        throw Error('Sync cleanup failed');
+      }});
+      close(handle);await handle.ClosedPromise;await settle();
+      assert(error.textContent.includes(asynchronous?'Async cleanup failed':'Sync cleanup failed'),
+        'close callback failure was not reported');
+      assert(!background.inert&&!container.querySelector('[role=dialog]'),'callback failure stranded a modal');
+      assert(document.activeElement===opener,'callback failure stranded focus');
+    }
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,
+      publishedHelperExecuted:true,unsupportedSteamNavigationReported:true,publishedOptOut:true,
+      dismissalPaths:dismissals,exactlyOnce:true,closedPromise:true,updatedContent:true,
+      busyGuard:true,nestedOwnership:true,reentrantClose:true,syncAndAsyncErrorsReported:true,
+      focusRestored:true,realBackendContacted:false,realFrameContacted:false,realSteamNavigation:false});
+  } catch(failure) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(failure.stack||failure)});
+  }
+})();
+</script>

@@ -1,0 +1,63 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), changes=[];
+  let root;
+  const input=type=>container.querySelector(`input[type="${type}"]`);
+  const reset=()=>container.querySelector('button');
+  const edit=(type,value)=>ReactDOM.flushSync(()=>{
+    const node=input(type);
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(node,String(value));
+    node.dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  function Settings({disabled=false,resetValue=4}) {
+    const [value,setValue]=React.useState(2);
+    return React.createElement('div',null,
+      React.createElement(window.DFL.SliderField,{label:'Workers',value,min:1,max:8,step:1,
+        editableValue:true,resetValue,disabled,validValues:next=>[1,2,4,8].includes(next),
+        onChange:next=>{changes.push(next);setValue(next);}}),
+      React.createElement('output',null,String(value)));
+  }
+  const saved=()=>Number(container.querySelector('output').textContent);
+  try {
+    root=ReactDOM.createRoot(container);
+    ReactDOM.flushSync(()=>root.render(React.createElement(Settings)));
+    edit('range',3);
+    assert(changes.length===0&&saved()===2,'rejected range value reached settings');
+    assert(input('range').value==='2','rejected range thumb did not return to controlled value');
+    edit('number',3);
+    assert(changes.length===0&&saved()===2,'rejected typed value reached settings');
+    assert(input('number').value==='2','rejected typed value did not return to controlled value');
+    edit('number','');edit('number',9);edit('number',1.5);
+    assert(changes.length===0&&saved()===2,'blank, bounds or native step validation lost');
+    edit('range',4);edit('number',8);
+    assert(JSON.stringify(changes)==='[4,8]'&&saved()===8,'valid changes did not reach settings');
+    ReactDOM.flushSync(()=>reset().click());
+    assert(JSON.stringify(changes)==='[4,8,4]'&&saved()===4,'valid reset did not reach settings');
+    ReactDOM.flushSync(()=>root.render(React.createElement(Settings,{resetValue:3})));
+    assert(!reset(),'rejected reset default was offered');
+    ReactDOM.flushSync(()=>root.render(React.createElement(Settings,{disabled:true})));
+    assert(input('range').disabled&&input('number').disabled&&reset().disabled,'disabled controls are active');
+    edit('range',8);edit('number',8);ReactDOM.flushSync(()=>reset().click());
+    assert(JSON.stringify(changes)==='[4,8,4]'&&saved()===4,'disabled event changed settings');
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,
+      rejectedRange:true,rejectedTyped:true,controlledValueRestored:true,validChangesAndReset:true,
+      rejectedResetHidden:true,nativeValidation:true,disabled:true,
+      syntheticSettings:true,realBackendContacted:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>
