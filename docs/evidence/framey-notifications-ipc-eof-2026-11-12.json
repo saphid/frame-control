@@ -1,0 +1,61 @@
+{
+  "at": "2026-11-12T08:30:17.911635+00:00",
+  "nativeAudit": {
+    "at": "2026-11-12T08:27:00.011350+00:00",
+    "head": "WORKTREE",
+    "architecture": "x86_64",
+    "reportSha256": "5c1076bf33219a6cd315777a7b4f8bcbfc0c7b99fab4f37d696a18b55c5a822d",
+    "sourceInputs": 54,
+    "allSourceFingerprintsVerified": true,
+    "positiveSeconds": [
+      0.275,
+      0.266
+    ],
+    "negativeSeconds": 5.54,
+    "positiveStopsVerified": true,
+    "previousManagedForcedKillReproduced": true,
+    "other115CompatibilityRowsUnchanged": true,
+    "all116ClassificationsAndInstallPoliciesUnchanged": true,
+    "historicalArm64CauseEstablished": false,
+    "realFrameContacted": false,
+    "releaseQualified": false,
+    "other37PrimaryProbeBodiesUnchanged": true,
+    "other39NativeCasesUnchanged": true
+  },
+  "e2e": {
+    "started": "2026-11-12T08:26:28.841753+00:00",
+    "finished": "2026-11-12T08:30:09.675952+00:00",
+    "project": "framey-notifications-nov12",
+    "returncode": 0,
+    "success": true,
+    "sourceSha256": {
+      "tests/e2e/test_framey.py": "0718166480b48d3b522564155023c2b8dca9057609181f72309cf7204b5386c4",
+      "ui/frame_decky_store.py": "1722a24a04f1eedf84a97f327a43f223cce0d1c26ab3b5fde79d239cc5c144b0",
+      "ui/framey-compatibility.json": "af62f7431f4d0f9f3a2aaf790d3f0a51e3b14675fdf0ce346f642a3e44684cff",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/fakeframe/compose.yaml": "064c2b5897c5a6903cf8bb32656021ec1a2b2be58e670b9d95d025962212418f"
+    },
+    "containerAndVolumesRemain": false,
+    "realFrameContacted": false,
+    "officialBackendExecuted": false
+  },
+  "localFocusedTests": 150,
+  "localFocusedSkips": 0,
+  "finalCompatibilityTests": 31,
+  "nativeCaseCount": 2,
+  "priorManagedForcedKillExpected": true,
+  "failedProducer": {
+    "head": "69c51b251b5fea5d189efa7fb624b13902c62017",
+    "run": 43177953796,
+    "job": 131046671443,
+    "artifact": 13925830546,
+    "archiveSha256": "336449268c02dc4eb8150726c3c0706e76dbd86f008c5c603badff8875481d30",
+    "sourceFingerprints": 53,
+    "retainedOutsideSuccessfulInventory": true
+  },
+  "rawSha256": "f998c7d36a3b3e649d604c6437039979cdac0f42356ea26250d8ac5719330bfe",
+  "historicalArm64CauseEstablished": false,
+  "hostedFinalHeadQualification": false,
+  "realFrameContacted": false,
+  "releaseQualified": false
+}

@@ -287,15 +287,18 @@ class Compatibility(unittest.TestCase):
         self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
         self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
-    def test_notifications_old_copy_exposes_logging_update_requirement(self):
+    def test_notifications_old_copy_requires_logging_and_eof_repairs(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 79)
         old = dict(storeId=79, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['notifications-private-logs'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
-        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        logging_only = dict(old, compatShims=['notifications-private-logs'])
+        updated = dict(old, compatShims=['notifications-private-logs', 'notifications-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, logging_only, updated]}))['plugins']
+        for item in result[:2]:
+            self.assertIn('Update or reinstall', item['compatibility']['reason'])
+            self.assertIn('IPC', item['compatibility']['reason'])
         self.assertIn('environment dump', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
     def test_game_sync_old_copy_requires_selection_fix(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 104)
