@@ -1,0 +1,88 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="opener">Fixture focus target</button><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const flush=callback=>ReactDOM.flushSync(callback), tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+  const opener=document.getElementById('opener');
+  const dialog=()=>document.querySelector('[role="dialog"]');
+  const cancel=()=>dialog().querySelector('button');
+  const deckyFrontendLib=DFL, state={providers:['fixture.first','fixture.second']};
+  const selections=[],actions=[],AppActions={SetCurrentServiceProvider:'fixture-provider'};
+  const setMediaPlayer=provider=>selections.push(provider),dispatch=action=>actions.push(action);
+  const getDisplayNameForProvider=provider=>'Local '+provider;
+  // Exact pinned provider-menu handler. Providers and selection callbacks are
+  // in memory; no MPRIS discovery, player/backend call or settings write runs.
+  __OFFICIAL_FACTORY__
+  try {
+    opener.focus();flush(()=>handleOnClick({currentTarget:opener}));await tick();
+    assert(dialog().getAttribute('aria-label')==='Select Media Player','published menu lost accessible name');
+    assert(dialog().querySelector('h3')?.textContent==='Select Media Player','published heading missing');
+    assert(cancel().textContent==='Cancel','published cancelText missing');
+    const items=[...dialog().querySelectorAll('button')].slice(1);
+    assert(items.length===2&&items[1].textContent==='Local fixture.second','published provider labels missing');
+    flush(()=>items[1].click());
+    assert(selections[0]===state.providers[1]&&actions[0].value===state.providers[1]&&
+      actions[0].type===AppActions.SetCurrentServiceProvider,'published selection callback changed');
+    assert(dialog(),'selection unexpectedly closed menu');
+    flush(()=>cancel().click());await tick();
+    assert(!dialog()&&document.activeElement===opener,'published cancel/focus cleanup failed');
+
+    let cancellations=0,handle;
+    const menu=props=>React.createElement(DFL.Menu,{label:'Local choices',cancelText:'Go back',
+      onCancel:()=>cancellations++,...props},React.createElement(DFL.MenuItem,null,'Local item'));
+    flush(()=>{handle=DFL.showContextMenu(menu());});await tick();
+    assert(cancel().textContent==='Go back','local cancel label missing');
+    flush(()=>handle.Hide());await tick();assert(cancellations===0,'Hide invented cancellation');
+    flush(()=>handle.Show());await tick();
+    assert(cancel().textContent==='Go back'&&dialog().querySelector('h3').textContent==='Local choices',
+      'Show lost metadata');
+    const oldCancel=cancel();flush(()=>oldCancel.click());await tick();
+    flush(()=>oldCancel.click());assert(cancellations===1&&!dialog(),'cancel callback repeated or failed to close');
+    flush(()=>handle.Show());await tick();
+    flush(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));await tick();
+    assert(cancellations===2&&!dialog(),'Escape cancellation changed');
+
+    flush(()=>{handle=DFL.showModal(menu({bCancelDisabled:true}));});await tick();
+    assert(cancel().disabled,'custom cancel label bypassed disabled state');
+    flush(()=>cancel().click());
+    flush(()=>window.dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true})));
+    assert(dialog()&&cancellations===2,'disabled cancellation fired');
+    flush(()=>handle.Update(menu({label:'Updated choices',cancelText:'Dismiss',className:'local-menu',style:{color:'rgb(1, 2, 3)'}})));
+    await tick();
+    assert(dialog().getAttribute('aria-label')==='Updated choices'&&
+      dialog().querySelector('h3').textContent==='Updated choices'&&cancel().textContent==='Dismiss',
+      'updated menu metadata stale');
+    const wrapper=dialog().querySelector('.local-menu');
+    assert(wrapper.style.color==='rgb(1, 2, 3)'&&!wrapper.hasAttribute('canceltext')&&
+      !wrapper.hasAttribute('label')&&!wrapper.hasAttribute('frameysetmodalbusy'),'menu props leaked or styles lost');
+    flush(()=>handle.Update(menu({label:'',cancelText:'  '})));await tick();
+    assert(cancel().textContent==='Close'&&dialog().getAttribute('aria-label')==='Plugin dialog',
+      'empty metadata did not use defaults');
+    flush(()=>handle.Update(menu({label:undefined,cancelText:undefined})));await tick();
+    assert(cancel().textContent==='Close'&&!dialog().querySelector('h3'),'omitted metadata did not use defaults');
+    flush(()=>handle.Update(React.createElement('div',{strTitle:'Ordinary dialog',cancelText:'Ignored'},
+      menu({label:React.createElement('em',null,'Nested choices'),cancelText:'Nested cancel'}))));
+    await tick();
+    assert(cancel().textContent==='Close'&&dialog().getAttribute('aria-label')==='Ordinary dialog',
+      'ordinary dialog picked up menu-only metadata');
+    assert(dialog().querySelector('h3 em')?.textContent==='Nested choices','nested React heading missing');
+    flush(()=>handle.Close());await tick();
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedMusicControlMenu:true,visibleHeading:true,accessibleMenuName:true,customCancelText:true,
+      providerCallbacksPreserved:true,noAutomaticSelectionDismissal:true,cancelOnce:true,escapeCancel:true,
+      hideWithoutCancel:true,reopenedMetadata:true,disabledCancelGuard:true,updatedMetadata:true,
+      nativeStylesRetained:true,emptyMetadataFallback:true,ordinaryDialogUnchanged:true,nestedMetadataIsolated:true,
+      syntheticProviders:true,realFrameContacted:false,realPlayerChanged:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>
