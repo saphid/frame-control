@@ -200,6 +200,7 @@ none of these frontend controls has passed a worn-headset check yet.
 | `Tabs`, `SidebarNavigation`, spinners, dialog/menu wrappers | Local tab navigation and ordinary HTML controls; no Steam navigation or controller focus tree | Host tests and catalog frontend smoke checks in local Chromium |
 | `Tabs` entries with `renderTabAddon` | Calls each tab's renderer beside its title on every render, retaining returned React markup and zero counts. Controlled/uncontrolled selection and disabled tabs keep their existing behavior. | Exact Animation Changer 1.3.2 tab expression in real React/DOM with synthetic browse/installed arrays; counts update without changing selection. Child views are inert; no animation discovery/download, full plugin, backend, controller or worn VR proof. |
 | `Spinner.style`, `SteamSpinner.style` | Preserves the supplied React style object on the loading status, including visibility and positioning; removing the style restores the ordinary status. Custom React children and the default loading message remain available. | Exact RadiYo! 1.3 overlay style and spinner expression in real React/DOM with synthetic playing/buffering/paused states, plus style removal and SteamSpinner alias checks. No player, station, audio, backend, physical input or worn VR proof. |
+| `Menu.label`, `cancelText` | Renders a visible heading. A direct root `Menu` also gives its local dialog the string label as an accessible name and uses nonblank string `cancelText` for its shell cancel button (default Close). Existing cancellation/disabled guards apply. | Exact MusicControl 1.1.6 provider-menu handler in real React/DOM with synthetic providers: heading, accessible name, Cancel text and unchanged provider callbacks; local cancellation, Hide/Show, updates and fallbacks. No player/backend, saved settings, controller or worn VR proof. |
 | `MenuGroup.label`, `disabled` | A labeled native fieldset; disabling it blocks native activation and focus of descendant controls, including nested groups. Individual `MenuItem` disabled states still apply. | Exact TabMaster 2.15.1 Micro SD Card menu with synthetic cards/preset callbacks in real React/DOM. No card discovery, real library edit, Steam submenu or worn/controller proof. |
 | `MenuItem.selected` | When supplied, exposes selection through `aria-pressed` on the native button and a visible checkmark. An absent selection prop leaves ordinary action semantics. The plugin owns selection updates; disabled selected items remain inert. | Exact TabMaster 2.15.1 custom-dropdown menu factory in real React/DOM with synthetic choices: original option identity, updated selection on reopen, missing selection, disabled actions and prop removal. No real settings/library mutation, backend, physical input or worn VR proof. |
 | `SidebarNavigation.pages` with `"separator"` entries | Omits layout separators from the local tab strip so they cannot open blank pages. Hidden pages stay absent; changing visibility of an earlier page preserves a later page's selection at the same source index. | Exact published Game Sync 1.0.4 navigation replay with inert child views and synthetic tab selection. No sync, backend, physical-input or worn VR proof. |
@@ -252,6 +253,12 @@ is unavailable. Framey uses native fieldset inheritance, so an enabled nested
 group cannot enable its controls inside a disabled parent. This governs native
 controls; it does not guard a plugin directly calling its own callbacks or
 implement Steam submenus or a controller focus tree.
+
+Pass a `Menu` directly to `showContextMenu` or `showModal` to use its `label`
+as the shell's accessible name and its `cancelText` on the shell cancel button.
+Blank or omitted cancel text uses Close. The visible heading also renders when
+a `Menu` is nested, but nested metadata does not configure the surrounding shell.
+Shell cancellation calls `onCancel`; item selection still belongs to the plugin.
 
 Keep the instance returned by `showContextMenu` when a menu action needs to call
 `Hide()`. Hiding is programmatic dismissal and does not invent a cancellation
