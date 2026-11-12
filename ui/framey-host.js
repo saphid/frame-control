@@ -395,6 +395,12 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  const ScrollPanel = R.forwardRef(function ScrollPanel({children, ...props}, ref) {
+    return R.createElement('div', {...props, ref}, children);
+  });
+  const ScrollPanelGroup = R.forwardRef(function ScrollPanelGroup({children, ...props}, ref) {
+    return R.createElement('div', {...props, ref}, children);
+  });
   // Some published buttons expose only Decky's OK action. Native activation
   // uses it as a fallback; keep an explicit click handler authoritative and
   // pass the original click event rather than fabricating gamepad input.
@@ -1143,7 +1149,7 @@
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
-    Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
+    Focusable, ScrollPanel, ScrollPanelGroup,
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
     DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton, QuickAccessTab,
     ColorPickerModal,
@@ -1198,7 +1204,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || value===Focusable || value===TextField)))));
+      (typeof value==='function' || [Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
