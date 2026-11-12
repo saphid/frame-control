@@ -1003,15 +1003,47 @@ zipfile.ZipFile.extractall = forbidden_extract
         self.assertEqual(result.returncode, 0, result.stderr)
         folder = self.folder.parent/plugin['folder']
         receipt = json.loads((folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
+        self.assertEqual(receipt['compatShims'], ['notifications-private-logs', 'notifications-ipc-eof'])
         main = (folder/'main.py').read_text()
         crypto = (folder/'py_modules/connector/crypto.py').read_text()
         self.assertNotIn('filename="/tmp/notifications.log"', main)
         self.assertNotIn('=== ENVIRON ===', crypto)
         self.assertNotIn('clear_env.items()', crypto)
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        self.assertTrue((folder/'main.py').read_bytes().startswith(prefix))
+        self.assertEqual((folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (Path(frame_decky_store.__file__).with_name('framey_decky_ipc.py')).read_bytes())
         result = self.apply('remove', plugin_id=79, folder=plugin['folder'])
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse(folder.exists())
+
+    def test_notifications_missing_ipc_payload_refuses_incomplete_install(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 79)
+        with patch.object(frame_decky_store, 'apply_script', return_value=frame_decky_store.APPLY):
+            result = self.apply('install', official_archive(plugin), plugin_id=79,
+                                folder=plugin['folder'], version=plugin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Decky Notifications child IPC EOF repair', result.stderr)
+        self.assertFalse((self.folder.parent/plugin['folder']).exists())
+
+    def test_notifications_other_archive_keeps_original_backend(self):
+        from framey_official import PLUGINS, archive as official_archive
+        plugin = next(p for p in PLUGINS if p['id'] == 79)
+        stream = io.BytesIO(official_archive(plugin))
+        with zipfile.ZipFile(stream, 'a') as bundle:
+            original = bundle.read(plugin['folder']+'/main.py')
+            bundle.writestr(plugin['folder']+'/new-version.txt', b'Different archive; no adaptation')
+        changed = stream.getvalue()
+        self.assertEqual(frame_decky_store.apply_script(79, hashlib.sha256(changed).hexdigest()), frame_decky_store.APPLY)
+        result = self.apply('install', changed, plugin_id=79,
+                            folder=plugin['folder'], version=plugin['version'])
+        self.assertEqual(result.returncode, 0, result.stderr)
+        folder = self.folder.parent/plugin['folder']
+        self.assertEqual((folder/'main.py').read_bytes(), original)
+        self.assertFalse((folder/'py_modules/framey_decky_ipc.py').exists())
+        self.assertEqual(json.loads((folder/'.frame-control-store.json').read_text()).get('compatShims', []), [])
 
     def test_exact_storage_cleaner_deletes_only_private_cache_fixture(self):
         from framey_official import PLUGINS, archive as official_archive
