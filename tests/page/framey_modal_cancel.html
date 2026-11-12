@@ -94,6 +94,60 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     assert(decisions.length===5&&container.querySelectorAll('[role=dialog]').length===1,'child cancelled its parent');
     escape();await parent.ClosedPromise;assert(decisions.length===6,'parent lost its cancellation binding');
 
+    // API contract fixture: a custom component's inner ModalRoot can disable
+    // cancellation. These props are synthetic, not a LocalSend feature claim.
+    let lockedCancels=0,lockedEscapes=0,focusCancels=0;
+    function Locked({closeModal,disabled,root=true,onEsc}) {
+      return root ? React.createElement(DFL.ModalRoot,{closeModal,bCancelDisabled:disabled,
+        onCancel:()=>{lockedCancels++;closeModal();},onEscKeypress:onEsc},
+        React.createElement(DFL.Focusable,{className:'inner-cancel-target',tabIndex:0,
+          onCancel:()=>{focusCancels++;closeModal();}},'Locked fixture')) :
+        React.createElement('p',null,'Root removed');
+    }
+    handle=show(React.createElement(Locked,{disabled:false}));
+    await settle();
+    const oldClose=button('Close');
+    const retainedClose=oldClose[Object.keys(oldClose).find(key=>key.startsWith('__reactProps$'))].onClick;
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Locked,{disabled:true})));
+    await settle();
+    assert(button('Close').disabled,'inner ModalRoot cancel-disable did not reach shell Close');
+    tap(button('Close'));ReactDOM.flushSync(()=>retainedClose());escape();await settle();
+    assert(lockedCancels===0&&button('Close'),'disabled inner root was cancelled by shell or retained handler');
+    assert(!container.querySelector('[bcanceldisabled]'),'Decky cancel flag leaked onto native DOM');
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Locked,{disabled:false})));
+    await settle();assert(!button('Close').disabled,'cleared inner flag left shell disabled');
+    tap(button('Close'));await handle.ClosedPromise;assert(lockedCancels===1,'unlocked shell did not cancel once');
+    handle=show(React.createElement(Locked,{disabled:true}));await settle();
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Locked)));
+    await settle();escape();await handle.ClosedPromise;
+    assert(lockedCancels===2,'removed cancel flag kept default Escape locked');
+
+    // An explicit Escape handler retains the existing plugin-owned behavior;
+    // bCancelDisabled controls default cancellation and the shell Close button.
+    handle=show(React.createElement(Locked,{disabled:true,onEsc:()=>lockedEscapes++}));await settle();
+    escape();assert(lockedEscapes===1&&lockedCancels===2&&button('Close').disabled,
+      'explicit Escape ownership changed');
+    close(handle);await handle.ClosedPromise;
+    for (const replacement of [React.createElement(Locked,{root:false}),React.createElement('p',null,'Replacement')]) {
+      handle=show(React.createElement(Locked,{disabled:true}));await settle();
+      ReactDOM.flushSync(()=>handle.Update(replacement));await settle();
+      assert(!button('Close').disabled,'root cleanup left a stale cancellation flag');
+      tap(button('Close'));await handle.ClosedPromise;
+    }
+    const lockedParent=show(React.createElement(Locked,{disabled:true}));await settle();
+    const unlockedChild=show(React.createElement(Locked,{disabled:false}));await settle();
+    tap(button('Close'));await unlockedChild.ClosedPromise;await settle();
+    assert(lockedCancels===3&&button('Close').disabled,'child cancel state changed its parent');
+    escape();assert(lockedCancels===3,'parent lost its cancel guard after child dismissal');
+    close(lockedParent);await lockedParent.ClosedPromise;
+    handle=show(React.createElement(Locked,{disabled:true}));await settle();
+    const focusEscape=()=>ReactDOM.flushSync(()=>container.querySelector('.inner-cancel-target')
+      .dispatchEvent(new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true})));
+    focusEscape();assert(focusCancels===0&&button('Close'),'Focusable bypassed inner cancel flag');
+    ReactDOM.flushSync(()=>handle.Update(React.createElement(Locked,{disabled:false})));await settle();
+    focusEscape();await handle.ClosedPromise;
+    assert(focusCancels===1&&lockedCancels===3,'unlocked Focusable cancel did not retain ownership');
+
     // Existing async submission guards still suppress shell cancellation.
     let finish,cancels=0;
     function Busy({closeModal}) {
@@ -110,6 +164,8 @@ addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.r
     result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedDialog:true,
       shellCloseRejects:true,escapeRejects:true,explicitDecisions:true,programmaticCloseSilent:true,
       updatedCallback:true,retiredRegistration:true,escapeOverride:true,nestedDialogs:true,busyGuard:true,
+      innerCancelDisabled:true,retainedCloseGuard:true,cancelFlagUpdates:true,cancelFlagCleanup:true,
+      focusableCancelGuard:true,
       syntheticInput:true,realFrameContacted:false,realFileTransfer:false});
   } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
 })();
