@@ -16,6 +16,8 @@ or run privileged code. See [the extension API](extensions.md) and its example.
 Use a Decky plugin only if you need Decky's backend or Gamepad UI integration.
 Build an official-format ZIP with one top-level folder, `plugin.json`, and a
 frontend bundle in `dist/index.js`. A Python `main.py` backend is optional.
+An empty frontend entry cannot open as a Framey panel. The local archive checker
+marks it as `panelCandidate: false`; a backend-only ZIP can still be installed.
 Save `plugin.json` as UTF-8 JSON without a byte-order mark. Unicode names and
 descriptions are supported, but UTF-16/32 and BOM-prefixed manifests are rejected
 before transfer and extraction: the installed loader cannot read them. The

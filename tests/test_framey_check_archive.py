@@ -99,6 +99,14 @@ class ArchiveChecker(unittest.TestCase):
         self.assertTrue(result['installerAccepted'])
         self.assertFalse(result['panelCandidate'])
 
+    def test_empty_frontend_matches_installed_panel_admission(self):
+        code, result = self.run_check(bundle=b'',
+                                      extra=('framey-settings/README.txt', 'x' * 2048),
+                                      expected_runtime=False)
+        self.assertEqual(code, 0, result)
+        self.assertTrue(result['installerAccepted'])
+        self.assertFalse(result['panelCandidate'])
+
     def test_damaged_large_asset_fails_local_author_check(self):
         name = 'framey-settings/assets/large.bin'
         code, result = self.run_check(extra=(name, b'x' * 150_000), damage=name)

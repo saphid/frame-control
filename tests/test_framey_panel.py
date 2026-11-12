@@ -514,6 +514,16 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         self.assertIn(b'framey-bundle', body)
         self.assertEqual(get('/framey/panel/15')[0], 404)
 
+        entry = self.folder/'dist/index.js'
+        bundle = entry.read_bytes()
+        entry.write_bytes(b'')
+        self.assertEqual(get('/framey/panel/14')[0], 404)
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/index.js')[0], 404)
+        self.assertEqual(entry.read_bytes(), b'', 'Admission must not repair plugin files')
+        entry.write_bytes(bundle)
+        self.assertEqual(get('/framey/panel/14')[0], 200)
+        self.assertEqual(get(f'/framey/module/14/{RECEIPT}/index.js')[2], bundle)
+
         (self.folder/'dist/chunks').mkdir()
         (self.folder/'dist/chunks/view.js').write_text('export const value = 1;')
         status, headers, body = get(f'/framey/module/14/{RECEIPT}/chunks/view.js')

@@ -66,6 +66,8 @@ def _owned_dist(plugin_id, expected_receipt=None):
             if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
                 raise FileNotFoundError('Framey plugin frontend unavailable')
             bundle = entry.read_bytes()
+            if not bundle:
+                raise FileNotFoundError('Framey plugin frontend is empty')
             legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
             if version is None and not legacy:
                 raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
