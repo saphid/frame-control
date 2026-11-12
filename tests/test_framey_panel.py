@@ -377,6 +377,40 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
         with self.assertRaises(FileNotFoundError):
             framey_panel.panel(15)
 
+    def test_panel_and_modules_require_integer_receipt_ids(self):
+        receipt = self.folder/'.frame-control-store.json'
+        bundle = (self.folder/'dist/index.js').read_bytes()
+        chunks = self.folder/'dist/chunks'
+        chunks.mkdir()
+        (chunks/'view.js').write_text('export const title = "Settings";')
+        for store_id, requested in [(True, 1), (False, 14), (14.0, 14),
+                                    ('14', 14), (None, 14), (0, 14), (-14, 14)]:
+            with self.subTest(storeId=store_id):
+                receipt.write_text(json.dumps({'storeId':store_id, 'sha256':RECEIPT}))
+                for read in (lambda: framey_panel.local_bundle(requested),
+                             lambda: framey_panel.panel(requested),
+                             lambda: framey_panel.local_module(requested, RECEIPT, 'index.js'),
+                             lambda: framey_panel.local_module(requested, RECEIPT, 'chunks/view.js')):
+                    with self.assertRaises(FileNotFoundError):
+                        read()
+        receipt.write_text(json.dumps({'storeId':14, 'sha256':RECEIPT}))
+        self.assertEqual(framey_panel.local_bundle(14), bundle)
+        self.assertIn('framey-bundle', framey_panel.panel(14).decode())
+        self.assertEqual(framey_panel.local_module(14, RECEIPT, 'chunks/view.js'),
+                         b'export const title = "Settings";')
+
+    def test_invalid_receipt_alias_does_not_mask_valid_plugin(self):
+        other = self.plugins/'malformed-peer'
+        (other/'dist').mkdir(parents=True)
+        (other/'plugin.json').write_text('{"name":"Wrong plugin","api_version":2}')
+        (other/'dist/index.js').write_text('export default () => "wrong plugin";')
+        # Make the malformed folder come first independently of filesystem order.
+        with patch.object(Path, 'iterdir', return_value=iter([other, self.folder])):
+            (other/'.frame-control-store.json').write_text(json.dumps({
+                'storeId':14.0, 'sha256':RECEIPT}))
+            self.assertEqual(framey_panel.local_bundle(14),
+                             (self.folder/'dist/index.js').read_bytes())
+
     def test_legacy_iife_is_admitted_without_api_manifest(self):
         (self.folder/'plugin.json').write_text(json.dumps({'name':'Legacy', 'flags':[]}))
         (self.folder/'dist/index.js').write_text(

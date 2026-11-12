@@ -395,6 +395,12 @@
   }, {passive:true});
 
   const passthrough = tag => ({children, ...props}) => R.createElement(tag, props, children);
+  const ScrollPanel = R.forwardRef(function ScrollPanel({children, ...props}, ref) {
+    return R.createElement('div', {...props, ref}, children);
+  });
+  const ScrollPanelGroup = R.forwardRef(function ScrollPanelGroup({children, ...props}, ref) {
+    return R.createElement('div', {...props, ref}, children);
+  });
   // Some published buttons expose only Decky's OK action. Native activation
   // uses it as a fallback; keep an explicit click handler authoritative and
   // pass the original click event rather than fabricating gamepad input.
@@ -574,7 +580,7 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   });
-  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -585,7 +591,7 @@
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description, icon},
+    return R.createElement(Field, {label, description, icon, className},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
@@ -739,6 +745,8 @@
       selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
+  const Menu = ({label, className, style, children}) => R.createElement('div', {className, style},
+    label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -840,14 +848,19 @@
   let modalId = 0;
   const renderModals = () => {
     document.getElementById('framey-root').inert = modals.length > 0;
-    modalRoot.render(modals.length ? modals.map((modal,index) =>
-    R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
-      ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
-      role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
-      'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
-      !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-        onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
+    modalRoot.render(modals.length ? modals.map((modal,index) => {
+      const props=modal.element?.props || {}, isMenu=modal.element?.type===Menu;
+      const title=typeof props.strTitle==='string' ? props.strTitle :
+        isMenu && typeof props.label==='string' && props.label.trim() ? props.label : 'Plugin dialog';
+      const cancelText=isMenu && typeof props.cancelText==='string' && props.cancelText.trim() ? props.cancelText : 'Close';
+      return R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
+        ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
+        role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
+        'aria-label':title},
+        !props.bHideCloseIcon && R.createElement('button', {
+          type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
+          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+    }) : null);
   };
   function modalCallback(modal, name) {
     const registered = modal.rootCallbacks;
@@ -951,7 +964,7 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const openModal = (element, previousFocus=document.activeElement) => {
+  const openModal = (element, previousFocus=document.activeElement, onClosed) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
     const modal = {id:++modalId, previousFocus, source:element};
@@ -966,6 +979,10 @@
         if (modals.length) modals.at(-1).node?.focus();
         else if (modal.previousFocus?.isConnected) modal.previousFocus.focus();
       },0);
+      // Removal retires this notification before plugin code can reenter Close.
+      // Cleanup failures cannot undo dismissal or leave ClosedPromise pending.
+      const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
+      try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
@@ -996,7 +1013,8 @@
       renderModals();
     }}};
   };
-  const showModal = element => openModal(element).handle;
+  const showModal = (element, _parent, props={}) =>
+    openModal(element, document.activeElement, props?.fnOnClose).handle;
   // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
   // Reuse the local shell, retaining only the element after dismissal. A fresh
   // Show remounts it; an already visible menu never gains a duplicate shell.
@@ -1156,7 +1174,7 @@
     definePlugin: init => init,
     PanelSection, PanelSectionRow: passthrough('div'), Field, ToggleField, DropdownItem, ReorderableList,
     Dropdown: DropdownItem, ButtonItem, DialogCheckbox, TextField, SliderField,
-    Focusable, ScrollPanel: passthrough('div'), ScrollPanelGroup: passthrough('div'),
+    Focusable, ScrollPanel, ScrollPanelGroup,
     DialogButton, DialogButtonPrimary: DialogButton, ConfirmModal,
     DialogButtonSecondary: DialogButton, Button: DialogButton, GamepadButton, QuickAccessTab,
     ColorPickerModal,
@@ -1168,7 +1186,7 @@
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup, MenuItem,
+    Menu, MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
@@ -1211,7 +1229,7 @@
   };
   localModules.set('framey/components', Object.freeze(Object.fromEntries(
     Object.entries(DFL).filter(([name,value])=>/^[A-Z]/.test(name) &&
-      (typeof value==='function' || value===Focusable || value===TextField)))));
+      (typeof value==='function' || [Focusable,TextField,ScrollPanel,ScrollPanelGroup].includes(value))))));
   // Some panels eagerly look up the optional Steam UI sound player. Allow the
   // lookup, but never claim playback or expose Steam's mutable audio store.
   localModules.set('framey/ui-audio', Object.freeze({UIAudio:Object.freeze({
