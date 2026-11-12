@@ -311,6 +311,12 @@ assert.throws(()=>eval(EXPRESSION),/library is unavailable/);
             result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_cache.mjs'), str(bundle)],
                                     capture_output=True, text=True, timeout=10)
             self.assertEqual(result.returncode, 0, result.stderr)
+            proof = 'Framey cache enumeration proof: '
+            self.assertTrue(result.stdout.startswith(proof), result.stdout)
+            report = json.loads(result.stdout[len(proof):])
+            self.assertIs(report['passed'], True, report)
+            report['hostSha256'] = hashlib.sha256((Path(__file__).resolve().parents[1]/'ui/framey-host.js').read_bytes()).hexdigest()
+            print(proof+json.dumps(report, sort_keys=True))
 
     def test_vr_store_browsing_and_search(self):
         result = subprocess.run(['node', str(Path(__file__).parent/'page/framey_store.mjs')],
