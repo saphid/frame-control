@@ -16,6 +16,14 @@ plugins → Open official store**. Search the catalogue, confirm an install, and
 choose **Open panel** from the installed plugin list. The panel contains the
 plugin's own controls and settings. Update and Remove affect only plugin
 folders that Frame Control's store manager installed.
+
+Update and Remove recheck ownership under the transaction lock using a regular
+store receipt file with a matching positive integer store ID. A symlinked,
+unreadable or malformed receipt cannot authorize a change. Refused operations
+leave the plugin and its data in place and do not stop the loader. Inventory
+still lists readable plugin manifests without claiming store ownership when
+their receipt or store ID is invalid.
+
 Use **Scroll plugin up** and **Scroll plugin down** above an open panel when
 wheel scrolling is unavailable. Point at a scrollable part of the plugin first
 to move that section; otherwise the buttons move the panel document. Each
@@ -162,7 +170,12 @@ work in VR. Storage Cleaner rendered an
 Its cleanup actions were not tested; they may remove local game saves.
 
 Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
-and progress bars. Its explicit SteamClient subscription fallbacks return
+and progress bars. `SidebarNavigation` preserves each visible page's React
+`icon` beside its title in the local navigation button, including icon props
+and later updates. Separators and pages with `visible: false` do not become
+buttons. This is local page selection; it does not recreate Steam's sidebar
+layout or verify controller navigation.
+Its explicit SteamClient subscription fallbacks return
 disposable handles without emitting fabricated events. Running-game reads and
 lifetime notifications use the scoped bridge described below; power, app launch
 and hardware mutation methods are not supplied. Other live Steam stores require integration
@@ -352,6 +365,11 @@ instead of hiding every plugin. A readable manifest with a non-object ownership
 receipt stays visible as unowned, without store actions or a managed Framey
 panel. The scan leaves those files untouched; after repair, a fresh inventory
 reads them again. These cases are tested with disposable local plugin folders.
+Panel and JavaScript module admission also require a positive integer `storeId`
+in the ownership receipt. JSON booleans and floating-point IDs cannot claim an
+integer plugin ID or mask a valid installed plugin during the panel scan.
+Malformed receipts are left untouched. Local fixtures cover rejection and
+recovery after repairing the ID; live-headset behavior remains unverified.
 
 Panel-ready, error, and trusted-pointer reports also carry the current panel
 session. A delayed report from a closed panel cannot change the new panel's
