@@ -352,6 +352,11 @@ instead of hiding every plugin. A readable manifest with a non-object ownership
 receipt stays visible as unowned, without store actions or a managed Framey
 panel. The scan leaves those files untouched; after repair, a fresh inventory
 reads them again. These cases are tested with disposable local plugin folders.
+Panel and JavaScript module admission also require a positive integer `storeId`
+in the ownership receipt. JSON booleans and floating-point IDs cannot claim an
+integer plugin ID or mask a valid installed plugin during the panel scan.
+Malformed receipts are left untouched. Local fixtures cover rejection and
+recovery after repairing the ID; live-headset behavior remains unverified.
 
 Panel-ready, error, and trusted-pointer reports also carry the current panel
 session. A delayed report from a closed panel cannot change the new panel's
