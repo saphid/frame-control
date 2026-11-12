@@ -46,7 +46,11 @@ counts them while they run.
   pan, `0` to fit, `F` for full screen. Capture uses OpenVR's `IVRScreenshots`
   API through Python `ctypes` (`ui/frame_vrshot.py`). Nothing extra is
   installed on the Frame (SteamOS ships `ffmpeg`). **Desktop panel** captures
-  gamescope's flat layer instead.
+  gamescope's flat layer instead. **Frametop Desktop**, the third view, shows
+  one screen of a [Frametop](https://github.com/xafnirus/frametop) desktop with
+  its own screen dropdown, for capture, live video, control and recording; it
+  needs Frametop's Remote Access on. See
+  [frametop-desktop.md](frametop-desktop.md).
 - **Screenshots** you take in the headset with Steam's shortcut: browse them and
   save them to `~/Pictures/SteamFrame`.
 - **Record** what the headset shows, with its sound, to an `.mp4` in

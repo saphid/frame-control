@@ -99,7 +99,7 @@ test('failed installed reads remain unknown or stale with retry, never successfu
 
 test('capture control discards old releases, timers and readiness on a target switch',async()=>{
   const f=connectionFixture(),c=f.context,writes=[];let rejectA;
-  Object.assign(c,{ctrl:{on:true,queue:[],sending:false,state:'ready',held:new Set(['left']),keys:new Set([30]),pointers:new Map(),g:null,rel:[1,2]},desk:{panels:[{window:4}],focus:'old',shown:'old',loaded:true},cancelAnimationFrame(){},ctrlShow(){},ctrlAim:e=>e,
+  Object.assign(c,{view:'flat',ctrl:{on:true,queue:[],sending:false,state:'ready',held:new Set(['left']),keys:new Set([30]),pointers:new Map(),g:null,rel:[1,2]},desk:{panels:[{window:4}],focus:'old',shown:'old',loaded:true},ft:{screens:[],pick:'',shown:null,loaded:false,desktop:false,remote:false,why:'',error:''},renderFtPick(){},syncFtUI(){},cancelAnimationFrame(){},ctrlShow(){},ctrlAim:e=>e,
     pad:{queue:[],state:'off'},padReset(){},fetch:(path,opts)=>{writes.push({device:opts.headers['X-Frame-Device'],events:JSON.parse(opts.body).events});return writes.length===1?new Promise((_,reject)=>rejectA=reject):Promise.resolve({ok:true,json:async()=>({state:'ready',sent:true})});}});
   f.run(pick(html,'function ctrlReset() {','// Pointer moves:'));
   f.run('ctrlSend([{key:30,down:false}])');
@@ -122,7 +122,7 @@ test('late installation completion cannot populate the new headset detail',async
 
 test('late input startup and touch poll responses cannot re-enable the old target',async()=>{
   const f=workspaceFixture(),c=f.context;let finish;
-  Object.assign(c,{pad:{state:'off'},clientPreferences:{set(){}},padShow:s=>{c.pad.state=s.state;},api:()=>new Promise(resolve=>finish=resolve)});
+  Object.assign(c,{view:'flat',pad:{state:'off'},clientPreferences:{set(){}},padShow:s=>{c.pad.state=s.state;},api:()=>new Promise(resolve=>finish=resolve)});
   f.run(pick(html,'async function padStart() {','$("padOn").onclick'));
   const start=f.run('padStart()');c.devGen++;c.pad.state='off';finish({state:'ready'});await start;assert.equal(c.pad.state,'off');
   Object.assign(c,{ctrl:{on:true,state:'off'},ctrlShow(){},ctrlFlush(){throw Error('Must not flush stale input');}});

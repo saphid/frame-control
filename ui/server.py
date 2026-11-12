@@ -970,6 +970,11 @@ def stream_command(query):
     if height not in STREAM_HEIGHTS or fps not in STREAM_FPS:
         raise Failure(f"h must be one of {STREAM_HEIGHTS} and fps one of {STREAM_FPS}", 400)
     rate = 3 if height == 720 else 6  # Mbit/s
+    if q.get("src") == ["frametop"]:
+        # One Frametop desktop screen, flat: KWin's own screenshot interface, encoded
+        # by the helper on the Frame. It stays still however the wearer moves their head.
+        return frametop_command("stream", frametop_screen((q.get("screen") or [""])[0]),
+                                "--height", height, "--fps", fps)
     if q.get("src") == ["panel"]:
         # The panel's own pixels (x11grab of its window: gamescope keeps them), fitted
         # to the height asked for. It stays still however the wearer moves their head.
@@ -1047,7 +1052,12 @@ def _clips_here():
 
 
 def record(body):
-    """{"action": "start"|"stop"}: record what the headset shows, with its sound."""
+    """{"action": "start"|"stop"}: record what the headset shows, with its sound,
+    or one Frametop screen when "screen" names it (Frametop desktops have no sound)."""
+    if body.get("screen") or body.get("view") == "frametop":
+        return frametop_record(body)
+    if body.get("action") == "stop" and _frametop_recorder.status()["state"] != "idle":
+        return frametop_record(body)  # Stop from the Frametop view leaves the screen out
     if not HEADSET_RUNTIME:
         _clips_here()
     action = body.get("action")
@@ -2178,11 +2188,292 @@ _touch = TouchAgent()
 
 
 def remote_touch(body):
-    """{"events": [...]} points, clicks, scrolls and types into the focused panel."""
+    """{"events": [...]} points, clicks, scrolls and types into the focused panel, or into
+    a Frametop screen when the events name one ("screen": "WL-0")."""
     events = body.get("events", [])
     if not isinstance(events, list) or len(events) > INPUT_BATCH_LIMIT:
         raise Failure(f"events must be a list of at most {INPUT_BATCH_LIMIT}", 400)
-    return _touch.send([touch_event(e) for e in events])
+    def to_frametop(event):
+        return isinstance(event, dict) and "screen" in event
+    frametop = [event for event in events if to_frametop(event)]
+    panels = [event for event in events if not to_frametop(event)]
+    sent = None
+    if frametop:
+        sent = _frametop_input.send([frametop_event(event) for event in frametop])
+        if sent.get("state") != "ready":
+            return sent  # the page keeps the panel events too and retries them
+    if panels or sent is None:
+        panel_sent = _touch.send([touch_event(event) for event in panels])
+        if sent is None:
+            return panel_sent
+        return dict(panel_sent, sent=bool(sent.get("sent") and panel_sent.get("sent")))
+    return sent
+
+
+# Frametop desktops: a second, multi-screen KDE Plasma desktop running on the Frame
+# itself (github.com/xafnirus/frametop). With Frametop's Remote Access on, its nested
+# KWin lets this server capture each screen through org.kde.KWin.ScreenShot2 and point
+# and type through org_kde_kwin_fake_input (both are only advertised then). The helper
+# (frame_frametop.py) does both and is sent over ssh like frame_touch.py, so there is
+# nothing to install. A desktop started without Remote Access refuses capture and
+# advertises no fake input; `why` explains it to the page.
+
+FRAMETOP_SOURCE = HERE / "frame_frametop.py"
+FRAMETOP_SCREEN = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.-]{0,31}$")
+FRAMETOP_WORK = ".cache/frame-control/frametop-video"
+_frametop_lock = threading.Lock()
+_frametop_saved = {"at": 0.0, "value": None}
+_frametop_code = None
+
+
+def frametop_command(*args):
+    """frame_frametop.py on the Frame, its source inlined so its stdin stays free."""
+    global _frametop_code
+    if _frametop_code is None:
+        try:
+            source = FRAMETOP_SOURCE.read_bytes()
+        except OSError:
+            raise Failure("This copy of Frame Control has no Frametop helper (ui/frame_frametop.py)", 500)
+        _frametop_code = base64.b64encode(source).decode()
+    rest = " ".join(shlex.quote(str(arg)) for arg in args)
+    return ("python3 -u -c " + shlex.quote(
+        "import base64;exec(compile(base64.b64decode('%s'),'frame_frametop','exec'))" % _frametop_code)
+        + (" " + rest if rest else ""))
+
+
+def frametop_state(fresh=False):
+    """What the Frame's Frametop desktop offers right now, cached for a couple of
+    seconds because the page polls it (the helper runs kscreen-doctor each time)."""
+    global _frametop_saved
+    if not fresh:
+        saved = _frametop_saved
+        if saved["value"] is not None and time.time() - saved["at"] < 2:
+            return saved["value"]
+    if not FRAMETOP_SOURCE.is_file():
+        raise Failure("This copy of Frame Control has no Frametop helper (ui/frame_frametop.py)", 500)
+    try:
+        answer = json.loads(ssh(frametop_command("status"), timeout=25))
+    except ValueError:
+        raise Failure("The Frame's Frametop helper gave no answer", 502)
+    if not isinstance(answer, dict):
+        raise Failure("The Frame's Frametop helper gave no answer", 502)
+    screens = []
+    for screen in answer.get("screens") or []:
+        if not isinstance(screen, dict):
+            continue
+        name = screen.get("name")
+        if not isinstance(name, str) or not FRAMETOP_SCREEN.match(name):
+            continue
+        try:
+            screens.append({"name": name, "width": int(screen.get("width") or 0),
+                            "height": int(screen.get("height") or 0),
+                            "x": int(screen.get("x") or 0), "y": int(screen.get("y") or 0)})
+        except (TypeError, ValueError):
+            continue
+    value = {"desktop": bool(answer.get("desktop")), "remote": bool(answer.get("remote")),
+             "why": str(answer.get("why") or ""), "screens": screens}
+    _frametop_saved = {"at": time.time(), "value": value}
+    return value
+
+
+def frametop_screen(name):
+    """A screen the Frametop desktop actually has and can be captured and pointed at."""
+    name = str(name or "")
+    if not FRAMETOP_SCREEN.match(name):
+        raise Failure("screen must be a Frametop screen name such as WL-0", 400)
+    state = frametop_state()
+    if not state["desktop"]:
+        raise Failure(state["why"] or "Frametop isn't running on the Frame", 409)
+    if not state["remote"]:
+        raise Failure(state["why"] or "Turn on Frametop Remote Access to use its screens", 409)
+    if name not in [screen["name"] for screen in state["screens"]]:
+        raise Failure(f"The Frametop desktop has no screen {name}", 404)
+    return name
+
+
+def frametop_capture(query):
+    """One frame of one Frametop screen, as its KWin draws it (with the cursor), as PNG."""
+    return ssh(frametop_command("shot", frametop_screen((parse_qs(query).get("screen") or [""])[0])),
+               timeout=30, text=False)
+
+
+def frametop_event(event):
+    """A frame_frametop.py event: the same gestures as touch_event, aimed at a Frametop screen."""
+    if not isinstance(event, dict):
+        raise Failure("each touch event must be an object", 400)
+
+    def num(name, limit):
+        value = event.get(name)
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value != value:
+            raise Failure(f"{name} must be a number", 400)
+        return max(-limit, min(limit, round(float(value), 4)))
+    out = {}
+    if "screen" in event:
+        screen = event.get("screen")
+        if not isinstance(screen, str) or not FRAMETOP_SCREEN.match(screen):
+            raise Failure("screen must be a Frametop screen name such as WL-0", 400)
+        out["screen"] = screen
+    if "fx" in event or "fy" in event:
+        if "screen" not in out:
+            raise Failure("a position needs the Frametop screen it is on", 400)
+        out.update(fx=num("fx", 1), fy=num("fy", 1))
+    for name in ("dx", "dy"):
+        if name in event:
+            out[name] = num(name, INPUT_MOVE_LIMIT)
+    if "button" in event:
+        if event["button"] not in TOUCH_BUTTONS:
+            raise Failure(f"button must be one of {', '.join(TOUCH_BUTTONS)}", 400)
+        if "screen" not in out:
+            raise Failure("a button press needs the Frametop screen it is on", 400)
+        out["button"], out["down"] = event["button"], event.get("down") is not False
+    if "scroll" in event:
+        scroll = event["scroll"]
+        if not isinstance(scroll, list) or len(scroll) != 2:
+            raise Failure("scroll must be [dx, dy]", 400)
+        out["scroll"] = [num_value(v, 5000) for v in scroll]
+    if "key" in event:
+        key = event["key"]
+        if isinstance(key, bool) or not isinstance(key, int) or not 0 < key < 768:
+            raise Failure("key must be a Linux key code", 400)
+        out["key"], out["down"] = key, event.get("down") is not False
+    if "text" in event:
+        text = event["text"]
+        if not isinstance(text, str) or not 0 < len(text) <= INPUT_TEXT_LIMIT:
+            raise Failure(f"text must be 1 to {INPUT_TEXT_LIMIT} characters", 400)
+        out["text"] = text
+    if not set(out) - {"screen"}:
+        raise Failure("touch event has nothing to do", 400)
+    return out
+
+
+class FrametopAgent(TouchAgent):
+    """frame_frametop.py in its input mode: pointer, buttons, scroll and keys for one
+    Frametop screen, over one long-lived ssh."""
+
+    def __init__(self):
+        super().__init__()
+        self.source = FRAMETOP_SOURCE
+
+    def command(self, folder=""):
+        return frametop_command()
+
+
+_frametop_input = FrametopAgent()
+
+
+class FrametopRecorder:
+    """One Frametop screen recording at a time, saved as .mp4 in ~/Videos/SteamFrame.
+
+    The helper captures and encodes on the Frame; Stop closes the ssh channel, which
+    finishes the file there, then it is copied here in the background. The states are
+    the ones frame_clips.Recorder publishes, so the page's Record button works alike.
+    """
+
+    def __init__(self):
+        self._lock = threading.Lock()
+        self._state = {"state": "idle"}
+        self._proc = None
+
+    def status(self):
+        with self._lock:
+            state = dict(self._state)
+        if state["state"] == "recording":
+            state["elapsed"] = round(time.time() - state["started"], 1)
+        return state
+
+    def start(self, screen):
+        with self._lock:
+            if self._state["state"] in ("starting", "recording", "stopping", "saving"):
+                raise Failure("Already recording, or still saving the last recording", 409)
+            self._state = {"state": "starting", "screen": screen}
+        name = frame_clips.recording_name()
+        errors = tempfile.TemporaryFile()
+        ensure_master()
+        proc = subprocess.Popen([*SSH, FRAME, frametop_command("record", screen, "--name", name)],
+                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=errors)
+        _live_tunnels.add(proc)  # killed if the server stops: the Frame then finishes the file
+        lines = frame_clips._line_reader(proc.stdout)
+        first = frame_clips._next_line(lines, 25)
+        if first != "started":
+            frame_clips._end(proc)
+            _live_tunnels.discard(proc)
+            errors.seek(0)
+            message = errors.read().decode(errors="replace").strip()
+            errors.close()
+            with self._lock:
+                self._state = {"state": "idle"}
+            raise Failure(message[-600:] or "The Frame didn't start recording the Frametop screen", 502)
+        with self._lock:
+            self._proc = proc
+            self._state = {"state": "recording", "name": name, "screen": screen, "started": time.time()}
+        busy_thread(lambda: self._watch(proc, name, screen, lines, errors)).start()
+        return dict(self.status(), message=f"Recording Frametop · {screen}")
+
+    def stop(self):
+        with self._lock:
+            if self._state["state"] != "recording":
+                raise Failure("Not recording", 409)
+            self._state = dict(self._state, state="stopping")
+            proc = self._proc
+        try:
+            proc.stdin.close()  # the helper sees EOF and finishes the .mp4
+        except (BrokenPipeError, OSError, ValueError):
+            proc.terminate()
+        return {"state": "stopping", "message": "Stopping the recording…"}
+
+    def _watch(self, proc, name, screen, lines, errors):
+        deadline = time.time() + frame_clips.MAX_SECONDS + 60
+        while True:
+            stopping = self.status()["state"] == "stopping"
+            line = frame_clips._next_line(lines, 30 if stopping else 5)
+            if line is None or line.startswith("exit "):
+                break  # the helper has gone and the file is finished
+            if line == "" and (stopping or time.time() > deadline):
+                break
+        frame_clips._end(proc)
+        errors.close()
+        _live_tunnels.discard(proc)
+        with self._lock:
+            self._proc = None
+            seconds = round(time.time() - self._state["started"])
+            self._state = dict(self._state, state="saving")
+        remote = f"{FRAMETOP_WORK}/{name}.mp4"
+        try:
+            size = int(ssh(f"stat -c %s \"$HOME/{remote}\"", timeout=20).strip() or 0)
+            frame_clips._make_room(frame_clips.VIDEOS_DIR, size)
+            incoming = Path(tempfile.mkdtemp(prefix=".incoming-", dir=frame_clips.VIDEOS_DIR))
+            try:
+                fetch_file(remote, incoming / f"{name}.mp4")
+                os.replace(incoming / f"{name}.mp4", frame_clips.VIDEOS_DIR / f"{name}.mp4")
+            finally:
+                shutil.rmtree(incoming, ignore_errors=True)
+            state = {"state": "saved", "screen": screen, "seconds": seconds, "audio": False,
+                     "file": str(frame_clips.VIDEOS_DIR / f"{name}.mp4"),
+                     "message": f"Saved {name}.mp4 to ~/Videos/SteamFrame"}
+        except (Failure, OSError) as e:
+            state = {"state": "failed", "screen": screen,
+                     "error": f"Couldn't save the recording: {e}"}
+        finally:
+            try:
+                ssh(f"rm -f \"$HOME/{remote}\"", timeout=20)
+            except (Failure, OSError):
+                pass  # the next recording's checks remove it
+        with self._lock:
+            self._state = state
+
+
+_frametop_recorder = FrametopRecorder()
+
+
+def frametop_record(body):
+    """{"action": "start"|"stop", "screen": "WL-0"}: record one Frametop screen."""
+    _clips_here()
+    action = body.get("action")
+    if action not in ("start", "stop"):
+        raise Failure("action must be start or stop", 400)
+    if action == "start":
+        return _frametop_recorder.start(frametop_screen(body.get("screen")))
+    return _frametop_recorder.stop()
 
 
 def flatpak(body):
@@ -4040,8 +4331,13 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json({"notices": licenses()})
             elif path == "/api/panels":
                 self.send_json(panels())
+            elif path == "/api/frametop":
+                self.send_json(frametop_state())
             elif path in ("/api/touch", "/api/input"):
-                agent = _touch  # both controls use gamescope; KDE Connect starts only for Unicode
+                # Both controls use gamescope; KDE Connect starts only for Unicode. The
+                # Frametop view uses the same route with ?src=frametop for its own agent.
+                frametop = path == "/api/touch" and parse_qs(url.query).get("src") == ["frametop"]
+                agent = _frametop_input if frametop else _touch
                 if parse_qs(url.query).get("start") == ["1"]:
                     # Validate and reserve before start() captures its immutable
                     # route and schedules a worker. Status-only polls stay free.
@@ -4100,7 +4396,12 @@ class Handler(BaseHTTPRequestHandler):
             elif path == "/api/record":
                 if not HEADSET_RUNTIME:
                     _clips_here()
-                self.send_json((headset_recorder if HEADSET_RUNTIME else recorder).status())
+                owned = (headset_recorder if HEADSET_RUNTIME else recorder).status()
+                frametop = _frametop_recorder.status()
+                # The flat fields are whichever recording is not idle, so a page that only
+                # reads "state" works; "frametop" carries its own state either way.
+                active = frametop if owned["state"] == "idle" and frametop["state"] != "idle" else owned
+                self.send_json(dict(active, frametop=frametop))
             elif path == "/api/clips":
                 self.send_json(list_clips())
             elif path == "/api/autosync":
@@ -4108,6 +4409,9 @@ class Handler(BaseHTTPRequestHandler):
                 self.send_json(autosync.state())
             elif path == "/api/stream":
                 self.stream_video(url.query)
+            elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["frametop"]:
+                self.send_bytes(frametop_capture(url.query), "image/png",
+                                headers=[("X-Capture-Source", "frametop")])
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["panel"]:
                 self.send_bytes(panel_capture(url.query), "image/png", headers=[("X-Capture-Source", "panel")])
             elif path == "/api/screenshot" and parse_qs(url.query).get("view") == ["headset"]:

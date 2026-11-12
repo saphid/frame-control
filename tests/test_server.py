@@ -231,7 +231,9 @@ class ServerGuards(unittest.TestCase):
 
     def test_recorder_idle_until_started(self):
         status, _, payload = self.request("GET", "/api/record", headers={"X-Frame-UI": "1"})
-        self.assertEqual((status, json.loads(payload)), (200, {"state": "idle"}))
+        body = json.loads(payload)
+        # The flat fields are the active recording; "frametop" is the Frame's screen recorder.
+        self.assertEqual((status, body["state"], body["frametop"]["state"]), (200, "idle", "idle"))
         status, payload = self.post("/api/record", {"action": "stop"})
         self.assertEqual(status, 409, payload)
 

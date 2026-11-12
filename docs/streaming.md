@@ -12,6 +12,8 @@ This covers three directions, plus input:
   Linux desktop capture remains disabled and unverified.
 - **Input**: type and point in the Frame from the Mac or iPhone.
 - **Live view and Control**: watch a panel flat and tap on it to use it.
+- **Frametop screens**: each screen of a Frametop desktop as its own capture,
+  live view and control target ([frametop-desktop.md](frametop-desktop.md)).
 
 The confidence labels are the same as in [ssh.md](ssh.md).
 

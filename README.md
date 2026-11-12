@@ -329,6 +329,7 @@ Frame's software fits together, all checked against a real headset and labelled
 | [VR mods and custom songs](docs/mods.md) | UEVR for Unreal games from Frame Control (install, play in VR, remove), the per-game table, Beat Saber blockers |
 | [Decky Loader on Frame](docs/decky-frame.md) · [Frame Control in VR](docs/headset-app.md) · [Frame plugin author guide](docs/frame-plugin-author.md) · [Frame Control extensions](docs/extensions.md) | Experimental Decky support, a removable headset panel, and the local extension API |
 | [SSH](docs/ssh.md) · [Streaming](docs/streaming.md) · [Files](docs/file-transfer.md) · [Panels](docs/panels.md) · [Tailscale](docs/tailscale.md) | Topic notes |
+| [Frametop desktops](docs/frametop-desktop.md) | A second, multi-screen Plasma desktop on the Frame: capture, watch, control and record each screen from Capture & Live, with Remote Access on |
 | [Frame Control for iPhone](docs/iphone.md) | The iPhone and iPad app, how it runs the server on the Frame, pairing |
 | [Recovery and OS images](docs/recovery-and-images.md) | Where to download the Frame's OS, what's inside, testing without the headset |
 | [AI agents and assistant](docs/agents.md) | Key-free MCP tools, human approvals, and an opt-in assistant panel |

@@ -266,7 +266,7 @@
   .viewer.immersive { position: fixed; z-index: 40; inset: env(safe-area-inset-top) env(safe-area-inset-right) 0 env(safe-area-inset-left);
                       max-height: none; aspect-ratio: auto; border-radius: 0; }
   .ctrl-keys { margin-top: 10px; }
-  #panelPick { max-width: 240px; height: 30px; }
+  #panelPick, #ftPick { max-width: 240px; height: 30px; }
   .viewer .stamp { position: absolute; right: 12px; bottom: 12px; font-size: 11px; color: #c7d5e0;
                    background: rgba(0,0,0,.6); padding: 3px 8px; border-radius: 2px; }
   .viewer .asleep { position: absolute; inset: auto 0 0 0; padding: 14px 18px; text-align: center; color: var(--text);
@@ -665,7 +665,7 @@
     .view-actions > button { grid-column:span 2; }
     .view-actions > #copyBtn, .view-actions > #saveBtn { grid-column:span 3; }
     .view-actions button { justify-content: center; padding: 0 4px; }
-    #panelPick { flex: 1 1 100%; max-width: none; }
+    #panelPick, #ftPick { flex: 1 1 100%; max-width: none; }
     .shelf-head { flex-wrap: wrap; row-gap: 8px; }
     .shelf { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
     .cat-grid { grid-template-columns: 1fr; }
@@ -1305,8 +1305,10 @@
         <div class="seg" aria-label="What to capture">
           <button data-view="headset" class="on" title="What the headset shows, via the SteamVR compositor">Headset view</button>
           <button data-view="flat" title="The app panel in use, flat: it stays still however the wearer looks around">Desktop</button>
+          <button data-view="frametop" title="A Frametop desktop screen, flat: it stays still however the wearer looks around">Frametop Desktop</button>
         </div>
         <select id="panelPick" class="small" hidden aria-label="Which panel to show"></select>
+        <select id="ftPick" class="small" hidden aria-label="Which Frametop screen to show"></select>
         <div class="seg" id="eyeSeg" aria-label="Crop">
           <button data-eye="left" class="on" title="One eye, like pointing a camera into one lens">Left eye</button>
           <button data-eye="both" title="Both eyes side by side">Both eyes</button>
@@ -2653,8 +2655,9 @@ const CDN = "https://cdn.cloudflare.steamstatic.com/steam/apps";
 const HINTS = {
   headset: "What the lenses show, composited by SteamVR: the room, floating panels, dashboard and controllers. Live streams it as video (one eye, about 30 fps); Capture takes a still of both eyes. Captures show everything on screen, including anything private.",
   flat: "The app panel in use in the headset, flat and still: it doesn't move as the wearer looks around. Pick another panel to watch it. Control lets you tap or click right where you want on it.",
+  frametop: "A KDE Plasma desktop that runs on the Frame itself, flat and still: it doesn't move as the wearer looks around. Pick a screen to watch it. Capture takes a still, Live streams it as video, and Control lets you tap or click right where you want on it.",
 };
-const SOURCE_LABEL = { steamvr: "Headset view", gamescope: "Desktop panel", panel: "Desktop", shot: "Screenshot" };
+const SOURCE_LABEL = { steamvr: "Headset view", gamescope: "Desktop panel", panel: "Desktop", frametop: "Frametop", shot: "Screenshot" };
 let state = null, stateReceivedAt = null, stateRead = {valid: false, error: null}, view = "headset", eye = "left", live = false, liveTimer = null, volTimer = null;
 let lastImg = null, lastSource = null, lastShot = null, viewGen = 0;
 
@@ -3218,11 +3221,15 @@ function setView(v) {
   view = v;
   document.querySelectorAll("[data-view]").forEach(b => b.classList.toggle("on", b.dataset.view === v));
   $("eyeSeg").style.visibility = v === "headset" && !video.ctl ? "visible" : "hidden";
-  $("eyeSeg").style.display = v === "flat" ? "none" : "";  // the Desktop view has no eyes to pick
+  $("eyeSeg").style.display = v === "flat" || v === "frametop" ? "none" : "";  // a desktop has no eyes to pick
   $("viewHint").textContent = HINTS[v];
   $("panelPick").hidden = v !== "flat";
   if (v === "flat") watchPanels(); else clearTimeout(desk.timer);
+  if (v === "frametop") { renderFtPick(); watchFrametop(); } else clearTimeout(ft.timer);
+  syncFtUI();
   if (live && changed) { toggleLive(false); toggleLive(true); }
+  // A still from the old view: show the Frametop screen's instead, once its list has arrived.
+  else if (changed && v === "frametop" && ft.loaded && !ftOff() && ftScreen() && (lastImg || lastSource)) capture();
   ctrlShow();
 }
 function setEye(e) {
@@ -3326,15 +3333,19 @@ async function capture() {
   let url = null;
   try {
     let url_ = "/api/screenshot?view=headset";
-    let shotPanel = null;
+    let shotPanel = null, shotFt = null;
     if (view === "flat") {
       shotPanel = deskPanel() || (await loadPanels(), deskPanel());
       if (!shotPanel) throw new Error(noPanelWhy());
       url_ = `/api/screenshot?view=panel&window=${shotPanel.window}&display=${encodeURIComponent(shotPanel.display)}`;
+    } else if (view === "frametop") {
+      shotFt = ftScreen() || (await loadFrametop(), ftScreen());
+      if (!shotFt || !ftUsable()) throw new Error(noFtWhy());
+      url_ = `/api/screenshot?view=frametop&screen=${encodeURIComponent(shotFt.name)}`;
     }
     const r = await fetch(url_, { headers: {"X-Frame-UI": UI_KEY} });
     if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
-    const source = r.headers.get("X-Capture-Source") || "gamescope";
+    const source = r.headers.get("X-Capture-Source") || (view === "frametop" ? "frametop" : "gamescope");
     url = URL.createObjectURL(await r.blob());
     const img = new Image();
     await new Promise((ok, bad) => { img.onload = ok; img.onerror = () => bad(new Error("not an image")); img.src = url; });
@@ -3342,7 +3353,9 @@ async function capture() {
     lastImg = img; lastSource = source; lastShot = null;
     draw();
     desk.shown = source === "panel" ? panelKey(shotPanel) : null;
+    ft.shown = source === "frametop" ? (shotFt?.name || null) : null;
     if (source === "panel") $("srcBadge").textContent = `Desktop · ${shotPanel?.name || "panel"}`;
+    else if (source === "frametop") $("srcBadge").textContent = `Frametop · ${shotFt?.name || "screen"}`;
     ctrlShow();
     $("stamp").hidden = false; $("stamp").textContent = new Date().toLocaleTimeString();
     $("saveBtn").disabled = $("copyBtn").disabled = false;
@@ -3364,7 +3377,9 @@ async function liveLoop(gen = liveGen) {
   liveFailures = ok ? 0 : liveFailures + 1;
   if (liveFailures >= 5) {
     toggleLive(false);
-    toast(view === "flat" ? "Live stopped: couldn't capture the panel." : "Live stopped after 5 failed captures. Is the headset on?", true);
+    toast(view === "flat" ? "Live stopped: couldn't capture the panel."
+        : view === "frametop" ? "Live stopped: couldn't capture the Frametop screen."
+        : "Live stopped after 5 failed captures. Is the headset on?", true);
     return;
   }
   if (live) liveTimer = setTimeout(() => liveLoop(gen), view === "headset" ? 300 : 700);
@@ -3378,7 +3393,8 @@ function toggleLive(on) {
   clearTimeout(liveTimer);
   stopVideo();
   if (!live) return;
-  if ("VideoDecoder" in window && (view === "headset" || deskPanel())) {
+  const canVideo = view === "headset" || (view === "flat" ? !!deskPanel() : !!ftScreen());
+  if ("VideoDecoder" in window && canVideo) {
     const started = startVideo();
     const ctl = video.ctl;
     started.catch(e => {
@@ -3424,6 +3440,7 @@ async function startVideo() {
         viewGen++;  // a capture still in flight mustn't replace the video
         lastImg = null; lastSource = "video"; lastShot = null;
         desk.shown = panelKey(panel); ctrlShow();
+        ft.shown = ftNow ? ftNow.name : null;
         $("viewer").classList.remove("busy");
         c.hidden = false; $("viewerEmpty").hidden = true; $("zoombar").hidden = false; $("asleep").hidden = true;
         $("srcBadge").hidden = false; $("srcBadge").textContent = `${video.label} · video`;
@@ -3439,9 +3456,12 @@ async function startVideo() {
     error: e => log("Video decoder: " + e.message, "e"),
   });
   const panel = view === "flat" ? deskPanel() : null;
+  const ftNow = view === "frametop" ? ftScreen() : null;
   desk.shown = null;  // until this stream's first picture
-  video.label = panel ? `Desktop · ${panel.name || "panel"}` : "Headset view";
-  const query = panel ? `src=panel&window=${panel.window}&display=${encodeURIComponent(panel.display)}&${STREAM_QUERY}` : STREAM_QUERY;
+  video.label = ftNow ? `Frametop · ${ftNow.name || "screen"}`
+              : panel ? `Desktop · ${panel.name || "panel"}` : "Headset view";
+  const query = ftNow ? `src=frametop&screen=${encodeURIComponent(ftNow.name)}&${STREAM_QUERY}`
+              : panel ? `src=panel&window=${panel.window}&display=${encodeURIComponent(panel.display)}&${STREAM_QUERY}` : STREAM_QUERY;
   const r = await fetch(`/api/stream?${query}`, { headers: {"X-Frame-UI": UI_KEY}, signal: ctl.signal });
   if (!r.ok) throw new Error((await r.json().catch(() => ({}))).error || `HTTP ${r.status}`);
   const reader = r.body.getReader();
@@ -3591,6 +3611,117 @@ $("panelPick").onchange = () => {
   if (live) { toggleLive(false); toggleLive(true); } else if (lastImg || lastSource) capture();
 };
 
+// ---- Frametop view: the multi-screen desktop that runs on the Frame itself ----
+// frame_frametop.py lists the KDE Plasma desktop's screens and draws, streams and touches
+// one of them. Flat like the Desktop view, so a tap lands where it was tapped; the
+// difference is that events name the screen ("WL-0") instead of a window and display.
+// ft.shown is the screen whose picture is on screen now; Control only acts on that one.
+// ft.why is the Frame's own reason when the desktop is down or remote access is off.
+const ft = { screens: [], pick: "", desktop: false, remote: false, why: "", loaded: false, error: "", timer: null, shown: null };
+const FT_EMPTY_HTML = $("viewerEmpty").innerHTML;
+let ftEmptyWhy = "";
+const ftUsable = () => ft.desktop && ft.remote;
+function ftScreen() {
+  // The picked screen, else the first one: a screen that went away must not leave nothing.
+  return ft.screens.find(s => s.name === ft.pick) || ft.screens[0] || null;
+}
+// Unusable while an answer says so, or when the first listing failed; unknown while loading.
+function ftOff() {
+  return view === "frametop" && ((ft.loaded && (!ftUsable() || !ft.screens.length)) || (!ft.loaded && !!ft.error));
+}
+function noFtWhy() {
+  if (ft.error) return "Couldn't read the Frame's Frametop screens: " + ft.error;
+  if (!ft.loaded) return "Finding the Frame's Frametop screens…";
+  return ft.why || (!ft.desktop ? "Frametop isn't running on the Frame."
+    : !ft.remote ? "Remote access to Frametop is off."
+    : "Frametop isn't showing any screens.");
+}
+// "Frametop screen 1 · 1920×1080", with the connector name only when it tells them apart.
+function ftLabel(s, i) {
+  const dims = s.width && s.height ? ` · ${s.width}×${s.height}` : "";
+  const name = s.name || "";
+  const obvious = ft.screens.length === 1 || /^(WL|HDMI|DP|eDP|DVI|VGA)-?\d+$/i.test(name);
+  return `Frametop screen ${i + 1}${dims}${!obvious && name ? ` (${name})` : ""}`;
+}
+function renderFtPick() {
+  // Keep the picked screen by name; fall back to the first one.
+  if (ft.screens.length && !ft.screens.some(s => s.name === ft.pick)) ft.pick = ft.screens[0].name;
+  const sel = $("ftPick");
+  sel.innerHTML = ft.screens.map((s, i) => `<option value="${esc(s.name)}">${esc(ftLabel(s, i))}</option>`).join("");
+  sel.value = ft.pick;
+}
+$("ftPick").onchange = () => {
+  ft.pick = $("ftPick").value;
+  syncFtUI();
+  ctrlShow();
+  if (live) { toggleLive(false); toggleLive(true); } else if (lastImg || lastSource) capture();
+};
+async function loadFrametop() {
+  try {
+    const before = ftScreen()?.name || "";
+    const r = await api("/api/frametop");
+    ft.screens = Array.isArray(r.screens) ? r.screens.filter(s => s && s.name) : [];
+    ft.desktop = !!r.desktop; ft.remote = !!r.remote; ft.why = r.why || "";
+    ft.loaded = true; ft.error = "";
+    renderFtPick();
+    syncFtUI();
+    const now = ftScreen()?.name || "";
+    if (view === "frametop" && live && now !== before) { toggleLive(false); toggleLive(true); }
+    ctrlShow();
+  } catch (e) {
+    if (e.stale) return;  // an answer about the previous headset says nothing about this one
+    // Polled every few seconds: waiting for the Frame, or the same failure again, isn't news.
+    if (!e.offline && e.message !== ft.error) log("Couldn't read the Frame's Frametop screens: " + e.message, "e");
+    ft.error = e.message;
+    syncFtUI();
+    ctrlShow();
+  }
+}
+function watchFrametop() {
+  clearTimeout(ft.timer);
+  if (view !== "frametop") return;
+  loadFrametop().finally(() => { if (view === "frametop") ft.timer = setTimeout(watchFrametop, document.hidden ? 10000 : 3000); });
+}
+// The why text where the picture would be, or the usual invitation.
+function ftEmpty(why) {
+  if (why === ftEmptyWhy) return;
+  ftEmptyWhy = why;
+  $("viewerEmpty").innerHTML = why ? `<div>${esc(why)}</div>` : FT_EMPTY_HTML;
+}
+// Capture, Live, Control and Record wait for a Frametop screen that can be shown.
+function syncFtUI() {
+  const on = view === "frametop", off = ftOff();
+  const why = on && off ? noFtWhy() : "";
+  $("ftPick").hidden = !on || off || !ft.screens.length;
+  $("shotBtn").disabled = off;
+  $("liveBtn").disabled = off;
+  $("ctrlBtn").disabled = off;
+  $("recBtn").title = on ? "Record the Frametop screen, without sound, to ~/Videos/SteamFrame on this computer"
+                         : "Record what the headset shows, with its sound, to ~/Videos/SteamFrame on this computer";
+  $("viewHint").textContent = why || HINTS[view];
+  ftEmpty(why);
+  syncRecBtn();
+  if (on && off) {  // the picture and the target it had are gone
+    if (live) toggleLive(false);
+    if (ctrl.on) ctrlToggle(false);
+  }
+}
+// What taps reach on the Frametop view (the screen on screen), or why they can't.
+// The offline tests eval ctrlTarget() without the page's `view`: keep that reference guarded.
+function ctrlFtTarget() {
+  const s = ftScreen();
+  if (!s) return { why: ft.loaded || ft.error ? noFtWhy() : "Finding the Frame's Frametop screens…" };
+  if (!ftUsable()) return { why: noFtWhy() };
+  if (ft.shown !== s.name) return { why: live ? "Waiting for the picture of the Frametop screen…"
+                                               : "The Frametop screen has changed. Press Capture or Live to see it first." };
+  return { ok: true, screen: s.name };
+}
+// Record starts the Frametop recorder when that view is active; Stop is always possible.
+function syncRecBtn() {
+  const busy = ["starting", "recording", "stopping", "saving"].includes(rec.state);
+  $("recBtn").disabled = rec.state !== "recording" && (busy || ftOff());
+}
+
 // ---- Control: tap or click on the view to use the Frame ----
 // Through gamescope's own input (frame_touch.py). On the Desktop view a tap lands
 // exactly where you tapped; on the headset view, which moves with the wearer's head,
@@ -3611,10 +3742,12 @@ for (let i = 1; i <= 10; i++) EVDEV["F" + i] = 58 + i;
 [[7, 71], [8, 72], [9, 73], [4, 75], [5, 76], [6, 77], [1, 79], [2, 80], [3, 81], [0, 82]].forEach(([n, k]) => EVDEV["Numpad" + n] = k);
 const CTRL_BUTTONS = ["left", "middle", "right"];  // MouseEvent.button 0, 1, 2
 
-function ctrlMode() { return view === "flat" ? "abs" : "rel"; }
-// Where taps go on the Desktop view, or why they can't.
+function ctrlMode() { return view === "flat" || view === "frametop" ? "abs" : "rel"; }
+// Where taps go on the Desktop and Frametop views, or why they can't.
 function ctrlTarget() {
   if (ctrlMode() === "rel") return { ok: true };
+  // The offline tests eval this without the page's `view`; keep that reference guarded.
+  if (typeof view !== "undefined" && view === "frametop") return ctrlFtTarget();
   const p = deskPanel();
   if (!p) return { why: desk.loaded || desk.error ? noPanelWhy() : "Finding the headset's panels…" };
   if (!desk.focus) return { why: "Nobody's using a panel in the headset yet. Taps work once one is in use." };
@@ -3632,7 +3765,8 @@ function ctrlShow() {
   b.hidden = !ctrl.on;
   if (!ctrl.on) return;
   const t = ctrlTarget();
-  let text = ctrlMode() === "abs" ? `Tap or click to use ${t.panel ? t.panel.name || "the panel" : "the panel"}`
+  let text = ctrlMode() === "abs" ? (view === "frametop" ? `Tap or click to use Frametop · ${t.screen || "the screen"}`
+                                                        : `Tap or click to use ${t.panel ? t.panel.name || "the panel" : "the panel"}`)
                                   : "Drag to move the pointer, tap to click, two fingers to scroll";
   let warn = false;
   if (!t.ok) { text = t.why; warn = true; }
@@ -3648,6 +3782,7 @@ function ctrlToggle(on) {
     setZoom(1);
     ctrlPoll(0);
     if (view === "flat" && !desk.loaded) watchPanels();
+    if (view === "frametop" && !ft.loaded) watchFrametop();
     if (!TOUCH) $("viewer").focus({ preventScroll: true });
   }
   if (window.frameApp && window.frameApp.captureKeys) window.frameApp.captureKeys(on && document.activeElement === $("viewer"));
@@ -3658,7 +3793,9 @@ $("ctrlBtn").onclick = () => ctrlToggle(!ctrl.on);
 async function ctrlPoll(n, gen = devGen) {
   if (!ctrl.on || gen !== devGen) return;
   try {
-    const r = await api(n ? "/api/touch" : "/api/touch?start=1");
+    // The Frametop helper is started and asked about by its own query, not another endpoint.
+    const base = view === "frametop" ? "/api/touch?src=frametop" : "/api/touch";
+    const r = await api(n ? base : base + (view === "frametop" ? "&start=1" : "?start=1"));
     if (gen !== devGen) return;
     ctrl.state = r.state; ctrl.message = r.message || "";
   } catch (e) { if (gen !== devGen) return; ctrl.state = "error"; ctrl.message = e.message; }
@@ -3684,6 +3821,9 @@ function ctrlReset() {
   ctrl.move = null; ctrl.rel = [0,0]; ctrl.raf = 0; ctrl.retryAt = 0;
   ctrl.held.clear(); ctrl.keys.clear(); ctrl.pointers.clear(); ctrl.g = null;
   desk.panels = []; desk.focus = null; desk.shown = null; desk.pick = ''; desk.loaded = false; desk.error = '';
+  ft.screens = []; ft.pick = ''; ft.shown = null; ft.loaded = false; ft.desktop = false; ft.remote = false;
+  ft.why = ''; ft.error = ''; ftEmptyWhy = null;
+  renderFtPick(); syncFtUI();
   window.frameApp?.captureKeys?.(false);
   ctrlShow();
 }
@@ -3766,9 +3906,10 @@ async function ctrlFlush() {
 }
 // Pointer moves: at most one per animation frame.
 function ctrlMoveTo(fx, fy) {
-  const p = ctrlTarget().panel;
-  if (!p) return;
-  ctrl.move = { fx, fy, window: p.window, display: p.display };
+  const t = ctrlTarget();
+  if (t.screen) ctrl.move = { fx, fy, screen: t.screen };
+  else if (t.panel) ctrl.move = { fx, fy, window: t.panel.window, display: t.panel.display };
+  else return;
   ctrlSchedule();
 }
 function ctrlMoveBy(dx, dy) { ctrl.rel[0] += dx; ctrl.rel[1] += dy; ctrlSchedule(); }
@@ -3780,12 +3921,20 @@ function ctrlFlushMoves() {
   if (ctrl.rel[0] || ctrl.rel[1]) { out.push({ dx: Math.round(ctrl.rel[0]), dy: Math.round(ctrl.rel[1]) }); ctrl.rel = [0, 0]; }
   if (out.length) ctrlSend(out);
 }
-// On the Desktop view, presses name the panel they're for, so the Frame drops them if
-// focus has moved on (releases always go).
-// A press with no panel to aim at (the Desktop view lost its target) isn't sent at all.
+// On the Desktop and Frametop views, presses name the panel or screen they're for, so the
+// server drops them if that changed. Releases always go; on Frametop they name the screen
+// as well, because the server routes each event by that name and must see the release.
+// A press with no target (the view lost its panel or screen) isn't sent at all.
+// The offline tests eval this without the page's `view` and `ft`: keep that reference guarded.
 function ctrlAim(e) {
-  if (ctrlMode() !== "abs" || e.down === false) return e;
-  const p = ctrlTarget().panel;
+  if (ctrlMode() !== "abs") return e;
+  const t = ctrlTarget();
+  if (t.screen) return { ...e, screen: t.screen };
+  if (e.down === false) {
+    if (typeof view !== "undefined" && view === "frametop" && ft.shown) return { ...e, screen: ft.shown };
+    return e;
+  }
+  const p = t.panel;
   return p ? { ...e, window: p.window, display: p.display } : null;
 }
 function ctrlButton(name, down) {
@@ -3847,9 +3996,13 @@ function ctrlTouchDown(e) {
     ctrl.g = { kind: "scroll", ...centroid() };
   }
 }
-// The panel a gesture started on; if that stops being the one in use, the gesture
+// The panel or screen a gesture started on; if that stops being the one in use, the gesture
 // does nothing more (except let go of what it holds).
-function ctrlAimedAt() { return ctrlMode() === "abs" ? panelKey(ctrlTarget().panel) : "headset"; }
+function ctrlAimedAt() {
+  if (ctrlMode() !== "abs") return "headset";
+  const t = ctrlTarget();
+  return t.screen || panelKey(t.panel);
+}
 function ctrlSameTarget(g) { return g.target && g.target === ctrlAimedAt(); }
 function centroid() {
   const ps = [...ctrl.pointers.values()];
@@ -6115,6 +6268,7 @@ async function openShot(s) {
     if (gen !== viewGen) return;
     lastImg = img; lastSource = "shot"; lastShot = { blob, file: s.file };
     desk.shown = null;  // a screenshot, not a panel: Control has nothing to act on here
+    ft.shown = null;    // nor on a Frametop screen
     draw();
     $("srcBadge").textContent = `Screenshot · ${shotApp(s.appid)}`;
     $("stamp").hidden = false; $("stamp").textContent = new Date(s.time * 1000).toLocaleString();
@@ -6269,24 +6423,30 @@ setInterval(() => { const s = autoSync.s; if (!document.hidden && s && (s.screen
 // ---- Recording the headset view, and Steam's own clips (server.py, frame_clips.py) ----
 // A recording runs on the Frame until Stop; the server then copies the .mp4 here
 // and the page follows it by polling /api/record.
-const rec = { state: "idle", timer: null };
+const rec = { state: "idle", timer: null, label: "" };
 const clock = t => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, "0")}`;
 function showRec(s) {
   const was = rec.state;
   rec.state = s.state;
+  if (s.state === "idle" || s.state === "failed") rec.label = "";
   const busy = ["starting", "recording", "stopping", "saving"].includes(s.state);
   const b = $("recBtn");
   b.textContent = s.state === "recording" ? "Stop" : "Record";
   b.classList.toggle("on", s.state === "recording");
-  b.disabled = busy && s.state !== "recording";
+  syncRecBtn();  // also keeps Record off while the Frametop view has nothing to record
+  const label = rec.label || (s.screen ? `Frametop · ${s.screen}` : "");
   const line = $("recStatus");
-  line.textContent = s.state === "recording" ? `Recording ${clock(s.elapsed || 0)} (stops by itself at ${clock(s.limit)})` +
-                       (s.audio ? "" : ". No sound: the Frame's audio couldn't be read, so this is video only.")
-    : s.state === "starting" ? "Starting the recording…"
+  line.textContent = s.state === "recording" ? (label
+                       ? `Recording ${label} — ${clock(s.elapsed ?? s.seconds ?? 0)}` +
+                         (s.audio === false ? ". No sound: Frametop is recorded without audio." : "")
+                       : `Recording ${clock(s.elapsed || 0)}${s.limit ? ` (stops by itself at ${clock(s.limit)})` : ""}` +
+                         (s.audio ? "" : ". No sound: the Frame's audio couldn't be read, so this is video only."))
+    : s.state === "starting" ? (label ? `Starting the recording of ${label}…` : "Starting the recording…")
     : s.state === "stopping" ? "Stopping the recording…"
-    : s.state === "saving" ? `Copying the recording to this ${HOST.computer}…`
+    : s.state === "saving" ? (label ? `Copying ${label} to this ${HOST.computer}…`
+                                    : `Copying the recording to this ${HOST.computer}…`)
     : s.state === "saved" ? s.message
-    : s.state === "failed" ? `Recording failed: ${s.error}` : "";
+    : s.state === "failed" ? `Recording failed: ${s.error || s.message || "unknown error"}` : "";
   line.hidden = !line.textContent;
   if (was !== s.state && was !== "idle" && s.state === "saved") { log(s.message, "ok"); toast(s.message); }
   if (was !== s.state && was !== "idle" && was !== "starting" && s.state === "failed") { log(line.textContent, "e"); toast(line.textContent, true); }
@@ -6303,8 +6463,18 @@ async function pollRec() {
 }
 $("recBtn").onclick = async e => {
   const start = rec.state !== "recording";
+  const body = { action: start ? "start" : "stop" };
+  if (start) {
+    rec.label = "";  // a plain headset recording, unless the Frametop view says otherwise
+    if (view === "frametop") {
+      const s = ftScreen();
+      if (!s || ftOff()) return toast(noFtWhy(), true);
+      rec.label = `Frametop · ${s.name}`;
+      body.screen = s.name;
+    }
+  }
   const res = await act(start ? "Start recording" : "Stop recording",
-                        () => api("/api/record", { action: start ? "start" : "stop" }), e.currentTarget);
+                        () => api("/api/record", body), e.currentTarget);
   if (res) showRec(res); else pollRec();
 };
 
