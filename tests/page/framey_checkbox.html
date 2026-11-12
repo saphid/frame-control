@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>__OFFICIAL_CSS__</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), selections=[];
+  const SP_REACT=window.SP_REACT,DFL=window.DFL;
+  __OFFICIAL_COMPONENT__
+  let root;
+  const render=node=>ReactDOM.flushSync(()=>root.render(node));
+  const input=()=>container.querySelector('input');
+  try {
+    root=ReactDOM.createRoot(container);
+    render(React.createElement(DropdownMultiselectItem,{value:'private-filter',label:'Portrait',
+      checked:false,onSelect:(checked,value)=>selections.push({checked,value})}));
+    const label=container.querySelector('label');
+    assert(label.classList.contains('decky_DropdownMultiselectItem_DialogCheckbox'),
+      'published checkbox pointer-routing class was discarded');
+    assert(label.style.marginBottom==='0px'&&label.style.padding==='0px','published wrapper style was discarded');
+    const hit=()=>{
+      const rect=input().getBoundingClientRect();
+      return document.elementFromPoint(rect.x+rect.width/2,rect.y+rect.height/2);
+    };
+    assert(hit()===container.querySelector('button'),'published CSS did not route the hit to the menu row');
+    selections.length=0;
+    ReactDOM.flushSync(()=>hit().click());
+    assert(input().checked&&selections.length===1&&selections[0].checked===true,
+      'menu-row activation did not select the published filter once');
+    ReactDOM.flushSync(()=>hit().click());
+    assert(!input().checked&&selections.length===2&&selections[1].checked===false,
+      'second menu-row activation did not deselect the filter once');
+    // Direct native activation forwards the original React click event once;
+    // onChange still supplies the checked boolean, not the event.
+    const clicks=[],changes=[];
+    function Direct({disabled=false}) {
+      const [checked,setChecked]=React.useState(false);
+      return React.createElement(DFL.DialogCheckbox,{label:'Direct setting',checked,disabled,
+        onClick:event=>clicks.push({type:event.type,node:event.currentTarget}),
+        onChange:value=>{changes.push(value);setChecked(value);}});
+    }
+    render(React.createElement(Direct));
+    const direct=input();ReactDOM.flushSync(()=>direct.click());
+    assert(clicks.length===1&&clicks[0].type==='click'&&clicks[0].node===direct,'original click event was lost');
+    assert(JSON.stringify(changes)==='[true]'&&direct.checked,'boolean change callback was lost');
+    render(React.createElement(Direct,{disabled:true}));
+    ReactDOM.flushSync(()=>input().click());
+    assert(clicks.length===1&&changes.length===1,'disabled checkbox invoked callbacks');
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());root=null;
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedClassAndStyle:true,
+      publishedHitRouting:true,publishedSelectionOnce:true,originalClickEvent:true,booleanChange:true,
+      disabled:true,syntheticFilters:true,realArtworkChanged:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

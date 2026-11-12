@@ -14,6 +14,57 @@ import frame_decky
 
 
 class Compatibility(unittest.TestCase):
+    def test_fileserver_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 60)
+        shims = ['deckyfileserver-user-native', 'deckyfileserver-https-address',
+                 'deckyfileserver-directory-entry']
+        old = dict(storeId=60, version=record['version'], sha256=record['sha256'], compatShims=shims)
+        fixed = dict(old, compatShims=shims+['deckyfileserver-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
+    def test_network_sentinel_old_receipt_requires_child_ipc_repair(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 114)
+        old = dict(storeId=114, version=record['version'], sha256=record['sha256'],
+                   compatShims=['network-sentinel-user-psutil'])
+        fixed = dict(old, compatShims=['network-sentinel-user-psutil', 'network-sentinel-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
+    def test_animation_old_receipt_requires_child_ipc_without_upgrading_partial_status(self):
+        record = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 23)
+        old = dict(storeId=23, version=record['version'], sha256=record['sha256'],
+                   compatShims=['animation-preserve-overrides'])
+        fixed = dict(old, compatShims=['animation-preserve-overrides', 'animation-ipc-eof'])
+        results = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertIn('Update or reinstall', results[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', results[1]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in results], ['partial', 'partial'])
+
+    def test_music_controls_require_current_ipc_repair_receipt(self):
+        records = json.loads(compatibility.DATA.read_text())['plugins']
+        for record in (r for r in records if r['id'] in (12, 111)):
+            old = dict(storeId=record['id'], version=record['version'], sha256=record['sha256'],
+                       compatShims=['music-control-system-dbus-env'])
+            fixed = dict(old, compatShims=['music-control-system-dbus-env', 'music-control-ipc-eof'])
+            result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+            self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+            self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+            self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
+    def test_desktop_apps_old_receipt_requires_current_child_ipc_fix(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 143)
+        old = dict(storeId=143, version=plugin['version'], sha256=plugin['sha256'])
+        fixed = dict(old, compatShims=['desktop-apps-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, fixed]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+
     def test_previous_deckyparty_receipt_requires_ipc_repair(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 117)
         old = dict(storeId=117, version=plugin['version'], sha256=plugin['sha256'],
@@ -69,15 +120,29 @@ class Compatibility(unittest.TestCase):
                 frame_decky_store.change(no_ssh, 'install', 42)
             download.assert_not_called()
 
+    def test_old_theme_music_copy_requires_ipc_repair_without_upgrading_partial_status(self):
+        plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 52)
+        old = dict(storeId=52, version=plugin['version'], sha256=plugin['sha256'])
+        repaired = dict(old, compatShims=['game-theme-music-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, repaired]}))['plugins']
+        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertEqual(result[0]['compatibility']['status'], 'partial')
+        self.assertEqual(result[1]['compatibility']['status'], 'partial')
+
     def test_old_deckyspy_copy_does_not_inherit_fixed_install_status(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 89)
         installed = {'plugins': [dict(storeId=89, version=plugin['version'], sha256=plugin['sha256']),
                                   dict(storeId=89, version=plugin['version'], sha256=plugin['sha256'],
-                                       compatShims=['deckyspy-psutil-and-battery'])]}
+                                       compatShims=['deckyspy-psutil-and-battery']),
+                                  dict(storeId=89, version=plugin['version'], sha256=plugin['sha256'],
+                                       compatShims=['deckyspy-psutil-and-battery', 'deckyspy-ipc-eof'])]}
         result = frame_decky.status(lambda *a, **k: json.dumps(installed))['plugins']
         self.assertEqual(result[0]['compatibility']['status'], 'partial')
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
-        self.assertEqual(result[1]['compatibility']['status'], 'works')
+        self.assertEqual(result[1]['compatibility']['status'], 'partial')
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertEqual(result[2]['compatibility']['status'], 'works')
         self.assertEqual(compatibility.lookup(89, plugin['sha256'], plugin['version'])['status'], 'works')
 
     def test_old_deck_shelves_copy_requires_ipc_fix(self):
@@ -179,7 +244,7 @@ class Compatibility(unittest.TestCase):
                    compatShims=['deckyfileserver-user-native'])
         previous = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address'])
         updated = dict(old, compatShims=['deckyfileserver-user-native', 'deckyfileserver-https-address',
-                                         'deckyfileserver-directory-entry'])
+                                         'deckyfileserver-directory-entry', 'deckyfileserver-ipc-eof'])
         result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, previous, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
@@ -189,12 +254,15 @@ class Compatibility(unittest.TestCase):
     def test_suggestme_old_copy_exposes_tls_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 132)
         old = dict(storeId=132, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['suggestme-verified-tls'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        tls_only = dict(old, compatShims=['suggestme-verified-tls'])
+        updated = dict(old, compatShims=['suggestme-verified-tls', 'suggestme-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, tls_only, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('may disable TLS verification', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertIn('IPC', result[1]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
     def test_deck_settings_old_copy_exposes_upload_tls_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 93)
@@ -218,22 +286,28 @@ class Compatibility(unittest.TestCase):
     def test_steam_status_old_copy_exposes_diagnostic_tls_update_requirement(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 123)
         old = dict(storeId=123, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['steam-status-verified-tls'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
+        tls_only = dict(old, compatShims=['steam-status-verified-tls'])
+        updated = dict(old, compatShims=['steam-status-verified-tls', 'steam-status-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, tls_only, updated]}))['plugins']
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
         self.assertIn('certificate and hostname verification', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
+        self.assertIn('IPC', result[1]['compatibility']['reason'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
-    def test_notifications_old_copy_exposes_logging_update_requirement(self):
+    def test_notifications_old_copy_requires_logging_and_eof_repairs(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 79)
         old = dict(storeId=79, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['notifications-private-logs'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
-        self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        logging_only = dict(old, compatShims=['notifications-private-logs'])
+        updated = dict(old, compatShims=['notifications-private-logs', 'notifications-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, logging_only, updated]}))['plugins']
+        for item in result[:2]:
+            self.assertIn('Update or reinstall', item['compatibility']['reason'])
+            self.assertIn('IPC', item['compatibility']['reason'])
         self.assertIn('environment dump', result[0]['compatibility']['reason'])
-        self.assertNotIn('Update or reinstall this managed plugin', result[1]['compatibility']['reason'])
-        self.assertEqual([p['compatibility']['status'] for p in result], ['partial', 'partial'])
+        self.assertNotIn('Update or reinstall this managed plugin', result[2]['compatibility']['reason'])
+        self.assertEqual([p['compatibility']['status'] for p in result], ['partial'] * 3)
 
     def test_game_sync_old_copy_requires_selection_fix(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 104)
@@ -257,10 +331,12 @@ class Compatibility(unittest.TestCase):
     def test_emuchievements_old_x86_helper_is_still_blocked(self):
         plugin = next(p for p in json.loads(compatibility.DATA.read_text())['plugins'] if p['id'] == 28)
         old = dict(storeId=28, version=plugin['version'], sha256=plugin['sha256'])
-        updated = dict(old, compatShims=['emuchievements-safe-arm64'])
-        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, updated]}))['plugins']
-        self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'partial'])
+        helper_only = dict(old, compatShims=['emuchievements-safe-arm64'])
+        updated = dict(old, compatShims=['emuchievements-safe-arm64', 'emuchievements-ipc-eof'])
+        result = frame_decky.status(lambda *a, **k: json.dumps({'plugins': [old, helper_only, updated]}))['plugins']
+        self.assertEqual([p['compatibility']['status'] for p in result], ['broken', 'broken', 'partial'])
         self.assertIn('Update or reinstall', result[0]['compatibility']['reason'])
+        self.assertIn('Update or reinstall', result[1]['compatibility']['reason'])
 
     def test_missing_audit_data_is_unverified(self):
         with patch.object(compatibility, 'DATA', Path('/nonexistent/framey-audit.json')):

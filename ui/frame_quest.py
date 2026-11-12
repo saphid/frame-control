@@ -247,9 +247,10 @@ def status(serial=None, with_apps=True):
 
 # ---- Checking what was copied ---------------------------------------------------
 
-def inspect(package_name, base, splits=()):
+def inspect(package_name, base, splits=(), info=None):
     """Refuse what can't run on the Frame (32-bit only, Android newer than Lepton's, splits
-    that can't be merged), before anything is copied to it; warn about what may not run."""
+    that can't be merged), before anything is copied to it; warn about what may not run.
+    A caller that already read the base manifest may pass info to avoid reading it twice."""
     names = set()
     for path in [base, *splits]:
         try:
@@ -257,7 +258,7 @@ def inspect(package_name, base, splits=()):
                 names |= set(z.namelist())
         except (zipfile.BadZipFile, OSError) as e:
             raise QuestError(f'{os.path.basename(path)} copied from the Quest is not a readable APK: {e}')
-    info = android.apk_info(base)
+    info = info or android.apk_info(base)
     label = info['label']
     if info['package'] != package_name:
         raise QuestError(f"The APK copied for {package_name} says it is {info['package']}; not importing it")

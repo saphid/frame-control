@@ -1,0 +1,55 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>label{display:grid;gap:6px} #fixture{width:320px}</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const SP_REACT=window.SP_REACT,DFL=window.DFL,container=document.getElementById('fixture');
+  const root=ReactDOM.createRoot(container),navigation=[],game={appid:123,game_name:'Long game title '.repeat(20),tag:'backlog',is_manual:true};
+  const TAG_COLORS={backlog:'blue'};
+  __OFFICIAL_STYLES__
+  const published=__OFFICIAL_CONTROL__;
+  // Record the published navigation callbacks locally; never open a Steam
+  // library page, run the plugin initializer or contact a backend/headset.
+  DFL.Navigation.Navigate=path=>navigation.push(path);
+  DFL.Navigation.CloseSideMenus=()=>navigation.push('close');
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  try {
+    render(published);
+    const field=container.querySelector('label'),button=container.querySelector('button');
+    assert(field.style.width==='100%'&&field.style.overflow==='hidden','published ButtonItem field style was lost');
+    assert(button.textContent.includes(game.game_name)&&button.textContent.includes('manual'),'published game title/badge lost');
+    ReactDOM.flushSync(()=>button.click());
+    assert(JSON.stringify(navigation)==='["/library/app/123","close"]','published callback changed');
+    render(React.cloneElement(published,{disabled:true}));
+    ReactDOM.flushSync(()=>container.querySelector('button').click());
+    assert(navigation.length===2&&container.querySelector('label').style.overflow==='hidden','disabled style/callback changed');
+    render(React.createElement(DFL.ButtonItem,{label:'Hidden action',description:'Hidden help',style:{display:'none'},onClick(){}},'Hidden button'));
+    const hidden=container.querySelector('label');
+    assert(getComputedStyle(hidden).display==='none'&&hidden.contains(container.querySelector('button'))&&
+      hidden.textContent.includes('Hidden help')&&!container.querySelector('button').getClientRects().length,
+      'field style must cover label, description and button');
+    let clicks=0;
+    render(React.createElement(DFL.ButtonItem,{label:'Ordinary action',description:'Ordinary help',onClick:()=>clicks++}));
+    const ordinary=container.querySelector('label');
+    assert(!ordinary.getAttribute('style')&&container.querySelector('button').getClientRects().length,'removed style survived');
+    assert(container.querySelector('button').textContent==='Ordinary action'&&ordinary.textContent.includes('Ordinary help'),'ordinary label/description lost');
+    ReactDOM.flushSync(()=>container.querySelector('button').click());assert(clicks===1,'ordinary callback changed');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedButtonAndStyles:true,fieldStylePreserved:true,disabledCallbackSuppressed:true,
+      hiddenFieldIncludesButtonAndHelp:true,styleRemoved:true,ordinaryButtonUnchanged:true,
+      navigationRecordedLocally:true,realSteamNavigation:false,realBackendContacted:false,
+      realFrameContacted:false,controllerInputVerified:false,wornVisibilityVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

@@ -16,6 +16,14 @@ plugins → Open official store**. Search the catalogue, confirm an install, and
 choose **Open panel** from the installed plugin list. The panel contains the
 plugin's own controls and settings. Update and Remove affect only plugin
 folders that Frame Control's store manager installed.
+
+Update and Remove recheck ownership under the transaction lock using a regular
+store receipt file with a matching positive integer store ID. A symlinked,
+unreadable or malformed receipt cannot authorize a change. Refused operations
+leave the plugin and its data in place and do not stop the loader. Inventory
+still lists readable plugin manifests without claiming store ownership when
+their receipt or store ID is invalid.
+
 Use **Scroll plugin up** and **Scroll plugin down** above an open panel when
 wheel scrolling is unavailable. Point at a scrollable part of the plugin first
 to move that section; otherwise the buttons move the panel document. Each
@@ -27,7 +35,19 @@ Frame Control's existing official-store manager downloads a published ZIP from
 Decky's content-addressed CDN, verifies its store SHA-256 hash and manifest,
 rejects unsafe ZIP members, path collisions, special files and root plugins,
 and swaps one managed plugin
-folder with rollback on failure. It rejects non-ARM64 ELF and Windows binaries.
+folder with rollback on failure. If moving the installed folder to a backup
+fails, the update or removal leaves the original folder in place. Rollback
+deletes only a replacement that the transaction successfully moved into place.
+It rejects non-ARM64 ELF and Windows binaries.
+Before transfer, it streams every file through its ZIP checksum within the
+existing archive size limits. Corruption after a file's header is rejected on
+the host and by the local author checker. Remote extraction also rejects
+checksum failures before changing the installed plugin or restarting Decky.
+File/directory collisions are rejected before transfer and checked again on the
+headset before extraction. For example, a file named `plugin/cache` cannot
+coexist with `plugin/cache/` or `plugin/cache/data.json`, in either ZIP order.
+Explicit directory entries remain optional; identical repeated file payloads
+with only execute-bit differences are still accepted for official archives.
 The Decky user service restarts after a file change. Framey's panel host accepts
 API v2 bundles and API v1 bundles using Decky's modern frontend initializer,
 with `dist/index.js`. Legacy `(function (...) {...})(DFL, SP_REACT)` bundles are
@@ -52,11 +72,29 @@ Framey gives each plugin a bounded `localStorage` substitute because browser
 storage is denied to an opaque-origin iframe. The parent panel keeps a separate
 cache for each plugin: up to 64 keys, 64 KiB per value and 128 KiB total. It
 restores the cache when a panel reopens if the parent's browser storage is
-available. If storage is denied or cleared, the cache lasts only for the current
-panel. The host waits for the parent's cache reply before loading plugin code;
-if the reply is missing or invalid after five seconds, the panel shows an error
-instead of opening with empty settings that could overwrite saved values. Use
+available. Plugins can enumerate non-reserved cache keys with `Object.keys`,
+`Object.entries` or `for...in`, and export their string values with object spread
+or `JSON.stringify(localStorage)`. API members are not enumerable; stored keys
+that collide with API/prototype names still require `getItem` and `key(index)`.
+If browser storage rejects a write, the parent keeps the latest
+bounded snapshot in memory across plugin close/reopen and switches back to disk
+on the next successful write. The plugin panel shows a notice while its snapshot
+is only in memory. **Retry saving** attempts to save that latest snapshot without
+changing a setting; a failed retry keeps the notice and values. A successful
+retry clears only that plugin's notice. Reloading the Frame Control page loses that memory
+fallback; an older disk snapshot may then return. Cleared browser storage also
+loses saved caches. The host waits for the parent's cache reply before loading plugin code.
+A failed browser-storage read or an invalid saved snapshot stops startup with an
+error and leaves the saved bytes untouched; neither is treated as an empty cache.
+Reopen the plugin after storage access recovers. Invalid saved data must be
+recovered separately before the panel can open; Framey does not erase it automatically.
+A valid in-memory snapshot from a failed write still works while disk reads are
+blocked. Only a missing cache starts empty. A missing reply fails after five
+seconds; explicit read errors and invalid replies fail immediately. Use
 the plugin backend for settings that must survive cache loss.
+The recovery notice, retry and readback after a full page reload are covered in
+a local browser with synthetic snapshots and native browser storage. Live
+headset persistence and worn-headset use remain unverified.
 
 Decky API v1/v2 `addEventListener` and `removeEventListener` receive real backend
 events while the panel is open. The parent resolves the plugin name from its
@@ -93,7 +131,10 @@ record the resulting TabMaster documentation support and remaining blockers.
 The host currently supplies sections, rows, buttons, toggles, text fields,
 sliders, grouped dropdowns,
 scroll containers, a modal, locale information, local panel routes and toasts,
-and backend calls for the plugin that owns the panel. The headset's scroll
+and backend calls for the plugin that owns the panel. Text fields support
+controlled values, uncontrolled defaults, and change, blur, focus, click and key
+callbacks. These are ordinary input events; they do not open or verify SteamVR's
+keyboard. The headset's scroll
 buttons send only a direction to the isolated iframe. They target the last
 scrollable region reached by a trusted pointer move and fall back to the iframe
 document when that region disappears. A result message reports whether content
@@ -129,7 +170,12 @@ work in VR. Storage Cleaner rendered an
 Its cleanup actions were not tested; they may remove local game saves.
 
 Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
-and progress bars. Its explicit SteamClient subscription fallbacks return
+and progress bars. `SidebarNavigation` preserves each visible page's React
+`icon` beside its title in the local navigation button, including icon props
+and later updates. Separators and pages with `visible: false` do not become
+buttons. This is local page selection; it does not recreate Steam's sidebar
+layout or verify controller navigation.
+Its explicit SteamClient subscription fallbacks return
 disposable handles without emitting fabricated events. Running-game reads and
 lifetime notifications use the scoped bridge described below; power, app launch
 and hardware mutation methods are not supplied. Other live Steam stores require integration
@@ -192,9 +238,23 @@ then checks it again. It also confirms removal blocks method calls and a
 reinstall can read the retained setting. This tests the bridge and fixture;
 real Decky settings persistence on a worn Frame is still unverified.
 
+The desktop official store has Previous/Next buttons for all search results,
+40 per page. Search matches names, authors and descriptions. A new search or
+catalogue request returns to the first page; refreshing installed status keeps
+the current page. Page information stays separate from catalogue and job errors.
+Loading and failed catalogue requests clear old rows and disable navigation.
+The page-script regression and private Chromium check use synthetic requests;
+they do not prove live downloads, installs or headset behavior.
+
 The in-headset **Open official store** view loads the full official catalogue.
 Search matches names, authors, and descriptions. Filters show non-root plugins
 or installed plugins, and Previous/Next buttons browse 20 results per page.
+The catalogue's loading or error message stays visible when searching, changing
+filters or refreshing installed plugins. A failed catalogue request does not
+become an empty search result. Open the official store again to retry; a
+successful catalogue response restores result counts and pagination. These
+states are checked with synthetic requests through the headset page script;
+they do not establish worn-headset visibility or controller behavior.
 The root label is a compatibility warning; other APIs are checked only when a
 plugin is opened. Both `root` and `_root`
 store tags mark a plugin as needing root, and duplicate store IDs are omitted
@@ -205,12 +265,44 @@ from starting, Remove remains available for Frame Control-owned plugins while
 the managed service is stopped; it does not restart the service.
 
 Install, Update, and Remove show the current job stage in the headset panel.
+The desktop store also reserves a request ID before sending a plugin change.
+Its separate result message and **Check result** action recover that same job
+without submitting the change again. Install, Update, Remove and loader changes
+stay disabled through the job and final installed-status refresh, including
+after a lost POST reply or exhausted polling retries. The saved request is
+bound to the original headset; return to it to check the result. Session storage
+retains the request through a page reload. If storage is denied, recovery is
+limited to the current open page; a reload loses the memory fallback.
+If the server no longer has the job, the desktop keeps changes disabled until
+its **Refresh** button successfully reads a complete installed list. Automatic
+reads, failed reads and acknowledgement changes do not clear that uncertainty.
+An explicit HTTP rejection before the request was accepted releases the request;
+a terminal job error also releases it after status refresh. These desktop paths
+are tested with synthetic API replies and real DOM controls, not live installs.
+
+Network Sentinel 1.0.4 installs a child IPC EOF repair while preserving its
+original monitoring and unload code. Existing managed copies need Update or
+reinstall to receive it. The isolated runtime gate requires a settings RPC after
+peer disconnect, the original unload save, restart persistence and two clean
+parent-only stops; a negative control restores the previous managed backend.
+External network quality, the real headset and worn VR remain unverified.
+
+DeckyFileServer 1.2.0 also installs the child IPC EOF repair. Its managed
+backend, HTTPS helper and original unload hook are preserved; existing copies
+need Update or reinstall. The native runtime gate closes a private IPC peer,
+requires a subsequent settings RPC, checks two clean parent-only stops and
+restart persistence, and restores the previous backend as a negative control.
+This does not establish the historical ARM64 migration timeout's cause or add
+real Frame or worn/controller proof.
+
 The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
 reusing the ID for a different change is rejected. **Check result** can resume
-polling even if the POST response is lost. After a connection error, Install, Update, and Remove
+polling even if the POST response is lost. A rejected polling request also keeps
+an accepted job's ID; it cannot establish that the install or update stopped.
+After a connection error, Install, Update, and Remove
 stay disabled while the saved job's result is unknown; use **Check result**
 before starting another change.
 If Chromium denies session storage, the open panel keeps the request ID in
@@ -221,19 +313,38 @@ Refresh the installed list before starting another
 operation after an error. The headset panel and desktop app send the hash of
 the version you saw; if the official store changes that version before the job
 starts, Frame Control stops before downloading or changing the headset. Refresh
-the store and review the new version before retrying. Job results live in server
-memory for one hour after completion. If Frame Control restarts, or the request
+the store and review the new version before retrying.
+The desktop and headset also include the installed receipt shown by the Update
+or Remove row. If another client changes that installed copy before the job
+starts, the operation stops before downloading or changing plugin files. Refresh
+installed plugins and review the current copy before trying again. The existing
+transaction lock checks the receipt again before applying the operation.
+An install also rechecks the store ID under that lock. If another client has
+installed that ID since the first status read, the later install stops before
+changing files or stopping Decky, even if the store changed its name and folder.
+Refresh installed plugins and use Update or Remove; a changed folder still
+requires removing the old version before installing the new one.
+Job results live in server memory for one hour after completion. If Frame Control restarts, or the request
 never reached it, the panel cannot recover the result. It clears that ID and
 keeps plugin changes disabled until **Refresh plugins** successfully reads the
 installed list. An automatic status read does not clear this unknown outcome.
 If browser session storage is denied, the unknown-result gate lasts for the
 current open panel only; refresh installed status after reopening it.
 
+If the server cannot create or start the background worker, **Check result**
+reports a completed startup error. Checking does not retry the plugin change.
+Refresh installed status before starting a fresh action after the error.
+
 An open plugin panel closes before its own Update or Remove starts, so its old
 frontend cannot call the changing backend. Open panel is unavailable while a
 store job is pending. A later installed-status refresh also closes an open panel
 if Decky stopped, its store receipt changed, or the status read failed. Reopen
 the plugin after a successful refresh to use its current frontend.
+While installed status is being refreshed, the headset page clears old
+installed rows and disables store changes. Callbacks retained from those rows
+cannot prompt or submit until a complete status read succeeds. Failed or
+incomplete reads keep changes blocked; a successful stopped status still
+allows recovery removal, while installs and updates require Decky to run.
 Chunked frontends load modules through URLs bound to the installed store
 receipt. If a desktop store update replaces the plugin during panel startup,
 old module requests fail and the panel must be reopened; Framey does not mix
@@ -241,6 +352,25 @@ chunks from two installed versions.
 The headset also includes the panel's store SHA-256 receipt with each backend
 call, Steam read, and event poll. It rejects a request if the installed receipt
 changed before the next status refresh; reopen the panel to use the new version.
+
+Catalog and installed plugin names stay complete when validating archives,
+checking name collisions, and routing backend calls or event subscriptions.
+Long names that share a prefix remain distinct; display-length truncation must
+not change a plugin's backend identity. The existing catalog-response and
+installed-manifest size limits still apply. These paths are tested locally
+with synthetic names and disposable manifests, without a live headset.
+
+An installed plugin with a non-object JSON manifest is skipped during inventory
+instead of hiding every plugin. A readable manifest with a non-object ownership
+receipt stays visible as unowned, without store actions or a managed Framey
+panel. The scan leaves those files untouched; after repair, a fresh inventory
+reads them again. These cases are tested with disposable local plugin folders.
+Panel and JavaScript module admission also require a positive integer `storeId`
+in the ownership receipt. JSON booleans and floating-point IDs cannot claim an
+integer plugin ID or mask a valid installed plugin during the panel scan.
+Malformed receipts are left untouched. Local fixtures cover rejection and
+recovery after repairing the ID; live-headset behavior remains unverified.
+
 Panel-ready, error, and trusted-pointer reports also carry the current panel
 session. A delayed report from a closed panel cannot change the new panel's
 status or count as input to that panel.

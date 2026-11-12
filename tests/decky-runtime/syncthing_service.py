@@ -63,7 +63,63 @@ def prop(unit, key):
     return ctl('show', unit, '--property=' + key, '--value')
 
 
-def stop_decky_service(unit, report):
+def decky_stop_snapshot(unit, logs, *, proc=Path('/proc'), cgroups=Path('/sys/fs/cgroup')):
+    """Read bounded diagnostics only for the disposable fixture's own cgroup."""
+    if unit not in ('frame-control-decky.service', 'frame-control-migration-decky-fixture.service'):
+        raise ValueError('Not an owned Decky fixture unit')
+    group = prop(unit, 'ControlGroup')
+    relative = Path(group.lstrip('/'))
+    if not group.startswith('/') or '..' in relative.parts or relative.name != unit:
+        raise ValueError('Unexpected owned Decky cgroup')
+    pids = sorted({int(pid) for pid in (cgroups / relative / 'cgroup.procs').read_text().split()})
+    snapshot = {'unit': unit, 'controlGroup': group, 'processes': [], 'logs': [],
+                'processesTruncated': len(pids) > 32}
+    for pid in pids[:32]:
+        entry = {'pid': pid}
+        snapshot['processes'].append(entry)
+        try:
+            base = proc / str(pid)
+            membership = (base / 'cgroup').read_text().splitlines()
+            if '0::' + group not in membership:
+                entry['error'] = 'Process left the owned cgroup; not inspected'
+                continue
+            before = (base / 'stat').read_text().rsplit(')', 1)[1].split()
+            entry.update(state=before[0], parentPid=int(before[1]),
+                         userTicks=int(before[11]), systemTicks=int(before[12]),
+                         startTicks=int(before[19]), threads=[])
+            tasks = sorted((base / 'task').iterdir(), key=lambda path: int(path.name))
+            entry['threadsTruncated'] = len(tasks) > 8
+            for task in tasks[:8]:
+                thread = {'tid': int(task.name)}
+                entry['threads'].append(thread)
+                for field, limit in (('wchan', 256), ('stack', 4096)):
+                    try:
+                        with (task / field).open('rb') as stream:
+                            thread[field] = stream.read(limit).decode(errors='replace')
+                    except OSError as error:
+                        thread[field + 'Error'] = type(error).__name__
+            after = (base / 'stat').read_text().rsplit(')', 1)[1].split()
+            if after[19] != before[19] or '0::' + group not in (base / 'cgroup').read_text().splitlines():
+                entry.clear()
+                entry.update(pid=pid, error='Process identity changed during inspection')
+        except (OSError, ValueError, IndexError) as error:
+            entry['error'] = type(error).__name__
+    for log in logs:
+        entry = {'name': Path(log.name).name}
+        snapshot['logs'].append(entry)
+        try:
+            # A separate reader preserves the caller's stream position and
+            # also lets the observer's fixture tests run on desktop Windows.
+            with open(log.name, 'rb') as stream:
+                size = os.fstat(stream.fileno()).st_size
+                stream.seek(max(0, size - 8192))
+                entry.update(bytes=size, tail=stream.read(8192).decode(errors='replace'))
+        except (OSError, ValueError) as error:
+            entry['error'] = type(error).__name__
+    return snapshot
+
+
+def stop_decky_service(unit, report, logs=()):
     """Observe the owned manager's stop job; forced or incomplete stops fail."""
     began = time.monotonic()
     report['ownedDeckyStop'] = state = {
@@ -72,12 +128,34 @@ def stop_decky_service(unit, report):
         'killMode': prop(unit, 'KillMode'),
     }
     try:
+        # Retain an identity/CPU baseline while the unit is still alive. This
+        # also exercises the observer on fast clean stops in the actual VM.
+        try:
+            state['beforeStopDiagnostics'] = decky_stop_snapshot(unit, logs)
+        except Exception as error:
+            state['beforeStopDiagnostics'] = {'error': type(error).__name__ + ': ' + str(error)}
         # The manager's default stop budget is 90 seconds. A blocking
         # systemctl command with the general 35-second RPC budget can expire
         # before that job completes, losing both its result and our logs.
         ctl('stop', '--no-block', unit)
+        thresholds = iter((10, 30, 60))
+        next_snapshot = next(thresholds)
         def stopped():
+            nonlocal next_snapshot
             state['activeState'] = prop(unit, 'ActiveState')
+            if state['activeState'] == 'deactivating':
+                elapsed = time.monotonic() - began
+                if next_snapshot is not None and elapsed >= next_snapshot:
+                    # Observation must never mask a strict stop failure, signal
+                    # another process, or extend systemd's stop budget.
+                    try:
+                        snapshot = decky_stop_snapshot(unit, logs)
+                    except Exception as error:
+                        snapshot = {'error': type(error).__name__ + ': ' + str(error)}
+                    snapshot['elapsedSeconds'] = round(elapsed, 3)
+                    state.setdefault('slowStopDiagnostics', []).append(snapshot)
+                    print('FRAMEY_DECKY_SLOW_STOP_JSON=' + json.dumps(snapshot), flush=True)
+                    next_snapshot = next(thresholds, None)
             return state['activeState'] in ('inactive', 'failed')
         wait(stopped, 'owned Decky service stop', timeout=100)
         state['result'] = prop(unit, 'Result')
@@ -294,6 +372,8 @@ def main(signed_flatpak=False):
                 destination.write_bytes(archive.read(entry))
     plugin = plugins / 'decky-syncthing'
     shutil.copy('/input/main.py', plugin / 'main.py')
+    (plugin / 'py_modules').mkdir(exist_ok=True)
+    shutil.copy('/input/framey_decky_ipc.py', plugin / 'py_modules/framey_decky_ipc.py')
     helper = plugin / 'bin/decky-syncthing-watchdog'
     shutil.copy('/input/watchdog', helper)
     helper.chmod(0o700)
@@ -819,7 +899,7 @@ def main(signed_flatpak=False):
         report['peerExitStatus'] = peer.returncode
         try:
             if decky_service is not None:
-                stop_decky_service(decky_service.name, report)
+                stop_decky_service(decky_service.name, report, logs)
                 decky_service.unlink()
                 ctl('daemon-reload')
                 report['ownedDeckyServiceRemoved'] = True

@@ -52,7 +52,8 @@ class AnimationOverrides(unittest.TestCase):
             raise AssertionError('No network or migration allowed in this fixture')
         for name in ['migrate_logs', 'migrate_settings', 'migrate_any']:
             setattr(decky, name, blocked)
-        stubs = {'decky_plugin': decky, 'framey_animation_overrides': helper,
+        ipc = types.SimpleNamespace(install=lambda: None)
+        stubs = {'framey_decky_ipc': ipc, 'decky_plugin': decky, 'framey_animation_overrides': helper,
                  'aiohttp': types.SimpleNamespace(ClientSession=blocked, TCPConnector=blocked),
                  'certifi': types.SimpleNamespace(where=lambda: ssl.get_default_verify_paths().cafile)}
         # Change only the HOME expansion for the private module's constant.
@@ -71,6 +72,34 @@ class AnimationOverrides(unittest.TestCase):
     def original(self, value=b'original override'):
         self.target.write_bytes(value)
         return self.helper.identity(self.target)
+
+    def test_exact_archive_installs_child_ipc_and_retains_previous_managed_body(self):
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        source = (self.folder/'main.py').read_bytes()
+        self.assertTrue(source.startswith(prefix))
+        self.assertEqual(hashlib.sha256(source[len(prefix):]).hexdigest(),
+                         '1f09235c0acac021186e8b95e88cbca2fe6c4c6d0a3c94d06c9af8a33837a44c')
+        self.assertEqual((self.folder/'py_modules/framey_decky_ipc.py').read_bytes(),
+                         (ROOT/'ui/framey_decky_ipc.py').read_bytes())
+        receipt = json.loads((self.folder/'.frame-control-store.json').read_text())
+        self.assertEqual(receipt['compatShims'], ['animation-preserve-overrides', 'animation-ipc-eof'])
+
+    def test_missing_ipc_rejects_update_and_preserves_installed_bytes(self):
+        before = {str(p.relative_to(self.folder)): p.read_bytes()
+                  for p in self.folder.rglob('*') if p.is_file()}
+        script = transactions.frame_decky_store.apply_script(23, self.pin['sha256'])
+        ipc = (ROOT/'ui/framey_decky_ipc.py').read_text()
+        script = script.replace('FRAMEY_ANIMATION_IPC_SOURCE = '+repr(ipc),
+                                'FRAMEY_ANIMATION_IPC_SOURCE = None')
+        with patch.object(transactions.frame_decky_store, 'apply_script',
+                          return_value=script):
+            result = self.tx.apply('update', self.data, expected=self.pin['sha256'], plugin_id=23,
+                                   folder=self.pin['folder'], version=self.pin['version'])
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn('Missing Animation Changer child IPC EOF repair', result.stderr)
+        self.assertEqual(before, {str(p.relative_to(self.folder)): p.read_bytes()
+                                 for p in self.folder.rglob('*') if p.is_file()})
 
     def test_empty_default_preserves_all_three_existing_movies_without_state(self):
         expected = {}
@@ -230,13 +259,15 @@ class AnimationOverrides(unittest.TestCase):
     def test_archive_source_preserved_and_helper_scoped_to_exact_pin(self):
         with zipfile.ZipFile(io.BytesIO(self.data)) as bundle:
             original = bundle.read(self.pin['folder']+'/main.py')
-            self.assertTrue((self.folder/'main.py').read_bytes().startswith(original))
+            prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                      b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+            self.assertTrue((self.folder/'main.py').read_bytes().startswith(prefix+original))
             for entry in bundle.infolist():
                 if not entry.is_dir() and not entry.filename.endswith('/main.py'):
                     relative = entry.filename.split('/', 1)[1]
                     self.assertEqual((self.folder/relative).read_bytes(), bundle.read(entry))
         receipt = json.loads((self.folder/'.frame-control-store.json').read_text())
-        self.assertEqual(receipt['compatShims'], ['animation-preserve-overrides'])
+        self.assertEqual(receipt['compatShims'], ['animation-preserve-overrides', 'animation-ipc-eof'])
         import frame_decky_store
         self.assertTrue(frame_decky_store.apply_script(23, self.pin['sha256']).startswith('FRAMEY_ANIMATION_OVERRIDES_SOURCE = '))
         self.assertFalse(frame_decky_store.apply_script(24, self.pin['sha256']).startswith('FRAMEY_ANIMATION_OVERRIDES_SOURCE = '))

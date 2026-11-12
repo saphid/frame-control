@@ -26,7 +26,11 @@ def _receipt_digest(path):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     meta = json.loads(path.read_text())
     digest = meta.get('sha256') if isinstance(meta, dict) else None
-    if not isinstance(digest, str) or not RECEIPT.fullmatch(digest):
+    store_id = meta.get('storeId') if isinstance(meta, dict) else None
+    # JSON booleans and floats compare equal to integers in Python. They
+    # cannot claim the panel or module URLs belonging to an integer store ID.
+    if (type(store_id) is not int or store_id <= 0 or
+            not isinstance(digest, str) or not RECEIPT.fullmatch(digest)):
         raise FileNotFoundError('Framey plugin store receipt unavailable')
     return meta, digest
 
@@ -66,6 +70,8 @@ def _owned_dist(plugin_id, expected_receipt=None):
             if not entry.is_file() or entry.stat().st_size > 8*1024*1024:
                 raise FileNotFoundError('Framey plugin frontend unavailable')
             bundle = entry.read_bytes()
+            if not bundle:
+                raise FileNotFoundError('Framey plugin frontend is empty')
             legacy = re.match(rb'\s*\(function\s*\(', bundle) is not None
             if version is None and not legacy:
                 raise FileNotFoundError('This legacy frontend is not a supported Decky IIFE bundle')
