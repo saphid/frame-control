@@ -575,12 +575,12 @@
       inlineControls);
   });
   const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
+    valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
-    const captions = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
-        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min) &&
-        Array.isArray(notchLabels) ? notchLabels.filter(entry=>
+    const hasNotches = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
+        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min);
+    const captions = hasNotches && Array.isArray(notchLabels) ? notchLabels.filter(entry=>
           entry && typeof entry.label==='string' && Number.isInteger(entry.notchIndex) &&
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
@@ -590,6 +590,12 @@
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
       onChange:e=>{const next=Number(e.target.value);if(!disabled && permitted(next))onChange?.(next);}}),
+    // Decorative marks are independent of captions and numeric step/validation.
+    // Use local markup so their visibility does not depend on native CEF ticks.
+    notchTicksVisible===true && hasNotches && R.createElement('span', {'aria-hidden':true,
+      style:{display:'flex',justifyContent:'space-between',padding:'0 8px',pointerEvents:'none'}},
+      Array.from({length:notchCount},(_,index)=>R.createElement('span', {key:index,
+        'data-framey-tick':index,style:{width:1,height:8,background:'currentColor',flexShrink:0}}))),
     captions.length>0 && R.createElement('span', {style:{display:'grid',
       gridTemplateColumns:`repeat(${notchCount}, minmax(0, 1fr))`, gap:'0.25rem'}},
       captions.map((entry,index)=>R.createElement('span', {key:index,
