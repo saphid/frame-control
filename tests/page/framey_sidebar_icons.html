@@ -1,0 +1,80 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>window.fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>window.fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const DFL=window.DFL,SP_REACT=window.SP_REACT,container=document.getElementById('fixture');
+  __OFFICIAL_ICONS__
+  const names=['Credentials','General','Library','Statistics','Mode Tuning','Maintenance','About & Instructions'];
+  let childActions=0;
+  const child=name=>()=>SP_REACT.createElement('button',{onClick:()=>childActions++},'Synthetic '+name);
+  const CredentialsPage=child(names[0]),GeneralSettingsPage=child(names[1]),LibraryPage=child(names[2]),
+    StatisticsPage=child(names[3]),ModeTuningPage=child(names[4]),MaintenancePage=child(names[5]),AboutPage=child(names[6]);
+  __OFFICIAL_SETTINGS__
+  const expected=__EXPECTED_ICONS__;
+  const root=ReactDOM.createRoot(container);
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  const tabs=()=>[...container.querySelectorAll('[role="tab"]')];
+  const panel=()=>container.querySelector('[role="tabpanel"]');
+  function checkPublished() {
+    assert(tabs().length===7,'published page count changed');
+    tabs().forEach((tab,index)=>{
+      const svg=tab.querySelector('svg');
+      assert(svg,'published '+names[index]+' icon is missing');
+      assert(svg.getAttribute('width')==='14'&&svg.getAttribute('height')==='14','published icon size lost');
+      assert(svg.getAttribute('viewBox')===expected[index].attr.viewBox,'published icon viewBox changed');
+      assert(svg.querySelector('path').getAttribute('d')===expected[index].child[0].attr.d,'published icon geometry changed');
+      assert(tab.textContent.trim()===names[index],'published navigation title lost');
+    });
+  }
+  try {
+    render(SP_REACT.createElement(SettingsPage));
+    checkPublished();
+    tabs().forEach((tab,index)=>{
+      ReactDOM.flushSync(()=>tab.querySelector('path').dispatchEvent(new MouseEvent('click',{bubbles:true})));
+      assert(tab.getAttribute('aria-selected')==='true','icon click did not select its page');
+      assert(panel().textContent==='Synthetic '+names[index],'selected the wrong child view');
+      ReactDOM.flushSync(()=>panel().querySelector('button').click());
+    });
+    assert(childActions===7,'child actions lost or duplicated');
+    checkPublished();
+
+    // Additional API-contract cases use synthetic pages, never published data.
+    const makePages=(icon,hidden=false)=>[
+      {title:'First',route:'/first',visible:!hidden,content:'First body'},'separator',
+      {title:SP_REACT.createElement('em',null,'Second'),route:'/second',icon,content:'Second body'},
+      {title:'Hidden',visible:false,icon:SP_REACT.createElement(FaKey),content:'Hidden body'}];
+    const sidebar=pages=>SP_REACT.createElement(DFL.SidebarNavigation,{pages,title:'Synthetic settings'});
+    render(sidebar(makePages(SP_REACT.createElement(FaKey,{size:20,title:'Author icon',className:'author-icon',style:{color:'red'}}))));
+    assert(tabs().length===2&&tabs()[1].querySelector('em').textContent==='Second','separator/hidden page or React title changed');
+    const svg=tabs()[1].querySelector('svg');
+    assert(svg.classList.contains('author-icon')&&svg.style.color==='red'&&svg.getAttribute('width')==='20','author icon props lost');
+    assert(svg.querySelector('title').textContent==='Author icon','author icon title lost');
+    ReactDOM.flushSync(()=>tabs()[1].click());
+    assert(panel().textContent==='Second body','synthetic page selection failed');
+    render(sidebar(makePages(SP_REACT.createElement('span',null,'Replacement icon'),true)));
+    assert(tabs().length===1&&tabs()[0].textContent.includes('Replacement icon'),'updated icon or visibility lost');
+    assert(panel().textContent==='Second body'&&tabs()[0].getAttribute('aria-selected')==='true','hiding earlier page retargeted selection');
+    render(sidebar(makePages(undefined,true)));
+    assert(!tabs()[0].querySelector('svg,span')&&tabs()[0].textContent==='Second','icon removal left stale content');
+    render(sidebar(makePages('<img src=x onerror=alert(1)>',true)));
+    assert(!tabs()[0].querySelector('img')&&tabs()[0].textContent.includes('<img src=x'),'string icon became HTML');
+    assert(window.fixtureFailures.length===0,window.fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedIcons:7,
+      publishedGeometryAndSize:true,iconClickSelection:true,syntheticChildActions:childActions,
+      reactContentAndUpdates:true,separatorAndVisibility:true,stableRouteSelection:true,
+      realBackendContacted:false,realFrameContacted:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

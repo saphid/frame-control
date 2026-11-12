@@ -658,7 +658,9 @@
       // Decky separators are layout markers, never selectable pages. Keep the
       // original index so hiding an earlier page does not retarget selection.
       tabs:pages.flatMap((page,index)=>page==='separator' || page.visible===false ? [] : [{
-        id:page.route || String(index), title:page.title, content:page.content}])}));
+        id:page.route || String(index),
+        title:page.icon == null ? page.title : R.createElement(R.Fragment, null, page.icon, ' ', page.title),
+        content:page.content}])}));
   const emptyReorderEntries = Object.freeze([]);
   const ReorderableList = ({entries=emptyReorderEntries, onSave, interactables:Interactables,
     fieldProps, disableReordering=false}) => {
