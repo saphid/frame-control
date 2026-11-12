@@ -299,7 +299,10 @@ The store verifies each downloaded archive and the headset applies it with a
 rollback if Decky cannot start. The panel saves a random request ID before
 submitting a change. The server uses that ID as the job ID and returns the
 same job for a repeated, identical request while its result is retained;
-reusing the ID for a different change is rejected. **Check result** can resume
+reusing the ID for a different change is rejected. Invalid plugin IDs and
+malformed reviewed store hashes receive HTTP 400 before a job is reserved or
+a worker starts. A corrected request can use the ID from that rejected
+submission. **Check result** can resume
 polling even if the POST response is lost. A rejected polling request also keeps
 an accepted job's ID; it cannot establish that the install or update stopped.
 After a connection error, Install, Update, and Remove

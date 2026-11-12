@@ -13,6 +13,76 @@ import server
 
 
 class StoreJobs(unittest.TestCase):
+    def test_invalid_plugin_ids_do_not_reserve_jobs_or_start_workers(self):
+        request_id = 'e' * 32
+        body = {'action': 'install', 'sha256': 'a' * 64,
+                'acknowledged': True, 'requestId': request_id}
+        with patch.object(server, 'busy_thread') as worker:
+            for plugin_id in (0, -1, True, False, 2.0, '2', None, []):
+                with self.subTest(plugin_id=plugin_id):
+                    try:
+                        with self.assertRaises(server.Failure) as error:
+                            server.decky_plugin({**body, 'id': plugin_id})
+                        self.assertEqual(error.exception.status, 400)
+                        with server._jobs_lock:
+                            self.assertNotIn(request_id, server._jobs)
+                    finally:
+                        with server._jobs_lock:
+                            server._jobs.pop(request_id, None)
+            worker.assert_not_called()
+
+    def test_invalid_reviewed_hashes_do_not_reserve_jobs_or_start_workers(self):
+        request_id = 'e' * 32
+        body = {'id': 2, 'acknowledged': True, 'requestId': request_id}
+        cases = [(action, digest) for action in ('install', 'update')
+                 for digest in (False, 1, '', 'A' * 64, 'a' * 63, 'a' * 65, [], {})]
+        cases.append(('remove', 'a' * 64))
+        with patch.object(server, 'busy_thread') as worker:
+            for action, digest in cases:
+                with self.subTest(action=action, digest=digest):
+                    try:
+                        with self.assertRaises(server.Failure) as error:
+                            server.decky_plugin({**body, 'action': action, 'sha256': digest})
+                        self.assertEqual(error.exception.status, 400)
+                        with server._jobs_lock:
+                            self.assertNotIn(request_id, server._jobs)
+                    finally:
+                        with server._jobs_lock:
+                            server._jobs.pop(request_id, None)
+            worker.assert_not_called()
+
+    def test_corrected_request_can_use_id_from_rejected_submission(self):
+        request_id = 'e' * 32
+        body = {'action': 'install', 'id': 2, 'sha256': 'a' * 64,
+                'acknowledged': True, 'requestId': request_id}
+        try:
+            with patch.object(server, 'busy_thread') as worker, \
+                 patch.object(server.frame_decky_store, 'change', return_value={'message': 'Installed once'}) as change:
+                with self.assertRaises(server.Failure) as error:
+                    server.decky_plugin({**body, 'sha256': ''})
+                self.assertEqual(error.exception.status, 400)
+                worker.assert_not_called()
+                first = server.decky_plugin(body)
+                self.assertEqual(first['job'], request_id)
+                self.assertEqual(server.decky_plugin(body), first)
+                self.assertEqual(worker.call_count, 1)
+                # Run only the captured worker function, with store work stubbed;
+                # no real thread, download, SSH or headset action is started.
+                target, *args = worker.call_args.args
+                target(*args)
+                result = server.job_status('id=' + request_id)
+                self.assertTrue(result['done'])
+                self.assertEqual(result['message'], 'Installed once')
+                self.assertEqual(change.call_args.kwargs['reviewed_hash'], 'a' * 64)
+                self.assertEqual(server.decky_plugin(body), first)
+                change.assert_called_once()
+                with self.assertRaises(server.Failure) as conflict:
+                    server.decky_plugin({**body, 'sha256': 'b' * 64})
+                self.assertEqual(conflict.exception.status, 409)
+        finally:
+            with server._jobs_lock:
+                server._jobs.pop(request_id, None)
+
     def test_desktop_lost_post_and_poll_replies_recover_without_resubmitting(self):
         result = subprocess.run(['node', str(Path(__file__).parent / 'page/framey_desktop_store_recovery.mjs')],
                                 capture_output=True, text=True, timeout=15)
