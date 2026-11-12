@@ -739,6 +739,8 @@
       selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
+  const Menu = ({label, className, style, children}) => R.createElement('div', {className, style},
+    label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -840,14 +842,19 @@
   let modalId = 0;
   const renderModals = () => {
     document.getElementById('framey-root').inert = modals.length > 0;
-    modalRoot.render(modals.length ? modals.map((modal,index) =>
-    R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
-      ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
-      role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
-      'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
-      !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
-        onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
+    modalRoot.render(modals.length ? modals.map((modal,index) => {
+      const props=modal.element?.props || {}, isMenu=modal.element?.type===Menu;
+      const title=typeof props.strTitle==='string' ? props.strTitle :
+        isMenu && typeof props.label==='string' && props.label.trim() ? props.label : 'Plugin dialog';
+      const cancelText=isMenu && typeof props.cancelText==='string' && props.cancelText.trim() ? props.cancelText : 'Close';
+      return R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
+        ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
+        role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
+        'aria-label':title},
+        !props.bHideCloseIcon && R.createElement('button', {
+          type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
+          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+    }) : null);
   };
   function modalCallback(modal, name) {
     const registered = modal.rootCallbacks;
@@ -951,7 +958,7 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const openModal = (element, previousFocus=document.activeElement) => {
+  const openModal = (element, previousFocus=document.activeElement, onClosed) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
     const modal = {id:++modalId, previousFocus, source:element};
@@ -966,6 +973,10 @@
         if (modals.length) modals.at(-1).node?.focus();
         else if (modal.previousFocus?.isConnected) modal.previousFocus.focus();
       },0);
+      // Removal retires this notification before plugin code can reenter Close.
+      // Cleanup failures cannot undo dismissal or leave ClosedPromise pending.
+      const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
+      try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
@@ -996,7 +1007,8 @@
       renderModals();
     }}};
   };
-  const showModal = element => openModal(element).handle;
+  const showModal = (element, _parent, props={}) =>
+    openModal(element, document.activeElement, props?.fnOnClose).handle;
   // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
   // Reuse the local shell, retaining only the element after dismissal. A fresh
   // Show remounts it; an already visible menu never gains a duplicate shell.
@@ -1168,7 +1180,7 @@
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup, MenuItem,
+    Menu, MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
