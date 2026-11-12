@@ -574,22 +574,28 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   });
-  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
-    valueSuffix='', resetValue, validValues, notchCount, notchLabels, onChange}) => {
+  const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+    valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
-    const captions = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
-        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min) &&
-        Array.isArray(notchLabels) ? notchLabels.filter(entry=>
+    const hasNotches = Number.isInteger(notchCount) && notchCount>=2 && notchCount<=100 &&
+        Number.isFinite(Number(min)) && Number.isFinite(Number(max)) && Number(max)>Number(min);
+    const captions = hasNotches && Array.isArray(notchLabels) ? notchLabels.filter(entry=>
           entry && typeof entry.label==='string' && Number.isInteger(entry.notchIndex) &&
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description, icon},
+    return R.createElement(Field, {label, description, icon, className},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
       onChange:e=>{const next=Number(e.target.value);if(!disabled && permitted(next))onChange?.(next);}}),
+    // Decorative marks are independent of captions and numeric step/validation.
+    // Use local markup so their visibility does not depend on native CEF ticks.
+    notchTicksVisible===true && hasNotches && R.createElement('span', {'aria-hidden':true,
+      style:{display:'flex',justifyContent:'space-between',padding:'0 8px',pointerEvents:'none'}},
+      Array.from({length:notchCount},(_,index)=>R.createElement('span', {key:index,
+        'data-framey-tick':index,style:{width:1,height:8,background:'currentColor',flexShrink:0}}))),
     captions.length>0 && R.createElement('span', {style:{display:'grid',
       gridTemplateColumns:`repeat(${notchCount}, minmax(0, 1fr))`, gap:'0.25rem'}},
       captions.map((entry,index)=>R.createElement('span', {key:index,
@@ -733,6 +739,8 @@
       selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
+  const Menu = ({label, className, style, children}) => R.createElement('div', {className, style},
+    label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -834,14 +842,19 @@
   let modalId = 0;
   const renderModals = () => {
     document.getElementById('framey-root').inert = modals.length > 0;
-    modalRoot.render(modals.length ? modals.map((modal,index) =>
-    R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
-      ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
-      role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
-      'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
-      !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
-        onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
+    modalRoot.render(modals.length ? modals.map((modal,index) => {
+      const props=modal.element?.props || {}, isMenu=modal.element?.type===Menu;
+      const title=typeof props.strTitle==='string' ? props.strTitle :
+        isMenu && typeof props.label==='string' && props.label.trim() ? props.label : 'Plugin dialog';
+      const cancelText=isMenu && typeof props.cancelText==='string' && props.cancelText.trim() ? props.cancelText : 'Close';
+      return R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
+        ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
+        role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
+        'aria-label':title},
+        !props.bHideCloseIcon && R.createElement('button', {
+          type:'button', disabled:!!modal.running || !!props.bCancelDisabled,
+          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+    }) : null);
   };
   function modalCallback(modal, name) {
     const registered = modal.rootCallbacks;
@@ -942,7 +955,7 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const openModal = (element, previousFocus=document.activeElement) => {
+  const openModal = (element, previousFocus=document.activeElement, onClosed) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
     const modal = {id:++modalId, previousFocus, source:element};
@@ -957,6 +970,10 @@
         if (modals.length) modals.at(-1).node?.focus();
         else if (modal.previousFocus?.isConnected) modal.previousFocus.focus();
       },0);
+      // Removal retires this notification before plugin code can reenter Close.
+      // Cleanup failures cannot undo dismissal or leave ClosedPromise pending.
+      const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
+      try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
@@ -987,7 +1004,8 @@
       renderModals();
     }}};
   };
-  const showModal = element => openModal(element).handle;
+  const showModal = (element, _parent, props={}) =>
+    openModal(element, document.activeElement, props?.fnOnClose).handle;
   // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
   // Reuse the local shell, retaining only the element after dismissal. A fresh
   // Show remounts it; an already visible menu never gains a duplicate shell.
@@ -1155,7 +1173,7 @@
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup, MenuItem,
+    Menu, MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
