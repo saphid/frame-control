@@ -407,8 +407,13 @@ u=h/'.config/systemd/user/frame-control-decky.service'; u.parent.mkdir(parents=T
                         hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 79:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
-                    self.assertEqual(receipt['compatShims'], ['notifications-private-logs'])
+                    self.assertEqual(receipt['compatShims'], ['notifications-private-logs', 'notifications-ipc-eof'])
+                    self.assertEqual(found[0]['compatShims'], receipt['compatShims'])
                     self.assertEqual(found[0]['compatibility']['status'], 'partial')
+                    self.assertEqual(ssh(f'sha256sum {installed}/main.py').split()[0],
+                                     '624b0c4d2c52f6fef1f4b1f36c440b477357cace49d0c026d449f09fb4f83782')
+                    self.assertEqual(ssh(f'sha256sum {installed}/py_modules/framey_decky_ipc.py').split()[0],
+                                     hashlib.sha256((ROOT/'ui/framey_decky_ipc.py').read_bytes()).hexdigest())
                 if plugin['id'] == 93:
                     receipt = json.loads(ssh(f'cat {installed}/.frame-control-store.json'))
                     self.assertEqual(receipt['compatShims'], ['deck-settings-verified-tls', 'deck-settings-ipc-eof'])

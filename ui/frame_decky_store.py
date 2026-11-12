@@ -304,6 +304,9 @@ def apply_script(plugin_id, digest):
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return ('FRAMEY_SURROUND_SOURCE = '+repr(source)+'\n'
                 +'FRAMEY_SURROUND_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY)
+    if plugin_id == 79 and digest == NOTIFICATIONS_DIGEST:
+        ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
+        return 'FRAMEY_NOTIFICATIONS_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
     if plugin_id == 132 and digest == '248294b5d6b9d5a5d635ce35f4b5185ce59d4e4fd59353e24df4b29d74c2ade4':
         ipc = Path(__file__).with_name('framey_decky_ipc.py').read_text(encoding='utf-8')
         return 'FRAMEY_SUGGESTME_IPC_SOURCE = '+repr(ipc)+'\n'+APPLY
@@ -2147,9 +2150,21 @@ def split_by_app(data):
                           b'            logger.error(f"{k}: {v}")\r\n')
                 if main_data.count(old)!=1 or crypto_data.count(env_dump)!=1:
                     raise RuntimeError('Decky Notifications logging source changed')
-                main.write_bytes(main_data.replace(old,new))
+                ipc=globals().get('FRAMEY_NOTIFICATIONS_IPC_SOURCE')
+                if not isinstance(ipc,str) or not ipc:
+                    raise RuntimeError('Missing Decky Notifications child IPC EOF repair')
+                helper=unpacked/'py_modules/framey_decky_ipc.py'
+                if helper.exists(): raise RuntimeError('Decky Notifications child IPC helper collides with archive')
+                compile(ipc,str(helper),'exec')
+                helper.parent.mkdir(exist_ok=True)
+                helper.write_text(ipc,encoding='utf-8')
+                source=(b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                        b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')+main_data.replace(old,new)
+                compile(source,str(main),'exec')
+                main.write_bytes(source)
                 crypto.write_bytes(crypto_data.replace(env_dump,b''))
                 compat_shims.append('notifications-private-logs')
+                compat_shims.append('notifications-ipc-eof')
             # The exact published backend awaits synchronous shutil.rmtree:
             # it deletes the cache then reports TypeError. Restrict deletion
             # to the two directories selected by its UI and their numeric app IDs.
