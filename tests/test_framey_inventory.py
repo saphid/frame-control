@@ -85,6 +85,19 @@ class PluginInventory(unittest.TestCase):
         self.assertEqual(found[1]['version'],'2.0')
         self.assertEqual(found[1]['author'],'Repaired author')
 
+    def test_only_positive_integer_store_ids_claim_inventory_ownership(self):
+        receipt = self.middle/'.frame-control-store.json'
+        for value in (True, False, 0, -1, 43.0, '43', None):
+            with self.subTest(value=value):
+                original = json.dumps({'storeId':value,'sha256':'b'*64})
+                receipt.write_text(original)
+                found = self.scan()
+                self.assertEqual([p['name'] for p in found], ['First','Middle','Last'])
+                self.assertEqual([p['storeId'] for p in found], [42,None,44])
+                self.assertEqual(receipt.read_text(), original)
+        receipt.write_text(json.dumps({'storeId':43,'sha256':'b'*64}))
+        self.assertEqual(self.scan()[1]['storeId'], 43)
+
     def test_empty_objects_keep_existing_fallbacks_and_valid_neighbors(self):
         (self.middle/'plugin.json').write_text('{}')
         (self.middle/'.frame-control-store.json').write_text('{}')
