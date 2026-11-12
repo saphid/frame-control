@@ -416,7 +416,7 @@
         onKeyDown?.(event);
         if (event.key==='Escape' && typeof onCancel==='function' && !disabled && !event.defaultPrevented) {
           const modal=modals.at(-1);
-          if (modal && (modal.running || modal.element?.props?.bCancelDisabled ||
+          if (modal && (modal.running || modalCancelDisabled(modal) ||
               !modal.node?.contains(event.currentTarget))) return;
           // Native Escape is a local cancel action, including from descendants.
           // The nearest handler owns dismissal; do not also cancel the shell.
@@ -846,7 +846,7 @@
       role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
       'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
       !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
+        type:'button', disabled:!!modal.running || modalCancelDisabled(modal),
         onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
   };
   function modalCallback(modal, name) {
@@ -854,8 +854,11 @@
     return registered && typeof registered[name]==='function'
       ? registered[name] : modal.element?.props?.[name];
   }
+  function modalCancelDisabled(modal) {
+    return !!(modal.rootCallbacks?.bCancelDisabled ?? modal.element?.props?.bCancelDisabled);
+  }
   function dismissModal(modal) {
-    if (!modals.includes(modal) || modal.running || modal.element?.props?.bCancelDisabled) return;
+    if (!modals.includes(modal) || modal.running || modalCancelDisabled(modal)) return;
     modalCallback(modal, 'onCancel')?.();
     modal.dismiss();
   }
@@ -1005,7 +1008,7 @@
       Show:()=>{if(!menu.isOpen())menu=openModal(element, opener);},
     };
   };
-  const ModalRoot = ({children, onOK, bOKDisabled, closeModal, onCancel, onEscKeypress,
+  const ModalRoot = ({children, onOK, bOKDisabled, bCancelDisabled, closeModal, onCancel, onEscKeypress,
     frameySetModalBusy, ...props}) => {
     const pending = R.useRef(false);
     const mounted = R.useRef(true);
@@ -1031,12 +1034,16 @@
     // replacement dialogs and effect cleanup retire the old callbacks.
     R.useEffect(() => {
       if (!modal || !modals.includes(modal)) return;
-      const registered = {onCancel, onEscKeypress};
+      const registered = {onCancel, onEscKeypress, bCancelDisabled};
       modal.rootCallbacks = registered;
+      renderModals();
       return () => {
-        if (modal.rootCallbacks===registered) delete modal.rootCallbacks;
+        if (modal.rootCallbacks===registered) {
+          delete modal.rootCallbacks;
+          if (modals.includes(modal)) renderModals();
+        }
       };
-    }, [modal, onCancel, onEscKeypress]);
+    }, [modal, onCancel, onEscKeypress, bCancelDisabled]);
     const markBusy = value => {
       pending.current = value; setBusy(value);
       if (modal && modals.includes(modal)) {modal.running=value; renderModals();}
