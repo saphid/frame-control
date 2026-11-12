@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<style>__OFFICIAL_CSS__</style>
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div><div id="framey-modal"></div>
+<div id="sgdb-wrap" style="font-size:16px"><div id="fixture" class="sgdb-asset-toolbar" style="display:flex;width:512px"></div></div>
+<pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), root=ReactDOM.createRoot(container), writes=[];
+  const flush=callback=>ReactDOM.flushSync(callback);
+  const range=()=>container.querySelector('input[type="range"]');
+  const edit=value=>flush(()=>{
+    Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(range(),String(value));
+    range().dispatchEvent(new Event('input',{bubbles:true}));
+  });
+  // Exact pinned control, numeric limits and CSS rule, with local zoom state
+  // and a recording callback. No artwork search, saved settings or backend.
+  __OFFICIAL_PROPERTIES__
+  const assetType='grid_p';
+  function Published({overrides={}}){
+    const [sliderValue,setSliderValue]=React.useState(120);
+    const handleSliderChange=value=>{writes.push(value);setSliderValue(value);};
+    return React.cloneElement(__OFFICIAL_CONTROL__,overrides);
+  }
+  const render=overrides=>flush(()=>root.render(React.createElement(Published,{overrides})));
+  try {
+    render();
+    let field=container.querySelector('.size-slider');
+    assert(field&&field.contains(range()),'published size-slider class missing from field wrapper');
+    const style=getComputedStyle(field);
+    assert(style.flexGrow==='1'&&style.paddingTop==='8px'&&style.paddingLeft==='16px'&&
+      style.justifyContent==='center','published toolbar CSS rule did not apply');
+    assert(range().min==='100'&&range().max==='200'&&range().step==='5','published limits changed');
+    edit(150);assert(writes.length===1&&writes[0]===150&&range().value==='150','numeric callback changed');
+    render({disabled:true});edit(160);
+    assert(range().disabled&&writes.length===1&&container.querySelector('.size-slider'),
+      'disabled slider lost class or invoked callback');
+    render({className:'size-slider local-extra',label:'Local grid size',description:'Local help',showValue:true});
+    field=container.querySelector('.local-extra');
+    assert(field===container.querySelector('.size-slider')&&field.querySelector('strong').textContent==='Local grid size'&&
+      field.querySelector('small').textContent==='Local help'&&range().getAttribute('aria-label')==='Local grid size',
+      'updated classes lost label/description or moved away from field');
+    assert(field.textContent.includes('150'),'class update changed current slider value');
+    render({className:'replacement'});
+    assert(!container.querySelector('.size-slider')&&!container.querySelector('.local-extra')&&
+      container.querySelector('.replacement')?.contains(range()),'class replacement retained stale tokens');
+    assert(getComputedStyle(container.querySelector('.replacement')).paddingLeft==='0px',
+      'removed class kept published padding');
+    render({className:undefined});
+    assert(!container.querySelector('[class]')&&range().value==='150','class removal changed ordinary slider');
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    flush(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedSteamGridDBSlider:true,publishedToolbarCSSApplied:true,fieldWrapperClass:true,
+      numericCallback:true,disabledGuard:true,updatedClasses:true,labelAndDescriptionRetained:true,
+      classReplacement:true,classRemoval:true,syntheticZoomState:true,realArtworkChanged:false,realFrameContacted:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

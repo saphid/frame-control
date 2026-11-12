@@ -574,7 +574,7 @@
           'aria-label':typeof ariaLabel==='string' ? `Clear ${ariaLabel}` : typeof label==='string' ? `Clear ${label}` : 'Clear text'}, 'Clear'),
       inlineControls);
   });
-  const SliderField = ({label, description, icon, value, min=0, max=100, step=1, disabled, showValue, editableValue,
+  const SliderField = ({label, description, icon, className, value, min=0, max=100, step=1, disabled, showValue, editableValue,
     valueSuffix='', resetValue, validValues, notchCount, notchLabels, notchTicksVisible, onChange}) => {
     const permitted = next => Number.isFinite(next) && next>=Number(min) && next<=Number(max) &&
       (typeof validValues!=='function' || validValues(next));
@@ -585,7 +585,7 @@
           entry.notchIndex>=0 && entry.notchIndex<notchCount).map(entry=>({...entry,
             value:entry.value ?? Number(min)+(Number(max)-Number(min))*entry.notchIndex/(notchCount-1)})) : [];
     const caption = captions.find(entry=>entry.value===value)?.label;
-    return R.createElement(Field, {label, description, icon},
+    return R.createElement(Field, {label, description, icon, className},
     R.createElement('input', {type:'range', value, min, max, step, disabled:!!disabled,
       'aria-label':typeof label==='string'?label:undefined,
       'aria-valuetext':caption,
