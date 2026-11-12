@@ -948,7 +948,7 @@
   };
   const noPatch = () => {const undo=()=>{};undo.unpatch=undo;return undo;};
   class MissingSteamComponent {}
-  const openModal = (element, previousFocus=document.activeElement) => {
+  const openModal = (element, previousFocus=document.activeElement, onClosed) => {
     let resolveClosed;
     const ClosedPromise = new Promise(resolve=>{resolveClosed=resolve;});
     const modal = {id:++modalId, previousFocus, source:element};
@@ -963,6 +963,10 @@
         if (modals.length) modals.at(-1).node?.focus();
         else if (modal.previousFocus?.isConnected) modal.previousFocus.focus();
       },0);
+      // Removal retires this notification before plugin code can reenter Close.
+      // Cleanup failures cannot undo dismissal or leave ClosedPromise pending.
+      const failed = failure => {error.textContent='Dialog close callback failed: '+String(failure?.message || failure);};
+      try {Promise.resolve(onClosed?.()).catch(failed);} catch (failure) {failed(failure);}
     };
     modal.dismiss = () => {
       if (!modals.includes(modal)) return;
@@ -993,7 +997,8 @@
       renderModals();
     }}};
   };
-  const showModal = element => openModal(element).handle;
+  const showModal = (element, _parent, props={}) =>
+    openModal(element, document.activeElement, props?.fnOnClose).handle;
   // Decky's context-menu instance has Hide/Show, distinct from a modal handle.
   // Reuse the local shell, retaining only the element after dismissal. A fresh
   // Show remounts it; an already visible menu never gains a duplicate shell.
