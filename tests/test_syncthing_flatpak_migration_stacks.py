@@ -7,7 +7,7 @@ import importlib.util
 import io
 import json
 import os
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 import sys
 import tempfile
 import threading
@@ -277,27 +277,32 @@ class MigrationStacks(unittest.TestCase):
                 self.observer.guest_observer({}, [])
 
     def test_guest_refuses_changed_sampler_loader_or_observer_before_install(self):
-        values = {'/input/migration-py-spy': b'sampler', '/input/PluginLoader': b'loader',
-                  self.observer.__file__: b'observer'}
+        values = {'migration-py-spy': b'sampler', 'PluginLoader': b'loader',
+                  'syncthing_migration_stacks.py': b'observer'}
         metadata = dict(architecture='x86_64', **{
             key: hashlib.sha256(value).hexdigest() for key, value in
             [('executableSha256', b'sampler'), ('loaderSha256', b'loader'),
              ('observerSha256', b'observer')]})
-        for changed in values:
-            def read_bytes(path):
-                return b'tampered' if str(path) == changed else values[str(path)]
-            def read_text(path):
-                return ('Frame Control Flatpak VM v1\n' if str(path) == '/framey-owned-vm'
-                        else 'systemd\n')
-            with self.subTest(changed=changed), \
-                    patch.object(self.observer.os, 'getuid', return_value=0, create=True), \
-                    patch.object(self.observer.os, 'getpid', return_value=42), \
-                    patch.object(self.observer.os, 'uname', return_value=Mock(machine='x86_64'), create=True), \
-                    patch.object(Path, 'read_text', read_text), \
-                    patch.object(Path, 'read_bytes', read_bytes), patch.object(Path, 'open') as opened:
-                with self.assertRaisesRegex(ValueError, 'provenance mismatch'):
-                    self.observer.guest_observer(metadata, [])
-                opened.assert_not_called()
+        # Emulate either runner's path spelling without touching its filesystem.
+        for flavour in (PurePosixPath, PureWindowsPath):
+            for changed in values:
+                def read_bytes(path):
+                    return b'tampered' if path.name == changed else values[path.name]
+                def read_text(path):
+                    return ('Frame Control Flatpak VM v1\n' if path.name == 'framey-owned-vm'
+                            else 'systemd\n')
+                opened = Mock()
+                guest_path = type('GuestPath', (flavour,), dict(
+                    read_text=read_text, read_bytes=read_bytes, open=opened))
+                with self.subTest(flavour=flavour.__name__, changed=changed), \
+                        patch.object(self.observer.os, 'getuid', return_value=0, create=True), \
+                        patch.object(self.observer.os, 'getpid', return_value=42), \
+                        patch.object(self.observer.os, 'uname', return_value=Mock(machine='x86_64'), create=True), \
+                        patch.object(self.observer, 'Path', guest_path), \
+                        patch.object(self.observer, '__file__', '/repo/syncthing_migration_stacks.py'):
+                    with self.assertRaisesRegex(ValueError, 'provenance mismatch'):
+                        self.observer.guest_observer(metadata, [])
+                    opened.assert_not_called()
 
     @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest sampler uses Linux pipes')
     def test_real_sampler_subprocess_has_hard_pipe_bounds_and_is_reaped(self):
