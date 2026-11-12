@@ -16,6 +16,14 @@ plugins → Open official store**. Search the catalogue, confirm an install, and
 choose **Open panel** from the installed plugin list. The panel contains the
 plugin's own controls and settings. Update and Remove affect only plugin
 folders that Frame Control's store manager installed.
+
+Update and Remove recheck ownership under the transaction lock using a regular
+store receipt file with a matching positive integer store ID. A symlinked,
+unreadable or malformed receipt cannot authorize a change. Refused operations
+leave the plugin and its data in place and do not stop the loader. Inventory
+still lists readable plugin manifests without claiming store ownership when
+their receipt or store ID is invalid.
+
 Use **Scroll plugin up** and **Scroll plugin down** above an open panel when
 wheel scrolling is unavailable. Point at a scrollable part of the plugin first
 to move that section; otherwise the buttons move the panel document. Each
