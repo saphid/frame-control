@@ -274,7 +274,7 @@ class MigrationStacks(unittest.TestCase):
     def test_host_and_unprivileged_invocation_are_refused(self):
         with patch.object(self.observer.os, 'getuid', return_value=1100, create=True):
             with self.assertRaisesRegex(RuntimeError, 'private systemd guest'):
-                self.observer.guest_observer({}, [])
+                self.observer.guest_observer({})
 
     def test_guest_refuses_changed_sampler_loader_or_observer_before_install(self):
         values = {'migration-py-spy': b'sampler', 'PluginLoader': b'loader',
@@ -301,7 +301,7 @@ class MigrationStacks(unittest.TestCase):
                         patch.object(self.observer, 'Path', guest_path), \
                         patch.object(self.observer, '__file__', '/repo/syncthing_migration_stacks.py'):
                     with self.assertRaisesRegex(ValueError, 'provenance mismatch'):
-                        self.observer.guest_observer(metadata, [])
+                        self.observer.guest_observer(metadata)
                     opened.assert_not_called()
 
     @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest sampler uses Linux pipes')

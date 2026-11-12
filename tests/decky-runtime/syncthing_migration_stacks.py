@@ -213,7 +213,7 @@ class Observer:
             raise RuntimeError('Migration stack observer did not stop')
 
 
-def guest_observer(metadata, user_command):
+def guest_observer(metadata):
     """Only the marked systemd guest root can install and launch the sampler."""
     if (os.getuid() != 0 or os.getpid() == 1
             or Path('/framey-owned-vm').read_text() != 'Frame Control Flatpak VM v1\n'
@@ -230,4 +230,10 @@ def guest_observer(metadata, user_command):
     with sampler.open('xb') as stream:
         stream.write(data)
     sampler.chmod(0o700)
-    return Observer(sampler, metadata, user_command)
+    # A property query needs the tester's bus credentials, not a PAM login
+    # session for every poll. setpriv execs the query rather than leaving a
+    # runuser parent whose child could outlive the query's three-second limit.
+    query_user = ['setpriv', '--reuid=1100', '--regid=1100', '--clear-groups', '--',
+                  'env', 'XDG_RUNTIME_DIR=/run/user/1100',
+                  'DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1100/bus']
+    return Observer(sampler, metadata, query_user)
