@@ -739,6 +739,8 @@
       selected && R.createElement('span', {'aria-hidden':true}, ' ✓'));
   const MenuGroup = ({label, disabled, children}) => R.createElement('fieldset', {disabled:!!disabled},
     label && R.createElement('legend', null, label), children);
+  const Menu = ({label, className, style, children}) => R.createElement('div', {className, style},
+    label != null && R.createElement('h3', null, label), children);
   const ConfirmModal = ({strTitle, strDescription, strOKButtonText, strCancelButtonText,
     strMiddleButtonText, onOK, onCancel, onMiddleButton, closeModal, frameySetModalBusy,
     bOKDisabled, bCancelDisabled, bMiddleDisabled, bAlertDialog, children}) => {
@@ -840,14 +842,19 @@
   let modalId = 0;
   const renderModals = () => {
     document.getElementById('framey-root').inert = modals.length > 0;
-    modalRoot.render(modals.length ? modals.map((modal,index) =>
-    R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
-      ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
-      role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
-      'aria-label':typeof modal.element?.props?.strTitle==='string' ? modal.element.props.strTitle : 'Plugin dialog'},
-      !modal.element?.props?.bHideCloseIcon && R.createElement('button', {
-        type:'button', disabled:!!modal.running || !!modal.element?.props?.bCancelDisabled,
-        onClick:()=>dismissModal(modal)}, 'Close'), modal.element)) : null);
+    modalRoot.render(modals.length ? modals.map((modal,index) => {
+      const props=modal.element?.props || {}, isMenu=modal.element?.type===Menu;
+      const title=typeof props.strTitle==='string' ? props.strTitle :
+        isMenu && typeof props.label==='string' && props.label.trim() ? props.label : 'Plugin dialog';
+      const cancelText=isMenu && typeof props.cancelText==='string' && props.cancelText.trim() ? props.cancelText : 'Close';
+      return R.createElement('section', {key:modal.id, className:'framey-dialog', tabIndex:-1,
+        ref:node=>{modal.node=node;}, hidden:index!==modals.length-1,
+        role:'dialog', 'aria-modal':index===modals.length-1 ? true : undefined,
+        'aria-label':title},
+        !props.bHideCloseIcon && R.createElement('button', {
+          type:'button', disabled:!!modal.running || !!props.bCancelDisabled,
+          onClick:()=>dismissModal(modal)}, cancelText), modal.element);
+    }) : null);
   };
   function modalCallback(modal, name) {
     const registered = modal.rootCallbacks;
@@ -1166,7 +1173,7 @@
     DialogLabel:passthrough('label'), DialogControlsSection:passthrough('section'),
     DialogControlsSectionHeader:passthrough('h3'), ModalRoot, SimpleModal,
     ModalPosition:passthrough('div'),
-    Menu:passthrough('div'), MenuGroup, MenuItem,
+    Menu, MenuGroup, MenuItem,
     ProgressBar, ProgressBarItem, ProgressBarWithInfo,
     gamepadDialogClasses:{}, quickAccessMenuClasses:{}, gamepadTabbedPageClasses:{},
     gamepadSliderClasses:{}, gamepadContextMenuClasses:{}, scrollPanelClasses:{},
