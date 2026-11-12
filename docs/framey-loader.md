@@ -162,7 +162,12 @@ work in VR. Storage Cleaner rendered an
 Its cleanup actions were not tested; they may remove local game saves.
 
 Framey also supplies local tabs/sidebar pages, spinners, dialog/menu wrappers
-and progress bars. Its explicit SteamClient subscription fallbacks return
+and progress bars. `SidebarNavigation` preserves each visible page's React
+`icon` beside its title in the local navigation button, including icon props
+and later updates. Separators and pages with `visible: false` do not become
+buttons. This is local page selection; it does not recreate Steam's sidebar
+layout or verify controller navigation.
+Its explicit SteamClient subscription fallbacks return
 disposable handles without emitting fabricated events. Running-game reads and
 lifetime notifications use the scoped bridge described below; power, app launch
 and hardware mutation methods are not supplied. Other live Steam stores require integration
