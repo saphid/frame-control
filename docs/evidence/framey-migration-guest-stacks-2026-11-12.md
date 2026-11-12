@@ -25,6 +25,9 @@ Further captures occur at 10, 30 and 60 seconds after the observer first sees
 the service deactivating. These times are relative to that observation, not
 the exact start of the user's stop command. A clean stop before a window
 does not require a capture at that window.
+A cgroup that disappears between a stop-state query and sampling is retained
+as an explicit diagnostic gap, with no stack text. It cannot replace the
+required running baseline.
 
 Each snapshot samples at most eight cgroup processes. Each sampler has a
 two-second deadline and drains at most 16,384 stdout bytes and 4,096 stderr

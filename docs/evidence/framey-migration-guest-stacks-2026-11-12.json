@@ -10,7 +10,7 @@
     "scripts/framey-test-syncthing-service.py": "33aa463ee9e10fdf2067987d3676b4071c7a212d3c632911e35d726cab6dd3ee",
     "tests/decky-runtime/Containerfile.flatpak-vm": "447bf47a7f0c5f27fd90a825f23a676e1ce4fdff72ab42f115c0c92f9fd13060",
     "tests/decky-runtime/syncthing_migration_stacks.py": "721b4c8dd0b89aa962144e7ad0c74ab24f8ac63adb36323ae488a3e81746fdc5",
-    "scripts/framey-test-syncthing-flatpak-package.py": "9d54074f5b6744dfc9ed027bb491dd50d69fee71229f99209c39aee44a9e1855"
+    "scripts/framey-test-syncthing-flatpak-package.py": "ae4bfbecd29d872629a7c92b227b80980ec8d75332ee8d25f2a6a1869ea4da2c"
   },
   "sampler": {
     "url": "https://github.com/benfred/py-spy/releases/download/v0.4.3/py_spy-0.4.3-py2.py3-none-manylinux1_x86_64.manylinux_2_5_x86_64.whl",

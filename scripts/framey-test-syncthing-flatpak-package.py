@@ -238,14 +238,19 @@ def verify_migration_stacks(report, metadata):
         raise ValueError('Unexpected migration capture windows')
     python_baseline = False
     for snapshot in snapshots:
-        if snapshot.get('controlGroup') != observer.GROUP or len(snapshot.get('processes', [])) > observer.MAX_PIDS:
-            raise ValueError('Unbound migration snapshot')
         if snapshot['window'] == 'baseline':
             if snapshot.get('activeState') != 'active' or snapshot.get('pythonServerReady') is not True:
                 raise ValueError('Stop-time sample cannot replace an active baseline')
         elif (snapshot.get('activeState') != 'deactivating'
               or snapshot.get('observedDeactivationSeconds', -1) < snapshot['window']):
             raise ValueError('Premature migration stop sample')
+        # A clean stop can remove the cgroup between the state query and dump.
+        # Retain that diagnostic gap, never treat it as a captured stack.
+        if (snapshot['window'] != 'baseline' and snapshot.get('error')
+                and not any(name in snapshot for name in ('processes', 'stdout', 'stderr'))):
+            continue
+        if snapshot.get('controlGroup') != observer.GROUP or len(snapshot.get('processes', [])) > observer.MAX_PIDS:
+            raise ValueError('Unbound migration snapshot')
         for process in snapshot.get('processes', []):
             if process.get('identityUnchanged') is not True:
                 if 'stdout' in process or 'stderr' in process:

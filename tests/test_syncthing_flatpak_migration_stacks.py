@@ -260,6 +260,17 @@ class MigrationStacks(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, 'No identity-bound'):
                 self.package.verify_migration_stacks(report, report['sampler'])
 
+    def test_cgroup_disappearance_during_stop_is_an_explicit_gap_without_stack_text(self):
+        report = self.report()
+        missing = dict(window=10, activeState='deactivating', observedDeactivationSeconds=10.1,
+                       error='FileNotFoundError: migration cgroup disappeared')
+        report['snapshots'].append(missing)
+        self.package.verify_migration_stacks(report, report['sampler'])
+        for name, value in (('stdout', 'unbound'), ('processes', [self.sample()['processes'][0]])):
+            report['snapshots'][-1] = dict(missing, **{name: value})
+            with self.assertRaises(ValueError):
+                self.package.verify_migration_stacks(report, report['sampler'])
+
     def test_host_and_unprivileged_invocation_are_refused(self):
         with patch.object(self.observer.os, 'getuid', return_value=1100, create=True):
             with self.assertRaisesRegex(RuntimeError, 'private systemd guest'):
