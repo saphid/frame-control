@@ -70,6 +70,7 @@ def main():
     parser.add_argument('version', nargs='?', default='-')
     parser.add_argument('--reproduce-desktop-apps-unload-regression', action='store_true')
     parser.add_argument('--reproduce-suggestme-unload-regression', action='store_true')
+    parser.add_argument('--reproduce-notifications-unload-regression', action='store_true')
     parser.add_argument('--reproduce-steam-status-unload-regression', action='store_true')
     parser.add_argument('--reproduce-localsend-unload-regression', action='store_true')
     parser.add_argument('--reproduce-download-all-unload-regression', action='store_true')
@@ -215,6 +216,16 @@ def main():
         assert managed.startswith(prefix)
         previous = managed[len(prefix):]
         assert hashlib.sha256(previous).hexdigest() == frame_decky_store.EMU_MANAGED_MAIN
+        (plugin/'main.py').write_bytes(previous)
+        (plugin/'py_modules/framey_decky_ipc.py').unlink()
+    if args.reproduce_notifications_unload_regression:
+        assert record['id'] == 79
+        prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                  b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+        managed = (plugin/'main.py').read_bytes()
+        assert managed.startswith(prefix)
+        previous = managed[len(prefix):]
+        assert hashlib.sha256(previous).hexdigest() == 'a5d082d2521a0a52a0f1077f0c2ba773b7b22d139896c82da351772c36ede398'
         (plugin/'main.py').write_bytes(previous)
         (plugin/'py_modules/framey_decky_ipc.py').unlink()
     if args.reproduce_battery_tracker_unload_regression:
@@ -1922,17 +1933,31 @@ def main():
                 assert len(notifications) == 1 and notifications[0]['title'] == 'Private title', notifications
                 assert legacy('notifications_clear') is None
                 assert legacy('notification_list') == []
-                backend.send_signal(signal.SIGTERM)
-                backend.wait(timeout=8)
-                backend = subprocess.Popen([str(loader)], env=env, stdout=log, stderr=log,
-                                           start_new_session=True)
-                processes.append(backend)
-                until_ready(lambda: rpc('loader/get_plugins'), 'restarted Decky discovery')
-                assert until_ready(fingerprint_when_ready, 'persisted fingerprint') == fingerprint
-                assert legacy('notification_list') == []
-                assert not Path('/tmp/notifications.log').exists()
-                report['result'] = ('discovery, private certificate, empty device list and synthetic notification '
-                    'read/clear/restart passed; pairing, live notifications, Frame and VR unverified')
+                installed = (plugin/'main.py').read_bytes()
+                prefix = (b'from framey_decky_ipc import install as _framey_install_ipc_eof\n'
+                          b'_framey_install_ipc_eof()\ndel _framey_install_ipc_eof\n')
+                previous = installed if args.reproduce_notifications_unload_regression else installed[len(prefix):]
+                assert hashlib.sha256(previous).hexdigest() == 'a5d082d2521a0a52a0f1077f0c2ba773b7b22d139896c82da351772c36ede398'
+                if not args.reproduce_notifications_unload_regression:
+                    assert installed.startswith(prefix)
+                    assert (plugin/'py_modules/framey_decky_ipc.py').read_bytes() == (ROOT/'ui/framey_decky_ipc.py').read_bytes()
+                with zipfile.ZipFile(io.BytesIO(data)) as original:
+                    for entry in original.infolist():
+                        relative = entry.filename.removeprefix(record['folder']+'/')
+                        if not entry.is_dir() and relative not in ('main.py', 'py_modules/connector/crypto.py'):
+                            assert (plugin/relative).read_bytes() == original.read(entry), relative
+                report['backendSha256'] = hashlib.sha256(installed).hexdigest()
+                report['ipcAdapterSha256'] = (None if args.reproduce_notifications_unload_regression else
+                    hashlib.sha256((plugin/'py_modules/framey_decky_ipc.py').read_bytes()).hexdigest())
+                import notifications_private
+                notifications_private.probe(backend, loader, env, log, processes, legacy, rpc,
+                    until_ready, fingerprint_when_ready, fingerprint, report,
+                    regression=args.reproduce_notifications_unload_regression)
+                report['result'] = ('prior managed Notifications peer EOF and forced kill reproduced; negative control only'
+                    if args.reproduce_notifications_unload_regression else
+                    'discovery, private certificate, empty device list and synthetic notification read/clear, '
+                    'peer EOF readback, restart and two clean parent-only unloads passed; '
+                    'pairing, live notifications, Frame and VR unverified')
             elif case['probe'] == 'radio-local':
                 # Exercise HTTP behavior and prove managed RadiYo rejects a
                 # self-signed HTTPS endpoint. No station or audio opens.
