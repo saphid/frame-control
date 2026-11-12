@@ -226,6 +226,7 @@ def verify_migration_stacks(report, metadata):
     observer = module('migration_observer', ROOT / 'tests/decky-runtime/syncthing_migration_stacks.py')
     if (report.get('sampler') != metadata or report.get('unit') != observer.UNIT
             or report.get('observerJoined') is not True
+            or report.get('queryHelperJoined') is not True
             or report.get('deactivationTimeBasis') != 'first observed deactivating state'
             or report.get('changesStopBudget') is not False
             or report.get('historicalCauseEstablished') is not False):

@@ -9,6 +9,7 @@ import json
 import os
 from pathlib import Path, PurePosixPath, PureWindowsPath
 import sys
+import subprocess
 import tempfile
 import threading
 import unittest
@@ -68,6 +69,7 @@ class MigrationStacks(unittest.TestCase):
     def report(self):
         metadata = {'executableSha256': 'a' * 64, 'architecture': 'x86_64'}
         return dict(sampler=metadata, unit=self.observer.UNIT, observerJoined=True,
+                    queryHelperJoined=True,
                     deactivationTimeBasis='first observed deactivating state',
                     changesStopBudget=False, historicalCauseEstablished=False,
                     snapshots=[dict(window='baseline', activeState='active', pythonServerReady=True,
@@ -180,14 +182,12 @@ class MigrationStacks(unittest.TestCase):
         capture.assert_called_once()
 
     def test_readiness_checks_status_without_reading_an_auth_token(self):
-        properties = '\n'.join(k+'='+v for k, v in self.properties.items()
-                               if k != 'PythonReady')
+        properties = {k:v for k, v in self.properties.items() if k != 'PythonReady'}
         response = Mock(status=200)
         connection = Mock()
         connection.getresponse.return_value = response
         observer = self.observer.Observer(Path('/unused'), {}, ['owned-user'])
-        with patch.object(self.observer.subprocess, 'run', return_value=Mock(
-                returncode=0, stdout=properties)), patch.object(
+        with patch.object(observer.transport, 'query', return_value=properties), patch.object(
                 self.observer.http.client, 'HTTPConnection', return_value=connection):
             self.assertTrue(observer.properties()['PythonReady'])
         connection.request.assert_called_once_with('HEAD', '/auth/token')
@@ -232,6 +232,75 @@ class MigrationStacks(unittest.TestCase):
         self.assertTrue(observer.report['observerJoined'])
         self.assertFalse(observer.thread.is_alive())
 
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_persistent_query_reuses_one_helper_for_multiple_requests(self):
+        properties = {k:v for k,v in self.properties.items() if k != 'PythonReady'}
+        code = ('import json,sys\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'for request in sys.stdin:\n'
+                ' assert request=="query\\n"\n'
+                ' print('+repr(json.dumps(properties))+',flush=True)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        self.addCleanup(query.close)
+        query.start()
+        pid = query.process.pid
+        self.assertEqual(query.query(), properties)
+        self.assertEqual(query.query(), properties)
+        self.assertEqual(query.process.pid, pid)
+        query.close()
+        self.assertIsNotNone(query.process.poll())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_query_timeout_reaps_helper_and_cannot_consume_a_late_reply(self):
+        code = ('import json,sys,time\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'sys.stdin.readline()\ntime.sleep(60)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        self.addCleanup(query.close)
+        query.start()
+        read = query.read
+        with patch.object(query, 'read', side_effect=lambda _: read(.1)):
+            with self.assertRaises(TimeoutError):
+                query.query()
+        self.assertIsNotNone(query.process.poll())
+        with self.assertRaisesRegex(RuntimeError, 'unavailable'):
+            query.query()
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_oversized_query_and_startup_replies_are_bounded_and_reaped(self):
+        for startup in (False, True):
+            with self.subTest(startup=startup):
+                code = 'import json,sys\n'
+                if not startup:
+                    code += 'print(json.dumps({"ready":True}),flush=True)\nsys.stdin.readline()\n'
+                code += 'print("x"*5000,flush=True)\n'
+                query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+                self.addCleanup(query.close)
+                with self.assertRaisesRegex(ValueError, 'Oversized'):
+                    query.start()
+                    query.query()
+                self.assertIsNotNone(query.process.poll())
+
+    @unittest.skipUnless(sys.platform.startswith('linux'), 'Guest helper uses Linux pipes')
+    def test_probe_failure_joins_real_query_helper(self):
+        code = ('import json,sys\nprint(json.dumps({"ready":True}),flush=True)\n'
+                'for request in sys.stdin: print("{}",flush=True)\n')
+        query = self.observer.UnitQuery([], executable=sys.executable, helper=code)
+        observer = self.observer.Observer(Path('/unused'), {}, [])
+        observer.transport = query
+        with self.assertRaisesRegex(RuntimeError, 'user probe'):
+            with observer:
+                raise RuntimeError('user probe')
+        self.assertTrue(observer.report['observerJoined'])
+        self.assertTrue(observer.report['queryHelperJoined'])
+        self.assertIsNotNone(query.process.poll())
+
+    def test_broken_query_pipe_does_not_bypass_reaping(self):
+        query = self.observer.UnitQuery([])
+        query.process = Mock()
+        query.process.stdin.close.side_effect = BrokenPipeError
+        query.close()
+        query.process.wait.assert_called_once_with(timeout=1)
+        query.process.stdout.close.assert_called_once()
+
     def test_valid_fixture_proof_is_not_a_historical_cause_claim(self):
         report = self.report()
         self.package.verify_migration_stacks(report, report['sampler'])
@@ -240,6 +309,7 @@ class MigrationStacks(unittest.TestCase):
     def test_proof_rejects_missing_identity_tampered_stacks_and_incomplete_cleanup(self):
         original = self.report()
         changes = [lambda r: r.update(observerJoined=False),
+                   lambda r: r.update(queryHelperJoined=False),
                    lambda r: r.update(deactivationTimeBasis='exact stop invocation'),
                    lambda r: r.update(historicalCauseEstablished=True),
                    lambda r: r['snapshots'][0].update(activeState='deactivating'),

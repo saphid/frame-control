@@ -18,12 +18,14 @@ samples UID 1100 processes in the exact migration Decky service cgroup.
 PID start ticks, all four UIDs and cgroup membership must agree before and
 after every dump. A changed or vanished process loses its captured text.
 The observer never signals Decky or changes the normal 90-second stop budget.
-Its read-only unit queries use `setpriv` with UID/GID 1100 and no supplementary
-groups. Each query replaces that wrapper with `systemctl`, avoiding a separate
-PAM login session and a surviving `runuser` child after a query timeout. The
-unprivileged migration probe keeps its existing `runuser` launch. This changes
-the diagnostic query transport; it does not establish the historical timeout
-cause or prove that ARM64 query timeouts have been eliminated.
+Its read-only unit queries use one persistent Python D-Bus client, launched
+through `setpriv` with UID/GID 1100 and no supplementary groups. This avoids
+starting `systemctl` for every poll. The helper has a 15-second startup bound,
+a three-second request deadline, a 4,096-byte reply limit and explicit cleanup.
+Missing or concurrently removed units return no properties; bus failures stay
+errors. The unprivileged migration probe keeps its existing `runuser` launch.
+This changes diagnostic transport; it does not establish the historical
+timeout cause or prove that ARM64 query timeouts have been eliminated.
 
 The first capture requires an active service and a ready Python HTTP server.
 A status-only `HEAD /auth/token` request does not read or retain a token.
