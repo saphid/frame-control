@@ -640,12 +640,15 @@ def decky(body):
 def decky_plugin(body):
     action = body.get('action')
     plugin_id = body.get('id')
-    if action not in ('install', 'update', 'remove') or type(plugin_id) is not int:
+    if action not in ('install', 'update', 'remove') or type(plugin_id) is not int or plugin_id <= 0:
         raise Failure('Choose an official store plugin and action', 400)
     if body.get('acknowledged') is not True:
         raise Failure('Confirm that store plugins run code as your Frame user', 400)
     reviewed_hash = body.get('sha256')
     installed_hash = body.get('installedSha256')
+    if reviewed_hash is not None and (action == 'remove' or not isinstance(reviewed_hash, str)
+                                      or not frame_decky_store.SHA.fullmatch(reviewed_hash)):
+        raise Failure('Invalid reviewed store version', 400)
     if installed_hash is not None and (action == 'install' or not isinstance(installed_hash, str)
                                        or not frame_decky_store.SHA.fullmatch(installed_hash)):
         raise Failure('Invalid reviewed installed version', 400)
