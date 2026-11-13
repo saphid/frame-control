@@ -1,0 +1,16 @@
+{
+  "bindable_udp_ports": [
+    15099,
+    15101,
+    15102,
+    15103,
+    15105
+  ],
+  "remote_task_ffmpeg_and_stimulus_processes": 0,
+  "steam_and_vrcompositor_running": true,
+  "battery_percent": 98,
+  "headset_lock_released": true,
+  "guest_task_ssh_host_block_removed": true,
+  "temporary_ssh_bridge_stopped": true,
+  "persistent_headset_authentication_changes": false
+}

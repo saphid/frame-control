@@ -1,0 +1,326 @@
+{
+  "timeUtc": "2026-10-26T02:23:08.939647+00:00",
+  "theme": "Detached read-only Steam library and current-user context",
+  "baselineMain": "3921e59",
+  "hostFileSha256": "3f70e9769c6c95d39cfa329ccf3f822df85d411e9295bdf888508b4738679e9d",
+  "realFrame": {
+    "platform": "Frame OS 0.5.6 ARM64",
+    "path": "SSH via lxso2; Steam SharedJSContext CDP",
+    "lock": "/tmp/frame-test.lock atomic mkdir; matching owner released in finally after every probe",
+    "apps": 1106,
+    "games": 895,
+    "compactBytesWithoutUser": 88451,
+    "invalidRows": 0,
+    "missingGameOverviews": 0,
+    "currentUser": "17-digit string verified; value withheld",
+    "mutations": "none; no wake, service, setting, screenshot or library changes; no device artifacts created",
+    "limits": "read-only CEF projection, not an official backend or worn-VR test"
+  },
+  "browser": {
+    "mode": "opaque iframe Chromium; detached real Frame snapshot replay; all backend/network actions denied",
+    "attempted": 116,
+    "initializerReady": 101,
+    "failed": 15,
+    "initializerGains": [
+      46,
+      53,
+      66
+    ],
+    "regressions": [],
+    "focused": [
+      {
+        "id": 37,
+        "name": "Discord Status",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 46,
+        "name": "Steamback",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "TypeError: saveInfos.map is not a function"
+          }
+        ],
+        "methods": [
+          "set_account_id",
+          "get_saveinfos"
+        ],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 53,
+        "name": "Shotty",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "set_id_map_fronend"
+        ],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 66,
+        "name": "PlayTime",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Impossible to get \"RunningApps\" observe. Events will not be attached."
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Unable to get settings, saving defaults Error: Not found"
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Failed to set current user: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "%c PlayTime %c ERROR  background: #16a085; color: black; background: #FF000040; Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "set_current_user",
+          "fetch_playtime_information",
+          "statistics_for_last_two_weeks",
+          "daily_statistics_for_period"
+        ],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 93,
+        "name": "Deck Settings",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:AuthorFooter] Error fetching avatar image: Error: Decky proxy fetch is unavailable in Framey"
+          },
+          {
+            "kind": "error",
+            "message": "[decky-game-settings:GameSelectView] Error fetching installed games: Error: Read-only compatibility audit: live Steam API blocked"
+          }
+        ],
+        "methods": [],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 132,
+        "name": "SuggestMe",
+        "ready": true,
+        "error": null,
+        "logs": [
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load config: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load library status: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load play next list: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load excluded games: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load filter presets: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load history: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load non-steam info: Error: Read-only compatibility audit: backend method blocked"
+          },
+          {
+            "kind": "error",
+            "message": "[SuggestMe] Failed to load collections: Error: Read-only compatibility audit: backend method blocked"
+          }
+        ],
+        "methods": [
+          "log_message",
+          "get_config",
+          "get_library_status",
+          "get_play_next_list",
+          "get_excluded_games",
+          "get_filter_presets",
+          "get_suggestion_history",
+          "get_non_steam_games",
+          "get_collections",
+          "get_available_genres",
+          "get_available_tags",
+          "get_available_community_tags"
+        ],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 134,
+        "name": "Deck Progress Tracker",
+        "ready": true,
+        "error": null,
+        "logs": [],
+        "methods": [
+          "get_settings",
+          "get_tag_statistics"
+        ],
+        "library": "snapshot replay"
+      },
+      {
+        "id": 135,
+        "name": "Deck Shelves",
+        "ready": false,
+        "error": "Failed to resolve module specifier \"./chunks/pluginApi-B8sV7970.js\". Invalid relative url or base scheme isn't hierarchical.",
+        "logs": [],
+        "methods": [],
+        "library": "snapshot replay"
+      }
+    ]
+  },
+  "fakeFrame": {
+    "attempted": 116,
+    "installedRemoved": 60,
+    "expectedBlockers": 56,
+    "backendExecution": "stubbed",
+    "cleanup": "private Compose containers/network/volumes removed"
+  },
+  "localBackends": {
+    "timeUtc": "2026-10-26T02:18:51.848256+00:00",
+    "verification": "local Chromium + actual Decky 3.3.0 amd64, detached real Frame SSH snapshot; no worn VR",
+    "calls": [
+      {
+        "id": 46,
+        "method": "set_account_id",
+        "resultType": "dict",
+        "resultCount": 2
+      },
+      {
+        "id": 46,
+        "method": "get_saveinfos",
+        "resultType": "dict",
+        "resultCount": 2
+      },
+      {
+        "id": 66,
+        "method": "set_current_user",
+        "resultType": "NoneType"
+      },
+      {
+        "id": 66,
+        "method": "statistics_for_last_two_weeks",
+        "resultType": "list",
+        "resultCount": 0
+      },
+      {
+        "id": 66,
+        "method": "fetch_playtime_information",
+        "resultType": "list",
+        "resultCount": 0
+      },
+      {
+        "id": 66,
+        "method": "daily_statistics_for_period",
+        "resultType": "dict",
+        "resultCount": 3
+      },
+      {
+        "id": 66,
+        "method": "fetch_playtime_information",
+        "resultType": "list",
+        "resultCount": 0
+      },
+      {
+        "id": 66,
+        "method": "statistics_for_last_two_weeks",
+        "resultType": "list",
+        "resultCount": 0
+      }
+    ],
+    "runtime": {
+      "tag": "v3.3.0",
+      "name": "PluginLoader",
+      "digest": "sha256:e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181"
+    },
+    "legacyReadback": {
+      "plugin": 46,
+      "method": "get_saveinfos",
+      "replyType": 1,
+      "success": true,
+      "saveInfoCount": 0
+    }
+  },
+  "uiChecks": {
+    "Steamback": "Supported games panel, actual private backend set_account_id and get_saveinfos returned successfully; empty isolated Steam save data",
+    "PlayTime": "Statistics panel (empty database) and routed General settings/tabs rendered; actual private backend selected user and returned statistics",
+    "Deck Settings": "Installed game picker rendered real Frame install-folder/name snapshot; search modal rendered",
+    "Shotty": "Initializer repaired; actual Decky 3.3.0 backend fails importing unused click.get_app_dir: ModuleNotFoundError; no screenshot methods invoked"
+  },
+  "notVerified": [
+    "Real ARM64 official backends in this theme",
+    "Worn VR/controllers/keyboard",
+    "Live MobX or running-game observations",
+    "Steamback backups/restores and automatic notifications",
+    "PlayTime automatic recording, existing databases or account switches while panel remains open",
+    "Deck Settings remote reports/proxy fetch and settings changes",
+    "Shotty screenshot aggregation/rescue"
+  ],
+  "cleanup": {
+    "localContainer": "stopped/removed; docker ps -a matching name empty",
+    "headsetLockReleased": true,
+    "httpHelpers": "three task-local HTTP servers stopped"
+  },
+  "plugins": [
+    {
+      "id": 37,
+      "name": "Discord Status",
+      "version": "1.5.0",
+      "sha256": "00a45dd919abb6e050685e1e408ce8023b9c4a09d6e91ba528d50aed2a63bf45"
+    },
+    {
+      "id": 46,
+      "name": "Steamback",
+      "version": "1.0.0-1",
+      "sha256": "ed5f2fbb47cdfc3aa9a4349a139ab20c29976117a3be0de7e8a588bb265ee7f3"
+    },
+    {
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe"
+    },
+    {
+      "id": 66,
+      "name": "PlayTime",
+      "version": "3.2.5",
+      "sha256": "10fc3beea48991c77cb02867e919b618d4cd6d5e9c6a6d0ccd5266c13214039f"
+    },
+    {
+      "id": 93,
+      "name": "Deck Settings",
+      "version": "1.2.6",
+      "sha256": "23c2a933a6883e2622f0184c33a76ce4a4e88c0a7dcd730f9bab71b8c3702132"
+    }
+  ],
+  "validation": {
+    "serverTests": 1617,
+    "serverSkips": 16,
+    "siteTests": 18,
+    "fakeFramePanel": "2 targeted panel/store flows passed; private Compose resources removed",
+    "focusedFrameyTests": 40
+  }
+}

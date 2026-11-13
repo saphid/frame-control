@@ -1,0 +1,79 @@
+python.exe : test_original_mac_congestion_and_recovery 
+(test_pc_controller.ControllerTrace.test_original_mac_congestion_and_recovery) ... skipped 'C 
+compiler not installed; native build jobs cover this trace'
+At line:12 char:1
++ & $python -B -m unittest discover -s tests -p 'test_pc*.py' -v 2>&1 | ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (test_original_m...ver this trace':String) [], Remote 
+   Exception
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+test_controller_is_inert_after_close 
+(test_pcview.AdapterTests.test_controller_is_inert_after_close) ... ok
+test_dxgi_only_bundle_captures_displays_without_optional_wgc_properties (test_pcview.AdapterTests.
+test_dxgi_only_bundle_captures_displays_without_optional_wgc_properties) ... ok
+test_idle_source_is_not_a_stall (test_pcview.AdapterTests.test_idle_source_is_not_a_stall) ... ok
+test_library_path_prepend_adds_no_empty_entry 
+(test_pcview.AdapterTests.test_library_path_prepend_adds_no_empty_entry) ... ok
+test_linux_uses_only_portal_fd_and_node 
+(test_pcview.AdapterTests.test_linux_uses_only_portal_fd_and_node) ... ok
+test_malformed_viewer_input_is_dropped_not_fatal 
+(test_pcview.AdapterTests.test_malformed_viewer_input_is_dropped_not_fatal) ... ok
+test_pc_card_receives_window_capture_limitation 
+(test_pcview.AdapterTests.test_pc_card_receives_window_capture_limitation) ... ok
+test_pc_reuses_launcher_and_namespaces_panel_ids 
+(test_pcview.AdapterTests.test_pc_reuses_launcher_and_namespaces_panel_ids) ... ok
+test_portal_input_clamps_and_releases_held_state 
+(test_pcview.AdapterTests.test_portal_input_clamps_and_releases_held_state) ... ok
+test_refused_windows_focus_never_clicks_the_covering_app 
+(test_pcview.AdapterTests.test_refused_windows_focus_never_clicks_the_covering_app) ... ok
+test_session_end_releases_native_input_only_once 
+(test_pcview.AdapterTests.test_session_end_releases_native_input_only_once) ... ok
+test_stats_keep_capture_time_and_bound_records 
+(test_pcview.AdapterTests.test_stats_keep_capture_time_and_bound_records) ... ok
+test_windows_release_and_negative_monitor_origin 
+(test_pcview.AdapterTests.test_windows_release_and_negative_monitor_origin) ... ok
+test_windows_sources_follow_actual_wgc_capabilities 
+(test_pcview.AdapterTests.test_windows_sources_follow_actual_wgc_capabilities) ... ok
+test_windows_uses_wgc_and_media_foundation 
+(test_pcview.AdapterTests.test_windows_uses_wgc_and_media_foundation) ... ok
+test_never_offered_off_windows_even_when_turned_on 
+(test_pcview.GatingTests.test_never_offered_off_windows_even_when_turned_on) ... ok
+test_off_by_default_starts_nothing (test_pcview.GatingTests.test_off_by_default_starts_nothing) 
+... ok
+test_only_windows_gets_the_pc_host (test_pcview.GatingTests.test_only_windows_gets_the_pc_host) 
+... ok
+test_server_enable_action (test_pcview.GatingTests.test_server_enable_action) ... ok
+test_turning_off_stops_streams_and_the_helper 
+(test_pcview.GatingTests.test_turning_off_stops_streams_and_the_helper) ... ok
+test_turning_on_checks_for_the_bundled_libraries 
+(test_pcview.GatingTests.test_turning_on_checks_for_the_bundled_libraries) ... ok
+test_expiry_and_stop_before_redeem (test_pcview.GrantsTests.test_expiry_and_stop_before_redeem) 
+... ok
+test_source_bound_retry_ack_and_stop 
+(test_pcview.GrantsTests.test_source_bound_retry_ack_and_stop) ... ok
+test_agent_reports_its_host_and_encoder 
+(test_pcview.NativeTests.test_agent_reports_its_host_and_encoder) ... ok
+test_auth_and_real_h264_stats (test_pcview.NativeTests.test_auth_and_real_h264_stats) ... skipped 
+'x264 is only in CI test bundles, not the installer'
+test_bundled_pipewire_context_needs_no_system_modules 
+(test_pcview.NativeTests.test_bundled_pipewire_context_needs_no_system_modules) ... skipped 
+'Linux PipeWire client libraries'
+test_installer_bundle_leaves_out_gpl_x264 
+(test_pcview.NativeTests.test_installer_bundle_leaves_out_gpl_x264) ... ok
+test_last_raw_picture_survives_a_closed_gate 
+(test_pcview.NativeTests.test_last_raw_picture_survives_a_closed_gate) ... skipped 'x264 is only 
+in CI test bundles, not the installer'
+test_native_property_probe_checks_the_instantiated_element 
+(test_pcview.NativeTests.test_native_property_probe_checks_the_instantiated_element) ... ok
+test_card_says_experimental_and_what_is_unverified 
+(test_pcview.PageTests.test_card_says_experimental_and_what_is_unverified) ... ok
+test_opt_in_is_remembered_with_the_client_preferences 
+(test_pcview.PageTests.test_opt_in_is_remembered_with_the_client_preferences) ... ok
+test_tool_link_is_windows_only_and_marked_experimental 
+(test_pcview.PageTests.test_tool_link_is_windows_only_and_marked_experimental) ... ok
+
+----------------------------------------------------------------------
+Ran 33 tests in 1.684s
+
+OK (skipped=4)

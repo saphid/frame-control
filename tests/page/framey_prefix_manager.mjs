@@ -1,0 +1,31 @@
+// Check the managed official panel reports backend refusals and RPC failures.
+import assert from 'node:assert/strict';
+import {readFileSync} from 'node:fs';
+import vm from 'node:vm';
+
+const bundle=readFileSync(process.argv[2],'utf8');
+assert.ok(bundle.includes('onClick: handleCleanupOrphans, disabled: true'));
+assert.ok(bundle.includes('Orphan Cleanup Unavailable'));
+assert.ok(bundle.includes('Disabled on Frame: non-Steam shortcut coverage is incomplete. Unidentified prefixes may still be in use.'));
+const start=bundle.indexOf('    const frameyPrefixAction = ');
+const end=bundle.indexOf('    const ConfirmModal = ',start);
+assert.ok(start>0 && end>start);
+const context=vm.createContext({});
+vm.runInContext(bundle.slice(start,end)+'\nglobalThis.action=frameyPrefixAction;',context);
+const toasts=[];
+let response={success:true,result:[true,'Success']};
+const api={callPluginMethod:async()=>response,toaster:{toast:value=>toasts.push(value)}};
+assert.equal(await context.action(api,'delete_prefix',{}),true);
+assert.equal(toasts.length,0);
+response={success:true,result:[false,'Symlinks are unsupported']};
+assert.equal(await context.action(api,'delete_prefix',{}),false);
+assert.equal(toasts.at(-1).body,'Symlinks are unsupported');
+response={success:true,result:[0,'Orphan cleanup is disabled on Frame: non-Steam shortcut coverage is incomplete; unidentified prefixes may still be in use']};
+assert.equal(await context.action(api,'cleanup_orphans',{}),false);
+assert.equal(toasts.at(-1).body,response.result[1]);
+response={success:false,result:'Private backend is unavailable'};
+assert.equal(await context.action(api,'delete_prefix',{}),false);
+assert.equal(toasts.at(-1).body,'Private backend is unavailable');
+api.callPluginMethod=async()=>{throw Error('Private RPC rejected');};
+assert.equal(await context.action(api,'delete_prefix',{}),false);
+assert.equal(toasts.at(-1).body,'Private RPC rejected');

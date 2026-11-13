@@ -69,6 +69,41 @@ The build packs the Frame bundle from the checkout, so the phone always runs
 the page and server from the same commit. Running on a phone needs your own
 signing team in Xcode (Signing & Capabilities).
 
+## TestFlight beta
+
+The existing Frame Control App Store Connect app is `6822547223`, with bundle
+ID `com.saphid.framecontrol` under Apple team `NJZUMEA4BN`. The repository
+does not contain its signing credentials. Use `ios/scripts/testflight.sh` on a
+Mac with Xcode and an App Store Connect API key with upload access. Keep the
+`.p8` key outside the checkout. The script makes an unsigned device archive,
+then asks Xcode to sign the exported IPA for App Store Connect. This worked
+through Xcode's managed distribution signing without a local Apple
+Distribution identity. The key is used only for export and upload.
+Select an Xcode installation with the iOS device SDK before running it; on a
+Mac with multiple Xcode versions, set `DEVELOPER_DIR` to the intended
+`Xcode.app/Contents/Developer` directory.
+
+Set `FRAME_IOS_TEAM_ID`, `FRAME_ASC_KEY_ID`, `FRAME_ASC_ISSUER_ID`, and the
+absolute `FRAME_ASC_KEY_PATH` to that account's values. Set
+`FRAME_IOS_OUTPUT` to an absolute build directory. Set `FRAME_IOS_VERSION`
+to the intended app version and `FRAME_IOS_BUILD` to a new, unused integer
+build number. Then run, in order:
+
+```sh
+ios/scripts/testflight.sh archive
+ios/scripts/testflight.sh export  # inspect the signed IPA before upload
+ios/scripts/testflight.sh upload
+```
+
+`archive` verifies the bundle ID, version, and build number in the unsigned
+archive. `export` verifies the IPA's Apple Distribution signature, team,
+non-debuggable Store profile, bundle ID, version, and build number. `upload`
+rechecks that IPA before Xcode signs and submits the same archive to App Store
+Connect. Confirm processing and tester access there. The simulator CI job
+checks a separate, unsigned build and does not upload a beta. The
+[0.4.59 TestFlight upload evidence](evidence/ios-testflight-0.4.59-2026-11-05.md)
+records the verified build.
+
 ## Verified
 
 <img src="img/iphone-tabs.jpg" alt="The four tabs in the iPhone app, connected to a Frame" width="900">
@@ -102,8 +137,9 @@ app installed opens its App Store page.
 Things iOS asks the first time: **Local Network** (tap Allow, or the app can't
 see the Frame), and **Paste** when you send the iPhone's clipboard (tap Allow
 Paste, or set Settings → Apps → Frame Control → Paste from Other Apps → Allow).
-Sending text to the Frame's clipboard needs the desktop panel open in the
-headset, as on the desktop app.
+Sending text to the Frame's clipboard, or copying the Frame's to the phone
+(**Type on the headset → Copy the headset's clipboard**), needs the desktop
+panel open in the headset, as on the desktop app.
 
 Not yet exercised: Android display changes through podman (no Android app was
 running), a real sleep/restart/shut down on the Frame, and a physical iPhone.

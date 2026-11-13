@@ -18,21 +18,31 @@
   #note[hidden] { display: block; opacity: 0; }
   #hud { position: fixed; left: 8px; top: 8px; font: 12px/1.35 ui-monospace, monospace; color: #dfe;
          background: rgba(0,0,0,.72); padding: 6px 9px; border-radius: 6px; pointer-events: none; white-space: pre; }
+  #switchWindow { position: fixed; right: 12px; bottom: 12px; z-index: 2; min-height: 44px;
+          padding: 8px 14px; border: 1px solid #a8c8d9; border-radius: 7px;
+          background: rgba(19,35,48,.9); color: #fff; font: 15px system-ui, sans-serif; cursor: pointer; }
+  #switchWindow:focus-visible { outline: 3px solid #66c0f4; outline-offset: 3px; }
+  #switchWindow:disabled { opacity: .5; cursor: default; }
 </style>
 </head>
 <body>
 <canvas id="c" width="16" height="9"></canvas>
-<div id="note">Connecting to the Mac…</div>
+<button id="switchWindow" type="button" hidden>Switch window</button>
+<div id="note">Connecting to your computer…</div>
 <div id="hud" hidden></div>
 <script>
 "use strict";
 const q = new URLSearchParams(location.search);
 // t: a single-use ticket from Frame Control. After the first connection the
 // Mac sends a reconnect key, kept only in memory.
-const src = q.get("src") || "test", ticket = q.get("t") || "", tag = q.get("tag") || "";
+const src = q.get("src") || "test", ticket = q.get("t") || "", tag = q.get("tag") || "", host = q.get("host") || "";
+document.title = host === "windows" ? "PC" : "Mac";
 let reconnectKey = "";
 const c = document.getElementById("c"), ctx = c.getContext("2d", { alpha: false, desynchronized: true });
 const note = document.getElementById("note");
+const switchButton = document.getElementById("switchWindow");
+switchButton.hidden = !src.startsWith("display:") || !["mac", "windows"].includes(host);
+if (!switchButton.hidden) switchButton.textContent = host === "mac" ? "Switch Mac app (⌘Tab)" : "Switch PC window (Alt+Tab)";
 // Counters for Frame Control's tests (read over DevTools).
 const stats = window.stats = { frames: 0, keyFrames: 0, bytes: 0, dropped: 0, codec: "", errors: [], info: null };
 
@@ -127,6 +137,29 @@ function show(text, ms) {
 }
 
 function send(obj) { if (ws && ws.readyState === 1) ws.send(JSON.stringify(obj)); }
+function windowSwitchEvents(hostName) {
+  const code = hostName === "mac" ? "MetaLeft" : hostName === "windows" ? "AltLeft" : "";
+  if (!code) return [];
+  const key = hostName === "mac" ? "Meta" : "Alt", mod = hostName === "mac" ? "meta" : "alt";
+  return [
+    { t: "k", e: "down", code, key, mods: [] },
+    { t: "k", e: "down", code: "Tab", key: "Tab", mods: [mod] },
+    { t: "k", e: "up", code: "Tab", key: "Tab", mods: [mod] },
+    { t: "k", e: "up", code, key, mods: [] },
+  ];
+}
+switchButton.addEventListener("click", () => {
+  if (!ws || ws.readyState !== 1) return show("Connect to your computer before switching windows.", 4000);
+  const events = windowSwitchEvents(host);
+  if (!events.length) return;
+  switchButton.disabled = true;
+  send(stamp(events[0]));
+  setTimeout(() => {
+    send(stamp(events[1]));
+    send(events[2]);
+    setTimeout(() => { send(events[3]); switchButton.disabled = false; }, 60);
+  }, 40);
+});
 let lastKeyAsk = 0;
 function askKeyFrame() {
   const now = performance.now();
@@ -237,20 +270,21 @@ async function connect() {
     if (codec === "h264") onH264(isKey, seq, payload); else onJPEG(seq, payload);
   };
   ws.onclose = () => {
+    dropWheelCarry();
     ws = null;
     clearInterval(pingTimer);
     if (closing) return;
     // Refused before ever getting a key: the ticket expired or was revoked,
     // and retrying can't help.
     if (!reconnectKey && ++failedStarts >= 3) {
-      show("This view has expired. Press Show in Frame Control on the Mac to open it again.");
+      show("This view has expired. Press Show in Frame Control on your computer to open it again.");
       return;
     }
     hideNoteOnFrame = true;
     // The Mac may be asleep or the tunnel restarting: keep trying.
     retry = Math.min(retry + 1, 6);
     // Keep the Mac's reason (a missing permission, a closed window) on screen.
-    show(lastError ? `${lastError} Retrying…` : "Lost the Mac. Reconnecting…");
+    show(lastError ? `${lastError} Retrying…` : "Lost the computer. Reconnecting…");
     setTimeout(connect, 500 * 2 ** retry);
   };
 }
@@ -269,7 +303,7 @@ function control(m) {
     document.title = tag ? `${name} [${tag}]` : name;
     if (!m.input) {
       hideNoteOnFrame = false;  // a warning, not a connection notice: let it stay its 8 s
-      show("Clicks and keys need Accessibility permission on the Mac (Frame Control asks for it).", 8000);
+      show(m.inputMessage || "Clicks and keys need Accessibility permission on the Mac (Frame Control asks for it).", 8000);
     }
   } else if (m.t === "error") {
     stats.errors.push(m.message);
@@ -321,6 +355,7 @@ function flushMove() {
   pendingMove = null;
 }
 addEventListener("pointermove", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   if (!p.inside && !e.buttons) return;
   pendingMove = { t: "m", e: "move", x: p.x, y: p.y };
@@ -331,6 +366,7 @@ addEventListener("pointermove", e => {
   setTimeout(flushMove, wait);
 });
 addEventListener("pointerdown", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   if (!p.inside) return;
   if (e.pointerId !== undefined) try { c.setPointerCapture(e.pointerId); } catch (err) {}
@@ -339,21 +375,39 @@ addEventListener("pointerdown", e => {
   e.preventDefault();
 });
 addEventListener("pointerup", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e);
   send({ t: "m", e: "up", b: e.button < 0 ? 0 : e.button, x: p.x, y: p.y });
 });
 // Let go of any held button where the pointer is on the Mac, not at a corner.
 addEventListener("pointercancel", () => send({ t: "release" }));
 addEventListener("contextmenu", e => e.preventDefault());
+function wholeWheel(carry, dx, dy) {
+  carry.x += dx;
+  carry.y += dy;
+  const whole = { dx: Math.trunc(carry.x), dy: Math.trunc(carry.y) };
+  carry.x -= whole.dx;
+  carry.y -= whole.dy;
+  return whole;
+}
+const wheelCarry = { x: 0, y: 0 };
+// A leftover fraction belongs to the gesture in progress, not the next one.
+function dropWheelCarry() { wheelCarry.x = wheelCarry.y = 0; }
 addEventListener("wheel", e => {
+  if (e.target === switchButton) return;
   const p = toPicture(e), unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
-  send(stamp({ t: "wheel", dx: e.deltaX * unit, dy: e.deltaY * unit, x: p.x, y: p.y }, e));
+  // CGEvent's pixel wheel fields are integers. SteamVR's thumbstick sends
+  // smaller smooth deltas, so keep them until they add up to a real pixel.
+  const delta = wholeWheel(wheelCarry, e.deltaX * unit, e.deltaY * unit);
+  if (delta.dx || delta.dy)
+    send(stamp({ t: "wheel", ...delta, x: p.x, y: p.y }, e));
   e.preventDefault();
 }, { passive: false });
 function mods(e) {
   return ["shift", "ctrl", "alt", "meta"].filter(m => e[m + "Key"]);
 }
 function onKey(e, down) {
+  if (e.target === switchButton) return;  // let Enter/Space activate the button
   // Ctrl+Alt+Shift+S shows the numbers; it isn't sent to the Mac.
   if (e.code === "KeyS" && e.ctrlKey && e.altKey && e.shiftKey) {
     if (down) showHud(hud.hidden);
@@ -389,9 +443,9 @@ function bench(m) {
 }
 addEventListener("keydown", e => onKey(e, true));
 addEventListener("keyup", e => onKey(e, false));
-addEventListener("blur", () => send({ t: "release" }));
+addEventListener("blur", () => { dropWheelCarry(); send({ t: "release" }); });
 
-show("Connecting to the Mac…");
+show("Connecting to your computer…");
 connect();
 </script>
 </body>

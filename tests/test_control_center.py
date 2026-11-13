@@ -63,6 +63,20 @@ class Coverage(unittest.TestCase):
         self.assertIn('*.js', ui['filter'])
         self.assertIn('*.css', ui['filter'])
 
+    def test_bundle_runs_the_server_on_its_own(self):
+        # The iPhone app and scripts/store-on-frame.sh start ui/server.py from this bundle alone.
+        import io, tarfile, tempfile
+        spec = importlib.util.spec_from_file_location('frame_bundle_run', ROOT / 'ios/scripts/make_frame_bundle.py')
+        bundle = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(bundle)
+        with tempfile.TemporaryDirectory() as tmp, tarfile.open(fileobj=io.BytesIO(bundle.build()), mode='r:gz') as tar:
+            tar.extractall(tmp)
+            result = subprocess.run([sys.executable, '-I', '-B', '-c',
+                                     'import sys; sys.path.insert(0, "ui"); import server, apk_sources.search; '
+                                     'apk_sources.search.modules()[1] and sys.exit("source modules failed: %r" % apk_sources.search.modules()[1])'],
+                                    cwd=tmp, capture_output=True, text=True, timeout=60)
+        self.assertEqual(result.returncode, 0, result.stderr[-2000:])
+
     def test_status_exposes_kernel_thermal_trips_without_guessing_thresholds(self):
         # Run the real aggregator with every external probe stubbed.
         names = ('read', 'process_names', 'performance', 'os_release', 'battery', 'power_source',

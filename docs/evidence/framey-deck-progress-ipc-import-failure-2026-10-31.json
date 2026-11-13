@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-31T00:48:21.162021+00:00",
+  "qualifiedPass": false,
+  "firstCandidateFailedImport": true,
+  "cause": "Decky adds only the plugin's py_modules directory to sys.path; helper was placed in plugin root",
+  "sourceWasEditedWhileThisRunWasLive": true,
+  "artifactCannotQualifyFinalSource": true,
+  "realFrameContacted": false,
+  "originalReport": {
+    "decky": "v3.3.0",
+    "architecture": "x86_64",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "ae29dc8fe6b9c2d70a01255176f1e7c59c934abc47dd7c4abb84afb21cdefcf3",
+      "ui/framey_decky_ipc.py": "8809bc26267418dff9e5bb5376ff70517ec89a6b71890ec937e3ebd7424251ec",
+      "tests/decky-runtime/check.py": "8013c61e89058b35c5485f4a33b58e74f1fe6e32c709dc8075e073c0a2fdf530",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "4baa735030a0cbc65c10443622690a73b838cf52d0851452fb62e4d971401835",
+      "tests/framey_official.py": "56a808f6426aa48ccd81113521b21c1239247768d0dd52aba61e422de74c5672",
+      "ui/frame_decky_store.py": "d0c0f2d5daf51f198b40272badb15a0fff9d92519ba53257fafe3a2b2dae4711",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "cases": []
+  },
+  "fullLog": "DEPRECATED: The legacy builder is deprecated and will be removed in a future release.\n            Install the buildx component to build images with BuildKit:\n            https://docs.docker.com/go/buildx/\n\nsha256:ed5d85be967ea3760b9f748317f9587dd004f05efa16c6f9e43cae95acef0078\nTraceback (most recent call last):\n  File \"/tmp/framey-deck-progress-native-mppkd9qczt/scripts/framey-test-decky-runtime.py\", line 142, in <module>\n    if __name__ == '__main__':\n        ^^^^^^\n  File \"/tmp/framey-deck-progress-native-mppkd9qczt/scripts/framey-test-decky-runtime.py\", line 129, in main\n    if result.returncode:\n        ^^^^^^^^^^^^^^^^^^\nRuntimeError: Decky runtime case 134 store failed:\n\n[main][WARNING]: decky is running as an unprivileged user, this is not officially supported and may cause issues\n[main][INFO]: Starting Decky version v3.3.0\n[loader][INFO]: plugin_path: /home/tester/.local/share/frame-control/decky/plugins\n[updater][INFO]: Current branch is not set, determining branch from version...\n[updater][INFO]: Current version determined to be stable\n[loader][INFO]: import plugins from /home/tester/.local/share/frame-control/decky/plugins\n[loader][INFO]: found plugin: deck-progress-tracker\n[loader][INFO]: Loaded Deck Progress Tracker (v1.3.6)\nFailed to start Deck Progress Tracker (v1.3.6)!\nTraceback (most recent call last):\n  File \"decky_loader/plugin/sandboxed_plugin.py\", line 116, in initialize\n  File \"<frozen importlib._bootstrap_external>\", line 763, in exec_module\n  File \"<frozen importlib._bootstrap>\", line 491, in _call_with_frames_removed\n  File \"/home/tester/.local/share/frame-control/decky/plugins/deck-progress-tracker/main.py\", line 2, in <module>\n    from framey_decky_ipc import install as _framey_install_ipc_eof\nModuleNotFoundError: No module named 'framey_decky_ipc'\n\n\nTraceback (most recent call last):\n  File \"/repo/tests/decky-runtime/check.py\", line 1526, in <module>\n    log.flush()\n    \n  File \"/repo/tests/decky-runtime/check.py\", line 227, in main\n    return response\n              ^^^^^\n    \n    \n  File \"/repo/tests/decky-runtime/check.py\", line 61, in until_ready\n    raise RuntimeError(f'{description} not ready: {last}')\nRuntimeError: private Deck Progress database not ready: \n\n",
+  "logSha256": "db11446145ba26a22ae8eb180119d5daa412d892b4be691d489d391540b70adf"
+}

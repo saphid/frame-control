@@ -1,0 +1,149 @@
+{
+  "atUtc": "2026-10-30T04:58:16.095345+00:00",
+  "scope": "Uninstalled HTTP transport candidate. Syncthing remains broken and the exact archive is still refused. No real Frame contacted.",
+  "published": {
+    "storeId": 64,
+    "version": "0.2.7",
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4"
+  },
+  "ownershipBaseline": {
+    "pullRequest": "https://github.com/saphid/frame-control/pull/463",
+    "head": "32746991373c612b0906e8a599e414eb6c6d95c0",
+    "mergeCommit": "e8ef42aa611a7822e509d8bdad6a86245a935900",
+    "headNativeCI": "https://github.com/saphid/frame-control/actions/runs/41003695031",
+    "scope": "Both native architectures verified ownership before the HTTP bridge follow-up; not evidence for this bridge on ARM64."
+  },
+  "build": {
+    "sourceCommit": "464fd7ca05ee0bea8daa8d5d125dfc672cf08942",
+    "sourceArchiveSha256": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "patchSha256": "65a38255715ed355a47a77b3a65c1109d9a138865c4f7ee75b55767dd39f8943",
+    "pythonSha256": "fed1871abe798b92d2cc8e3a028de1edeee4648ff8c623293d4e5f7f7e8a5df5",
+    "builderImage": "sha256:49b48c81f541784e8e40ea095ae1883159a2ea7b3df40606283612480810b0fa",
+    "cargoLockSha256": "cd1fb9b40fff4cec67ab09fa9a2b6c3d13337d9ed78054e1bf78e2cda861ff0f",
+    "builds": [
+      {
+        "architecture": "x86_64",
+        "elfMachine": 62,
+        "bytes": 12967536,
+        "sha256": "fba483be71143f75bccfa7f1ab74d524b5605ea1c748704a7d8a1e033f54de28",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "x86_64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false
+      },
+      {
+        "architecture": "aarch64",
+        "elfMachine": 183,
+        "bytes": 11975992,
+        "sha256": "f1b540748615bd0758c69a0dcfc7531a8cc967d9243be2d4c583e72ccbcdf126",
+        "command": [
+          "cargo",
+          "build",
+          "--frozen",
+          "--offline",
+          "--release",
+          "--target",
+          "aarch64-unknown-linux-gnu",
+          "-j2"
+        ],
+        "executed": false
+      }
+    ],
+    "installerEnabled": false,
+    "runtimeVerified": false
+  },
+  "nativeAmd64": {
+    "archiveSha256": "27e47379c280c92253d5533435f57c33b332b215f866d2ac4493daf18ec0d1c4",
+    "pythonSha256": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+    "helperSha256": "fba483be71143f75bccfa7f1ab74d524b5605ea1c748704a7d8a1e033f54de28",
+    "installerEnabled": false,
+    "independentState": {
+      "listenerConflictBeforeSettingsOrService": true,
+      "ownedRestartReaped": true,
+      "foreignPidIgnored": true,
+      "duplicateOwnershipRefused": true,
+      "activeReloadCount": 3,
+      "unrelatedProcessPreserved": true,
+      "privateSocketMode": true,
+      "privateHttpProxy": true,
+      "privateFixtureAuthErrorPreserved": true,
+      "privateSocketCleanupOnReload": true,
+      "loaderExitStoppedOwnedWatchdog": true
+    },
+    "result": "published Decky discovery, disabled defaults, native listener/ownership conflicts, owned restart, three reloads and private-socket HTTP transport passed; the upstream HTTP fixture is synthetic; service control, actual Syncthing, sync, Frame and VR unverified",
+    "decky": "v3.3.0",
+    "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+    "architecture": "x86_64",
+    "sourceSha256": {
+      "scripts/framey-test-syncthing-candidate.py": "0d642faac1e46da34e844a4519bff99f21d4640b3bb1d8221ee35a0a8f5daff2",
+      "tests/decky-runtime/syncthing_candidate.py": "ae3b97cf2e90cb17cfb871e41782002fd45c47f7a6d74c198f8e627f3a2cdac9",
+      "ui/vendor/syncthing-0.2.7/main.py": "efa3c8f21adddca20124a786a8f4deb65e903b7c8ef39a1977e0f07776cb09a1",
+      "ui/vendor/syncthing-0.2.7/watchdog.patch": "65a38255715ed355a47a77b3a65c1109d9a138865c4f7ee75b55767dd39f8943"
+    }
+  },
+  "pythonBuildProvenance": "Build captured Python before the Python-only setup-timeout correction. Rust inputs and binary hashes are unchanged; native/contract reports verify current Python separately.",
+  "sourceSha256": {
+    "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+    "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    "tests/page/framey_syncthing_http.mjs": "148db2caa23da9eb3405320aa0f9be2fe01a010930a1da39880660023d64c80f",
+    "tests/test_framey_panel.py": "194e33a6b0f63ff0c707e49c7b7202815b5b3e809c4877ca4f2040e3d3fdf731",
+    "tests/test_framey_syncthing_candidate.py": "f3e79b8fa1c3aee3f7cd6b0c71d45ea7327bc45ce8d6fbd36042526803b1c1a4",
+    ".github/workflows/syncthing-candidate.yml": "7c5a228b768952adf47f8fd49359f8efb5acbbda69f48b9e8394961b1fb3c25a"
+  },
+  "localRegression": {
+    "tests": 1794,
+    "seconds": 216.556,
+    "skips": 16,
+    "failures": 0
+  },
+  "python39": {
+    "contracts": 15,
+    "result": "pass",
+    "container": "python:3.9-slim-bookworm",
+    "readOnly": true,
+    "network": "none"
+  },
+  "panelContracts": {
+    "tests": 30,
+    "result": "pass",
+    "facadeEnvironment": "Node VM with actual host source; not browser rendering",
+    "nativeNetworkCalls": 0
+  },
+  "archiveAdmission": {
+    "allowed": false,
+    "reason": "Plugin contains a non-ARM64 Linux binary: decky-syncthing/bin/decky-syncthing-watchdog"
+  },
+  "limits": {
+    "normalSocketOperationTimeoutSeconds": 5,
+    "setupStartSocketOperationTimeoutSeconds": 20,
+    "totalRequestDeadline": false,
+    "maximumResponseBytes": 262144,
+    "maximumHttpWorkers": 4,
+    "cancellationRetainsWorkerSlot": true,
+    "slowSetupRegression": "Reproduced 5-second TimeoutError before correction; 5.1-second fixture passes after correction",
+    "upstreamHttpFixture": "synthetic, not actual Syncthing",
+    "tcpFallback": false,
+    "installedReceiptShimProduced": false
+  },
+  "unverified": [
+    "Exact-head CI and native ARM64 bridge execution",
+    "Supported actual Syncthing runtime/package",
+    "Actual systemd DBus service start/stop and synchronization",
+    "Managed unit paths and migration",
+    "Managed install/update/remove",
+    "Actual Chromium/plugin browser controls",
+    "Real Frame runtime",
+    "SteamVR passthrough and wearer-visible rendering",
+    "Physical controller interaction"
+  ],
+  "realFrameContacted": false,
+  "releaseAttempted": false
+}

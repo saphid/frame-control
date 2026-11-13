@@ -1,0 +1,38 @@
+{
+  "date_utc": "2026-10-24T07:54:37Z",
+  "frame_control_tag": "v0.4.16",
+  "steamos_version": "0.5.6",
+  "steamos_build": "20261015.6141207",
+  "host": "lxso2",
+  "interface": "source UI served by a temporary private Frame Control server, opened in T3 Code's desktop browser",
+  "action": "Clicked the visible Export button for Steam's retained real saved clip in Capture & Live",
+  "clip_id": "10230640/clips/clip_13009719723623972864_20261024_072115",
+  "api_observed": {
+    "post_clips_export_http": 200,
+    "get_job_http": 200,
+    "get_clips_http": 200
+  },
+  "ui_result": "Saved clip_13009719723623972864_20261024_072115.mp4 to ~/Videos/SteamFrame; button changed to Export again",
+  "output": {
+    "path": "~/Videos/SteamFrame/clip_13009719723623972864_20261024_072115.mp4",
+    "bytes": 159829,
+    "sha256": "f8a476eefb2bde7ba5cb464632ec9b952eea3ab1610b5bed2098bf1f11d62cf1",
+    "matches_previously_fully_decoded_export": true,
+    "duration_seconds": 10.288532,
+    "video": "H.264 1920x1080",
+    "audio": "AAC stereo"
+  },
+  "cleanup": {
+    "temporary_server_stopped": true,
+    "shared_device_lock_released": true,
+    "battery_percent_after": 99,
+    "desktop_mode_active_after": false,
+    "test_title_created": false,
+    "steam_source_clip_retained": true
+  },
+  "limits": [
+    "The test used the source UI, not a packaged desktop installer.",
+    "The retained source clip was nearly black; visible gameplay capture remains unverified.",
+    "Perceptual audio/video sync, long clips, trims and automatic copying were not tested."
+  ]
+}

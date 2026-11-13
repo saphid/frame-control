@@ -1,3 +1,4 @@
+import Combine
 import Foundation
 import Network
 
@@ -18,20 +19,30 @@ final class FrameFinder: ObservableObject {
 
     private var browser: NWBrowser?
     private var probeTask: Task<Void, Never>?
-    private var fallback = "frame.local"
+    private var search = FrameSearchState()
+    private let probe: @Sendable (String) async -> Bool
+    private let discoveryEnabled: Bool
 
-    func start(fallback: String?) {
+    init(probe: @escaping @Sendable (String) async -> Bool = { await FrameFinder.sshAnswers(host: $0) },
+         discoveryEnabled: Bool = true) {
+        self.probe = probe
+        self.discoveryEnabled = discoveryEnabled
+    }
+
+    func start(fallback: String?, manual: Bool = false) {
         stop()
-        self.fallback = (fallback?.isEmpty == false ? fallback : nil) ?? "frame.local"
+        let mine = search.start(manualAddress: manual ? fallback : nil)
+        let host = FrameSearchState.address(manual: search.manualAddress ?? "", discovered: fallback)
         found = nil
         since = Date()
-        browse()
+        if search.discovers && discoveryEnabled { browse(generation: mine) }
         probeTask = Task { [weak self] in
             while !Task.isCancelled {
-                guard let self else { return }
-                let host = self.fallback
-                if self.found == nil, await Self.sshAnswers(host: host) {
-                    self.found = Found(host: host, name: host)
+                guard let self, self.search.accepts(mine) else { return }
+                if self.found == nil {
+                    let answers = await self.probe(host)
+                    guard !Task.isCancelled, self.search.accepts(mine) else { return }
+                    if answers, self.found == nil { self.found = Found(host: host, name: host) }
                 }
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
             }
@@ -39,20 +50,21 @@ final class FrameFinder: ObservableObject {
     }
 
     func stop() {
+        search.stop()
         browser?.cancel()
         browser = nil
         probeTask?.cancel()
         probeTask = nil
     }
 
-    private func browse() {
+    private func browse(generation: UUID) {
         let browser = NWBrowser(for: .bonjour(type: "_steamos-devkit._tcp", domain: nil), using: .tcp)
         browser.browseResultsChangedHandler = { [weak self] results, _ in
             for result in results {
                 guard case let .service(name, _, _, _) = result.endpoint else { continue }
                 Self.resolve(result.endpoint) { host in
                     Task { @MainActor in
-                        guard let self, let host else { return }
+                        guard let self, self.search.accepts(generation), self.search.discovers, let host else { return }
                         // A found device is used over the fallback probe.
                         self.found = Found(host: host, name: name)
                     }
@@ -91,12 +103,8 @@ final class FrameFinder: ObservableObject {
 
     /// Whether something answers on the SSH port of "host" or "host:port" within a few seconds.
     nonisolated static func sshAnswers(host address: String) async -> Bool {
-        var host = address, port: UInt16 = 22
-        if let target = AppModel.parse(host: address, user: "steamos") {
-            host = target.host
-            port = UInt16(target.port)
-        }
-        return await sshAnswers(host: host, port: port)
+        guard let target = FrameSettings.parse(host: address, user: "steamos") else { return false }
+        return await sshAnswers(host: target.host, port: UInt16(target.port))
     }
 
     nonisolated static func sshAnswers(host: String, port: UInt16) async -> Bool {

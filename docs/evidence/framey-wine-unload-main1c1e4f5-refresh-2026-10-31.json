@@ -1,0 +1,42 @@
+{
+  "at": "2026-10-31T07:47:43.854841+00:00",
+  "oldHead": "fd01d7a4604a300a81d071879a1117ff07d95739",
+  "main": "1c1e4f588735dc3119f67f90ca8c33d3a90563cd",
+  "sourceCommit": "50cc009eefa9fcbcc04941f1c91d4c2cf4af9e60",
+  "tree": "863be2cbf6c859f6100a19fe92890511138ab692",
+  "normalMerge": true,
+  "wineCorrectionDiffUnchanged": true,
+  "productAndCatalogUnchangedAgainstCurrentMain": true,
+  "shottyRuntimeSourcesUnchangedAgainstCurrentMain": true,
+  "unitReplayTests": 7,
+  "unitReplayCommand": "python3 -m unittest discover -s tests -p test_framey_wine_unload_evidence.py -v",
+  "unitReplayExit": 0,
+  "focusedLogSha256": "7631d9bb74d1e7f8567e760c5f5cb7c02b2f4b20d00be07c20285fa783d05262",
+  "focusedTestPatterns": [
+    "test_framey_compatibility.py",
+    "test_frame_decky_store.py"
+  ],
+  "nativeCaseCoverageCount": 33,
+  "nativeCoverageIncludesShottyAndWine": true,
+  "generatedDocsCheckPassed": true,
+  "diffCheckPassed": true,
+  "changedPaths": [
+    "docs/evidence/framey-wine-unload-negative-states-2026-10-31-audit.json",
+    "docs/evidence/framey-wine-unload-negative-states-2026-10-31-failed.log",
+    "docs/evidence/framey-wine-unload-negative-states-2026-10-31-raw.json.gz",
+    "docs/evidence/framey-wine-unload-negative-states-2026-10-31-unit.log",
+    "docs/evidence/framey-wine-unload-negative-states-2026-10-31.md",
+    "tests/decky-runtime/wine_cellar_private.py",
+    "tests/fixtures/wine-unload-observations.json",
+    "tests/test_framey_wine_unload_evidence.py"
+  ],
+  "previousHeadHostedChecks": 13,
+  "previousHeadHostedBase": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+  "newHeadHostedQualificationPending": true,
+  "localNewNativeRun": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "focusedCompatibilityTests": 17,
+  "focusedStoreTests": 60,
+  "totalFocusedHostTests": 84
+}

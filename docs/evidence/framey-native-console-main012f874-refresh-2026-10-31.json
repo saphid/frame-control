@@ -1,0 +1,75 @@
+{
+  "at": "2026-10-31T08:27:15.019403+00:00",
+  "sourceHead": "863a7eb3e20c1d1ca9046c3c85f2546fd98b5713",
+  "baseMain": "012f874906bd122c29e75a0c9d572980b41a1085",
+  "normalMainMerge": true,
+  "correctionDiffUnchanged": true,
+  "sourceFingerprintsPerReport": 15,
+  "focusedUnitTests": 92,
+  "unitLogSha256": "8b51d31c9da565ada0842a5b352baecb36b9bfb149f975ecc3c002b01958b2ee",
+  "architecture": "x86_64",
+  "cases": [
+    {
+      "id": 68,
+      "expectedRegression": false,
+      "runtimeConsoleSha256": "709f3537222c672aaaee5dcc5de2d2a25042795a46759e3b9c0b0835daacf345",
+      "postCleanupLoaderExits": [
+        0,
+        0
+      ],
+      "globalCleanShutdownVerified": false,
+      "positiveLifecycleClean": true,
+      "negativeForcedPluginKills": 0,
+      "ownLifecycleStops": 2
+    },
+    {
+      "id": 68,
+      "expectedRegression": true,
+      "runtimeConsoleSha256": "e6343e9de81ae5e6ef30910df097796529d33d98ce6560fcd2c2b9e890983b67",
+      "postCleanupLoaderExits": [
+        0
+      ],
+      "globalCleanShutdownVerified": false,
+      "positiveLifecycleClean": false,
+      "negativeForcedPluginKills": 1,
+      "ownLifecycleStops": 1
+    },
+    {
+      "id": 53,
+      "expectedRegression": false,
+      "runtimeConsoleSha256": "9f11b46557fe03f31061fd2ab8494a0b608e70fb6ec85493318f392deede371e",
+      "postCleanupLoaderExits": [
+        0,
+        0
+      ],
+      "globalCleanShutdownVerified": false,
+      "positiveLifecycleClean": true,
+      "negativeForcedPluginKills": 0,
+      "ownLifecycleStops": 2
+    },
+    {
+      "id": 53,
+      "expectedRegression": true,
+      "runtimeConsoleSha256": "6ce40ac89c21463cb1a131a3d0689592c9c3271744ba9bb3338195097b780de4",
+      "postCleanupLoaderExits": [
+        0
+      ],
+      "globalCleanShutdownVerified": false,
+      "positiveLifecycleClean": false,
+      "negativeForcedPluginKills": 1,
+      "ownLifecycleStops": 1
+    }
+  ],
+  "rawGzipSha256": "7b0d17536ca3ed830cf53c98b468bc1cd3aab0c156c6c659450f90b3da582135",
+  "ownedResourcesReaped": true,
+  "globalCleanShutdownVerified": false,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "limits": [
+    "Only Wine/Shotty replayed locally; full exact-head hosted matrix still required",
+    "Fresh original Wine negative observed a zombie; historical live orphan remains preserved separately",
+    "Generic cleanup records already-exited loader return codes without claiming it sent another parent-only signal; deliberate non-loader sibling exits can be -15",
+    "Capture completion and zero loader exits do not prove every plugin unloaded cleanly",
+    "No managed install, real Steam CEF, Frame, wearer/controller or release proof"
+  ]
+}

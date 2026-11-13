@@ -1,0 +1,13 @@
+# TabMaster empty-settings diagnostic: local startup trace
+
+An isolated AMD64 replay at source `0dc8da2114e145da8598d0b1763ba17154924715` traced the single `Expecting value: line 1 column 1 (char 0)` diagnostic to startup. It did not originate from the IPC EOF path in this observation. The previous hosted console placed the buffered diagnostic near shutdown; that output order did not establish its cause.
+
+The exact published Decky 3.3.0 loader and TabMaster 2.15.1 archive ran in the existing disposable, unprivileged, network/device/session-isolated fixture. A diagnostic-only append wrapped the child process's `json.loads`, printed the input and a stack on decode failure, and re-raised the exception. The test assertion was adjusted only to recognize those appended diagnostic bytes; this is not an unchanged-backend qualification run. The parent loader was unchanged.
+
+The retained stack shows an empty string passed from `json.load` through bundled `decky_loader/settings.py:46`, called by TabMaster `read()` at line 285 from `_main()` at line 331. This happened before `Initializing Tab Master.` and either shutdown. The tagged Decky source creates a new empty settings file, then TabMaster explicitly reads it; that source explains the observed call path. Byte-for-byte equivalence between the tagged Python source and the bundled loader source was not established.
+
+All 40 private settings/discovery RPC results and disk/restart checks still passed. Both stops signalled only the owning loader, returned zero, reaped the observed process identities and retained complete shutdown records. This does not make the console error-free. No new owned container or image tag remained. No pre-existing Docker resource was removed.
+
+Files: [audit](framey-tabmaster-json-startup-2026-10-31.json), [complete report/console and diagnostic inputs](framey-tabmaster-json-startup-2026-10-31-raw.json.gz), [diagnostic-only runner patch](framey-tabmaster-json-startup-2026-10-31.patch). The raw report deliberately records `publishedBackendUnmodified: false`. Apply the zero-context patch with `git apply --unidiff-zero` only to the named exact source in a disposable diagnostic snapshot, then run `scripts/framey-test-decky-runtime.py --case 61` with the pinned loader; do not deploy it.
+
+This identifies one local AMD64 observation. It does not establish the cause of every similar diagnostic, the hosted ARM64 observation, or a fault in the shutdown implementation. No product patch, compatibility promotion, real Steam CEF, real Frame, wearer/controller or release proof follows. #500 still needs current-main integration and its complete exact-head gates; the separate backup/restore fix remains #501.

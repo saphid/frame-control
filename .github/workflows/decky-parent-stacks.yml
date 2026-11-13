@@ -1,0 +1,82 @@
+name: Decky parent EOF stack samples
+
+on:
+  pull_request:
+    paths:
+      - 'scripts/framey-probe-decky-parent-stacks.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'tests/decky-runtime/parent_eof_stacks.py'
+      - 'tests/decky-runtime/parent_eof_native.py'
+      - 'tests/decky-runtime/Containerfile'
+      - 'tests/decky-runtime/check.py'
+      - 'tests/decky-runtime/deck_settings_private.py'
+      - 'ui/framey_decky_ipc.py'
+      - 'tests/test_decky_parent_stacks.py'
+      - '.github/workflows/decky-parent-stacks.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  parent-stacks:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            architecture: x86_64
+          - os: ubuntu-24.04-arm
+            architecture: aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXPECTED_ARCH: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Sample the owned native loader parent without added capabilities
+        run: python3 scripts/framey-probe-decky-parent-stacks.py --output "$RUNNER_TEMP/parent-stacks"
+      - name: Bind samples and control results to the native exact head
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, platform, subprocess
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP'])/'parent-stacks'
+          raw = (folder/'report.json').read_bytes()
+          report = json.loads(raw)
+          head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert head == os.environ['AUDIT_HEAD']
+          assert report['architecture'] == platform.machine() == os.environ['EXPECTED_ARCH']
+          assert report['diagnosticPassed'] and report['ownedContainerRemoved'] and report['ownedImageRemoved']
+          native, stacks = report['native'], report['stacks']
+          assert native['normalControlPassed'] and native['publishedBinaryParentHangReproduced']
+          assert native['allOwnedProcessesReaped'] and native['parentUnmodified']
+          assert stacks['nonblockingSampling'] and stacks['probeSubreaperEnabled'] and not stacks['addedCapabilities']
+          assert stacks['listener']['samples'] > 0 and stacks['listener']['pids']
+          stack_bytes = (folder/'stacks.raw').read_bytes()
+          assert len(stack_bytes) == stacks['stackBytes']
+          assert hashlib.sha256(stack_bytes).hexdigest() == stacks['stackSha256']
+          for key in ('historicalArm64VmExecuted', 'historicalCauseEstablished', 'releaseHoldCleared', 'realFrameContacted'):
+              assert report[key] is False
+          for path, digest in report['sourceSha256'].items():
+              assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
+          receipt = dict(headSha=head, architecture=platform.machine(),
+                         sourceSha256=report['sourceSha256'], reportSha256=hashlib.sha256(raw).hexdigest(),
+                         stackSha256=stacks['stackSha256'], diagnosticPassed=True,
+                         historicalCauseEstablished=False, releaseHoldCleared=False, realFrameContacted=False)
+          (folder/'exact-head.json').write_text(json.dumps(receipt, indent=2)+'\n')
+          print(json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decky-parent-stacks-${{ matrix.os }}
+          path: ${{ runner.temp }}/parent-stacks/
+          if-no-files-found: error

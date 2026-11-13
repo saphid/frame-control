@@ -73,6 +73,78 @@ class Intake(unittest.TestCase):
             'blocker': {'kind': 'missing-context', 'reason': 'Cannot distinguish two request paths.',
                         'next_step': 'Need the affected binary version, without credentials.'}}
 
+    def tracked_connections(self):
+        """Keep every connection the queue opens, so only an explicit close ends it."""
+        from unittest.mock import patch
+        opened, real = [], m.sqlite3.connect
+        def connect(*args, **kwargs):
+            opened.append(real(*args, **kwargs))
+            return opened[-1]
+        return opened, patch.object(m.sqlite3, 'connect', connect)
+
+    def assertAllClosed(self, opened):
+        self.assertTrue(opened)
+        for db in opened:
+            with self.assertRaisesRegex(m.sqlite3.ProgrammingError, 'closed'):
+                db.execute('SELECT 1')
+
+    def test_every_queue_operation_closes_its_connection(self):
+        opened, tracking = self.tracked_connections()
+        with tracking:
+            self.q = m.Queue(self.path)
+            body = self.body()
+            eid = body['event']['uuid']
+            self.assertEqual(self.send(body), 'accepted')
+            self.assertEqual(self.send(body), 'duplicate')
+            woken = []
+            def sender(url, raw, key):
+                woken.append(json.loads(raw))
+                return 202
+            self.assertEqual(dispatcher.dispatch(self.q, 'unused', self.key, self.now, sender), 'accepted')
+            lease = woken[0]['lease']
+            self.assertEqual(self.q.inspect(eid, lease, self.now)['dispatch_outcome'], 'accepted')
+            self.q.context(eid, lease, self.now)
+            with self.assertRaises(ValueError):
+                self.q.inspect(eid, str(uuid.uuid4()), self.now)
+            self.q.investigate(eid, lease, self.investigation(), self.now)
+            self.q.finish(eid, lease, self.now, 'blocked: original binary unavailable')
+            self.q.record_history(eid, 'status', 'blocked')
+            self.assertEqual(len(self.q.history(eid)['cases']), 1)
+            self.assertEqual(len(self.q.history_list()), 1)
+        self.assertAllClosed(opened)
+
+    def test_rejected_transaction_rolls_back_and_releases_the_database(self):
+        first = self.body()
+        self.send(first)
+        job = self.q.claim(self.now)
+        self.journal(job)
+        self.q.finish(job['id'], job['lease'], self.now)
+        # Pruning runs inside the admission transaction before the UUID conflict is found.
+        self.now += 31*86400
+        conflict = copy.deepcopy(first)
+        conflict['event']['properties']['$exception_message'] = 'changed'
+        conflict['event']['properties']['$exception_list'][0]['value'] = 'changed'
+        opened, tracking = self.tracked_connections()
+        with tracking:
+            with self.assertRaises(m.Rejected) as error:
+                self.send(conflict)
+            self.assertEqual(error.exception.status, 422)
+            with self.assertRaises(RuntimeError):
+                with self.q.connect() as db:
+                    db.execute('BEGIN IMMEDIATE')
+                    db.execute("UPDATE reports SET state='pending'")
+                    raise RuntimeError('caller failure inside a write transaction')
+        self.assertAllClosed(opened)
+        # Both failures were rolled back and left no lock: a writer that will not wait succeeds.
+        probe = m.sqlite3.connect(self.path, timeout=0)
+        try:
+            probe.execute('BEGIN IMMEDIATE')
+            self.assertEqual(probe.execute('SELECT state FROM reports WHERE id=?',
+                                           (job['id'],)).fetchone()[0], 'done')
+            probe.rollback()
+        finally:
+            probe.close()
+
     def test_history_keeps_duplicate_occurrences_and_artifacts_after_payload_pruning(self):
         first, repeat = self.body(), self.body()
         self.assertEqual(self.send(first), 'accepted')
@@ -551,7 +623,13 @@ class Intake(unittest.TestCase):
             except OSError:
                 break
             time.sleep(0.05)
-        self.assertEqual(client.recv(1024), b'')
+        # Closing a socket that still holds unread trickled bytes can reach the client as
+        # EOF or as a reset/abort (macOS: ECONNRESET, Windows: WinError 10053). Each means
+        # the deadline closed it; a timeout or any response bytes still fail.
+        try:
+            self.assertEqual(client.recv(1024), b'')
+        except (ConnectionResetError, ConnectionAbortedError):
+            pass
         self.assertLess(time.monotonic() - started, 0.8)
         # The next request must be served after the slow request is forcibly closed.
         import http.client

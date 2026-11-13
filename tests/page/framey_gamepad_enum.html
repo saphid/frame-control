@@ -1,0 +1,49 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><div id="fixture"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  let canGoToPreviousPage=true,canGoToNextPage=true;
+  const calls=[],previousPage=()=>calls.push('previous'),nextPage=()=>calls.push('next');
+  // Exact published handler and action map, called directly with synthetic
+  // detail objects. No controller event bridge or plugin initializer runs.
+  __OFFICIAL_HANDLER__
+  const actions=()=>(__OFFICIAL_ACTION_MAP__);
+  const send=(button,repeat=false)=>{
+    let stopped=0;
+    handlePageButton({detail:{button,is_repeat:repeat},stopPropagation:()=>stopped++});
+    return stopped;
+  };
+  try {
+    assert(send(5)===1&&calls.join(',')==='previous','published left bumper was not recognized');
+    assert(send(6)===1&&calls.join(',')==='previous,next','published right bumper was not recognized');
+    assert(send(1)===0&&calls.length===2,'unrelated OK event was misclassified');
+    assert(send(5,true)===1&&calls.length===2,'published repeat guard changed');
+    canGoToPreviousPage=false;send(5);assert(calls.length===2,'previous-page boundary guard changed');
+    canGoToNextPage=false;send(6);assert(calls.length===2,'next-page boundary guard changed');
+    canGoToPreviousPage=canGoToNextPage=true;
+    assert(actions()[5]==='Previous page'&&actions()[6]==='Next page'&&Object.keys(actions()).length===2,
+      'published action descriptions collided');
+    canGoToPreviousPage=false;
+    assert(actions()[5]===undefined&&actions()[6]==='Next page','published action-map updates changed');
+    assert(DFL.GamepadButton[5]==='BUMPER_LEFT'&&DFL.GamepadButton[6]==='BUMPER_RIGHT'&&
+      DFL.GamepadButton.OK===1&&DFL.GamepadButton.CANCEL===2&&DFL.GamepadButton.DIR_UP===9&&
+      DFL.GamepadButton.SELECT===13&&DFL.GamepadButton.STEAM_QUICK_MENU===28,'SDK constants/reverse lookup changed');
+    const container=document.getElementById('fixture'),root=ReactDOM.createRoot(container),native=[];
+    ReactDOM.flushSync(()=>root.render(React.createElement(DFL.Focusable,{onActivate:e=>native.push(e)},'Activate')));
+    ReactDOM.flushSync(()=>container.querySelector('[role=button]').click());
+    assert(native.length===1&&native[0].type==='click'&&typeof native[0].detail==='number',
+      'native activation was replaced by a fabricated gamepad event');
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,publishedHandlerReplay:true,
+      leftRightSeparated:true,repeatAndBoundaryGuardsPreserved:true,publishedActionMapKeysSeparated:true,
+      reverseLookupPreserved:true,nativeClickUnchanged:true,syntheticDetailObjects:true,
+      enumSnapshot:Object.fromEntries(Object.entries(DFL.GamepadButton).filter(([name])=>!/^[0-9]+$/.test(name))),
+      realControllerEventsReceived:false,realPageNavigation:false,realBackendContacted:false,
+      realFrameContacted:false,controllerInputVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

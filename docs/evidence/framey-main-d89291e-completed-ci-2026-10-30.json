@@ -1,0 +1,354 @@
+{
+  "head": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+  "recordedAtUtc": "2026-10-30T21:06:01.566167+00:00",
+  "reports": {
+    "native-amd": {
+      "terminalOriginalImportRegression": {
+        "id": 65,
+        "name": "Decky Terminal",
+        "version": "0.5.3",
+        "sha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "shim": null,
+        "calls": [],
+        "discovered": [
+          {
+            "name": "Decky Terminal",
+            "version": "0.5.3",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "expectedRegression": {
+          "success": false,
+          "phase": "backend import",
+          "exception": "ModuleNotFoundError: No module named 'termios'",
+          "originalPluginUnmodified": true,
+          "backendSourceSha256": {
+            "main.py": "aa049c7e0e9724de9f697e6a2f74f982d6553be8be93c87b31315d3b00952923",
+            "py_modules/decky_terminal/terminal.py": "6324d71bfd1d74c06f8c45f4592eca16e84a0b8e2dd23de594353097d5b99238"
+          },
+          "backendRpcNotAttempted": true,
+          "rpcMethodsSucceeded": 0,
+          "ptyCommandsExecuted": 0,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "original published Terminal import regression reproduced; discovery is not backend usability; no PTY or input executed"
+      },
+      "allSevenSourceFingerprintsVerified": true,
+      "head": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "runId": 41125956882,
+      "architecture": "x86_64",
+      "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+      "archiveSha256": "6e0fc29294cd543ddf25a129899b15a001cb5e6f20e6720eb787d19c785b3b52",
+      "nativeCasesCompleted": 34,
+      "officialArchiveDigestsVerified": 30,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "jobId": 124304417582,
+      "exactCompletedJobVerified": true,
+      "workflowEvent": "push",
+      "workflowRunAttempt": 1,
+      "githubArtifactDigestVerified": true,
+      "artifactId": 13011525728,
+      "checkoutCommit": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "checkoutTree": "8a8165a2605bd804ea87dc47f5e605c1d6c80f96",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "133082298b9cb50c50161d3cfbfa819ab2769bcac5baf47ca913777a93a547db"
+    },
+    "native-arm": {
+      "terminalOriginalImportRegression": {
+        "id": 65,
+        "name": "Decky Terminal",
+        "version": "0.5.3",
+        "sha256": "7bd8765ca57663a24178b05687acb52c3723518ac9eac1c14419a87904c0a872",
+        "shim": null,
+        "calls": [],
+        "discovered": [
+          {
+            "name": "Decky Terminal",
+            "version": "0.5.3",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "expectedRegression": {
+          "success": false,
+          "phase": "backend import",
+          "exception": "ModuleNotFoundError: No module named 'termios'",
+          "originalPluginUnmodified": true,
+          "backendSourceSha256": {
+            "main.py": "aa049c7e0e9724de9f697e6a2f74f982d6553be8be93c87b31315d3b00952923",
+            "py_modules/decky_terminal/terminal.py": "6324d71bfd1d74c06f8c45f4592eca16e84a0b8e2dd23de594353097d5b99238"
+          },
+          "backendRpcNotAttempted": true,
+          "rpcMethodsSucceeded": 0,
+          "ptyCommandsExecuted": 0,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "original published Terminal import regression reproduced; discovery is not backend usability; no PTY or input executed"
+      },
+      "allSevenSourceFingerprintsVerified": true,
+      "head": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "runId": 41125956882,
+      "architecture": "aarch64",
+      "loaderSha256": "8ef5dcf36cbbbb6e97201a6baed5d79c4cc44ec27789fc9af1c5b6ae8f0b25b6",
+      "archiveSha256": "e9f32d97d818095f421be8374bd34dba048c7a72991016ae7fc320632b51e47e",
+      "nativeCasesCompleted": 34,
+      "officialArchiveDigestsVerified": 30,
+      "exactWorkflowRunVerified": true,
+      "caseInventoryAndDiscoveryVerified": true,
+      "expectedNegativeRegressionsVerified": true,
+      "steamgriddbPrivateArtwork": {
+        "id": 36,
+        "name": "SteamGridDB",
+        "version": "1.8.1",
+        "sha256": "e84f5b1f111af8862b06218479491fbf61036e1bfd9f16f93f9901e9b9ebc5e0",
+        "shim": null,
+        "calls": [
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          },
+          {
+            "method": "read_file_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "get_setting",
+            "result": false
+          },
+          {
+            "method": "set_setting",
+            "result": null
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "set_shortcut_icon_from_path",
+            "result": true
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": "icon_is_same_path"
+          },
+          {
+            "method": "set_shortcut_icon",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_path",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/777/private-icon.jpg"
+          },
+          {
+            "method": "download_as_base64",
+            "result": "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jC1sAAAAASUVORK5CYII="
+          },
+          {
+            "method": "set_shortcut_icon_from_url",
+            "result": true
+          },
+          {
+            "method": "set_steam_icon_from_url",
+            "result": "/home/tester/.local/share/Steam/appcache/librarycache/888/private-download.jpg"
+          },
+          {
+            "method": "get_setting",
+            "result": {
+              "enabled": false,
+              "label": "Private artwork fixture",
+              "ids": [
+                777,
+                888
+              ]
+            }
+          },
+          {
+            "method": "get_local_start",
+            "result": "/home/tester"
+          }
+        ],
+        "discovered": [
+          {
+            "name": "SteamGridDB",
+            "version": "1.8.1",
+            "load_type": 1,
+            "disabled": false
+          }
+        ],
+        "privateArtwork": {
+          "settingsPersistedAcrossLoaderRestart": true,
+          "settingsSha256": "284e7567f60b0df8ed029ebbeeb425327048e0b4d6ff0a949907550cd6a7083a",
+          "artworkSha256": "10c748c65ed61863df4836499e79764b3506929f28a5e29065f8682cafaf8ea6",
+          "localFileRoundTrip": true,
+          "signedShortcutIdNormalized": true,
+          "shortcutSetSamePathClear": true,
+          "unselectedShortcutPreserved": true,
+          "cacheTempFilesReplaced": true,
+          "loopbackDownloads": 3,
+          "ownedHttpServerStopped": true,
+          "noProductionChanges": true,
+          "externalArtworkServiceVerified": false,
+          "steamContextMenuVerified": false,
+          "browserVerified": false,
+          "realSteamCef": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "result": "published Decky API1 discovery, private settings/restart, local/base64 and loopback artwork, shortcut icon set/same/clear and signed-ID normalization passed; Steam context menu, external service, browser and VR unverified"
+      },
+      "realFrameContacted": false,
+      "physicalControllerVerified": false,
+      "jobId": 124304417713,
+      "exactCompletedJobVerified": true,
+      "workflowEvent": "push",
+      "workflowRunAttempt": 1,
+      "githubArtifactDigestVerified": true,
+      "artifactId": 13010901883,
+      "checkoutCommit": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "checkoutTree": "8a8165a2605bd804ea87dc47f5e605c1d6c80f96",
+      "checkoutTreeMatchesExactHead": true,
+      "jobLogSha256": "510c2139780e8bdca9b4be2b96251658dbb77c34c312354e57fbcb4556579879"
+    },
+    "e2e": {
+      "success": true,
+      "head": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "run": 41125956886,
+      "job": 124304417284,
+      "workflowEvent": "push",
+      "runAttempt": 1,
+      "workflowConclusionAtAudit": "success",
+      "workflowStatusAtAudit": "completed",
+      "checkoutCommit": "d89291ef3fcfbe94056ad4a1b659ee0d9e8b6b8c",
+      "checkoutTree": "8a8165a2605bd804ea87dc47f5e605c1d6c80f96",
+      "actualE2ePassed": true,
+      "e2eSeconds": 236,
+      "includingBuildsSeconds": 310,
+      "logSha256": "4325554299edf9f9bad554fdb148224151386524fcaead24647cb32820a4b045",
+      "realFrameContacted": false
+    }
+  },
+  "packageJobsAtAudit": "all four still running; full main gate unverified",
+  "realFrameContacted": false,
+  "physicalControllerVerified": false
+}

@@ -1,0 +1,118 @@
+{
+  "captured_utc": "2026-11-05T02:30:16.503Z",
+  "url": "http://localhost:47812/#steamStore",
+  "viewport": {
+    "width": 1280,
+    "height": 800
+  },
+  "headset": "frame-sim",
+  "filtered_catalog": {
+    "tags": [
+      "1752",
+      "21978"
+    ],
+    "hidef2p": true,
+    "total": 601,
+    "first_page_rows": 50,
+    "second_page": {
+      "start": 50,
+      "rows": 50,
+      "total": 601,
+      "first_title": "Beat Saber - Imagine Dragons - \"Thunder\""
+    },
+    "context_preserved_after_detail": true
+  },
+  "media": {
+    "time": 27.427993,
+    "width": 1280,
+    "height": 720,
+    "paused": false,
+    "error": "",
+    "thumbs": [
+      {
+        "label": "Show trailer: Gameplay Short New",
+        "text": "▶",
+        "clientWidth": 96,
+        "scrollWidth": 96,
+        "clientHeight": 58,
+        "scrollHeight": 58
+      },
+      {
+        "label": "Show trailer: 8th Anniversary ",
+        "text": "▶",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 1",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 2",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 3",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 4",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 5",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      },
+      {
+        "label": "Show Screenshot 6",
+        "text": "",
+        "clientWidth": 98,
+        "scrollWidth": 98,
+        "clientHeight": 60,
+        "scrollHeight": 60
+      }
+    ],
+    "nativeVRModVisible": false
+  },
+  "sale": {
+    "loading": false,
+    "error": "",
+    "query": "Beat Saber",
+    "total": 7,
+    "start": 0,
+    "countText": "7 results",
+    "scope": "1–7 of 7 Steam results for “Beat Saber”. All store controls apply before pagination. Prices and limits use your Steam region (AU). Frame rating filters apply to this page (7 shown). Steam can return loose matches when a title search is combined with On sale, including unrelated titles. Counts and ordering are supplied by Steam; remove On sale to compare.",
+    "summary": "Catalog filters · On sale",
+    "names": [
+      "John Carpenter's Toxic Commando",
+      "Spheroll",
+      "Apoc Tank: Rush Forward",
+      "Mortal Path: Mighty Senior Brother",
+      "Rally: Village Defense",
+      "Magic Awakening：Hero Saga",
+      "Beach Defense: Zombie Invasion"
+    ]
+  }
+}

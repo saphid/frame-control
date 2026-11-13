@@ -1,0 +1,140 @@
+<!DOCTYPE html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"><button id="opener">Open fixture</button></div>
+<div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const result=document.getElementById('result'), container=document.getElementById('framey-modal');
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const settle=()=>new Promise(resolve=>setTimeout(resolve,20));
+  const show=element=>{let handle;ReactDOM.flushSync(()=>{handle=DFL.showModal(element);});return handle;};
+  const close=handle=>ReactDOM.flushSync(()=>handle.Close());
+  const click=text=>ReactDOM.flushSync(()=>{
+    const button=[...container.querySelectorAll('button')].find(node=>node.textContent===text);
+    assert(button,'Missing button: '+text);button.click();
+  });
+  const opener=document.getElementById('opener'), choices=[];
+  // Only the pinned warning runs. Choices are synthetic; no plugin initializer,
+  // external navigation, backend, Steam tab or controller action runs here.
+  window.SP_REACT=React;
+  const deckyFrontendLib=DFL;
+  __OFFICIAL_COMPONENT__
+  // Replay the published QR wrapper, replacing only its QR renderer with inert
+  // local text. No QR library, URL navigation or plugin initializer runs.
+  const _default=()=>React.createElement('span',null,'Inert QR renderer');
+  __OFFICIAL_QR_COMPONENT__
+  const warning=()=>React.createElement(UsageWarningModal,{
+    onOk:()=>choices.push('accept'),onCancel:()=>choices.push('cancel')});
+  try {
+    opener.focus();
+    let handle=show(warning());await settle();
+    assert(container.querySelector('h3').textContent==='WARNING','warning heading missing');
+    const body=container.querySelector('p');
+    assert(body.textContent.includes('known security vulnerabilities'),'published warning text lost');
+    assert(body.style.textAlign==='justify','published child style lost');
+    assert(container.querySelectorAll('[role=dialog]').length===1,'duplicate shell');
+    click('I Understand');await handle.ClosedPromise;await settle();
+    assert(choices.join(',')==='accept' && !container.children.length,'accept callback/dismiss failed');
+    assert(document.activeElement===opener,'opener focus not restored');
+    handle=show(warning());click('Close');await handle.ClosedPromise;
+    handle=show(warning());await settle();
+    ReactDOM.flushSync(()=>document.activeElement.dispatchEvent(new KeyboardEvent('keydown',{
+      key:'Escape',bubbles:true,cancelable:true})));
+    await handle.ClosedPromise;
+    assert(choices.join(',')==='accept,cancel,cancel','shell dismissal accepted or duplicated a choice');
+    handle=show(warning());close(handle);await handle.ClosedPromise;
+    assert(choices.join(',')==='accept,cancel,cancel','programmatic Close emitted a choice');
+
+    // Active changes mount/unmount children without creating another portal.
+    // An inactive child cannot autofocus, run effects or retain a stale draft.
+    let mounted=0,unmounted=0;
+    const Child=()=>{
+      React.useEffect(()=>{mounted++;return ()=>{unmounted++;};},[]);
+      return React.createElement('input',{autoFocus:true,defaultValue:'Fresh draft'});
+    };
+    const content=active=>React.createElement(DFL.SimpleModal,{active},React.createElement(Child));
+    handle=show(content(false));await settle();
+    assert(!container.querySelector('input') && mounted===0,'inactive children mounted');
+    assert(container.querySelector('[role=dialog]'),'inactive content unexpectedly closed its owner');
+    ReactDOM.flushSync(()=>handle.Update(content(true)));await settle();
+    let input=container.querySelector('input');
+    assert(input && mounted===1 && document.activeElement===input,'activated child did not mount/focus');
+    input.value='Retired draft';
+    ReactDOM.flushSync(()=>handle.Update(content(false)));await settle();
+    assert(!container.querySelector('input') && unmounted===1,'deactivated child not cleaned up');
+    ReactDOM.flushSync(()=>handle.Update(content(true)));await settle();
+    assert(container.querySelector('input').value==='Fresh draft' && mounted===2,'inactive draft survived remount');
+    close(handle);await settle();assert(unmounted===2,'closing did not clean up active child');
+
+    let cancelCalls=0, shellCalls=0, originalEvent;
+    const escape=node=>{
+      const event=new KeyboardEvent('keydown',{key:'Escape',bubbles:true,cancelable:true});
+      ReactDOM.flushSync(()=>node.dispatchEvent(event));return event;
+    };
+    const QRReplay=({closeModal})=>React.createElement(QRModal,{
+      url:'https://example.invalid/local-fixture',closeModal:event=>{
+        cancelCalls++;originalEvent=event.nativeEvent;closeModal();
+      }});
+    handle=show(React.createElement(QRReplay));await settle();
+    let focusable=container.querySelector('div[role=button]');
+    assert(focusable,'published QR Focusable missing');focusable.focus();
+    const qrEscape=escape(focusable);await settle();
+    assert(cancelCalls===1,'published Focusable cancel callback dropped');
+    assert(originalEvent===qrEscape && qrEscape.defaultPrevented,'original keyboard event lost');
+    assert(!container.children.length,'published cancel did not close shell');
+
+    // Descendant Escape reaches the nearest cancel handler exactly once. The
+    // handler owns dismissal; neither the parent handler nor shell also runs.
+    const cancelChild=props=>React.createElement(DFL.Focusable,props,React.createElement('input'));
+    handle=show(React.createElement(DFL.Focusable,{onCancel:()=>shellCalls++},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && shellCalls===0 && container.children.length,
+      'nested cancellation bubbled or implicitly dismissed shell');
+    close(handle);await settle();
+
+    // An explicit key handler can consume Escape before the compatibility
+    // callback. Keep the shell from reacting to the consumed event as well.
+    handle=show(cancelChild({onCancel:()=>cancelCalls++,onKeyDown:event=>{
+      event.preventDefault();
+    }}));await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && container.children.length,'consumed Escape cancelled');
+    close(handle);await settle();
+
+    handle=show(React.createElement(DFL.ConfirmModal,{bCancelDisabled:true,onCancel:()=>shellCalls++},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && shellCalls===0 && container.children.length,'cancel-disabled modal bypassed');
+    close(handle);await settle();
+
+    let finishSave;
+    handle=show(React.createElement(DFL.ConfirmModal,{onOK:()=>new Promise(resolve=>{finishSave=resolve;})},
+      cancelChild({onCancel:()=>cancelCalls++})));
+    await settle();click('OK');await settle();escape(container.querySelector('input'));await settle();
+    assert(cancelCalls===2 && container.children.length,'busy modal cancelled through Focusable');
+    finishSave();await handle.ClosedPromise;await settle();
+
+    // Disabled Focusable callbacks remain inert outside a modal, too.
+    const local=document.createElement('div');document.getElementById('framey-root').append(local);
+    const localRoot=ReactDOM.createRoot(local);
+    ReactDOM.flushSync(()=>localRoot.render(cancelChild({disabled:true,onCancel:()=>cancelCalls++})));
+    escape(local.querySelector('input'));assert(cancelCalls===2,'disabled Focusable cancelled');
+    ReactDOM.flushSync(()=>localRoot.unmount());local.remove();
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    result.textContent=JSON.stringify({passed:true,realReactDOM:true,publishedWarning:true,
+      acceptAndShellDismiss:true,programmaticCloseSilent:true,childStylesPreserved:true,
+      inactiveChildrenUnmounted:true,activeRemountFresh:true,focusRestored:true,
+      publishedQRCancel:true,originalCancelKeyboardEvent:true,nestedCancelOnce:true,
+      cancelHandlerOwnsDismissal:true,consumedEscapeRespected:true,
+      busyCancelAndDisabledGuards:true,
+      realFrameContacted:false,controllerInputVerified:false,vrKeyboardVerified:false});
+  } catch(error) {result.textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

@@ -1,0 +1,34 @@
+{
+  "date": "2026-10-24",
+  "scope": "Read-only three-sample HTML export and browser download check; no installs, app launches, or remote process-control commands",
+  "preflight": {
+    "smokeLock": "absent",
+    "version": "0.5.6",
+    "build": "20261015.6141207"
+  },
+  "command": "scripts/frame-power-sample.sh --count 3 --interval 1 --html /tmp/frame-power-export-check.html",
+  "exitCode": 0,
+  "sampleCount": 3,
+  "metricCount": 91,
+  "unavailableGroups": [
+    "proximity"
+  ],
+  "browser": {
+    "engine": "T3 collaborative Chromium preview",
+    "widths": [
+      1280,
+      390
+    ],
+    "jsonDownloadMatches": true,
+    "csvDownloadMatches": true,
+    "csvDataRows": 276,
+    "pageScripts": 0,
+    "horizontalOverflow": "confined to focusable table region"
+  },
+  "limits": [
+    "No real-device Ctrl+C cancellation test; local child termination and retained samples verified with subprocess fixtures",
+    "No screen-reader, Windows or macOS verification",
+    "No controlled baseline, load or worn-headset testing",
+    "Sensor accuracy not established"
+  ]
+}

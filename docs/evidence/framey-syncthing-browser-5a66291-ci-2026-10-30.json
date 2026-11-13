@@ -1,0 +1,562 @@
+{
+  "head": "5a6629155b4b9b9822f6d2c216b47a377b59f2e0",
+  "architecture": "x86_64",
+  "artifactSha256": "9d948fee3677f401aea3a93e5d2f1669b73e8b1ced156db6c87e14ddbf80a121",
+  "allSourceFingerprintsVerified": true,
+  "signedContentAndActualPackageVerified": true,
+  "requiredResults": {
+    "signedBundlesInstalled": true,
+    "packageLaunched": true,
+    "actualTwoWaySync": true,
+    "runtimeOriginGpgVerificationEnabled": true,
+    "appOriginGpgVerificationEnabled": true,
+    "actualUserServiceLifecycle": true,
+    "certificateRetained": true,
+    "syncRetainedAfterRestart": true,
+    "ownedServiceRemoved": true,
+    "ownedProcessesReaped": true,
+    "noOwnedFlatpakInstancesRemain": true,
+    "uninstallPreservedOwnedData": true
+  },
+  "commits": {
+    "app": "2be395a769ce7f1d8332892c1777d9f1f147ce7f66647864d87d5550e7061034",
+    "runtime": "2bb946ea4ebb050f6a32f90e979feb975b08280d1ff1aac881dec3d1361ad84d"
+  },
+  "reportedVersion": "syncthing v1.27.3 \"Gold Grasshopper\" (go1.25.6 linux-amd64) flatbld@76ab452bfb4c 2011-11-11 11:11:11 UTC [noupgrade, stnoupgrade]",
+  "stopElapsedSeconds": 0.182,
+  "installerEnabled": false,
+  "realFrameContacted": false,
+  "setupPortScans": [
+    8384
+  ],
+  "setupPortScanElapsedSeconds": 0.236,
+  "combinedDeckyVerified": true,
+  "requiredLifecycleResults": 17,
+  "wizardResults": {
+    "defaultPackageConfig": true,
+    "remainedUnconfiguredDuringScan": true,
+    "discoveredDefaultPort": true,
+    "discoveredDefaultApiKey": true,
+    "scannedBasicAuth": true,
+    "persistedThroughDeckyRpc": true,
+    "setupCommittedAndReloaded": true,
+    "authenticatedRestWithDiscoveredKey": true,
+    "ownedSetupServiceStopped": true
+  },
+  "ownershipRefusals": 18,
+  "processIdentityChecks": 14,
+  "uninstallPreservedCandidateData": true,
+  "migrationMountNamespaceAssertionSourceBound": true,
+  "migrationResults": 12,
+  "legacyPidBefore": 644,
+  "legacyPidAfter": 704,
+  "migrationDataPreservedAfterUninstall": true,
+  "browserStages": [
+    "running",
+    "stopped",
+    "restarted",
+    "stopped"
+  ],
+  "browserCalls": 68,
+  "manualPortFallbackUsed": false,
+  "sandboxedRendererCount": 4,
+  "signedBrowserPidTransitions": [
+    {
+      "stage": "running",
+      "pids": [
+        1038,
+        1048,
+        1057
+      ]
+    },
+    {
+      "stage": "restarted",
+      "pids": [
+        1129,
+        1142,
+        1151
+      ]
+    }
+  ],
+  "screenshotSha256": {
+    "running1": "c8d0c55589a8e5e9464d61b47fead8d2a048c3495469a83c7ff210f48e4e7407",
+    "stopped2": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70",
+    "restarted3": "c8d0c55589a8e5e9464d61b47fead8d2a048c3495469a83c7ff210f48e4e7407",
+    "stopped4": "5a5d3c54605a485bf92b3f3c80d92e8f92bbda021e381a48c76590411b9bfb70"
+  },
+  "syntheticInput": true,
+  "privateTestBridge": true,
+  "productionHttpParentVerified": false,
+  "realSteamCef": false,
+  "physicalControllerVerified": false,
+  "allFourCapturesVisuallyInspected": true,
+  "bothRunningCapturesShowPrivateFolderAndTwoDevices": true,
+  "restartDomSnapshotCapturedBeforeFolderRows": true,
+  "initialAuditAssumptionCorrected": "Restart DOM snapshot predates the populated screenshot; the actual screenshot was inspected independently. No CI gate or fixture was changed.",
+  "checkedAtUtc": "2026-10-30T13:34:20.891466+00:00",
+  "artifactId": 12980797871,
+  "runId": 41060673311,
+  "arm64SignedPending": true,
+  "managedInstallVerified": false,
+  "browserStagesDetail": [
+    {
+      "type": "test:stage",
+      "stage": "running",
+      "text": "Syncthing\n Running\nFolders\nPrivate service sync\nDevices\nframey-owned-vm\nowned-peer",
+      "errors": [],
+      "manualPortFallbackUsed": false
+    },
+    {
+      "type": "test:stage",
+      "stage": "stopped",
+      "text": "Syncthing\n Stopped",
+      "errors": [],
+      "manualPortFallbackUsed": false
+    },
+    {
+      "type": "test:stage",
+      "stage": "restarted",
+      "text": "Syncthing\n Running\nFolders\nDevices",
+      "errors": [],
+      "manualPortFallbackUsed": false
+    },
+    {
+      "type": "test:stage",
+      "stage": "stopped",
+      "text": "Syncthing\n Stopped",
+      "errors": [],
+      "manualPortFallbackUsed": false
+    }
+  ],
+  "browserCallsDetail": [
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "set_setting",
+      "setting": "mode"
+    },
+    {
+      "method": "set_setting",
+      "setting": "flatpak_name"
+    },
+    {
+      "method": "set_setting",
+      "setting": "flatpak_binary"
+    },
+    {
+      "method": "set_setting",
+      "setting": "_wizard_force_flatpak_config_for"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/check/start",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/check/scan_port",
+      "status": 200
+    },
+    {
+      "method": "set_setting",
+      "setting": "port"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/check/scan_api_key",
+      "status": 200
+    },
+    {
+      "method": "set_setting",
+      "setting": "api_key"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/check/scan_basic_auth",
+      "status": 200
+    },
+    {
+      "method": "set_setting",
+      "setting": "basic_auth_user"
+    },
+    {
+      "method": "set_setting",
+      "setting": "basic_auth_pass"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "set_setting",
+      "setting": "autostart"
+    },
+    {
+      "method": "set_setting",
+      "setting": "keep_running_on_desktop"
+    },
+    {
+      "method": "set_setting",
+      "setting": "is_setup"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/reload-config",
+      "status": 204
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/devices",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/system/status",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/folders",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/folder",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/device",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/db/status?folder=framey-private",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/stop",
+      "status": 204
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/folders",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/folder",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/system/status",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/devices",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/device",
+      "status": 425
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/start",
+      "status": 204
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/",
+      "status": 200
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/folders",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/folder",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/system/status",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/devices",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/device",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/db/status?folder=framey-private",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "POST",
+      "path": "/__decky-watchdog/stop",
+      "status": 204
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/folders",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/folder",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/system/status",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/config/devices",
+      "status": 425
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/rest/stats/device",
+      "status": 425
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "get_settings_json"
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    },
+    {
+      "method": "framey_http_fetch",
+      "httpMethod": "GET",
+      "path": "/__decky-watchdog/state",
+      "status": 200
+    }
+  ],
+  "sourceSha256": {
+    "scripts/framey-test-syncthing-flatpak-package.py": "15704ca77678cb867a87b1ff9ce1492fdff19e1521b9de421a8c4bbaa9b2edcf",
+    "scripts/framey-test-syncthing-service.py": "377191a5de4129bbf44c1215beb521632101e10e81b2e6dcb03a4ebc5e0d1f68",
+    "tests/decky-runtime/syncthing_flatpak_package_root.py": "20f7c8d8507beb13d7c55e0d6f1995cd3fcceb14ff460104ede08579ed07047e",
+    "tests/decky-runtime/syncthing_flatpak_package.py": "0b8918229661aeb10e7229246867e1fadd8b5813e2149abf28c38a3b6710a02c",
+    "tests/decky-runtime/syncthing_service.py": "7f472d5a2d3d98bc7ea64fb67129173a9bcbe5afe0c4f3823be2e85e1eddcf69",
+    "tests/decky-runtime/syncthing_migration.py": "4f871c41f9c5384069bfcdce3c4abc0c93822705f9a95292b5660a643abde4a2",
+    "scripts/build-framey-syncthing.py": "1546bb102e27555b0ed56fe9dd00b9f90c6443fab5db299003630db10e6685fd",
+    "scripts/framey-test-decky-runtime.py": "1b3f701585fb6ef940ffbd7c161691a914dd346e57e4fc81c5394694e24b3fc4",
+    "scripts/framey-test-syncthing-runtime.py": "a906869db1b9845f7affa043e5812596c188626e392c94d090d317d03dc5826b",
+    "ui/vendor/syncthing-0.2.7/main.py": "b90bd75deed7ecf0728c93e04df841ba76f53671013be7c2c202d0bd0bc2e5ba",
+    "ui/vendor/syncthing-0.2.7/source.tar.gz": "a17f1c0bdfa70cf666c0d57a996a25597ac2f4791d43463a5dbf0639a0e51f8f",
+    "ui/vendor/syncthing-0.2.7/owned_unit.rs": "5f091a608da8d2922312699eb32fe378115b3372300043ec8d88d256892ab03a",
+    "ui/vendor/syncthing-0.2.7/watchdog.patch": "4620596a1b2f19fec343d67b7706125e4e421eb59c6f3da631263314adee81e5",
+    "scripts/framey-test-syncthing-browser.py": "a916825418fda2e5d21fbbe1a302e2826950e7b81d186ea69a633deb3d5253bb",
+    "tests/decky-runtime/syncthing_browser.py": "13650e3ef1f4141030c411ab6c4095776d2dbc8a0475314705123fb962509a39",
+    "tests/decky-runtime/Containerfile.flatpak-vm": "447bf47a7f0c5f27fd90a825f23a676e1ce4fdff72ab42f115c0c92f9fd13060",
+    "ui/framey_panel.py": "27294fc03645e2d44f1b3453a16957775e5c7da65ad85a3c9d2c2dcabcbd3e38",
+    "ui/framey-host.js": "609e4cc0a144d5cdb1021b6594720b5a1f78534a7b18d9bf0b725664a62d585a",
+    "ui/frame_decky.py": "2e26a03cafb8faaee551e795224108d30772137a671fa83fa970c6e80007051b",
+    "ui/frame_decky_store.py": "49075253e23cdff57fa81ab7d2a8f393da230f2a9be3977a83fa9838425392ff",
+    "ui/framey_compatibility.py": "9185d259d8fda415abe0f7c479a02ff7540c5ffb69d4a432912442314c1fe3f4",
+    "ui/frame_steam.py": "7662a9fa60c6b263b96ad84d63d83ee3e8d299b04e34fe5af37c441e3e2a73e3",
+    "ui/vendor/react-18.3.1.min.js": "d949f1c3687aedadcedac85261865f29b17cd273997e7f6b2bfc53b2f9d4c4dd",
+    "ui/vendor/react-dom-18.3.1.min.js": "35f4f974f4b2bcd44da73963347f8952e341f83909e4498227d4e26b98f66f0d",
+    "ui/vendor/syncthing-0.2.7/frontend.patch": "3c92e2e391af1b3bafbda77dd5852f0d1e9145c7f1bf59e70b49fd7f9e9c31cd"
+  },
+  "sandboxedRendererPids": [
+    {
+      "pid": 960,
+      "ancestryToBrowser": [
+        960,
+        897,
+        895,
+        873
+      ],
+      "commandLineStyle": "process-title",
+      "seccomp": 2,
+      "noNewPrivs": 1
+    },
+    {
+      "pid": 971,
+      "ancestryToBrowser": [
+        971,
+        897,
+        895,
+        873
+      ],
+      "commandLineStyle": "process-title",
+      "seccomp": 2,
+      "noNewPrivs": 1
+    },
+    {
+      "pid": 972,
+      "ancestryToBrowser": [
+        972,
+        897,
+        895,
+        873
+      ],
+      "commandLineStyle": "process-title",
+      "seccomp": 2,
+      "noNewPrivs": 1
+    },
+    {
+      "pid": 1001,
+      "ancestryToBrowser": [
+        1001,
+        897,
+        895,
+        873
+      ],
+      "commandLineStyle": "process-title",
+      "seccomp": 2,
+      "noNewPrivs": 1
+    }
+  ],
+  "browserVersion": "Chromium 156.0.8078.73 built on Debian GNU/Linux 13 (trixie)",
+  "browserExecutableSha256": "7bd6a2bd99304f8ed217e3bd12c8785b7b6ea3ba901ffc37b6de6292e3d35dd4"
+}

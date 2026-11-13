@@ -1,0 +1,48 @@
+{
+  "at": "2026-10-31T23:04:40.438107+00:00",
+  "pr": 520,
+  "testedSource": "20f8a0d445ece65936be9fdda8c471328c511f6b",
+  "integratedMain": "9c749eb2ac1707229759adb1c42f69079e8df19d",
+  "normalMergeParents": [
+    "81d837ab2a7f58a44039aa5deefa2bdaffbaa9a8",
+    "9c749eb2ac1707229759adb1c42f69079e8df19d"
+  ],
+  "sourceInputs": 23,
+  "serverTests": 1961,
+  "serverPlatformOptionalSkips": 15,
+  "websiteTests": 18,
+  "localNativeArchitecture": "x86_64",
+  "nativeFixtureCases": 5,
+  "localNativePluginIds": [
+    24,
+    130
+  ],
+  "radiyoRpcs": [
+    9,
+    7
+  ],
+  "radiyoTlsBothRejectionPathsPreserved": true,
+  "prefixManagerRpcs": [
+    39,
+    42,
+    40
+  ],
+  "store130Pin": "1.0.1",
+  "github102CandidateStatus": "unverified",
+  "prefixBothExactArchiveInstallOutputsUnchangedFromMain": true,
+  "e2eTests": 53,
+  "e2eSkips": 0,
+  "e2eSeconds": 402.632,
+  "catalogPins": 116,
+  "localCatalogResultsMatchPreviousMainIntegration": true,
+  "ownedCleanupIndependentlyVerified": true,
+  "sharedSimulatorAndImagesPreserved": true,
+  "compatibility": "partial",
+  "externalStationsTrustedHttpsPlaybackOfficialUiWearerControllerUnverified": true,
+  "freshHostedCIUnverified": true,
+  "realFrameContacted": false,
+  "mergeQualified": false,
+  "releaseQualified": false,
+  "rawSha256": "cc2e331ebaa1adb233787059ae2ac1555aab68816b367a545d67779b7ad1c5e9",
+  "rawBytes": 48950
+}

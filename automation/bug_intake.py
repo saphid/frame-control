@@ -4,6 +4,7 @@ import argparse
 from datetime import datetime, timezone
 import base64
 import binascii
+import contextlib
 import hashlib
 import hmac
 import json
@@ -130,10 +131,19 @@ class Queue:
                        "SELECT 'finish:'||d.report_id,r.fingerprint,d.finished,'disposition',d.disposition,'' "
                        'FROM dispositions d JOIN reports r ON r.id=d.report_id')
 
+    @contextlib.contextmanager
     def connect(self):
+        # One transaction per connection: commit on success, roll back on error, then
+        # always close. sqlite3's own context manager never closes, and on recent CPython
+        # an unclosed connection stays open until cyclic garbage collection. That keeps
+        # the database in use on Windows and holds handles in the long-running server.
         db = sqlite3.connect(self.path, timeout=5)
-        db.row_factory = sqlite3.Row
-        return db
+        try:
+            db.row_factory = sqlite3.Row
+            with db:
+                yield db
+        finally:
+            db.close()
 
     def admit_standard(self, raw, message_id, timestamp, signatures, key, now=None):
         now = int(time.time()) if now is None else now

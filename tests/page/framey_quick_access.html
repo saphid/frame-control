@@ -1,0 +1,59 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const deckyFrontendLib=DFL,toaster=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'fixture').toaster;
+  const queries=[],onSearch=query=>queries.push(query);
+  // Exact published callback and toast methods; no initializer or backend runs.
+  __OFFICIAL_SEARCH_CALLBACK__
+  __OFFICIAL_TOAST__
+  PyCaller.pluginName='Private Free Loader fixture';
+  const container=document.getElementById('framey-root'),root=ReactDOM.createRoot(container);
+  const plugin={content:React.createElement('p',null,'Local plugin home')};
+  const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+  const go=()=>ReactDOM.flushSync(()=>DFL.Navigation.Navigate('/fixture/detail'));
+  try {
+    ReactDOM.flushSync(()=>root.render(React.createElement(window.__FixtureSurface,{plugin})));
+    await tick();
+    const router=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'fixture').routerHook;
+    router.addRoute('/fixture/detail',()=>React.createElement('p',null,'Local detail page'));
+    go();assert(container.textContent.includes('Local detail page'),'local detail route did not open');
+    // RadiYo must reach its continuation after requesting the Decky tab.
+    await onSearchModalClosed('Synthetic station query');await tick();
+    assert(queries.length===1&&queries[0]==='Synthetic station query','published search continuation was lost');
+    assert(container.textContent==='Local plugin home','published callback did not return to local home');
+    ReactDOM.flushSync(()=>DFL.Navigation.NavigateBack());
+    assert(container.textContent==='Local plugin home','cleared local history reopened a retired detail route');
+    go();PyCaller.toast('Synthetic deal notification');
+    const open=[...document.querySelectorAll('#framey-toasts button')].find(button=>button.textContent==='Open');
+    assert(open,'published toast Open action was lost');
+    ReactDOM.flushSync(()=>open.click());await tick();
+    assert(container.textContent==='Local plugin home','published toast did not return to local home');
+    assert(!document.querySelector('#framey-toasts button'),'handled toast did not dismiss');
+    go();ReactDOM.flushSync(()=>DFL.Router.OpenQuickAccessMenu(DFL.QuickAccessTab.Decky));
+    assert(container.textContent==='Local plugin home','Router alias did not share local mapping');
+    go();
+    for(const tab of [0,1,2,3,4,5,6,7,8,undefined,null,'999']) {
+      let refused=false;
+      try {DFL.Navigation.OpenQuickAccessMenu(tab);}catch(error){refused=String(error).includes('unavailable');}
+      assert(refused,'unsupported Steam tab was accepted: '+String(tab));
+      assert(container.textContent.includes('Local detail page'),'refused tab changed local navigation');
+    }
+    const expected={Notifications:0,RemotePlayTogetherControls:1,VoiceChat:2,Friends:3,Settings:4,Perf:5,Help:6,Music:7,Decky:999};
+    for(const [name,value] of Object.entries(expected))
+      assert(DFL.QuickAccessTab[name]===value&&DFL.QuickAccessTab[value]===name,'legacy enum mismatch: '+name);
+    assert(Object.isFrozen(DFL.QuickAccessTab),'shared tab identifiers were mutable');
+    router.removeRoute('/fixture/detail');ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedSearchContinuation:true,publishedToastOpen:true,localRouteReturn:true,localHistoryCleared:true,
+      routerAliasPreserved:true,unsupportedTabsRefused:true,legacyEnumVerified:true,
+      syntheticQuery:true,syntheticToast:true,steamQuickAccessMenuOpened:false,
+      realRadioSearch:false,realDealsFetched:false,realSettingsSaved:false,
+      realFrameContacted:false,controllerInputVerified:false,wornVisibilityVerified:false});
+  } catch(error) {document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

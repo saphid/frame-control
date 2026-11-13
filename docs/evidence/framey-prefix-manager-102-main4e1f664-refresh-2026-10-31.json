@@ -1,0 +1,603 @@
+{
+  "at": "2026-10-31T16:48:37.204915+00:00",
+  "sourceRevision": "0dcb4b1b4521a1cc6ba9f5badeffd2319734784c",
+  "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "1cc2805e0ed9695e53d17735b79187ba3ef1009d3af2b8069e66cc263a71dfa2",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "553e5144bb02df2f49ebaccf1b3ae2187e9291aff98f9a442b6dd955b04125fa",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+    "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+    "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+    "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+    "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "0aaa53c85d57cde644d96b6e4ef9f5c59bc0c1cdadb616afe1598b5f47788839",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "3fd471b7ee0c306c3005f6fcc47769b1d33c454366aed1a680b5b197a932b8eb",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "sourcePreservation": {
+    "at": "2026-10-31T16:43:45.806698+00:00",
+    "sourceRevision": "0dcb4b1b4521a1cc6ba9f5badeffd2319734784c",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "priorHead": "2d0742332d71c03f226ff7b9e6d3ac4681e571c6",
+    "normalMerge": true,
+    "mainOther36RuntimeBodiesPreserved": true,
+    "priorPrefixBodyPreserved": true,
+    "all37RuntimeDispatchOccurrencesVerified": true,
+    "mainOtherInstallerBranchesPreserved": true,
+    "onlyPriorPrefixInstallerBranchChanged": true,
+    "allMainApplyScriptDispatchesPreserved": true,
+    "freeLoaderRuntimeAndFixtureMatchMain": true,
+    "all116CompleteCatalogRowsPreserved": true,
+    "all116StatusInstallPoliciesPreserved": true,
+    "sharedIpcConsoleInventoryUnchanged": true,
+    "mainOther33NativeCasesPreserved": true,
+    "priorPrefixCaseAndHelperPreserved": true,
+    "mainRunnerPreservedWithOneNewControl": true,
+    "mainE2eAssertionsPreserved": true,
+    "nativeSourceFingerprints": {
+      "scripts/framey-test-decky-runtime.py": "1cc2805e0ed9695e53d17735b79187ba3ef1009d3af2b8069e66cc263a71dfa2",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "553e5144bb02df2f49ebaccf1b3ae2187e9291aff98f9a442b6dd955b04125fa",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "0aaa53c85d57cde644d96b6e4ef9f5c59bc0c1cdadb616afe1598b5f47788839",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "3fd471b7ee0c306c3005f6fcc47769b1d33c454366aed1a680b5b197a932b8eb",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "nativeInputCount": 20
+  },
+  "prefixNative": {
+    "sourceRevision": "0dcb4b1b4521a1cc6ba9f5badeffd2319734784c",
+    "baseMain": "4e1f664be47b99fcf88c84d1280126c39d6753b4",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "1cc2805e0ed9695e53d17735b79187ba3ef1009d3af2b8069e66cc263a71dfa2",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "553e5144bb02df2f49ebaccf1b3ae2187e9291aff98f9a442b6dd955b04125fa",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "0aaa53c85d57cde644d96b6e4ef9f5c59bc0c1cdadb616afe1598b5f47788839",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "3fd471b7ee0c306c3005f6fcc47769b1d33c454366aed1a680b5b197a932b8eb",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "architecture": "x86_64",
+    "decky": "v3.3.0",
+    "cases": [
+      {
+        "version": "1.0.1",
+        "rpcCount": 39,
+        "rpcMethods": [
+          "get_games",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "cleanup_orphans",
+          "delete_prefix",
+          "get_games"
+        ],
+        "backendSha256": null,
+        "ipcAdapterSha256": null,
+        "independentState": {
+          "backupBytesMatch": true,
+          "oldBackupPreserved": true,
+          "outsideMarkerPreserved": true,
+          "symlinkAndTraversalRejected": true,
+          "privatePrefixesRemoved": true,
+          "bulkCleanupAlwaysRefused": true,
+          "secondUserPrefixPreserved": true,
+          "malformedAndUnreadableShortcutsPreserved": true,
+          "ambiguousLibraryPrefixesPreserved": true
+        },
+        "lifecycle": null,
+        "consoleSha256": "d4e1addd9b735015af42d3c65f1214003a169dbe42e275a29e1db9085d4b08e7"
+      },
+      {
+        "version": "1.0.2",
+        "rpcCount": 42,
+        "rpcMethods": [
+          "get_games",
+          "get_games",
+          "delete_prefix",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "cleanup_orphans",
+          "delete_prefix",
+          "get_games",
+          "get_games",
+          "get_games"
+        ],
+        "backendSha256": "24d4dbe23ff5b4322b46c36650fcf09577ca6c7607083dfcec3d56770ef748dc",
+        "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+        "independentState": {
+          "backupBytesMatch": true,
+          "oldBackupPreserved": true,
+          "outsideMarkerPreserved": true,
+          "symlinkAndTraversalRejected": true,
+          "privatePrefixesRemoved": true,
+          "bulkCleanupAlwaysRefused": true,
+          "secondUserPrefixPreserved": true,
+          "malformedAndUnreadableShortcutsPreserved": true,
+          "ambiguousLibraryPrefixesPreserved": true
+        },
+        "lifecycle": {
+          "stops": [
+            {
+              "loaderPid": 9,
+              "returncode": 0,
+              "elapsedSeconds": 0.163869502954185,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessCount": 5,
+              "ownedProcessIdentitiesReaped": true,
+              "descendantsBefore": {
+                "10": {
+                  "state": "S",
+                  "parent": 9,
+                  "start": "351589969"
+                },
+                "19": {
+                  "state": "S",
+                  "parent": 10,
+                  "start": "351590001"
+                },
+                "20": {
+                  "state": "S",
+                  "parent": 10,
+                  "start": "351590001"
+                },
+                "21": {
+                  "state": "S",
+                  "parent": 20,
+                  "start": "351590012"
+                }
+              },
+              "exactDescendantsRemaining": {},
+              "adoptedChildExits": [
+                {
+                  "pid": 19,
+                  "returncode": 0
+                },
+                {
+                  "pid": 20,
+                  "returncode": 0
+                }
+              ],
+              "fixtureClosedUnixPeers": [
+                "/tmp/plugin_socket_1793465150.2412965"
+              ],
+              "forcedPluginKills": 0,
+              "pluginUnloadCompleted": true,
+              "errors": [],
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\nCalling Loader unload function for Games Prefix Manager (v1.0.2).\nAttempting to unload with plugin Games Prefix Manager (v1.0.2)'s \"_unload\" function.\n\nCould not find \"_unload\" in Games Prefix Manager (v1.0.2)'s main.py\n\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "bf4118cd1278dabad340cf6a7cc7c3c52b231e7f593a103154f1cf93b4880757",
+              "cleanShutdownVerified": true
+            },
+            {
+              "loaderPid": 23,
+              "returncode": 0,
+              "elapsedSeconds": 0.2138118576258421,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessCount": 5,
+              "ownedProcessIdentitiesReaped": true,
+              "descendantsBefore": {
+                "24": {
+                  "state": "S",
+                  "parent": 23,
+                  "start": "351590286"
+                },
+                "33": {
+                  "state": "S",
+                  "parent": 24,
+                  "start": "351590318"
+                },
+                "34": {
+                  "state": "S",
+                  "parent": 24,
+                  "start": "351590318"
+                },
+                "35": {
+                  "state": "S",
+                  "parent": 34,
+                  "start": "351590329"
+                }
+              },
+              "exactDescendantsRemaining": {},
+              "adoptedChildExits": [
+                {
+                  "pid": 33,
+                  "returncode": 0
+                },
+                {
+                  "pid": 34,
+                  "returncode": 0
+                }
+              ],
+              "fixtureClosedUnixPeers": [],
+              "forcedPluginKills": 0,
+              "pluginUnloadCompleted": true,
+              "errors": [],
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\nCalling Loader unload function for Games Prefix Manager (v1.0.2).\nAttempting to unload with plugin Games Prefix Manager (v1.0.2)'s \"_unload\" function.\n\nCould not find \"_unload\" in Games Prefix Manager (v1.0.2)'s main.py\n\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "bf4118cd1278dabad340cf6a7cc7c3c52b231e7f593a103154f1cf93b4880757",
+              "cleanShutdownVerified": true
+            }
+          ],
+          "emptyLibraryReadbacks": [
+            [],
+            []
+          ],
+          "backupSha256Before": {
+            "4242-b4id6gqe.zip": "d861e40abeb77e0cc505b7492dacf3afa253ecc11dda12fa7963e3ca7eea4475",
+            "4242-fhtvjfaw.zip": "d861e40abeb77e0cc505b7492dacf3afa253ecc11dda12fa7963e3ca7eea4475"
+          },
+          "backupsPreserved": true,
+          "outsideMarkerPreserved": true,
+          "unrelatedSiblingPreserved": true,
+          "cleanShutdownVerified": true,
+          "expectedRegression": false,
+          "customUnloadHookPresent": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false,
+          "restartedDiscovery": [
+            {
+              "name": "Games Prefix Manager",
+              "version": "1.0.2",
+              "load_type": 0,
+              "disabled": false
+            }
+          ]
+        },
+        "consoleSha256": "9f433b6e9c3f113e6e309f6614a9327d40624af96a931d8a29c216b28f12669c"
+      },
+      {
+        "version": "1.0.2",
+        "rpcCount": 40,
+        "rpcMethods": [
+          "get_games",
+          "get_games",
+          "delete_prefix",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "cleanup_orphans",
+          "cleanup_orphans",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "delete_prefix",
+          "get_games",
+          "delete_prefix",
+          "get_games",
+          "cleanup_orphans",
+          "delete_prefix",
+          "get_games"
+        ],
+        "backendSha256": "96786bc3609b34d449a72b9159e01bd46b40d6c9b4e28ae384e64ffeab387478",
+        "ipcAdapterSha256": null,
+        "independentState": {
+          "backupBytesMatch": true,
+          "oldBackupPreserved": true,
+          "outsideMarkerPreserved": true,
+          "symlinkAndTraversalRejected": true,
+          "privatePrefixesRemoved": true,
+          "bulkCleanupAlwaysRefused": true,
+          "secondUserPrefixPreserved": true,
+          "malformedAndUnreadableShortcutsPreserved": true,
+          "ambiguousLibraryPrefixesPreserved": true
+        },
+        "lifecycle": {
+          "stops": [
+            {
+              "loaderPid": 9,
+              "returncode": 0,
+              "elapsedSeconds": 5.22360415617004,
+              "signaledOnlyOwnedLoader": true,
+              "ownedProcessCount": 5,
+              "ownedProcessIdentitiesReaped": true,
+              "descendantsBefore": {
+                "10": {
+                  "state": "S",
+                  "parent": 9,
+                  "start": "351590648"
+                },
+                "19": {
+                  "state": "S",
+                  "parent": 10,
+                  "start": "351590680"
+                },
+                "20": {
+                  "state": "S",
+                  "parent": 10,
+                  "start": "351590680"
+                },
+                "21": {
+                  "state": "S",
+                  "parent": 20,
+                  "start": "351590691"
+                }
+              },
+              "exactDescendantsRemaining": {},
+              "adoptedChildExits": [
+                {
+                  "pid": 19,
+                  "returncode": 0
+                },
+                {
+                  "pid": 20,
+                  "returncode": 0
+                }
+              ],
+              "fixtureClosedUnixPeers": [
+                "/tmp/plugin_socket_1793465157.0268352"
+              ],
+              "forcedPluginKills": 1,
+              "pluginUnloadCompleted": false,
+              "errors": [],
+              "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down Games Prefix Manager (v1.0.2)\n[plugin][INFO]: Stopping response listener for Games Prefix Manager (v1.0.2)\n[plugin][WARNING]: Plugin Games Prefix Manager (v1.0.2) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin Games Prefix Manager (v1.0.2) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+              "consoleSha256": "8932d7d5eaacd7a4c30dfd575f1f94d97fce2b06c80125d1cfcc912572b17be6",
+              "cleanShutdownVerified": false
+            }
+          ],
+          "emptyLibraryReadbacks": [],
+          "backupSha256Before": {
+            "4242-y06v51nk.zip": "14b7bd6c0d4a39b75dff6d43a6a2ba9b7ccbaa2c73a92039b39e18126e5d59d8",
+            "4242-f6r_t8eb.zip": "14b7bd6c0d4a39b75dff6d43a6a2ba9b7ccbaa2c73a92039b39e18126e5d59d8"
+          },
+          "backupsPreserved": true,
+          "outsideMarkerPreserved": true,
+          "unrelatedSiblingPreserved": true,
+          "cleanShutdownVerified": false,
+          "expectedRegression": true,
+          "customUnloadHookPresent": false,
+          "realFrameContacted": false,
+          "physicalControllerVerified": false
+        },
+        "consoleSha256": "5d1b443a8c1bc841ab0b7e1b26bfc021175265f3f9bcfb60587c847deec24c65"
+      }
+    ],
+    "store101FilesAndReceiptByteIdenticalToMain": true,
+    "github102OnlyEofPrefixAdded": true,
+    "github102CatalogStatus": "unverified",
+    "rawSha256": "1e519d7a7e8378e055fca3188c94905f3fa8f0ab1ed2259b465d0b69379c371a",
+    "realFrameContacted": false
+  },
+  "timerControl": {
+    "sourceRevision": "0dcb4b1b4521a1cc6ba9f5badeffd2319734784c",
+    "sourceSha256": {
+      "scripts/framey-test-decky-runtime.py": "1cc2805e0ed9695e53d17735b79187ba3ef1009d3af2b8069e66cc263a71dfa2",
+      "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+      "tests/decky-runtime/check.py": "553e5144bb02df2f49ebaccf1b3ae2187e9291aff98f9a442b6dd955b04125fa",
+      "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+      "tests/decky-runtime/timer_lifecycle.py": "94424d68a18078b04032895f27cde3b62264b429d29677511a91f28c1f7c066c",
+      "tests/decky-runtime/timer_private.py": "7db7829d13594c930f3d03778685326df7a7c72164d8447d836e6bcbd31e24d1",
+      "tests/decky-runtime/deck_settings_private.py": "d72dea2f6392ad90ada9b5d1ece85ecf205a3ff210e094a52a845a9cc1f6cbac",
+      "tests/decky-runtime/free_loader_private.py": "6d04fad6b001392bd763960e7b442b264705b407bfe3a1246deac6c34e350fba",
+      "tests/decky-runtime/prefix_manager_private.py": "b90c4484fa87cdbecff87c11032b6919633e4df278d603836ab9dc61c0f69dc1",
+      "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+      "tests/decky-runtime/cases.json": "0aaa53c85d57cde644d96b6e4ef9f5c59bc0c1cdadb616afe1598b5f47788839",
+      "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+      "ui/frame_decky_store.py": "3fd471b7ee0c306c3005f6fcc47769b1d33c454366aed1a680b5b197a932b8eb",
+      "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+      "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+      "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+      "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+      "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+      "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+      ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+    },
+    "native": [
+      {
+        "caseIndex": 0,
+        "rpcs": 31,
+        "events": 30,
+        "consoleSha256": "39929dfe75b06eae057683a288ed3dbf0d5ff1b88987419174962b5dcae4c590",
+        "positiveScopedCleanShutdownVerified": true,
+        "expectedNegative": false
+      },
+      {
+        "caseIndex": 1,
+        "rpcs": 10,
+        "events": 14,
+        "consoleSha256": "b64666554766aa378ba0b36261b9456c22bde8d3eca616f023ae36e4d0a14ed0",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      },
+      {
+        "caseIndex": 2,
+        "rpcs": 18,
+        "events": 24,
+        "consoleSha256": "39a51ea6e265460d7cebc40d48ddc3b95bb20e8c8bc12b7ff8538bc9844057c4",
+        "positiveScopedCleanShutdownVerified": false,
+        "expectedNegative": true
+      }
+    ],
+    "repairedStopSeconds": [
+      0.214,
+      0.225,
+      0.185,
+      0.214
+    ],
+    "managedBackendSha256": "7c3b00e081dbfa602a7f811f25d3b19271b881a6fbb90d56c500ba8ea0d2598f",
+    "realFrameContacted": false
+  },
+  "publicStore": {
+    "at": "2026-10-31T16:47:57.949201+00:00",
+    "url": "https://plugins.deckbrew.xyz/plugins",
+    "responseSha256": "f94819296b4565d36a818d0e37b358295622ca380f60ba0a883cfa61403d3027",
+    "plugin": {
+      "id": 130,
+      "name": "Games Prefix Manager",
+      "author": "Saad Alareqi",
+      "description": "Manage Steam Deck Prefixes, delete orphans, and backup data.",
+      "tags": [
+        "utilities"
+      ],
+      "versions": [
+        {
+          "name": "1.0.1",
+          "hash": "ef8c727943188cad04c63fae7e4e620b8080c07f35dec0c144e99c6166307473",
+          "created": "2026-03-20T23:01:17Z",
+          "downloads": 6662,
+          "updates": 582
+        }
+      ],
+      "visible": true,
+      "image_url": "https://cdn.tzatzikiweeb.moe/file/steam-deck-homebrew/artifact_images/Games%20Prefix%20Manager-3c6c78adc121381e0aa108b0bee670bdac4d16779b4b575a6c220171edd923d9.jpg",
+      "downloads": 6662,
+      "updates": 582,
+      "created": "2026-03-20T23:01:17Z",
+      "updated": "2026-03-20T23:01:17Z"
+    }
+  },
+  "githubRelease": {
+    "assets": [
+      {
+        "browser_download_url": "https://github.com/Saad-Alareqi/GamesPrefixManager/releases/download/v1.0.2/games-prefix-manager.zip",
+        "digest": "sha256:12ab420f06023cd13717489aa92a1babd09dec8566a601f4b4bb93464fbc92b6",
+        "id": 411464964,
+        "name": "games-prefix-manager.zip",
+        "size": 58717
+      }
+    ],
+    "draft": false,
+    "html_url": "https://github.com/Saad-Alareqi/GamesPrefixManager/releases/tag/v1.0.2",
+    "id": 316972639,
+    "prerelease": false,
+    "published_at": "2026-05-04T02:00:11Z",
+    "tag_name": "v1.0.2",
+    "target_commitish": "main"
+  },
+  "focusedTests": {
+    "tests": 86,
+    "skips": 0,
+    "failures": 0
+  },
+  "localFullSuiteRerun": false,
+  "previousFullSuite": {
+    "tests": 1948,
+    "skips": 16,
+    "source": "ef46ca828f10b748c88ec8a62865b2f61f6e197a",
+    "historical": true
+  },
+  "currentFullHostedMatrixPending": true,
+  "realFrameContacted": false,
+  "releaseQualified": false,
+  "rawSha256": "71e97eaafa77d7ba07e3a650a99f98f5b40825b4a3ba57360fc3528c0186f465"
+}

@@ -1,0 +1,97 @@
+{
+  "decky": "v3.3.0",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "cases": [
+    {
+      "id": 53,
+      "name": "Shotty",
+      "version": "0.1.0",
+      "sha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
+      "shim": "shotty-click-app-dir",
+      "calls": [
+        {
+          "method": "was_rescued",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 0
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": true
+        },
+        {
+          "method": "set_id_map_fronend",
+          "result": null
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "copy_screenshot",
+          "result": false
+        },
+        {
+          "method": "aggregate_all",
+          "result": 1
+        },
+        {
+          "method": "was_rescued",
+          "result": false
+        }
+      ],
+      "discovered": [
+        {
+          "name": "Shotty",
+          "version": "0.1.0",
+          "load_type": 0,
+          "disabled": false
+        }
+      ],
+      "independentState": {
+        "differentFilesystems": true,
+        "repeatCopy": true,
+        "sourceIndependent": true,
+        "titleConfined": true,
+        "symlinkRefused": true,
+        "conflictingOutputPreserved": true
+      },
+      "result": "discovery, backend import, empty aggregation, private screenshot cross-filesystem copy, repeat copy, path/symlink refusals, preserved conflicting output and historical aggregation passed"
+    }
+  ]
+}

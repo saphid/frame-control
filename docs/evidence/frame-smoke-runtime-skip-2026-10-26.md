@@ -1,0 +1,9 @@
+# Headset smoke: unavailable x86 runtime is a skip
+
+The v0.4.41 tagged smoke result recorded 13/13 passed even though its x86_64 launch outcome was `runtime missing`: Steam had acknowledged the title but had not started it. This follow-up separates an unavailable optional runtime from a verified launch. It keeps the smoke usable on a Frame without Steam Linux Runtime 4 while making the missing coverage explicit in its console summary and saved JSON.
+
+Focused local `test_smoke_cleanup.py` ran **22 tests successfully**. The new regression starts an x86_64 title cycle with a fresh missing-runtime Steam log, verifies `skipped=true` and `outcome=runtime missing`, and verifies that the title is still removed. A result test checks separate passed/skipped/failed counts and a zero exit code when an optional runtime is absent but nothing fails.
+
+The revised `scripts/frame-smoke.sh` then ran on the real Frame from this branch. It acquired its unique owner in `/tmp/frame-test.lock` before any headset read. Locked preflight found SteamVR activity 3 (standby), proximity 6.25 and battery 99%. On Frame OS 0.5.6 build `20261022.6153909`, the result was **12 passed / 1 skipped / 0 failed**. ARM64 and Proton test executables ran; x86_64 was explicitly skipped because Steam Linux Runtime 4 was not installed. Both title cleanup steps passed. The command exited 0, including release of its owned shared lock. The detailed result remains private at `tests/smoke/results/2026-10-26T050711Z-20261022.6153909.json` in the test checkout.
+
+The headset was in standby and nobody wore it for this test. Title smoke does not prove wearer-visible pixels, physical controller input, official Decky panels, audio output or comfort. It also does not prove x86_64 runtime execution on this Frame; that path needs the optional runtime present. The hourly worn check remains enabled.

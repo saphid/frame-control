@@ -64,6 +64,7 @@ class LinkUI(unittest.TestCase):
   renderPill();
   assert.match($('conn').innerHTML, /<b>Office Frame<\/b><span>Offline<span class="via"> · retrying in 12 s<\/span>/);
   assert.ok($('conn').title.includes(changed.error.message));
+  assert.ok(!$('conn').title.includes('..'), $('conn').title);
   // Without a short reason: the stage that failed.
   link.s = {...changed, retry_at: null, error: {stage: 'identity', message: 'Something.'}};
   renderPill();
@@ -120,7 +121,9 @@ class LinkUI(unittest.TestCase):
 class HeaderLayout(unittest.TestCase):
     def test_the_devices_tab_explanation_wraps(self):
         # It was cut to one line with no way to read the rest.
-        self.assertIn(".dev-problem .s { white-space: normal; }", PAGE)
+        # More specific than the later .item .s rule: the old equal-specificity
+        # rule passed this test while the browser still clipped the explanation.
+        self.assertIn(".item.dev-problem .s { white-space: normal; overflow-wrap: anywhere; }", PAGE)
         self.assertEqual(len(re.findall(r'<div class="item dev-problem" role="alert">', PAGE)), 2)
 
     def test_the_header_buttons_dont_give_way(self):

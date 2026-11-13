@@ -1,0 +1,274 @@
+{
+  "at": "2026-10-31T10:12:33.727056+00:00",
+  "sourceRevision": "f7748f22229df6f3ab2ce3dccb93d3164468d933",
+  "baseMain": "0082d79a3ff9a9338e49dd5c83bbe25aa9e784b4",
+  "baselineRevision": "8ddb3881ac043ee9549aee9f15ac0c2b04734194",
+  "architecture": "x86_64",
+  "loaderSha256": "e80d03e641d1766a33a817cb27ab8d2e0a4633685e5d27e4de948a6687526181",
+  "nativeSourceSha256": {
+    "scripts/framey-test-decky-runtime.py": "c41cac7db7a85e993f97933033b6bc2439ac28770e885fd0b621b16dedeae1f3",
+    "ui/framey_decky_ipc.py": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+    "tests/decky-runtime/check.py": "b5993c1a562279a642a78867c5e8cda6f19f598733c05fe6da65655dbf200159",
+    "tests/decky-runtime/runtime_console.py": "46e4d53fab3cc3bae2640a2208d1091f9dbaffd0d1f6d54eed5fc68a470a9eab",
+    "tests/decky-runtime/radiyo_private.py": "aefc8431004c69c7451d6ab8bae9daaa94734e7ab3fd22bf98c64693e14cef3e",
+    "tests/decky-runtime/Containerfile": "9e00d73f75343cdb431f58970221a2fc091efe1ef10f1681c3a7e2b300f35d0f",
+    "tests/decky-runtime/cases.json": "96753a570177a01d5d00915d281fcbc49f8a3809941bef7374a6dbd494c8a6d6",
+    "tests/framey_official.py": "c409389ed06c46450f2256942e5d30ec961be79ccbe55cd1a7c7667c5231625a",
+    "ui/frame_decky_store.py": "6d3562936831c127be1e401c4f8508d95b9aa1dc2f6e259496065d683e2c878e",
+    "tests/decky-runtime/ludusavi_private.py": "d926fca3934ac143ffcb0b27a8002479ef3bc2f9b11e97006e77daa88b584429",
+    "tests/decky-runtime/wine_cellar_private.py": "35f7f93c4dcbd5c7703667677ef3c0605036939f3448cb1e2572da51c25b6c1a",
+    "tests/decky-runtime/shotty_private.py": "e94db3d1b052af7ab1354f34e9e3f61e32f20622640e50735aa553b8370610e0",
+    "ui/framey_shotty.py": "a0b27d75eff21eddb64e839a37d2c7e55b9075a37da7bd1b8f15d9dda4f85fe6",
+    "tests/fixtures/framey-wine-cellar-pre-ipc.py.gz": "93a1ab879bb67c37cf1b7c650c127a565cd6df32eda6bc92e426b23b3305ade6",
+    "ui/vendor/wine-cellar-0.2.1/main.py.gz": "d205d36869d649982b23f23d71ff44ad30718026e005ee8fd2bd4a7090ccc581",
+    ".github/workflows/decky-runtime.yml": "a717b94a5ab3b4dbe8558b3b9bbb4f49312caa5d31a00021f58101fba51aa7d1"
+  },
+  "all16SourceFingerprintsVerified": true,
+  "all16BaselineSourceFingerprintsVerified": true,
+  "archiveSha256": "647111578aa7a5ecd16af8d7fe6c068a6d7ea8737c6dce5ac2d52e84a549ec43",
+  "originalBackendSha256": "868332dbe3feb1e7a81e35a0c01fdc0a6b68421ec1f84e238564bfad4946e87e",
+  "previousManagedBackendSha256": "79d14191b83345caedeb7a819c283f495ce6f5923fd81d1aecb86c14254a6be3",
+  "managedBackendSha256": "23cdff5bfa7f57e6c0341c825ab23cfb363e4408ae3c4f117fe3d1885f00a265",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "unchangedArchiveFiles": {
+    "LICENSE": "7f64a1130058fd9b965b366c26a125aeb055856d86b2d5297b7abc2a15beb400",
+    "package.json": "6334c9b75f3db2030d3e921076f8d11139ad73ae29d3cbb1a91b99e3546aab2a",
+    "plugin.json": "352523e9df7ca0c09e0764caed1055a4940071c202828722c82c1450a06f4cff",
+    "README.md": "fe549af9c94268beb30b0858f5ed6a68780e687986657ba3d5a818569b7cbec7",
+    "dist/index.js": "41ac20dfcc93b98df1aba0f0adc282077351e9f9ebb1340181fe364150f671db",
+    "dist/assets/logo-61e502bb.png": "307f46653dc13c18660c5bb0a2a383e6474953904f76249d231970a0e3c4fd47"
+  },
+  "onlyIpcPrefixAddedToPreviousManagedBackend": true,
+  "mainSharedIpcAdapterUnchanged": true,
+  "verifiedTlsPolicyPreserved": true,
+  "bothMethodsSelfSignedTlsRejectionVerified": true,
+  "all116StatusInstallPoliciesPreserved": true,
+  "other115CompleteCatalogRowsPreserved": true,
+  "other33NativeCasesPreserved": true,
+  "otherProbeBodiesPreserved": 36,
+  "focusedTests": 85,
+  "unitLogSha256": "b342f7fa0f510ccf5f02ad08caaa49cbccce0209a6d1168dfba1a904082a5335",
+  "nativeCases": [
+    {
+      "rpcs": 9,
+      "tlsBothMethodsRejectedSelfSigned": true,
+      "httpReadbacks": [
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 10:11:41 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:43459/station"
+          }
+        },
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 10:11:44 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:43459/station"
+          }
+        }
+      ],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349224774"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349224802"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349224802"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349224812"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.215,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793441498.254479"
+          ],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+          "cleanShutdownVerified": true
+        },
+        {
+          "loaderPid": 33,
+          "descendantsBefore": {
+            "34": {
+              "state": "S",
+              "parent": 33,
+              "start": "349225191"
+            },
+            "43": {
+              "state": "S",
+              "parent": 34,
+              "start": "349225221"
+            },
+            "44": {
+              "state": "S",
+              "parent": 34,
+              "start": "349225221"
+            },
+            "45": {
+              "state": "S",
+              "parent": 44,
+              "start": "349225231"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 43,
+              "returncode": 0
+            },
+            {
+              "pid": 44,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 0.214,
+          "fixtureClosedUnixPeers": [],
+          "forcedPluginKills": 0,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 0.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "a89ca196e9c7e61c7a7c295fc04d64e2b00411b934a24913d30efce20f1d8fde",
+          "cleanShutdownVerified": true
+        }
+      ],
+      "consoleSha256": "d63c8202aa597254264afaf7a64fe0b7039c924e36ccd42aadda5ed2dcb03480"
+    },
+    {
+      "rpcs": 7,
+      "tlsBothMethodsRejectedSelfSigned": true,
+      "httpReadbacks": [
+        {
+          "station": {
+            "body": "Framey lifecycle station\n",
+            "headers": {
+              "Server": "BaseHTTP/0.6 Python/3.13.5",
+              "Date": "Sat, 31 Oct 2026 10:11:49 GMT",
+              "Content-Type": "text/plain",
+              "Content-Length": "25"
+            },
+            "status": 200
+          },
+          "redirect": {
+            "response": "http://127.0.0.1:36105/station"
+          }
+        }
+      ],
+      "stops": [
+        {
+          "loaderPid": 9,
+          "descendantsBefore": {
+            "10": {
+              "state": "S",
+              "parent": 9,
+              "start": "349225580"
+            },
+            "19": {
+              "state": "S",
+              "parent": 10,
+              "start": "349225609"
+            },
+            "20": {
+              "state": "S",
+              "parent": 10,
+              "start": "349225609"
+            },
+            "21": {
+              "state": "S",
+              "parent": 20,
+              "start": "349225619"
+            }
+          },
+          "exactDescendantsRemaining": {},
+          "adoptedChildExits": [
+            {
+              "pid": 19,
+              "returncode": 0
+            },
+            {
+              "pid": 20,
+              "returncode": 0
+            }
+          ],
+          "parentOnlySignal": true,
+          "loaderReturncode": 0,
+          "seconds": 5.224,
+          "fixtureClosedUnixPeers": [
+            "/tmp/plugin_socket_1793441506.320036"
+          ],
+          "forcedPluginKills": 1,
+          "errors": [],
+          "console": "[main][INFO]: Shutting down...\n[main][INFO]: Disabling reload...\n[main][INFO]: Killing plugins...\n[plugin][INFO]: Shutting down RadiYo! (v1.3)\n[plugin][INFO]: Stopping response listener for RadiYo! (v1.3)\n[plugin][WARNING]: Plugin RadiYo! (v1.3) still alive 5 seconds after stop request! Sending SIGKILL!\n[plugin][INFO]: Plugin RadiYo! (v1.3) has been stopped in 5.1s\n[main][INFO]: Disconnecting from WS...\n[main][INFO]: Cancelling tasks...\n[main][INFO]: Shutdown finished.\n======== Running on http://127.0.0.1:1337 ========\n(Press CTRL+C to quit)\n",
+          "consoleSha256": "60707430106551f272c6fd16208fe73e2a3dfe97c53fa5b8ac2417e784bc13b4",
+          "cleanShutdownVerified": false
+        }
+      ],
+      "consoleSha256": "d487da146ebdca1769fecad894098389066af726076873d84d21fee482f36661"
+    }
+  ],
+  "repairedCleanStops": 2,
+  "priorSourceForcedKillVerified": true,
+  "rawJsonSha256": "48c0fc9e78d492f5dcb9028b15e157a0185a2325871ef03023dc750f7431aca9",
+  "rawGzipSha256": "279b8c2da5d8c9136a1363541dc5f6c9fcc80339b7e27969002bee2802e1ab36",
+  "fullMatrixExpected": {
+    "probes": 42,
+    "archivePins": 34,
+    "sourceFingerprints": 16
+  },
+  "compatibility": "partial",
+  "globalCleanPluginShutdownVerified": false,
+  "realFrameContacted": false,
+  "physicalControllerVerified": false,
+  "releaseQualified": false,
+  "limits": [
+    "Local isolated AMD64 published Decky3.3.0 only; explicit private Unix-peer disconnect stabilizes the regression.",
+    "Fresh final-head hosted checks/e2e, native AMD64/ARM64 and all triggered package gates remain required.",
+    "No new browser, external station, trusted HTTPS, audio playback, managed Frame, wearer/controller or release proof."
+  ]
+}

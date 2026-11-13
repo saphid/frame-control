@@ -1,0 +1,88 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><button id="outside">Outside</button>
+<div id="fixture"></div><pre id="result">Pending</pre>
+<script>
+window.fixtureFailures=[];
+addEventListener('error',event=>fixtureFailures.push(event.message));
+addEventListener('unhandledrejection',event=>fixtureFailures.push(String(event.reason)));
+</script>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('fixture'), root=ReactDOM.createRoot(container);
+  const outside=document.getElementById('outside'), scrolls=[];
+  const render=element=>ReactDOM.flushSync(()=>root.render(element));
+  let publishedAction;
+  function PublishedSearch({inputRef:searchRef}) {
+    const [query,setQuery]=React.useState(''), entryLabel='fixture entries';
+    const listRef={current:{scrollToItem:index=>scrolls.push(index)}};
+    // Exact published search control and action only, with an inert list. No
+    // TabMaster initializer, Steam library, backend or physical input runs.
+    __OFFICIAL_ACTION__
+    publishedAction=actionButtonProps.onButtonDown;
+    return __OFFICIAL_CONTROL__;
+  }
+  try {
+    const ref=React.createRef();outside.focus();
+    render(React.createElement(PublishedSearch,{inputRef:ref}));
+    const input=container.querySelector('input'), handle=ref.current;
+    assert(handle?.element===input,'published search ref did not receive its native input');
+    assert(typeof handle.Focus==='function','published Focus method is absent');
+    assert(document.activeElement===outside,'attaching a ref stole focus');
+    let clicks=0;input.addEventListener('click',()=>clicks++);
+    publishedAction({detail:{button:DFL.GamepadButton.INVALID}});
+    assert(document.activeElement===outside&&clicks===0,'unrelated synthetic button activated search');
+    publishedAction({detail:{button:DFL.GamepadButton.SELECT}});
+    assert(document.activeElement===input&&clicks===1,'published search action did not focus and click its input');
+    ReactDOM.flushSync(()=>{
+      Object.getOwnPropertyDescriptor(HTMLInputElement.prototype,'value').set.call(input,'Synthetic query');
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+    });
+    assert(input.value==='Synthetic query'&&JSON.stringify(scrolls)==='[0]','published query change callback lost');
+    assert(ref.current===handle&&handle.element===input,'ordinary input redraw replaced its ref handle');
+    handle.element.blur();assert(document.activeElement!==input,'element.blur() did not reach the native input');
+    outside.focus();render(null);
+    assert(ref.current===null&&handle.element===null,'unmount retained a live input ref');
+    handle.Focus();assert(document.activeElement===outside,'retired Focus moved focus');
+
+    // Callback refs detach on replacement, remain stable through ordinary
+    // redraws, and cannot focus a disabled input. Native events stay intact.
+    const first=[],second=[],events=[];
+    const firstRef=value=>first.push(value), secondRef=value=>second.push(value);
+    const local=(inputRef,value,disabled=false)=>React.createElement(DFL.TextField,{
+      ref:inputRef,value,disabled,label:'Local input',
+      onFocus:event=>events.push(['focus',event.target]),onBlur:event=>events.push(['blur',event.target]),
+    });
+    render(local(firstRef,'Initial'));
+    const native=container.querySelector('input'), original=first[0];
+    assert(first.length===1&&original.element===native,'callback ref did not attach');
+    render(local(firstRef,'Updated'));
+    assert(first.length===1&&original.element===native&&native.value==='Updated','ordinary redraw detached the callback ref');
+    original.Focus();original.element.blur();
+    assert(events.length===2&&events.every(event=>event[1]===native),'ref methods changed native focus/blur callbacks');
+    outside.focus();render(local(secondRef,'Disabled',true));
+    assert(first.length===2&&first[1]===null&&second.length===1,'callback replacement did not detach and attach');
+    assert(second[0].element===native&&native.disabled,'replacement lost the disabled input');
+    second[0].Focus();assert(document.activeElement===outside,'disabled ref received focus');
+    assert(DFL.findModuleByExport(value=>value===DFL.TextField)?.TextField===DFL.TextField,
+      'ref-enabled TextField missing from local module registry');
+    const retained=second[0];render(null);
+    assert(second.length===2&&second[1]===null&&retained.element===null,'callback unmount retained its input');
+    await new Promise(resolve=>setTimeout(resolve,20));
+    assert(fixtureFailures.length===0,fixtureFailures.join('; '));
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedTabmasterSearch:true,publishedSyntheticSelectAction:true,nativeElementRef:true,
+      focusMethod:true,nativeBlur:true,controlledQueryPreserved:true,stableHandle:true,
+      callbackRefReplacement:true,unmountClearsRefs:true,retainedHandleInert:true,
+      disabledFocusSuppressed:true,nativeFocusBlurCallbacks:true,moduleLookupPreserved:true,
+      realFrameContacted:false,realLibraryChanged:false,controllerInputVerified:false,
+      wornVisibilityVerified:false,vrKeyboardVerified:false});
+  } catch(error) {
+    document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});
+  }
+})();
+</script>

@@ -1,0 +1,46 @@
+{
+  "at": "2026-10-31T07:00:10.751254+00:00",
+  "baseMain": "51841728090a45f9f452b4cd4ccf93f4caf8df14",
+  "baselineSource": "7be700c9aab5556e1087cecdd13151f2620b7ed2",
+  "sourceRevision": "21e58d4e570c36ff229832cf276ef83a9a07c3fc",
+  "architecture": "x86_64",
+  "decky": "v3.3.0",
+  "archiveSha256": "ab7f6618b264a0cb766525e788cef6c3e1478c0fef98a701225e5e8af441e2fe",
+  "previousManagedBackendSha256": "5c62941c81887727b6f1ea2dbc0ba0c8c9e6153503ae3e3c234a4c4271d336de",
+  "managedBackendSha256": "3941e3364b5e0e4b15c83c0ff66688671744e04c6b0d4f21923c33fc540bda51",
+  "ipcAdapterSha256": "43ad5a8e19270347e6efaeb59ea94f06f149b525ac928e27298325c0b30500e8",
+  "all14RuntimeSourceHashesVerified": true,
+  "exactProductionInstallBlockIndependentlyReconstructed": true,
+  "allOtherPublishedMembersPreserved": true,
+  "other115CatalogRecordsUnchanged": true,
+  "sharedIpcBehaviorAstUnchanged": true,
+  "positiveLegacyRpcs": 17,
+  "baselineAndNegativeLegacyRpcs": 16,
+  "positiveParentOnlyCleanStops": 2,
+  "positiveStopSeconds": [
+    0.214,
+    0.214
+  ],
+  "baselineForcedPluginKills": 1,
+  "previousSourceNegativeForcedPluginKills": 1,
+  "originalNegativeExplicitlyUnqualified": true,
+  "unrelatedSiblingPreserved": true,
+  "unitTests": 84,
+  "unitLogsSha256": {
+    "shotty-fix277-unit.log": "8873a2323614948127a7824e019bbf4fd37da7e81d93d84ca22ac186d811d47f",
+    "shotty-fix277-receipt-unit.log": "0132c334355a1aa87a511a89407c46f41460079eb867658c11dc26cd9297c331"
+  },
+  "reportsSha256": {
+    "shotty-baseline277-native.json": "8bbabb563ea7a8686e6bf7424700dc481981ef5ef1c1552594afc5ca7317c25f",
+    "shotty-fix277-native.json": "8480fe097230ec55533b7de42bb91755daeb54a72a633ad7a06f8bdf19633c81"
+  },
+  "fullNativeConsolesAndProcessIdentitiesRetained": true,
+  "ownedContainersAndTagsRemoved": true,
+  "compatibility": "partial",
+  "realFrameContacted": false,
+  "limits": [
+    "Local AMD64 only; fresh hosted AMD64/ARM64 and full native matrix remain required",
+    "No live Steam screenshots, notifications, continuous rescue, real Frame installation or wearer/controller proof",
+    "Copy unit contracts stub IPC import; actual EOF/unload qualification is the published native loader positive and prior-source negative"
+  ]
+}
