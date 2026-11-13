@@ -1,0 +1,87 @@
+name: Decky published binary parent EOF diagnostic
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/framey-probe-decky-native-parent-eof.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'tests/decky-runtime/parent_eof_native.py'
+      - 'tests/decky-runtime/Containerfile'
+      - 'tests/decky-runtime/check.py'
+      - 'tests/decky-runtime/deck_settings_private.py'
+      - 'ui/framey_decky_ipc.py'
+      - '.github/workflows/decky-native-parent-eof.yml'
+  pull_request:
+    paths:
+      - 'scripts/framey-probe-decky-native-parent-eof.py'
+      - 'scripts/framey-test-decky-runtime.py'
+      - 'tests/decky-runtime/parent_eof_native.py'
+      - 'tests/decky-runtime/Containerfile'
+      - 'tests/decky-runtime/check.py'
+      - 'tests/decky-runtime/deck_settings_private.py'
+      - 'ui/framey_decky_ipc.py'
+      - '.github/workflows/decky-native-parent-eof.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native-parent-eof:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            architecture: x86_64
+          - os: ubuntu-24.04-arm
+            architecture: aarch64
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 10
+    env:
+      AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+      EXPECTED_ARCH: ${{ matrix.architecture }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Published loader normal shutdown and abrupt plugin exit
+        run: python3 scripts/framey-probe-decky-native-parent-eof.py --output "$RUNNER_TEMP/native-parent-eof"
+      - name: Bind evidence to exact head and native architecture
+        run: |
+          python3 - <<'PY'
+          import hashlib, json, os, platform, subprocess
+          from pathlib import Path
+          folder = Path(os.environ['RUNNER_TEMP'])/'native-parent-eof'
+          raw = (folder/'report.json').read_bytes()
+          report = json.loads(raw)
+          head = subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip()
+          assert head == os.environ['AUDIT_HEAD']
+          assert report['architecture'] == platform.machine() == os.environ['EXPECTED_ARCH']
+          assert report['diagnosticPassed'] and report['ownedContainerRemoved'] and report['ownedImageRemoved']
+          native = report['native']
+          assert native['normalControlPassed'] and native['publishedBinaryParentHangReproduced']
+          assert native['allOwnedProcessesReaped']
+          assert native['nativeArm64Executed'] is (platform.machine() == 'aarch64')
+          for key in ('historicalArm64VmExecuted', 'historicalCauseEstablished', 'releaseHoldCleared', 'realFrameContacted'):
+              assert native[key] is False
+          for path, digest in report['sourceSha256'].items():
+              assert hashlib.sha256(Path(path).read_bytes()).hexdigest() == digest
+          receipt = dict(headSha=head, architecture=platform.machine(),
+                         sourceSha256=report['sourceSha256'], reportSha256=hashlib.sha256(raw).hexdigest(),
+                         diagnosticPassed=True, historicalCauseEstablished=False,
+                         releaseHoldCleared=False, realFrameContacted=False)
+          (folder/'exact-head.json').write_text(json.dumps(receipt, indent=2)+'\n')
+          print(json.dumps(receipt))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: decky-native-parent-eof-${{ matrix.os }}
+          path: ${{ runner.temp }}/native-parent-eof/
+          if-no-files-found: error

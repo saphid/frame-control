@@ -3,7 +3,7 @@ import {webcrypto} from 'node:crypto';
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
-const html = readFileSync(new URL('../../ui/headset.html', import.meta.url), 'utf8');
+const html = readFileSync(process.argv[2] || new URL('../../ui/headset.html', import.meta.url), 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1].split('refresh();refreshGames();')[0];
 class Element {
   constructor(id='') {this.id=id; this.value=''; this.textContent=''; this.children=[]; this.disabled=false; this.hidden=false;}
@@ -89,6 +89,36 @@ await vm.runInContext('checkDeckyJob()',ctx);
 assert.equal(el('deckyJobStatus').textContent,'Recovered install');
 assert.equal(session.has('frameyPluginJob'),false);
 
+// A failed worker startup keeps the reserved ID but reports a terminal error.
+// Check result releases the gate; only a fresh explicit action retries.
+const startupIds=[];
+ctx.mockApi=async (path,body) => {
+  if(path==='/api/decky/plugin'){
+    startupIds.push(body.requestId);
+    if(startupIds.length===1){const error=Error('No worker available');error.status=500;throw error;}
+    return {job:body.requestId};
+  }
+  if(path.startsWith('/api/job'))return startupIds.length===1 ?
+    {done:true,error:'Could not start background job: No worker available'} :
+    {done:true,message:'Explicit retry completed'};
+  if(path==='/api/decky')return {managed:true,running:true,plugins:[]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(JSON.parse(session.get('frameyPluginJob')).job,startupIds[0]);
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(startupIds.length,1,'do not retry before checking the failed worker');
+await vm.runInContext('checkDeckyJob()',ctx);
+assert.match(el('deckyJobStatus').textContent,/Could not start background job: No worker available/);
+assert.equal(session.has('frameyPluginJob'),false);
+assert.equal(el('deckyJobCheck').hidden,true);
+assert.equal(startupIds.length,1,'checking a failed worker cannot issue another plugin POST');
+await vm.runInContext('deckyChange("install",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+assert.equal(startupIds.length,2);
+assert.notEqual(startupIds[0],startupIds[1]);
+assert.equal(el('deckyJobStatus').textContent,'Explicit retry completed');
+
 // A definite validation rejection never reserved a job on the server.
 ctx.mockApi=async path => {
   if(path==='/api/decky/plugin'){
@@ -120,6 +150,7 @@ ctx.mockApi=async (path,body) => {
   throw Error(`unexpected ${path}`);
 };
 vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx); // Resume Decky before testing an update failure.
 await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"b".repeat(64)})',ctx);
 assert.match(el('deckyJobStatus').textContent,/Error: archive digest mismatch/);
 assert.equal(session.has('frameyPluginJob'),false);
@@ -158,6 +189,60 @@ assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textCon
 assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,false);
 assert.equal(el('deckyStoreList').children[1].children[1].disabled,false);
 
+// Actions carry the installed receipt displayed in that row, even when a
+// background status change replaces the in-memory list before the tap.
+const selectedReceipts=[];
+ctx.mockApi=async (path,body)=>{
+  if(path==='/api/decky/plugin'){
+    selectedReceipts.push(body);const error=Error('stale installed copy');error.status=400;throw error;
+  }
+  if(path==='/api/decky')return {managed:true,running:true,plugins:[
+    {storeId:2,name:'Plugin 2',version:'1.0',sha256:'a'.repeat(64)}]};
+  throw Error(`unexpected ${path}`);
+};
+vm.runInContext('api=mockApi',ctx);
+await vm.runInContext('refreshDecky()',ctx);
+const oldRemove=el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').onclick;
+vm.runInContext('deckyState.plugins[0]={...deckyState.plugins[0],sha256:"b".repeat(64)}',ctx);
+await oldRemove();
+assert.equal(selectedReceipts.at(-1).action,'remove');
+assert.equal(selectedReceipts.at(-1).installedSha256,'a'.repeat(64));
+const oldUpdate=el('deckyStoreList').children[1].children[1].onclick;
+vm.runInContext('deckyState.plugins[0]={...deckyState.plugins[0],sha256:"c".repeat(64)}',ctx);
+await oldUpdate();
+assert.equal(selectedReceipts.at(-1).action,'update');
+assert.equal(selectedReceipts.at(-1).installedSha256,'a'.repeat(64));
+
+// A 4xx from job polling is not a rejected submission. The server already
+// accepted the change; retain its ID and block a duplicate until it resolves.
+for(const status of [403,429]){
+  let acceptedId, posts=0;
+  ctx.mockApi=async (path,body)=>{
+    if(path==='/api/decky/plugin'){posts++;acceptedId=body.requestId;return {job:acceptedId};}
+    if(path.startsWith('/api/job')){const error=Error('Polling temporarily denied');error.status=status;throw error;}
+    if(path==='/api/decky')return {managed:true,running:true,
+      plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+    throw Error(`unexpected ${path}`);
+  };
+  vm.runInContext('api=mockApi',ctx);
+  await vm.runInContext('deckyChange("update",{id:2,name:"Plugin 2",sha256:"a".repeat(64)})',ctx);
+  assert.equal(JSON.parse(session.get('frameyPluginJob')).job,acceptedId);
+  assert.equal(el('deckyJobCheck').hidden,false);
+  assert.equal(el('deckyInstalled').children[0].children.find(child=>child.textContent==='Remove').disabled,true);
+  await vm.runInContext('deckyChange("remove",{id:2,name:"Plugin 2"})',ctx);
+  assert.equal(posts,1);
+  ctx.mockApi=async path=>{
+    if(path.startsWith('/api/job'))return {done:true,message:'Recovered accepted update'};
+    if(path==='/api/decky')return {managed:true,running:true,
+      plugins:[{storeId:2,name:'Plugin 2',version:'1.0'}]};
+    throw Error(`unexpected ${path}`);
+  };
+  vm.runInContext('api=mockApi',ctx);
+  await vm.runInContext('checkDeckyJob()',ctx);
+  assert.equal(session.has('frameyPluginJob'),false);
+  assert.equal(el('deckyJobStatus').textContent,'Recovered accepted update');
+}
+
 // A failed refresh must remove old install buttons. A late older response
 // must not replace the newer catalog the wearer just requested.
 ctx.mockApi=async path => {assert.equal(path,'/api/decky/store');throw Error('offline');};
@@ -165,6 +250,18 @@ vm.runInContext('api=mockApi',ctx);
 await vm.runInContext('loadDeckyStore()',ctx);
 assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
 assert.equal(el('deckyStoreList').children.length,0);
+// Search/filter/installed-status rendering must not turn a failed catalog
+// request into a successful empty search, or hide an in-flight catalog load.
+el('deckySearch').value='synthetic search';el('deckySearch').oninput();
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+assert.equal(el('deckyStoreList').textContent,'','an outage is not an empty search');
+el('deckyStoreFilter').value='installed';el('deckyStoreFilter').onchange();
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+ctx.mockApi=async path=>{assert.equal(path,'/api/decky');return {running:true,plugins:[]};};
+vm.runInContext('api=mockApi',ctx);await vm.runInContext('refreshDecky()',ctx);
+assert.match(el('deckyStoreSummary').textContent,/Store unavailable: offline/);
+assert.equal(el('deckyStoreList').children.length,0);
+el('deckySearch').value='';el('deckyStoreFilter').value='all';el('deckySearch').oninput();
 let finishOld, finishNew;
 ctx.mockApi=path => {assert.equal(path,'/api/decky/store');
   return new Promise(resolve=>{if(!finishOld)finishOld=resolve;else finishNew=resolve;});};
@@ -173,12 +270,18 @@ const old=vm.runInContext('loadDeckyStore()',ctx);
 const current=vm.runInContext('loadDeckyStore()',ctx);
 assert.equal(el('deckyStoreList').children.length,0);
 assert.equal(el('deckyStoreSummary').textContent,'Loading official Decky store…');
+el('deckySearch').oninput();el('deckyStoreFilter').onchange();
+assert.equal(el('deckyStoreSummary').textContent,'Loading official Decky store…');
+assert.equal(el('deckyStoreList').textContent,'','an unfinished load is not an empty search');
+assert.equal(el('deckyStorePrevious').disabled,true);
+assert.equal(el('deckyStoreNext').disabled,true);
 finishNew({plugins:[{id:98,name:'Current',version:'2.0',description:'Latest'}]});
 await current;
 finishOld({plugins:[{id:97,name:'Stale',version:'1.0',description:'Older'}]});
 await old;
 assert.match(el('deckyStoreList').children[0].children[0].textContent,/Current/);
 assert.doesNotMatch(el('deckyStoreList').children[0].children[0].textContent,/Stale/);
+assert.equal(el('deckyStoreSummary').textContent,'1 plugin found');
 
 // A saved job does not survive a server restart. Keep changes disabled after
 // the missing result until a manual installed-status refresh succeeds.
@@ -356,3 +459,66 @@ const deniedBoot=vm.createContext({document:deniedDocument,
   fetch(){throw Error('No network expected');}});
 vm.runInContext(script,deniedBoot);
 assert.equal(vm.runInContext('key',deniedBoot),'private-key');
+
+// Refresh invalidates status immediately, including callbacks retained from
+// old rows. Exercise the actual headset script with delayed synthetic reads.
+{
+  const entries=new Map();
+  const get=id=>{if(!entries.has(id))entries.set(id,new Element(id));return entries.get(id);};
+  const queued=[],posts=[];let confirms=0,deferStatus=false;
+  let state={managed:true,running:true,plugins:[
+    {storeId:2,name:'Installed fixture',version:'1',sha256:'a'.repeat(64)}]};
+  const context=vm.createContext({document:{getElementById:get,createElement:()=>new Element()},
+    location:{hash:'',pathname:'/'},history:{replaceState(){}},crypto:webcrypto,
+    sessionStorage:{getItem:()=>null,setItem(){},removeItem(){}},
+    window:{addEventListener(){}},setInterval(){},setTimeout(){},console,
+    confirm:()=>{confirms++;return true;}});
+  vm.runInContext(script,context);
+  context.mockApi=async(path,body)=>{
+    if(path==='/api/decky')return deferStatus ? new Promise((resolve,reject)=>queued.push({resolve,reject})) : state;
+    if(path==='/api/decky/plugin'){posts.push(body);return {job:body.requestId};}
+    if(path.startsWith('/api/job'))return {done:true,message:'Synthetic removal complete'};
+    throw Error(`unexpected ${path}`);
+  };
+  const run=expression=>vm.runInContext(expression,context);
+  get('deckyStoreFilter').value='all';
+  run('api=mockApi');await run('refreshDecky()');
+  run('deckyStore=[{id:2,name:"Installed fixture",version:"2",sha256:"b".repeat(64)},'+
+    '{id:3,name:"New fixture",version:"1",sha256:"c".repeat(64)}];showDeckyStore()');
+  const remove=get('deckyInstalled').children[0].children.find(node=>node.textContent==='Remove').onclick;
+  const open=get('deckyInstalled').children[0].children.find(node=>node.textContent==='Open panel').onclick;
+  const update=get('deckyStoreList').children[0].children[1].onclick;
+  const install=get('deckyStoreList').children[1].children[1].onclick;
+  const retained=[remove,update,install];
+  get('frameyPanel').hidden=true;
+  deferStatus=true;
+  const pending=run('refreshDecky()');
+  assert.equal(get('deckyInstalled').children.length,0,'refresh must retire old installed rows before awaiting status');
+  assert.ok(get('deckyStoreList').children.every(row=>row.children[1].disabled),
+    'refresh must disable mutations before awaiting status');
+  for(const tap of retained)await tap();open();
+  assert.equal(confirms,0,'retained callbacks must stop before confirmation while status is pending');
+  assert.equal(posts.length,0);assert.equal(get('frameyPanel').hidden,true);
+  queued.shift().reject(Error('Synthetic status outage'));await pending;
+  for(const tap of retained)await tap();open();
+  assert.equal(confirms,0,'failed status cannot revive retained mutations');
+  assert.equal(posts.length,0);assert.equal(get('frameyPanel').hidden,true);
+
+  // An incomplete normal refresh is a failed read, just like unknown-job
+  // recovery. It must not unlock installation based only on running=true.
+  deferStatus=false;const complete=state;state={running:true};
+  await run('refreshDecky()');
+  assert.match(get('deckyState').textContent,/status is incomplete/);
+  for(const tap of retained)await tap();
+  assert.equal(confirms,0);assert.equal(posts.length,0);
+
+  state={...complete,running:false};await run('refreshDecky()');
+  assert.equal(get('deckyInstalled').children[0].children.find(node=>node.textContent==='Remove').disabled,false,
+    'successful stopped status keeps recovery removal available');
+  await update();await install();
+  assert.equal(posts.length,0,'stopped Decky cannot install or update via retained callbacks');
+  assert.equal(confirms,0);
+  await remove();
+  assert.equal(posts.length,1);assert.equal(posts[0].action,'remove');
+  assert.equal(posts[0].installedSha256,'a'.repeat(64));assert.equal(confirms,1);
+}

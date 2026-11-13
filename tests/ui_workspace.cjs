@@ -78,10 +78,10 @@ test('catalog installs retain progress, failure retry and installed-app handoff'
 test('Steam actions distinguish owned installation, installed play and non-owned store handoff',()=>{
   const f=workspaceFixture();
   f.context.gm.byId=new Map([[1,{installed:false}],[2,{installed:true}]]);
-  const start=html.indexOf('function gameButtons(');f.run(html.slice(start,html.indexOf('function moreGames(',start)));
+  const start=html.indexOf('function steamOwnership(');f.run(html.slice(start,html.indexOf('function moreGames(',start)));
   assert.match(f.run("gameButtons(1,'Owned',false)"),/data-gm="install"/);
   assert.match(f.run("gameButtons(2,'Installed',false)"),/data-launch="2"/);
-  for(const free of [false,true]){const output=f.run(`gameButtons(3,'Store',${free})`);assert.match(output,free?/Get on Steam/:/Buy on Steam/);assert.doesNotMatch(output,/data-gm="install"/);}
+  for(const free of [false,true]){const output=f.run(`gameButtons(3,'Store',${free})`);assert.match(output,free?/Get on Steam/:/View on Steam/);assert.doesNotMatch(output,/data-gm="install"/);}
   f.context.gm.dl={appid:1,percent:30};assert.match(f.run("gameButtons(1,'Owned',false)"),/Downloading 30%/);
 });
 test('Apps Games Tools Settings expose installed, browse, ownership and intentional legacy routes',()=>{
@@ -285,7 +285,7 @@ test('expanded owned and store results survive source and destination returns',a
   f.navigate('#getgames');const ownedMarkup=f.el('gmGrid').innerHTML;
   response.resolve({results:games.slice(0,60)});await search;
   assert.equal(f.el('gmGrid').innerHTML,ownedMarkup,'a late store response leaves current owned results intact');
-  f.navigate('#steamStore');assert.equal(gm.shown,48);assert.equal(gm.storeQ,'new search');
+  f.navigate('#steamStore');assert.equal(gm.shown,50);assert.equal(gm.storeQ,'new search');
 });
 test('Home shortcuts show their tool before focusing it, so typing works on the first tap',()=>{
   const f=workspaceFixture(),pad={state:'on'},buttons=[{dataset:{go:'pad'}}];let focusedVisible=null;

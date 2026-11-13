@@ -347,17 +347,20 @@
 
   /* ---- library shelf (portrait capsules, like Steam's library home) ---- */
   .shelf { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 16px; }
-  .capsule { position: relative; aspect-ratio: 2 / 3; border-radius: 3px; overflow: hidden; background: #2a2f38 center/cover no-repeat;
+  .capsule { position: relative; padding-top:150%; border-radius: 3px; overflow: hidden; background: #2a2f38 top/100% auto no-repeat;
              box-shadow: 0 6px 16px rgba(0,0,0,.45); transition: transform .18s ease, box-shadow .18s ease; }
   .capsule:hover, .capsule:focus-within { transform: translateY(-4px) scale(1.02); box-shadow: 0 14px 30px rgba(0,0,0,.6), 0 0 0 1px rgba(255,255,255,.12); }
-  .capsule .fallback { position: absolute; inset: 0; display: grid; place-items: center; padding: 12px; text-align: center;
+  .capsule .fallback { position: absolute; inset: 0 0 auto; aspect-ratio:2/3; display: grid; place-items: center; padding: 12px; text-align: center;
                        font-weight: 500; color: var(--text); background: linear-gradient(160deg, #3d4450, #1e2329); }
-  .capsule .over { position: absolute; inset: auto 0 0 0; padding: 40px 10px 10px; display: flex; flex-direction: column; gap: 8px;
-                   background: linear-gradient(to top, rgba(0,0,0,.92) 20%, transparent); opacity: 0; transition: opacity .18s; }
+  .capsule .over { position: relative; padding: 10px; display: flex; flex-direction: column; gap: 8px;
+                   background: #151e28; opacity: 1; }
   .capsule:hover .over, .capsule:focus-within .over { opacity: 1; }
-  .capsule .name { font-weight: 700; font-size: 13px; color: #fff; line-height: 1.25; }
+  .capsule .name { font-weight: 700; font-size: 13px; color: #fff; line-height: 1.25; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
   .capsule .size { color: var(--muted); font-size: 11.5px; }
   .capsule button { justify-content: center; }
+  .capsule .installed-art-link { position:absolute; inset:0 0 auto; width:100%; aspect-ratio:2/3; padding:0; height:auto; background:transparent; border:0; }
+  .capsule .installed-art-link:focus-visible { outline:3px solid var(--link); outline-offset:-3px; }
+  .capsule .installed-art-link .fallback { height:100%; }
 
   /* ---- transfer / apps / power ---- */
   .drop { border: 2px dashed rgba(143,152,160,.35); border-radius: 3px; padding: 24px 16px; text-align: center;
@@ -487,6 +490,102 @@
   .cat-card .row a:hover { color: #fff; }
   .game-card .bar { height: 3px; background: rgba(255,255,255,.08); border-radius: 2px; overflow: hidden; }
   .game-card .bar > i { display: block; height: 100%; background: var(--action); }
+  .steam-art { position:relative; display:block; background:linear-gradient(135deg,#294660,#152333); overflow:hidden; border-radius:4px; aspect-ratio:231/87; }
+  .steam-art > span { position:absolute; inset:0; display:grid; place-items:center; padding:8px; text-align:center; color:#c5deef; font-size:12px; overflow-wrap:anywhere; }
+  .steam-art img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+  #gmGrid.steam-results { display:flex; flex-direction:column; gap:6px; }
+  .steam-results .game-card { display:grid; grid-template-columns:168px minmax(140px,1fr) 175px; grid-template-rows:24px 32px; gap:2px 14px; padding:8px; align-items:center; min-height:80px; }
+  .steam-results .steam-art { grid-column:1; grid-row:1/3; }
+  .steam-art-link { padding:0; height:auto; width:100%; background:transparent; border:0; text-align:inherit; }
+  .steam-art-link:hover { background:transparent; }
+  .steam-art-link .steam-art { width:100%; }
+  .steam-results .steam-art-link { grid-column:1; grid-row:1/3; }
+  .steam-discount { display:inline-block; background:#385b14; color:#c3f56b; padding:2px 5px; margin-right:7px; border-radius:3px; font-weight:700; }
+  .steam-result-meta time { color:var(--muted); }
+  .steam-results .steam-result-info { grid-column:2; grid-row:1/3; }
+  .steam-result-info { min-width:0; }
+  .steam-title { display:block; padding:0; height:auto; background:none; color:var(--bright); font-size:15px; font-weight:600; text-align:left; line-height:1.35; white-space:nowrap; text-overflow:ellipsis; overflow:hidden; max-width:100%; }
+  .steam-title:hover { color:var(--link); background:none; }
+  .steam-result-meta { display:flex; flex-wrap:wrap; gap:6px 12px; color:var(--muted); font-size:12px; margin-top:5px; }
+  .steam-price { text-align:right; font-variant-numeric:tabular-nums; }
+  .steam-results .steam-price { grid-column:3; grid-row:1; }
+  .steam-results .row { grid-column:3; grid-row:2; margin:0; flex-wrap:wrap; justify-content:flex-end; gap:6px; }
+  .steam-results .row .small { height:30px; padding:0 10px; font-size:12px; }
+  .steam-results .bar { grid-column:2/4; }
+  .steam-controls { position:relative; display:flex; flex-wrap:wrap; gap:10px 20px; align-items:center; margin:8px 0; color:var(--muted); font-size:12px; }
+  .steam-controls label { display:flex; align-items:center; gap:8px; }
+  .steam-tag-filter { color:var(--text); }
+  .steam-tag-filter summary { margin-top:0; cursor:pointer; padding:9px 10px; border:1px solid #ffffff26; border-radius:4px; background:#121d29; }
+  .steam-tag-picker { position:absolute; right:0; top:100%; z-index:3; width:min(340px,calc(100vw - 100px)); padding:12px; background:#172331; border:1px solid #62839b; border-radius:4px; box-shadow:0 8px 20px #0008; }
+  .steam-tag-picker input[type=search] { width:100%; box-sizing:border-box; margin-bottom:8px; }
+  .steam-tag-options { max-height:216px; overflow-y:auto; display:grid; grid-template-columns:1fr 1fr; gap:2px 8px; }
+  .steam-tag-options label { min-height:36px; color:var(--text); }
+  .steam-tag-picker p { margin:8px 0 0; }
+  .steam-active-filters { display:flex; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; margin-bottom:8px; grid-column:1/-1; }
+  .steam-active-filters button { padding:5px 8px; }
+  .steam-controls select { padding:7px 10px; color:var(--text); background:#121d29; border:1px solid #ffffff26; border-radius:4px; font:inherit; }
+  .steam-rating-filters { font-size:12px; color:var(--muted); }
+  .steam-rating-filters summary { padding:9px; cursor:pointer; border:1px solid #ffffff26; border-radius:4px; }
+  #getgames .panel:has(#gmStoreControls[hidden]) .steam-rating-filters summary { display:none; }
+  #gmScope { margin:8px 0 12px; }
+  #gmScope a { color:var(--link); }
+  #getgames :focus-visible, #steamDetail :focus-visible { outline:2px solid var(--link); outline-offset:3px; }
+  .page[data-page=games] { gap:12px; }
+  .page[data-page=games]:has(#libraryScope [data-scope=store][aria-pressed=true]) > .workspace-heading { display:none; }
+  .page[data-page=games] .workspace-heading { margin-bottom:0; }
+  .page[data-page=games] .library-controls { margin-bottom:0; gap:6px; }
+  .page[data-page=games] #getgames .panel { padding:14px 18px; }
+  .page[data-page=games] #gmScope { margin:6px 0 8px; }
+  #steamDetailBody { padding:22px 30px; }
+  #steamDetailBody h1 { margin:0 0 16px; }
+  #steamDetailBody > dl { display:grid; grid-template-columns:110px minmax(0,1fr); gap:6px 16px; margin:18px 0; }
+  #steamDetailBody > dl dt { color:var(--muted); }
+  #steamDetailBody > dl dd { margin:0; }
+  .steam-detail-art { width:100%; margin:0; }
+  .steam-detail-top { display:grid; grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); gap:20px; align-items:start; }
+  .steam-detail-top p { margin:10px 0; }
+  .steam-reviews { color:var(--link); font-size:13px; white-space:pre-line; }
+  .steam-requirements { white-space:pre-line; font-size:13px; line-height:1.6; color:var(--muted); }
+  .steam-pager { display:flex; align-items:center; gap:12px; margin-top:12px; }
+  .library-nav { display:flex; flex-wrap:wrap; align-items:center; gap:10px 20px; }
+  .library-store-search { display:flex; gap:8px; margin-left:auto; }
+  .library-store-search input { max-width:280px; border:1px solid #62839b; border-radius:5px; background:#0e1926; }
+  .library-store-search button { min-height:44px; }
+  .library-store-search :focus-visible, .steam-art-link:focus-visible { outline:2px solid var(--link); outline-offset:3px; }
+  @media(min-width:1150px) {
+    #getgames .panel:has(#gmStoreControls:not([hidden])) { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:12px; }
+    #getgames .panel > :is(form,#gmScope,#gmGrid,#gmPager,.row,.hint) { grid-column:1/-1; }
+    #getgames .steam-controls { gap:10px; }
+    #getgames #gmChips { margin:6px 0; }
+    #getgames #gmChips button { padding:0 8px; font-size:12px; }
+    #getgames .steam-rating-filters { align-self:center; position:relative; }
+    #getgames .steam-rating-filters[open] #gmChips { position:absolute; right:0; z-index:2; min-width:440px; padding:10px; background:#172331; border:1px solid #ffffff26; border-radius:4px; box-shadow:0 8px 20px #0008; }
+    #getgames .panel:has(#gmStoreControls[hidden]) .steam-rating-filters[open] #gmChips { position:static; padding:0; border:0; box-shadow:none; background:none; }
+  }
+  .steam-detail-gallery { display:flex; gap:8px; overflow-x:auto; margin:10px 0; padding:3px; }
+  .steam-detail-gallery button { position:relative; display:block; overflow:hidden; flex:0 0 100px; height:62px; padding:3px; border:1px solid #ffffff30; background:#0d1823; border-radius:4px; color:var(--text); font-size:11px; }
+  .steam-detail-gallery button[aria-pressed=true] { border:2px solid var(--link); padding:2px; }
+  .steam-trailer-badge { position:absolute; left:6px; bottom:6px; display:grid; place-items:center; width:25px; height:25px; border-radius:50%; background:#07101de6; color:white; box-shadow:0 0 0 1px #ffffff80; font-size:13px; }
+  .steam-detail-gallery img { width:100%; height:100%; object-fit:cover; display:block; }
+  .steam-media-stage { aspect-ratio:16/9; background:#070e16; display:grid; place-items:center; }
+  .steam-media-stage :is(img,video) { width:100%; height:100%; max-height:360px; object-fit:contain; }
+  .steam-media-controls { display:flex; align-items:center; justify-content:space-between; gap:8px; font-size:12px; margin:8px 0; }
+  .steam-media-controls button { min-width:44px; height:44px; padding:0 10px; }
+  .steam-tags { display:flex; flex-wrap:wrap; gap:6px; }
+  .steam-about { margin:18px 0; }
+  .steam-about summary { color:var(--link); cursor:pointer; }
+  .steam-about p { white-space:pre-line; line-height:1.6; }
+  @media(max-width:650px) {
+    .steam-results .game-card { grid-template-columns:100px minmax(0,1fr); grid-template-rows:auto auto auto; gap:8px; }
+    .steam-results :is(.steam-art,.steam-art-link) { grid-column:1; grid-row:1; }
+    .steam-results .steam-result-info { grid-column:2; grid-row:1; }
+    .steam-results .steam-price { grid-column:2; grid-row:2; text-align:left; }
+    .steam-results .row { grid-column:1/3; grid-row:3; justify-content:flex-start; }
+    .steam-results .bar { grid-column:1/3; }
+    #steamDetailBody { padding:18px; }
+    .steam-detail-top { grid-template-columns:1fr; }
+    .library-store-search { margin-left:0; }
+  }
   .f-0 { color: var(--muted); }
   /* ---- Android display ---- */
   .mv-windows { max-height: 420px; overflow-y: auto; }
@@ -876,6 +975,18 @@
   .scope-tabs button { min-height:44px; height:auto; padding:10px 16px; border-radius:7px; background:transparent; color:var(--muted); }
   .scope-tabs [aria-pressed=true] { background:#28455e; color:white; box-shadow:inset 0 0 0 1px #66c0f440; }
   #librarySources { padding-bottom:14px; border-bottom:1px solid #ffffff12; }
+  #nxnativeDlg { width:min(760px, calc(100vw - 32px)); }
+  #nxnativeDlg h2 { margin:0 0 12px; }
+  #nxnativeDlg .source-repo-form { margin:20px 0; }
+  .nxnative-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+  .nxnative-source, .nxnative-game { display:flex; align-items:center; gap:16px; padding:14px 0; border-bottom:1px solid #ffffff12; }
+  .nxnative-source > div, .nxnative-game > div { min-width:0; flex:1; }
+  .nxnative-source p, .nxnative-game p { margin:5px 0 0; overflow-wrap:anywhere; }
+  .nxnative-source .small, .nxnative-game .small { flex-shrink:0; }
+  .nxnative-help { margin-top:22px; }
+  #nxnativeStatus { margin:12px 0; min-height:1.4em; }
+  #nxnativeDlg input { width:100%; box-sizing:border-box; }
+
   .lib-head { margin-bottom:12px; gap:12px; }
   .lib-head h2 { margin:0 0 5px; font-size:17px; color:white; }
   .lib-head p { font-size:13px; }
@@ -1008,6 +1119,17 @@
   #wiDlg { max-width:calc(100vw - 24px); }
   #wiFacts dd { overflow-wrap:anywhere; }
   #wiDlg button, #getgames button { min-height:44px; height:auto; }
+  @media(min-width:651px) and (pointer:fine) {
+    #getgames .steam-results button { min-height:30px; height:30px; }
+    #getgames .steam-results .steam-title { min-height:24px; height:24px; }
+    #getgames .vchips button { min-height:32px; height:32px; }
+  }
+  .cat-card .row a.steam-primary, .steam-primary { display:inline-flex; align-items:center; justify-content:center; min-height:32px; padding:6px 12px; border-radius:4px; background:linear-gradient(110deg,#259ed6,#2854b6); color:#fff; font-weight:600; font-size:13px; }
+  .cat-card .row a.steam-primary:hover { background:#287ac0; }
+  @media(pointer:coarse) {
+    .cat-card .row a.steam-primary, .steam-primary { min-height:44px; }
+    .steam-results .game-card { grid-template-rows:minmax(24px,auto) minmax(44px,auto); }
+  }
   @media(max-width:680px) {
     [data-page=apps] .workspace-heading .eyebrow, [data-page=apps] .workspace-heading p, [data-page=games] .workspace-heading .eyebrow { display:none; }
     .add-install { font-size:13px; padding:10px 12px; }
@@ -1289,7 +1411,7 @@
 
   <div class="page" data-page="games">
   <div class="workspace-heading"><div><span class="eyebrow">Play on your Frame</span><h1>Games</h1><p>Your Steam library and games you add yourself.</p></div><button class="action add-install" data-open-install>＋ Add / Install</button></div>
-  <div class="library-controls"><div class="scope-tabs" id="libraryScope" aria-label="Game library"><button data-scope="installed" aria-pressed="true">Installed</button><button data-scope="owned" aria-pressed="false">Owned</button><button data-scope="store" aria-pressed="false">Store</button></div>
+  <div class="library-controls"><div class="library-nav"><div class="scope-tabs" id="libraryScope" aria-label="Game library"><button data-scope="installed" aria-pressed="true">Installed</button><button data-scope="owned" aria-pressed="false">Owned</button><button data-scope="store" aria-pressed="false">Store</button></div><form class="library-store-search" id="libraryStoreSearch"><input type="search" id="libraryStoreQ" aria-label="Search the Steam store from your library" placeholder="Find a game on Steam…" maxlength="100"><button class="action" type="submit">Search Steam</button></form></div>
     <div class="scope-tabs" id="librarySources" aria-label="Installed content source"><button data-library-source="all" aria-pressed="true">All</button><button data-library-source="steam" aria-pressed="false">Steam</button><button data-library-source="sideloaded" aria-pressed="false">Sideloaded</button></div></div>
   <section class="panel now-running" id="nowRunning" aria-labelledby="nowRunningTitle" hidden>
     <div class="shelf-head"><h2 id="nowRunningTitle">Running now</h2><span class="spacer"></span><button class="small" id="runningCheck">Check again</button></div>
@@ -1332,16 +1454,33 @@
     <div class="shelf-head"><h2 id="steamScopeTitle">Owned, not installed</h2><span class="count" id="gmCount"></span><span class="spacer"></span>
       <span class="sub" id="gmDl"></span></div>
     <div class="panel">
-      <div class="cat-tools">
+      <form class="cat-tools" id="gmSearch">
         <div hidden class="seg" id="gmSrc" aria-label="Where to look">
-          <button data-src="owned" class="on">Your games</button>
-          <button data-src="store">Steam store</button>
+          <button type="button" data-src="owned" class="on">Your games</button>
+          <button type="button" data-src="store">Steam store</button>
         </div>
-        <input type="text" id="gmQ" placeholder="Filter your games…">
-        <button class="small" id="gmReload" title="Read the library again, e.g. after buying something">Refresh</button>
+        <input type="search" id="gmQ" placeholder="Filter your games…" aria-label="Filter owned games" maxlength="100">
+        <button class="action small" id="gmSearchButton" type="submit" hidden>Search</button>
+        <button class="small" id="gmReload" type="button" title="Read the library again, e.g. after buying something">Refresh library</button>
+      </form>
+      <div class="steam-controls" id="gmStoreControls" hidden>
+        <label>Type <select id="gmType"><option value="all">All types</option><option value="game">Games</option><option value="dlc">DLC</option></select></label>
+        <label>Sort <select id="gmSort"><option value="relevance">Relevance</option><option value="name">Name A–Z</option><option value="price">Price: low to high</option><option value="reviews">User reviews</option><option value="released">Release date</option></select></label>
+        <label>VR <select id="gmVR"><option value="all">Any support</option><option value="supported">VR supported</option><option value="required">VR only</option></select></label>
+        <label>Price <select id="gmPrice"><option value="any">Any price</option><option value="free">Free</option><option value="10">Up to 10</option><option value="25">Up to 25</option><option value="50">Up to 50</option></select></label>
+        <label><input type="checkbox" id="gmDiscount"> On sale</label>
+        <label><input type="checkbox" id="gmHideF2P"> Hide free-to-play</label>
+        <details class="steam-tag-filter" id="gmTags"><summary id="gmTagSummary">Tags · Any</summary><div class="steam-tag-picker">
+          <input type="search" id="gmTagQ" placeholder="Find a Steam tag…" aria-label="Find a Steam tag" maxlength="50">
+          <div class="steam-tag-options" id="gmTagOptions" aria-label="Steam tags"></div>
+          <p class="sub" id="gmTagHint" role="status">Match all selected tags · up to 5</p>
+        </div></details>
       </div>
-      <div class="vchips" id="gmChips"></div>
+      <details class="steam-rating-filters" id="gmRatingFilters" open><summary>Frame ratings · this page</summary><div class="vchips" id="gmChips" aria-label="Frame compatibility filters"></div></details>
+      <div class="steam-active-filters" id="gmActiveFilters" hidden><span id="gmFilterSummary"></span><button class="small" id="gmClearFilters" type="button" hidden>Clear filters</button></div>
+      <div class="sub" id="gmScope" role="status" aria-live="polite"></div>
       <div class="cat-grid" id="gmGrid"><div class="sub">Loading your library…</div></div>
+      <div class="steam-pager" id="gmPager" hidden><button class="small" id="gmPrev">Previous</button><span class="sub" id="gmPageLabel"></span><button class="small" id="gmNext">Next</button></div>
       <div class="row" style="margin-top:12px"><button class="small" id="gmMore" hidden>Show more</button></div>
       <div class="hint">Install downloads a game you own straight to the Frame and accepts Steam's default options;
         EULAs and license prompts still need answering in the headset. To buy, open the store page in your browser
@@ -1349,6 +1488,10 @@
         compatibility categories.</div>
     </div>
   </section>
+  <dialog class="store-dialog" id="steamDetail" aria-labelledby="steamDetailTitle">
+    <button class="store-close" type="button" aria-label="Close game details" onclick="this.closest('dialog').close()">×</button>
+    <div class="detail-content" id="steamDetailBody"></div>
+  </dialog>
   </div>
 
   <div class="page" data-page="apps">
@@ -1468,9 +1611,13 @@
     <div class="hint">Install and update download Decky's official ARM64 release and verify its published SHA-256. Frame Control uses a removable user service and does not change the root filesystem. Remove keeps plugin files.</div>
     <h3>Official plugin store</h3>
     <p class="sub">Plugins run code as your Frame user. Store installs are opt-in and only work with the managed loader. Root plugins and x86-only archives are blocked. A loaded backend does not prove its VR page works.</p>
-    <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search store"></label>
+    <label>Find a plugin <input id="deckyStoreSearch" type="search" placeholder="Search names, authors or descriptions"></label>
     <div class="row"><button class="small" id="deckyStoreRefresh">Load store</button></div>
-    <div id="deckyStoreState" class="hint"></div><div id="deckyStoreList" class="stack"></div>
+    <div id="deckyStoreState" class="hint"></div>
+    <div id="deckyPluginJobState" class="hint" role="status"></div>
+    <button class="small" id="deckyPluginJobCheck" hidden>Check result</button>
+    <div class="row"><button class="small" id="deckyStorePrevious" disabled>Previous</button><span id="deckyStorePage" class="hint" role="status" aria-live="polite"></span><button class="small" id="deckyStoreNext" disabled>Next</button></div>
+    <div id="deckyStoreList" class="stack"></div>
   </section>
   <section class="panel" id="headsetPanel">
     <div class="shelf-head"><h2>Frame Control in VR</h2><span class="spacer"></span><button class="small" id="headsetRefresh">Refresh</button></div>
@@ -2096,10 +2243,28 @@
 <dialog id="installChooser" class="dlg installed-detail install-chooser" aria-labelledby="installChooserTitle">
   <div class="install-chooser-head"><span class="eyebrow">Add to your Frame</span><button type="button" id="installChooserClose" class="store-close" aria-label="Close Add or install">×</button></div>
   <h2 id="installChooserTitle">What would you like to install?</h2>
-  <div class="install-choices"><a href="#appStore"><strong>Browse apps</strong><span>VR, Android games, media and utilities</span></a><a href="#getgames"><strong>Owned Steam games</strong><span>Install straight from your Steam library</span></a><a href="#steamStore"><strong>Find a Steam game</strong><span>Search the store, buy or get, then install</span></a><a href="#linuxApps"><strong>Linux apps</strong><span>Desktop apps from Flathub</span></a><button type="button" id="installChooseFile"><strong>Choose a file</strong><span>Android APK · Windows EXE · game ZIP</span></button><button type="button" id="androidBackupOpen"><strong>Import Android game</strong><span>A SideQuest backup: APK with its OBB game data</span></button></div>
+  <div class="install-choices"><a href="#appStore"><strong>Browse apps</strong><span>VR, Android games, media and utilities</span></a><a href="#getgames"><strong>Owned Steam games</strong><span>Install straight from your Steam library</span></a><a href="#steamStore"><strong>Find a Steam game</strong><span>Search the store, buy or get, then install</span></a><a href="#linuxApps"><strong>Linux apps</strong><span>Desktop apps from Flathub</span></a><button type="button" id="installChooseFile"><strong>Choose a file</strong><span>Android APK · Windows EXE · game ZIP</span></button><button type="button" id="androidBackupOpen"><strong>Import Android game</strong><span>A SideQuest backup: APK with its OBB game data</span></button><button type="button" data-open-nxnative><strong>NxNative games</strong><span>Your game catalogs and network folders</span></button></div>
   <input type="file" id="installFileInput" accept=".apk,.zip,.exe" multiple hidden>
   <form id="installLinkForm"><label for="installUrl">Or paste a download or Frame Control install link</label><div class="install-link-row"><input id="installUrl" type="text" inputmode="url" placeholder="https://example.com/game.zip" autocomplete="off" required><button class="action" type="submit">Review link</button></div><p id="installLinkError" class="sub" role="alert" hidden></p></form>
   <p class="sub">Link installs show the title, source and file before you confirm, then use automatic launch and runtime settings. Choose a ZIP or EXE file to pick those settings yourself. Compatibility varies by title.</p>
+</dialog>
+<dialog id="nxnativeDlg" class="dlg installed-detail" aria-labelledby="nxnativeTitle">
+  <div class="install-chooser-head"><span class="eyebrow">Your own library</span><button type="button" id="nxnativeClose" class="store-close" aria-label="Close NxNative games">×</button></div>
+  <h2 id="nxnativeTitle">NxNative games</h2>
+  <p class="sub">Add your own game catalog or folder. Frame Control includes no ROM sources. Prepared NxNative packages install as flat games in SteamVR.</p>
+  <p class="sub">Experimental: Metroid Dread 2.1.0 has been tested on Frame. Other games need separate compatibility checks.</p>
+  <div id="nxnativeStatus" class="sub" role="status" aria-live="polite"></div>
+  <form id="nxnativeAdd" class="source-repo-form">
+    <label>Catalog address or folder path<input name="location" type="text" required maxlength="4096" autocomplete="off" autocapitalize="none" spellcheck="false" placeholder="HTTPS catalog or mounted folder path"></label>
+    <label>Source name (optional)<input name="name" type="text" maxlength="200" autocomplete="off"></label>
+    <p class="sub" id="nxnativePathNote">Use a JSON or text URL-list catalog, or a local folder. Mount an SMB, NFS or WebDAV share on this computer first, then enter its folder path.</p>
+    <button class="action" type="submit">Add source</button>
+  </form>
+  <div class="nxnative-toolbar"><h3>Your sources</h3><button type="button" class="small" id="nxnativeRefresh">Refresh</button></div>
+  <div id="nxnativeSources"></div>
+  <label>Find a game<input type="search" id="nxnativeSearch" placeholder="Filter your games"></label>
+  <div id="nxnativeGames" aria-live="polite"></div>
+  <details class="nxnative-help" id="nxnativePreparation"><summary>Preparing NxNative and LÖVE games</summary><div id="nxnativeGuide"><p class="sub">Raw NSP, XCI and ROM listings can be browsed here, but need a matching NxNative build before installation. Prepare your own extracted game with the Frame build tools on a Mac, then export a .nxnative.zip containing its Android APK and verified game data. No game content or console keys are included with Frame Control.</p><p class="sub">Sources and file paths are stored by this app's server. On iPhone and iPad, the server runs on your Frame, so network folders must be mounted there; HTTPS catalogs work without a local mount.</p></div></details>
 </dialog>
 <dialog id="wiDlg" aria-labelledby="wiTitle">
   <h2 id="wiTitle">Install from a website</h2>
@@ -2213,36 +2378,118 @@ $('extensionClose').onclick = () => {
 function deckyCompatibilityText(plugin) {const c=plugin.compatibility;return c ? `${c.status === 'na' ? 'N/A' : c.status}: ${c.reason}${c.verification?.length ? ' Verified: '+c.verification.join(', ')+'.' : ''}` : 'Unverified on Frame';}
 let deckyInfo = null;
 let deckyCatalog = [];
-async function loadDecky() {
+let deckyStorePage = 0;
+let deckyStatusRequest = 0, deckyStoreRequest = 0;
+let deckyPluginBusy = false;
+let deckyPluginRequest = null;
+const deckyPluginJobKey = 'frameControlDesktopDeckyPluginJob';
+function desktopDeckyDevice() { return globalThis.window?.connDevice || null; }
+try {
+  const raw = sessionStorage.getItem(deckyPluginJobKey);
+  if (raw) {
+    const saved = JSON.parse(raw);
+    const valid = saved && typeof saved === 'object' && typeof saved.name === 'string' &&
+      ['install','update','remove'].includes(saved.action) && /^[0-9a-f]{32}$/.test(saved.job) &&
+      (saved.device === null || typeof saved.device === 'string');
+    deckyPluginRequest = valid ? saved : {unknown:true};
+  }
+} catch (_) {
+  // If storage itself is denied, this page still retains new requests in memory.
+  // A malformed stored snapshot must be reviewed rather than silently discarded.
+  try { if (sessionStorage.getItem(deckyPluginJobKey)) deckyPluginRequest = {unknown:true}; } catch (_) {}
+}
+function rememberDesktopDeckyJob(request) {
+  deckyPluginRequest = request;
   try {
-    const d = deckyInfo = await api('/api/decky');
+    if (request) sessionStorage.setItem(deckyPluginJobKey, JSON.stringify(request));
+    else sessionStorage.removeItem(deckyPluginJobKey);
+  } catch (_) {}
+}
+function desktopDeckyJobMatchesDevice() {
+  return !deckyPluginRequest || deckyPluginRequest.device === undefined ||
+    deckyPluginRequest.device === desktopDeckyDevice();
+}
+function desktopDeckyJobControls() {
+  const saved = deckyPluginRequest, check = $('deckyPluginJobCheck');
+  check.hidden = !saved || !!saved.unknown;
+  check.disabled = deckyPluginBusy || !desktopDeckyJobMatchesDevice();
+  if (saved && !desktopDeckyJobMatchesDevice())
+    $('deckyPluginJobState').textContent = 'Return to the original headset to check the previous plugin change.';
+  else if (saved && !$('deckyPluginJobState').textContent)
+    $('deckyPluginJobState').textContent = saved.unknown
+      ? 'Previous plugin result unavailable. Use Refresh to review installed plugins before another change.'
+      : 'A previous plugin change has an unconfirmed result. Use Check result before another change.';
+}
+async function loadDecky(reviewUnknown = false) {
+  const request = ++deckyStatusRequest;
+  deckyInfo = null;
+  const managedList=$('deckyManagedList');managedList.replaceChildren();
+  $('deckyPlugins').textContent = 'Checking installed plugins…';
+  $('deckyState').textContent = 'Checking Decky status…';
+  deckyButtons();showDeckyStore();
+  try {
+    const d = await api('/api/decky');
+    if (request !== deckyStatusRequest) return;
+    if (!Array.isArray(d.plugins) || !Array.isArray(d.upstreamPlugins) ||
+        typeof d.managed !== 'boolean' || typeof d.running !== 'boolean')
+      throw Error('Installed plugin status is incomplete');
+    deckyInfo = d;
     $('deckyState').textContent = `${d.frameOS || 'Unknown'} ${d.variant || ''} · ${d.arch} · CEF ${d.cef ? 'ready' : 'unavailable'} · ${d.managed ? `managed Decky ${d.version || ''} ${d.running ? 'running' : 'stopped'}` : d.upstreamInstall ? 'upstream Decky installation found' : 'Decky not installed'}`;
     const plugins = [...d.plugins.map(x => `${x.name} (managed)`), ...d.upstreamPlugins.map(x => `${x.name} (upstream)`)];
     $('deckyPlugins').textContent = plugins.length ? `Installed plugins: ${plugins.join(', ')}` : 'No Decky plugins found.';
-    const managedList=$('deckyManagedList');managedList.replaceChildren();
+    managedList.replaceChildren();
     for(const plugin of d.plugins||[]){if(!plugin.storeId)continue;
       const row=document.createElement('div');row.className='hint';
       const label=document.createElement('span');label.textContent=`${plugin.name} ${plugin.version||''} · ${deckyCompatibilityText(plugin)}`;
       const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove plugin';
-      remove.disabled=!d.managed||!$('deckyAck').checked;
-      remove.onclick=()=>changeDeckyPlugin('remove',{id:plugin.storeId,name:plugin.name});
+      remove.disabled=deckyPluginBusy||!d.managed||!$('deckyAck').checked;
+      remove.onclick=()=>changeDeckyPlugin('remove',
+        {id:plugin.storeId,name:plugin.name,installedSha256:plugin.sha256});
       row.append(label,remove);managedList.append(row);}
+    if (reviewUnknown === true && deckyPluginRequest?.unknown && desktopDeckyJobMatchesDevice()) {
+      rememberDesktopDeckyJob(null);
+      $('deckyPluginJobState').textContent = 'Installed plugins refreshed. Review the list before another change.';
+    }
     deckyButtons();
     showDeckyStore();
-  } catch (error) { deckyInfo = null; $('deckyState').textContent = error.message; deckyButtons(); showDeckyStore(); }
+  } catch (error) {
+    if (request !== deckyStatusRequest) return;
+    deckyInfo = null;
+    $('deckyState').textContent = error.message;
+    $('deckyPlugins').textContent = 'Installed plugins unavailable.';
+    managedList.replaceChildren();managedList.textContent = 'Refresh plugins to check installed status.';
+    deckyButtons();showDeckyStore();
+  }
 }
 async function loadDeckyStore() {
+  const request = ++deckyStoreRequest;
+  deckyCatalog = [];deckyStorePage = 0;showDeckyStore();
   $('deckyStoreState').textContent = 'Loading the official store…';
-  try { deckyCatalog = (await api('/api/decky/store')).plugins;
+  try { const catalog = await api('/api/decky/store');
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = catalog.plugins;
     $('deckyStoreState').textContent = `${deckyCatalog.length} plugins in the official store. Select a plugin to install it.`;
     showDeckyStore();
-  } catch(error) { $('deckyStoreState').textContent = error.message; }
+  } catch(error) {
+    if (request !== deckyStoreRequest) return;
+    deckyCatalog = [];showDeckyStore();
+    $('deckyStoreState').textContent = error.message;
+  }
 }
 function showDeckyStore() {
+  desktopDeckyJobControls();
   const list = $('deckyStoreList'); list.replaceChildren();
   const query = $('deckyStoreSearch').value.trim().toLowerCase();
   const installed = [...(deckyInfo?.plugins||[]), ...(deckyInfo?.upstreamPlugins||[])];
-  for (const plugin of deckyCatalog.filter(p => !query || `${p.name} ${p.description}`.toLowerCase().includes(query)).slice(0, 40)) {
+  const found = deckyCatalog.filter(p => !query || `${p.name} ${p.author||''} ${p.description}`.toLowerCase().includes(query));
+  const size = 40, pages = Math.max(1, Math.ceil(found.length / size));
+  deckyStorePage = Math.max(0, Math.min(deckyStorePage, pages - 1));
+  // Keep page information separate from catalogue and job errors. Loading or
+  // failed requests clear the catalogue, so they never appear as empty searches.
+  $('deckyStorePage').textContent = deckyCatalog.length ? `Page ${deckyStorePage + 1} of ${pages} · ${found.length} plugin${found.length===1?'':'s'} found` : '';
+  $('deckyStorePrevious').disabled = deckyStorePage === 0;
+  $('deckyStoreNext').disabled = deckyStorePage >= pages - 1;
+  for (const plugin of found.slice(deckyStorePage * size, (deckyStorePage + 1) * size)) {
     const row = document.createElement('div'); row.className = 'hint';
     const title = document.createElement('strong'); title.textContent = `${plugin.name} · ${plugin.version}`;
     const description = document.createElement('span'); description.textContent = ` ${plugin.description}`;
@@ -2255,37 +2502,99 @@ function showDeckyStore() {
     else {
       const button=document.createElement('button'); button.className='small';
       button.textContent=entry ? (entry.version===plugin.version?'Reinstall':'Update') : 'Install';
-      button.disabled=!deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
-      button.onclick=()=>changeDeckyPlugin(entry?'update':'install',plugin);
+      button.disabled=deckyPluginBusy || !!deckyPluginRequest || !deckyInfo?.managed || !deckyInfo?.running || !$('deckyAck').checked;
+      button.onclick=()=>changeDeckyPlugin(entry?'update':'install',{...plugin,installedSha256:entry?.sha256});
       row.append(button);
       if(entry){const remove=document.createElement('button');remove.className='small danger';remove.textContent='Remove';
-        remove.disabled=!deckyInfo?.managed || !$('deckyAck').checked;
-        remove.onclick=()=>changeDeckyPlugin('remove',plugin);row.append(remove);}
+        remove.disabled=deckyPluginBusy || !!deckyPluginRequest || !deckyInfo?.managed || !$('deckyAck').checked;
+        remove.onclick=()=>changeDeckyPlugin('remove',{...plugin,installedSha256:entry.sha256});row.append(remove);}
     }
     list.append(row);
   }
 }
 async function changeDeckyPlugin(action, plugin) {
-  if (!$('deckyAck').checked || !confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
-  try { await runJob(`${action} ${plugin.name}`, 'decky-plugin', () => api('/api/decky/plugin',
-    {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,acknowledged:true}));
-    await loadDecky(); showDeckyStore(); } catch(error) { $('deckyStoreState').textContent=error.message; }
+  if (deckyPluginBusy || deckyPluginRequest || !$('deckyAck').checked) return;
+  if (!deckyInfo?.managed || (action !== 'remove' && !deckyInfo.running)) {
+    $('deckyStoreState').textContent = 'Refresh plugins to check Decky status before changing plugins.';
+    return;
+  }
+  if (!confirm(`${action} ${plugin.name}? This official store plugin runs code as your Frame user.`)) return;
+  // Lock before the first await: another click or retained row callback can
+  // arrive before disabled buttons redraw. Keep the lock through status refresh.
+  const requestId = Array.from(crypto.getRandomValues(new Uint8Array(16)),
+    byte=>byte.toString(16).padStart(2,'0')).join('');
+  const saved = {job:requestId, action, name:plugin.name, device:desktopDeckyDevice()};
+  rememberDesktopDeckyJob(saved);
+  await runDesktopDeckyJob(saved, () => api('/api/decky/plugin',
+    {action,id:plugin.id,sha256:action==='remove'?undefined:plugin.sha256,
+      installedSha256:plugin.installedSha256,acknowledged:true,requestId}, saved.device));
+}
+async function runDesktopDeckyJob(saved, start) {
+  deckyPluginBusy = true;
+  $('deckyPluginJobState').textContent = `${saved.action} ${saved.name}…`;
+  deckyButtons(); showDeckyStore();
+  let failure = null, accepted = false;
+  const failed = error => {
+    failure = error;
+    if (accepted && /no such job/i.test(error.message) && deckyPluginRequest === saved)
+      rememberDesktopDeckyJob({...saved, unknown:true});
+  };
+  try {
+    await runJob(`${saved.action} ${saved.name}`, 'decky-plugin', async () => {
+      try {
+        const started = await start();
+        if (started?.job !== saved.job) throw Error('The server did not confirm the reserved plugin request ID');
+        accepted = true;
+        return started;
+      } catch (error) {
+        if (error.status >= 400 && error.status < 500 && deckyPluginRequest === saved)
+          rememberDesktopDeckyJob(null);
+        throw error;
+      }
+    }, progress => {
+      if (desktopDeckyDevice() !== saved.device)
+        throw Error('Return to the original headset to check the previous plugin change.');
+      if (typeof progress.done !== 'boolean') throw Error('Plugin job status is incomplete');
+      if (progress.done && deckyPluginRequest === saved) rememberDesktopDeckyJob(null);
+    }, failed);
+  } catch (error) { failed(error); }
+  finally {
+    $('deckyPluginJobState').textContent = failure ? failure.message : `${saved.action} ${saved.name} complete.`;
+    if (deckyPluginRequest)
+      $('deckyPluginJobState').textContent += deckyPluginRequest.unknown
+        ? ' The server has no recoverable result. Use Refresh to review installed plugins before another change.'
+        : ' Result unconfirmed. Use Check result before another change.';
+    await loadDecky();
+    deckyPluginBusy = false; deckyButtons(); showDeckyStore();
+  }
+}
+async function checkDesktopDeckyJob() {
+  if (deckyPluginBusy || !deckyPluginRequest || deckyPluginRequest.unknown) return;
+  if (!desktopDeckyJobMatchesDevice()) { desktopDeckyJobControls(); return; }
+  const saved = deckyPluginRequest;
+  await runDesktopDeckyJob(saved, () => Promise.resolve({job:saved.job}));
 }
 function deckyButtons() {
+  desktopDeckyJobControls();
+  const locked = deckyPluginBusy || !!deckyPluginRequest;
   const ready = !!deckyInfo && deckyInfo.arch === 'aarch64' && deckyInfo.variant === 'vr' && deckyInfo.cef && !deckyInfo.upstreamInstall;
   const ack = $('deckyAck').checked;
-  $('deckyInstall').disabled = !ack || !ready || deckyInfo.managed;
-  $('deckyUpdate').disabled = !ack || !ready || !deckyInfo.managed;
-  $('deckyRemove').disabled = !ack || !deckyInfo?.managed;
+  $('deckyInstall').disabled = locked || !ack || !ready || deckyInfo.managed;
+  $('deckyUpdate').disabled = locked || !ack || !ready || !deckyInfo.managed;
+  $('deckyRemove').disabled = locked || !ack || !deckyInfo?.managed;
+  for(const button of $('deckyManagedList').querySelectorAll('button'))
+    button.disabled=locked || !ack || !deckyInfo?.managed;
 }
-$('deckyAck').onchange = () => { deckyButtons(); showDeckyStore();
-  for(const button of $('deckyManagedList').querySelectorAll('button'))button.disabled=!$('deckyAck').checked||!deckyInfo?.managed; };
-$('deckyRefresh').onclick = loadDecky;
+$('deckyPluginJobCheck').onclick = checkDesktopDeckyJob;
+$('deckyAck').onchange = () => { deckyButtons(); showDeckyStore(); };
+$('deckyStorePrevious').onclick = () => { deckyStorePage--; showDeckyStore(); };
+$('deckyStoreNext').onclick = () => { deckyStorePage++; showDeckyStore(); };
+$('deckyStoreSearch').oninput = () => { deckyStorePage = 0; showDeckyStore(); };
+$('deckyRefresh').onclick = () => loadDecky(true);
 $('deckyStoreRefresh').onclick = loadDeckyStore;
-$('deckyStoreSearch').oninput = showDeckyStore;
 for (const action of ['Install', 'Update', 'Remove']) {
   $(`decky${action}`).onclick = async () => {
-    if (!$('deckyAck').checked || !deckyInfo) return;
+    if (deckyPluginBusy || deckyPluginRequest || !$('deckyAck').checked || !deckyInfo) return;
     const verb = action.toLowerCase();
     if (verb === 'remove' && !confirm('Remove the Frame Control managed Decky service and binary? Plugin files will stay.')) return;
     await runJob(`${action} Decky Loader`, 'decky', () => api('/api/decky', {action:verb, acknowledged:true}));
@@ -2445,7 +2754,7 @@ const savesToDevice = () => !!(window.frameApp && window.frameApp.saveImages);
 // then are about the old one, so they're dropped rather than shown.
 let devGen = 0;
 // Answers that don't depend on the headset (this computer's data, the catalogue, jobs).
-const HEADSET_FREE = /^\/api\/(power|devices|connection|host|job|titles\/job|webinstall\/job|apk-versions|android\/(catalog|reports)|steam\/search)\b/;
+const HEADSET_FREE = /^\/api\/(power|devices|connection|host|job|titles\/job|webinstall\/job|apk-versions|android\/(catalog|reports)|steam\/(search|browse|details))\b/;
 async function api(path, body, device = window.connDevice) {
   const gen = devGen;
   const checkGeneration = () => {
@@ -2471,6 +2780,7 @@ async function api(path, body, device = window.connDevice) {
   checkGeneration();
   if (!r.ok) {
     const err = new Error(data.error || `HTTP ${r.status}`);
+    err.status = r.status;
     err.apk = data.apk;
     err.offline = !!data.offline;
     if (err.offline) setOnline(false, err.message);
@@ -2869,9 +3179,9 @@ function render(s) {
   $("gameCount").textContent = `(${games.length})`;
   $("games").innerHTML = games.length ? games.map(g => `
     <div class="capsule" data-appid="${g.appid}">
-      <div class="fallback">${esc(g.name)}</div>
+      <button class="installed-art-link" data-steam-detail="${g.appid}" aria-label="Details for ${esc(g.name)}"><span class="fallback">${esc(g.name)}</span></button>
       <div class="over">
-        <div class="name">${esc(g.name)}</div>
+        <div class="name" title="${esc(g.name)}">${esc(g.name)}</div>
         <div class="size">${gb(g.size)}</div>
         <button class="play small" data-launch="${g.appid}" data-name="${esc(g.name)}">▶ Play</button>
         <button class="small danger" data-force-quit-app="${g.appid}" data-name="${esc(g.name)}" title="Quit it if it has stopped responding">Force quit…</button>
@@ -3703,7 +4013,7 @@ function showJobs() {
                                waiting ? `${waiting} queued` : ""].filter(Boolean).join(", ");
   renderHome();
 }
-async function runJob(label, key, start, onProgress = () => {}) {
+async function runJob(label, key, start, onProgress = () => {}, onError = () => {}) {
   installing.add(key); jobsRunning++; showJobs();
   try {
     const started = await start();
@@ -3725,6 +4035,7 @@ async function runJob(label, key, start, onProgress = () => {}) {
       return j.result || {};
     }
   } catch (e) {
+    onError(e);
     log(`${label} failed: ${e.message}`, "e"); toast(`${label} failed: ${e.message}`, true);
   } finally { installing.delete(key); queued.delete(key); jobsRunning--; showJobs(); }
 }
@@ -4325,27 +4636,31 @@ $("runningCheck").onclick = () => loadRunning().then(() => { if (!runningGames.l
 
 
 // ---- Steam games: install owned games, find and buy on the store ----
-const FLABEL = { 3: "Frame Verified", 2: "Playable", 1: "Unsupported", 0: "Unknown" };
+const FLABEL = { 3: "Frame Verified", 2: "Playable", 1: "Unsupported", 0: "Frame Unknown" };
 const FCLASS = { 3: "v-works", 2: "v-maybe", 1: "v-no", 0: "f-0" };
 const gm = { src: "owned", owned: null, byId: new Map(), country: null, dl: null, q: "", storeDraft: "",
              // Rating filters per view: most store results aren't rated yet, so show them all there.
              filters: { owned: new Set(["3", "2", "0", "1"]), store: new Set(["3", "2", "0", "1"]) },
-             results: [], shown: 0, shownBySource: {owned:0, store:0}, store: [], storeQ: null, poll: null, seq: 0 };
+             results: [], shown: 0, shownBySource: {owned:0, store:0}, store: [], storeQ: null, poll: null, seq: 0,
+             type: "all", sort: "relevance", vr:"all", price:"any", discount:false, tags:[], hidef2p:false, catalog:false, mediaIndex:0, start:0, total:null, pageSize:50, hasMore:false, browseLoaded: false, loading: false, error: "", detail: null, detailSeq: 0 };
 
 async function loadOwned() {
+  const generation = devGen;
   $("gmReload").disabled = true;
   try {
     const r = await api("/api/steam/owned");
+    if (generation !== devGen) return;
     gm.owned = r.games; gm.country = r.country || gm.country; gm.dl = r.download;
     gm.byId = new Map(gm.owned.map(g => [g.id, g]));
   } catch (e) {
+    if (generation !== devGen) return;
     if (!gm.owned) failed($("gmGrid"), e);
     if (!e.offline) log("Steam library: " + e.message, "e");
     // Keep trying while a download was in progress; one failed poll shouldn't freeze it.
     clearTimeout(gm.poll);
     if (gm.dl) gm.poll = setTimeout(loadOwned, 15000);
     return;
-  } finally { $("gmReload").disabled = false; }
+  } finally { if (generation === devGen) $("gmReload").disabled = false; }
   const d = gm.dl, name = d && gm.byId.get(d.appid)?.name;
   $("gmDl").textContent = d ? `${d.paused ? "Paused" : "Downloading"} ${name || d.appid} · ${d.percent ?? 0}%` +
     (d.eta > 0 && !d.paused ? ` · ${dur(d.eta)} left` : "") : "";
@@ -4353,6 +4668,7 @@ async function loadOwned() {
   clearTimeout(gm.poll);
   if (d) gm.poll = setTimeout(loadOwned, document.hidden ? 30000 : 5000);
   renderChips(); filterGames(true); renderHome();
+  if ($('steamDetail').open && gm.detail) $('steamDetailActions').innerHTML = gameButtons(gm.detail.id,gm.detail.name,gm.detail.free === true,true);
 }
 
 function renderChips() {
@@ -4364,6 +4680,11 @@ function renderChips() {
 
 function filterGames(keepScroll) {
   const y = scroller().scrollTop;
+  const store = gm.src === "store";
+  renderSteamFilters();
+  $("gmGrid").classList.toggle("steam-results", store);
+  $("gmGrid").setAttribute("aria-busy", String(store && !!gm.loading));
+  $("gmScope").textContent = "";
   if (gm.src === "owned") {
     if (!gm.owned) return;
     const terms = gm.q.toLowerCase().split(/\s+/).filter(Boolean);
@@ -4372,46 +4693,130 @@ function filterGames(keepScroll) {
     gm.results.sort((a, b) => (b.installed - a.installed) || (b.lastPlayed - a.lastPlayed) || a.sort.localeCompare(b.sort));
     $("gmCount").textContent = `${gm.results.length.toLocaleString()} of ${gm.owned.length.toLocaleString()} owned`;
   } else {
-    gm.results = gm.store.filter(g => gm.filters.store.has(String(g.frame)));
-    $("gmCount").textContent = gm.storeQ ? `${gm.results.length} of ${gm.store.length} store results` : "";
+    gm.results = gm.store.filter(g => gm.filters.store.has(String(g.frame)) && (gm.catalog || gm.storeQ || gm.type === 'all' || !gm.type || g.type === gm.type) &&
+      (gm.catalog || gm.storeQ || !gm.vr || gm.vr === 'all' || (g.categories || []).some(c => gm.vr === 'required' ? c === 'VR Only' : /VR Only|VR Supported/.test(c))));
+    if (!gm.catalog && !gm.storeQ) {
+      if (gm.sort === 'name') gm.results.sort((a,b) => a.name.localeCompare(b.name));
+      if (gm.sort === 'price') gm.results.sort((a,b) => (a.free ? 0 : a.price?.final ?? Infinity) - (b.free ? 0 : b.price?.final ?? Infinity));
+      if (gm.sort === 'released') gm.results.sort((a,b) => (Date.parse(b.release) || 0) - (Date.parse(a.release) || 0));
+      if (gm.sort === 'reviews') {
+        const positive = g => Number(g.review_summary?.match(/(\d+)%/)?.[1] ?? -1);
+        gm.results.sort((a,b) => positive(b) - positive(a));
+      }
+    }
+    const total = gm.total ?? gm.store.length, start = gm.start || 0;
+    $("gmCount").textContent = (gm.catalog || gm.storeQ) ? `${total.toLocaleString()} results` : `${gm.store.length} starting points`;
+    $("gmScope").innerHTML = (gm.catalog || gm.storeQ)
+      ? `${gm.store.length ? `${start+1}–${start+gm.store.length}` : '0'} of ${total.toLocaleString()} Steam results${gm.storeQ ? ` for “${esc(gm.storeQ)}”` : ' across the catalog'}. All store controls apply before pagination. Prices and limits use your Steam region (${esc(gm.country)}). Frame rating filters apply to this page (${gm.results.length} shown).${gm.storeQ && gm.discount ? ' Steam can return loose matches when a title search is combined with On sale, including unrelated titles. Counts and ordering are supplied by Steam; remove On sale to compare.' : ''}`
+      : 'Explore VR · A small selection of starting points, not a ranking or personalized recommendations. Search above for other titles. Availability and prices come from Steam.';
+
   }
-  const n = Math.max(48, keepScroll ? gm.shown : 0);
+  $("gmPager").hidden = !store || !(gm.catalog || gm.storeQ);
+  $("gmPrev").disabled = gm.loading || !(gm.start > 0);
+  $("gmNext").disabled = gm.loading || !gm.hasMore;
+  $("gmPageLabel").textContent = `Page ${Math.floor((gm.start || 0)/(gm.pageSize || 50))+1} of ${Math.max(1,Math.ceil((gm.total || 0)/(gm.pageSize || 50)))}`;
+  const n = Math.max(store && gm.pageSize ? gm.pageSize : 48, keepScroll ? gm.shown : 0);
   $("gmGrid").innerHTML = ""; gm.shown = 0; moreGames(n);
-  if (!gm.results.length) $("gmGrid").innerHTML = `<div class="sub">${gm.src === "store" && !gm.storeQ
-    ? "Type a name and press Enter to search the Steam store." : "Nothing matches. Try turning on more ratings above."}</div>`;
+  if (!gm.results.length) $("gmGrid").innerHTML = `<div class="sub">${store
+    ? 'Nothing matches this selection. Try more compatibility ratings on this page, the next page, or a different type or search.'
+    : "Nothing matches. Try turning on more ratings above."}</div>`;
+  if (store && gm.loading) $("gmCount").textContent = "Searching Steam…";
+  if (store && gm.loading) $("gmGrid").innerHTML = '<div class="sub" role="status">Loading Steam titles…</div>';
+  if (store && gm.error) $("gmGrid").innerHTML = `<div class="sub" role="alert">${esc(gm.error)} <button class="small" data-steam-retry>Try again</button></div>`;
   if (keepScroll) scrollToY(y);
 }
 
-function price(p) {
-  if (!p) return "Free";
-  const f = n => { try { return new Intl.NumberFormat(undefined, { style: "currency", currency: p.currency }).format(n / 100); }
-                   catch { return `${(n / 100).toFixed(2)} ${esc(p.currency || "")}`; } };
-  const fin = p.final ?? p.initial ?? 0;
-  return p.initial > fin ? `<s>${f(p.initial)}</s>${f(fin)}` : f(fin);
+// Same live-verified ID allowlist as frame_store.SEARCH_TAGS; the server validates every request.
+const STEAM_TAGS = {"21978": "VR", "4182": "Singleplayer", "3859": "Multiplayer", "1752": "Rhythm", "1774": "Shooter", "19": "Action", "492": "Indie", "1664": "Puzzle", "21": "Adventure", "1773": "Arcade", "1685": "Co-op", "3843": "Online Co-Op", "3841": "Local Co-Op", "7368": "Local Multiplayer", "599": "Simulation", "9": "Strategy", "122": "RPG", "597": "Casual", "699": "Racing", "701": "Sports", "1667": "Horror", "1663": "FPS", "1621": "Music", "1625": "Platformer", "1695": "Open World", "3810": "Sandbox", "1662": "Survival", "1742": "Story Rich", "3834": "Exploration", "1654": "Relaxing", "1716": "Roguelike", "3959": "Roguelite", "3839": "First-Person", "1697": "Third Person", "3942": "Sci-fi", "1684": "Fantasy", "1775": "PvP", "6730": "PvE", "493": "Early Access", "7481": "Controller"};
+const STEAM_TAG_LIMIT = 5;
+function renderSteamTagOptions() {
+  const q = $('gmTagQ').value.trim().toLowerCase();
+  const matches = Object.entries(STEAM_TAGS).filter(([id,name]) => name.toLowerCase().includes(q)).sort((a,b) => a[1].localeCompare(b[1]));
+  $('gmTagOptions').innerHTML = matches.map(([id,name]) => `<label><input type="checkbox" data-steam-tag="${id}" ${gm.tags.includes(id) ? 'checked' : ''} ${gm.tags.length >= STEAM_TAG_LIMIT && !gm.tags.includes(id) ? 'disabled' : ''}> ${esc(name)}</label>`).join('') || '<span class="sub">No matching tags.</span>';
+}
+function renderSteamFilters() {
+  const active = [];
+  if (gm.type !== 'all') active.push(gm.type === 'game' ? 'Games' : 'DLC');
+  if (gm.vr !== 'all') active.push(gm.vr === 'required' ? 'VR only' : 'VR supported');
+  if (gm.price !== 'any') active.push(gm.price === 'free' ? 'Free' : `Up to ${gm.price} (${gm.country || 'Steam region'})`);
+  if (gm.discount) active.push('On sale');
+  if (gm.hidef2p) active.push('Hide free-to-play');
+  if (gm.tags.length) active.push(`Tags: ${gm.tags.map(id => STEAM_TAGS[id]).join(' + ')}`);
+  if (gm.sort !== 'relevance') active.push(`Sort: ${({name:'Name A–Z',price:'Price: low to high',reviews:'User reviews',released:'Release date'})[gm.sort]}`);
+  $('gmActiveFilters').hidden = gm.src !== 'store' || !active.length;
+  $('gmFilterSummary').textContent = active.length ? `Catalog filters · ${active.join(' · ')}` : 'Catalog filters · None';
+  $('gmClearFilters').hidden = !active.length;
+  $('gmTagSummary').textContent = gm.tags.length ? `Tags · ${gm.tags.length} selected` : 'Tags · Any';
+  $('gmTagHint').textContent = `Match all selected tags · ${gm.tags.length} of ${STEAM_TAG_LIMIT} selected`;
+  for (const [id,value] of [['gmType',gm.type],['gmVR',gm.vr],['gmPrice',gm.price],['gmSort',gm.sort]]) $(id).value = value;
+  $('gmDiscount').checked = gm.discount; $('gmHideF2P').checked = gm.hidef2p;
+  document.querySelectorAll('[data-steam-tag]').forEach(input => {
+    input.checked = gm.tags.includes(input.dataset.steamTag);
+    input.disabled = gm.tags.length >= STEAM_TAG_LIMIT && !input.checked;
+  });
 }
 
-function gameButtons(id, name, free) {
-  const g = gm.byId.get(id), d = gm.dl;
-  const storeUrl = `https://store.steampowered.com/app/${id}/`;
-  const open = `<button class="small" data-gm="store" data-id="${id}" data-name="${esc(name)}" title="Open the store page in the headset">Store on Frame</button>`;
+function price(p) {
+  if (!p || !Number.isFinite(p.final ?? p.initial) || (p.final ?? p.initial) < 0) return "Price unavailable";
+  const f = n => { try { return regionalPriceText(new Intl.NumberFormat('en', { style: "currency", currency: p.currency }).format(n / 100)); }
+                   catch { return `${(n / 100).toFixed(2)} ${p.currency || ""}`; } };
+  const fin = p.final ?? p.initial ?? 0;
+  const finalText = p.final_formatted || f(fin), originalText = p.initial_formatted || f(p.initial);
+  return p.initial > fin ? `<s>${esc(regionalPriceText(originalText))}</s>${esc(regionalPriceText(finalText))}` : esc(regionalPriceText(finalText));
+}
+function regionalPriceText(value) { return String(value).replace(/\s+/g,' ').trim().replace(/([^\d\s.,-])(?=\d)/g,'$1 '); }
+
+function steamArt(g, extra = "") {
+  const src = g.image || `${CDN}/${g.id}/header.jpg`;
+  return `<span class="steam-art ${extra}"><span aria-hidden="true">${esc(g.name)}</span><img loading="lazy" src="${esc(src)}" alt="" data-fallback="${CDN}/${g.id}/header.jpg" onerror="if(this.dataset.fallback){const next=this.dataset.fallback;delete this.dataset.fallback;if(this.src!==next){this.src=next;return;}}this.hidden=true"></span>`;
+}
+
+function steamType(g) { return ({game:"Game",dlc:"DLC",demo:"Demo",music:"Soundtrack",package:"Package",bundle:"Bundle"})[g.type] || "Steam title"; }
+function steamPrice(g) {
+  if (g.free === true) return "Free to play";
+  const discount = g.price?.discount_percent ?? g.discount_percent;
+  const badge = Number.isInteger(discount) && discount > 0 && discount <= 100 ? `<span class="steam-discount" aria-label="${discount}% off">−${discount}%</span>` : '';
+  if (g.price && (g.price.final != null || g.price.initial != null)) return badge + price(g.price);
+  if (g.price_text) return badge + `${g.original_price_text ? `<s>${esc(regionalPriceText(g.original_price_text))}</s>` : ''}${esc(regionalPriceText(g.price_text))}`;
+  return "Price unavailable";
+}
+
+function steamOwnership(id) {
+  const installed = state?.games?.find(g => String(g.appid) === String(id));
+  return gm.byId.get(id) || (installed && {...installed,installed:true});
+}
+
+function gameButtons(id, name, free, detail = false) {
+  const g = steamOwnership(id), d = gm.dl;
+  const metadata = gm.detail && String(gm.detail.id) === String(id) ? gm.detail : gm.store.find(item => String(item.id) === String(id));
+  const nativeVROnly = g?.vrOnly || metadata?.vrOnly || metadata?.categories?.includes('VR Only');
+  const key = String(id).match(/^(sub|bundle)_(\d+)$/);
+  const storeUrl = key ? `https://store.steampowered.com/${key[1]}/${key[2]}/` : `https://store.steampowered.com/app/${id}/`;
+  const open = `<button class="small" data-gm="store" data-id="${id}" data-name="${esc(name)}" title="Open the Steam store page in the headset">Store in headset</button>`;
   if (d && d.appid === id) return `<span class="tag">${d.paused ? "Paused" : "Downloading"} ${d.percent ?? 0}%</span>`;
-  if (g && g.installed) return `<span class="tag">Installed</span>` +
+  if (g && g.installed) return (detail ? `<span class="tag">Installed</span>` : "") +
     `<button class="play small" data-launch="${id}" data-name="${esc(name)}">▶ Play</button>` +
-    `<button class="small" data-mod="${id}" data-name="${esc(name)}" title="Flat-to-VR mod for Unreal Engine games">VR mod</button>`;
+    (detail && !nativeVROnly ? `<button class="small" data-mod="${id}" data-name="${esc(name)}" title="Flat-to-VR mod for Unreal Engine games">VR mod</button>` : "");
   if (g) return `<button class="action small" data-gm="install" data-id="${id}" data-name="${esc(name)}">Install on Frame</button>`;
-  return `<a href="${storeUrl}" target="_blank" rel="noopener" title="Opens in your browser">${free ? "Get" : "Buy"} on Steam ↗</a>${open}`;
+  return `<a class="steam-primary" href="${storeUrl}" target="_blank" rel="noopener" title="Opens Steam in your browser; purchases happen there">${free ? "Get on Steam" : "View on Steam"} ↗</a>${detail && !key ? open : ""}`;
 }
 
 function moreGames(count = 48) {
   const next = gm.results.slice(gm.shown, gm.shown + count);
   $("gmGrid").insertAdjacentHTML("beforeend", next.map(g => {
     const own = gm.byId.get(g.id), d = gm.dl && gm.dl.appid === g.id ? gm.dl : null;
+    if (gm.src === "store") return `<article class="cat-card game-card">
+      <button class="steam-art-link" data-steam-detail="${g.id}" aria-label="Details for ${esc(g.name)}">${steamArt(g)}</button><div class="steam-result-info"><button class="steam-title" data-steam-detail="${g.id}" aria-label="Details for ${esc(g.name)}">${esc(g.name)}</button>
+      <div class="steam-result-meta"><span>${steamType(g)}</span>${g.release ? `<time>${esc(g.release)}</time>` : ''}${g.review_summary ? `<span class="steam-reviews" title="${esc(g.review_summary)}">${esc(g.review_summary.split('\n')[0])}</span>` : ''}<span class="${FCLASS[g.frame] ?? FCLASS[0]}" title="${g.frame ? 'Valve’s Steam Frame compatibility rating' : 'Frame compatibility has not been confirmed'}">${FLABEL[g.frame] ?? FLABEL[0]}</span><span>${own ? (own.installed ? 'Installed on Frame' : 'In your library') : (gm.owned ? 'Not in your library' : 'Ownership not checked')}</span></div></div>
+      <div class="steam-price price">${steamPrice(g)}</div>
+      ${d ? `<div class="bar"><i style="width:${d.percent ?? 0}%"></i></div>` : ''}
+      <div class="row">${gameButtons(g.id,g.name,g.free === true)}</div></article>`;
     const sub = gm.src === "owned"
       ? [g.minutes ? `${(g.minutes / 60).toFixed(g.minutes < 600 ? 1 : 0)} h played` : "Never played", g.vrOnly ? "VR only" : g.vr ? "VR" : "",
          g.installed && g.size ? gb(g.size) : ""].filter(Boolean).join(" · ")
       : `<span class="price">${own ? "In your library" : price(g.price)}</span>${g.metascore ? ` · Metacritic ${esc(g.metascore)}` : ""}`;
     return `<div class="cat-card game-card">
-      <img class="art" loading="lazy" src="${CDN}/${g.id}/capsule_231x87.jpg" alt="" onerror="this.style.visibility='hidden'">
+      ${steamArt(g)}
       <div class="top"><div style="min-width:0"><div class="t">${esc(g.name)}</div><div class="s">${sub}</div></div>
         <span class="vbadge ${FCLASS[g.frame] ?? FCLASS[0]}">${FLABEL[g.frame] ?? FLABEL[0]}</span></div>
       ${d ? `<div class="bar"><i style="width:${d.percent ?? 0}%"></i></div>` : ""}
@@ -4423,21 +4828,32 @@ function moreGames(count = 48) {
   $("gmMore").hidden = gm.shown >= gm.results.length;
 }
 
-async function searchStore() {
-  const seq = ++gm.seq;  // clearing the query invalidates earlier work too
-  const q = $("gmQ").value.trim();
-  if (!q) { gm.store = []; gm.storeQ = null; renderChips(); return filterGames(); }
-  if (!gm.country) await loadOwned();  // the store search needs the account's country
-  if (seq !== gm.seq) return;
-  if (!gm.country) return toast("Couldn't read the Steam account's country from the Frame", true);
-  if (gm.src === 'store') $("gmGrid").innerHTML = `<div class="sub">Searching the Steam store…</div>`;
-  try {
-    const r = await api(`/api/steam/search?q=${encodeURIComponent(q)}&cc=${gm.country}`);
-    if (seq !== gm.seq) return;
-    gm.store = r.results; gm.storeQ = q;
-  } catch (e) { if (seq === gm.seq && gm.src === 'store') $("gmGrid").innerHTML = `<div class="sub">${esc(e.message)}</div>`; return; }
-  gm.shownBySource.store = 0;
+async function searchStore(start = 0, query = $("gmQ").value) {
+  const seq = ++gm.seq;
+  const q = String(query || '').trim().slice(0,100);
+  if (arguments.length < 2) gm.storeDraft = q;
+  gm.catalog = !!(q || (gm.type && gm.type !== 'all') || (gm.sort && gm.sort !== 'relevance') || (gm.vr && gm.vr !== 'all') || (gm.price && gm.price !== 'any') || gm.discount || gm.hidef2p || gm.tags.length);
+  gm.store = []; gm.storeQ = q || null; gm.start = start; gm.total = null; gm.hasMore = false; gm.loading = true; gm.error = "";
   if (gm.src === 'store') { renderChips(); filterGames(); }
+  try {
+    if (!gm.country) await loadOwned();  // use the headset account's store region
+    if (seq !== gm.seq) return;
+    if (!gm.country) throw Error("Couldn't read your Steam store region. Connect your Frame, then try again.");
+    const path = gm.catalog ? `/api/steam/search?q=${encodeURIComponent(q)}&cc=${gm.country}&start=${start}&type=${gm.type}&sort=${gm.sort}&vr=${gm.vr || 'all'}&price=${gm.price || 'any'}&discount=${gm.discount ? '1' : '0'}&tags=${encodeURIComponent(gm.tags.join(','))}&hidef2p=${gm.hidef2p ? '1' : '0'}` : `/api/steam/browse?cc=${gm.country}`;
+    const r = await api(path);
+    if (seq !== gm.seq) return;
+    gm.store = r.results; gm.total = r.total ?? r.results.length; gm.start = r.start ?? start; gm.pageSize = r.page_size || 50; gm.hasMore = !!r.has_more;
+    if (!gm.catalog) gm.browseLoaded = true;
+    gm.shownBySource.store = 0;
+  } catch (e) {
+    if (seq !== gm.seq) return;
+    gm.error = e.message;
+  } finally {
+    if (seq === gm.seq) {
+      gm.loading = false;
+      if (gm.src === 'store') { renderChips(); filterGames(); }
+    }
+  }
 }
 
 function setGameSource(src) {
@@ -4447,10 +4863,136 @@ function setGameSource(src) {
   gm.src = src;
   gm.shown = gm.shownBySource[src] || 0;
   document.querySelectorAll("[data-src]").forEach(b => b.classList.toggle("on", b.dataset.src === src));
-  $("gmQ").placeholder = src === "owned" ? "Filter your games…" : "Search the Steam store, then press Enter…";
+  $("gmQ").placeholder = src === "owned" ? "Filter your games…" : "Search the Steam store…";
+  $("gmQ").setAttribute("aria-label", src === "owned" ? "Filter owned games" : "Search the Steam store");
+  $("gmSearchButton").hidden = src !== "store";
+  $("gmStoreControls").hidden = src !== "store";
+  $("gmRatingFilters").open = src !== "store";
+  $("libraryStoreSearch").hidden = src === "store";
   $("gmQ").value = src === "owned" ? gm.q : gm.storeDraft;
   renderChips(); filterGames(true);
+  if (src === "store" && !gm.browseLoaded && !gm.storeQ && !gm.loading) searchStore();
 }
+
+let steamHls = null, steamMediaSeq = 0, steamHlsLoad = null;
+function stopSteamMedia() {
+  ++steamMediaSeq;
+  if (steamHls) { steamHls.destroy(); steamHls = null; }
+  const video = $('steamTrailer');
+  if (video?.pause) { video.pause(); video.removeAttribute('src'); video.load(); }
+}
+function steamMedia(g) {
+  const movies = (g.movies || []).filter(m => m.sources?.some(s => /^https:\/\//.test(s.url)));
+  return [...movies.map(m => ({...m, kind:'movie'})), ...(g.screenshots || []).filter(s => /^https:\/\//.test(s)).map((url,i) => ({kind:'image',url,thumbnail:url,name:`Screenshot ${i+1}`}))];
+}
+function loadSteamHls() {
+  if (window.Hls) return Promise.resolve(window.Hls);
+  if (!steamHlsLoad) steamHlsLoad = new Promise((resolve,reject) => {
+    const script = document.createElement('script'); script.src = '/steam-hls.js';
+    script.onload = () => window.Hls ? resolve(window.Hls) : reject(Error('Trailer player unavailable'));
+    script.onerror = () => { script.remove(); steamHlsLoad = null; reject(Error('Trailer player could not load')); };
+    document.head.append(script);
+  });
+  return steamHlsLoad;
+}
+async function selectSteamMedia(index, focus = false) {
+  const items = steamMedia(gm.detail || {});
+  stopSteamMedia();
+  if (!items.length) return;
+  const seq = steamMediaSeq;
+  gm.mediaIndex = (Number(index) + items.length) % items.length;
+  const item = items[gm.mediaIndex];
+  $('steamMediaLabel').textContent = `${gm.mediaIndex+1} / ${items.length} · ${item.name}`;
+  document.querySelectorAll('[data-steam-media]').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.steamMedia) === gm.mediaIndex)));
+  $('steamMediaError').textContent = '';
+  if (item.kind === 'image') {
+    $('steamMediaStage').innerHTML = `<img src="${esc(item.url)}" alt="${esc((gm.detail?.name || '') + ' ' + item.name)}">`;
+  } else {
+    const sources = item.sources.filter(s => /^https:\/\//.test(s.url));
+    $('steamMediaStage').innerHTML = `<video id="steamTrailer" controls playsinline preload="none" ${/^https:\/\//.test(item.thumbnail || '') ? `poster="${esc(item.thumbnail)}"` : ''} aria-label="${esc(item.name)}"></video>`;
+    const video = $('steamTrailer');
+    const unavailable = () => { if (seq === steamMediaSeq) $('steamMediaError').textContent = 'Trailer playback unavailable here. Open the Steam page to watch it.'; };
+    video.addEventListener('error', unavailable);
+    try {
+      const direct = sources.find(s => s.type !== 'application/vnd.apple.mpegurl' && video.canPlayType(s.type));
+      const hls = sources.find(s => s.type === 'application/vnd.apple.mpegurl');
+      if (direct) video.src = direct.url;
+      else if (hls && video.canPlayType(hls.type)) video.src = hls.url;
+      else if (hls) {
+        const Hls = await loadSteamHls();
+        if (seq !== steamMediaSeq) return;
+        if (!Hls.isSupported()) return unavailable();
+        // Buffer enough for native controls to become usable; never call play().
+        const player = steamHls = new Hls({maxBufferLength:10, maxMaxBufferLength:20, enableWorker:false});
+        player.on(Hls.Events.ERROR, (_,data) => { if (data.fatal) unavailable(); });
+        player.loadSource(hls.url); player.attachMedia(video);
+      } else unavailable();
+    } catch { unavailable(); }
+  }
+  if (focus) {
+    const selected = document.querySelector(`[data-steam-media="${gm.mediaIndex}"]`);
+    selected?.focus(); selected?.scrollIntoView({block:'nearest',inline:'nearest'});
+  }
+}
+function steamMediaViewer(g) {
+  const items = steamMedia(g);
+  if (!items.length) return `${steamArt(g,'steam-detail-art')}<p class="sub">Media unavailable from Steam.</p>`;
+  return `<div class="steam-media-stage" id="steamMediaStage"></div>
+    <div class="steam-media-controls"><button type="button" data-steam-media-step="-1" aria-label="Previous media">←</button><span id="steamMediaLabel" aria-live="polite"></span><button type="button" data-steam-media-step="1" aria-label="Next media">→</button></div>
+    <div class="steam-detail-gallery" aria-label="Select trailer or screenshot">${items.map((m,i) => `<button type="button" data-steam-media="${i}" aria-label="Show ${m.kind === 'movie' ? 'trailer: ' : ''}${esc(m.name)}" aria-pressed="false">${/^https:\/\//.test(m.thumbnail || '') ? `<img loading="lazy" src="${esc(m.thumbnail)}" alt="">` : ''}${m.kind === 'movie' ? '<span class="steam-trailer-badge" aria-hidden="true">▶</span>' : ''}</button>`).join('')}</div><p class="sub" id="steamMediaError" role="status"></p><a href="https://store.steampowered.com/app/${g.id}/" target="_blank" rel="noopener">Media on Steam ↗</a>`;
+}
+$('steamDetailBody').onclick = e => {
+  const media = e.target.closest('[data-steam-media]'), step = e.target.closest('[data-steam-media-step]');
+  if (media) selectSteamMedia(Number(media.dataset.steamMedia));
+  if (step) selectSteamMedia((gm.mediaIndex || 0) + Number(step.dataset.steamMediaStep), true);
+};
+
+function renderSteamDetail(g, note = "") {
+  stopSteamMedia();
+  const own = steamOwnership(g.id), base = g.base_game;
+  const vr = (g.categories || []).filter(c => /VR|Controller/.test(c)).join(' · ');
+  const vrRequirement = (g.requirements?.minimum || '').split('\n').find(line => /^VR Support:/i.test(line));
+  const reviewText = (g.review_summaries || []).length
+    ? g.review_summaries.map(r => `${r.label} ${r.rating} · ${r.description}`).join('\n')
+    : g.review_summary || 'Steam user reviews unavailable.';
+  $("steamDetailBody").innerHTML = `<h1 id="steamDetailTitle">${esc(g.name)}</h1>
+    <div class="steam-detail-top"><div>${steamMediaViewer(g)}</div>
+    <div><div class="steam-result-meta"><span>${steamType(g)}</span><span class="${FCLASS[g.frame] ?? FCLASS[0]}" title="${g.frame ? 'Valve’s Steam Frame compatibility rating' : 'Frame compatibility has not been confirmed'}">${FLABEL[g.frame] ?? FLABEL[0]}</span><span>${own ? (own.installed ? 'Installed on Frame' : 'In your library') : (gm.owned ? 'Not in your library' : 'Ownership not checked')}</span></div>
+    <p class="price">${steamPrice(g)}</p>${vr || vrRequirement ? `<p>${esc([vr,vrRequirement].filter(Boolean).join(' · '))}</p>` : ''}<p class="steam-reviews">${esc(reviewText)}</p>
+    <p>${esc(storeText(g.description || 'No description available from Steam. Open its Steam page for more information.'))}</p>
+    ${base ? `<p>DLC requires the base game${base.name ? `: ${esc(base.name)}` : ''}. Check Steam for requirements.</p>` : g.type === 'dlc' ? '<p>This is additional content. Check Steam for the required base game.</p>' : ''}
+    <p class="sub">${g.frame === 0 || g.frame == null ? 'Frame compatibility has not been confirmed. Unknown does not mean supported.' : "Compatibility is Valve’s Steam Frame rating."}</p>
+    <div class="row" id="steamDetailActions">${gameButtons(g.id,g.name,g.free === true,true)}</div><p role="status">${esc(note)}</p></div></div>
+    ${g.tags?.length ? `<p class="sub">Popular user tags from Steam</p><div class="steam-tags">${g.tags.map(t => `<span class="store-badge">${esc(t)}</span>`).join('')}</div>` : '<p class="sub">User tags unavailable from Steam.</p>'}
+    <details class="steam-about"><summary>About this game</summary><p>${esc(g.about || 'Full description unavailable from Steam. Open its Steam page for more information.')}</p></details>
+    <dl><dt>DLC</dt><dd>${Number.isInteger(g.dlc_count) ? `${g.dlc_count} downloadable content items listed by Steam` : 'Count unavailable from Steam'}</dd><dt>VR / features</dt><dd>${esc(g.categories?.join(' · ') || 'Unavailable from Steam')}</dd><dt>Developer</dt><dd>${esc(g.developers?.join(', ') || 'Unavailable')}</dd><dt>Publisher</dt><dd>${esc(g.publishers?.join(', ') || 'Unavailable')}</dd><dt>Release date</dt><dd>${esc(g.release || 'Unavailable')}</dd><dt>Genres</dt><dd>${esc(g.genres?.join(', ') || 'Unavailable')}</dd>${g.metascore ? `<dt>Metacritic</dt><dd>${esc(g.metascore)}</dd>` : ''}</dl>
+    <details><summary>PC / VR system requirements from Steam</summary><div class="steam-requirements">${esc(g.requirements?.minimum || 'Minimum requirements unavailable from Steam.')}</div>${g.requirements?.recommended ? `<div class="steam-requirements">${esc(g.requirements.recommended)}</div>` : ''}<p class="sub">PC requirements describe the Steam release; use the separate Frame rating for headset compatibility.</p></details>
+    <p class="sub">Purchases happen on Steam in your browser or headset. Install downloads an owned title to the Frame with Steam’s default options; answer license prompts in the headset. After a purchase, use Refresh library.</p>`;
+  selectSteamMedia(gm.mediaIndex || 0);
+}
+
+async function openSteamDetail(id) {
+  const installed = state?.games?.find(g => String(g.appid) === String(id));
+  const g = gm.store.find(g => String(g.id) === String(id)) || gm.byId.get(+id) || (installed && {...installed,id:Number(id),type:'unknown'});
+  if (!g) return;
+  const seq = ++gm.detailSeq;
+  gm.detail = g; gm.mediaIndex = 0;
+  renderSteamDetail(g, typeof g.id === 'number' ? 'Loading current Steam details…' : 'Open Steam for full package details.');
+  if (!$("steamDetail").open) $("steamDetail").showModal();
+  if (typeof g.id !== "number") return;
+  try {
+    if (!gm.country) await loadOwned();
+    if (seq !== gm.detailSeq || !$("steamDetail").open) return;
+    if (!gm.country) throw Error("Couldn't read your Steam store region");
+    const r = await api(`/api/steam/details?appid=${id}&cc=${gm.country}`);
+    if (seq !== gm.detailSeq || !$("steamDetail").open) return;
+    gm.detail = {...g, ...r.game};
+    renderSteamDetail(gm.detail);
+  } catch (e) {
+    if (seq === gm.detailSeq && $("steamDetail").open) renderSteamDetail(g, `Couldn't refresh details: ${e.message}. You can still open Steam.`);
+  }
+}
+$("steamDetail").addEventListener('close', () => { stopSteamMedia(); gm.detailSeq++; gm.detail = null; });
 
 $("gmSrc").onclick = e => { const b = e.target.closest("[data-src]"); if (b) setGameSource(b.dataset.src); };
 let gmTimer;
@@ -4459,7 +5001,42 @@ $("gmQ").oninput = e => {
   gm.q = e.target.value;
   clearTimeout(gmTimer); gmTimer = setTimeout(() => { if (gm.src === 'owned') filterGames(); }, 150);
 };
-$("gmQ").addEventListener("keydown", e => { if (e.key === "Enter" && gm.src === "store") searchStore(); });
+$("gmSearch").onsubmit = e => { e.preventDefault(); if (gm.src === "store") searchStore(); else filterGames(); };
+$("gmType").onchange = e => { gm.type = e.target.value; searchStore(0, gm.storeQ || ''); };
+$("gmVR").onchange = e => { gm.vr = e.target.value; searchStore(0, gm.storeQ || ''); };
+$("gmSort").onchange = e => { gm.sort = e.target.value; searchStore(0, gm.storeQ || ''); };
+$("gmPrice").onchange = e => { gm.price = e.target.value; searchStore(0, gm.storeQ || ''); };
+$("gmDiscount").onchange = e => { gm.discount = e.target.checked; searchStore(0, gm.storeQ || ''); };
+$('gmHideF2P').onchange = e => { gm.hidef2p = e.target.checked; searchStore(0, gm.storeQ || ''); };
+$('gmTagQ').oninput = renderSteamTagOptions;
+$('gmTagOptions').onchange = e => {
+  const id = e.target.dataset.steamTag;
+  if (!Object.hasOwn(STEAM_TAGS,id)) return;
+  if (e.target.checked) {
+    if (!gm.tags.includes(id) && gm.tags.length < STEAM_TAG_LIMIT) gm.tags.push(id);
+  } else gm.tags = gm.tags.filter(tag => tag !== id);
+  searchStore(0, gm.storeQ || '');
+};
+$('gmTags').onkeydown = e => { if (e.key === 'Escape') { $('gmTags').open = false; $('gmTagSummary').focus(); e.stopPropagation(); } };
+$('gmClearFilters').onclick = () => {
+  Object.assign(gm,{type:'all',vr:'all',price:'any',sort:'relevance',discount:false,hidef2p:false,tags:[]});
+  $('gmTagQ').value = ''; renderSteamTagOptions();
+  searchStore(0, gm.storeQ || '');
+};
+renderSteamTagOptions();
+$("gmGrid").onclick = e => { if (e.target.closest('[data-steam-retry]')) searchStore(gm.start || 0, gm.storeQ || ''); };
+$("gmPrev").onclick = () => searchStore(Math.max(0, gm.start - gm.pageSize), gm.storeQ);
+$("gmNext").onclick = () => searchStore(gm.start + gm.pageSize, gm.storeQ);
+$("libraryStoreSearch").onsubmit = e => {
+  e.preventDefault();
+  const q = $("libraryStoreQ").value.trim();
+  if (!q) return;
+  // Set the draft before switching so entering Store doesn't fire a browse request.
+  gm.storeQ = q; gm.storeDraft = q;
+  selectLibrary(workspace.source, 'store');
+  $("gmQ").value = q;
+  searchStore();
+};
 $("gmReload").onclick = loadOwned;
 $("gmMore").onclick = () => moreGames();
 $("gmChips").onclick = e => {
@@ -4469,6 +5046,8 @@ $("gmChips").onclick = e => {
   b.setAttribute("aria-pressed", f.has(b.dataset.f)); filterGames();
 };
 document.body.addEventListener("click", async e => {
+  const details = e.target.closest("[data-steam-detail]");
+  if (details) return openSteamDetail(details.dataset.steamDetail);
   const b = e.target.closest("[data-gm]"); if (!b) return;
   const action = b.dataset.gm, appid = b.dataset.id, name = b.dataset.name;
   const res = await act(action === "install" ? `Install ${name}` : `Open ${name} in the headset store`,
@@ -4995,9 +5574,11 @@ function renderMetaApps() {
   $("metaApps").innerHTML = metaLib.apps.length ? metaLib.apps.map(a => {
     // Sizes first: the line is cut short with "…" in a narrow panel, and the package is the least needed.
     const bits = [a.size ? questSize(a.size) : "", a.data_files ? `OBB ${questSize(a.data_size)}` : "",
-                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "", a.package || "package unknown"];
+                  a.version ? `v${a.version}${a.version_code != null ? ` (${a.version_code})` : ""}` : "",
+                  a.min_sdk != null ? `minimum API ${a.min_sdk}` : "", a.package || "package unknown"];
     const line = bits.filter(Boolean).join(" · ");
     const problem = a.problem ? `<div class="s v-no" title="${esc(a.problem)}">${esc(a.problem)}</div>` : "";
+    const incompatible = a.incompatible ? `<div class="s v-no" title="${esc(a.incompatible)}">Not compatible with the Frame: ${esc(a.incompatible)}</div>` : "";
     // Required game data Frame Control can't place as an OBB (data_plan in frame_meta.py): the game may not run without it.
     const skipped = (a.skipped_files || []).length
       ? `<div class="s v-maybe" title="${esc(a.skipped_files.join("\n"))}">Not installed: ${a.skipped_files.length} required data file${a.skipped_files.length === 1 ? "" : "s"} (${esc(a.skipped_files.join(", "))}); the game may not run without ${a.skipped_files.length === 1 ? "it" : "them"}.</div>` : "";
@@ -5007,8 +5588,8 @@ function renderMetaApps() {
     const result = r ? `<div class="s">${esc(r)}</div>` : "";
     const busy = installing.has("meta:" + a.id) ? " disabled" : "", waits = queued.has("meta:" + a.id);
     const on = installed.has(a.package);
-    const can = a.package && !a.problem;
-    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${skipped}${verdict}${result}</div>
+    const can = a.package && !a.problem && !a.incompatible;
+    return `<div class="item"><div class="grow"><div class="t">${esc(a.title)}</div><div class="s" title="${esc(line)}">${esc(line)}</div>${problem}${incompatible}${skipped}${verdict}${result}</div>
       ${on ? `<span class="tag">On the Frame</span>` : ""}
       ${waits ? `<span class="tag">Queued</span>` : ""}
       ${can ? `<button class="small" data-meta-install="${esc(a.id)}"${busy}>${on ? "Install again" : "Install"}</button>
@@ -5111,6 +5692,11 @@ $("metaApps").addEventListener("click", async e => {
   if (bar.dataset.owner === "meta:" + app.id) bar.hidden = true;  // not while another install still shows its progress
   if (r && r.message) { $("metaState").textContent = r.message; metaLib.results.set(app.package, r.test ? r.test.message : r.message); }
   else if (r !== null) $("metaState").textContent = `${app.title} wasn't installed; the reason is in the message log below.`;
+  // A failed install may have learned the minimum API from the downloaded manifest. Read the
+  // cached library again so the row becomes visibly blocked before another click can retry it.
+  if (r == null) {
+    try { metaLib.apps = (await api("/api/meta?library=1")).apps || []; } catch {}
+  }
   loadAndroid(); renderMetaApps(); if (test) loadReports();
 });
 loadMeta();
@@ -6349,6 +6935,7 @@ function selectLibrary(source = workspace.source, scope = workspace.scope, resto
   $('library').hidden = !installed || !['all','steam'].includes(workspace.source);
   $('sideloaded').hidden = !installed || !['all','sideloaded'].includes(workspace.source);
   $('librarySources').hidden = !installed;
+  $('libraryStoreSearch').hidden = store;
   $('libraryOwned').hidden = installed || store;
   $('steamDiscover').hidden = !store;
   document.querySelectorAll('[data-library-source]').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.librarySource === workspace.source)));
@@ -7488,7 +8075,8 @@ function onConnection(s) {
     });
     disp.list = []; disp.port = null;
     // The lists behind those panels too, so filters can't bring the old ones back.
-    gm.storeDraft = ""; gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.shownBySource = {owned:0, store:0}; gm.seq++;
+    gm.loading = false; gm.error = ""; gm.browseLoaded = false; gm.detail = null; gm.detailSeq++; $('steamDetail').close(); gm.country = null; gm.dl = null; clearTimeout(gm.poll);
+    gm.start = 0; gm.total = null; gm.hasMore = false; gm.storeDraft = ""; gm.owned = null; gm.byId = new Map(); gm.results = []; gm.store = []; gm.storeQ = null; gm.shown = 0; gm.shownBySource = {owned:0, store:0}; gm.seq++;
     androidApps = []; androidSeq++; androidPending.clear(); $('installedDetail').close(); resetShots(); resetClips();
     renderHome();
     titlesSeq++; disp.seq++; runningSeq++;  // answers to loads already on their way are ignored
@@ -7919,6 +8507,8 @@ api("/api/host").then(h => {
   watchConnection();
 }).catch(() => watchConnection());
 </script>
+<script src="/nxnative.js"></script>
+<script>FrameNxNative.mount({document, api, mobile: () => !!HOST.mobile, onInstallApk: openInstallChooser, onInstalled: () => { loadAndroid(); loadTitles(); }});</script>
 <script src="/artwork-settings.js"></script>
 <script src="/control-center.js"></script>
 <script>

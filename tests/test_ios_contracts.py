@@ -31,7 +31,10 @@ class BundleContracts(unittest.TestCase):
         cls.tmp.cleanup()
 
     def test_required_resources_ship_to_both_clients(self):
-        resources = ["frame/android/library_artwork.js", "frame/openxr-compat/XrApiLayer_FRAME_compat.json",
+        resources = ["ui/vendor/hls-1.6.13.light.min.js", "ui/vendor/hls-LICENSE",
+                     "ui/vendor/react-18.3.1.min.js", "ui/vendor/REACT-LICENSE.txt",
+                     "ui/vendor/react-dom-18.3.1.min.js", "ui/vendor/REACT-DOM-LICENSE.txt",
+                     "frame/android/library_artwork.js", "frame/openxr-compat/XrApiLayer_FRAME_compat.json",
                      "frame/openxr-compat/prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz"]
         config = json.loads((ROOT / "app/package.json").read_text())
         for resource in resources:
@@ -45,6 +48,14 @@ class BundleContracts(unittest.TestCase):
                         relative = str(Path(resource).relative_to(source))
                         packaged |= any(fnmatch.fnmatch(relative, pattern) for pattern in entry.get("filter", ["**/*"]))
                 self.assertTrue(packaged, "desktop resource contract: " + resource)
+
+    def test_framey_runtime_assets_ship_to_iphone(self):
+        # The shared page loads these from /framey-runtime when a plugin panel opens.
+        for name in ("react-18.3.1.min.js", "react-dom-18.3.1.min.js",
+                     "REACT-LICENSE.txt", "REACT-DOM-LICENSE.txt"):
+            resource = Path("ui/vendor") / name
+            with self.subTest(resource=str(resource)):
+                self.assertEqual((self.root / resource).read_bytes(), (ROOT / resource).read_bytes())
 
     def test_extracted_runtime_can_render_and_load_xr_layer(self):
         result = subprocess.run([sys.executable, "-I", "-B", "-c", """

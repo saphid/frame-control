@@ -1,0 +1,75 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(async () => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-root'),root=ReactDOM.createRoot(container);
+  const router=window.__DECKY_SECRET_INTERNALS_DO_NOT_USE_OR_YOU_WILL_BE_FIRED_deckyLoaderAPIInit.connect(2,'fixture').routerHook;
+  const tick=()=>new Promise(resolve=>setTimeout(resolve,0));
+  let homeMounts=0,homeCleanups=0,quickActions=0,failSettings=true,failPanel=false;
+  function Home() {
+    const [count,setCount]=React.useState(0);
+    React.useEffect(()=>{homeMounts++;return ()=>{homeCleanups++;};},[]);
+    if(failPanel)throw Error('Synthetic main panel failure');
+    return React.createElement('button',{onClick:()=>setCount(count+1)},'Home count '+count);
+  }
+  function Settings() {
+    if(failSettings)throw Error('Synthetic settings failure');
+    return React.createElement('p',null,'Healthy synthetic settings');
+  }
+  function BrokenRoute() {throw Error('Synthetic route failure '+DFL.useParams().reason);}
+  const plugin={titleView:React.createElement('h1',null,'Synthetic plugin title'),
+    content:React.createElement(Home),settings:React.createElement(Settings),
+    frameyQuickActions:[{label:'Synthetic read',onClick:async()=>{quickActions++;return 'Synthetic read complete';}}]};
+  const render=()=>ReactDOM.flushSync(()=>root.render(React.createElement(window.__FixtureBoundary,null,
+    React.createElement(window.__FixtureSurface,{plugin}))));
+  const button=label=>[...container.querySelectorAll('button')].find(node=>node.textContent===label);
+  const click=label=>{assert(button(label),'missing recovery control: '+label);ReactDOM.flushSync(()=>button(label).click());};
+  const go=path=>ReactDOM.flushSync(()=>assert(DFL.Navigation.Navigate(path),'route refused: '+path));
+  const failed=message=>{
+    assert(container.textContent.includes(message),'missing render failure message: '+message);
+    assert(container.querySelector('h1')?.textContent==='Synthetic plugin title','content failure removed plugin title');
+    assert(button('Panel')&&button('Settings')&&button('Synthetic read'),'content failure removed view/actions navigation');
+  };
+  try {
+    router.addRoute('/fixture/broken/:reason',BrokenRoute);
+    router.addRoute('/fixture/healthy',()=>React.createElement('p',null,'Healthy synthetic route'));
+    render();await tick();
+    click('Home count 0');render();assert(button('Home count 1'),'ordinary rerender reset healthy child state');
+    go('/fixture/broken/first');
+    assert(button('Back to plugin'),'render failure removed Back to plugin');
+    failed('Synthetic route failure first');
+    assert(homeCleanups===1,'failed route left retired home effects running');
+    click('Synthetic read');await tick();
+    assert(quickActions===1&&container.textContent.includes('Synthetic read complete'),'quick action unavailable during route failure');
+    click('Back to plugin');assert(button('Home count 0'),'Back did not recover healthy home');
+    go('/fixture/healthy');assert(container.textContent.includes('Healthy synthetic route'),'healthy route did not open');
+    go('/fixture/broken/second');failed('Synthetic route failure second');
+    ReactDOM.flushSync(()=>DFL.Navigation.NavigateBack());
+    assert(container.textContent.includes('Healthy synthetic route'),'history Back did not recover healthy route');
+    go('/fixture/broken/third');failed('Synthetic route failure third');
+    ReactDOM.flushSync(()=>router.removeRoute('/fixture/broken/:reason'));
+    assert(button('Home count 0')&&!button('Back to plugin'),'removing failed active route did not recover home');
+
+    click('Settings');failed('Synthetic settings failure');
+    click('Panel');assert(button('Home count 0'),'Panel could not recover from failed Settings');
+    failSettings=false;click('Settings');
+    assert(container.textContent.includes('Healthy synthetic settings'),'revisiting repaired settings retained old failure');
+    failPanel=true;click('Panel');failed('Synthetic main panel failure');
+    click('Settings');assert(container.textContent.includes('Healthy synthetic settings'),'Settings could not recover from failed Panel');
+    failPanel=false;click('Panel');assert(button('Home count 0'),'revisiting repaired panel retained old failure');
+    click('Home count 0');render();assert(button('Home count 1'),'healthy recovered panel reset on redraw');
+    ReactDOM.flushSync(()=>root.unmount());
+    assert(homeMounts===homeCleanups,'unmounted home effects were not cleaned up');
+    router.removeRoute('/fixture/healthy');
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      routeBackRecovery:true,historyBackRecovery:true,activeRouteRemovalRecovery:true,
+      settingsAndPanelRecovery:true,repairedViewReentry:true,healthyStatePreserved:true,
+      titleAndQuickActionsPreserved:true,effectCleanup:true,syntheticQuickActions:quickActions,
+      syntheticRenderFailures:true,realBackendContacted:false,realFrameContacted:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

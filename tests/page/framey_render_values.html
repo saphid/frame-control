@@ -1,0 +1,66 @@
+<!doctype html><meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'">
+<div id="framey-root"></div><div id="framey-error"></div><div id="framey-toasts"></div>
+<div id="framey-modal"></div><pre id="result">Pending</pre>
+<script>__REACT__</script><script>__REACT_DOM__</script><script>__HOST__</script>
+<script>
+(() => {
+  const assert=(value,message)=>{if(!value)throw Error(message);};
+  const container=document.getElementById('framey-root'),root=ReactDOM.createRoot(container);
+  // Replay Wine Cellar's bundled encoder and render-time calls with an
+  // oversized synthetic payload. No plugin settings, QR display or IPC runs.
+  __OFFICIAL_ENCODER__
+  let payload='x'.repeat(4000),renders=0;
+  function PublishedQR(){
+    renders++;
+    const level='L',value=payload;
+    __OFFICIAL_RENDER_CALLS__
+    return React.createElement('p',null,'Synthetic QR encoded: '+qr.getModuleCount());
+  }
+  let thrown,shouldThrow=true;
+  function SyntheticFailure(){if(shouldThrow)throw thrown;return React.createElement('p',null,'Recovered view');}
+  const plugin={titleView:React.createElement('h1',null,'Local recovery title'),
+    content:React.createElement(PublishedQR),settings:React.createElement('p',null,'Healthy settings')};
+  const render=()=>ReactDOM.flushSync(()=>root.render(React.createElement(window.__FixtureBoundary,null,
+    React.createElement(window.__FixtureSurface,{plugin}))));
+  const button=label=>[...container.querySelectorAll('button')].find(node=>node.textContent===label);
+  const click=label=>{assert(button(label),'missing '+label);ReactDOM.flushSync(()=>button(label).click());};
+  const checkFailure=expected=>{
+    const alert=container.querySelector('[role="alert"]');
+    assert(alert?.textContent==='This Decky panel is not compatible with Framey: '+expected,
+      'render failure diagnostic lost: expected '+expected+'; got '+alert?.textContent);
+    assert(container.querySelector('h1')?.textContent==='Local recovery title'&&button('Settings')&&button('Panel'),
+      'render failure removed recovery navigation');
+  };
+  try {
+    let publishedFailure;
+    try{PublishedQR();}catch(failure){publishedFailure=failure;}
+    assert(typeof publishedFailure==='string'&&publishedFailure.startsWith('code length overflow.'),
+      'published encoder did not produce its string capacity error');
+    render();checkFailure(publishedFailure);
+    const failedRenders=renders;render();
+    assert(renders===failedRenders,'redraw retried failed render');
+    click('Settings');assert(container.textContent.includes('Healthy settings'),'could not leave published QR failure');
+    payload='small synthetic value';click('Panel');
+    assert(container.textContent.includes('Synthetic QR encoded:'),'fixed QR input could not recover on reentry');
+
+    const cases=[[null,'null'],[undefined,'undefined'],[false,'false'],[0,'0'],['','Unknown render failure'],
+      [42,'42'],[Symbol('fixture'),'Symbol(fixture)'],[{message:'Plain object diagnostic'},'Plain object diagnostic'],
+      [new Error('Ordinary Error'),'Ordinary Error']];
+    for(const [value,expected] of cases){
+      click('Settings');plugin.content=React.createElement(SyntheticFailure);
+      thrown=value;shouldThrow=true;click('Panel');
+      checkFailure(expected);
+      click('Settings');shouldThrow=false;click('Panel');
+      assert(container.textContent.includes('Recovered view'),'non-Error failure did not recover on reentry');
+    }
+    ReactDOM.flushSync(()=>root.unmount());
+    document.getElementById('result').textContent=JSON.stringify({passed:true,realReactDOM:true,
+      publishedWineCellarEncoder:true,publishedStringDiagnostic:publishedFailure,syntheticOversizedInput:true,
+      falsyAndOtherThrownValues:cases.length,recoveryNavigationPreserved:true,sameViewDoesNotRetry:true,
+      repairedViewReentry:true,ordinaryErrorPreserved:true,realPluginFailureObserved:false,
+      realBackendContacted:false,realFrameContacted:false,wornVisibilityVerified:false,
+      controllerInputVerified:false,vrKeyboardVerified:false});
+  }catch(error){document.getElementById('result').textContent=JSON.stringify({passed:false,error:String(error.stack||error)});}
+})();
+</script>

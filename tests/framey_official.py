@@ -111,6 +111,14 @@ LEGACY_PLUGINS = (
      'folder': 'SDH-CssLoader', 'sha256': '99beaf1374af82408e6d056e0b0147e5fca544e1035fa7ab88419231697bc231'},
 )
 
+# Dialog-component replay only. Keep it out of PLUGINS/LEGACY_PLUGINS so
+# fake-store install fixtures do not imply full Web Browser support.
+WEB_BROWSER_143 = {
+    'id': 59, 'name': 'Web Browser', 'version': '1.4.3', 'api_version': 'legacy',
+    'folder': 'DeckWebBrowser',
+    'sha256': '1192864fddc5d72550346b8dff02c21d71f0c40a06ac41c4e67bb6220d267f9d',
+}
+
 
 def archive(plugin):
     return (ROOT / plugin.get('fixture', f"{plugin['id']}.zip")).read_bytes()

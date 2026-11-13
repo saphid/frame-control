@@ -7,11 +7,13 @@ on:
       - 'scripts/framey-*syncthing*.py'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-probe-decky-parent-stacks.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
       - 'tests/decky-runtime/syncthing_browser.py'
       - 'ui/**'
       - 'tests/decky-runtime/syncthing_migration.py'
+      - 'tests/decky-runtime/syncthing_migration_stacks.py'
       - 'tests/decky-runtime/syncthing_http.py'
       - 'tests/decky-runtime/syncthing_http_parent.py'
       - 'tests/decky-runtime/guest_result.py'
@@ -21,17 +23,22 @@ on:
       - 'apk-catalog/pick.py'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
   pull_request:
     paths:
       - 'scripts/framey-*syncthing*.py'
       - 'scripts/build-framey-syncthing.py'
       - 'scripts/framey-test-decky-runtime.py'
+      - 'scripts/framey-probe-decky-parent-stacks.py'
       - 'tests/decky-runtime/syncthing_flatpak_package*.py'
       - 'tests/decky-runtime/syncthing_service.py'
       - 'tests/decky-runtime/syncthing_browser.py'
       - 'ui/**'
       - 'tests/decky-runtime/syncthing_migration.py'
+      - 'tests/decky-runtime/syncthing_migration_stacks.py'
       - 'tests/decky-runtime/syncthing_http.py'
       - 'tests/decky-runtime/syncthing_http_parent.py'
       - 'tests/decky-runtime/guest_result.py'
@@ -41,8 +48,16 @@ on:
       - 'apk-catalog/pick.py'
       - 'tests/decky-runtime/Containerfile.flatpak*'
       - 'tests/test_syncthing_flatpak*.py'
+      - 'scripts/ci-ubuntu-packages.py'
       - '.github/workflows/syncthing-flatpak-package.yml'
+      - '.github/actions/framey-runtime-inputs/**'
+      - 'scripts/framey-cache-runtime-inputs.py'
   workflow_dispatch:
+    inputs:
+      migration_stacks:
+        description: Capture bounded guest-root Python stacks in the native migration fixtures
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -73,15 +88,16 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: ./.github/actions/framey-runtime-inputs
       - name: Install preparation tools and matching QEMU emulator
+        timeout-minutes: 12
         run: |
           case "$(uname -m)" in
             x86_64) emulator=qemu-system-x86 ;;
             aarch64) emulator=qemu-system-arm ;;
             *) exit 1 ;;
           esac
-          sudo apt-get update
-          sudo apt-get install -y --no-install-recommends python3-gi "$emulator"
+          sudo python3 scripts/ci-ubuntu-packages.py python3-gi "$emulator"
       - name: Bounded exact app and runtime objects (download is not proof)
         run: |
           /usr/bin/python3 -m unittest discover -s tests -p 'test_syncthing_flatpak*.py' -q
@@ -106,6 +122,7 @@ jobs:
         env:
           FRAMEY_BROWSER: ${{ matrix.browser }}
           FRAMEY_PARENT: ${{ matrix.parent || false }}
+          FRAMEY_MIGRATION_STACKS: ${{ inputs.migration_stacks || false }}
         run: |
           vm_image="framey-flatpak-vm:$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           vm_container="framey-flatpak-export-$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
@@ -117,12 +134,16 @@ jobs:
           esac
           browser_packages=
           browser_flags=()
+          observer_flags=()
           if [ "$FRAMEY_BROWSER" = true ]; then
             browser_packages='chromium chromium-sandbox'
             browser_flags=(--browser-setup --http-gateway)
           fi
           if [ "$FRAMEY_PARENT" = true ]; then
             browser_flags+=(--http-browser-parent)
+          fi
+          if [ "$FRAMEY_MIGRATION_STACKS" = true ] && [ "$FRAMEY_BROWSER" != true ]; then
+            observer_flags+=(--migration-stacks)
           fi
           docker build -q -t "$vm_image" --build-arg "KERNEL_PACKAGE=$kernel" --build-arg "BROWSER_PACKAGES=$browser_packages" \
             -f tests/decky-runtime/Containerfile.flatpak-vm tests/decky-runtime
@@ -131,7 +152,8 @@ jobs:
           docker pull rust:1.98.1-bookworm
           python3 scripts/build-framey-syncthing.py --image rust:1.98.1-bookworm --fetch \
             --architectures "$(uname -m)" --output "$RUNNER_TEMP/signed-package-candidate"
-          python3 scripts/framey-test-syncthing-flatpak-package.py "${browser_flags[@]}" \
+          python3 scripts/framey-test-syncthing-flatpak-package.py "${browser_flags[@]}" "${observer_flags[@]}" \
+            --loader "$RUNNER_TEMP/framey-runtime-inputs/loader" \
             --rootfs-tar "$RUNNER_TEMP/flatpak-rootfs.tar" \
             --bundles "$RUNNER_TEMP/flatpak-generated/bundles" \
             --key "$RUNNER_TEMP/flatpak-generated/bundles/flathub-key.gpg" \
@@ -145,6 +167,7 @@ jobs:
           AUDIT_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
           FRAMEY_BROWSER: ${{ matrix.browser }}
           FRAMEY_PARENT: ${{ matrix.parent || false }}
+          FRAMEY_MIGRATION_STACKS: ${{ inputs.migration_stacks || false }}
         run: |
           python3 - <<'PY'
           import hashlib,json,os,runpy,subprocess
@@ -154,13 +177,14 @@ jobs:
           paths=['scripts/framey-prepare-syncthing-flatpak.py','scripts/framey-test-syncthing-flatpak-package.py','scripts/framey-test-syncthing-service.py','tests/decky-runtime/syncthing_flatpak_package.py','tests/decky-runtime/syncthing_flatpak_package_root.py','tests/decky-runtime/syncthing_service.py','tests/decky-runtime/syncthing_migration.py','scripts/build-framey-syncthing.py','ui/vendor/syncthing-0.2.7/main.py','ui/framey_decky_ipc.py','ui/vendor/syncthing-0.2.7/watchdog.patch','ui/vendor/syncthing-0.2.7/owned_unit.rs','ui/vendor/syncthing-0.2.7/source.tar.gz','tests/decky-runtime/Containerfile.flatpak-bundles','tests/decky-runtime/Containerfile.flatpak-vm','.github/workflows/syncthing-flatpak-package.yml']
           paths+=['tests/decky-runtime/syncthing_browser.py','scripts/framey-test-syncthing-browser.py','ui/framey_panel.py','ui/framey-host.js','ui/frame_steam.py','ui/vendor/syncthing-0.2.7/frontend.patch','ui/vendor/react-18.3.1.min.js','ui/vendor/react-dom-18.3.1.min.js']
           paths+=['tests/decky-runtime/syncthing_http.py','scripts/framey-test-decky-runtime.py','scripts/framey-test-syncthing-runtime.py']
+          paths+=['tests/decky-runtime/syncthing_migration_stacks.py','scripts/framey-probe-decky-parent-stacks.py','tests/decky-runtime/guest_result.py']
           if os.environ['FRAMEY_BROWSER']=='true':
-              paths+=['tests/decky-runtime/guest_result.py']
               _payloads, metadata=runpy.run_path('scripts/framey-test-syncthing-flatpak-package.py')['http_gateway_payloads'](os.environ['FRAMEY_PARENT']=='true')
               paths+=list(metadata['sourceSha256'])
           if os.environ['FRAMEY_PARENT']=='true':paths+=['tests/decky-runtime/syncthing_http_parent.py']
           paths=list(dict.fromkeys(paths))
           report={'httpBrowserParentRequested':os.environ['FRAMEY_PARENT']=='true','httpGatewayRequested':os.environ['FRAMEY_BROWSER']=='true','browserSetupRequested':os.environ['FRAMEY_BROWSER']=='true','headSha':head,'architecture':os.uname().machine,'sourceSha256':{p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in paths},'packagePass':False}
+          report['migrationStacksRequested']=os.environ['FRAMEY_MIGRATION_STACKS']=='true' and os.environ['FRAMEY_BROWSER']!='true'
           result=Path(os.environ['RUNNER_TEMP'])/'flatpak-package/result.json'
           if result.exists():report['packagePass']=json.loads(result.read_text()).get('success') is True
           (Path(os.environ['RUNNER_TEMP'])/'flatpak-exact-head.json').write_text(json.dumps(report,indent=2)+'\n')

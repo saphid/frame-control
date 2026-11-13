@@ -38,6 +38,8 @@ XR_COMPAT_FILES = {
     'lib/arm64-v8a/libXrApiLayer_FRAME_compat.so': 'prebuilt/arm64-v8a/libXrApiLayer_FRAME_compat.so.gz',
 }
 PKG_RE = re.compile(r'^[A-Za-z][\w]*(\.[A-Za-z_][\w]*)+$')
+LEPTON_ANDROID = 11
+LEPTON_API = 30
 SSH_OPTS = ['-o', 'BatchMode=yes', '-o', 'ConnectTimeout=8']
 
 
@@ -74,8 +76,8 @@ def ssh(cmd, input=None, timeout=120):
         # Bytes input gives bytes output: decode it, so the message isn't "b'...'".
         stderr, stdout = (v if isinstance(v, str) else (v or b'').decode(errors='replace')
                           for v in (p.stderr, p.stdout))
-        error = FrameError((stderr or stdout or f'ssh exited {p.returncode}').strip()[-600:])
-        raise frame_host.link_failure(error) if frame_host.ssh_link_failed(p.returncode, stderr) else error
+        error = FrameError((stderr or stdout or frame_host.ssh_exit_message(p.returncode)).strip()[-600:])
+        raise frame_host.link_failure(error) if frame_host.ssh_link_failed(p.returncode, stderr, stdout) else error
     return p.stdout
 
 
@@ -131,9 +133,14 @@ def layer_note(meta):
     return LAYER_MISSING_NOTE if LAYER_MISSING_NOTE in ((meta or {}).get('vr_issues') or []) else ''
 
 
+def newer_android_message(label, min_sdk):
+    return (f'{label} needs Android API {min_sdk}; Lepton is Android {LEPTON_ANDROID} (API {LEPTON_API}). '
+            "This version cannot run on the Frame, and this isn't a setting you can change.")
+
+
 def check_installable(info):
-    if info['min_sdk'] and info['min_sdk'] > 30:
-        raise FrameError(f"{info['label']} needs Android API {info['min_sdk']}; Lepton is Android 11 (API 30)")
+    if info['min_sdk'] and info['min_sdk'] > LEPTON_API:
+        raise FrameError(newer_android_message(info['label'], info['min_sdk']))
     if info['abis'] and 'arm64-v8a' not in info['abis']:
         # Sites that offer one APK per ABI (Grayjay: arm64-v8a, armeabi-v7a, x86, x86_64,
         # universal) leave the choice to the user; say which file to fetch instead.
