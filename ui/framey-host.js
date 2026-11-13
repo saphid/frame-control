@@ -1380,9 +1380,13 @@
   }};
   class PanelBoundary extends R.Component {
     constructor(props) { super(props); this.state = {failure:null}; }
-    static getDerivedStateFromError(failure) { return {failure}; }
+    static getDerivedStateFromError(failure) {
+      // Published render helpers also throw strings. Capture a nonempty text
+      // diagnostic so falsy thrown values cannot bypass this boundary.
+      return {failure:String(failure?.message || failure) || 'Unknown render failure'};
+    }
     render() { return this.state.failure ? R.createElement('p', {role:'alert'},
-      `This Decky panel is not compatible with Framey: ${this.state.failure.message}`) : this.props.children; }
+      `This Decky panel is not compatible with Framey: ${this.state.failure}`) : this.props.children; }
   }
   function PluginSurface({plugin}) {
     const [view, setView] = R.useState(plugin.content ? 'panel' : 'settings');
